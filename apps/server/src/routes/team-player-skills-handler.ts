@@ -72,6 +72,8 @@ import { isTeamRosterFrozen } from '../services/team-lock-status';
 import {
   advancementCostFor,
   assertTournamentAllowsAdvancement,
+  eliteSkillsForPack,
+  fallbackPspCostForTeam,
   packForTeam,
   poolSpentForTeamId,
   TeamAdvancementError,
@@ -206,8 +208,21 @@ export async function handleUpdatePlayerSkills(
       ? null
       : await packForTeam(teamRow.tournamentRuleset ?? null);
     const poolTotal = frozen ? 0 : (teamRow.startingPspPool ?? 0);
+    // MEME comptabilite que la fiche d'equipe : le repli des ameliorations
+    // sans `pspCost` doit appliquer le bareme du reglement, sinon le pool
+    // parait sous-consomme et finance une competence deja payee.
     const poolLeft = poolTotal
-      ? Math.max(0, poolTotal - (await poolSpentForTeamId(teamId)))
+      ? Math.max(
+          0,
+          poolTotal -
+            (await poolSpentForTeamId(
+              teamId,
+              await fallbackPspCostForTeam(
+                teamRow.tournamentRuleset ?? null,
+                (team.ruleset as string | null) ?? null,
+              ),
+            )),
+        )
       : 0;
 
     // Branche caracteristique (BB2025) : on ameliore une stat, pas une
@@ -249,6 +264,9 @@ export async function handleUpdatePlayerSkills(
         undefined,
         // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
         await loadAdvancementSchedule(team.ruleset as Ruleset),
+        // Sans objet pour une caractéristique (aucun slug), passé pour que
+        // les deux appels de ce fichier restent identiques.
+        await eliteSkillsForPack(pack, (team.ruleset as string) ?? null),
       );
       const playerSpp = p.spp || 0;
       const fromPool = poolLeft >= sppCost;
@@ -455,6 +473,9 @@ export async function handleUpdatePlayerSkills(
       advancementType,
       finalSkillSlug,
       await loadAdvancementSchedule(teamRuleset as Ruleset),
+      // Surcoût Élite du règlement : sans cette liste, la même compétence
+      // coûtait 8 PSP au build et 6 à l'achat d'après-création.
+      await eliteSkillsForPack(pack, (teamRuleset as string) ?? null),
     );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const playerSpp = (player as any).spp || 0;

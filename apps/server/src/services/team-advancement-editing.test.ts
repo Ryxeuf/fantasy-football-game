@@ -12,6 +12,9 @@ vi.mock('../prisma', () => ({
     // Le règlement de tournoi est résolu par le repository (base d'abord).
     // Table vide ⇒ repli sur le registre du moteur, sans bruit d'erreur.
     tournamentRuleset: { findMany: vi.fn(() => Promise.resolve([])) },
+    // Compétences Élite (`Skill.isElite`) : le pack NAF facture un surcoût
+    // Élite sans republier la liste, il retombe donc sur celle de l'édition.
+    skill: { findMany: vi.fn(() => Promise.resolve([])) },
   },
 }));
 
@@ -28,6 +31,7 @@ import { isTeamRosterFrozen } from './team-lock-status';
 import {
   advancementCostFor,
   assertTournamentAllowsAdvancement,
+  eliteSkillsForPack,
   getTeamPspPoolState,
   packForTeam,
   removePlayerAdvancement,
@@ -42,6 +46,7 @@ const playerFindFirst = prisma.teamPlayer.findFirst as unknown as ReturnType<typ
 const playerFindUnique = prisma.teamPlayer.findUnique as unknown as ReturnType<typeof vi.fn>;
 const playerUpdate = prisma.teamPlayer.update as unknown as ReturnType<typeof vi.fn>;
 const cupFindFirst = prisma.cupParticipant.findFirst as unknown as ReturnType<typeof vi.fn>;
+const skillFindMany = prisma.skill.findMany as unknown as ReturnType<typeof vi.fn>;
 const frozen = isTeamRosterFrozen as unknown as ReturnType<typeof vi.fn>;
 
 const TEAM = {
@@ -57,6 +62,7 @@ beforeEach(() => {
   cupFindFirst.mockResolvedValue(null);
   frozen.mockResolvedValue(false);
   playerFindMany.mockResolvedValue([]);
+  skillFindMany.mockResolvedValue([]);
   teamUpdate.mockResolvedValue({});
   playerUpdate.mockResolvedValue({});
   playerFindUnique.mockResolvedValue({ id: 'P1' });
@@ -392,5 +398,183 @@ describe('assertTournamentAllowsAdvancement', () => {
         type: 'primary',
       }),
     ).rejects.toMatchObject({ code: 'tournament-rules' });
+  });
+});
+
+/**
+ * Rattrapage à la LECTURE des améliorations écrites avant que le coût payé
+ * (`pspCost`) ne soit persisté.
+ *
+ * `prisma/migrations/` est gitignoré (prod = `db push`) : aucun backfill
+ * n'est possible sur ces lignes. Sous un règlement de tournoi, le repli au
+ * barème standard les sous-compte — cas prod, équipe Ogre NAF World Cup
+ * 2027 : 54 PSP annoncés dépensés sur un pool de 66, donc 12 PSP fantômes
+ * réputés disponibles alors que le pool était vide.
+ */
+describe('fallbackPspCostForTeam — équipes construites avant `pspCost`', () => {
+  /** Compétences du roster Ogre remonté, sans coût persisté. */
+  const OGRE_PICKS = [
+    {
+      advancements: JSON.stringify([
+        { type: 'primary', skillSlug: 'guard' },
+        { type: 'secondary', skillSlug: 'block' },
+      ]),
+    },
+    ...Array.from({ length: 4 }, () => ({
+      advancements: JSON.stringify([{ type: 'primary', skillSlug: 'guard' }]),
+    })),
+    { advancements: JSON.stringify([{ type: 'primary', skillSlug: 'brawler' }]) },
+    {
+      advancements: JSON.stringify([
+        { type: 'primary', skillSlug: 'dirty-player' },
+      ]),
+    },
+  ];
+
+  function ogreTeam(overrides: Record<string, unknown> = {}) {
+    return {
+      id: 'T-OGRE',
+      roster: 'ogre',
+      ruleset: 'season_3',
+      startingPspPool: 66,
+      tournamentRuleset: 'naf_world_cup_2027',
+      ...overrides,
+    };
+  }
+
+  /**
+   * Garde et Blocage sont Élite en Saison 3. Le pack NAF facture +2 PSP par
+   * compétence Élite sans republier la liste : elle vient donc de
+   * l'édition (`Skill.isElite`). C'est TOUT l'écart 54 → 66.
+   */
+  function eliteSkills(...slugs: string[]) {
+    skillFindMany.mockResolvedValue(slugs.map((slug) => ({ slug })));
+  }
+
+  it('re-applique le barème du règlement : 66 PSP dépensés, 0 disponible', async () => {
+    teamFindFirst.mockResolvedValue(ogreTeam());
+    playerFindMany.mockResolvedValue(OGRE_PICKS);
+    eliteSkills('guard', 'block');
+
+    const state = await getTeamPspPoolState('T-OGRE', 'U1');
+
+    expect(state.pool).toBe(66);
+    // 54 avant le correctif : le barème standard ignorait le surcoût Élite
+    // et les paliers du pack.
+    expect(state.spent).toBe(66);
+    expect(state.remaining).toBe(0);
+  });
+
+  it('retombe sur le barème standard sans règlement de tournoi', async () => {
+    teamFindFirst.mockResolvedValue(
+      ogreTeam({ tournamentRuleset: null, startingPspPool: 100 }),
+    );
+    playerFindMany.mockResolvedValue(OGRE_PICKS);
+    eliteSkills('guard', 'block');
+
+    const state = await getTeamPspPoolState('T-OGRE', 'U1');
+
+    // Barème BB2025 indexé par rang : (6 + 12) + 4 × 6 + 6 + 6 = 54.
+    expect(state.spent).toBe(54);
+  });
+
+  it('interdit de descendre le pool sous ce que le règlement a réellement facturé', async () => {
+    teamFindFirst.mockResolvedValue(ogreTeam());
+    playerFindMany.mockResolvedValue(OGRE_PICKS);
+    eliteSkills('guard', 'block');
+
+    // 60 passait avant le correctif (54 « dépensés »), libérant un pool
+    // que les compétences déjà achetées avaient pourtant consommé.
+    await expect(setStartingPspPool('T-OGRE', 'U1', 60)).rejects.toMatchObject({
+      code: 'pool-below-spent',
+    });
+    expect(teamUpdate).not.toHaveBeenCalled();
+  });
+
+  it('préfère le coût persisté au barème de repli', async () => {
+    teamFindFirst.mockResolvedValue(ogreTeam({ startingPspPool: 40 }));
+    playerFindMany.mockResolvedValue([
+      {
+        advancements: JSON.stringify([
+          // Coût réellement payé, plus cher que tout barème dérivable.
+          { type: 'primary', skillSlug: 'guard', pspCost: 30, fundedBy: 'pool' },
+        ]),
+      },
+    ]);
+
+    const state = await getTeamPspPoolState('T-OGRE', 'U1');
+
+    expect(state.spent).toBe(30);
+    expect(state.remaining).toBe(10);
+  });
+
+  it('ne compte pas au pool une amélioration gagnée en match', async () => {
+    teamFindFirst.mockResolvedValue(ogreTeam({ startingPspPool: 40 }));
+    playerFindMany.mockResolvedValue([
+      {
+        advancements: JSON.stringify([
+          { type: 'primary', skillSlug: 'guard', pspCost: 8, fundedBy: 'pool' },
+          { type: 'primary', skillSlug: 'block', pspCost: 8, fundedBy: 'player' },
+        ]),
+      },
+    ]);
+
+    const state = await getTeamPspPoolState('T-OGRE', 'U1');
+
+    expect(state.spent).toBe(8);
+  });
+});
+
+/**
+ * Surcoût Élite d'un règlement de tournoi à l'achat d'APRÈS-création.
+ *
+ * Le build résolvait les compétences Élite (liste du pack, sinon celles de
+ * l'édition) et facturait le surcoût ; `advancementCostFor` ne le faisait
+ * pas. La MÊME compétence coûtait donc 8 PSP à la construction et 6 le
+ * lendemain, sur la même équipe et le même pool.
+ */
+describe('advancementCostFor — surcoût Élite du règlement', () => {
+  it('facture le surcoût quand la liste Élite est fournie', async () => {
+    const pack = await packForTeam('naf_world_cup_2027');
+    expect(pack).not.toBeNull();
+
+    const elite = new Set(['guard']);
+    // 1re primaire : 6 de base + 2 de surcoût Élite.
+    expect(advancementCostFor(pack, 0, 'primary', 'guard', undefined, elite)).toBe(8);
+    // Compétence non Élite : pas de surcoût.
+    expect(
+      advancementCostFor(pack, 0, 'primary', 'brawler', undefined, elite),
+    ).toBe(6);
+    // 1re secondaire Élite : 10 + 2.
+    expect(
+      advancementCostFor(pack, 0, 'secondary', 'guard', undefined, elite),
+    ).toBe(12);
+    // 2e primaire Élite : 8 + 2.
+    expect(advancementCostFor(pack, 1, 'primary', 'guard', undefined, elite)).toBe(10);
+  });
+
+  it('résout les Élite de l\'édition quand le règlement n\'en publie pas', async () => {
+    const pack = await packForTeam('naf_world_cup_2027');
+    // Le pack NAF facture un surcoût Élite SANS republier la liste.
+    expect(pack?.eliteSkills).toEqual([]);
+    skillFindMany.mockResolvedValue([{ slug: 'guard' }, { slug: 'block' }]);
+
+    const elite = await eliteSkillsForPack(pack, 'season_3');
+
+    expect(elite?.has('guard')).toBe(true);
+    expect(elite?.has('brawler')).toBe(false);
+    expect(advancementCostFor(pack, 0, 'primary', 'guard', undefined, elite)).toBe(8);
+  });
+
+  it('ne résout rien hors règlement de tournoi', async () => {
+    await expect(eliteSkillsForPack(null, 'season_3')).resolves.toBeUndefined();
+    // Barème standard : 6 PSP pour une 1re primaire, Élite ou non.
+    expect(advancementCostFor(null, 0, 'primary', 'guard')).toBe(6);
+  });
+
+  it('laisse les caractéristiques au barème standard', async () => {
+    const pack = await packForTeam('naf_world_cup_2027');
+    // Un règlement n'a de barème que pour les compétences au choix.
+    expect(advancementCostFor(pack, 0, 'characteristic')).toBe(14);
   });
 });

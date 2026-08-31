@@ -33,6 +33,16 @@ export interface TeamBudgetSummary {
   readonly initialBudget: number;
   /** Coût de tous les joueurs engagés (base + surcoûts d'avancement). */
   readonly playersCost: number;
+  /**
+   * Coût d'EMBAUCHE seul des joueurs engagés — la part payée en OR.
+   *
+   * C'est elle, et non `playersCost`, qui se confronte au budget de
+   * construction : une amélioration se paie en PSP (pool de construction ou
+   * SPP gagnés en match), jamais en or. Cf. `playersHireCost` du breakdown.
+   */
+  readonly playersHireCost: number;
+  /** Surcoûts d'avancement (po) : `playersCost − playersHireCost`. */
+  readonly advancementsCost: number;
   /** Coût des Star Players recrutés. */
   readonly starPlayersCost: number;
   /** Cheerleaders + assistants + apothicaire. */
@@ -44,7 +54,11 @@ export interface TeamBudgetSummary {
    * budget de construction mais PAS dans la VE/VEA.
    */
   readonly dedicatedFansCost: number;
-  /** Somme des postes ci-dessus (hors budget initial). */
+  /**
+   * OR réellement engagé : embauches + Star Players + staff + relances +
+   * fans dévoués. Exclut les surcoûts d'avancement (`advancementsCost`),
+   * qui ne se paient pas en or.
+   */
   readonly totalSpent: number;
   /**
    * Reliquat du budget de construction (`initialBudget - totalSpent`).
@@ -58,6 +72,10 @@ export interface TeamBudgetSummary {
   readonly teamValue: number;
   /** VEA — Valeur d'Équipe Actuelle. */
   readonly currentValue: number;
+  /** Valeur des joueurs indisponibles au prochain match (VE − VEA). */
+  readonly unavailablePlayersCost: number;
+  /** Embauches annulées dans la VEA par « Trois-quarts à vil prix ». */
+  readonly cheapLinemenWaived: number;
 }
 
 interface BudgetTeamRow {
@@ -126,8 +144,12 @@ export async function buildTeamBudgetSummary(
   );
 
   const initialBudget = team.initialBudget * 1000;
+  // Budget d'OR : coûts d'EMBAUCHE seuls. Les surcoûts d'avancement se
+  // paient en PSP (pool de construction, SPP de match) — les compter ici
+  // affichait un « Budget restant » négatif sur une équipe construite au
+  // budget exact, et `syncDraftTreasury` ramenait sa trésorerie à 0.
   const totalSpent =
-    breakdown.playersCost +
+    breakdown.playersHireCost +
     starPlayersCost +
     breakdown.staffCost +
     breakdown.rerollsCost +
@@ -136,6 +158,8 @@ export async function buildTeamBudgetSummary(
   return {
     initialBudget,
     playersCost: breakdown.playersCost,
+    playersHireCost: breakdown.playersHireCost,
+    advancementsCost: breakdown.advancementsCost,
     starPlayersCost,
     staffCost: breakdown.staffCost,
     rerollsCost: breakdown.rerollsCost,
@@ -145,6 +169,8 @@ export async function buildTeamBudgetSummary(
     treasury: team.treasury,
     teamValue: breakdown.teamValue,
     currentValue: breakdown.currentValue,
+    unavailablePlayersCost: breakdown.unavailablePlayersCost,
+    cheapLinemenWaived: breakdown.cheapLinemenWaived,
   };
 }
 

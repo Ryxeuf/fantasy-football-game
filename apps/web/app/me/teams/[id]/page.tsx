@@ -12,6 +12,7 @@ import {
   getPlayerCost,
   getDisplayName,
   getRerollCost,
+  SURCHARGE_PER_ADVANCEMENT,
 } from "@bb/game-engine";
 import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-card/card-model";
 import { formatPlusStat } from "../../../lib/format-stats";
@@ -28,6 +29,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
 import { shouldShowTeamLoadError } from "./team-detail-error";
 import { rosterPlayersOf } from "./roster-players";
+import { makePlayerValueResolver } from "./roster-player-value";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
@@ -51,38 +53,22 @@ async function fetchJSON(path: string) {
   return res.json();
 }
 
-// Barème SPP par palier (miroir de packages/game-engine advancements.ts) pour
-// afficher les PSP dépensés au build sur la fiche d'équipe.
-const ADVANCEMENT_PSP_COSTS: Record<string, number[]> = {
-  primary: [6, 8, 12, 16, 20, 30],
-  secondary: [10, 12, 16, 20, 24, 34],
-  "random-primary": [3, 4, 6, 8, 10, 15],
-  characteristic: [14, 16, 20, 24, 28, 38],
-};
-
-/** PSP dépensés par un joueur (somme des paliers de ses advancements). */
-function pspSpentForPlayer(advancementsJson: unknown): number {
-  if (typeof advancementsJson !== "string") return 0;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(advancementsJson);
-  } catch {
-    return 0;
-  }
-  if (!Array.isArray(parsed)) return 0;
-  return parsed.reduce((sum: number, adv: any, index: number) => {
-    const table = ADVANCEMENT_PSP_COSTS[adv?.type];
-    return sum + (table ? table[Math.min(index, table.length - 1)] : 0);
-  }, 0);
-}
-
-/** PSP dépensés par toute l'équipe. */
-function pspSpentForTeam(players: unknown): number {
-  if (!Array.isArray(players)) return 0;
-  return players.reduce(
-    (sum: number, p: any) => sum + pspSpentForPlayer(p?.advancements),
-    0,
-  );
+/**
+ * État du pool de PSP de construction, calculé par le serveur
+ * (`GET /team/:id`).
+ *
+ * La fiche re-dérivait ces chiffres avec un miroir du barème standard
+ * BB2025, indexé par le rang de l'amélioration. Sous un règlement de
+ * tournoi qui facture le sien (NAF World Cup : 1re/2e compétence ×
+ * primaire/secondaire + surcoût Élite), elle annonçait donc 54 PSP dépensés
+ * là où l'équipe en avait consommé 66 — et 12 PSP « disponibles » qui
+ * n'existaient pas. Un seul comptable désormais : le serveur, qui lit le
+ * coût réellement payé (`pspCost`).
+ */
+interface TeamPspPoolView {
+  readonly pool: number;
+  readonly spent: number;
+  readonly remaining: number;
 }
 
 /**
@@ -92,6 +78,14 @@ function pspSpentForTeam(players: unknown): number {
 interface TeamBudgetSummary {
   readonly initialBudget: number;
   readonly playersCost: number;
+  /**
+   * Coût d'EMBAUCHE seul des joueurs — la part payée en or. Optionnel pour
+   * rétro-compat avec un serveur pré-correctif (cf. « Backwards-compat sur
+   * champs API ajoutes ») ; à défaut on retombe sur `playersCost`.
+   */
+  readonly playersHireCost?: number;
+  /** Surcoûts d'avancement (po), payés en PSP et non en or. */
+  readonly advancementsCost?: number;
   readonly starPlayersCost: number;
   readonly staffCost: number;
   readonly rerollsCost: number;
@@ -101,6 +95,10 @@ interface TeamBudgetSummary {
   readonly treasury: number;
   readonly teamValue: number;
   readonly currentValue: number;
+  /** Valeur des joueurs indisponibles au prochain match (VE − VEA). */
+  readonly unavailablePlayersCost?: number;
+  /** Embauches annulées dans la VEA par « Trois-quarts à vil prix ». */
+  readonly cheapLinemenWaived?: number;
 }
 
 /** Formatte un montant en po vers l'affichage compact « 1 000K po ». */
@@ -135,12 +133,16 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
   const dedicatedFansCost =
     Math.max(0, (team?.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 5000);
   const initialBudget = (team?.initialBudget || 0) * 1000;
+  // `playersCost` du repli est déjà un coût d'embauche (le calcul local
+  // n'ajoute aucun surcoût d'avancement) : les deux postes coïncident donc.
   const totalSpent =
     playersCost + starPlayersCost + staffCost + rerollsCost + dedicatedFansCost;
 
   return {
     initialBudget,
     playersCost,
+    playersHireCost: playersCost,
+    advancementsCost: 0,
     starPlayersCost,
     staffCost,
     rerollsCost,
@@ -150,6 +152,8 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
     treasury: team?.treasury ?? 0,
     teamValue: team?.teamValue ?? 0,
     currentValue: team?.currentValue ?? 0,
+    unavailablePlayersCost: 0,
+    cheapLinemenWaived: 0,
   };
 }
 
@@ -356,6 +360,7 @@ export default function TeamDetailPage() {
         userName,
         language,
         { positionName: positionResolvers.displayName, rosterName },
+        playerValuePo,
       );
       setExportMenuOpen(false);
     } catch (error) {
@@ -397,7 +402,10 @@ export default function TeamDetailPage() {
   const handleExportPlayerCard = (p: any, download: boolean) => {
     if (!team) return;
     trackUmamiEvent(UMAMI_EVENTS.CARD_EXPORT, { kind: "team", download });
-    const cost = positionResolvers.costPo(p.position, team.roster);
+    // Valeur du joueur (embauche + augmentations), comme la colonne « Coût »
+    // et comme la VE — une carte qui annonce le tarif de recrue d'un joueur
+    // deux fois amélioré est fausse.
+    const cost = playerValuePo(p);
     const cardData = buildTeamPlayerCardData(
       {
         name: p.name,
@@ -504,6 +512,22 @@ export default function TeamDetailPage() {
   const budget: TeamBudgetSummary = useMemo(
     () => resolveBudgetSummary(team),
     [team],
+  );
+  /**
+   * Valeur affichée d'un joueur : celle calculée par le serveur (mêmes
+   * coûts de poste, mêmes surcoûts Élite et même barème que la VE), avec
+   * repli local sur « embauche + surcoûts standards » tant qu'un serveur
+   * pré-correctif ne sert pas `playerValues` (cf. module dédié).
+   */
+  const playerValuePo = useMemo(
+    () =>
+      makePlayerValueResolver({
+        served: team?.playerValues,
+        hireCostOf: (position: string) =>
+          positionResolvers.costPo(position, team?.roster),
+        surchargeByType: SURCHARGE_PER_ADVANCEMENT,
+      }),
+    [team, positionResolvers],
   );
   /** Composition affichée : les joueurs encore au roster (cf. module). */
   const rosterPlayers: any[] = useMemo(
@@ -756,12 +780,34 @@ export default function TeamDetailPage() {
                     {kpo(budget.initialBudget)}
                   </div>
                 </div>
-                <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
-                  <div className="text-xs sm:text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
-                  <div className="text-xl sm:text-2xl font-bold text-green-900" data-testid="budget-players-cost">
-                    {kpo(budget.playersCost + budget.starPlayersCost)}
-                  </div>
-                </div>
+                {(() => {
+                  // « Coût actuel » se lit à côté de « Budget initial » et de
+                  // « Budget restant » : c'est donc l'OR engagé sur les
+                  // joueurs. Y compter les surcoûts d'avancement — payés en
+                  // PSP — donnait un coût supérieur au budget sur une équipe
+                  // pourtant construite au budget exact.
+                  const hireCost = budget.playersHireCost ?? budget.playersCost;
+                  const advancements = budget.advancementsCost ?? 0;
+                  return (
+                    <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
+                      <div className="text-xs sm:text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-green-900" data-testid="budget-players-cost">
+                        {kpo(hireCost + budget.starPlayersCost)}
+                      </div>
+                      {advancements > 0 ? (
+                        <div
+                          className="mt-1 text-[11px] text-green-700"
+                          data-testid="budget-advancements-cost"
+                        >
+                          {t.teams.advancementsNotInBudget.replace(
+                            "{amount}",
+                            kpo(advancements),
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })()}
                 <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg border border-purple-200">
                   <div className="text-xs sm:text-sm text-purple-600 font-medium">{t.teams.teamValue}</div>
                   <div className="text-xl sm:text-2xl font-bold text-purple-900" data-testid="budget-team-value">
@@ -795,9 +841,15 @@ export default function TeamDetailPage() {
                   seulement si un pool a été alloué à la construction. */}
               {(team.startingPspPool ?? 0) > 0 &&
                 (() => {
-                  const pool = team.startingPspPool ?? 0;
-                  const spent = pspSpentForTeam(team.players);
-                  const available = Math.max(0, pool - spent);
+                  // Comptabilité SERVEUR (`pspPool`) : elle lit le coût
+                  // réellement payé et applique le barème du règlement de
+                  // tournoi. Repli sur le pool brut si un serveur
+                  // pré-correctif ne sert pas le champ.
+                  const served = team.pspPool as TeamPspPoolView | undefined;
+                  const pool = served?.pool ?? team.startingPspPool ?? 0;
+                  const spent = served?.spent ?? 0;
+                  const available =
+                    served?.remaining ?? Math.max(0, pool - spent);
                   return (
                     <div
                       className="mt-3 sm:mt-4 grid grid-cols-3 gap-3 sm:gap-4"
@@ -845,6 +897,58 @@ export default function TeamDetailPage() {
                 <p><strong>{t.teams.teamValue}</strong> : {t.teams.teamValueDesc}</p>
                 <p><strong>{t.teams.remainingBudget}</strong> : {t.teams.remainingBudgetDesc}</p>
               </div>
+              {/* Contrôle du budget de construction : ligne à ligne, pour
+                  qu'un « Coût actuel » et un « Budget restant » ne soient
+                  jamais deux chiffres sans lien visible. */}
+              <details
+                className="mt-3 text-xs text-gray-600"
+                data-testid="budget-gold-details"
+              >
+                <summary className="cursor-pointer font-medium text-gray-700">
+                  {t.teams.goldBreakdownTitle}
+                </summary>
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between">
+                    <span>{t.teams.goldPlayersHire}</span>
+                    <span className="font-mono">
+                      {kpo(budget.playersHireCost ?? budget.playersCost)}
+                    </span>
+                  </div>
+                  {budget.starPlayersCost > 0 ? (
+                    <div className="flex justify-between">
+                      <span>{t.teams.starPlayersCostLabel}</span>
+                      <span className="font-mono">{kpo(budget.starPlayersCost)}</span>
+                    </div>
+                  ) : null}
+                  <div className="flex justify-between">
+                    <span>{t.teams.staffRerollsLabel}</span>
+                    <span className="font-mono">
+                      {kpo(budget.staffCost + budget.rerollsCost)}
+                    </span>
+                  </div>
+                  {budget.dedicatedFansCost > 0 ? (
+                    <div className="flex justify-between">
+                      <span>{t.teams.goldDedicatedFans}</span>
+                      <span className="font-mono">{kpo(budget.dedicatedFansCost)}</span>
+                    </div>
+                  ) : null}
+                  <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold">
+                    <span>{t.teams.goldTotalSpent}</span>
+                    <span className="font-mono" data-testid="budget-total-spent">
+                      {kpo(budget.totalSpent)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{t.teams.goldLeftover}</span>
+                    <span className="font-mono" data-testid="budget-leftover">
+                      {kpo(budget.remaining)}
+                    </span>
+                  </div>
+                  <p className="pt-1 text-[11px] text-gray-500">
+                    {t.teams.goldBreakdownHint}
+                  </p>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -984,8 +1088,11 @@ export default function TeamDetailPage() {
                           className="mt-1"
                         />
                       </td>
-                      <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">
-                        {Math.round(positionResolvers.costPo(p.position, team.roster) / 1000)}{t.teams.kpo}
+                      <td
+                        className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm"
+                        data-testid={`roster-player-value-${p.number}`}
+                      >
+                        {Math.round(playerValuePo(p) / 1000)}{t.teams.kpo}
                       </td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.ma}</td>
                       <td className="p-3 sm:p-4 text-center font-mono text-xs sm:text-sm">{p.st}</td>
@@ -1090,8 +1197,11 @@ export default function TeamDetailPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-xs text-gray-500">{t.teams.tableCost}</div>
-                        <div className="font-mono text-sm font-semibold">
-                          {Math.round(positionResolvers.costPo(p.position, team.roster) / 1000)}{t.teams.kpo}
+                        <div
+                          className="font-mono text-sm font-semibold"
+                          data-testid={`roster-player-value-mobile-${p.number}`}
+                        >
+                          {Math.round(playerValuePo(p) / 1000)}{t.teams.kpo}
                         </div>
                         {p.dead || p.firedAt ? (
                           <button
@@ -1300,6 +1410,14 @@ export default function TeamDetailPage() {
             staffConfig: team.staffConfig,
             playersCost: budget.playersCost,
             starPlayersCost: budget.starPlayersCost,
+            // Postes servis par le serveur : le panneau les AFFICHE au lieu
+            // de les re-dériver, pour que « Coûts détaillés », « Coût total »
+            // et « Résumé global » ne puissent plus diverger entre eux.
+            staffCost: budget.staffCost,
+            rerollsCost: budget.rerollsCost,
+            dedicatedFansCost: budget.dedicatedFansCost,
+            unavailablePlayersCost: budget.unavailablePlayersCost,
+            cheapLinemenWaived: budget.cheapLinemenWaived,
           }}
         />
         </>

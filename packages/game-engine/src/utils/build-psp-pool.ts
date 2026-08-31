@@ -14,7 +14,14 @@
  *
  * Rétro-compat : une amélioration sans `fundedBy` est comptée comme
  * financée par le pool (c'est ce que l'ancien affichage supposait), et son
- * coût retombe sur le barème standard indexé par son rang.
+ * coût retombe sur `fallbackCost` — le barème standard par défaut.
+ *
+ * `fallbackCost` existe parce que `prisma/migrations/` est gitignoré ici
+ * (prod = `db push`) : AUCUN backfill n'est possible sur les améliorations
+ * déjà écrites sans `pspCost`. Le seul rattrapage possible est donc à la
+ * LECTURE, et il doit pouvoir appliquer le barème du règlement de tournoi
+ * de l'équipe — sinon une équipe Ogre NAF WC 2027 s'affiche à 54/66 PSP
+ * dépensés là où elle a réellement consommé tout son pool.
  */
 
 import type { AdvancementType } from './advancements';
@@ -40,29 +47,50 @@ export interface PoolFundedAdvancement {
 }
 
 /**
- * Coût PSP d'une amélioration à son rang `index` (0 = première), tel qu'il
- * a été payé. Retombe sur le barème standard pour les enregistrements
- * historiques qui ne portent pas leur coût.
+ * Barème de repli pour une amélioration qui ne porte pas son coût payé.
+ * Reçoit l'amélioration et son rang (0 = première) dans la liste du joueur.
  */
-export function advancementPspCost(
+export type FallbackPspCost = (
+  adv: PoolFundedAdvancement,
+  index: number,
+) => number;
+
+/** Barème standard BB2025 indexé par rang — repli par défaut. */
+export function standardPspCost(
   adv: PoolFundedAdvancement,
   index: number,
 ): number {
-  if (typeof adv.pspCost === 'number' && Number.isFinite(adv.pspCost)) {
-    return Math.max(0, adv.pspCost);
-  }
   const table = STANDARD_PSP_COSTS[adv.type];
   if (!table) return 0;
   return table[Math.min(Math.max(index, 0), table.length - 1)];
 }
 
+/**
+ * Coût PSP d'une amélioration à son rang `index` (0 = première), tel qu'il
+ * a été payé. Retombe sur `fallbackCost` (barème standard par défaut) pour
+ * les enregistrements historiques qui ne portent pas leur coût.
+ */
+export function advancementPspCost(
+  adv: PoolFundedAdvancement,
+  index: number,
+  fallbackCost: FallbackPspCost = standardPspCost,
+): number {
+  if (typeof adv.pspCost === 'number' && Number.isFinite(adv.pspCost)) {
+    return Math.max(0, adv.pspCost);
+  }
+  return Math.max(0, fallbackCost(adv, index));
+}
+
 /** PSP prélevés sur le POOL par les améliorations d'un joueur. */
 export function poolSpentForPlayer(
   advancements: readonly PoolFundedAdvancement[],
+  fallbackCost: FallbackPspCost = standardPspCost,
 ): number {
   return advancements.reduce(
     (sum, adv, index) =>
-      adv.fundedBy === 'player' ? sum : sum + advancementPspCost(adv, index),
+      adv.fundedBy === 'player'
+        ? sum
+        : sum + advancementPspCost(adv, index, fallbackCost),
     0,
   );
 }
@@ -70,9 +98,10 @@ export function poolSpentForPlayer(
 /** PSP prélevés sur le pool par toute l'équipe. */
 export function poolSpentForTeam(
   playersAdvancements: readonly (readonly PoolFundedAdvancement[])[],
+  fallbackCost: FallbackPspCost = standardPspCost,
 ): number {
   return playersAdvancements.reduce(
-    (sum, advancements) => sum + poolSpentForPlayer(advancements),
+    (sum, advancements) => sum + poolSpentForPlayer(advancements, fallbackCost),
     0,
   );
 }

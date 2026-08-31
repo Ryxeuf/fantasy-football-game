@@ -40,15 +40,36 @@ describe("TeamInfoDisplay — titre de section", () => {
     expect(screen.queryByText("Informations de l'équipe")).toBeNull();
   });
 
-  it("n'affiche plus de ligne de coût pour les fans dévoués", () => {
+  it("sort les fans dévoués du total staff, mais dit ce qu'ils ont coûté", () => {
     render(
       <LanguageProvider>
-        <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 3 }} />
+        <TeamInfoDisplay
+          info={{ ...INFO, dedicatedFans: 3, dedicatedFansCost: 10_000 }}
+        />
       </LanguageProvider>,
     );
-    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA : la
-    // ligne de coût a disparu du détail des coûts.
+    // Les fans dévoués ne comptent ni dans la VE ni dans la VEA : ils ne
+    // sont plus dans le total (ancien testid retiré)…
     expect(screen.queryByTestId("dedicated-fans-cost")).toBeNull();
+    // …mais l'or dépensé pour eux reste affiché, hors total, sinon il
+    // manque au budget sans explication.
+    expect(
+      normalizeSpaces(
+        screen.getByTestId("staff-dedicated-fans-cost").textContent,
+      ),
+    ).toBe("10K po");
+    expect(
+      normalizeSpaces(screen.getByTestId("staff-rerolls-cost").textContent),
+    ).toBe("170K po");
+  });
+
+  it("n'affiche aucune ligne fans quand le premier (offert) est le seul", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 1 }} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByTestId("staff-dedicated-fans-cost")).toBeNull();
   });
 
   it("le total staff & relances ignore les fans dévoués", () => {
@@ -177,5 +198,149 @@ describe("TeamInfoDisplay — coût des Star Players", () => {
     );
 
     expect(screen.queryByTestId("staff-star-players-cost")).toBeNull();
+  });
+});
+
+/**
+ * Écart VE → VEA.
+ *
+ * Cas remonté : une équipe Ogre qui n'a joué AUCUN match affichait
+ * VE 1 415K / VEA 1 265K sans la moindre explication. L'écart vient
+ * entièrement de « Trois-quarts à vil prix », qui annule le Coût
+ * d'Embauche des Trois-quarts dans la VEA. La carte doit le dire.
+ */
+describe("TeamInfoDisplay — écart VE / VEA", () => {
+  const OGRE = {
+    ...INFO,
+    teamValue: 1_415_000,
+    currentValue: 1_265_000,
+    roster: "ogre",
+    playersCost: 1_235_000,
+    staffCost: 40_000,
+    rerollsCost: 140_000,
+  };
+
+  it("chiffre l'exonération « Trois-quarts à vil prix »", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={{ ...OGRE, cheapLinemenWaived: 150_000 }} />
+      </LanguageProvider>,
+    );
+
+    expect(
+      normalizeSpaces(screen.getByTestId("tv-ctv-cheap-linemen").textContent),
+    ).toBe("−150K po");
+    expect(screen.getByText("Pourquoi la VEA diffère de la VE")).toBeTruthy();
+    // La règle est nommée, pas seulement chiffrée.
+    expect(
+      screen.getByText(/Trois-quarts à vil prix/),
+    ).toBeTruthy();
+  });
+
+  it("chiffre les joueurs indisponibles au prochain match", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay
+          info={{ ...OGRE, currentValue: 1_325_000, unavailablePlayersCost: 90_000 }}
+        />
+      </LanguageProvider>,
+    );
+
+    expect(
+      normalizeSpaces(screen.getByTestId("tv-ctv-unavailable").textContent),
+    ).toBe("−90K po");
+    expect(screen.queryByTestId("tv-ctv-cheap-linemen")).toBeNull();
+  });
+
+  it("affiche les deux postes quand ils se cumulent", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay
+          info={{
+            ...OGRE,
+            currentValue: 1_175_000,
+            cheapLinemenWaived: 150_000,
+            unavailablePlayersCost: 90_000,
+          }}
+        />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByTestId("tv-ctv-cheap-linemen")).toBeTruthy();
+    expect(screen.getByTestId("tv-ctv-unavailable")).toBeTruthy();
+  });
+
+  it("masque le bloc quand VEA et VE ne sont séparées par rien", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay
+          info={{
+            ...OGRE,
+            currentValue: OGRE.teamValue,
+            cheapLinemenWaived: 0,
+            unavailablePlayersCost: 0,
+          }}
+        />
+      </LanguageProvider>,
+    );
+
+    expect(screen.queryByTestId("tv-ctv-gap")).toBeNull();
+  });
+
+  it("reste muet pour un serveur pré-correctif (champs absents)", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={OGRE} />
+      </LanguageProvider>,
+    );
+
+    // Pas d'explication inventée faute de données : mieux vaut rien
+    // qu'un chiffre faux.
+    expect(screen.queryByTestId("tv-ctv-gap")).toBeNull();
+  });
+});
+
+/**
+ * Le « Résumé global des coûts » totalise la VE. Ses lignes doivent donc
+ * s'additionner exactement à la VE affichée juste en dessous — c'est le
+ * bloc dont les chiffres étaient jugés « flous et erronés ».
+ */
+describe("TeamInfoDisplay — résumé global cohérent", () => {
+  it("fait tomber joueurs + staff + relances exactement sur la VE", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay
+          info={{
+            ...INFO,
+            teamValue: 1_415_000,
+            currentValue: 1_265_000,
+            playersCost: 1_235_000,
+            // Config staff volontairement DIFFÉRENTE des défauts du roster :
+            // sans les postes serveur, la re-dérivation locale ferait dériver
+            // le total du bloc et l'addition ne tomberait plus sur la VE.
+            staffCost: 40_000,
+            rerollsCost: 140_000,
+            cheapLinemenWaived: 150_000,
+          }}
+        />
+      </LanguageProvider>,
+    );
+
+    const players = normalizeSpaces(
+      screen.getByTestId("staff-players-cost").textContent,
+    );
+    const staff = normalizeSpaces(
+      screen.getByTestId("staff-rerolls-cost").textContent,
+    );
+    const ve = normalizeSpaces(screen.getByTestId("global-ve-total").textContent);
+    const vea = normalizeSpaces(
+      screen.getByTestId("global-vea-total").textContent,
+    );
+
+    expect(players).toBe("1 235K po");
+    expect(staff).toBe("180K po");
+    // 1 235K + 180K = 1 415K : l'addition tombe juste.
+    expect(ve).toBe("1 415K po");
+    expect(vea).toBe("1 265K po");
   });
 });

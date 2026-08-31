@@ -5,6 +5,7 @@ import {
   poolSpentForTeam,
   poolRemaining,
   parseAdvancements,
+  type FallbackPspCost,
 } from './build-psp-pool';
 
 describe('advancementPspCost', () => {
@@ -86,5 +87,109 @@ describe('parseAdvancements', () => {
     expect(parseAdvancements([{ foo: 1 }, { type: 'primary' }])).toEqual([
       { type: 'primary' },
     ]);
+  });
+});
+
+/**
+ * Barème de repli injectable — rattrapage à la LECTURE des améliorations
+ * écrites avant que `pspCost` ne soit persisté.
+ *
+ * `prisma/migrations/` est gitignoré (prod = `db push`) : ces lignes ne
+ * peuvent pas être backfillées. Sous un règlement de tournoi, le barème
+ * standard les sous-compte — cas prod Ogres NAF WC 2027 : 54 PSP affichés
+ * pour 66 réellement dépensés, donc 12 PSP fantômes réputés disponibles.
+ */
+describe("poolSpentForTeam — barème de repli injectable", () => {
+  /** Barème NAF WC 2027 : 6/8 primaire, 10/12 secondaire, +2 si Élite. */
+  const NAF_ELITE = new Set(["guard", "block"]);
+  const nafCost: FallbackPspCost = (adv, index) => {
+    const base =
+      index <= 0
+        ? adv.type === "primary"
+          ? 6
+          : 10
+        : adv.type === "primary"
+          ? 8
+          : 12;
+    const slug = (adv as { skillSlug?: string }).skillSlug;
+    return base + (slug && NAF_ELITE.has(slug) ? 2 : 0);
+  };
+
+  it("applique le barème standard par défaut", () => {
+    const spent = poolSpentForTeam([
+      [
+        { type: "primary", skillSlug: "guard" },
+        { type: "secondary", skillSlug: "block" },
+      ],
+    ]);
+
+    // Barème standard indexé par rang : 6 puis 12.
+    expect(spent).toBe(18);
+  });
+
+  it("applique le barème du règlement quand il est injecté", () => {
+    const spent = poolSpentForTeam(
+      [
+        [
+          { type: "primary", skillSlug: "guard" },
+          { type: "secondary", skillSlug: "block" },
+        ],
+      ],
+      nafCost,
+    );
+
+    // Garde primaire Élite = 6 + 2 ; Blocage secondaire Élite = 12 + 2.
+    expect(spent).toBe(22);
+  });
+
+  it("reconstitue les 66 PSP de l'équipe Ogre remontée (54 avec le barème standard)", () => {
+    // 1 Ogre à 2 compétences Élite (8 + 14), 4 Ogres Garde Élite (8),
+    // 1 Bagarreur non Élite (6), 1 Joueur Déloyal non Élite (6).
+    const team = [
+      [
+        { type: "primary", skillSlug: "guard" },
+        { type: "secondary", skillSlug: "block" },
+      ],
+      ...Array.from({ length: 4 }, () => [
+        { type: "primary", skillSlug: "guard" },
+      ]),
+      [{ type: "primary", skillSlug: "brawler" }],
+      [{ type: "primary", skillSlug: "dirty-player" }],
+    ];
+
+    expect(poolSpentForTeam(team, nafCost)).toBe(66);
+    // Le chiffre erroné qui s'affichait sur la fiche d'équipe.
+    expect(poolSpentForTeam(team)).toBe(54);
+  });
+
+  it("préfère TOUJOURS le coût persisté au barème de repli", () => {
+    const spent = poolSpentForTeam(
+      [[{ type: "primary", skillSlug: "guard", pspCost: 8, fundedBy: "pool" }]],
+      // Repli volontairement absurde : il ne doit jamais être consulté.
+      () => 999,
+    );
+
+    expect(spent).toBe(8);
+  });
+
+  it("ignore les améliorations financées par les SPP du joueur", () => {
+    const spent = poolSpentForTeam(
+      [
+        [
+          { type: "primary", skillSlug: "guard", fundedBy: "player" },
+          { type: "primary", skillSlug: "block", fundedBy: "pool" },
+        ],
+      ],
+      nafCost,
+    );
+
+    // Seule la seconde compte, à son rang réel (index 1) : 8 + 2 d'Élite.
+    expect(spent).toBe(10);
+  });
+
+  it("ne renvoie jamais un coût négatif depuis un repli fautif", () => {
+    expect(
+      poolSpentForTeam([[{ type: "primary" }]], () => -50),
+    ).toBe(0);
   });
 });

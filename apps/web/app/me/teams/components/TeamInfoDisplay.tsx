@@ -28,6 +28,24 @@ interface TeamInfo {
    * une ligne à part dans le résumé, qui n'entre pas dans le total VE.
    */
   starPlayersCost?: number;
+  /** Cheerleaders + assistants + apothicaire (po), calculés par le serveur. */
+  staffCost?: number;
+  /** Relances d'équipe (po), calculées par le serveur. */
+  rerollsCost?: number;
+  /**
+   * Fans dévoués ACHETÉS (le premier est offert). Payés en or mais hors
+   * VE/VEA : la carte les listait comme un effectif sans jamais dire ce
+   * qu'ils avaient coûté, ni pourquoi ils manquaient au total staff.
+   */
+  dedicatedFansCost?: number;
+  /** Valeur des joueurs indisponibles au prochain match (VE − VEA). */
+  unavailablePlayersCost?: number;
+  /**
+   * Coût d'embauche annulé dans la VEA par « Trois-quarts à vil prix ».
+   * C'est la seule explication possible d'une VEA inférieure à la VE sur une
+   * équipe qui n'a joué aucun match — encore faut-il l'afficher.
+   */
+  cheapLinemenWaived?: number;
 }
 
 interface TeamInfoDisplayProps {
@@ -45,11 +63,20 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
   const apothecaryCost = info.staffConfig?.apothecaryCost ?? 50000;
   // Les Fans Dévoués ne comptent ni dans la VE ni dans la VEA : leur achat
   // coûte de la trésorerie mais leur valeur n'entre pas dans le total staff.
-  const staffRerollsCost =
-    info.rerolls * rerollCost +
+  //
+  // Postes SERVIS par le serveur quand ils sont disponibles : la carte les
+  // re-dérivait, et le moindre écart de config staff faisait mentir le
+  // « Résumé global » (dont le total est censé être exactement la VE).
+  const rerollsCost = info.rerollsCost ?? info.rerolls * rerollCost;
+  const staffOnlyCost =
+    info.staffCost ??
     info.cheerleaders * cheerleaderCost +
-    info.assistants * assistantCost +
-    (info.apothecary ? apothecaryCost : 0);
+      info.assistants * assistantCost +
+      (info.apothecary ? apothecaryCost : 0);
+  const staffRerollsCost = staffOnlyCost + rerollsCost;
+  const dedicatedFansCost = info.dedicatedFansCost ?? 0;
+  const unavailablePlayersCost = info.unavailablePlayersCost ?? 0;
+  const cheapLinemenWaived = info.cheapLinemenWaived ?? 0;
 
   // Tous les montants de la carte s'affichent en kpo (« 50K po ») pour
   // rester compacts — même convention que le reste de la fiche équipe.
@@ -137,7 +164,7 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.rerollsCost.replace("{count}", info.rerolls.toString()).replace("{cost}", formatKpo(rerollCost))}</span>
-              <span className="font-mono">{formatKpo(info.rerolls * rerollCost)}</span>
+              <span className="font-mono">{formatKpo(rerollsCost)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t.teams.cheerleadersCost.replace("{count}", info.cheerleaders.toString())}</span>
@@ -153,10 +180,35 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
             </div>
             <div className="border-t border-gray-300 pt-2 flex justify-between font-semibold">
               <span className="text-gray-700">{t.teams.totalStaffRerolls}</span>
-              <span className="font-mono">
+              <span className="font-mono" data-testid="staff-rerolls-cost">
                 {formatKpo(staffRerollsCost)}
               </span>
             </div>
+            {/* Fans dévoués : payés en or, HORS VE/VEA. Affichés APRÈS le
+                total (ils n'en font pas partie) — absents de ce bloc, ils
+                creusaient un écart inexpliqué entre le budget dépensé et le
+                total staff. */}
+            {info.dedicatedFans > 1 ? (
+              <>
+                <div className="flex justify-between text-gray-500">
+                  <span>
+                    {t.teams.dedicatedFansCost.replace(
+                      "{count}",
+                      Math.max(0, info.dedicatedFans - 1).toString(),
+                    )}
+                  </span>
+                  <span
+                    className="font-mono"
+                    data-testid="staff-dedicated-fans-cost"
+                  >
+                    {formatKpo(dedicatedFansCost)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500">
+                  {t.teams.dedicatedFansOutOfTvHint}
+                </p>
+              </>
+            ) : null}
           </div>
         </div>
 
@@ -176,6 +228,47 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
                 {formatKpo(info.currentValue)}
               </span>
             </div>
+            {/* Écart VE → VEA, poste par poste.
+                Une VEA inférieure à la VE sur une équipe qui n'a joué aucun
+                match n'a que deux causes possibles : des joueurs
+                indisponibles, ou « Trois-quarts à vil prix » qui annule leur
+                coût d'embauche. Sans ces deux lignes, l'écart passe pour une
+                erreur de calcul — c'est exactement ce qui a été remonté. */}
+            {unavailablePlayersCost > 0 || cheapLinemenWaived > 0 ? (
+              <div
+                className="mt-2 space-y-1 rounded border border-blue-200 bg-white/60 p-2 text-xs text-blue-800"
+                data-testid="tv-ctv-gap"
+              >
+                <p className="font-semibold">{t.teams.veaGapTitle}</p>
+                {cheapLinemenWaived > 0 ? (
+                  <div className="flex justify-between gap-2">
+                    <span>{t.teams.veaGapCheapLinemen}</span>
+                    <span
+                      className="font-mono whitespace-nowrap"
+                      data-testid="tv-ctv-cheap-linemen"
+                    >
+                      −{formatKpo(cheapLinemenWaived)}
+                    </span>
+                  </div>
+                ) : null}
+                {unavailablePlayersCost > 0 ? (
+                  <div className="flex justify-between gap-2">
+                    <span>{t.teams.veaGapUnavailable}</span>
+                    <span
+                      className="font-mono whitespace-nowrap"
+                      data-testid="tv-ctv-unavailable"
+                    >
+                      −{formatKpo(unavailablePlayersCost)}
+                    </span>
+                  </div>
+                ) : null}
+                {cheapLinemenWaived > 0 ? (
+                  <p className="pt-1 text-[11px] text-blue-700">
+                    {t.teams.veaGapCheapLinemenHint}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
             <div className="mt-3 pt-2 border-t border-blue-300">
               <div className="text-xs text-blue-600">
                 <p><strong>{t.teams.veShort}</strong> : {t.teams.veDescription}</p>
@@ -231,16 +324,29 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
                   <div className="border-t border-green-300 pt-2 mt-2">
                     <div className="flex justify-between font-bold">
                       <span className="text-green-800">{t.teams.veTotal}</span>
-                      <span className="font-mono text-green-900">
+                      <span
+                        className="font-mono text-green-900"
+                        data-testid="global-ve-total"
+                      >
                         {formatKpo(info.teamValue)}
                       </span>
                     </div>
                     <div className="flex justify-between font-bold">
                       <span className="text-green-800">{t.teams.veaTotal}</span>
-                      <span className="font-mono text-green-900">
+                      <span
+                        className="font-mono text-green-900"
+                        data-testid="global-vea-total"
+                      >
                         {formatKpo(info.currentValue)}
                       </span>
                     </div>
+                    {/* Ce bloc totalise la VE : les Star Players et les fans
+                        dévoués sont payés en or mais n'y entrent pas. Le dire
+                        ici évite de chercher pourquoi l'addition « ne tombe
+                        pas juste ». */}
+                    <p className="pt-2 text-[11px] text-green-700">
+                      {t.teams.globalCostSummaryHint}
+                    </p>
                   </div>
                 </>
               );

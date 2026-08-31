@@ -453,11 +453,13 @@ export {
 // Comptabilité du pool de PSP de construction (édition avancée / coupes)
 export {
   advancementPspCost,
+  standardPspCost,
   poolSpentForPlayer,
   poolSpentForTeam,
   poolRemaining,
   parseAdvancements,
   type AdvancementFunding,
+  type FallbackPspCost,
   type PoolFundedAdvancement,
 } from './utils/build-psp-pool';
 

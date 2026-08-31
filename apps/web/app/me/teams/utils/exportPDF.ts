@@ -88,7 +88,18 @@ export async function exportTeamToPDF(
   coachName?: string,
   language: 'fr' | 'en' = 'fr',
   labels?: PdfLabelResolvers,
+  /**
+   * Valeur d'un joueur (embauche + augmentations), pour la colonne « Valeur
+   * actuelle ». Elle recopiait le coût d'embauche : un joueur augmenté de
+   * deux compétences y valait son tarif de recrue. Absent ⇒ ancien
+   * comportement (les deux colonnes coïncident).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  getPlayerValue?: (player: any) => number,
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const playerValue = (player: any): number =>
+    getPlayerValue?.(player) ?? getPlayerCost(player.position, team.roster);
   const positionName = (position: string): string =>
     labels?.positionName?.(position) || getDisplayName(position);
   const rosterLabel = labels?.rosterName || getRosterDisplayName(team.roster);
@@ -191,7 +202,7 @@ export async function exportTeamToPDF(
         '', // RPM
         '', // BP
         '', // RC
-        `${Math.round(getPlayerCost(player.position, team.roster) / 1000)}`, // Valeur actuelle
+        `${Math.round(playerValue(player) / 1000)}`, // Valeur actuelle
       ];
     });
 

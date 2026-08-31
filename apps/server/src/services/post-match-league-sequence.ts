@@ -44,6 +44,7 @@ import {
   rollRandomPrimaryCandidates,
   isRandomSkillCategory,
   type RandomSkillCategoryCode,
+  type AdvancementFunding,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
 import { updateTeamValues } from "../utils/team-values";
@@ -380,6 +381,23 @@ export interface ApplyAdvancementInput {
    * ameliorables. Obligatoire pour type='characteristic'.
    */
   readonly d8?: number;
+  /**
+   * Cout PSP IMPOSE, en remplacement du bareme de l'edition.
+   *
+   * Un reglement de tournoi (NAF World Cup...) facture ses propres paliers
+   * (1re/2e competence x primaire/secondaire + surcout Elite). Sans cet
+   * override, le build creditait le joueur du cout du tournoi puis
+   * `applyAdvancementChoice` ne debitait que le bareme standard : l'ecart
+   * restait en SPP fantomes sur le joueur (12 PSP jamais gagnes sur une
+   * equipe Ogre NAF WC 2027), utilisables ensuite HORS des regles du
+   * tournoi.
+   */
+  readonly pspCostOverride?: number;
+  /**
+   * Source de financement a persister sur l'amelioration. Defaut `player`
+   * (SPP gagnes en match) ; le build depuis le pool passe `pool`.
+   */
+  readonly fundedBy?: AdvancementFunding;
 }
 
 export type RollRandomPrimaryOutcome =
@@ -510,14 +528,25 @@ export async function applyAdvancementChoice(
     return { skipped: true, reason: "max-advancements-reached" };
   }
 
-  // Lot 6.2 — coût PSP au barème de l'édition de l'équipe.
-  const cost = getNextAdvancementPspCost(
-    taken.length,
-    input.type,
-    await loadAdvancementSchedule(
-      (player.team?.ruleset as Ruleset) ?? undefined,
-    ),
-  );
+  // Coût PSP : barème imposé par l'appelant (règlement de tournoi au build)
+  // sinon barème de l'édition de l'équipe (lot 6.2). Le cas imposé DOIT
+  // rester prioritaire, sinon le débit ne solde pas le crédit du pool.
+  const cost =
+    typeof input.pspCostOverride === "number" &&
+    Number.isFinite(input.pspCostOverride) &&
+    input.pspCostOverride >= 0
+      ? Math.round(input.pspCostOverride)
+      : getNextAdvancementPspCost(
+          taken.length,
+          input.type,
+          await loadAdvancementSchedule(
+            (player.team?.ruleset as Ruleset) ?? undefined,
+          ),
+        );
+  // Source du financement, persistée sur l'amélioration : sans elle, la
+  // comptabilité du pool (`poolSpentForTeam`) ne sait pas distinguer un
+  // achat au build d'un avancement gagné en match.
+  const fundedBy: AdvancementFunding = input.fundedBy ?? "player";
   if (player.spp < cost) {
     return {
       skipped: true,
@@ -563,6 +592,8 @@ export async function applyAdvancementChoice(
       d8: roll,
       isRandom: false,
       at: Date.now(),
+      pspCost: cost,
+      fundedBy,
     };
     const updatedAdvancements = [...taken, newAdvancement];
 
@@ -681,6 +712,8 @@ export async function applyAdvancementChoice(
     type: input.type,
     isRandom: input.type === "random-primary",
     at: Date.now(),
+    pspCost: cost,
+    fundedBy,
   };
   const updatedAdvancements = [...taken, newAdvancement];
 

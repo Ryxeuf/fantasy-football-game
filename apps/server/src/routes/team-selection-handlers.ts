@@ -31,6 +31,11 @@ import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
 import { buildTeamBudgetSummary } from '../services/team-budget-summary';
 import { getTeamSpecialRules } from '../services/team-special-rules';
+import {
+  fallbackPspCostForTeam,
+  poolSpentForTeamId,
+} from '../services/team-advancement-editing';
+import { computePlayerValuesFor } from '../utils/team-values';
 import { serverLog } from '../utils/server-log';
 import {
   isAdminRequest,
@@ -293,6 +298,50 @@ export async function handleGetTeamDetail(
       team.starPlayers,
     );
 
+    // État du pool de PSP de construction, calculé ICI et non re-dérivé côté
+    // web : la fiche d'équipe mirroir-ait le barème standard BB2025 et
+    // annonçait 54 PSP dépensés là où un règlement de tournoi en avait
+    // facturé 66 (Ogres NAF WC 2027). Une seule comptabilité, celle du
+    // serveur, qui sait lire `pspCost` et replier sur le barème du pack.
+    const startingPspPool =
+      (team as { startingPspPool?: number }).startingPspPool ?? 0;
+    // Enrichissements d'AFFICHAGE : ils ne doivent jamais priver le coach de
+    // sa fiche d'équipe. Même posture que la persistance de VE fraîche plus
+    // bas — on journalise et on sert la fiche sans le champ, que le web sait
+    // remplacer par son repli.
+    let pspPool: { pool: number; spent: number; remaining: number } | undefined;
+    try {
+      const pspSpent =
+        startingPspPool > 0
+          ? await poolSpentForTeamId(
+              team.id,
+              await fallbackPspCostForTeam(
+                (team as { tournamentRuleset?: string | null })
+                  .tournamentRuleset ?? null,
+                team.ruleset ?? null,
+              ),
+            )
+          : 0;
+      pspPool = {
+        pool: startingPspPool,
+        spent: pspSpent,
+        remaining: Math.max(0, startingPspPool - pspSpent),
+      };
+    } catch (e: unknown) {
+      serverLog.error('[team-detail] etat du pool de PSP', e);
+    }
+
+    // Valeur de chaque joueur (embauche + surcoûts d'avancement), calculée
+    // par la MÊME résolution que la VE. La colonne « Coût » de la fiche
+    // n'affichait que le tarif de recrue : un joueur augmenté de deux
+    // compétences y restait à 140k alors qu'il en valait 230k dans la VE.
+    let playerValues: Record<string, unknown> | undefined;
+    try {
+      playerValues = await computePlayerValuesFor(prisma, team, team.players);
+    } catch (e: unknown) {
+      serverLog.error('[team-detail] valeurs par joueur', e);
+    }
+
     // Auto-réparation : la VE/VEA stockée peut dater d'avant un changement
     // de règle (valeur des compétences Élite, fans dévoués…). On persiste
     // la valeur fraîche dès qu'elle diverge, pour que la fiche d'équipe, la
@@ -324,6 +373,8 @@ export async function handleGetTeamDetail(
         starPlayers: enrichedStarPlayers,
         staffConfig,
         budgetSummary,
+        pspPool,
+        playerValues,
         specialRules,
       },
       currentMatch: selection?.match || null,

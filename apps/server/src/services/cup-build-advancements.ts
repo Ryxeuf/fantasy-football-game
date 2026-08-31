@@ -13,6 +13,14 @@
  * `applyAdvancementChoice` le consomme, le solde `spp` du joueur revient donc
  * à sa valeur initiale (0). Le pool, lui, est décrémenté.
  *
+ * Le crédit et le débit doivent partir du MÊME barème, d'où
+ * `pspCostOverride` : sous un règlement de tournoi (NAF World Cup…), on
+ * créditait le coût du pack (Garde primaire Elite = 8) et le débit retombait
+ * sur le barème standard (6). L'écart restait en SPP fantômes sur le joueur
+ * — 12 PSP jamais gagnés sur une équipe Ogre NAF WC 2027, dépensables ensuite
+ * HORS des règles du tournoi — et le pool s'affichait sous-consommé
+ * (54/66 au lieu de 66/66), faute de `pspCost` persisté.
+ *
  * Chaque advancement est appliqué dans sa propre transaction (celle de
  * `applyAdvancementChoice`). L'atomicité « tout ou rien » du build est assurée
  * par le caller (`handleBuildTeam`), qui supprime l'équipe si une erreur est
@@ -136,6 +144,11 @@ export async function applyCupBuildAdvancements(
         category: adv.category,
         stat: adv.stat,
         d8: adv.d8,
+        // Débit = crédit : le barème du pack fait foi de bout en bout, et
+        // le coût réel est persisté sur l'amélioration (`pspCost`) pour que
+        // la comptabilité du pool ne le re-dérive jamais.
+        pspCostOverride: cost,
+        fundedBy: 'pool',
       });
     } catch (e) {
       await rollbackCredit(adv.playerId, cost);
