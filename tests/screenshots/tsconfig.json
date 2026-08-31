@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@bb/game-engine": ["../../packages/game-engine/src"],
+      "@bb/nfl-mapper": ["../../packages/nfl-mapper/src"],
+      "@bb/shared-types": ["../../packages/shared-types/src"],
+      "@bb/sim-engine": ["../../packages/sim-engine/src"],
+      "@bb/ui": ["../../packages/ui/src"]
+    },
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "noEmit": true
+  },
+  "include": ["*.ts", "*.tsx"]
+}

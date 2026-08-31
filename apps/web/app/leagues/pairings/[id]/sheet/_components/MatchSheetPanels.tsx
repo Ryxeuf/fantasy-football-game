@@ -1590,7 +1590,7 @@ function teamPositions(
  * que le coach voie POURQUOI un poste est indisponible (« 2/2 ») plutot que
  * de le chercher dans une liste ou il a disparu.
  */
-function purchaseOptionLabel(o: {
+export function purchaseOptionLabel(o: {
   name: string;
   cost: number;
   currentCount: number;

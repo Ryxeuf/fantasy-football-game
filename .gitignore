@@ -97,6 +97,12 @@ prisma/migrations/
 *.save
 logs/
 screenshots/
+# ... mais les captures de PREUVE d'une correction, et le harnais qui les
+# genere, sont des livrables : elles sont versionnees. Sans ces deux
+# exceptions, `screenshots/` (qui matche a n'importe quelle profondeur) les
+# avale en silence — `git add -A` ne dit rien, et la PR part sans elles.
+!docs/screenshots/
+!tests/screenshots/
 /data/
 
 # Development tools
