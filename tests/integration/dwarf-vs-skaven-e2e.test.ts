@@ -117,7 +117,9 @@ function drainPendingPopups(initial: GameState, rng: RNG): GameState {
     state.pendingFollowUpChoice
   ) {
     if (++guard > 64) {
-      throw new Error("drainPendingPopups: too many iterations (possible loop)");
+      throw new Error(
+        "drainPendingPopups: too many iterations (possible loop)",
+      );
     }
     if (state.pendingBlock) {
       const opts = state.pendingBlock.options;
@@ -207,16 +209,27 @@ describe("Règle: Match complet Nains vs Skaven sans divergence de règles", () 
     const onField = game.players.filter((p) => p.pos.x >= 0 && p.pos.y >= 0);
     expect(onField).toHaveLength(22);
 
-    // Les stats du roster sont préservées après tout le flux de pré-match
+    // Les stats du roster sont préservées après tout le flux de pré-match.
+    // Le poste est cherché par le libellé du ROSTER (`buildRosterPlayers`
+    // recopie `displayName`) et non par un nom anglais en dur : « Blocker »
+    // ne désignait plus rien depuis la francisation des postes, donc la
+    // recherche rendait `undefined` et l'assertion ne testait plus rien.
+    const dwarfLinemanName = TEAM_ROSTERS.dwarf.positions[0].displayName;
     const nainBlocker = game.players.find(
-      (p) => p.team === "A" && p.position.includes("Blocker"),
+      (p) => p.team === "A" && p.position === dwarfLinemanName,
     );
+    expect(nainBlocker, `poste introuvable : ${dwarfLinemanName}`).toBeTruthy();
     expect(nainBlocker?.av).toBe(10);
     expect(nainBlocker?.skills).toContain("block");
 
+    const skavenLinemanName = TEAM_ROSTERS.skaven.positions[0].displayName;
     const skavenLineman = game.players.find(
-      (p) => p.team === "B" && p.position === "Lineman",
+      (p) => p.team === "B" && p.position === skavenLinemanName,
     );
+    expect(
+      skavenLineman,
+      `poste introuvable : ${skavenLinemanName}`,
+    ).toBeTruthy();
     expect(skavenLineman?.ma).toBe(7);
 
     const validation = validateGameState(game);

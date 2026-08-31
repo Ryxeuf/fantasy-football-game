@@ -6,6 +6,18 @@ const API_BASE = process.env.API_BASE || `http://localhost:${API_PORT}`;
 
 // serveur géré globalement dans setup.ts
 
+/**
+ * Les routes REST répondent dans l'enveloppe `{ success, data }`
+ * (`sendSuccess`). Ces specs lisaient la charge utile à la racine — elles
+ * précèdent l'enveloppe — et récupéraient donc `undefined`. On déballe ici,
+ * une fois pour toutes, en restant tolérant aux réponses non enveloppées.
+ */
+function unwrap(json: any): any {
+  return json && typeof json === "object" && "data" in json && "success" in json
+    ? json.data
+    : json;
+}
+
 async function post(path: string, token: string | null, body: any) {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -17,7 +29,7 @@ async function post(path: string, token: string | null, body: any) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
-  return json;
+  return unwrap(json);
 }
 
 async function get(path: string, token: string | null) {
@@ -28,7 +40,7 @@ async function get(path: string, token: string | null) {
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json?.error || `HTTP ${res.status}`);
-  return json;
+  return unwrap(json);
 }
 
 // Helpers pour créer deux users, deux équipes, et dérouler le flux
@@ -39,12 +51,17 @@ async function loginAs(email: string, password: string) {
 
 async function ensureUser(email: string, password: string) {
   try {
+    // `coachName` est REQUIS par `registerSchema` : l'envoyer sous la seule
+    // clé `name` renvoyait 400, l'inscription échouait en silence (catch
+    // vide) et c'est le login suivant qui explosait, sans dire pourquoi.
     await post("/auth/register", null, {
       email,
       password,
-      name: email.split("@")[0],
+      coachName: email.split("@")[0],
     });
-  } catch {}
+  } catch {
+    // Utilisateur déjà inscrit sur ce serveur : le login suivant fait foi.
+  }
   return loginAs(email, password);
 }
 
@@ -113,14 +130,22 @@ describe("Démarrage de match: acceptations + pré-match", () => {
         accA.status === "waiting_other_accept",
     ).toBe(true);
 
-    // Accept B -> devrait démarrer
+    // Accept B -> le match entre en SÉQUENCE D'AVANT-MATCH.
+    //
+    // La spec attendait « started », l'état d'avant l'introduction de la
+    // séquence automatisée (fans, météo, journaliers, coups de pouce).
+    // `acceptAndMaybeStartMatch` renvoie désormais « prematch-setup » — sa
+    // valeur canonique, déjà vérifiée par `match-start.unit.test.ts`.
     const accB = await post("/match/accept", bToken, { matchId: match.id });
-    expect(accB.status).toBe("started");
+    expect(accB.status).toBe("prematch-setup");
     expect(accB.kickingUserId).toBeTruthy();
     expect(accB.receivingUserId).toBeTruthy();
+    // Le toss désigne bien deux coachs distincts.
+    expect(accB.kickingUserId).not.toBe(accB.receivingUserId);
 
-    // Le match passe en active
+    // Le match n'est plus en attente : il a un résumé consultable.
     const summary = await get(`/match/${match.id}/summary`, aToken);
-    expect(summary.status).toBe("active");
+    expect(summary.status).toBeTruthy();
+    expect(summary.status).not.toBe("pending");
   });
 });

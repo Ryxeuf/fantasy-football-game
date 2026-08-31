@@ -197,11 +197,24 @@ describe("Test de stress - Simulation intensive", () => {
     expect(actionCount).toBeGreaterThan(0);
     expect(gameState.turn).toBeGreaterThan(0);
 
-    // Vérifier que tous les joueurs ont des positions valides
+    // Vérifier que tous les joueurs ont des positions valides.
+    //
+    // Un joueur SORTI du terrain (KO, blessé, expulsé) porte la sentinelle
+    // hors-terrain `{ x: -1, y: -1 }` posée par `movePlayerToDugoutZone` :
+    // exiger `x >= 0` de TOUS les joueurs faisait donc échouer la spec dès
+    // qu'une des 20 mi-temps simulées envoyait quelqu'un au dugout. On
+    // distingue les deux cas, ce qui vérifie en plus que la sentinelle est
+    // bien celle attendue (et non une coordonnée négative quelconque).
     for (const player of gameState.players) {
-      expect(player.pos.x).toBeGreaterThanOrEqual(0);
+      const offPitch = player.pos.x < 0 || player.pos.y < 0;
+      if (offPitch) {
+        expect(player.pos, `joueur ${player.id} hors terrain`).toEqual({
+          x: -1,
+          y: -1,
+        });
+        continue;
+      }
       expect(player.pos.x).toBeLessThan(gameState.width);
-      expect(player.pos.y).toBeGreaterThanOrEqual(0);
       expect(player.pos.y).toBeLessThan(gameState.height);
     }
   });
