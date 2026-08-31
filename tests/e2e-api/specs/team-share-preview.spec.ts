@@ -11,7 +11,13 @@ import { createTeam, seedAndLogin } from "../helpers/factories";
  *  - `PATCH /team/:id/description` — le fluff du coach (cosmétique, donc
  *    hors verrou anti-triche), trimé, ≤ 1000, chaîne vide ⇒ `null` ;
  *  - `GET /api/public/teams/by-id/:id` — l'aperçu minimal servi à la
- *    metadata de `/me/teams/:id`, et UNIQUEMENT si l'équipe est publique.
+ *    metadata de `/me/teams/:id`, et UNIQUEMENT si l'équipe est publique ;
+ *  - `GET /api/public/teams/:token` — la page publique elle-même, dont la
+ *    réponse porte désormais les chiffres calculés par le serveur (valeur
+ *    par joueur, coûts de staff, postes de dépense). Ces enrichissements
+ *    interrogent le catalogue (`Roster`, `RosterStaffConfig`, `Position`),
+ *    absent ou vide du miroir SQLite : la spec est le garde-fou qui exige
+ *    qu'ils DÉGRADENT au lieu de faire tomber la page partagée.
  *
  * Cette suite tourne sur le miroir SQLite (`prisma/sqlite/schema.prisma`),
  * pas sur le schéma Postgres : elle est donc le garde-fou qui exige que la
@@ -21,6 +27,23 @@ import { createTeam, seedAndLogin } from "../helpers/factories";
 
 interface DescriptionResponse {
   team: { id: string; description: string | null };
+}
+
+interface PublicTeamResponse {
+  team: {
+    id: string;
+    name: string;
+    roster: string;
+    treasury: number;
+    rerolls: number;
+    logoUrl: string | null;
+    description: string | null;
+    players: Array<{ id: string; name: string; skills: string }>;
+    starPlayers: Array<{ starPlayerSlug: string; cost: number }>;
+    staffConfig?: { rerollCost: number };
+    budgetSummary?: { teamValue: number };
+    playerValues?: Record<string, { value: number }>;
+  };
 }
 
 interface PreviewResponse {
@@ -152,6 +175,58 @@ describe("GET /api/public/teams/by-id/:id", () => {
 
   it("répond 404 sur un id inconnu, comme sur une équipe privée", async () => {
     const res = await rawGet("/api/public/teams/by-id/team-qui-nexiste-pas", null);
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /api/public/teams/:token", () => {
+  async function enableShare(): Promise<string> {
+    const res = await rawPatch(`/team/${teamId}/share`, token, {
+      enabled: true,
+    });
+    expect(res.status).toBe(200);
+    const { shareToken } = unwrap<{ shareToken: string | null }>(
+      await res.json(),
+    );
+    expect(shareToken).toBeTruthy();
+    return shareToken as string;
+  }
+
+  it("sert le roster complet d'une équipe partagée", async () => {
+    const shareToken = await enableShare();
+
+    const res = await rawGet(`/api/public/teams/${shareToken}`, null);
+    expect(res.status).toBe(200);
+
+    const { team } = (await res.json()) as PublicTeamResponse;
+    expect(team.name).toBe("Les Rats Véloces");
+    expect(team.roster).toBe("skaven");
+    expect(team.players.length).toBeGreaterThan(0);
+    // Les compétences sont servies pour que la page publique les affiche
+    // comme la fiche du coach (base vs acquise).
+    expect(typeof team.players[0].skills).toBe("string");
+  });
+
+  it("n'expose ni le propriétaire ni le jeton de partage", async () => {
+    const shareToken = await enableShare();
+    const res = await rawGet(`/api/public/teams/${shareToken}`, null);
+    const { team } = (await res.json()) as PublicTeamResponse;
+
+    expect(team).not.toHaveProperty("ownerId");
+    expect(team).not.toHaveProperty("shareToken");
+    expect(team).not.toHaveProperty("isPublic");
+  });
+
+  it("répond 404 sur un jeton inconnu", async () => {
+    const res = await rawGet("/api/public/teams/jeton-inconnu", null);
+    expect(res.status).toBe(404);
+  });
+
+  it("se referme quand le coach coupe le partage", async () => {
+    const shareToken = await enableShare();
+    await rawPatch(`/team/${teamId}/share`, token, { enabled: false });
+
+    const res = await rawGet(`/api/public/teams/${shareToken}`, null);
     expect(res.status).toBe(404);
   });
 });

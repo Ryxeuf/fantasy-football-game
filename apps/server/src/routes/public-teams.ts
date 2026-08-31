@@ -3,7 +3,11 @@
  *
  * `GET /api/public/teams/:token` → l'équipe + son roster si elle a été
  * rendue publique par son coach (opt-in). 404 sinon. Alimente la page
- * publique de partage et l'image OG dynamique.
+ * publique de partage et l'image OG dynamique. La réponse est une VUE
+ * enrichie (`services/public-team-view`) : valeur par joueur, coûts de
+ * staff et postes de dépense y sont calculés par le serveur, pour que la
+ * page publique n'ait rien à re-dériver — et n'affiche donc jamais un
+ * chiffre qui contredise la fiche du coach.
  *
  * `GET /api/public/teams/by-id/:id` → aperçu MINIMAL de la même équipe,
  * résolu par son id. Alimente la metadata de la fiche `/me/teams/:id`,
@@ -12,10 +16,8 @@
  */
 
 import { Router } from "express";
-import {
-  getPublicTeamByToken,
-  getPublicTeamPreviewById,
-} from "../services/team-share";
+import { getPublicTeamPreviewById } from "../services/team-share";
+import { getPublicTeamViewByToken } from "../services/public-team-view";
 import { serverLog } from "../utils/server-log";
 
 const router = Router();
@@ -38,7 +40,7 @@ router.get("/public/teams/by-id/:id", async (req, res) => {
 
 router.get("/public/teams/:token", async (req, res) => {
   try {
-    const team = await getPublicTeamByToken(req.params.token);
+    const team = await getPublicTeamViewByToken(req.params.token);
     if (!team) {
       res.status(404).json({ error: "team_not_found" });
       return;

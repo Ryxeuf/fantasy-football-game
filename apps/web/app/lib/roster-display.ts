@@ -5,6 +5,13 @@
  * "imperial_nobility") et les Star Players que leur slug
  * ("griff_oberwald"). Faute de nom localisé dans le payload public, on
  * prettifie le slug en Title Case — suffisant pour l'affichage et l'OG.
+ *
+ * Il n'y a volontairement PAS de parseur de compétences ici : `TeamPlayer.skills`
+ * est une CSV de slugs (« block,dodge »), pas du JSON. Le parseur maison qui
+ * vivait dans ce module tentait un `JSON.parse` et rendait donc une liste VIDE
+ * pour tous les joueurs — la page publique affichait « — » en face de chacun.
+ * La lecture passe par `me/teams/skills-data.parseSkills`, celui de la fiche
+ * du coach.
  */
 
 export function prettifySlug(slug: string): string {
@@ -14,22 +21,4 @@ export function prettifySlug(slug: string): string {
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
-}
-
-/** Parse tolérant d'un champ `skills` (array natif, JSON string, ou null). */
-export function parseSkillList(raw: unknown): string[] {
-  if (Array.isArray(raw)) {
-    return raw.filter((s): s is string => typeof s === "string");
-  }
-  if (typeof raw === "string") {
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed)
-        ? parsed.filter((s): s is string => typeof s === "string")
-        : [];
-    } catch {
-      return [];
-    }
-  }
-  return [];
 }
