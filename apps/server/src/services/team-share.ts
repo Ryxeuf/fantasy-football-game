@@ -14,6 +14,7 @@
 import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "../prisma";
+import { ACTIVE_PLAYER_WHERE } from "./player-status";
 
 export class TeamShareError extends Error {
   constructor(
@@ -81,4 +82,73 @@ export async function getPublicTeamByToken(
     include: { players: true, starPlayers: true },
   });
   return team;
+}
+
+/**
+ * Aperçu minimal d'une équipe partagée, résolu par son **id** et non par
+ * son token.
+ *
+ * Sert la metadata de la fiche `/me/teams/:id` : quand un coach colle ce
+ * lien dans un salon, le scraper n'a que l'id sous la main. On ne réutilise
+ * pas `getPublicTeamByToken` (mauvaise clé) et on n'ouvre pas la lecture
+ * complète par id : l'aperçu n'a besoin ni de la trésorerie, ni du détail
+ * des joueurs, ni de leurs compétences, donc la route ne les rend pas.
+ *
+ * Même porte que le partage : `isPublic` est obligatoire. Une équipe
+ * privée est un `null`, indiscernable d'une équipe inexistante — le
+ * partage reste opt-in.
+ */
+export interface PublicTeamPreview {
+  readonly id: string;
+  readonly name: string;
+  readonly roster: string;
+  readonly ruleset: string;
+  readonly teamValue: number;
+  readonly playerCount: number;
+  readonly starPlayerNames: readonly string[];
+  readonly logoUrl: string | null;
+  readonly description: string | null;
+  /** Permet de pointer l'aperçu vers la page réellement consultable. */
+  readonly shareToken: string | null;
+}
+
+export async function getPublicTeamPreviewById(
+  teamId: string,
+): Promise<PublicTeamPreview | null> {
+  if (!teamId) return null;
+  const team = await prisma.team.findFirst({
+    where: { id: teamId, isPublic: true, deletedAt: null },
+    select: {
+      id: true,
+      name: true,
+      roster: true,
+      ruleset: true,
+      teamValue: true,
+      logoUrl: true,
+      description: true,
+      shareToken: true,
+      // Aucun joueur n'est exposé un par un : seul l'effectif encore AU
+      // ROSTER compte pour l'aperçu, d'où le filtre canonique (morts ET
+      // licenciés) plutôt qu'un `dead: false` qui laisserait un licencié
+      // gonfler le compte.
+      players: { where: ACTIVE_PLAYER_WHERE, select: { id: true } },
+      starPlayers: { select: { starPlayerSlug: true } },
+    },
+  });
+  if (!team) return null;
+
+  return {
+    id: team.id,
+    name: team.name,
+    roster: team.roster,
+    ruleset: String(team.ruleset),
+    teamValue: team.teamValue,
+    playerCount: team.players.length,
+    starPlayerNames: team.starPlayers.map(
+      (sp: { starPlayerSlug: string }) => sp.starPlayerSlug,
+    ),
+    logoUrl: team.logoUrl ?? null,
+    description: team.description ?? null,
+    shareToken: team.shareToken ?? null,
+  };
 }

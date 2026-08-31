@@ -7,6 +7,7 @@ import {
   detectLocaleFromHeader,
   type Locale,
 } from "./app/lib/locale-detection";
+import { privateTeamDivertTarget } from "./app/lib/private-team-share-divert";
 
 const LOCALE_COOKIE = "NEXT_LOCALE";
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 an
@@ -108,13 +109,37 @@ export async function middleware(request: NextRequest) {
   // Protège toutes les routes commençant par /me : connexion ou création de compte requise
   if (pathname.startsWith("/me")) {
     if (!hasValidAuthToken(request)) {
+      const syncFallback = !request.cookies.has("auth_token");
+
+      // La fiche d'équipe est le lien que les coachs collent dans un salon.
+      // Sans ce détournement, le scraper est renvoyé sur /auth/sync et
+      // n'unfurle QUE la carte générique du site — aucune metadata posée
+      // sur /me/teams/[id] ne peut y changer quoi que ce soit, la
+      // redirection ayant lieu avant le rendu. Le résolveur ne renvoie vers
+      // la page publique que si l'équipe est publique ; sinon il reconduit
+      // le parcours de connexion ci-dessous.
+      const divert = privateTeamDivertTarget({
+        pathname,
+        search: request.nextUrl.search,
+        method: request.method,
+        syncFallback,
+      });
+      if (divert) {
+        const url = request.nextUrl.clone();
+        url.search = "";
+        const [divertPath, divertQuery] = divert.split("?");
+        url.pathname = divertPath;
+        if (divertQuery) url.search = `?${divertQuery}`;
+        return NextResponse.redirect(url);
+      }
+
       const redirectTarget = pathname + (request.nextUrl.search || "");
       const url = request.nextUrl.clone();
 
       // Si aucun cookie n'est présent, tente d'abord une synchronisation depuis
       // localStorage (utilisateurs déjà connectés sans cookie).
       // Si un cookie est présent mais invalide/expiré, redirige directement vers le login.
-      if (!request.cookies.has("auth_token")) {
+      if (syncFallback) {
         url.pathname = "/auth/sync";
       } else {
         url.pathname = "/login";

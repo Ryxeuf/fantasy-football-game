@@ -19,6 +19,7 @@ import {
 import { buildPositionMetaByPosition, type PositionMeta } from "../roster-skill-access";
 import { allowedCategoriesFor } from "../../../../lib/skill-access";
 import TeamInfoEditor from "../../components/TeamInfoEditor";
+import TeamDescriptionEditor from "../../components/TeamDescriptionEditor";
 import { formatPlusStat } from "../../../../lib/format-stats";
 import {
   getPlayerCost,
@@ -1928,6 +1929,22 @@ export default function TeamEditPage() {
             })()}
           </div>
         </div>
+      )}
+
+      {/* Fluff de l'équipe. PAS soumis a `canEdit` : la description est
+          cosmetique, une equipe engagee reste descriptible (meme posture
+          que le renommage). */}
+      {team && (
+        <TeamDescriptionEditor
+          teamId={team.id}
+          initialDescription={team.description ?? null}
+          onSaved={(description) => {
+            setData((prev: any) => ({
+              ...prev,
+              team: { ...prev.team, description },
+            }));
+          }}
+        />
       )}
 
       {/* Informations d'équipe */}

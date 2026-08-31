@@ -15,6 +15,7 @@ import {
   designateCaptainSchema,
   updateStartingPspPoolSchema,
   renameTeamSchema,
+  updateTeamDescriptionSchema,
 } from "../schemas/team.schemas";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
@@ -140,6 +141,19 @@ router.patch(
   authUser,
   validate(renameTeamSchema),
   handleRenameTeamImpl,
+);
+
+// Description (fluff) de l'equipe : meme posture que le renommage
+// (cosmetique, hors verrou anti-triche). Sert de texte d'apercu quand
+// l'equipe est partagee.
+export { handleUpdateTeamDescription } from './team-description-handler';
+import { handleUpdateTeamDescription as handleUpdateTeamDescriptionImpl } from './team-description-handler';
+
+router.patch(
+  "/:id/description",
+  authUser,
+  validate(updateTeamDescriptionSchema),
+  handleUpdateTeamDescriptionImpl,
 );
 
 // #3 — Partage public opt-in du roster (boucle d'acquisition).

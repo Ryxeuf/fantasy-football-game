@@ -27,7 +27,7 @@ import { exportTeamToPDF, exportSkillsSheet, exportMatchSheet } from "../utils/e
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
 import { shouldShowTeamLoadError } from "./team-detail-error";
-import { rosterPlayersOf } from "./roster-players";
+import { rosterPlayersOf } from "../../../lib/roster-players";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
@@ -623,6 +623,18 @@ export default function TeamDetailPage() {
               </span>
             )}
           </div>
+          {/* Fluff du coach. C'est aussi le texte servi dans l'apercu quand
+              l'equipe est partagee — il doit donc etre visible ici, sinon on
+              ne comprend pas d'ou il sort. Se modifie sur « Modifier
+              l'equipe ». */}
+          {team?.description ? (
+            <p
+              data-testid="team-description"
+              className="mt-3 max-w-2xl whitespace-pre-line text-sm text-gray-700 leading-relaxed"
+            >
+              {team.description}
+            </p>
+          ) : null}
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {canEdit ? (
