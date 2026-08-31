@@ -13,6 +13,7 @@ import { prisma } from "../prisma";
 import {
   setTeamShare,
   getPublicTeamByToken,
+  getPublicTeamPreviewById,
   generateShareToken,
   TeamShareError,
 } from "./team-share";
@@ -99,5 +100,99 @@ describe("getPublicTeamByToken", () => {
   it("retourne null quand aucune équipe publique ne correspond", async () => {
     team.findFirst.mockResolvedValue(null);
     expect(await getPublicTeamByToken("tok")).toBeNull();
+  });
+});
+
+describe("getPublicTeamPreviewById", () => {
+  it("retourne null pour un id vide (pas d'appel DB)", async () => {
+    const res = await getPublicTeamPreviewById("");
+    expect(res).toBeNull();
+    expect(team.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("n'ouvre l'aperçu que sur une équipe publique et non supprimée", async () => {
+    team.findFirst.mockResolvedValue({
+      id: "t1",
+      name: "Les Rats",
+      roster: "skaven",
+      ruleset: "season_3",
+      teamValue: 1_150_000,
+      logoUrl: null,
+      description: null,
+      shareToken: "tok",
+      players: [{ id: "p1" }, { id: "p2" }],
+      starPlayers: [{ starPlayerSlug: "griff_oberwald" }],
+    });
+
+    await getPublicTeamPreviewById("t1");
+
+    expect(team.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "t1", isPublic: true, deletedAt: null },
+      }),
+    );
+  });
+
+  it("rend un aperçu minimal (effectif compté, pas de trésorerie)", async () => {
+    team.findFirst.mockResolvedValue({
+      id: "t1",
+      name: "Les Rats",
+      roster: "skaven",
+      ruleset: "season_3",
+      teamValue: 1_150_000,
+      logoUrl: "/images/team-logos/rats.png",
+      description: "Bande de rats",
+      shareToken: "tok",
+      players: [{ id: "p1" }, { id: "p2" }],
+      starPlayers: [{ starPlayerSlug: "griff_oberwald" }],
+    });
+
+    const res = await getPublicTeamPreviewById("t1");
+
+    expect(res).toEqual({
+      id: "t1",
+      name: "Les Rats",
+      roster: "skaven",
+      ruleset: "season_3",
+      teamValue: 1_150_000,
+      playerCount: 2,
+      starPlayerNames: ["griff_oberwald"],
+      logoUrl: "/images/team-logos/rats.png",
+      description: "Bande de rats",
+      shareToken: "tok",
+    });
+    expect(res).not.toHaveProperty("treasury");
+  });
+
+  it("ne compte que les joueurs encore au roster (morts ET licenciés exclus)", async () => {
+    team.findFirst.mockResolvedValue({
+      id: "t1",
+      name: "Les Rats",
+      roster: "skaven",
+      ruleset: "season_3",
+      teamValue: 0,
+      logoUrl: null,
+      description: null,
+      shareToken: null,
+      players: [],
+      starPlayers: [],
+    });
+
+    await getPublicTeamPreviewById("t1");
+
+    expect(team.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          players: expect.objectContaining({
+            where: { dead: false, firedAt: null },
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("retourne null quand l'équipe est privée ou inexistante", async () => {
+    team.findFirst.mockResolvedValue(null);
+    expect(await getPublicTeamPreviewById("t1")).toBeNull();
   });
 });

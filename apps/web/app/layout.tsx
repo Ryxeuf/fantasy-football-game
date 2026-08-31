@@ -103,6 +103,14 @@ export const metadata: Metadata = {
     // les segments /fr/* /en/*, ce helper prefixera automatiquement.
     languages: buildHreflangAlternates("/"),
   },
+  // `images` est volontairement ABSENT ici : l'image par defaut est generee
+  // par `app/opengraph-image.tsx` (1200x630 reels). Next n'applique ce
+  // fichier que si la metadata du meme segment ne declare pas
+  // `openGraph.images` (cf. `mergeStaticMetadata`) — declarer les deux
+  // ferait ignorer le fichier en silence.
+  //
+  // L'ancienne entree pointait `/images/logo.png` en annoncant 1200x630
+  // pour un PNG CARRE de 1024x1024 : les scrapers etiraient donc le logo.
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -112,21 +120,13 @@ export const metadata: Metadata = {
     title: "Nuffle Arena — Gestionnaire d'équipes Blood Bowl (Saison 3, 2025)",
     description:
       "31 rosters officiels, 60+ Star Players, 130+ compétences. Créez, exportez et suivez vos équipes Blood Bowl — 100% gratuit.",
-    images: [
-      {
-        url: `${baseUrl}/images/logo.png`,
-        width: 1200,
-        height: 630,
-        alt: "Nuffle Arena — Gestionnaire d'équipes Blood Bowl",
-      },
-    ],
   },
+  // Idem : sans `images`, `resolveTwitter` recopie celles d'`openGraph`.
   twitter: {
     card: "summary_large_image",
     title: "Nuffle Arena — Gestionnaire d'équipes Blood Bowl",
     description:
       "Gestionnaire Blood Bowl gratuit : 31 rosters, 60+ Star Players, 130+ compétences, export PDF et suivi de match sur table.",
-    images: [`${baseUrl}/images/logo.png`],
     creator: "@nufflearena",
   },
   robots: {

@@ -6,8 +6,18 @@
  * dimensions absolutes (px / fractions de 1200x630).
  *
  * Le template est purement presentation : il consomme la structure
- * { title, subtitle, badges[], accent } produite par
+ * { title, subtitle, badges[], accent, logo? } produite par
  * `og-image-content.ts` et la mappe sur des elements styles inline.
+ *
+ * Regle du logo : il est pose dans une boite CARREE de taille fixe, en
+ * `objectFit: contain`. C'est ce qui empeche la deformation constatee sur
+ * l'ancien `og:image` (un PNG 1024x1024 annonce 1200x630, donc etire par
+ * les scrapers) — et ca vaut aussi pour un logo d'equipe uploade, dont on
+ * ne maitrise pas les proportions.
+ *
+ * L'embleme de repli (equipe sans logo) est rendu en elements SATORI, pas
+ * en `<img src="data:image/svg+xml…">` : satori rasterise un SVG imbrique
+ * sans resoudre ses polices, et le monogramme disparaitrait.
  */
 import type { OgContent, OgAccent } from "./og-image-content";
 
@@ -50,6 +60,15 @@ const THEMES: Record<OgAccent, AccentTheme> = {
     badgeBg: "rgba(52, 211, 153, 0.18)",
     badgeText: "#a7f3d0",
   },
+  // Carte par defaut du site : le brun/or de l'identite Nuffle Arena.
+  brand: {
+    background:
+      "linear-gradient(135deg, #16110b 0%, #2e2314 55%, #6b4e2e 100%)",
+    accent: "#e0b64a",
+    text: "#fdf7e6",
+    badgeBg: "rgba(224, 182, 74, 0.18)",
+    badgeText: "#f6e3ad",
+  },
   // Lot O.D — Gazette : parchemin journal, sepia/amber chaud
   gazette: {
     background:
@@ -67,8 +86,31 @@ interface OgImageTemplateProps {
   canonicalUrl: string;
 }
 
+/** Cote de la boite du logo, en px. */
+const LOGO_BOX = 260;
+/** Marge interieure de la boite : le logo ne touche jamais ses bords. */
+const LOGO_PADDING = 22;
+/** Largeur restante pour le texte quand un logo occupe la colonne droite. */
+const TEXT_WIDTH_WITH_LOGO = 1040 - LOGO_BOX - 48;
+
+/**
+ * Satori passe bien a la ligne, mais un nom d'equipe long a 92px mangerait
+ * la carte sur trois lignes et pousserait les badges hors du cadre. On
+ * reduit le corps par paliers plutot que de tronquer : un nom coupe est
+ * pire qu'un nom un peu plus petit.
+ */
+function titleSizeFor(title: string, hasLogo: boolean): string {
+  const budget = hasLogo ? 18 : 24;
+  if (title.length <= budget) return "92px";
+  if (title.length <= budget * 1.6) return "68px";
+  return "52px";
+}
+
 export function OgImageTemplate({ content, canonicalUrl }: OgImageTemplateProps) {
   const theme = THEMES[content.accent];
+  const logo = content.logo;
+  const hasLogo = Boolean(logo);
+  const titleFontSize = titleSizeFor(content.title, hasLogo);
 
   return (
     <div
@@ -97,40 +139,101 @@ export function OgImageTemplate({ content, canonicalUrl }: OgImageTemplateProps)
         NUFFLE ARENA
       </div>
 
-      {/* Title block (centered vertically via flex-grow) */}
+      {/* Title block (centered vertically via flex-grow) + logo a droite */}
       <div
         style={{
           flexGrow: 1,
           display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: "48px",
         }}
       >
         <div
           style={{
-            fontSize: "92px",
-            fontWeight: 800,
-            lineHeight: 1.05,
-            color: theme.text,
-            marginBottom: "24px",
-            // satori ne wrap pas automatiquement les longs titres ; on
-            // augmente la zone via maxWidth pour eviter la troncature.
-            maxWidth: "1040px",
+            flexGrow: 1,
             display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            // Sans logo, le bloc titre reprend toute la largeur utile.
+            maxWidth: hasLogo ? `${TEXT_WIDTH_WITH_LOGO}px` : "1040px",
           }}
         >
-          {content.title}
+          <div
+            style={{
+              fontSize: titleFontSize,
+              fontWeight: 800,
+              lineHeight: 1.05,
+              color: theme.text,
+              marginBottom: "24px",
+              display: "flex",
+            }}
+          >
+            {content.title}
+          </div>
+          <div
+            style={{
+              fontSize: "32px",
+              color: theme.accent,
+              fontWeight: 600,
+              display: "flex",
+            }}
+          >
+            {content.subtitle}
+          </div>
         </div>
-        <div
-          style={{
-            fontSize: "32px",
-            color: theme.accent,
-            fontWeight: 600,
-            display: "flex",
-          }}
-        >
-          {content.subtitle}
-        </div>
+
+        {/*
+          Boite CARREE + objectFit: contain => les proportions du logo sont
+          preservees quelles qu'elles soient (carre, panoramique, portrait).
+          C'est le correctif de la deformation constatee au partage.
+        */}
+        {logo?.kind === "image" ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: `${LOGO_BOX}px`,
+              height: `${LOGO_BOX}px`,
+              flexShrink: 0,
+              borderRadius: "32px",
+              background: theme.badgeBg,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logo.src}
+              alt=""
+              width={LOGO_BOX - LOGO_PADDING * 2}
+              height={LOGO_BOX - LOGO_PADDING * 2}
+              style={{ objectFit: "contain" }}
+            />
+          </div>
+        ) : null}
+
+        {/* Embleme de repli : couleurs canoniques du roster + monogramme. */}
+        {logo?.kind === "emblem" ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: `${LOGO_BOX}px`,
+              height: `${LOGO_BOX}px`,
+              flexShrink: 0,
+              borderRadius: logo.round ? "50%" : "44px",
+              background: logo.background,
+              border: `8px solid ${logo.foreground}`,
+              color: logo.foreground,
+              fontSize: logo.glyph.length >= 3 ? "84px" : logo.glyph.length === 2 ? "104px" : "132px",
+              fontWeight: 800,
+              letterSpacing: "2px",
+            }}
+          >
+            {logo.glyph}
+          </div>
+        ) : null}
       </div>
 
       {/* Badges row */}

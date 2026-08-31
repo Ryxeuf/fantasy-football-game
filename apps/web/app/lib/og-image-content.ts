@@ -15,7 +15,17 @@
  *      supporte pas grid)
  */
 
-export type OgAccent = "team" | "star" | "skill" | "match" | "gazette";
+import type { TeamOgLogo } from "./og-team-logo";
+import { OG_SUBTITLE_MAX, truncateOnWordBoundary } from "./roster-share-text";
+
+export type OgAccent =
+  | "team"
+  | "star"
+  | "skill"
+  | "match"
+  | "gazette"
+  /** Carte par defaut du site (accueil, pages sans image dediee). */
+  | "brand";
 
 export interface OgContent {
   /** Titre principal affiche en grand. */
@@ -26,6 +36,14 @@ export interface OgContent {
   badges: string[];
   /** Identifiant de palette accent ("team" / "star" / "skill"). */
   accent: OgAccent;
+  /**
+   * Logo affiche a droite de la carte, dans une boite CARREE. Une image y
+   * est posee en `objectFit: contain` : ses proportions d'origine sont donc
+   * preservees, quelles qu'elles soient. Absent => carte texte seul
+   * (comportement historique). Voir `og-team-logo.ts` pour la resolution
+   * (logo uploade ou embleme du roster).
+   */
+  logo?: TeamOgLogo;
 }
 
 export interface TeamOgInput {
@@ -125,16 +143,28 @@ export interface RosterShareOgInput {
   playerCount: number;
   starPlayerNames: string[];
   ruleset: "season_2" | "season_3" | string;
+  /**
+   * Fluff saisi par le coach (`Team.description`). Quand il existe, il
+   * prend la place du sous-titre « Avec <Star Players> » : le texte du
+   * coach dit mieux ce qu'est son équipe qu'une liste de mercenaires.
+   */
+  description?: string | null;
+  /** Logo resolu par `resolveTeamOgLogo`. */
+  logo?: TeamOgLogo;
 }
 
 export function buildRosterShareOgContent(input: RosterShareOgInput): OgContent {
   const players = clampNonNegative(input.playerCount);
   const stars = input.starPlayerNames.filter(Boolean).slice(0, 2);
+  const own = input.description?.trim();
+  const subtitle = own
+    ? truncateOnWordBoundary(own, OG_SUBTITLE_MAX)
+    : stars.length
+      ? `Avec ${stars.join(", ")}`
+      : "Équipe Blood Bowl";
   return {
     title: input.teamName,
-    subtitle: stars.length
-      ? `Avec ${stars.join(", ")}`
-      : "Équipe Blood Bowl",
+    subtitle,
     badges: [
       input.raceName,
       `VE ${formatBudget(input.teamValue)}${NBSP}po`,
@@ -142,6 +172,37 @@ export function buildRosterShareOgContent(input: RosterShareOgInput): OgContent 
       formatRuleset(input.ruleset),
     ],
     accent: "team",
+    ...(input.logo ? { logo: input.logo } : {}),
+  };
+}
+
+export interface SiteOgInput {
+  /** Logo du site, resolu par l'appelant (data URI ou URL absolue). */
+  logoUrl?: string;
+}
+
+
+/**
+ * Carte par defaut du site — celle que reçoivent l'accueil et toutes les
+ * pages sans image dediee.
+ *
+ * Elle remplace l'ancien `og:image = /images/logo.png`, qui declarait
+ * 1200x630 pour un fichier CARRE de 1024x1024 : les scrapers etiraient
+ * donc le logo dans la boite 1,91:1 annoncee. Ici les dimensions sont
+ * celles reellement generees, et le logo est pose en `contain`.
+ */
+export function buildSiteOgContent(input: SiteOgInput = {}): OgContent {
+  return {
+    title: "Nuffle Arena",
+    subtitle: "Gestionnaire d'équipes Blood Bowl — Saison 3 (2025)",
+    badges: [
+      "31 rosters officiels",
+      "60+ Star Players",
+      "130+ compétences",
+      "100 % gratuit",
+    ],
+    accent: "brand",
+    ...(input.logoUrl ? { logo: { kind: "image" as const, src: input.logoUrl } } : {}),
   };
 }
 
