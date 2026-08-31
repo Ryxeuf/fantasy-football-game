@@ -1586,9 +1586,9 @@ function teamPositions(
 }
 
 /**
- * Libelle d'un poste dans le picker d'embauche : nom + quota consomme, pour
- * que le coach voie POURQUOI un poste est indisponible (« 2/2 ») plutot que
- * de le chercher dans une liste ou il a disparu.
+ * Libellé d'un poste dans le picker d'embauche : nom + quota consommé, pour
+ * que le coach voie POURQUOI un poste est indisponible (« 2/2 ») plutôt que
+ * de le chercher dans une liste où il a disparu.
  */
 export function purchaseOptionLabel(o: {
   name: string;
@@ -1620,23 +1620,23 @@ function PurchaseEditor({
   testId?: string;
   team: SheetTeam | null;
   /**
-   * Tresorerie disponible AVANT achats a cette etape de la sequence
-   * (cagnotte figee au debut du match + gains du match). Sert a afficher
-   * ce qu'il reste et a alerter sur un depassement.
+   * Trésorerie disponible AVANT achats à cette étape de la séquence
+   * (cagnotte figée au début du match + gains du match). Sert à afficher
+   * ce qu'il reste et à alerter sur un dépassement.
    */
   treasuryBefore: number;
-  /** Prix de recrutement d'un journalier (poste + evolution de l'etape 3). */
+  /** Prix de recrutement d'un journalier (poste + évolution de l'étape 3). */
   journeymanHireCost: (journeymanId: string) => number | null;
   /**
-   * Catalogue d'embauche de l'equipe (postes du roster + staff, avec quota
-   * et prix). Absent => saisie libre, comme avant le catalogue.
+   * Catalogue d'embauche de l'équipe (postes du roster + staff, avec quota
+   * et prix). Absent ⇒ saisie libre, comme avant le catalogue.
    */
   options?: PurchaseOptions;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
-  // Postes du CATALOGUE du roster (quota + prix) ; a defaut, les postes
-  // deja presents a l'effectif — qui ne disent rien des quotas ni des prix.
+  // Postes du CATALOGUE du roster (quota + prix) ; à défaut, les postes
+  // déjà présents à l'effectif — qui ne disent rien des quotas ni des prix.
   const catalogue = options?.positions ?? [];
   const positions =
     catalogue.length > 0
@@ -1653,7 +1653,7 @@ function PurchaseEditor({
   const staffOption = (kind: StaffKind | "reroll") =>
     staffOptions.find((o) => o.kind === kind) ?? null;
   const rerollOption = staffOption("reroll");
-  /** Prix catalogue de la ligne, s'il est connu (pour signaler un ecart). */
+  /** Prix catalogue de la ligne, s'il est connu (pour signaler un écart). */
   const catalogueCost = (it: Purchase): number | null => {
     if (it.kind === "player")
       return positions.find((p) => p.slug === it.position)?.cost ?? null;
@@ -1691,9 +1691,9 @@ function PurchaseEditor({
           <select
             value={it.kind}
             onChange={(e) => {
-              // Changer de type invalide le poste/staff deja choisi ET son
-              // prix : une relance a 100 000 po ne doit pas rester collee a
-              // un « Joueur » qu'on selectionnera ensuite.
+              // Changer de type invalide le poste/staff déjà choisi ET son
+              // prix : une relance à 100 000 po ne doit pas rester collée à
+              // un « Joueur » qu'on sélectionnera ensuite.
               const kind = e.target.value as Purchase["kind"];
               update(i, {
                 kind,
@@ -1714,9 +1714,9 @@ function PurchaseEditor({
               </option>
             ))}
           </select>
-          {/* Joueur : poste a recruter. Le catalogue du roster donne le
-              QUOTA (0-2 Blitzers...) et le PRIX : un poste complet est
-              propose grise, et le prix se remplit tout seul au choix. */}
+          {/* Joueur : poste à recruter. Le catalogue du roster donne le
+              QUOTA (0-2 Blitzers…) et le PRIX : un poste complet est
+              proposé grisé, et le prix se remplit tout seul au choix. */}
           {it.kind === "player" && (
             <select
               value={it.position ?? ""}
@@ -1770,8 +1770,8 @@ function PurchaseEditor({
               ))}
             </select>
           )}
-          {/* Staff : sous-type materialise, avec son plafond et son prix.
-              Un roster sans apothicaire (morts-vivants...) le voit grise. */}
+          {/* Staff : sous-type matérialisé, avec son plafond et son prix.
+              Un roster sans apothicaire (morts-vivants…) le voit grisé. */}
           {it.kind === "staff" && (
             <select
               value={it.staff ?? ""}
