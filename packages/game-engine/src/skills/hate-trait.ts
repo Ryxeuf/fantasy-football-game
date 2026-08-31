@@ -164,7 +164,7 @@ export function buildHateSkillDefinition(
  * Mot-clé français d'un slug de Haine, reconstruit depuis le vocabulaire
  * connu (positions Season 3 + Star Players).
  *
- * La slugification est DESTRUCTRICE (« Homme-lézard » → `homme-lezard`) :
+ * La slugification est DESTRUCTRICE (« Homme Lézard » → `homme-lezard`) :
  * on ne peut pas remonter l'accentuation par calcul. On indexe donc les
  * mots-clés du catalogue par leur slug de Haine, ce qui rend le libellé
  * exact pour tout mot-clé que le moteur connaît.

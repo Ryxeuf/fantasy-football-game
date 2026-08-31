@@ -2736,15 +2736,33 @@ function colorsFor(roster: string | undefined): MatchSheetTeamColors {
 }
 
 /**
+ * Ids des joueurs TUES pendant le match saisi. Ils sont encore au roster
+ * (la validation n'a pas eu lieu) mais ne comptent plus dans l'effectif :
+ * le livre les retire en premier, avant les embauches.
+ */
+function deadThisMatch(summary: MatchSummary): ReadonlySet<string> {
+  const out = new Set<string>();
+  for (const inj of summary.injuries) {
+    if (inj.severity === "dead") out.add(inj.playerId);
+  }
+  return out;
+}
+
+/**
  * Postes et staff achetables par une equipe a l'etape 4 (embauches), avec
  * leur prix. Best-effort : une resolution en echec rend un catalogue vide,
  * l'UI retombe alors sur la saisie libre plutot que de bloquer la feuille.
  *
- * Les compteurs partent du roster ACTIF (les morts quittent l'equipe en fin
- * de match, ils ne consomment donc pas de slot pour l'achat qui suit).
+ * Les compteurs partent du roster ACTIF, MOINS les joueurs tues pendant CE
+ * match : le livre (p.68) retire un mort AVANT toute autre action
+ * d'apres-match, sa place est donc libre pour le recrutement de l'etape 4.
+ * Ces morts-la ne sont pas encore persistes (la validation vient apres) :
+ * sans eux, l'equipe qui vient de perdre son 16e joueur ne pourrait pas le
+ * remplacer — exactement le cas que la regle vise.
  */
 async function purchaseOptionsFor(
   team: MatchSheetTeam | null,
+  deadThisMatch: ReadonlySet<string> = new Set(),
 ): Promise<PurchaseOptions> {
   if (!team) return EMPTY_PURCHASE_OPTIONS;
   try {
@@ -2756,7 +2774,9 @@ async function purchaseOptionsFor(
     ]);
     if (!rosterData) return EMPTY_PURCHASE_OPTIONS;
 
-    const active = team.players.filter((p) => !p.dead);
+    const active = team.players.filter(
+      (p) => !p.dead && !deadThisMatch.has(p.id),
+    );
     return buildPurchaseOptions({
       positions: rosterData.positions.map((p) => ({
         slug: p.slug,
@@ -2921,6 +2941,9 @@ export async function buildMatchSheetReference(
   spent: { home: number; away: number } = { home: 0, away: 0 },
   // Règlement de tournoi de la ligue (liste fermée + prix imposés).
   pack: TournamentRulesetDefinition | null = null,
+  // Joueurs tués pendant CE match (pas encore persistés) : leur place est
+  // libre pour l'embauche de l'étape 4.
+  deadThisMatch: ReadonlySet<string> = new Set(),
 ): Promise<MatchSheetReference> {
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
@@ -2941,8 +2964,8 @@ export async function buildMatchSheetReference(
   });
 
   const [purchasesHome, purchasesAway] = await Promise.all([
-    purchaseOptionsFor(teams.home),
-    purchaseOptionsFor(teams.away),
+    purchaseOptionsFor(teams.home, deadThisMatch),
+    purchaseOptionsFor(teams.away, deadThisMatch),
   ]);
 
   return {
@@ -3362,6 +3385,7 @@ export async function getMatchSheet(input: {
       allowedInducements,
       { home: 0, away: 0 },
       inducementPack,
+      deadThisMatch(summary),
     ),
     computedSpp,
     viewerRole: commissioner

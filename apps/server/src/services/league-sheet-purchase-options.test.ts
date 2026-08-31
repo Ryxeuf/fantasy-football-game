@@ -83,6 +83,18 @@ describe("buildPurchaseOptions — postes (E47)", () => {
     const opts = build({ playerCount: 11, maxPlayers: 11 });
     expect(opts.positions.every((p) => !p.canAdd)).toBe(true);
   });
+
+  it("libère la place d'un joueur retiré de l'effectif", () => {
+    // Livre p.68 : un mort est retiré AVANT les embauches, sa place est
+    // libre. L'appelant l'exclut donc de `playerCount` — l'équipe qui vient
+    // de perdre son 16e joueur peut le remplacer au même match.
+    const plein = build({ playerCount: 16 });
+    expect(plein.positions.some((p) => p.canAdd)).toBe(false);
+    const apresRetrait = build({ playerCount: 15 });
+    expect(
+      apresRetrait.positions.find((p) => p.slug === "lineman")?.canAdd,
+    ).toBe(true);
+  });
 });
 
 describe("buildPurchaseOptions — staff (E46)", () => {
