@@ -2462,7 +2462,7 @@ function parseFrozenTeamValues(raw: unknown): {
  * Violent ». Le summarizer ne crédite les PSP d'une Élimination sur
  * Action Spéciale (`special_elim`) qu'à ces joueurs (règle BB S3).
  */
-function collectViolentInnovators(teams: {
+export function collectViolentInnovators(teams: {
   home: MatchSheetTeam | null;
   away: MatchSheetTeam | null;
 }): Set<string> {

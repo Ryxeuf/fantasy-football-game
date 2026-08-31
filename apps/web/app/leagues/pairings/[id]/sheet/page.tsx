@@ -39,6 +39,7 @@ import {
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
 import {
+  eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
   RECEIVER_BEARING_KINDS,
@@ -995,6 +996,17 @@ export default function MatchSheetPage() {
                       </option>
                     ))}
                   </select>
+                  {/* Toutes les éliminations ne rapportent pas de PSP : sans
+                      ce rappel, une saisie correcte passe pour une perte de
+                      données. */}
+                  {eventKindHint(kind) && (
+                    <span
+                      data-testid="event-kind-hint"
+                      className="mt-1 block text-[11px] font-normal text-slate-500"
+                    >
+                      {eventKindHint(kind)}
+                    </span>
+                  )}
                 </label>
                 <label className="text-xs">
                   Équipe

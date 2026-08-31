@@ -6,6 +6,7 @@
  */
 import { describe, it, expect } from "vitest";
 import {
+  eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
   RECEIVER_BEARING_KINDS,
@@ -99,6 +100,38 @@ describe("event-fields — réceptionneur de passe", () => {
       "other_elim",
     ] as const) {
       expect(hasTargetField(kind), kind).toBe(false);
+    }
+  });
+});
+
+describe("eventKindHint — rappels de règle sur les PSP (E30)", () => {
+  it("prévient qu'une Élimination sur Action Spéciale ne rapporte rien", () => {
+    const hint = eventKindHint("special_elim");
+    expect(hint).toContain("Aucun PSP");
+    expect(hint).toContain("Innovateur Violent");
+  });
+
+  it("explique les éliminations sans auteur", () => {
+    for (const kind of ["other_elim", "stalling", "crowd_surge"] as const) {
+      expect(eventKindHint(kind)).toBeTruthy();
+    }
+  });
+
+  it("ne dit rien des évènements qui rapportent normalement des PSP", () => {
+    for (const kind of [
+      "touchdown",
+      "casualty",
+      "pass_complete",
+      "interception",
+      "ttm_landing",
+    ] as const) {
+      expect(eventKindHint(kind)).toBeNull();
+    }
+  });
+
+  it("ne commente pas non plus les évènements sans PSP par nature", () => {
+    for (const kind of ["kickoff", "expulsion", "team_throw"] as const) {
+      expect(eventKindHint(kind)).toBeNull();
     }
   });
 });
