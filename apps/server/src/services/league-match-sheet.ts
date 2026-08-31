@@ -64,6 +64,10 @@ import {
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
 import {
+  applyPrayerSppBonuses,
+  computePrayerSppBonuses,
+} from "./league-sheet-prayer-spp";
+import {
   deriveSheetStarPlayers,
   isSyntheticSheetPlayerId,
   type SheetStarPlayer,
@@ -1154,6 +1158,9 @@ export function buildOfflineInputFromSummary(
     rankingBonusAway?: number | null;
     /** SPP bonus "Nuffle" par joueur : [{ playerId, spp }]. */
     sppBonus?: unknown;
+    /** Prieres a Nuffle achetees en coup de pouce (D16). */
+    prayersHome?: unknown;
+    prayersAway?: unknown;
     /** Depenses post/avant-match (debit treasury). */
     inducementsHome?: unknown;
     inducementsAway?: unknown;
@@ -1267,9 +1274,20 @@ export function buildOfflineInputFromSummary(
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
     rankingBonusHome: sheet.rankingBonusHome ?? undefined,
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
-    sppBonus: parseSppBonus(sheet.sppBonus).filter(
-      (b) => !isSyntheticSheetPlayerId(b.teamPlayerId),
-    ),
+    // SPP bonus persistes = saisie manuelle du commissaire + PSP dus aux
+    // Prieres a Nuffle. Les deux passent par le meme canal, donc par la
+    // meme reversion a l'invalidation. Les joueurs SYNTHETIQUES (journaliers,
+    // Star Players) en sont exclus : ils n'ont pas de ligne TeamPlayer — les
+    // PSP d'un journalier ne comptent qu'a son recrutement, via
+    // `computeSheetSpp`, qui applique les memes prieres.
+    sppBonus: [
+      ...parseSppBonus(sheet.sppBonus),
+      ...computePrayerSppBonuses({
+        summary,
+        prayersHome: sheet.prayersHome,
+        prayersAway: sheet.prayersAway,
+      }).map((b) => ({ teamPlayerId: b.playerId, spp: b.spp })),
+    ].filter((b) => !isSyntheticSheetPlayerId(b.teamPlayerId)),
     injuries,
     // Achats -> materialisation roster (le debit treasury est deja porte
     // par treasuryDebit ci-dessus : pas de double-debit).
@@ -1634,6 +1652,10 @@ export async function validateByCommissioner(input: {
       rankingBonusHome?: number | null;
       rankingBonusAway?: number | null;
       sppBonus?: unknown;
+      // Prieres a Nuffle : « Passe Parfaite » et « Reception Etourdissante »
+      // creditent des PSP a la validation, via `sppBonus`.
+      prayersHome?: unknown;
+      prayersAway?: unknown;
       inducementsHome?: unknown;
       inducementsAway?: unknown;
       costlyErrorsHome?: unknown;
@@ -1692,10 +1714,16 @@ export async function validateByCommissioner(input: {
   // qu'il a gagné au match (PSP + évolution de l'étape 3, qui renchérit son
   // prix). Le serveur redérive tout (PSP officiels, coût du poste) : la
   // saisie du coach ne porte que l'id du journalier.
+  const sheetPrayers = sheet as {
+    prayersHome?: unknown;
+    prayersAway?: unknown;
+  };
   const computedSppForHire = await computeSheetSpp({
     summary,
     motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
     teams: teamsForBudget,
+    prayersHome: sheetPrayers.prayersHome,
+    prayersAway: sheetPrayers.prayersAway,
   });
   const sheetJourneymenChoice = sheet as {
     journeymenHome?: unknown;
@@ -2908,6 +2936,9 @@ async function computeSheetSpp(input: {
   summary: MatchSummary;
   motmPlayerIds: unknown;
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
+  /** Prieres a Nuffle saisies (colonnes `prayersHome/Away` de la feuille). */
+  prayersHome?: unknown;
+  prayersAway?: unknown;
 }): Promise<Record<string, number>> {
   const { summary, teams } = input;
   const motm = new Set(parseStringArray(input.motmPlayerIds));
@@ -2951,7 +2982,18 @@ async function computeSheetSpp(input: {
       side === "home" ? sppContext.teamA : sppContext.teamB,
     );
   }
-  return out;
+  // Prieres a Nuffle : « Passe Parfaite » (Reussite a 2 PSP) et « Reception
+  // Etourdissante » (1 PSP au receptionneur). Le receptionneur n'a sinon
+  // AUCUN PSP — c'est le lanceur qui marque la Reussite — donc sa saisie
+  // sur l'evenement de passe restait sans effet.
+  return applyPrayerSppBonuses(
+    out,
+    computePrayerSppBonuses({
+      summary,
+      prayersHome: input.prayersHome,
+      prayersAway: input.prayersAway,
+    }),
+  );
 }
 
 /**
@@ -3113,10 +3155,16 @@ export async function getMatchSheet(input: {
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
+  const sheetPrayersForSpp = sheet as {
+    prayersHome?: unknown;
+    prayersAway?: unknown;
+  };
   const computedSpp = await computeSheetSpp({
     summary,
     motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
     teams,
+    prayersHome: sheetPrayersForSpp.prayersHome,
+    prayersAway: sheetPrayersForSpp.prayersAway,
   });
 
   const { allowlist: allowedInducements, pack: inducementPack } =
