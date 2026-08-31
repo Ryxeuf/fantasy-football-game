@@ -1724,22 +1724,14 @@ describe("Gestion des actions par joueur", () => {
 
       // Placer le ballon à côté du joueur B (vers la gauche pour éviter B2)
       const ballPosition = { x: playerB.pos.x - 1, y: playerB.pos.y };
+      // L'état est DÉRIVÉ de `state` plutôt que reconstruit champ par champ :
+      // l'énumération manuelle omettait `dugouts`, que `cloneGameState` lit
+      // sans garde (`state.dugouts.teamA`) — d'où un TypeError au premier
+      // déplacement. Un champ ajouté au GameState ne cassera plus ce test.
       let newState: GameState = {
-        width: state.width,
-        height: state.height,
-        players: state.players,
+        ...state,
         ball: ballPosition,
         currentPlayer: "B",
-        turn: state.turn,
-        selectedPlayerId: state.selectedPlayerId,
-        lastDiceResult: state.lastDiceResult,
-        isTurnover: state.isTurnover,
-        playerActions: state.playerActions,
-        teamBlitzCount: state.teamBlitzCount,
-        half: state.half,
-        score: state.score,
-        teamNames: state.teamNames,
-        gameLog: state.gameLog,
       };
 
       // Faire bouger le joueur B vers le ballon
