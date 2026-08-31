@@ -9,6 +9,8 @@ import {
   hateSlugForKeyword,
   isHateSkillSlug,
   buildHateSkillDefinition,
+  hateKeywordFromSlug,
+  hateSkillLabelFr,
 } from "./hate-trait";
 import { KEYWORDS_SEASON3 } from "../rosters/keywords-season3";
 import { SKILLS_DEFINITIONS } from "./index";
@@ -151,5 +153,57 @@ describe("catalogue existant", () => {
     for (const s of hates) {
       expect(s.excludedFromSelection).toBe(true);
     }
+  });
+});
+
+describe("hateSkillLabelFr — libellé français depuis le seul slug", () => {
+  it("rend la variante générique", () => {
+    expect(hateSkillLabelFr("hate")).toBe("Haine (X)");
+  });
+
+  it("retrouve le mot-clé ACCENTUÉ que la slugification avait perdu", () => {
+    // `Homme Lézard` se slugifie `homme-lezard` : sans index inverse, on ne
+    // peut pas remonter l'accent par calcul. Le catalogue porte deux
+    // orthographes du même mot-clé (« Homme Lézard » et « Homme-Lézard »),
+    // qui se rejoignent sur ce slug : la première rencontrée gagne, ce qui
+    // rend le libellé stable d'un rendu à l'autre.
+    const slug = hateSlugForKeyword("Homme Lézard");
+    expect(slug).toBe("hate-homme-lezard");
+    expect(hateSkillLabelFr(slug!)).toBe("Haine (Homme Lézard)");
+  });
+
+  it("francise les variantes déjà au catalogue sous un slug anglais", () => {
+    expect(hateSkillLabelFr("hate-dwarf")).toBe("Haine (Nain)");
+    expect(hateSkillLabelFr("hate-troll")).toBe("Haine (Troll)");
+  });
+
+  it("couvre les mots-clés des Star Players", () => {
+    const slug = hateSlugForKeyword("Ogre");
+    expect(slug).toBe("hate-ogre");
+    expect(hateSkillLabelFr(slug!)).toBe("Haine (Ogre)");
+  });
+
+  it("reste lisible pour un mot-clé hors vocabulaire", () => {
+    // Mot-clé venu d'une position éditée en admin : pas d'accent à rendre,
+    // mais surtout pas le slug brut.
+    expect(hateSkillLabelFr("hate-gnoll-des-sables")).toBe(
+      "Haine (Gnoll des sables)",
+    );
+  });
+
+  it("ne s'applique pas à une compétence qui n'est pas de la Haine", () => {
+    expect(hateSkillLabelFr("block")).toBeNull();
+    expect(hateSkillLabelFr("hatred")).toBeNull();
+  });
+});
+
+describe("hateKeywordFromSlug", () => {
+  it("rend le mot-clé du vocabulaire connu", () => {
+    expect(hateKeywordFromSlug("hate-orque")).toBe("Orque");
+  });
+
+  it("rend null hors vocabulaire et pour la variante générique", () => {
+    expect(hateKeywordFromSlug("hate")).toBeNull();
+    expect(hateKeywordFromSlug("hate-gnoll-des-sables")).toBeNull();
   });
 });

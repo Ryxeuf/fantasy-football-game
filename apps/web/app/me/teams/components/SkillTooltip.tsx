@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { parseSkillSlugs } from "@bb/game-engine";
+import { hateSkillLabelFr, parseSkillSlugs } from "@bb/game-engine";
 import {
   DEFAULT_SKILLS_RULESET,
   getSkillDescription,
@@ -57,6 +57,15 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
   const resolveSkill = (slug: string) =>
     resolveFromCatalog(catalog, slug, language) ??
     getSkillDescription(slug, language, ruleset);
+  /**
+   * Libellé du badge. Les variantes de Haine (X) sont créées À LA VOLÉE à la
+   * validation d'une feuille de match : un catalogue chargé avant ne les
+   * connaît pas, et le badge retombait sur le slug brut (`hate-orque`), que
+   * le coach lit comme de l'anglais. Le repli francise le trait sans
+   * attendre le rechargement du catalogue.
+   */
+  const skillLabel = (slug: string, info: { name: string } | null): string =>
+    info?.name || (language === "fr" ? (hateSkillLabelFr(slug) ?? slug) : slug);
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [skillDescription, setSkillDescription] = useState<{ name: string; description: string; category: string; isPassive?: boolean; isElite?: boolean } | null>(null);
@@ -142,7 +151,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         {/* Compétences de base */}
         {baseSkillSlugs.map((skillSlug, index) => {
           const skillInfo = resolveSkill(skillSlug);
-          const displayName = skillInfo?.name || skillSlug;
+          const displayName = skillLabel(skillSlug, skillInfo);
           const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
           const baseSkillText = language === "fr" ? "Compétence de base" : "Base skill";
 
@@ -170,7 +179,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         {/* Compétences acquises */}
         {acquiredSkillSlugs.map((skillSlug, index) => {
           const skillInfo = resolveSkill(skillSlug);
-          const displayName = skillInfo?.name || skillSlug;
+          const displayName = skillLabel(skillSlug, skillInfo);
           const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
           const acquiredSkillText = language === "fr" ? "Compétence acquise" : "Acquired skill";
 

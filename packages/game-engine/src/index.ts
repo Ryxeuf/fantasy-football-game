@@ -407,6 +407,8 @@ export {
   hateSlugForKeyword,
   isHateSkillSlug,
   buildHateSkillDefinition,
+  hateKeywordFromSlug,
+  hateSkillLabelFr,
 } from './skills/hate-trait';
 export * from './skills/random-skill-table-2025';
 

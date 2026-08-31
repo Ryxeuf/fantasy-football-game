@@ -187,11 +187,45 @@ export interface TeamColors {
   primary: string;
   secondary: string;
 }
+/** Un poste du roster proposé à l'embauche, avec son prix catalogue. */
+export interface PurchasePositionOption {
+  slug: string;
+  name: string;
+  /** Prix de recrutement en po (déjà converti depuis les kpo du catalogue). */
+  cost: number;
+  currentCount: number;
+  maxCount: number;
+  /** Faux si le quota du poste OU l'effectif du format est atteint. */
+  canAdd: boolean;
+}
+
+/** Un élément de staff proposé, avec son prix d'APRÈS-MATCH. */
+export interface PurchaseStaffOption {
+  kind: StaffKind | "reroll";
+  name: string;
+  /** Relance : prix de construction × 2 (règle BB de l'achat post-création). */
+  cost: number;
+  currentCount: number;
+  maxCount: number;
+  canAdd: boolean;
+}
+
+export interface PurchaseOptions {
+  positions: PurchasePositionOption[];
+  staff: PurchaseStaffOption[];
+}
+
 export interface MatchSheetReference {
   weatherTables: WeatherTable[];
   inducements: { home: InducementOption[]; away: InducementOption[] };
   starPlayers: { home: StarPlayerOption[]; away: StarPlayerOption[] };
   budget: { home: TeamBudget; away: TeamBudget };
+  /**
+   * Postes et staff achetables à l'étape 4 (EMBAUCHES), avec leur prix et
+   * leur quota. Optionnel : une feuille servie par un serveur antérieur à ce
+   * catalogue retombe sur la saisie libre.
+   */
+  purchases?: { home: PurchaseOptions; away: PurchaseOptions };
   colors: { home: TeamColors; away: TeamColors };
 }
 
@@ -1551,6 +1585,25 @@ function teamPositions(
   );
 }
 
+/**
+ * Libellé d'un poste dans le picker d'embauche : nom + quota consommé, pour
+ * que le coach voie POURQUOI un poste est indisponible (« 2/2 ») plutôt que
+ * de le chercher dans une liste où il a disparu.
+ */
+export function purchaseOptionLabel(o: {
+  name: string;
+  cost: number;
+  currentCount: number;
+  maxCount: number;
+  canAdd: boolean;
+}): string {
+  const quota = `${o.currentCount}/${o.maxCount}`;
+  const price = formatGold(o.cost);
+  return o.canAdd
+    ? `${o.name} (${quota}) — ${price}`
+    : `${o.name} (${quota}) — complet`;
+}
+
 function PurchaseEditor({
   list,
   onChange,
@@ -1559,6 +1612,7 @@ function PurchaseEditor({
   team,
   treasuryBefore,
   journeymanHireCost,
+  options,
 }: {
   list: Purchase[];
   onChange: (l: Purchase[]) => void;
@@ -1573,10 +1627,43 @@ function PurchaseEditor({
   treasuryBefore: number;
   /** Prix de recrutement d'un journalier (poste + évolution de l'étape 3). */
   journeymanHireCost: (journeymanId: string) => number | null;
+  /**
+   * Catalogue d'embauche de l'équipe (postes du roster + staff, avec quota
+   * et prix). Absent ⇒ saisie libre, comme avant le catalogue.
+   */
+  options?: PurchaseOptions;
 }) {
   const update = (i: number, patch: Partial<Purchase>) =>
     onChange(list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
-  const positions = teamPositions(team);
+  // Postes du CATALOGUE du roster (quota + prix) ; à défaut, les postes
+  // déjà présents à l'effectif — qui ne disent rien des quotas ni des prix.
+  const catalogue = options?.positions ?? [];
+  const positions =
+    catalogue.length > 0
+      ? catalogue
+      : teamPositions(team).map((pos) => ({
+          slug: pos.slug,
+          name: pos.name,
+          cost: 0,
+          currentCount: 0,
+          maxCount: 0,
+          canAdd: true,
+        }));
+  const staffOptions = options?.staff ?? [];
+  const staffOption = (kind: StaffKind | "reroll") =>
+    staffOptions.find((o) => o.kind === kind) ?? null;
+  const rerollOption = staffOption("reroll");
+  /** Prix catalogue de la ligne, s'il est connu (pour signaler un écart). */
+  const catalogueCost = (it: Purchase): number | null => {
+    if (it.kind === "player")
+      return positions.find((p) => p.slug === it.position)?.cost ?? null;
+    if (it.kind === "reroll") return rerollOption?.cost ?? null;
+    if (it.kind === "staff")
+      return it.staff ? (staffOption(it.staff)?.cost ?? null) : null;
+    if (it.kind === "journeyman")
+      return it.journeymanId ? journeymanHireCost(it.journeymanId) : null;
+    return null;
+  };
   // Journaliers ayant joué CE match : recrutables à l'étape EMBAUCHES.
   const journeymen = team?.journeymen ?? [];
   const spent = list.reduce((sum, p) => sum + (p.cost || 0), 0);
@@ -1603,10 +1690,22 @@ function PurchaseEditor({
         <div key={i} className="flex flex-wrap items-center gap-1.5">
           <select
             value={it.kind}
-            onChange={(e) =>
-              update(i, { kind: e.target.value as Purchase["kind"] })
-            }
+            onChange={(e) => {
+              // Changer de type invalide le poste/staff déjà choisi ET son
+              // prix : une relance à 100 000 po ne doit pas rester collée à
+              // un « Joueur » qu'on sélectionnera ensuite.
+              const kind = e.target.value as Purchase["kind"];
+              update(i, {
+                kind,
+                position: undefined,
+                staff: undefined,
+                journeymanId: undefined,
+                cost: kind === "reroll" ? (rerollOption?.cost ?? 0) : 0,
+              });
+            }}
             disabled={disabled}
+            aria-label="type d'achat"
+            data-testid={testId ? `${testId}-kind-${i}` : undefined}
             className="rounded border px-1.5 py-1 text-sm"
           >
             {PURCHASE_KINDS.map((k) => (
@@ -1615,21 +1714,30 @@ function PurchaseEditor({
               </option>
             ))}
           </select>
-          {/* Joueur : poste a recruter (sinon le serveur resout par cout). */}
+          {/* Joueur : poste à recruter. Le catalogue du roster donne le
+              QUOTA (0-2 Blitzers…) et le PRIX : un poste complet est
+              proposé grisé, et le prix se remplit tout seul au choix. */}
           {it.kind === "player" && (
             <select
               value={it.position ?? ""}
-              onChange={(e) =>
-                update(i, { position: e.target.value || undefined })
-              }
+              onChange={(e) => {
+                const slug = e.target.value || undefined;
+                const pos = positions.find((o) => o.slug === slug);
+                update(i, {
+                  position: slug,
+                  // Un catalogue absent (maxCount 0) laisse la saisie libre.
+                  cost: pos && pos.maxCount > 0 ? pos.cost : it.cost,
+                });
+              }}
               disabled={disabled}
               aria-label="poste"
+              data-testid={testId ? `${testId}-position-${i}` : undefined}
               className="rounded border px-1.5 py-1 text-sm"
             >
-              <option value="">poste (auto)</option>
+              <option value="">poste…</option>
               {positions.map((pos) => (
-                <option key={pos.slug} value={pos.slug}>
-                  {pos.name}
+                <option key={pos.slug} value={pos.slug} disabled={!pos.canAdd}>
+                  {pos.maxCount > 0 ? purchaseOptionLabel(pos) : pos.name}
                 </option>
               ))}
             </select>
@@ -1662,25 +1770,36 @@ function PurchaseEditor({
               ))}
             </select>
           )}
-          {/* Staff : sous-type materialise. */}
+          {/* Staff : sous-type matérialisé, avec son plafond et son prix.
+              Un roster sans apothicaire (morts-vivants…) le voit grisé. */}
           {it.kind === "staff" && (
             <select
               value={it.staff ?? ""}
-              onChange={(e) =>
-                update(i, {
-                  staff: (e.target.value || undefined) as StaffKind | undefined,
-                })
-              }
+              onChange={(e) => {
+                const kind = (e.target.value || undefined) as
+                  | StaffKind
+                  | undefined;
+                const opt = kind ? staffOption(kind) : null;
+                update(i, { staff: kind, cost: opt ? opt.cost : it.cost });
+              }}
               disabled={disabled}
               aria-label="type de staff"
+              data-testid={testId ? `${testId}-staff-${i}` : undefined}
               className="rounded border px-1.5 py-1 text-sm"
             >
               <option value="">type…</option>
-              {STAFF_KINDS.map((k) => (
-                <option key={k.value} value={k.value}>
-                  {k.label}
-                </option>
-              ))}
+              {STAFF_KINDS.map((k) => {
+                const opt = staffOption(k.value);
+                return (
+                  <option
+                    key={k.value}
+                    value={k.value}
+                    disabled={!!opt && !opt.canAdd}
+                  >
+                    {opt ? purchaseOptionLabel(opt) : k.label}
+                  </option>
+                );
+              })}
             </select>
           )}
           {purchaseHasNameField(it.kind) ? (
@@ -1701,6 +1820,8 @@ function PurchaseEditor({
             onChange={(e) => update(i, { cost: Number(e.target.value) || 0 })}
             disabled={disabled}
             placeholder="Coût (po)"
+            aria-label="coût"
+            data-testid={testId ? `${testId}-cost-${i}` : undefined}
             className="w-24 rounded border px-2 py-1 text-sm"
           />
           {!disabled && (
@@ -1713,6 +1834,21 @@ function PurchaseEditor({
               ✕
             </button>
           )}
+          {/* Le prix reste corrigeable (ajustement de ligue), mais un écart
+              au catalogue est signalé : c'est ce montant qui débite la
+              trésorerie. */}
+          {(() => {
+            const ref = catalogueCost(it);
+            if (ref === null || ref === it.cost) return null;
+            return (
+              <span
+                data-testid={testId ? `${testId}-cost-hint-${i}` : undefined}
+                className="w-full text-[11px] text-amber-700"
+              >
+                Prix catalogue : {formatGold(ref)}
+              </span>
+            );
+          })()}
         </div>
       ))}
       {!disabled && (
@@ -1722,6 +1858,7 @@ function PurchaseEditor({
             onChange([...list, { kind: "player", name: "", cost: 0 }])
           }
           className="text-xs font-medium text-blue-600"
+          data-testid={testId ? `${testId}-add` : undefined}
         >
           + achat
         </button>
@@ -1771,6 +1908,7 @@ export function PostMatchPanel({
   computedSpp = {},
   autoWinnings,
   journeymanHireCost,
+  purchaseOptions,
   onGoToAdvancements,
 }: {
   initial: PostMatchValues;
@@ -1789,6 +1927,12 @@ export function PostMatchPanel({
    * la validation.
    */
   journeymanHireCost?: (journeymanId: string) => number | null;
+  /**
+   * Catalogue d'embauche par côté (postes du roster avec quota et prix,
+   * staff avec ses plafonds), servi par `reference.purchases`. Absent, la
+   * saisie du poste et du montant reste libre comme auparavant.
+   */
+  purchaseOptions?: { home?: PurchaseOptions; away?: PurchaseOptions };
   /**
    * Bascule vers l'onglet « Évolutions » (étape 3 de la séquence). Absent,
    * l'étape rappelle seulement où la saisie se fait.
@@ -2157,6 +2301,7 @@ export function PostMatchPanel({
                   team={c.team}
                   treasuryBefore={c.treasuryBeforePurchases}
                   journeymanHireCost={journeymanHireCost ?? (() => null)}
+                  options={purchaseOptions?.[c.side]}
                 />
                 <p className="mt-1 text-[10px] text-slate-500">
                   « Dépense diverse » débite seulement la trésorerie (aucun
