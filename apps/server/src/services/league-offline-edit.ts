@@ -81,7 +81,11 @@ export type ReverseOfflineSkipReason =
   | "purchase-consumed";
 
 export type ReverseOfflineOutcome =
-  | { readonly reversed: true; readonly matchId: string; readonly pairingId: string }
+  | {
+      readonly reversed: true;
+      readonly matchId: string;
+      readonly pairingId: string;
+    }
   | { readonly skipped: true; readonly reason: ReverseOfflineSkipReason };
 
 interface PendingChoiceLite {
@@ -237,6 +241,26 @@ export interface ReverseOfflineOptions {
   readonly removeConsumedAdvancements?: boolean;
 }
 
+/** Round d'un match, sous la forme minimale dont depend la reversion. */
+interface LeagueRoundLite {
+  readonly id: string;
+  readonly status: string;
+  readonly kind: string | null;
+  readonly bracketSlot: string | null;
+}
+
+/**
+ * Un round est un round de PLAYOFF s'il le declare (`kind`) ou s'il porte
+ * un slot de bracket. Le slot suffit : il n'existe que sur les rounds
+ * generes par `startPlayoffs` / l'avancement du bracket, alors que `kind`
+ * vaut "regular" par defaut — donc aussi sur un round de playoff cree a la
+ * main par le commissaire (calendrier manuel).
+ */
+function isPlayoffRound(round: LeagueRoundLite | null): boolean {
+  if (!round) return false;
+  return round.kind === "playoff" || !!round.bracketSlot;
+}
+
 /**
  * Annule tous les effets d'un resultat offline et supprime le Match
  * synthetique. Idempotent quant aux garde-fous (refus si effet consomme).
@@ -271,6 +295,18 @@ export async function reverseOfflineLeagueResult(
       leagueRound: {
         select: { id: true, status: true, kind: true, bracketSlot: true },
       },
+      // Round LU DEPUIS LE PAIRING : `Match.leagueRoundId` est nullable
+      // (`onDelete: SetNull`) et n'a jamais pu etre backfille — les matchs
+      // anterieurs a la colonne, comme ceux dont le round a ete supprime,
+      // le portent a NULL. `LeaguePairing.roundId` est obligatoire : c'est
+      // lui qui fait foi pour savoir si le match est un match DE playoff.
+      leaguePairing: {
+        select: {
+          round: {
+            select: { id: true, status: true, kind: true, bracketSlot: true },
+          },
+        },
+      },
     },
   })) as {
     id: string;
@@ -285,12 +321,8 @@ export async function reverseOfflineLeagueResult(
       status: string;
       league: { winPoints: number; drawPoints: number; lossPoints: number };
     } | null;
-    leagueRound: {
-      id: string;
-      status: string;
-      kind: string | null;
-      bracketSlot: string | null;
-    } | null;
+    leagueRound: LeagueRoundLite | null;
+    leaguePairing: { round: LeagueRoundLite | null } | null;
   } | null;
 
   if (!match) return { skipped: true, reason: "match-missing" };
@@ -317,7 +349,10 @@ export async function reverseOfflineLeagueResult(
   // refuser rendait toute erreur de saisie en playoff definitive. On le
   // laisse donc passer tant que le tour suivant n'a pas demarre (sinon un
   // match serait deja joue par une equipe qu'on s'apprete a dequalifier).
-  const isPlayoffMatch = match.leagueRound?.kind === "playoff";
+  // Le round du PAIRING fait foi (cf. le select) ; celui du Match ne sert
+  // que de repli pour un pairing devenu illisible.
+  const round = match.leaguePairing?.round ?? match.leagueRound;
+  const isPlayoffMatch = isPlayoffRound(round);
   if (!isPlayoffMatch) {
     const playoffRounds = await prisma.leagueRound.count({
       where: { seasonId: match.leagueSeasonId, kind: "playoff" },
@@ -325,10 +360,10 @@ export async function reverseOfflineLeagueResult(
     if (playoffRounds > 0) {
       return { skipped: true, reason: "playoffs-generated" };
     }
-  } else if (match.leagueRound?.bracketSlot) {
+  } else if (round?.bracketSlot) {
     const state = await playoffAdvancementState(
       match.leagueSeasonId,
-      match.leagueRound.bracketSlot,
+      round.bracketSlot,
     );
     if (state === "started") {
       return { skipped: true, reason: "playoff-round-advanced" };
@@ -472,7 +507,9 @@ export async function reverseOfflineLeagueResult(
       where: { id: { in: ids } },
       select: { id: true, teamId: true },
     })) as Array<{ id: string; teamId: string }>;
-    const teamById = new Map<string, string>(owned.map((p) => [p.id, p.teamId]));
+    const teamById = new Map<string, string>(
+      owned.map((p) => [p.id, p.teamId]),
+    );
     for (const s of input.playerStats) {
       const teamId = teamById.get(s.teamPlayerId);
       if (teamId !== home.teamId && teamId !== away.teamId) continue;
@@ -559,10 +596,8 @@ export async function reverseOfflineLeagueResult(
 
   // 3. Economie : annule le net treasury applique a la saisie
   //    (gains - depenses) + restaure dedicatedFans (pre-valeur).
-  const treasuryDeltaHome =
-    input.winningsHome - (input.treasuryDebitHome ?? 0);
-  const treasuryDeltaAway =
-    input.winningsAway - (input.treasuryDebitAway ?? 0);
+  const treasuryDeltaHome = input.winningsHome - (input.treasuryDebitHome ?? 0);
+  const treasuryDeltaAway = input.winningsAway - (input.treasuryDebitAway ?? 0);
   ops.push(
     prisma.team.update({
       where: { id: home.teamId },
@@ -699,10 +734,10 @@ export async function reverseOfflineLeagueResult(
       },
     }),
   );
-  if (match.leagueRound && match.leagueRound.status === "completed") {
+  if (round && round.status === "completed") {
     ops.push(
       prisma.leagueRound.update({
-        where: { id: match.leagueRound.id },
+        where: { id: round.id },
         data: { status: "scheduled" },
       }),
     );
@@ -734,7 +769,8 @@ export async function reverseOfflineLeagueResult(
       details: {
         side,
         matchId: match.id,
-        reversedWinnings: side === "home" ? input.winningsHome : input.winningsAway,
+        reversedWinnings:
+          side === "home" ? input.winningsHome : input.winningsAway,
         reversedTreasuryDebit:
           side === "home"
             ? (input.treasuryDebitHome ?? 0)
@@ -785,17 +821,18 @@ export async function reverseOfflineLeagueResult(
   // Bracket : retire la qualification issue de ce match (miroir exact de
   // `advancePlayoffsAfterPairingComplete`, joue a la saisie). Sans ca, le
   // tour suivant garderait un qualifie issu d'un resultat annule.
-  if (isPlayoffMatch && match.leagueRound?.bracketSlot) {
+  if (isPlayoffMatch && round?.bracketSlot) {
+    const slot = round.bracketSlot;
     const winnerParticipantId =
       winner === "home" ? home.id : winner === "away" ? away.id : null;
     const out = await unadvancePlayoffsForSlot({
       seasonId: match.leagueSeasonId,
-      slot: match.leagueRound.bracketSlot,
+      slot,
       winnerParticipantId,
     });
     if (!out.unadvanced && out.reason && out.reason !== "no-next-round") {
       serverLog.warn(
-        `[league-offline-edit] desavancement bracket ignore (${out.reason}) match=${match.id} slot=${match.leagueRound.bracketSlot}`,
+        `[league-offline-edit] desavancement bracket ignore (${out.reason}) match=${match.id} slot=${slot}`,
       );
     }
   }

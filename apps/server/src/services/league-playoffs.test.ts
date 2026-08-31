@@ -56,10 +56,7 @@ vi.mock("../prisma", () => ({
   },
 }));
 
-import {
-  computeSeasonStandings,
-  computeSeasonStandingsByPool,
-} from "./league";
+import { computeSeasonStandings, computeSeasonStandingsByPool } from "./league";
 import { prisma } from "../prisma";
 import {
   generatePlayoffSeedingFor,
@@ -92,8 +89,8 @@ const mocked = {
   pairingUpdateMany: prisma.leaguePairing.updateMany as MockFn,
   roundUpdateMany: prisma.leagueRound.updateMany as MockFn,
   roundDelete: prisma.leagueRound.delete as MockFn,
-  auditCreate: (prisma as unknown as { auditLog: { create: MockFn } })
-    .auditLog.create as MockFn,
+  auditCreate: (prisma as unknown as { auditLog: { create: MockFn } }).auditLog
+    .create as MockFn,
   seasonUpdate: prisma.leagueSeason.update as MockFn,
 };
 
@@ -143,9 +140,9 @@ describe("generatePlayoffSeedingFor (PURE)", () => {
   });
 
   it("rejects when seeds < size", () => {
-    expect(() =>
-      generatePlayoffSeedingFor(4, ["a", "b", "c"], 8),
-    ).toThrow(/insuffisants/);
+    expect(() => generatePlayoffSeedingFor(4, ["a", "b", "c"], 8)).toThrow(
+      /insuffisants/,
+    );
   });
 
   it("size=2 produces a single 'final' pairing seed1 vs seed2", () => {
@@ -158,11 +155,7 @@ describe("generatePlayoffSeedingFor (PURE)", () => {
   });
 
   it("size=4 produces 2 SF pairings using cross-bracket seeding (1v4, 2v3)", () => {
-    const out = generatePlayoffSeedingFor(
-      4,
-      ["s1", "s2", "s3", "s4"],
-      10,
-    );
+    const out = generatePlayoffSeedingFor(4, ["s1", "s2", "s3", "s4"], 10);
     expect(out).toHaveLength(2);
     expect(out[0]).toMatchObject({
       slot: "sf1",
@@ -208,8 +201,17 @@ describe("generatePlayoffSeedingFor (PURE)", () => {
     const out = generatePlayoffSeedingFor(
       8,
       [
-        "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8",
-        "s9", "s10", "s11", // ignored
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "s8",
+        "s9",
+        "s10",
+        "s11", // ignored
       ],
       1,
     );
@@ -296,9 +298,7 @@ describe("selectSeedsFromPools (PURE)", () => {
       8,
     );
     if (!out.ok) throw new Error("expected ok");
-    expect(out.seeds).toEqual([
-      "a1", "b1", "c1", "d1", "a2", "b2", "c2", "d2",
-    ]);
+    expect(out.seeds).toEqual(["a1", "b1", "c1", "d1", "a2", "b2", "c2", "d2"]);
     for (const p of generatePlayoffSeedingFor(8, out.seeds, 1)) {
       expect(p.homeParticipantId[0]).not.toBe(p.awayParticipantId[0]);
     }
@@ -313,9 +313,7 @@ describe("selectSeedsFromPools (PURE)", () => {
       8,
     );
     if (!out.ok) throw new Error("expected ok");
-    expect(out.seeds).toEqual([
-      "a1", "b1", "a2", "b2", "a3", "b3", "a4", "b4",
-    ]);
+    expect(out.seeds).toEqual(["a1", "b1", "a2", "b2", "a3", "b3", "a4", "b4"]);
     for (const p of generatePlayoffSeedingFor(8, out.seeds, 1)) {
       expect(p.homeParticipantId[0]).not.toBe(p.awayParticipantId[0]);
     }
@@ -339,7 +337,10 @@ describe("selectSeedsFromPools (PURE)", () => {
 
   it("refuse quand la somme des quotas != taille du bracket", () => {
     const out = selectSeedsFromPools(
-      [pool("A", 0, 3, ["a1", "a2", "a3"]), pool("B", 1, 3, ["b1", "b2", "b3"])],
+      [
+        pool("A", 0, 3, ["a1", "a2", "a3"]),
+        pool("B", 1, 3, ["b1", "b2", "b3"]),
+      ],
       4,
     );
     expect(out).toEqual({ ok: false, reason: "pool-qualification-mismatch" });
@@ -788,20 +789,19 @@ describe("advancePlayoffsAfterPairingComplete (forfeit path)", () => {
   });
 
   it("creates next round + pairing when sf does not exist (qf1 forfeit_home -> sf1 home)", async () => {
-    mocked.pairingFindFirst
-      .mockResolvedValueOnce({
-        id: "qf1-pairing",
-        status: "forfeit_home",
-        homeParticipantId: "seed1",
-        awayParticipantId: "seed8",
-        round: {
-          id: "r-qf1",
-          seasonId: "s1",
-          roundNumber: 8,
-          kind: "playoff",
-          bracketSlot: "qf1",
-        },
-      });
+    mocked.pairingFindFirst.mockResolvedValueOnce({
+      id: "qf1-pairing",
+      status: "forfeit_home",
+      homeParticipantId: "seed1",
+      awayParticipantId: "seed8",
+      round: {
+        id: "r-qf1",
+        seasonId: "s1",
+        roundNumber: 8,
+        kind: "playoff",
+        bracketSlot: "qf1",
+      },
+    });
     mocked.roundFindFirst.mockResolvedValueOnce(null); // no sf1 yet
     mocked.roundCreate.mockResolvedValue({ id: "r-sf1" });
     mocked.pairingCreate.mockResolvedValue({});
@@ -814,6 +814,42 @@ describe("advancePlayoffsAfterPairingComplete (forfeit path)", () => {
     const newPairingArgs = mocked.pairingCreate.mock.calls[0][0];
     // Winner of qf1 is seed8 (forfeit_home), placed as home in sf1
     expect(newPairingArgs.data.homeParticipantId).toBe("seed8");
+  });
+
+  // A158 — `pairing.round.roundNumber + 1` visait le numero DEJA pris par le
+  // round frere du meme tour de bracket (`startPlayoffs` cree un round par
+  // slot : demi 1 = N, demi 2 = N+1). La creation echouait sur la contrainte
+  // unique (seasonId, roundNumber) et le tour suivant n'existait jamais.
+  it("numerote le tour suivant apres le DERNIER round de la saison", async () => {
+    mocked.pairingFindFirst.mockResolvedValueOnce({
+      id: "sf1-pairing",
+      status: "forfeit_home",
+      homeParticipantId: "seed1",
+      awayParticipantId: "seed4",
+      round: {
+        id: "r-sf1",
+        seasonId: "s1",
+        // Demi-finale 1 : le round frere (sf2) porte deja le numero 13.
+        roundNumber: 12,
+        kind: "playoff",
+        bracketSlot: "sf1",
+      },
+    });
+    mocked.roundFindFirst
+      // Pas encore de round "final"...
+      .mockResolvedValueOnce(null)
+      // ...et le dernier round de la saison est sf2 (13).
+      .mockResolvedValueOnce({ roundNumber: 13 });
+    mocked.roundCreate.mockResolvedValue({ id: "r-final" });
+    mocked.pairingCreate.mockResolvedValue({});
+
+    const out = await advancePlayoffsAfterPairingComplete("sf1-pairing");
+
+    expect(out).toEqual({ advanced: true, nextSlot: "final" });
+    const newRoundArgs = mocked.roundCreate.mock.calls[0][0];
+    // 14, et surtout PAS 13 (numero du round frere).
+    expect(newRoundArgs.data.roundNumber).toBe(14);
+    expect(newRoundArgs.data.bracketSlot).toBe("final");
   });
 
   it("updates existing next-round pairing when sf already exists (qf2 forfeit_away -> sf1 away)", async () => {
@@ -853,20 +889,19 @@ describe("advancePlayoffsAfterPairingComplete (forfeit path)", () => {
 
 describe("advancePlayoffsWithWinner (explicit winner side)", () => {
   it("uses winnerSide=home to pick homeParticipantId", async () => {
-    mocked.pairingFindFirst
-      .mockResolvedValueOnce({
-        id: "p-sf1",
-        status: "played",
-        homeParticipantId: "winner-home",
-        awayParticipantId: "loser-away",
-        round: {
-          id: "r-sf1",
-          seasonId: "s1",
-          roundNumber: 10,
-          kind: "playoff",
-          bracketSlot: "sf1",
-        },
-      });
+    mocked.pairingFindFirst.mockResolvedValueOnce({
+      id: "p-sf1",
+      status: "played",
+      homeParticipantId: "winner-home",
+      awayParticipantId: "loser-away",
+      round: {
+        id: "r-sf1",
+        seasonId: "s1",
+        roundNumber: 10,
+        kind: "playoff",
+        bracketSlot: "sf1",
+      },
+    });
     mocked.roundFindFirst.mockResolvedValueOnce(null);
     mocked.roundCreate.mockResolvedValue({ id: "r-final" });
     mocked.pairingCreate.mockResolvedValue({});
@@ -1066,7 +1101,9 @@ describe("playoffAdvancementState / unadvancePlayoffsForSlot", () => {
     });
 
     expect(out).toEqual({ unadvanced: true });
-    expect(mocked.roundDelete).toHaveBeenCalledWith({ where: { id: "r-final" } });
+    expect(mocked.roundDelete).toHaveBeenCalledWith({
+      where: { id: "r-final" },
+    });
     expect(mocked.pairingUpdate).not.toHaveBeenCalled();
   });
 

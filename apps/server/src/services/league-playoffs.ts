@@ -62,7 +62,10 @@ const FINAL_SLOT = "final";
  *   - winner of sf1 va dans final (home)
  *   - winner of sf2 va dans final (away)
  */
-const ADVANCEMENT_MAP: Record<string, { nextSlot: string; side: "home" | "away" }> = {
+const ADVANCEMENT_MAP: Record<
+  string,
+  { nextSlot: string; side: "home" | "away" }
+> = {
   qf1: { nextSlot: "sf1", side: "home" },
   qf2: { nextSlot: "sf1", side: "away" },
   qf3: { nextSlot: "sf2", side: "home" },
@@ -769,6 +772,28 @@ function playoffRoundLabel(slot: string): string {
 }
 
 /**
+ * Numero du prochain round d'une saison : `max(roundNumber) + 1`.
+ *
+ * `pairing.round.roundNumber + 1` butait sur la contrainte unique
+ * `(seasonId, roundNumber)` : `startPlayoffs` cree UN round par slot du
+ * bracket (demi 1 = N, demi 2 = N+1), donc la premiere demi-finale a
+ * terminer tentait de creer la finale sur le numero de la seconde. La
+ * creation echouait, le tour suivant n'existait jamais, et le bracket
+ * restait bloque au premier tour.
+ */
+async function allocateRoundNumber(
+  client: PrismaWithLeague,
+  seasonId: string,
+): Promise<number> {
+  const last = (await client.leagueRound.findFirst({
+    where: { seasonId },
+    orderBy: { roundNumber: "desc" },
+    select: { roundNumber: true },
+  })) as { roundNumber: number } | null;
+  return (last?.roundNumber ?? 0) + 1;
+}
+
+/**
  * Apres la cloture d'un pairing playoff (status=played /
  * forfeit_*), determine le winner et cree (si applicable) le pairing
  * du round suivant. Idempotent : verifie via `bracketSlot` que le
@@ -829,7 +854,11 @@ export async function advancePlayoffsAfterPairingComplete(
     };
   } | null;
 
-  if (!pairing || pairing.round.kind !== "playoff" || !pairing.round.bracketSlot) {
+  if (
+    !pairing ||
+    pairing.round.kind !== "playoff" ||
+    !pairing.round.bracketSlot
+  ) {
     return { advanced: false, reason: "not-a-playoff-pairing" };
   }
 
@@ -890,7 +919,10 @@ export async function advancePlayoffsAfterPairingComplete(
   // homeParticipantId = winnerId ET awayParticipantId = winnerId
   // temporairement, avec une convention "placeholder = home == away".
   // L'advancement subsequent overwrite le bon cote.
-  const newRoundNumber = pairing.round.roundNumber + 1;
+  const newRoundNumber = await allocateRoundNumber(
+    client,
+    pairing.round.seasonId,
+  );
   const newRound = (await client.leagueRound.create({
     data: {
       seasonId: pairing.round.seasonId,
@@ -990,7 +1022,11 @@ export async function advancePlayoffsWithWinner(
     };
   } | null;
 
-  if (!pairing || pairing.round.kind !== "playoff" || !pairing.round.bracketSlot) {
+  if (
+    !pairing ||
+    pairing.round.kind !== "playoff" ||
+    !pairing.round.bracketSlot
+  ) {
     return { advanced: false, reason: "not-a-playoff-pairing" };
   }
 
@@ -1031,7 +1067,10 @@ export async function advancePlayoffsWithWinner(
     return { advanced: true, nextSlot: next.nextSlot };
   }
 
-  const newRoundNumber = pairing.round.roundNumber + 1;
+  const newRoundNumber = await allocateRoundNumber(
+    client,
+    pairing.round.seasonId,
+  );
   const newRound = (await client.leagueRound.create({
     data: {
       seasonId: pairing.round.seasonId,
