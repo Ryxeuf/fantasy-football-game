@@ -4,6 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../../lib/tournament-rulesets";
 import SkillTooltip from "../components/SkillTooltip";
+import { displayedRegionalLeagues } from "./regional-leagues";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
@@ -493,6 +494,12 @@ export default function TeamDetailPage() {
   )
     ? rosterDetail.regionalLeagues
     : [];
+  // A159 — le roster n'affiche que la Ligue retenue par l'équipe (règle et
+  // replis dans `regional-leagues.ts`).
+  const displayedLeagues = displayedRegionalLeagues(
+    regionalLeagues,
+    team?.regionalLeague,
+  );
 
   // Résumé du budget : calculé par le serveur (`GET /team/:id`) à partir de
   // la MÊME logique que la VE persistée — coûts de poste au ruleset de
@@ -1182,25 +1189,22 @@ export default function TeamDetailPage() {
                 </h2>
               </div>
               <div className="p-4 sm:p-6">
-                {/* La Ligue CHOISIE à la création est celle qui compte : elle
-                    seule débloque Star Players et Coups de Pouce. Les autres
-                    Ligues du roster restent affichées, mais grisées. */}
+                {/* Seule la Ligue CHOISIE à la création s'applique à cette
+                    équipe : elle seule débloque ses Star Players et ses Coups
+                    de Pouce. Les autres Ligues du roster ne la concernent
+                    pas, et les afficher barrées laissait croire qu'elles
+                    avaient été perdues. Sans choix enregistré (équipe
+                    antérieure à la règle), le roster en propose encore
+                    plusieurs : on les montre toutes. */}
                 <div className="flex flex-wrap gap-2 sm:gap-3">
-                  {regionalLeagues.map((league) => {
+                  {displayedLeagues.map((league) => {
                     const chosen = team.regionalLeague === league.slug;
-                    // Sans choix enregistré (équipe antérieure à la règle),
-                    // toutes les Ligues du roster restent actives.
-                    const active = !team.regionalLeague || chosen;
                     return (
                       <span
                         key={league.slug}
                         data-testid={`roster-league-${league.slug}`}
                         aria-current={chosen ? "true" : undefined}
-                        className={`px-3 sm:px-4 py-1.5 rounded-full font-medium text-xs sm:text-sm border ${
-                          active
-                            ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                            : "bg-gray-50 text-gray-400 border-gray-200 line-through"
-                        }`}
+                        className="px-3 sm:px-4 py-1.5 rounded-full font-medium text-xs sm:text-sm border bg-indigo-50 text-indigo-700 border-indigo-100"
                       >
                         {league.name}
                       </span>
