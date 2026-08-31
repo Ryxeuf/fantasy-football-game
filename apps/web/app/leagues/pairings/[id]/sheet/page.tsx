@@ -1287,6 +1287,7 @@ export default function MatchSheetPage() {
                 away: data.sheet.winningsAway ?? 0,
               }}
               journeymanHireCost={journeymanHireCost}
+              purchaseOptions={data.reference.purchases}
               onGoToAdvancements={() => setTab("advancements")}
             />
           </div>

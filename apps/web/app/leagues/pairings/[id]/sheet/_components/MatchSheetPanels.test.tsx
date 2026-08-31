@@ -987,6 +987,206 @@ describe("PostMatchPanel — achats (positions lisibles + champ Nom contextuel)"
   });
 });
 
+describe("PostMatchPanel — catalogue d'embauche (E46/E47)", () => {
+  const teamWithPlayer: SheetTeam = {
+    ...TEAM,
+    players: [
+      {
+        id: "p1",
+        number: 1,
+        name: "Blitzeur 1",
+        position: "he_blitzer",
+        positionName: "Blitzeur Haut Elfe",
+        dead: false,
+        missNextMatch: false,
+        spp: 0,
+      },
+    ],
+  };
+
+  // Haut Elfes : relance a 50 000 po a la construction => 100 000 apres match.
+  const OPTIONS = {
+    home: {
+      positions: [
+        {
+          slug: "he_lineman",
+          name: "Trois-quart Haut Elfe",
+          cost: 60_000,
+          currentCount: 0,
+          maxCount: 16,
+          canAdd: true,
+        },
+        {
+          slug: "he_blitzer",
+          name: "Blitzeur Haut Elfe",
+          cost: 100_000,
+          currentCount: 2,
+          maxCount: 2,
+          canAdd: false,
+        },
+      ],
+      staff: [
+        {
+          kind: "reroll" as const,
+          name: "Relance d'équipe",
+          cost: 100_000,
+          currentCount: 1,
+          maxCount: 8,
+          canAdd: true,
+        },
+        {
+          kind: "assistant" as const,
+          name: "Assistant",
+          cost: 10_000,
+          currentCount: 0,
+          maxCount: 6,
+          canAdd: true,
+        },
+        {
+          kind: "cheerleader" as const,
+          name: "Pom-pom girl",
+          cost: 10_000,
+          currentCount: 0,
+          maxCount: 12,
+          canAdd: true,
+        },
+        {
+          kind: "apothecary" as const,
+          name: "Apothicaire",
+          cost: 50_000,
+          currentCount: 0,
+          maxCount: 0,
+          canAdd: false,
+        },
+        {
+          kind: "dedicated_fan" as const,
+          name: "Fan dévoué",
+          cost: 10_000,
+          currentCount: 1,
+          maxCount: 6,
+          canAdd: true,
+        },
+      ],
+    },
+  };
+
+  function renderWith(purchase: PostMatchValues["purchasesHome"][number]) {
+    return render(
+      <PostMatchPanel
+        initial={{ ...EMPTY_POST, purchasesHome: [purchase] }}
+        home={teamWithPlayer}
+        away={null}
+        onSave={vi.fn()}
+        purchaseOptions={OPTIONS}
+      />,
+    );
+  }
+
+  it("propose les postes du ROSTER, pas seulement ceux déjà à l'effectif", () => {
+    // Sans catalogue, le picker listait les postes des joueurs presents :
+    // un Trois-quart jamais recrute n'etait donc jamais proposé.
+    renderWith({ kind: "player", name: "", cost: 0 });
+    const labels = within(screen.getByTestId("purchases-home-position-0"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(labels).toEqual([
+      "poste…",
+      "Trois-quart Haut Elfe (0/16) — 60 k",
+      "Blitzeur Haut Elfe (2/2) — complet",
+    ]);
+  });
+
+  it("désactive un poste dont le quota est atteint", () => {
+    renderWith({ kind: "player", name: "", cost: 0 });
+    const options = within(
+      screen.getByTestId("purchases-home-position-0"),
+    ).getAllByRole("option") as HTMLOptionElement[];
+    expect(options.find((o) => o.value === "he_blitzer")?.disabled).toBe(true);
+    expect(options.find((o) => o.value === "he_lineman")?.disabled).toBe(false);
+  });
+
+  it("remplit le prix du poste choisi", () => {
+    renderWith({ kind: "player", name: "", cost: 0 });
+    fireEvent.change(screen.getByTestId("purchases-home-position-0"), {
+      target: { value: "he_lineman" },
+    });
+    expect(
+      (screen.getByTestId("purchases-home-cost-0") as HTMLInputElement).value,
+    ).toBe("60000");
+  });
+
+  it("remplit le prix d'APRÈS-MATCH d'une relance (× 2)", () => {
+    renderWith({ kind: "player", name: "", cost: 0 });
+    fireEvent.change(screen.getByTestId("purchases-home-kind-0"), {
+      target: { value: "reroll" },
+    });
+    expect(
+      (screen.getByTestId("purchases-home-cost-0") as HTMLInputElement).value,
+    ).toBe("100000");
+  });
+
+  it("remplit le prix du staff choisi", () => {
+    renderWith({ kind: "staff", name: "", cost: 0 });
+    fireEvent.change(screen.getByTestId("purchases-home-staff-0"), {
+      target: { value: "assistant" },
+    });
+    expect(
+      (screen.getByTestId("purchases-home-cost-0") as HTMLInputElement).value,
+    ).toBe("10000");
+  });
+
+  it("désactive un staff auquel le roster n'a pas droit", () => {
+    renderWith({ kind: "staff", name: "", cost: 0 });
+    const options = within(
+      screen.getByTestId("purchases-home-staff-0"),
+    ).getAllByRole("option") as HTMLOptionElement[];
+    expect(options.find((o) => o.value === "apothecary")?.disabled).toBe(true);
+    expect(options.find((o) => o.value === "cheerleader")?.disabled).toBe(
+      false,
+    );
+  });
+
+  it("remet le prix à zéro quand on change de type d'achat", () => {
+    renderWith({ kind: "reroll", name: "", cost: 100_000 });
+    fireEvent.change(screen.getByTestId("purchases-home-kind-0"), {
+      target: { value: "other" },
+    });
+    expect(
+      (screen.getByTestId("purchases-home-cost-0") as HTMLInputElement).value,
+    ).toBe("0");
+  });
+
+  it("signale un montant saisi qui s'écarte du prix catalogue", () => {
+    renderWith({ kind: "reroll", name: "", cost: 50_000 });
+    expect(
+      screen.getByTestId("purchases-home-cost-hint-0").textContent,
+    ).toContain("100 k");
+  });
+
+  it("ne signale rien quand le montant est le prix catalogue", () => {
+    renderWith({ kind: "reroll", name: "", cost: 100_000 });
+    expect(screen.queryByTestId("purchases-home-cost-hint-0")).toBeNull();
+  });
+
+  it("retombe sur les postes de l'effectif sans catalogue (rétro-compat)", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "player", name: "", cost: 0 }],
+        }}
+        home={teamWithPlayer}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const labels = within(screen.getByTestId("purchases-home-position-0"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(labels).toEqual(["poste…", "Blitzeur Haut Elfe"]);
+  });
+});
+
 describe("InvalidateControl — avertissements morts / licenciements", () => {
   it("annonce les joueurs ressuscites ET les licencies reintegres", () => {
     render(

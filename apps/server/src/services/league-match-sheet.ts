@@ -68,6 +68,12 @@ import {
   computePrayerSppBonuses,
 } from "./league-sheet-prayer-spp";
 import {
+  buildPurchaseOptions,
+  countByPosition,
+  EMPTY_PURCHASE_OPTIONS,
+  type PurchaseOptions,
+} from "./league-sheet-purchase-options";
+import {
   deriveSheetStarPlayers,
   isSyntheticSheetPlayerId,
   type SheetStarPlayer,
@@ -106,7 +112,11 @@ import {
   DEFAULT_RULESET,
   APOTHECARY_FORBIDDEN_ROSTERS,
   getTeamColors,
+  getFormatConstraints,
+  isGameFormat,
   TEAM_ROSTERS,
+  type AllowedRoster,
+  type GameFormat,
   type Ruleset,
   type TournamentRulesetDefinition,
 } from "@bb/game-engine";
@@ -2150,6 +2160,8 @@ export interface MatchSheetTeam {
   readonly logoUrl: string | null;
   /** Ruleset de l'équipe (catalogue de compétences du staging). */
   readonly ruleset: string;
+  /** Format de l'equipe (bb11, sevens...) : plafond d'effectif a l'embauche. */
+  readonly format: string;
   /** Libelle de la race (ex: "Skavens"), resolu depuis le roster slug. */
   readonly raceName: string;
   /** Nom du coach (owner de l'equipe). */
@@ -2268,6 +2280,9 @@ async function loadSheetTeams(
       roster: true,
       logoUrl: true,
       ruleset: true,
+      // Plafond d'effectif de l'equipe (BB11 16, Sevens 11) : borne les
+      // postes proposes a l'embauche d'apres-match.
+      format: true,
       teamValue: true,
       currentValue: true,
       treasury: true,
@@ -2313,6 +2328,7 @@ async function loadSheetTeams(
     roster: string;
     logoUrl?: string | null;
     ruleset?: string | null;
+    format?: string | null;
     teamValue?: number | null;
     currentValue?: number | null;
     treasury?: number | null;
@@ -2363,6 +2379,7 @@ async function loadSheetTeams(
       roster: t.roster,
       logoUrl: t.logoUrl ?? null,
       ruleset: t.ruleset ?? "season_3",
+      format: t.format ?? "bb11",
       raceName: raceNameForRoster(t.roster),
       coachName: t.owner?.coachName ?? "",
       teamValue: t.teamValue ?? 0,
@@ -2598,6 +2615,15 @@ export interface MatchSheetReference {
     readonly home: MatchSheetTeamBudget;
     readonly away: MatchSheetTeamBudget;
   };
+  /**
+   * Ce que chaque equipe peut ACHETER a l'etape 4 (embauches), et a quel
+   * prix : postes du roster avec leur quota, staff avec ses plafonds. Le
+   * coach saisissait auparavant un poste libre et un montant libre.
+   */
+  readonly purchases: {
+    readonly home: PurchaseOptions;
+    readonly away: PurchaseOptions;
+  };
   readonly colors: {
     readonly home: MatchSheetTeamColors;
     readonly away: MatchSheetTeamColors;
@@ -2707,6 +2733,56 @@ function colorHex(n: number): string {
 function colorsFor(roster: string | undefined): MatchSheetTeamColors {
   const c = getTeamColors(roster);
   return { primary: colorHex(c.primary), secondary: colorHex(c.secondary) };
+}
+
+/**
+ * Postes et staff achetables par une equipe a l'etape 4 (embauches), avec
+ * leur prix. Best-effort : une resolution en echec rend un catalogue vide,
+ * l'UI retombe alors sur la saisie libre plutot que de bloquer la feuille.
+ *
+ * Les compteurs partent du roster ACTIF (les morts quittent l'equipe en fin
+ * de match, ils ne consomment donc pas de slot pour l'achat qui suit).
+ */
+async function purchaseOptionsFor(
+  team: MatchSheetTeam | null,
+): Promise<PurchaseOptions> {
+  if (!team) return EMPTY_PURCHASE_OPTIONS;
+  try {
+    const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+    const format: GameFormat = isGameFormat(team.format) ? team.format : "bb11";
+    const [rosterData, staff] = await Promise.all([
+      getRosterFromDb(team.roster as AllowedRoster, "fr", ruleset),
+      resolveStaffConfigBySlug(team.roster, ruleset, format),
+    ]);
+    if (!rosterData) return EMPTY_PURCHASE_OPTIONS;
+
+    const active = team.players.filter((p) => !p.dead);
+    return buildPurchaseOptions({
+      positions: rosterData.positions.map((p) => ({
+        slug: p.slug,
+        displayName: p.displayName,
+        cost: p.cost,
+        max: p.max,
+      })),
+      staff,
+      team: {
+        countsByPosition: countByPosition(active),
+        playerCount: active.length,
+        maxPlayers: getFormatConstraints(format).maxPlayers,
+        rerolls: team.staff.rerolls,
+        cheerleaders: team.staff.cheerleaders,
+        assistants: team.staff.assistants,
+        apothecary: team.staff.apothecary,
+        dedicatedFans: team.dedicatedFans ?? 0,
+      },
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.warn(
+      `[league-match-sheet] catalogue d'achats indisponible (${team.roster}): ${msg}`,
+    );
+    return EMPTY_PURCHASE_OPTIONS;
+  }
 }
 
 async function starPlayersFor(
@@ -2864,8 +2940,14 @@ export async function buildMatchSheetReference(
     spentTeamB: spent.away,
   });
 
+  const [purchasesHome, purchasesAway] = await Promise.all([
+    purchaseOptionsFor(teams.home),
+    purchaseOptionsFor(teams.away),
+  ]);
+
   return {
     weatherTables: buildWeatherTables(),
+    purchases: { home: purchasesHome, away: purchasesAway },
     inducements: {
       home: teams.home
         ? await inducementOptionsFor(
