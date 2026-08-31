@@ -1,8 +1,11 @@
-import { spawn } from "child_process";
-
+/**
+ * Valeurs d'environnement attendues par les specs, dans le processus de test.
+ *
+ * Le SERVEUR, lui, est démarré et arrêté par `global-setup.ts` : un
+ * `setupFiles` s'exécute une fois par fichier de test et ne reçoit jamais
+ * d'appel de `teardown`.
+ */
 const API_PORT = process.env.API_PORT || "18001";
-const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL || "file:memdb1?mode=memory&cache=shared";
 
 // Active par défaut tous les feature flags pour la suite intégration.
 // Cf. apps/server/src/services/featureFlags.ts. Sans ceci, les routes gatées
@@ -11,55 +14,9 @@ if (process.env.FEATURE_FLAGS_FORCE_ENABLED === undefined) {
   process.env.FEATURE_FLAGS_FORCE_ENABLED = "true";
 }
 
-let serverProc: any;
-
-async function wait(ms: number) {
-  return new Promise((r) => setTimeout(r, ms));
+// Les specs lisent `API_BASE` pour construire leurs URLs : sans ça, elles
+// retombaient sur le port de DEV (8201) et ne touchaient jamais le serveur
+// de test qui vient d'être démarré.
+if (!process.env.API_BASE) {
+  process.env.API_BASE = `http://localhost:${API_PORT}`;
 }
-
-export async function setup() {
-  // Ne démarrer qu'une seule fois
-  if ((globalThis as any).__serverStarted) return;
-  // Vérifier si up
-  try {
-    const res = await fetch(`http://localhost:${API_PORT}/health`).catch(
-      () => null as any,
-    );
-    if (res && res.ok) {
-      (globalThis as any).__serverStarted = true;
-      return;
-    }
-  } catch {}
-  serverProc = spawn("pnpm", ["run", "dev:nowatch"], {
-    cwd: "../../apps/server",
-    stdio: "inherit",
-    shell: process.platform === "win32",
-    env: {
-      ...process.env,
-      API_PORT,
-      TEST_SQLITE: "1",
-      TEST_DATABASE_URL,
-    },
-  });
-  (globalThis as any).__serverProc = serverProc;
-  await wait(1200);
-  // Reset DB avant tests
-  await fetch(`http://localhost:${API_PORT}/__test/reset`, {
-    method: "POST",
-  }).catch(() => null);
-  (globalThis as any).__serverStarted = true;
-}
-
-export async function teardown() {
-  const p = (globalThis as any).__serverProc as any;
-  if (p) {
-    try {
-      p.kill();
-    } catch {}
-    (globalThis as any).__serverProc = undefined;
-  }
-  (globalThis as any).__serverStarted = false;
-}
-
-// Vitest hooks
-await setup();

@@ -1,12 +1,16 @@
 import fetch from "node-fetch";
 
-// Ce test suppose que l'API tourne localement et que le match existe.
-// On vérifie les statuts d'erreur et la route qui dépend du X-Match-Token.
-
+// On vérifie les statuts d'erreur et la route qui dépend du X-Match-Token,
+// contre le serveur démarré par `setup.ts`.
+//
+// Le repli était le port de DEV (8201) : la spec ne touchait donc jamais le
+// serveur de test et échouait en `ECONNREFUSED`. On suit maintenant le même
+// port que le setup (`API_PORT`), qui renseigne aussi `API_BASE`.
+const API_PORT = process.env.API_PORT || "18001";
 const API_BASE =
   process.env.API_BASE ||
   process.env.NEXT_PUBLIC_API_BASE ||
-  "http://localhost:8201";
+  `http://localhost:${API_PORT}`;
 
 // Token fourni par l'utilisateur (match_token signé avec MATCH_SECRET)
 const MATCH_TOKEN =

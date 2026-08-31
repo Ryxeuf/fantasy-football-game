@@ -568,7 +568,15 @@ if (process.env.TEST_SQLITE === "1") {
       // existantes continuent de passer sans modification.
       const update: Record<string, unknown> = { passwordHash };
       if (typeof valid === "boolean") update.valid = valid;
-      if (typeof role === "string") update.role = role;
+      if (typeof role === "string") {
+        // `roles` PRIME sur `role` a la lecture (cf. `adminOnly`, qui lit
+        // `normalizeRoles(user.roles ?? user.role)`). N'ecrire que `role`
+        // laissait donc un compte deja cree conserver ses anciens droits :
+        // promouvoir un utilisateur existant en admin ne faisait rien. La
+        // branche `create` ecrivait bien les deux — on aligne l'update.
+        update.role = role;
+        update.roles = JSON.stringify([role]);
+      }
       if (typeof leaderboardStatus === "string") {
         update.leaderboardStatus = leaderboardStatus;
       }
