@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   EXPENSIVE_MISTAKE_LABELS_FR,
   EXPENSIVE_MISTAKES_THRESHOLD,
@@ -1730,6 +1730,38 @@ function PurchaseEditor({
   );
 }
 
+/**
+ * Une étape numérotée de la séquence d'après-match (livre p.68). Les cinq
+ * étapes sont un ORDRE de jeu, pas une décoration : le numéro et le titre
+ * sont affichés pour que le coach saisisse dans le bon ordre.
+ */
+function SequenceStep({
+  step,
+  title,
+  side,
+  children,
+}: {
+  step: number;
+  title: string;
+  side: "home" | "away";
+  children: ReactNode;
+}) {
+  return (
+    <section
+      data-testid={`post-match-step-${step}-${side}`}
+      className="space-y-2 rounded border border-slate-200 bg-white p-2"
+    >
+      <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-nuffle-bronze">
+        <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-nuffle-bronze text-[10px] font-bold text-white">
+          {step}
+        </span>
+        {title}
+      </h4>
+      {children}
+    </section>
+  );
+}
+
 export function PostMatchPanel({
   initial,
   home,
@@ -1739,6 +1771,7 @@ export function PostMatchPanel({
   computedSpp = {},
   autoWinnings,
   journeymanHireCost,
+  onGoToAdvancements,
 }: {
   initial: PostMatchValues;
   home: SheetTeam | null;
@@ -1756,6 +1789,11 @@ export function PostMatchPanel({
    * la validation.
    */
   journeymanHireCost?: (journeymanId: string) => number | null;
+  /**
+   * Bascule vers l'onglet « Évolutions » (étape 3 de la séquence). Absent,
+   * l'étape rappelle seulement où la saisie se fait.
+   */
+  onGoToAdvancements?: () => void;
 }) {
   const [winH, setWinH] = useState<string>(
     initial.winningsHomeManual?.toString() ?? "",
@@ -1907,9 +1945,22 @@ export function PostMatchPanel({
       data-testid="post-match-panel"
       className="rounded-lg border bg-white p-4"
     >
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
         Fin du match
       </h2>
+      {/* E41 — la séquence d'après-match est une RÈGLE, pas une mise en
+          page : une compétence gagnée à l'étape 3 change le prix d'embauche
+          d'un journalier à l'étape 4, et les embauches précèdent les renvois.
+          Les étapes sont donc numérotées et rendues dans cet ordre. */}
+      <p
+        data-testid="post-match-sequence-legend"
+        className="mb-3 mt-1 text-[11px] text-slate-500"
+      >
+        Séquence d&apos;après-match, dans l&apos;ordre du livre :{" "}
+        <strong>1</strong> résultats et gains · <strong>2</strong> fans dévoués
+        · <strong>3</strong> amélioration de joueurs · <strong>4</strong>{" "}
+        embauches puis renvois · <strong>5</strong> erreurs coûteuses.
+      </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {sides.map((c) => (
           <div
@@ -1920,184 +1971,236 @@ export function PostMatchPanel({
               {c.name}
             </div>
 
-            <label className="block text-xs">
-              Joueur du match
-              <PlayerSelect
-                team={c.team}
-                value={c.motmVal}
-                onChange={(id) => setMotmSide(c.side, id)}
-                disabled={disabled}
-                testId={`motm-${c.side}`}
-              />
-            </label>
+            <SequenceStep
+              step={1}
+              title="Consigner résultats et gains"
+              side={c.side}
+            >
+              <label className="block text-xs">
+                Joueur du match
+                <PlayerSelect
+                  team={c.team}
+                  value={c.motmVal}
+                  onChange={(id) => setMotmSide(c.side, id)}
+                  disabled={disabled}
+                  testId={`motm-${c.side}`}
+                />
+              </label>
 
-            <label className="block text-xs">
-              Gains (override, sinon auto)
-              <input
-                type="number"
-                min={0}
-                value={c.win}
-                onChange={(e) => c.setWin(e.target.value)}
-                disabled={disabled}
-                placeholder="auto"
-                data-testid={`winnings-${c.side}`}
-                className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-              />
-              {autoWinnings ? (
-                <span className="mt-0.5 block text-[11px] text-slate-500">
-                  Gains auto :{" "}
-                  {(c.side === "home"
-                    ? autoWinnings.home
-                    : autoWinnings.away
-                  ).toLocaleString("fr-FR")}{" "}
-                  po
+              <label className="block text-xs">
+                Gains (override, sinon auto)
+                <input
+                  type="number"
+                  min={0}
+                  value={c.win}
+                  onChange={(e) => c.setWin(e.target.value)}
+                  disabled={disabled}
+                  placeholder="auto"
+                  data-testid={`winnings-${c.side}`}
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                />
+                {autoWinnings ? (
+                  <span className="mt-0.5 block text-[11px] text-slate-500">
+                    Gains auto :{" "}
+                    {(c.side === "home"
+                      ? autoWinnings.home
+                      : autoWinnings.away
+                    ).toLocaleString("fr-FR")}{" "}
+                    po
+                  </span>
+                ) : null}
+              </label>
+
+              <label className="block text-xs">
+                Bonus au classement (points)
+                <input
+                  type="number"
+                  value={c.rb}
+                  onChange={(e) => c.setRb(e.target.value)}
+                  disabled={disabled}
+                  placeholder="0"
+                  data-testid={`ranking-bonus-${c.side}`}
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                />
+                <span className="mt-0.5 block text-[11px] text-slate-400">
+                  Compté dans la colonne bonus (« Bo ») du classement, à part
+                  des points génériques.
                 </span>
-              ) : null}
-            </label>
+              </label>
+            </SequenceStep>
 
-            <label className="block text-xs">
-              Fans dévoués
-              <select
-                value={c.fans}
-                onChange={(e) => c.setFans(Number(e.target.value))}
-                disabled={disabled}
-                data-testid={`fans-${c.side}`}
-                className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-              >
-                <option value={-1}>-1</option>
-                <option value={0}>0</option>
-                <option value={1}>+1</option>
-              </select>
-              {typeof c.team?.dedicatedFans === "number" ? (
-                <span
-                  data-testid={`fans-hint-${c.side}`}
-                  className="mt-0.5 block text-[11px] text-slate-500"
+            <SequenceStep
+              step={2}
+              title="Mettre à jour les fans dévoués"
+              side={c.side}
+            >
+              <label className="block text-xs">
+                Fans dévoués
+                <select
+                  value={c.fans}
+                  onChange={(e) => c.setFans(Number(e.target.value))}
+                  disabled={disabled}
+                  data-testid={`fans-${c.side}`}
+                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                 >
-                  Actuel : {c.team.dedicatedFans} — vainqueur : +1 si D6 ≥{" "}
-                  {c.team.dedicatedFans} · perdant : −1 si D6 &lt;{" "}
-                  {c.team.dedicatedFans}
-                </span>
-              ) : null}
-            </label>
+                  <option value={-1}>-1</option>
+                  <option value={0}>0</option>
+                  <option value={1}>+1</option>
+                </select>
+                {typeof c.team?.dedicatedFans === "number" ? (
+                  <span
+                    data-testid={`fans-hint-${c.side}`}
+                    className="mt-0.5 block text-[11px] text-slate-500"
+                  >
+                    Actuel : {c.team.dedicatedFans} — vainqueur : +1 si D6 ≥{" "}
+                    {c.team.dedicatedFans} · perdant : −1 si D6 &lt;{" "}
+                    {c.team.dedicatedFans}
+                  </span>
+                ) : null}
+              </label>
+            </SequenceStep>
 
-            <label className="block text-xs">
-              Bonus au classement (points)
-              <input
-                type="number"
-                value={c.rb}
-                onChange={(e) => c.setRb(e.target.value)}
-                disabled={disabled}
-                placeholder="0"
-                data-testid={`ranking-bonus-${c.side}`}
-                className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-              />
-              <span className="mt-0.5 block text-[11px] text-slate-400">
-                Compté dans la colonne bonus (« Bo ») du classement, à part des
-                points génériques.
-              </span>
-            </label>
-
-            {/* SPP estimés (auto, depuis les évènements + MVP). Read-only :
-                le calcul officiel est appliqué à la validation. */}
-            {(() => {
-              const players = (c.team?.players ?? []).filter(
-                (p) => (computedSpp[p.id] ?? 0) > 0,
-              );
-              if (players.length === 0) return null;
-              const total = players.reduce(
-                (acc, p) => acc + (computedSpp[p.id] ?? 0),
-                0,
-              );
-              return (
-                <div
-                  className="rounded border border-emerald-200 bg-emerald-50/60 p-2 text-xs"
-                  data-testid={`auto-spp-${c.side}`}
-                >
-                  <div className="mb-1 font-medium text-emerald-800">
-                    SPP estimés (auto) · +{total}
+            <SequenceStep
+              step={3}
+              title="Amélioration de joueurs"
+              side={c.side}
+            >
+              {/* SPP estimés (auto, depuis les évènements + MVP). Read-only :
+                  le calcul officiel est appliqué à la validation. */}
+              {(() => {
+                const players = (c.team?.players ?? []).filter(
+                  (p) => (computedSpp[p.id] ?? 0) > 0,
+                );
+                if (players.length === 0) return null;
+                const total = players.reduce(
+                  (acc, p) => acc + (computedSpp[p.id] ?? 0),
+                  0,
+                );
+                return (
+                  <div
+                    className="rounded border border-emerald-200 bg-emerald-50/60 p-2 text-xs"
+                    data-testid={`auto-spp-${c.side}`}
+                  >
+                    <div className="mb-1 font-medium text-emerald-800">
+                      SPP estimés (auto) · +{total}
+                    </div>
+                    <ul className="space-y-0.5 text-emerald-900/80">
+                      {players.map((p) => (
+                        <li key={p.id} className="flex justify-between gap-2">
+                          <span className="truncate">
+                            N°{p.number} {p.name}
+                          </span>
+                          <span className="tabular-nums">
+                            +{computedSpp[p.id]}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="mt-1 text-[10px] text-emerald-700/70">
+                      Appliqué au roster à la validation du commissaire.
+                    </p>
                   </div>
-                  <ul className="space-y-0.5 text-emerald-900/80">
-                    {players.map((p) => (
-                      <li key={p.id} className="flex justify-between gap-2">
-                        <span className="truncate">
-                          N°{p.number} {p.name}
-                        </span>
-                        <span className="tabular-nums">
-                          +{computedSpp[p.id]}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-1 text-[10px] text-emerald-700/70">
-                    Appliqué au roster à la validation du commissaire.
-                  </p>
+                );
+              })()}
+
+              <div className="text-xs">
+                <div className="mb-1 font-medium text-slate-600">
+                  SPP bonus (Nuffle)
                 </div>
-              );
-            })()}
-
-            <div className="text-xs">
-              <div className="mb-1 font-medium text-slate-600">
-                SPP bonus (Nuffle)
+                <SppBonusEditor
+                  team={c.team}
+                  entries={c.spp}
+                  onChange={c.setSpp}
+                  disabled={disabled}
+                  testId={`spp-bonus-${c.side}`}
+                />
               </div>
-              <SppBonusEditor
-                team={c.team}
-                entries={c.spp}
-                onChange={c.setSpp}
-                disabled={disabled}
-                testId={`spp-bonus-${c.side}`}
-              />
-            </div>
 
-            <div className="text-xs">
-              <div className="mb-1 font-medium text-slate-600">Achats</div>
-              <PurchaseEditor
-                list={c.buy}
-                onChange={c.setBuy}
-                disabled={disabled}
-                testId={`purchases-${c.side}`}
-                team={c.team}
-                treasuryBefore={c.treasuryBeforePurchases}
-                journeymanHireCost={journeymanHireCost ?? (() => null)}
-              />
-              <p className="mt-1 text-[10px] text-slate-500">
-                « Dépense diverse » débite seulement la trésorerie (aucun
-                joueur/relance/staff créé).
+              {/* Les paliers d'évolution se saisissent dans l'onglet dédié.
+                  Le rappel est ici parce que l'étape 3 se joue AVANT les
+                  embauches : une compétence prise maintenant renchérit le
+                  recrutement d'un journalier à l'étape 4. */}
+              <p
+                data-testid={`advancements-hint-${c.side}`}
+                className="rounded border border-sky-200 bg-sky-50/70 px-2 py-1.5 text-[11px] text-sky-900"
+              >
+                Les paliers d&apos;évolution se saisissent dans l&apos;onglet{" "}
+                <strong>Évolutions</strong>
+                {onGoToAdvancements ? (
+                  <>
+                    {" — "}
+                    <button
+                      type="button"
+                      onClick={onGoToAdvancements}
+                      data-testid={`go-to-advancements-${c.side}`}
+                      className="font-semibold underline"
+                    >
+                      y aller
+                    </button>
+                  </>
+                ) : null}
+                . Une compétence prise ici renchérit le recrutement d&apos;un
+                journalier à l&apos;étape 4.
               </p>
-            </div>
+            </SequenceStep>
 
-            <div className="text-xs">
-              <div className="mb-1 font-medium text-slate-600">
-                Erreurs coûteuses
+            <SequenceStep step={4} title="Embauches puis renvois" side={c.side}>
+              <div className="text-xs">
+                <div className="mb-1 font-medium text-slate-600">
+                  Embauches (achats)
+                </div>
+                <PurchaseEditor
+                  list={c.buy}
+                  onChange={c.setBuy}
+                  disabled={disabled}
+                  testId={`purchases-${c.side}`}
+                  team={c.team}
+                  treasuryBefore={c.treasuryBeforePurchases}
+                  journeymanHireCost={journeymanHireCost ?? (() => null)}
+                />
+                <p className="mt-1 text-[10px] text-slate-500">
+                  « Dépense diverse » débite seulement la trésorerie (aucun
+                  joueur/relance/staff créé).
+                </p>
               </div>
-              <ExpensiveMistakeHelper
-                treasuryAtStep={
-                  c.treasuryBeforePurchases -
-                  c.buy.reduce((sum, p) => sum + (p.cost || 0), 0)
-                }
-                onAdd={(entry) => c.setCe([...c.ce, entry])}
-                disabled={disabled}
-                testId={`expensive-mistake-${c.side}`}
-              />
-              <CostlyErrorEditor
-                list={c.ce}
-                onChange={c.setCe}
-                disabled={disabled}
-                testId={`costly-${c.side}`}
-              />
-            </div>
 
-            <div className="text-xs">
-              <div className="mb-1 font-medium text-slate-600">
-                Licenciements
+              <div className="text-xs">
+                <div className="mb-1 font-medium text-slate-600">
+                  Renvois (licenciements)
+                </div>
+                <FiredEditor
+                  team={c.team}
+                  ids={c.fired}
+                  onChange={c.setFired}
+                  disabled={disabled}
+                  testId={`fired-${c.side}`}
+                />
+                <p className="mt-1 text-[10px] text-slate-500">
+                  Les embauches précèdent les renvois : sans place pour un
+                  positionnel, il faut attendre le match suivant.
+                </p>
               </div>
-              <FiredEditor
-                team={c.team}
-                ids={c.fired}
-                onChange={c.setFired}
-                disabled={disabled}
-                testId={`fired-${c.side}`}
-              />
-            </div>
+            </SequenceStep>
+
+            <SequenceStep step={5} title="Erreurs coûteuses" side={c.side}>
+              <div className="text-xs">
+                <ExpensiveMistakeHelper
+                  treasuryAtStep={
+                    c.treasuryBeforePurchases -
+                    c.buy.reduce((sum, p) => sum + (p.cost || 0), 0)
+                  }
+                  onAdd={(entry) => c.setCe([...c.ce, entry])}
+                  disabled={disabled}
+                  testId={`expensive-mistake-${c.side}`}
+                />
+                <CostlyErrorEditor
+                  list={c.ce}
+                  onChange={c.setCe}
+                  disabled={disabled}
+                  testId={`costly-${c.side}`}
+                />
+              </div>
+            </SequenceStep>
           </div>
         ))}
       </div>

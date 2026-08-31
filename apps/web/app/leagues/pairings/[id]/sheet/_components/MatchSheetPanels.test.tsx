@@ -1034,3 +1034,151 @@ describe("InvalidateControl — avertissements morts / licenciements", () => {
     confirmSpy.mockRestore();
   });
 });
+
+// ────────────────── E41 — SÉQUENCE D'APRÈS-MATCH ──────────────────
+//
+// L'ORDRE des étapes est une règle (livre p.68), pas une mise en page :
+// une compétence gagnée à l'étape 3 change le prix d'embauche d'un
+// journalier à l'étape 4, et les embauches précèdent les renvois. Le
+// panneau plaçait les erreurs coûteuses AVANT les licenciements et ne
+// numérotait rien — d'où le retour « je ne vois pas d'évolution ».
+
+describe("PostMatchPanel — séquence d'après-match (E41)", () => {
+  /** Ordre d'apparition des étapes dans le DOM, pour un côté. */
+  function stepOrder(side: "home" | "away"): number[] {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>(
+        `[data-testid^="post-match-step-"][data-testid$="-${side}"]`,
+      ),
+    ).map((el) => Number(el.dataset.testid!.split("-")[3]));
+  }
+
+  it("rend les 5 étapes du livre, numérotées et dans l'ordre", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(stepOrder("home")).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("nomme chaque étape comme le livre", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const label = (n: number) =>
+      screen.getByTestId(`post-match-step-${n}-home`).textContent ?? "";
+    expect(label(1)).toContain("Consigner résultats et gains");
+    expect(label(2)).toContain("Mettre à jour les fans dévoués");
+    expect(label(3)).toContain("Amélioration de joueurs");
+    expect(label(4)).toContain("Embauches puis renvois");
+    expect(label(5)).toContain("Erreurs coûteuses");
+  });
+
+  it("place chaque saisie dans SON étape", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const step = (n: number) => screen.getByTestId(`post-match-step-${n}-home`);
+    expect(within(step(1)).getByTestId("motm-home")).toBeTruthy();
+    expect(within(step(1)).getByTestId("winnings-home")).toBeTruthy();
+    expect(within(step(1)).getByTestId("ranking-bonus-home")).toBeTruthy();
+    expect(within(step(2)).getByTestId("fans-home")).toBeTruthy();
+    expect(within(step(3)).getByTestId("spp-bonus-home")).toBeTruthy();
+    expect(within(step(4)).getByTestId("purchases-home")).toBeTruthy();
+    expect(within(step(4)).getByTestId("fired-home")).toBeTruthy();
+    expect(within(step(5)).getByTestId("costly-home")).toBeTruthy();
+  });
+
+  // Le point précis du retour : « 4/ EMBAUCHES puis RENVOIS... 5/ Erreurs
+  // coûteuses » — les licenciements venaient APRÈS les erreurs coûteuses.
+  it("les renvois précèdent les erreurs coûteuses, et les embauches les renvois", () => {
+    const { container } = render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const html = container.innerHTML;
+    const at = (testId: string) => html.indexOf(`data-testid="${testId}"`);
+    expect(at("purchases-home")).toBeGreaterThan(-1);
+    expect(at("purchases-home")).toBeLessThan(at("fired-home"));
+    expect(at("fired-home")).toBeLessThan(at("costly-home"));
+  });
+
+  it("annonce la séquence en tête de panneau", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    const legend = screen.getByTestId("post-match-sequence-legend").textContent;
+    expect(legend).toContain("fans dévoués");
+    expect(legend).toContain("embauches puis renvois");
+    expect(legend).toContain("erreurs coûteuses");
+  });
+
+  // L'étape 3 se joue sur un autre onglet : sans rappel, le coach saute
+  // l'amélioration de joueurs et embauche au mauvais prix.
+  it("l'étape 3 renvoie vers l'onglet Évolutions", () => {
+    const onGo = vi.fn();
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+        onGoToAdvancements={onGo}
+      />,
+    );
+    const step3 = screen.getByTestId("post-match-step-3-home");
+    expect(step3.textContent).toContain("Évolutions");
+    fireEvent.click(screen.getByTestId("go-to-advancements-home"));
+    expect(onGo).toHaveBeenCalled();
+  });
+
+  it("sans bascule fournie, l'étape 3 rappelle seulement où saisir", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("go-to-advancements-home")).toBeNull();
+    expect(screen.getByTestId("advancements-hint-home").textContent).toContain(
+      "Évolutions",
+    );
+  });
+
+  it("les deux équipes suivent la même séquence", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={TEAM}
+        away={{ ...TEAM, teamId: "team-away", name: "Orcland Raiders" }}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(stepOrder("away")).toEqual([1, 2, 3, 4, 5]);
+  });
+});
