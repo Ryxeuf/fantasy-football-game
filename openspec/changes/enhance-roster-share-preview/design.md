@@ -149,7 +149,21 @@ Deux points de sûreté :
 
 Ces trois bornes vivent dans le même module pur pour ne pas diverger.
 
-## 7. Journalisation
+## 7. Le miroir SQLite est une SECONDE déclaration de schéma
+
+`Team.description` ajoutée à `prisma/schema.prisma` ne suffit pas : la
+suite `e2e-api` génère son client depuis `apps/server/prisma/sqlite/
+schema.prisma`, un miroir distinct. Une colonne absente de ce miroir fait
+échouer à l'exécution tout `select` qui la demande — donc l'aperçu public
+ET l'écriture de la description, mais uniquement sous `TEST_SQLITE=1`.
+
+Rien ne garde cette parité automatiquement. Le garde ici est le spec
+`tests/e2e-api/specs/team-share-preview.spec.ts` : il exerce les deux
+nouvelles routes contre le miroir, et 9 de ses 11 cas tombent si la colonne
+manque (vérifié en retirant la colonne). Toute colonne ajoutée par la suite
+et lue par une route couverte en e2e-api hérite du même garde.
+
+## 8. Journalisation
 
 `Team.description` est une écriture sur `Team` : la garde CI
 `services/team-audit-coverage.test.ts` impose de journaliser. On suit
@@ -159,7 +173,7 @@ exemption. `description` n'entre PAS dans `DIFFED_FIELDS` : le diff
 dénormalisé sert à reconstituer l'économie de l'équipe, pas son fluff — le
 `details: { from, to }` de l'étape suffit à retrouver un texte effacé.
 
-## 8. Alternatives écartées
+## 9. Alternatives écartées
 
 - **Enrichir l'aperçu de `/me/teams/[id]` même pour une équipe privée.**
   Rejeté : le repo pose le partage comme opt-in explicite (« Désactivé par

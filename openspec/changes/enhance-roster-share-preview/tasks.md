@@ -19,6 +19,10 @@
 - [x] Tests serveur : `services/team-description.test.ts`,
       `routes/team-description-handler.test.ts`,
       `services/team-share-preview.test.ts`.
+- [x] Miroir SQLite : `Team.description` dans
+      `apps/server/prisma/sqlite/schema.prisma` (schéma distinct, généré
+      par le job e2e-api) + spec `tests/e2e-api/specs/team-share-preview.spec.ts`
+      qui exerce les deux routes contre ce miroir.
 
 ## Images OG
 
