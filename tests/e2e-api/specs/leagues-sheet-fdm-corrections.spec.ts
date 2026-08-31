@@ -484,3 +484,91 @@ describe("E2E API — corrections FDM", () => {
     });
   });
 });
+
+/**
+ * A157 — « Gérer mon équipe » affiche les tags Mort / Absent / BP. Le rendu
+ * est couvert côté web (`player-status-tags.test.ts`) ; ce qu'il faut
+ * verrouiller ici, c'est que `GET /team/:id` SERVE bien les trois champs —
+ * sans eux les tags ne s'afficheraient jamais, quel que soit le composant.
+ */
+describe("E2E API — état des joueurs servi par GET /team/:id (A157)", () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  it("expose dead / missNextMatch / nigglingInjuries après une blessure", async () => {
+    const ctx = await setupPairing("tags");
+    const url = sheetUrl(ctx.pairingId);
+    await post(url, ctx.homeToken, {});
+    const opened = unwrap(
+      await get<{ data: SheetResponse }>(url, ctx.homeToken),
+    );
+    const home = opened.teams.home!;
+    const absent = home.players[0];
+    const blesse = home.players[1];
+
+    // Un joueur rate le prochain match, un autre récolte une Blessure
+    // Persistante : les deux états que l'écran doit annoncer.
+    for (const [victim, severity] of [
+      [absent, "mng"],
+      [blesse, "niggling"],
+    ] as const) {
+      const res = await rawPost(`${url}/events`, ctx.awayToken, {
+        kind: "casualty",
+        team: "away",
+        actorPlayerId: opened.teams.away!.players[0].id,
+        targetPlayerId: victim.id,
+        injurySeverity: severity,
+      });
+      expect(res.status, await bodyOf(res)).toBe(201);
+    }
+    await post(`${url}/submit`, ctx.homeToken, {});
+    await post(`${url}/submit`, ctx.awayToken, {});
+    await post(`${url}/validate`, ctx.commissionerToken, {});
+
+    const team = unwrap(
+      await get<{ data: TeamDetailDTO }>(
+        `/team/${ctx.homeTeamId}`,
+        ctx.homeToken,
+      ),
+    ).team;
+    const absentAfter = team.players.find((p) => p.id === absent.id)!;
+    const blesseAfter = team.players.find((p) => p.id === blesse.id)!;
+
+    // Les trois champs sont présents (et pas seulement `undefined`).
+    expect(absentAfter.missNextMatch).toBe(true);
+    expect(absentAfter.dead).toBe(false);
+    expect(blesseAfter.nigglingInjuries).toBeGreaterThanOrEqual(1);
+  });
+
+  it("expose la mort d'un joueur", async () => {
+    const ctx = await setupPairing("dead");
+    const url = sheetUrl(ctx.pairingId);
+    await post(url, ctx.homeToken, {});
+    const opened = unwrap(
+      await get<{ data: SheetResponse }>(url, ctx.homeToken),
+    );
+    const victim = opened.teams.home!.players[0];
+    const res = await rawPost(`${url}/events`, ctx.awayToken, {
+      kind: "casualty",
+      team: "away",
+      actorPlayerId: opened.teams.away!.players[0].id,
+      targetPlayerId: victim.id,
+      injurySeverity: "dead",
+    });
+    expect(res.status, await bodyOf(res)).toBe(201);
+    await post(`${url}/submit`, ctx.homeToken, {});
+    await post(`${url}/submit`, ctx.awayToken, {});
+    await post(`${url}/validate`, ctx.commissionerToken, {});
+
+    const team = unwrap(
+      await get<{ data: TeamDetailDTO }>(
+        `/team/${ctx.homeTeamId}`,
+        ctx.homeToken,
+      ),
+    ).team;
+    const dead = team.players.find((p) => p.id === victim.id);
+    expect(dead, "le joueur mort reste au roster, barré").toBeTruthy();
+    expect(dead!.dead).toBe(true);
+  });
+});
