@@ -55,12 +55,18 @@ import {
   buildJourneymanHire,
   deriveJourneymen,
   deriveMatchJourneymen,
+  journeymenChoiceInput,
   linemanPositionsForRoster,
   type JourneymanSourcePosition,
   parseJourneymenChoice,
+  parseJourneymenChoices,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
+import {
+  applyPrayerSppBonuses,
+  computePrayerSppBonuses,
+} from "./league-sheet-prayer-spp";
 import {
   deriveSheetStarPlayers,
   isSyntheticSheetPlayerId,
@@ -206,9 +212,7 @@ interface PairingContext {
  * Resout le contexte d'autorisation d'un pairing : ligue, commissaire,
  * owners des deux equipes. Source unique pour tous les checks de role.
  */
-async function loadPairingContext(
-  pairingId: string,
-): Promise<PairingContext> {
+async function loadPairingContext(pairingId: string): Promise<PairingContext> {
   const pairing = (await prisma.leaguePairing.findUnique({
     where: { id: pairingId },
     select: {
@@ -316,7 +320,7 @@ async function captureSideSnapshot(
     roster: team.roster,
     ruleset: team.ruleset,
     players: team.players,
-    chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+    ...journeymenChoiceInput(journeymenChoiceRaw),
     positions: await journeymanPositionsFor(team.roster, team.ruleset),
   });
   if (journeymen.length === 0) return JSON.stringify(base);
@@ -538,10 +542,7 @@ export async function removeEvent(input: {
   eventId: string;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (
-    !coachSide(ctx, input.userId) &&
-    !isCommissioner(ctx, input.userId)
-  ) {
+  if (!coachSide(ctx, input.userId) && !isCommissioner(ctx, input.userId)) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(input.pairingId);
@@ -570,9 +571,20 @@ export interface PreMatchPayload {
   inducementsAway?: unknown;
   prayersHome?: unknown;
   prayersAway?: unknown;
-  /** Journaliers — poste de lineman choisi (slug), null = defaut. */
+  /**
+   * Journaliers — poste de lineman choisi (slug) pour TOUS les journaliers
+   * du cote, null = defaut. Forme historique, conservee pour les clients
+   * qui ne connaissent pas le choix par rang.
+   */
   journeymenChoiceHome?: string | null;
   journeymenChoiceAway?: string | null;
+  /**
+   * Journaliers — poste de CHAQUE journalier, par rang (`[i]` = journalier
+   * `i`). `null` sur un rang = repli sur le choix global puis sur le
+   * lineman de base. Prioritaire sur `journeymenChoiceHome/Away`.
+   */
+  journeymenChoicesHome?: readonly (string | null)[] | null;
+  journeymenChoicesAway?: readonly (string | null)[] | null;
 }
 
 /** Met a jour les infos d'avant-match. */
@@ -582,10 +594,7 @@ export async function updatePreMatch(input: {
   payload: PreMatchPayload;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (
-    !coachSide(ctx, input.userId) &&
-    !isCommissioner(ctx, input.userId)
-  ) {
+  if (!coachSide(ctx, input.userId) && !isCommissioner(ctx, input.userId)) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(input.pairingId);
@@ -651,7 +660,11 @@ export async function updatePreMatch(input: {
     // Le règlement pose une liste FERMÉE : elle borne l'allowlist de ligue.
     const effectiveAllowlist = effectiveInducementAllowlist(allowlist, pack);
     assertInducementsAllowed(p.inducementsHome, effectiveAllowlist, "domicile");
-    assertInducementsAllowed(p.inducementsAway, effectiveAllowlist, "extérieur");
+    assertInducementsAllowed(
+      p.inducementsAway,
+      effectiveAllowlist,
+      "extérieur",
+    );
     if (p.inducementsHome !== undefined) {
       const spent = sumGold(p.inducementsHome);
       if (spent > budget.home.maxBudget) {
@@ -711,20 +724,54 @@ export async function updatePreMatch(input: {
     data.winningsHome = winnings.home;
     data.winningsAway = winnings.away;
   }
-  if (p.inducementsHome !== undefined) data.inducementsHome = p.inducementsHome ?? undefined;
-  if (p.inducementsAway !== undefined) data.inducementsAway = p.inducementsAway ?? undefined;
-  if (p.prayersHome !== undefined) data.prayersHome = p.prayersHome ?? undefined;
-  if (p.prayersAway !== undefined) data.prayersAway = p.prayersAway ?? undefined;
-  // Journaliers : choix du poste de lineman ({ position } | null).
-  if (p.journeymenChoiceHome !== undefined) {
-    data.journeymenHome = p.journeymenChoiceHome
-      ? { position: p.journeymenChoiceHome }
-      : null;
+  if (p.inducementsHome !== undefined)
+    data.inducementsHome = p.inducementsHome ?? undefined;
+  if (p.inducementsAway !== undefined)
+    data.inducementsAway = p.inducementsAway ?? undefined;
+  if (p.prayersHome !== undefined)
+    data.prayersHome = p.prayersHome ?? undefined;
+  if (p.prayersAway !== undefined)
+    data.prayersAway = p.prayersAway ?? undefined;
+  // Journaliers : postes de lineman choisis. La colonne porte les deux
+  // formes — `{ position }` (choix global, historique) et `{ positions }`
+  // (choix par rang). Un PATCH qui ne touche qu'une des deux PRESERVE
+  // l'autre : sans ca, choisir le poste du 2e journalier effacerait le
+  // choix global deja pose (et inversement).
+  const mergeJourneymenChoice = (
+    current: unknown,
+    position: string | null | undefined,
+    positions: readonly (string | null)[] | null | undefined,
+  ): { position?: string; positions?: (string | null)[] } | null => {
+    const previous = parseJourneymenChoices(current);
+    const nextPosition = position !== undefined ? position : previous.position;
+    const nextPositions =
+      positions !== undefined ? (positions ?? []) : previous.positions;
+    const merged: { position?: string; positions?: (string | null)[] } = {};
+    if (nextPosition) merged.position = nextPosition;
+    if (nextPositions.some((slug) => slug !== null)) {
+      merged.positions = [...nextPositions];
+    }
+    return Object.keys(merged).length > 0 ? merged : null;
+  };
+  if (
+    p.journeymenChoiceHome !== undefined ||
+    p.journeymenChoicesHome !== undefined
+  ) {
+    data.journeymenHome = mergeJourneymenChoice(
+      (sheet as { journeymenHome?: unknown }).journeymenHome,
+      p.journeymenChoiceHome,
+      p.journeymenChoicesHome,
+    );
   }
-  if (p.journeymenChoiceAway !== undefined) {
-    data.journeymenAway = p.journeymenChoiceAway
-      ? { position: p.journeymenChoiceAway }
-      : null;
+  if (
+    p.journeymenChoiceAway !== undefined ||
+    p.journeymenChoicesAway !== undefined
+  ) {
+    data.journeymenAway = mergeJourneymenChoice(
+      (sheet as { journeymenAway?: unknown }).journeymenAway,
+      p.journeymenChoiceAway,
+      p.journeymenChoicesAway,
+    );
   }
 
   return prisma.leagueMatchSheet.update({
@@ -843,8 +890,7 @@ export async function updatePostMatch(input: {
     data.purchasesHome = p.purchasesHome ?? undefined;
   if (p.purchasesAway !== undefined)
     data.purchasesAway = p.purchasesAway ?? undefined;
-  if (p.motmPlayerIds !== undefined)
-    data.motmPlayerIds = [...p.motmPlayerIds];
+  if (p.motmPlayerIds !== undefined) data.motmPlayerIds = [...p.motmPlayerIds];
   if (p.firedPlayerIds !== undefined)
     data.firedPlayerIds = [...(p.firedPlayerIds ?? [])];
   if (p.advancementsHome !== undefined)
@@ -925,7 +971,9 @@ export async function submitByCoach(input: {
   if (next === "both_submitted") {
     notifyCommissionerSheetReady(ctx).catch((e: unknown) => {
       const msg = e instanceof Error ? e.message : "unknown";
-      serverLog.error(`[league-match-sheet] notify commissioner failed: ${msg}`);
+      serverLog.error(
+        `[league-match-sheet] notify commissioner failed: ${msg}`,
+      );
     });
   }
 
@@ -1057,7 +1105,8 @@ function sumGold(raw: unknown): number {
     const cost = (entry as { cost?: unknown }).cost;
     const qty = (entry as { qty?: unknown }).qty;
     const c = typeof cost === "number" && Number.isFinite(cost) ? cost : 0;
-    const q = typeof qty === "number" && Number.isFinite(qty) && qty > 0 ? qty : 1;
+    const q =
+      typeof qty === "number" && Number.isFinite(qty) && qty > 0 ? qty : 1;
     total += Math.max(0, Math.floor(c)) * q;
   }
   return total;
@@ -1082,7 +1131,7 @@ function collectPositionedSheetPlayers(
     roster: team.roster,
     ruleset: team.ruleset,
     players: team.players,
-    chosenPosition: parseJourneymenChoice(journeymenChoiceRaw),
+    ...journeymenChoiceInput(journeymenChoiceRaw),
     positions,
     frozenRosterSnapshot,
   })) {
@@ -1109,6 +1158,9 @@ export function buildOfflineInputFromSummary(
     rankingBonusAway?: number | null;
     /** SPP bonus "Nuffle" par joueur : [{ playerId, spp }]. */
     sppBonus?: unknown;
+    /** Prieres a Nuffle achetees en coup de pouce (D16). */
+    prayersHome?: unknown;
+    prayersAway?: unknown;
     /** Depenses post/avant-match (debit treasury). */
     inducementsHome?: unknown;
     inducementsAway?: unknown;
@@ -1181,8 +1233,8 @@ export function buildOfflineInputFromSummary(
     );
     const metaStat =
       src && src.meta && typeof src.meta === "object"
-        ? ((src.meta as Record<string, unknown>).stat as string | undefined) ??
-          null
+        ? (((src.meta as Record<string, unknown>).stat as string | undefined) ??
+          null)
         : null;
     const type = mapInjurySeverity(inj.severity, metaStat);
     if (type) {
@@ -1222,9 +1274,20 @@ export function buildOfflineInputFromSummary(
     dedicatedFansDeltaAway: sheet.dedicatedFansDeltaAway ?? undefined,
     rankingBonusHome: sheet.rankingBonusHome ?? undefined,
     rankingBonusAway: sheet.rankingBonusAway ?? undefined,
-    sppBonus: parseSppBonus(sheet.sppBonus).filter(
-      (b) => !isSyntheticSheetPlayerId(b.teamPlayerId),
-    ),
+    // SPP bonus persistes = saisie manuelle du commissaire + PSP dus aux
+    // Prieres a Nuffle. Les deux passent par le meme canal, donc par la
+    // meme reversion a l'invalidation. Les joueurs SYNTHETIQUES (journaliers,
+    // Star Players) en sont exclus : ils n'ont pas de ligne TeamPlayer — les
+    // PSP d'un journalier ne comptent qu'a son recrutement, via
+    // `computeSheetSpp`, qui applique les memes prieres.
+    sppBonus: [
+      ...parseSppBonus(sheet.sppBonus),
+      ...computePrayerSppBonuses({
+        summary,
+        prayersHome: sheet.prayersHome,
+        prayersAway: sheet.prayersAway,
+      }).map((b) => ({ teamPlayerId: b.playerId, spp: b.spp })),
+    ].filter((b) => !isSyntheticSheetPlayerId(b.teamPlayerId)),
     injuries,
     // Achats -> materialisation roster (le debit treasury est deja porte
     // par treasuryDebit ci-dessus : pas de double-debit).
@@ -1246,7 +1309,9 @@ export function buildOfflineInputFromSummary(
  * Parse tolerant du SPP bonus stocke (array PG / string sqlite) :
  * [{ playerId, spp }] -> [{ teamPlayerId, spp }].
  */
-function parseSppBonus(raw: unknown): Array<{ teamPlayerId: string; spp: number }> {
+function parseSppBonus(
+  raw: unknown,
+): Array<{ teamPlayerId: string; spp: number }> {
   let arr: unknown = raw;
   if (typeof raw === "string") {
     try {
@@ -1261,7 +1326,11 @@ function parseSppBonus(raw: unknown): Array<{ teamPlayerId: string; spp: number 
     if (!e || typeof e !== "object") continue;
     const id = (e as { playerId?: unknown }).playerId;
     const spp = (e as { spp?: unknown }).spp;
-    if (typeof id === "string" && typeof spp === "number" && Number.isFinite(spp)) {
+    if (
+      typeof id === "string" &&
+      typeof spp === "number" &&
+      Number.isFinite(spp)
+    ) {
       out.push({ teamPlayerId: id, spp: Math.floor(spp) });
     }
   }
@@ -1336,7 +1405,7 @@ function enrichJourneymanPurchases(input: {
         roster: team.roster,
         ruleset: team.ruleset,
         players: team.players,
-        chosenPosition: parseJourneymenChoice(input.choiceRaw),
+        ...journeymenChoiceInput(input.choiceRaw),
         positions: input.positions,
         frozenRosterSnapshot: input.frozenRosterSnapshot,
       })
@@ -1474,8 +1543,7 @@ export async function validateByCommissioner(input: {
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
-  const journeymanPositions =
-    await loadJourneymanPositions(teamsForBudgetLive);
+  const journeymanPositions = await loadJourneymanPositions(teamsForBudgetLive);
   const teamsForBudget = {
     home: withJourneymenValue(
       withFrozenTeamValues(
@@ -1584,6 +1652,10 @@ export async function validateByCommissioner(input: {
       rankingBonusHome?: number | null;
       rankingBonusAway?: number | null;
       sppBonus?: unknown;
+      // Prieres a Nuffle : « Passe Parfaite » et « Reception Etourdissante »
+      // creditent des PSP a la validation, via `sppBonus`.
+      prayersHome?: unknown;
+      prayersAway?: unknown;
       inducementsHome?: unknown;
       inducementsAway?: unknown;
       costlyErrorsHome?: unknown;
@@ -1642,10 +1714,16 @@ export async function validateByCommissioner(input: {
   // qu'il a gagné au match (PSP + évolution de l'étape 3, qui renchérit son
   // prix). Le serveur redérive tout (PSP officiels, coût du poste) : la
   // saisie du coach ne porte que l'id du journalier.
+  const sheetPrayers = sheet as {
+    prayersHome?: unknown;
+    prayersAway?: unknown;
+  };
   const computedSppForHire = await computeSheetSpp({
     summary,
     motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
     teams: teamsForBudget,
+    prayersHome: sheetPrayers.prayersHome,
+    prayersAway: sheetPrayers.prayersAway,
   });
   const sheetJourneymenChoice = sheet as {
     journeymenHome?: unknown;
@@ -2115,8 +2193,13 @@ export interface MatchSheetTeam {
   readonly journeymen?: readonly SheetJourneyman[];
   /** Postes de lineman offerts au choix du coach (>= 12 max). */
   readonly journeymenOptions?: readonly JourneymanPositionOption[];
-  /** Choix courant ({ position } sur la feuille), null = defaut. */
+  /** Choix GLOBAL courant ({ position } sur la feuille), null = defaut. */
   readonly journeymenChoice?: string | null;
+  /**
+   * Poste EFFECTIF de chaque journalier, dans l'ordre de `journeymen`.
+   * C'est ce que l'UI pre-selectionne dans le picker de chaque journalier.
+   */
+  readonly journeymenChoices?: readonly string[];
   /**
    * Star Players ENGAGÉS en coup de pouce sur cette feuille. Ils jouent le
    * match : proposés comme acteurs / cibles d'évènement, exclus de la
@@ -2437,7 +2520,7 @@ function withJourneymenValue(
     roster: team.roster,
     ruleset: team.ruleset,
     players: team.players,
-    chosenPosition: parseJourneymenChoice(
+    ...journeymenChoiceInput(
       side === "home" ? sheet.journeymenHome : sheet.journeymenAway,
     ),
     positions,
@@ -2610,7 +2693,10 @@ async function inducementOptionsFor(
       ...(d.variableCost ? { variableCost: true } : {}),
     }));
   // Prix, quantités et précisions du règlement priment sur le catalogue.
-  return applyPackInducementRules(options, pack) as MatchSheetInducementOption[];
+  return applyPackInducementRules(
+    options,
+    pack,
+  ) as MatchSheetInducementOption[];
 }
 
 /** Couleur 24 bits -> hex CSS (#rrggbb). */
@@ -2638,7 +2724,11 @@ async function starPlayersFor(
       regionalLeague,
       await getDeclaredRegionalRules(roster, ruleset),
     ) ?? [];
-  const starPlayers = await getAvailableStarPlayersDb(roster, regionalRules, ruleset);
+  const starPlayers = await getAvailableStarPlayersDb(
+    roster,
+    regionalRules,
+    ruleset,
+  );
   return starPlayers.map((s) => ({
     slug: s.slug,
     name: s.displayName,
@@ -2846,6 +2936,9 @@ async function computeSheetSpp(input: {
   summary: MatchSummary;
   motmPlayerIds: unknown;
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
+  /** Prieres a Nuffle saisies (colonnes `prayersHome/Away` de la feuille). */
+  prayersHome?: unknown;
+  prayersAway?: unknown;
 }): Promise<Record<string, number>> {
   const { summary, teams } = input;
   const motm = new Set(parseStringArray(input.motmPlayerIds));
@@ -2889,7 +2982,18 @@ async function computeSheetSpp(input: {
       side === "home" ? sppContext.teamA : sppContext.teamB,
     );
   }
-  return out;
+  // Prieres a Nuffle : « Passe Parfaite » (Reussite a 2 PSP) et « Reception
+  // Etourdissante » (1 PSP au receptionneur). Le receptionneur n'a sinon
+  // AUCUN PSP — c'est le lanceur qui marque la Reussite — donc sa saisie
+  // sur l'evenement de passe restait sans effet.
+  return applyPrayerSppBonuses(
+    out,
+    computePrayerSppBonuses({
+      summary,
+      prayersHome: input.prayersHome,
+      prayersAway: input.prayersAway,
+    }),
+  );
 }
 
 /**
@@ -3051,10 +3155,16 @@ export async function getMatchSheet(input: {
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
+  const sheetPrayersForSpp = sheet as {
+    prayersHome?: unknown;
+    prayersAway?: unknown;
+  };
   const computedSpp = await computeSheetSpp({
     summary,
     motmPlayerIds: (sheet as { motmPlayerIds?: unknown }).motmPlayerIds,
     teams,
+    prayersHome: sheetPrayersForSpp.prayersHome,
+    prayersAway: sheetPrayersForSpp.prayersAway,
   });
 
   const { allowlist: allowedInducements, pack: inducementPack } =
@@ -3076,33 +3186,40 @@ export async function getMatchSheet(input: {
     side: "home" | "away",
   ): MatchSheetTeam | null => {
     if (!team) return null;
-    const choice = parseJourneymenChoice(
+    const choice = parseJourneymenChoices(
       side === "home"
         ? sheetJourneymen.journeymenHome
         : sheetJourneymen.journeymenAway,
     );
     const positions =
       side === "home" ? journeymanPositions.home : journeymanPositions.away;
+    const journeymen = deriveMatchJourneymen({
+      side,
+      roster: team.roster,
+      ruleset: team.ruleset,
+      players: team.players,
+      chosenPosition: choice.position,
+      chosenPositions: choice.positions,
+      positions,
+      frozenRosterSnapshot:
+        side === "home"
+          ? sheetSnapRaw.rosterSnapshotHome
+          : sheetSnapRaw.rosterSnapshotAway,
+    });
     return {
       ...team,
-      journeymen: deriveMatchJourneymen({
-        side,
-        roster: team.roster,
-        ruleset: team.ruleset,
-        players: team.players,
-        chosenPosition: choice,
-        positions,
-        frozenRosterSnapshot:
-          side === "home"
-            ? sheetSnapRaw.rosterSnapshotHome
-            : sheetSnapRaw.rosterSnapshotAway,
-      }),
+      journeymen,
       journeymenOptions: linemanPositionsForRoster(
         team.roster,
         team.ruleset,
         positions,
       ),
-      journeymenChoice: choice,
+      journeymenChoice: choice.position,
+      // Choix EFFECTIF de chaque journalier (le poste réellement dérivé),
+      // et pas seulement ce que la feuille a stocké : l'UI peut ainsi
+      // pré-sélectionner le bon poste même quand le rang n'a pas de choix
+      // propre et retombe sur le défaut.
+      journeymenChoices: journeymen.map((j) => j.position),
     };
   };
   // Star Players engagés en coup de pouce : ils JOUENT le match, donc ils

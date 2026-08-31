@@ -14,10 +14,18 @@
  *  - exclus de la persistance post-match (SPP, blessures…) via
  *    `isJourneymanId` (cf. league-match-sheet.buildOfflineInputFromSummary).
  *
- * Si le roster offre PLUSIEURS postes de lineman, le coach choisit le
- * poste via la feuille (`LeagueMatchSheet.journeymenHome/Away`,
- * `{ position: slug }`). Par défaut : le lineman « de base » (max le
- * plus élevé, puis coût le plus bas).
+ * Si le roster offre PLUSIEURS postes de lineman (Orques : Trois-quart
+ * Orque OU Trois-quart Gobelin), le coach choisit le poste de CHAQUE
+ * journalier via la feuille (`LeagueMatchSheet.journeymenHome/Away`,
+ * `{ positions: [slug | null, ...] }`). Un seul choix global
+ * (`{ position: slug }`, forme historique) reste lu et s'applique alors à
+ * tous les journaliers. Par défaut : le lineman « de base » (max le plus
+ * élevé, puis coût le plus bas).
+ *
+ * Le choix est PAR RANG : `positions[i]` est le poste du journalier `i`
+ * (l'ordre de dérivation, stable). Un rang absent, `null` ou inconnu
+ * retombe sur le choix global puis sur le lineman de base — une équipe qui
+ * passe de 2 à 3 journaliers garde donc ses deux premiers choix.
  *
  * SOURCE DES POSTES — la base (`Position`), injectée par l'appelant via
  * `positions`. Le catalogue compilé (`TEAM_ROSTERS_BY_RULESET`) ne sert plus
@@ -32,6 +40,7 @@
 import {
   TEAM_ROSTERS_BY_RULESET,
   DEFAULT_RULESET,
+  KEYWORDS_SEASON3,
   type Ruleset,
 } from "@bb/game-engine";
 
@@ -42,8 +51,36 @@ export function isJourneymanId(id: string | null | undefined): boolean {
   return typeof id === "string" && id.startsWith(JOURNEYMAN_ID_PREFIX);
 }
 
-/** Seuil BB « 0-12 ou plus » : un poste éligible aux journaliers. */
+/** Seuil BB « 0-12 ou plus » : le Trois-quart « de base » d'une fiche. */
 const JOURNEYMAN_ELIGIBLE_MAX = 12;
+
+/**
+ * Mot-clé de poste qui désigne un Trois-quart. Le compendium publié pose la
+ * règle en ces termes — « un journalier correspond toujours à un poste de
+ * Trois-quart de la fiche d'équipe » et « si la fiche d'équipe propose
+ * plusieurs postes de Trois-quart, le coach choisit le type de journalier ».
+ * Le seul seuil `max` ratait les Trois-quarts à quota réduit (Orques :
+ * Trois-quart Gobelin, 0-4), donc le choix annoncé par la règle.
+ */
+const LINEMAN_KEYWORD = "trois-quart";
+
+/** Mots-clés d'un poste : ceux de la base, sinon la transcription moteur. */
+function positionKeywords(p: JourneymanSourcePosition): string {
+  return p.keywords ?? KEYWORDS_SEASON3[p.slug] ?? "";
+}
+
+/**
+ * Poste utilisable comme journalier : le Trois-quart « de base » (0-12 ou
+ * plus, quel que soit son libellé) ou tout poste dont les Mots-clés
+ * déclarent « Trois-quart ».
+ */
+function isJourneymanEligible(p: JourneymanSourcePosition): boolean {
+  if (p.max >= JOURNEYMAN_ELIGIBLE_MAX) return true;
+  return positionKeywords(p)
+    .split(",")
+    .map((k) => k.trim().toLowerCase())
+    .includes(LINEMAN_KEYWORD);
+}
 
 export interface JourneymanPositionOption {
   readonly slug: string;
@@ -88,6 +125,12 @@ export interface JourneymanSourcePosition {
   pa: number | null;
   av: number;
   skills: string;
+  /**
+   * Mots-clés du poste (CSV, ex: « Gobelin, Trois-quart »). Présents sur les
+   * lignes lues en base ; sur le catalogue compilé, ils sont résolus par
+   * slug. Servent à reconnaître un Trois-quart à quota réduit.
+   */
+  keywords?: string | null;
 }
 
 /**
@@ -101,14 +144,18 @@ function rosterPositions(
 ): readonly JourneymanSourcePosition[] {
   if (provided && provided.length > 0) return provided;
   const rs = (ruleset as Ruleset) ?? DEFAULT_RULESET;
-  const map = TEAM_ROSTERS_BY_RULESET[rs] ?? TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
-  const def = (map as Record<string, { positions?: JourneymanSourcePosition[] }>)[roster];
+  const map =
+    TEAM_ROSTERS_BY_RULESET[rs] ?? TEAM_ROSTERS_BY_RULESET[DEFAULT_RULESET];
+  const def = (
+    map as Record<string, { positions?: JourneymanSourcePosition[] }>
+  )[roster];
   return def?.positions ?? [];
 }
 
 /**
- * Postes de type « lineman » du roster (max >= 12), triés par max
- * décroissant puis coût croissant : le premier est le lineman de base.
+ * Postes de Trois-quart du roster, triés par max décroissant puis coût
+ * croissant : le PREMIER reste le Trois-quart de base (0-16), donc le
+ * défaut historique est inchangé — seule la liste des choix s'élargit.
  */
 export function linemanPositionsForRoster(
   roster: string,
@@ -116,7 +163,7 @@ export function linemanPositionsForRoster(
   positions?: readonly JourneymanSourcePosition[] | null,
 ): JourneymanPositionOption[] {
   return rosterPositions(roster, ruleset, positions)
-    .filter((p) => p.max >= JOURNEYMAN_ELIGIBLE_MAX)
+    .filter(isJourneymanEligible)
     .sort((a, b) => b.max - a.max || a.cost - b.cost)
     .map((p) => ({ slug: p.slug, name: p.displayName }));
 }
@@ -140,8 +187,18 @@ export interface DeriveJourneymenInput {
     readonly dead: boolean;
     readonly missNextMatch: boolean;
   }>;
-  /** Choix du coach ({ position }) — null/inconnu => lineman de base. */
+  /**
+   * Choix GLOBAL du coach (forme historique `{ position }`) — appliqué à
+   * tous les journaliers qui n'ont pas de choix propre. null/inconnu =>
+   * lineman de base.
+   */
   readonly chosenPosition?: string | null;
+  /**
+   * Choix PAR RANG (`{ positions }`) : `chosenPositions[i]` est le poste du
+   * journalier `i`. Un rang absent, `null` ou inconnu du roster retombe sur
+   * `chosenPosition` puis sur le lineman de base.
+   */
+  readonly chosenPositions?: readonly (string | null)[] | null;
   /**
    * Postes du roster lus EN BASE (`Position`). Absents/vides => repli sur le
    * catalogue compilé.
@@ -170,41 +227,43 @@ export function deriveJourneymen(
     input.ruleset,
     input.positions,
   );
-  const chosenSlug =
-    input.chosenPosition &&
-    linemen.some((l) => l.slug === input.chosenPosition)
-      ? input.chosenPosition
-      : linemen[0]?.slug;
-  const position = positions.find((p) => p.slug === chosenSlug);
-
-  const baseSkills = (position?.skills ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-  const skills = [...baseSkills, LONER_SLUG].join(",");
+  /** Un slug n'est retenu que s'il désigne bien un lineman de ce roster. */
+  const eligibleSlug = (slug: string | null | undefined): string | null =>
+    slug && linemen.some((l) => l.slug === slug) ? slug : null;
+  const globalSlug = eligibleSlug(input.chosenPosition);
+  const defaultSlug = globalSlug ?? linemen[0]?.slug ?? null;
   const maxNumber = input.players.reduce((m, p) => Math.max(m, p.number), 0);
 
-  return Array.from({ length: missing }, (_, i) => ({
-    id: `${JOURNEYMAN_ID_PREFIX}${input.side}-${i + 1}`,
-    number: maxNumber + i + 1,
-    name: `Journalier ${i + 1}`,
-    position: position?.slug ?? "journeyman",
-    positionName: position
-      ? `Journalier (${position.displayName})`
-      : "Journalier",
-    stats: position
-      ? {
-          ma: position.ma,
-          st: position.st,
-          ag: position.ag,
-          pa: position.pa,
-          av: position.av,
-        }
-      : FALLBACK_STATS,
-    skills,
-    // Coût du poste (kpo moteur -> po) : compte dans la VEA du match.
-    cost: position ? position.cost * 1000 : FALLBACK_COST,
-  }));
+  return Array.from({ length: missing }, (_, i) => {
+    const slug = eligibleSlug(input.chosenPositions?.[i]) ?? defaultSlug;
+    const position = positions.find((p) => p.slug === slug);
+    const baseSkills = (position?.skills ?? "")
+      .split(",")
+      .map((sk) => sk.trim())
+      .filter((sk) => sk.length > 0);
+    return {
+      id: `${JOURNEYMAN_ID_PREFIX}${input.side}-${i + 1}`,
+      number: maxNumber + i + 1,
+      name: `Journalier ${i + 1}`,
+      position: position?.slug ?? "journeyman",
+      positionName: position
+        ? `Journalier (${position.displayName})`
+        : "Journalier",
+      stats: position
+        ? {
+            ma: position.ma,
+            st: position.st,
+            ag: position.ag,
+            pa: position.pa,
+            av: position.av,
+          }
+        : FALLBACK_STATS,
+      // Chaque journalier porte les compétences de SON poste + Solitaire.
+      skills: [...baseSkills, LONER_SLUG].join(","),
+      // Coût du poste (kpo moteur -> po) : compte dans la VEA du match.
+      cost: position ? position.cost * 1000 : FALLBACK_COST,
+    };
+  });
 }
 
 /**
@@ -257,7 +316,11 @@ export function parseFrozenSheetRoster(raw: unknown): FrozenSheetRoster | null {
   if (o.headerOnly === true) return null;
   if (!Array.isArray(o.players)) return null;
 
-  const players: Array<{ number: number; dead: boolean; missNextMatch: boolean }> = [];
+  const players: Array<{
+    number: number;
+    dead: boolean;
+    missNextMatch: boolean;
+  }> = [];
   const journeymen: Array<{ number: number; name: string }> = [];
   for (const entry of o.players) {
     if (!entry || typeof entry !== "object") continue;
@@ -308,8 +371,21 @@ export function deriveMatchJourneymen(
   });
 }
 
-/** Parse tolérant du champ `journeymenHome/Away` ({ position } | null). */
-export function parseJourneymenChoice(raw: unknown): string | null {
+/**
+ * Choix de postes de journaliers lu sur la feuille : un choix GLOBAL
+ * (forme historique) et/ou un choix PAR RANG.
+ */
+export interface JourneymenChoice {
+  /** `{ position }` — s'applique aux rangs sans choix propre. */
+  readonly position: string | null;
+  /** `{ positions }` — `positions[i]` = poste du journalier `i`. */
+  readonly positions: readonly (string | null)[];
+}
+
+const EMPTY_CHOICE: JourneymenChoice = { position: null, positions: [] };
+
+/** Une valeur JSON exploitable, quelle que soit sa forme de stockage. */
+function parseJsonObject(raw: unknown): Record<string, unknown> | null {
   let obj: unknown = raw;
   if (typeof raw === "string") {
     try {
@@ -319,8 +395,54 @@ export function parseJourneymenChoice(raw: unknown): string | null {
     }
   }
   if (!obj || typeof obj !== "object") return null;
-  const position = (obj as { position?: unknown }).position;
-  return typeof position === "string" && position.length > 0 ? position : null;
+  return obj as Record<string, unknown>;
+}
+
+/** Un slug non vide, sinon `null` (une entrée illisible ne bloque rien). */
+function slugOrNull(raw: unknown): string | null {
+  return typeof raw === "string" && raw.length > 0 ? raw : null;
+}
+
+/**
+ * Parse tolérant du champ `journeymenHome/Away` — objet natif (PG), chaîne
+ * JSON (miroir sqlite) ou null. Lit les DEUX formes :
+ * `{ position }` (historique) et `{ positions: [...] }` (choix par rang).
+ */
+export function parseJourneymenChoices(raw: unknown): JourneymenChoice {
+  const obj = parseJsonObject(raw);
+  if (!obj) return EMPTY_CHOICE;
+  const rawPositions = obj.positions;
+  return {
+    position: slugOrNull(obj.position),
+    positions: Array.isArray(rawPositions)
+      ? rawPositions.map((entry) => slugOrNull(entry))
+      : [],
+  };
+}
+
+/**
+ * Choix GLOBAL seul (forme historique). Conservé pour les appelants qui ne
+ * dérivent qu'une valeur par équipe (capture de snapshot, affichage).
+ */
+export function parseJourneymenChoice(raw: unknown): string | null {
+  return parseJourneymenChoices(raw).position;
+}
+
+/**
+ * Choix de postes, prêt à être étalé dans un `DeriveJourneymenInput`. Un
+ * seul point d'entrée pour les quatre dérivations de la feuille : elles ne
+ * peuvent plus diverger sur la forme lue (un côté qui lirait encore le seul
+ * choix global produirait des journaliers différents de ceux affichés).
+ */
+export function journeymenChoiceInput(raw: unknown): {
+  readonly chosenPosition: string | null;
+  readonly chosenPositions: readonly (string | null)[];
+} {
+  const choice = parseJourneymenChoices(raw);
+  return {
+    chosenPosition: choice.position,
+    chosenPositions: choice.positions,
+  };
 }
 
 /**

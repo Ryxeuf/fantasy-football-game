@@ -255,14 +255,19 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
 
   // Un match DE playoff ne fige aucun classement de phase reguliere :
   // le refus « playoffs-generated » le rendait pourtant ineditable.
+  const playoffRound = (
+    slot: string | null,
+    kind: string | null = "playoff",
+  ) => ({
+    id: "round-po",
+    status: "completed",
+    kind,
+    bracketSlot: slot,
+  });
   const playoffMatch = (slot = "sf1") =>
     buildMatch({
-      leagueRound: {
-        id: "round-po",
-        status: "completed",
-        kind: "playoff",
-        bracketSlot: slot,
-      },
+      leagueRound: playoffRound(slot),
+      leaguePairing: { round: playoffRound(slot) },
     });
 
   it("invalide un match DE playoff sans buter sur « playoffs-generated »", async () => {
@@ -275,6 +280,87 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     // Le comptage global des rounds playoff n'est meme plus interroge.
     expect(m.roundCount).not.toHaveBeenCalled();
     expect(m.poState).toHaveBeenCalledWith("season-1", "sf1");
+  });
+
+  // A158 — `Match.leagueRoundId` est NULLABLE (`onDelete: SetNull`) et n'a
+  // jamais pu etre backfille (`db push` en prod). Un match de playoff qui le
+  // porte a NULL etait donc vu comme un match REGULIER, et son invalidation
+  // butait sur « playoffs-generated ». Le round du PAIRING fait foi.
+  it("invalide un match DE playoff dont le Match ne porte plus son round", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leagueRound: null,
+        leaguePairing: { round: playoffRound("sf1") },
+      }),
+    );
+    m.roundCount.mockResolvedValue(2);
+
+    const r = await reverseOfflineLeagueResult("m-1");
+
+    expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+    expect(m.roundCount).not.toHaveBeenCalled();
+    expect(m.poState).toHaveBeenCalledWith("season-1", "sf1");
+  });
+
+  // Un round de bracket cree a la main par le commissaire garde
+  // `kind: "regular"` (le defaut Prisma) mais porte bien son slot.
+  it("traite comme playoff un round qui porte un bracketSlot sans le declarer", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leagueRound: null,
+        leaguePairing: { round: playoffRound("final", "regular") },
+      }),
+    );
+    m.roundCount.mockResolvedValue(3);
+
+    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
+      reversed: true,
+      matchId: "m-1",
+      pairingId: "pair-1",
+    });
+    expect(m.poState).toHaveBeenCalledWith("season-1", "final");
+  });
+
+  // Le repli reste utile : un pairing illisible ne doit pas faire perdre
+  // l'information de round portee par le Match.
+  it("retombe sur le round du Match quand le pairing n'en porte pas", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leagueRound: playoffRound("qf1"),
+        leaguePairing: null,
+      }),
+    );
+    m.roundCount.mockResolvedValue(4);
+
+    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
+      reversed: true,
+      matchId: "m-1",
+      pairingId: "pair-1",
+    });
+    expect(m.roundCount).not.toHaveBeenCalled();
+  });
+
+  // Un match REGULIER reste refuse : le classement de phase reguliere est
+  // fige des que le bracket existe.
+  it("refuse toujours un match REGULIER une fois le bracket genere", async () => {
+    m.matchFind.mockResolvedValue(
+      buildMatch({
+        leaguePairing: {
+          round: {
+            id: "round-1",
+            status: "completed",
+            kind: "regular",
+            bracketSlot: null,
+          },
+        },
+      }),
+    );
+    m.roundCount.mockResolvedValue(2);
+
+    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
+      skipped: true,
+      reason: "playoffs-generated",
+    });
   });
 
   it("refuse si le tour suivant du bracket a deja demarre", async () => {
@@ -635,7 +721,9 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     // est annule avec la remise a zero du snapshot bonus du pairing.
     const bonusReversal = m.partUpdate.mock.calls.find((c) => {
       const points = (
-        c[0] as { data: { points?: { decrement?: number; increment?: number } } }
+        c[0] as {
+          data: { points?: { decrement?: number; increment?: number } };
+        }
       ).data.points;
       return (
         points?.decrement === 2 ||

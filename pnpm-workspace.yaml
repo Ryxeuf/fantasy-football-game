@@ -5,3 +5,4 @@ packages:
   - tests/integration
   - tests/e2e-api
   - tests/e2e-ui
+  - tests/screenshots

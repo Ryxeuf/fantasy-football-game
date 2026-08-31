@@ -4,42 +4,43 @@
 
 import { z } from "zod";
 
-export const addEventSchema = z.object({
-  kind: z.enum([
-    "kickoff",
-    "touchdown",
-    "casualty",
-    "pass_complete",
-    "interception",
-    "aggression",
-    "expulsion",
-    "crowd_surge",
-    "stalling",
-    "team_throw",
-    "ttm_landing",
-    "special_elim",
-    "other_elim",
-  ]),
-  team: z.enum(["home", "away"]).optional().nullable(),
-  actorPlayerId: z.string().min(1).optional().nullable(),
-  /**
-   * Joueur subissant l'action (equipe adverse)… sauf sur `pass_complete`,
-   * ou il porte le RECEPTIONNEUR : un coequipier du lanceur. C'est lui qui
-   * « Receptionne le ballon a la suite d'une Action de Passe », donc le
-   * beneficiaire de la Priere a Nuffle « Reception Etourdissante ».
-   */
-  targetPlayerId: z.string().min(1).optional().nullable(),
-  causeDetail: z.string().max(64).optional().nullable(),
-  injurySeverity: z
-    .enum(["badly_hurt", "mng", "niggling", "stat_loss", "dead"])
-    .optional()
-    .nullable(),
-  /** Mi-temps de l'evenement (1 ou 2). Fusionne dans meta.half. */
-  half: z.number().int().min(1).max(2).optional().nullable(),
-  /** Tour de l'evenement (1..16). Fusionne dans meta.turn. */
-  turn: z.number().int().min(1).max(16).optional().nullable(),
-  meta: z.record(z.string(), z.unknown()).optional().nullable(),
-})
+export const addEventSchema = z
+  .object({
+    kind: z.enum([
+      "kickoff",
+      "touchdown",
+      "casualty",
+      "pass_complete",
+      "interception",
+      "aggression",
+      "expulsion",
+      "crowd_surge",
+      "stalling",
+      "team_throw",
+      "ttm_landing",
+      "special_elim",
+      "other_elim",
+    ]),
+    team: z.enum(["home", "away"]).optional().nullable(),
+    actorPlayerId: z.string().min(1).optional().nullable(),
+    /**
+     * Joueur subissant l'action (equipe adverse)… sauf sur `pass_complete`,
+     * ou il porte le RECEPTIONNEUR : un coequipier du lanceur. C'est lui qui
+     * « Receptionne le ballon a la suite d'une Action de Passe », donc le
+     * beneficiaire de la Priere a Nuffle « Reception Etourdissante ».
+     */
+    targetPlayerId: z.string().min(1).optional().nullable(),
+    causeDetail: z.string().max(64).optional().nullable(),
+    injurySeverity: z
+      .enum(["badly_hurt", "mng", "niggling", "stat_loss", "dead"])
+      .optional()
+      .nullable(),
+    /** Mi-temps de l'evenement (1 ou 2). Fusionne dans meta.half. */
+    half: z.number().int().min(1).max(2).optional().nullable(),
+    /** Tour de l'evenement (1..16). Fusionne dans meta.turn. */
+    turn: z.number().int().min(1).max(16).optional().nullable(),
+    meta: z.record(z.string(), z.unknown()).optional().nullable(),
+  })
   // Une passe reussie a deux joueurs DISTINCTS : on ne receptionne pas sa
   // propre passe. Sans ce refus, le meme id compterait a la fois la
   // Reussite et la Reception, et doublerait les PSP sous « Reception
@@ -93,6 +94,15 @@ const prayersSchema = z
   .optional()
   .nullable();
 
+// Journaliers : un slug de poste par rang (`[i]` = journalier `i`), `null`
+// pour « laisser le défaut ». Au plus 11 — au-delà, l'équipe n'aligne plus
+// aucun joueur de son roster.
+const journeymenChoicesSchema = z
+  .array(z.string().max(64).nullable())
+  .max(11, "Au plus 11 journaliers par équipe")
+  .optional()
+  .nullable();
+
 export const preMatchSchema = z
   .object({
     weatherTable: z.string().max(64).optional().nullable(),
@@ -103,13 +113,31 @@ export const preMatchSchema = z
     /** Toss d'avant-match : côté vainqueur + son choix (engager/recevoir). */
     tossWinner: z.enum(["home", "away"]).optional().nullable(),
     tossChoice: z.enum(["kick", "receive"]).optional().nullable(),
-    inducementsHome: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
-    inducementsAway: z.array(z.record(z.string(), z.unknown())).optional().nullable(),
+    inducementsHome: z
+      .array(z.record(z.string(), z.unknown()))
+      .optional()
+      .nullable(),
+    inducementsAway: z
+      .array(z.record(z.string(), z.unknown()))
+      .optional()
+      .nullable(),
     prayersHome: prayersSchema,
     prayersAway: prayersSchema,
-    /** Journaliers — poste de lineman choisi (slug), null = défaut. */
+    /**
+     * Journaliers — poste de lineman choisi (slug) pour TOUS les journaliers
+     * du côté, null = défaut. Forme historique.
+     */
     journeymenChoiceHome: z.string().max(64).optional().nullable(),
     journeymenChoiceAway: z.string().max(64).optional().nullable(),
+    /**
+     * Journaliers — poste de CHAQUE journalier, par rang. Un roster qui
+     * offre plusieurs linemen (Orques : Trois-quart Orque / Gobelin) peut
+     * ainsi panacher son contingent. `null` sur un rang = repli sur le
+     * choix global puis sur le lineman de base. Borné à 11 : on n'aligne
+     * jamais plus de 11 journaliers.
+     */
+    journeymenChoicesHome: journeymenChoicesSchema,
+    journeymenChoicesAway: journeymenChoicesSchema,
   })
   .refine(
     (v) => Object.keys(v).length > 0,
@@ -204,10 +232,34 @@ const stagedAdvancementsSchema = z
 
 export const postMatchSchema = z
   .object({
-    winningsHomeManual: z.number().int().min(0).max(MAX_GOLD).optional().nullable(),
-    winningsAwayManual: z.number().int().min(0).max(MAX_GOLD).optional().nullable(),
-    dedicatedFansDeltaHome: z.number().int().min(-6).max(6).optional().nullable(),
-    dedicatedFansDeltaAway: z.number().int().min(-6).max(6).optional().nullable(),
+    winningsHomeManual: z
+      .number()
+      .int()
+      .min(0)
+      .max(MAX_GOLD)
+      .optional()
+      .nullable(),
+    winningsAwayManual: z
+      .number()
+      .int()
+      .min(0)
+      .max(MAX_GOLD)
+      .optional()
+      .nullable(),
+    dedicatedFansDeltaHome: z
+      .number()
+      .int()
+      .min(-6)
+      .max(6)
+      .optional()
+      .nullable(),
+    dedicatedFansDeltaAway: z
+      .number()
+      .int()
+      .min(-6)
+      .max(6)
+      .optional()
+      .nullable(),
     rankingBonusHome: z.number().int().min(-50).max(50).optional().nullable(),
     rankingBonusAway: z.number().int().min(-50).max(50).optional().nullable(),
     sppBonus: z
