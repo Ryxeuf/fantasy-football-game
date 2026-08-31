@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import fetch from "node-fetch";
-import jwt from "jsonwebtoken";
 
 const API_PORT = process.env.API_PORT || "18001";
 const API_BASE = `http://localhost:${API_PORT}`;
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
 describe("Statistiques liées aux matchs locaux", () => {
   let user1Token: string;
@@ -23,7 +21,11 @@ describe("Statistiques liées aux matchs locaux", () => {
     const reg1 = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email1, password: password1, name: "Coach One" }),
+      body: JSON.stringify({
+        email: email1,
+        password: password1,
+        coachName: "Coach One",
+      }),
     });
     expect(reg1.status).toBe(201);
     const body1: any = await reg1.json();
@@ -37,7 +39,11 @@ describe("Statistiques liées aux matchs locaux", () => {
     const reg2 = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email2, password: password2, name: "Coach Two" }),
+      body: JSON.stringify({
+        email: email2,
+        password: password2,
+        coachName: "Coach Two",
+      }),
     });
     expect(reg2.status).toBe(201);
     const body2: any = await reg2.json();
@@ -95,25 +101,47 @@ describe("Statistiques liées aux matchs locaux", () => {
     localMatchId = lmBody.localMatch.id;
 
     // Terminer le match avec un score 2-1 pour l'équipe 1
-    const completeRes = await fetch(`${API_BASE}/local-match/${localMatchId}/complete`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user1Token}`,
+    const completeRes = await fetch(
+      `${API_BASE}/local-match/${localMatchId}/complete`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user1Token}`,
+        },
+        body: JSON.stringify({
+          scoreTeamA: 2,
+          scoreTeamB: 1,
+        }),
       },
-      body: JSON.stringify({
-        scoreTeamA: 2,
-        scoreTeamB: 1,
-      }),
-    });
+    );
     expect(completeRes.status).toBe(200);
 
-    // Générer un token admin pour interroger les routes /admin
-    adminToken = jwt.sign(
-      { sub: user1Id, role: "admin", roles: ["admin"] },
-      JWT_SECRET,
-      { expiresIn: "1d" },
-    );
+    // Token admin pour interroger les routes /admin.
+    //
+    // Forger un JWT portant `role: "admin"` ne suffit PAS — et c'est
+    // volontaire : `adminOnly` relit le rôle EN BASE, précisément pour
+    // qu'une revendication de jeton ne puisse pas accorder les droits. On
+    // promeut donc réellement le compte, puis on se connecte normalement.
+    const promote = await fetch(`${API_BASE}/__test/seed-user`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: email1,
+        password: password1,
+        role: "admin",
+      }),
+    });
+    expect(promote.status).toBe(200);
+
+    const adminLogin = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email1, password: password1 }),
+    });
+    expect(adminLogin.status).toBe(200);
+    const adminBody: any = await adminLogin.json();
+    adminToken = adminBody.token;
   }, 60000);
 
   it("expose les statistiques de matchs locaux dans /admin/stats", async () => {
@@ -147,18 +175,22 @@ describe("Statistiques liées aux matchs locaux", () => {
     expect(res.status).toBe(200);
     const json: any = await res.json();
 
-    expect(json.team).toBeTruthy();
-    expect(json.localMatchStats).toBeTruthy();
+    // `GET /team/:id` répond dans l'enveloppe `{ success, data }`
+    // (`sendSuccess`) : la spec lisait la charge utile à la racine, donc
+    // `undefined`.
+    const payload = json.data ?? json;
+    expect(payload.team).toBeTruthy();
+    expect(payload.localMatchStats).toBeTruthy();
 
-    const stats = json.localMatchStats;
+    const stats = payload.localMatchStats;
     expect(stats.total).toBeGreaterThanOrEqual(1);
     expect(stats.completed).toBeGreaterThanOrEqual(1);
     // Avec notre match 2-1, l'équipe 1 a au moins une victoire et un différentiel positif
     expect(stats.wins).toBeGreaterThanOrEqual(1);
     expect(stats.touchdownsFor).toBeGreaterThanOrEqual(2);
     expect(stats.touchdownsAgainst).toBeGreaterThanOrEqual(1);
-    expect(stats.touchdownDiff).toBe(stats.touchdownsFor - stats.touchdownsAgainst);
+    expect(stats.touchdownDiff).toBe(
+      stats.touchdownsFor - stats.touchdownsAgainst,
+    );
   }, 20000);
 });
-
-

@@ -1,7 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
 
-// Mock léger du moteur pour rendre makeRNG déterministe sans dépendance réelle
-vi.mock("@bb/game-engine", () => ({
+// Le moteur n'est mocké QUE sur ce que cette spec doit piloter : un RNG
+// déterministe et un état de pré-match minimal. Le reste du module est
+// conservé (`importOriginal`).
+//
+// Le mock remplaçait auparavant TOUT `@bb/game-engine` par ce stub : chaque
+// nouvel export importé par le serveur (ici `INDUCEMENT_CATALOGUE`, ajouté
+// avec le catalogue de coups de pouce en base) faisait échouer la spec au
+// chargement, sans rapport avec ce qu'elle vérifie.
+vi.mock("@bb/game-engine", async (importOriginal) => ({
+  ...((await importOriginal()) as Record<string, unknown>),
   makeRNG: (seed: string) => {
     let t = 0;
     return () => {

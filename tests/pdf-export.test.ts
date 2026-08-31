@@ -3,7 +3,20 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getDisplayName, getPlayerCost } from '@bb/game-engine';
+import { getDisplayName, getPlayerCost, TEAM_ROSTERS } from '@bb/game-engine';
+
+/**
+ * Slugs de postes lus dans le ROSTER, et non écrits en dur.
+ *
+ * Ces tests portaient encore les anciens slugs anglais (`skaven_blitzer`,
+ * `skaven_lineman`) : `getPlayerCost` ne les trouvait plus et retombait sur
+ * son repli à 50 000 po pour TOUS, si bien qu'un Blitzer « coûtait » autant
+ * qu'un Trois-quart et que le total d'équipe était faux.
+ */
+const SKAVEN = TEAM_ROSTERS.skaven.positions;
+const SKAVEN_LINEMAN = SKAVEN[0].slug;
+const SKAVEN_GUTTER_RUNNER = SKAVEN[2].slug;
+const SKAVEN_BLITZER = SKAVEN[3].slug;
 
 describe('PDF Export Utilities', () => {
   it('devrait formater correctement les noms de positions', () => {
@@ -13,22 +26,25 @@ describe('PDF Export Utilities', () => {
   });
 
   it('devrait calculer correctement le coût des joueurs', () => {
-    const cost = getPlayerCost('skaven_blitzer', 'skaven');
+    const cost = getPlayerCost(SKAVEN_BLITZER, 'skaven');
     expect(cost).toBeGreaterThan(0);
     expect(typeof cost).toBe('number');
   });
 
   it('devrait gérer les coûts de différentes positions', () => {
-    const blitzerCost = getPlayerCost('skaven_blitzer', 'skaven');
-    const linemanCost = getPlayerCost('skaven_lineman', 'skaven');
+    const blitzerCost = getPlayerCost(SKAVEN_BLITZER, 'skaven');
+    const linemanCost = getPlayerCost(SKAVEN_LINEMAN, 'skaven');
     
     // Un Blitzer devrait coûter plus cher qu'un Lineman
     expect(blitzerCost).toBeGreaterThan(linemanCost);
   });
 
   it('devrait gérer plusieurs types de rosters', () => {
-    const skavenCost = getPlayerCost('skaven_lineman', 'skaven');
-    const lizardmenCost = getPlayerCost('lizardmen_skink', 'lizardmen');
+    const skavenCost = getPlayerCost(SKAVEN_LINEMAN, 'skaven');
+    const lizardmenCost = getPlayerCost(
+      TEAM_ROSTERS.lizardmen.positions[0].slug,
+      'lizardmen',
+    );
     
     expect(skavenCost).toBeGreaterThan(0);
     expect(lizardmenCost).toBeGreaterThan(0);
@@ -81,12 +97,12 @@ describe('Team Data Structure', () => {
 
   it('devrait calculer correctement le coût total d\'une équipe', () => {
     const mockPlayers = [
-      { position: 'skaven_blitzer', cost: 90000 },
-      { position: 'skaven_blitzer', cost: 90000 },
-      { position: 'skaven_gutter_runner', cost: 85000 },
-      { position: 'skaven_gutter_runner', cost: 85000 },
-      { position: 'skaven_lineman', cost: 50000 },
-      { position: 'skaven_lineman', cost: 50000 },
+      { position: SKAVEN_BLITZER },
+      { position: SKAVEN_BLITZER },
+      { position: SKAVEN_GUTTER_RUNNER },
+      { position: SKAVEN_GUTTER_RUNNER },
+      { position: SKAVEN_LINEMAN },
+      { position: SKAVEN_LINEMAN },
     ];
 
     const roster = 'skaven';
@@ -94,8 +110,14 @@ describe('Team Data Structure', () => {
       return sum + getPlayerCost(p.position, roster);
     }, 0);
 
+    // Attendu dérivé du roster (kpo -> po) : le test vérifie la SOMME, pas
+    // un barème figé qui redeviendrait faux au prochain errata.
+    const expected =
+      2 * SKAVEN[3].cost * 1000 +
+      2 * SKAVEN[2].cost * 1000 +
+      2 * SKAVEN[0].cost * 1000;
     expect(totalCost).toBeGreaterThan(0);
-    expect(totalCost).toBe(450000); // 2*90k + 2*85k + 2*50k
+    expect(totalCost).toBe(expected);
   });
 
   it('devrait calculer le roster total incluant les extras', () => {

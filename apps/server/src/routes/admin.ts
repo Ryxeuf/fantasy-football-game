@@ -1232,6 +1232,24 @@ async function revertMatchDeaths(
   }
 }
 
+
+/**
+ * Filtre « la liste `roles` contient admin », portable entre les deux
+ * schémas.
+ *
+ * `User.roles` est un `String[]` en Postgres (filtre `has`) mais une CHAÎNE
+ * JSON dans le miroir SQLite des tests, où `has` n'existe pas : la requête y
+ * levait un `PrismaClientValidationError` et `/admin/stats` renvoyait 500.
+ * On choisit le filtre d'après le client effectivement chargé (même signal
+ * que `prisma.ts`), ce qui laisse le chemin Postgres strictement inchangé et
+ * évite de charger tous les utilisateurs en mémoire pour les compter.
+ */
+function adminRolesFilter(): Record<string, unknown> {
+  return process.env.TEST_SQLITE === "1"
+    ? { roles: { contains: "admin" } }
+    : { roles: { has: "admin" } };
+}
+
 /**
  * Lot P.B.4 — Annulation administrative d'un match (bug, exploit, etc.).
  *
@@ -1434,7 +1452,7 @@ router.get("/stats", async (_req, res) => {
       prisma.user.count({ where: { valid: true } }),
       prisma.user.count({
         where: {
-          OR: [{ role: "admin" }, { roles: { has: "admin" } }],
+          OR: [{ role: "admin" }, adminRolesFilter()],
         },
       }),
       prisma.match.count(),

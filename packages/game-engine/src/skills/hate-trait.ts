@@ -17,6 +17,8 @@
  */
 
 import type { SkillDefinition } from "./index";
+import { KEYWORDS_SEASON3 } from "../rosters/keywords-season3";
+import { STAR_PLAYER_KEYWORDS } from "../rosters/star-player-keywords";
 
 /** Résultat minimum du D6 pour gagner le trait. */
 export const HATE_ROLL_TARGET = 4;
@@ -156,4 +158,56 @@ export function buildHateSkillDefinition(
     season3Only: true,
     excludedFromSelection: true,
   };
+}
+
+/**
+ * Mot-clé français d'un slug de Haine, reconstruit depuis le vocabulaire
+ * connu (positions Season 3 + Star Players).
+ *
+ * La slugification est DESTRUCTRICE (« Homme Lézard » → `homme-lezard`) :
+ * on ne peut pas remonter l'accentuation par calcul. On indexe donc les
+ * mots-clés du catalogue par leur slug de Haine, ce qui rend le libellé
+ * exact pour tout mot-clé que le moteur connaît.
+ *
+ * `null` pour la variante générique `hate` (pas de mot-clé) et pour un slug
+ * hors vocabulaire (mot-clé venu d'une position éditée en admin).
+ */
+const HATE_KEYWORD_BY_SLUG: ReadonlyMap<string, string> = (() => {
+  const map = new Map<string, string>();
+  const add = (csv: string | null | undefined): void => {
+    for (const keyword of eligibleHateKeywords(csv)) {
+      const slug = hateSlugForKeyword(keyword);
+      if (slug && !map.has(slug)) map.set(slug, keyword);
+    }
+  };
+  for (const csv of Object.values(KEYWORDS_SEASON3)) add(csv);
+  for (const csv of Object.values(STAR_PLAYER_KEYWORDS)) add(csv);
+  return map;
+})();
+
+export function hateKeywordFromSlug(slug: string): string | null {
+  return HATE_KEYWORD_BY_SLUG.get(slug) ?? null;
+}
+
+/**
+ * Libellé FRANÇAIS d'un trait de Haine à partir de son seul slug.
+ *
+ * Les variantes de Haine sont créées À LA VOLÉE à la validation d'une
+ * feuille de match : le catalogue déjà chargé par un navigateur peut donc
+ * ignorer `hate-orque` et retomber sur le slug brut — que le coach lit
+ * comme de l'anglais. Ce repli redonne « Haine (Orque) » sans attendre le
+ * rechargement du catalogue.
+ *
+ * `null` si le slug n'est pas une variante de Haine : l'appelant garde
+ * alors sa propre résolution.
+ */
+export function hateSkillLabelFr(slug: string): string | null {
+  if (!isHateSkillSlug(slug)) return null;
+  if (slug === "hate") return "Haine (X)";
+  const keyword = hateKeywordFromSlug(slug);
+  if (keyword) return `Haine (${keyword})`;
+  // Mot-clé hors vocabulaire : on rend le slug lisible plutôt que brut.
+  const raw = slug.slice("hate-".length).replace(/-/g, " ").trim();
+  if (!raw) return "Haine (X)";
+  return `Haine (${raw.charAt(0).toUpperCase()}${raw.slice(1)})`;
 }

@@ -98,6 +98,7 @@ import {
   buildOfflineInputFromSummary,
   listPendingValidationsForCommissioner,
   buildMatchSheetReference,
+  collectViolentInnovators,
   MatchSheetError,
 } from "./league-match-sheet";
 import { recordOfflineLeagueResult } from "./league-offline-result";
@@ -3052,5 +3053,58 @@ describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
         "infamous_coaching_staff",
       ]),
     );
+  });
+});
+
+describe("collectViolentInnovators — E30", () => {
+  const player = (id: string, skills: string | null) =>
+    ({ id, skills }) as never;
+  const side = (players: unknown[]) =>
+    ({ players }) as unknown as Parameters<
+      typeof collectViolentInnovators
+    >[0]["home"];
+
+  it("retient les joueurs des DEUX équipes portant la compétence", () => {
+    const set = collectViolentInnovators({
+      home: side([
+        player("h1", "block,violent-innovator"),
+        player("h2", "block"),
+      ]),
+      away: side([player("a1", "violent-innovator")]),
+    });
+    expect([...set].sort()).toEqual(["a1", "h1"]);
+  });
+
+  it("accepte la variante à underscore et la casse", () => {
+    // Les CSV de compétences viennent de sources multiples (seed, admin,
+    // évolution) : les deux orthographes circulent.
+    const set = collectViolentInnovators({
+      home: side([
+        player("h1", "Violent_Innovator"),
+        player("h2", " VIOLENT-INNOVATOR "),
+      ]),
+      away: null,
+    });
+    expect([...set].sort()).toEqual(["h1", "h2"]);
+  });
+
+  it("ne retient personne sans la compétence", () => {
+    const set = collectViolentInnovators({
+      home: side([player("h1", "block,dodge"), player("h2", null)]),
+      away: side([player("a1", "")]),
+    });
+    expect(set.size).toBe(0);
+  });
+
+  it("ne confond pas une compétence dont le nom la contient", () => {
+    const set = collectViolentInnovators({
+      home: side([player("h1", "violent-innovator-plus")]),
+      away: null,
+    });
+    expect(set.size).toBe(0);
+  });
+
+  it("tolère une équipe absente (forfait, feuille incomplète)", () => {
+    expect(collectViolentInnovators({ home: null, away: null }).size).toBe(0);
   });
 });

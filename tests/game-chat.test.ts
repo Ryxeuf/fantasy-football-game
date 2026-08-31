@@ -5,14 +5,29 @@ import {
 } from "../apps/server/src/game-chat";
 import type { Namespace, Socket } from "socket.io";
 
-// Helper to create a mock socket
+/**
+ * Socket factice.
+ *
+ * `rooms` manquait : le handler vérifie l'appartenance à la room du match
+ * (`socket.rooms.has(matchId)`) avant de diffuser, et le mock faisait donc
+ * planter tous les tests sur `undefined.has`. Comme un vrai socket.io, la
+ * room contient d'office l'id du socket ; `joinRooms` simule les rooms
+ * rejointes.
+ */
 function createMockSocket(
   userId?: string,
   socketId?: string,
+  joinRooms: string[] = [],
 ): Socket & { _trigger: (event: string, ...args: unknown[]) => void } {
   const listeners = new Map<string, Function>();
+  const id = socketId ?? `socket-${Math.random().toString(36).slice(2, 8)}`;
+  const rooms = new Set<string>([id, ...joinRooms]);
   return {
-    id: socketId ?? `socket-${Math.random().toString(36).slice(2, 8)}`,
+    id,
+    rooms,
+    join: vi.fn((room: string) => {
+      rooms.add(room);
+    }),
     data: {
       user: userId ? { id: userId } : undefined,
     },
@@ -68,7 +83,7 @@ describe("game-chat", () => {
 
   describe("sending messages", () => {
     it("broadcasts a chat message to the match room", () => {
-      const socket = createMockSocket("user-1", "sock-1");
+      const socket = createMockSocket("user-1", "sock-1", ["match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -97,7 +112,7 @@ describe("game-chat", () => {
     });
 
     it("trims whitespace from message text", () => {
-      const socket = createMockSocket("user-1", "sock-1");
+      const socket = createMockSocket("user-1", "sock-1", ["match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -113,7 +128,7 @@ describe("game-chat", () => {
     });
 
     it("sets userId to anonymous when not authenticated", () => {
-      const socket = createMockSocket(undefined, "sock-anon");
+      const socket = createMockSocket(undefined, "sock-anon", ["match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -129,9 +144,32 @@ describe("game-chat", () => {
     });
   });
 
+  describe("appartenance à la room", () => {
+    // Le handler refuse de diffuser dans une room que le socket n'a pas
+    // rejointe : sans ça, n'importe qui pourrait écrire dans le chat d'un
+    // match auquel il ne participe pas. Aucun test ne le couvrait.
+    it("refuse un message vers une room non rejointe", () => {
+      const socket = createMockSocket("user-1", "sock-outsider");
+      mockNamespace._triggerConnection(socket);
+
+      const ack = vi.fn();
+      socket._trigger(
+        "game:chat-message",
+        { matchId: "match-1", message: "Coucou" },
+        ack,
+      );
+
+      expect(ack).toHaveBeenCalledWith({
+        ok: false,
+        error: "Not in this match room",
+      });
+      expect(mockNamespace._emittedTo.get("match-1")).toBeUndefined();
+    });
+  });
+
   describe("validation", () => {
     it("rejects a message without matchId", () => {
-      const socket = createMockSocket("user-1");
+      const socket = createMockSocket("user-1", undefined, ["m1", "match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -144,7 +182,7 @@ describe("game-chat", () => {
     });
 
     it("rejects a message without message text", () => {
-      const socket = createMockSocket("user-1");
+      const socket = createMockSocket("user-1", undefined, ["m1", "match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -157,7 +195,7 @@ describe("game-chat", () => {
     });
 
     it("rejects an empty (whitespace-only) message", () => {
-      const socket = createMockSocket("user-1");
+      const socket = createMockSocket("user-1", undefined, ["m1", "match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -173,7 +211,7 @@ describe("game-chat", () => {
     });
 
     it("rejects messages longer than 500 characters", () => {
-      const socket = createMockSocket("user-1");
+      const socket = createMockSocket("user-1", undefined, ["m1", "match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -189,7 +227,7 @@ describe("game-chat", () => {
     });
 
     it("accepts messages of exactly 500 characters", () => {
-      const socket = createMockSocket("user-1");
+      const socket = createMockSocket("user-1", undefined, ["m1", "match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -202,7 +240,7 @@ describe("game-chat", () => {
     });
 
     it("rejects a non-string matchId", () => {
-      const socket = createMockSocket("user-1");
+      const socket = createMockSocket("user-1", undefined, ["m1", "match-1"]);
       mockNamespace._triggerConnection(socket);
 
       const ack = vi.fn();
@@ -220,7 +258,7 @@ describe("game-chat", () => {
 
   describe("rate limiting", () => {
     it("allows up to 10 messages in quick succession", () => {
-      const socket = createMockSocket("user-1", "rate-socket");
+      const socket = createMockSocket("user-1", "rate-socket", ["m1"]);
       mockNamespace._triggerConnection(socket);
 
       for (let i = 0; i < 10; i++) {
@@ -234,7 +272,7 @@ describe("game-chat", () => {
     });
 
     it("rate-limits the 11th message", () => {
-      const socket = createMockSocket("user-1", "rate-socket-2");
+      const socket = createMockSocket("user-1", "rate-socket-2", ["m1"]);
       mockNamespace._triggerConnection(socket);
 
       for (let i = 0; i < 10; i++) {
@@ -260,7 +298,7 @@ describe("game-chat", () => {
     });
 
     it("cleans up rate limit data on disconnect", () => {
-      const socket = createMockSocket("user-1", "rate-cleanup");
+      const socket = createMockSocket("user-1", "rate-cleanup", ["m1"]);
       mockNamespace._triggerConnection(socket);
 
       // Send a few messages
@@ -277,7 +315,7 @@ describe("game-chat", () => {
       // resetChatRateLimits is called in beforeEach, but the disconnect
       // handler itself should have cleaned up this socket's entries
       // If we reconnect with same ID, we should be able to send again
-      const socket2 = createMockSocket("user-1", "rate-cleanup");
+      const socket2 = createMockSocket("user-1", "rate-cleanup", ["m1"]);
       mockNamespace._triggerConnection(socket2);
 
       for (let i = 0; i < 10; i++) {
@@ -293,7 +331,7 @@ describe("game-chat", () => {
 
   describe("broadcast format", () => {
     it("includes matchId, userId, message, and timestamp in broadcast", () => {
-      const socket = createMockSocket("user-42", "sock-42");
+      const socket = createMockSocket("user-42", "sock-42", ["match-format"]);
       mockNamespace._triggerConnection(socket);
 
       vi.useFakeTimers();

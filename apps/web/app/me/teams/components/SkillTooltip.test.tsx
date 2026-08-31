@@ -12,13 +12,19 @@ vi.mock("../skills-data", () => ({
   // (`?ruleset=`) : le mock doit exposer le défaut (cf. CLAUDE.md — un mock
   // doit déclarer toutes les exports utilisées).
   DEFAULT_SKILLS_RULESET: "season_3",
-  getSkillDescription: (slug: string) => ({
-    name: h.state.ready ? `API-${slug}` : `FB-${slug}`,
-    description: "",
-    category: "General",
-  }),
+  // Les variantes de Haine sont creees A LA VOLEE a la validation d'une
+  // feuille : un catalogue deja charge ne les connait pas et ne resout rien.
+  getSkillDescription: (slug: string) =>
+    slug.startsWith("hate")
+      ? null
+      : {
+          name: h.state.ready ? `API-${slug}` : `FB-${slug}`,
+          description: "",
+          category: "General",
+        },
   getSkillDescriptionAsync: async (slug: string) => {
     h.state.ready = true;
+    if (slug.startsWith("hate")) return null;
     return { name: `API-${slug}`, description: "", category: "General" };
   },
   parseSkills: (s: string) =>
@@ -33,10 +39,16 @@ vi.mock("../base-skills-data", () => ({
   }),
 }));
 
-vi.mock("@bb/game-engine", () => ({
-  parseSkillSlugs: (s: string) =>
-    s.split(",").map((x) => x.trim()).filter(Boolean),
-}));
+// `importOriginal` : on garde la vraie `hateSkillLabelFr` (module pur), qui
+// est justement ce que le repli francophone des badges doit exercer.
+vi.mock("@bb/game-engine", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@bb/game-engine")>();
+  return {
+    ...actual,
+    parseSkillSlugs: (s: string) =>
+      s.split(",").map((x) => x.trim()).filter(Boolean),
+  };
+});
 
 vi.mock("../../../contexts/LanguageContext", () => ({
   useLanguage: () => ({ language: "fr", setLanguage: () => {}, t: {} }),
@@ -150,5 +162,34 @@ describe("SkillTooltip (me/teams) — rafraîchissement du cache compétences", 
         screen.getByTestId("skill-tooltip-activation-thick-skull").textContent,
       ).toBe("Passif"),
     );
+  });
+});
+
+describe("SkillTooltip — trait Haine hors catalogue (A160)", () => {
+  beforeEach(() => {
+    h.state.ready = false;
+  });
+
+  it("affiche « Haine (Orque) » plutôt que le slug brut", () => {
+    // Le badge retombait sur `hate-orque`, que le coach lit comme de
+    // l'anglais alors que le trait a un nom français.
+    render(<SkillTooltip skillsString="hate-orque" />);
+    expect(screen.getByText("Haine (Orque)")).toBeTruthy();
+    expect(screen.queryByText("hate-orque")).toBeNull();
+  });
+
+  it("restitue l'accent perdu par la slugification", () => {
+    render(<SkillTooltip skillsString="hate-homme-lezard" />);
+    expect(screen.getByText("Haine (Homme Lézard)")).toBeTruthy();
+  });
+
+  it("francise aussi les variantes au slug anglais du catalogue", () => {
+    render(<SkillTooltip skillsString="hate-dwarf" />);
+    expect(screen.getByText("Haine (Nain)")).toBeTruthy();
+  });
+
+  it("laisse les autres compétences inconnues sur leur slug", () => {
+    render(<SkillTooltip skillsString="hatchet-job" />);
+    expect(screen.getByText("FB-hatchet-job")).toBeTruthy();
   });
 });

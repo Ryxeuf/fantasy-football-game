@@ -2,13 +2,20 @@
  * Image Open Graph dynamique d'un roster partagé /r/[token].
  *
  * Auto-détectée par Next.js : override `openGraph.images` de la route.
- * « Version riche » : nom d'équipe + race + valeur d'équipe + nombre de
- * joueurs + Star Players, via le template OG partagé.
+ * « Version riche » : logo de l'équipe + nom + race + valeur d'équipe +
+ * effectif, via le template OG partagé.
+ *
+ * Le logo est celui uploadé par le coach quand il existe, sinon l'emblème
+ * programmatique du roster (`resolveTeamOgLogo`) — jamais rien, pour que la
+ * carte identifie toujours l'équipe partagée. Il est posé en `contain` dans
+ * une boîte carrée par `OgImageTemplate` : ses proportions sont préservées.
  */
 import { ImageResponse } from "next/og";
 import { fetchServerJson, getServerApiBase } from "../../lib/serverApi";
 import { buildRosterShareOgContent } from "../../lib/og-image-content";
 import { OgImageTemplate } from "../../lib/og-image-template";
+import { resolveTeamOgLogo } from "../../lib/og-team-logo";
+import { rosterPlayersOf } from "../../lib/roster-players";
 import { prettifySlug } from "../../lib/roster-display";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://nufflearena.fr").replace(/\/$/, "");
@@ -23,7 +30,9 @@ interface OgTeam {
   roster?: string;
   ruleset?: string;
   teamValue?: number;
-  players?: unknown[];
+  logoUrl?: string | null;
+  description?: string | null;
+  players?: { dead?: boolean; firedAt?: string | null }[];
   starPlayers?: { starPlayerSlug?: string }[];
 }
 
@@ -46,9 +55,17 @@ export default async function Image({ params }: { params: { token: string } }) {
     teamName: team?.name ?? "Équipe Blood Bowl",
     raceName: prettifySlug(team?.roster ?? "") || "Blood Bowl",
     teamValue: team?.teamValue ?? 1000000,
-    playerCount: team?.players?.length ?? 0,
+    // Effectif = joueurs encore AU ROSTER : `players.length` comptait aussi
+    // les morts et les licenciés, et annonçait donc un effectif faux.
+    playerCount: rosterPlayersOf(team?.players).length,
     starPlayerNames: (team?.starPlayers ?? []).map((sp) => prettifySlug(sp.starPlayerSlug ?? "")),
     ruleset: team?.ruleset ?? "season_3",
+    description: team?.description,
+    logo: resolveTeamOgLogo({
+      logoUrl: team?.logoUrl,
+      roster: team?.roster,
+      assetBase: SITE_URL,
+    }),
   });
 
   return new ImageResponse(

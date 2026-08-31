@@ -48,9 +48,16 @@ jobs:
       - name: Unit tests
         # Les workspaces e2e/integration (`@bb/tests-*`) ont besoin d'infra
         # specifique (DB, browsers Playwright) qui n'est pas presente sur
-        # ce runner — leurs jobs dedies tournent dans `e2e.yml`. On garde
-        # donc le fallback historique pour ne pas casser la step.
-        run: pnpm -w test || echo "Some workspaces require infra unavailable here (e2e jobs run in e2e.yml)"
+        # ce runner — leurs jobs dedies tournent dans `e2e.yml`. Ils sont
+        # donc EXCLUS de la step, au lieu d'avaler le code de sortie de
+        # TOUTES les suites avec un `|| echo` : ce fallback masquait aussi
+        # les vrais echecs de `@bb/tests` et `@bb/tests-integration`, qui
+        # ont pu deriver sans que rien ne le signale. Les deux sont verts et
+        # gatent desormais la CI.
+        # `--` transmet les filtres a TURBO (le script racine est
+        # `turbo run test --continue`) : sans lui, pnpm les interprete pour
+        # lui-meme et les suites e2e tournent quand meme.
+        run: pnpm -w test -- --filter='!@bb/tests-e2e-api' --filter='!@bb/tests-e2e-ui'
       - name: Coverage thresholds (S25.4)
         # Seuils de couverture par package (cf. vitest.config.ts de
         # chaque workspace). Echec CI si la couverture passe en dessous
