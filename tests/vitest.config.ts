@@ -11,11 +11,11 @@ export default defineConfig({
       "**/node_modules/**",
       "e2e-api/**",
       "e2e-ui/**",
-      "integration/admin-middleware.test.ts",
-      "integration/auth.test.ts",
-      "integration/local-stats-features.test.ts",
-      "integration/match-endpoints.test.ts",
-      "integration/match-start.test.ts",
+      // `integration/**` a SON workspace (`tests/integration`), qui démarre
+      // le serveur dont ces specs dépendent. Le workspace racine en excluait
+      // cinq nommément, mais pas les autres : `public-rosters` y tournait
+      // donc sans serveur et expirait au hook (10 s).
+      "integration/**",
       "ui/PlayByIdHeader.test.tsx",
     ],
     coverage: {
@@ -26,7 +26,13 @@ export default defineConfig({
         "../packages/ui/src/**/*.ts",
         "../packages/ui/src/**/*.tsx",
       ],
-      exclude: ["node_modules/", "**/*.d.ts", "**/*.config.*", "**/*.test.ts", "**/*.test.tsx"],
+      exclude: [
+        "node_modules/",
+        "**/*.d.ts",
+        "**/*.config.*",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+      ],
     },
   },
   resolve: {

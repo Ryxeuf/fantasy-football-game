@@ -376,6 +376,9 @@ model Team {
   // Logo d'équipe uploadé (miroir SQLite de schema.prisma).
   logoUrl String?
 
+  // Fluff libre saisi par le coach (miroir SQLite de schema.prisma).
+  description String?
+
   // Partage public opt-in (miroir SQLite de schema.prisma).
   isPublic   Boolean @default(false)
   shareToken String? @unique

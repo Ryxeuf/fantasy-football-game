@@ -99,6 +99,14 @@ export default function TeamShareToggle({
             onFocus={(e) => e.currentTarget.select()}
             className="mt-1.5 w-full rounded-lg border border-nuffle-bronze/30 bg-white/60 px-3 py-2 text-sm text-nuffle-anthracite/80 font-body"
           />
+          {/* Le coach colle spontanement l'URL de SA fiche (/me/teams/:id),
+              qui exige une session : sans cette phrase, rien ne lui dit que
+              c'est ce lien-ci qui porte l'apercu (logo, nom, description). */}
+          <p className="mt-2 text-xs text-nuffle-anthracite/60 font-body">
+            {en
+              ? "This is the link that carries the rich preview — team logo, name and description — when pasted on Discord, Slack or X."
+              : "C'est ce lien qui porte l'aperçu enrichi — logo, nom et description de l'équipe — quand il est collé sur Discord, Slack ou X."}
+          </p>
           <div className="mt-3">
             <ShareBar
               url={publicUrl}

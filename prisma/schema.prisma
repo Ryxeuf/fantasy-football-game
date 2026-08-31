@@ -456,6 +456,13 @@ model Team {
   // dérivé du roster (`renderTeamLogoSvg`).
   logoUrl String?
 
+  // Fluff libre saisi par le coach sur la fiche d'édition (≤ 1000
+  // caractères). Purement cosmétique : aucun effet sur la VE, le budget ou
+  // la composition. Sert de texte d'aperçu quand l'équipe est partagée
+  // (`/r/:token`), à la place de la description générique du site.
+  // Nullable et lisible sans backfill : null => description générée.
+  description String?
+
   // Partage public opt-in (boucle d'acquisition). Le coach active le
   // partage -> `shareToken` généré ; lien public en lecture seule via
   // /api/public/teams/:token. Désactivé par défaut (vie privée).

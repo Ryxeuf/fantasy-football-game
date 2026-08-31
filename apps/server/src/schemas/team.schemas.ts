@@ -232,6 +232,32 @@ export const renameTeamSchema = z.object({
 export type RenameTeamBody = z.infer<typeof renameTeamSchema>;
 
 /**
+ * Description (fluff) d'une équipe (`PATCH /team/:id/description`).
+ *
+ * Même posture que le renommage : champ cosmétique, éditable équipe
+ * engagée. Le `.trim()` normalise et une chaîne devenue vide vaut `null` —
+ * « pas de description » et « description vide » ne doivent pas être deux
+ * états distincts, sinon l'aperçu de partage devrait arbitrer entre les
+ * deux à chaque lecture.
+ */
+export const TEAM_DESCRIPTION_MAX_LENGTH = 1000;
+
+export const updateTeamDescriptionSchema = z.object({
+  description: z
+    .string()
+    .trim()
+    .max(
+      TEAM_DESCRIPTION_MAX_LENGTH,
+      `La description ne peut pas dépasser ${TEAM_DESCRIPTION_MAX_LENGTH} caractères`,
+    )
+    .nullable()
+    .transform((v) => (v && v.length > 0 ? v : null)),
+});
+export type UpdateTeamDescriptionBody = z.infer<
+  typeof updateTeamDescriptionSchema
+>;
+
+/**
  * Édition avancée : réglage du pool de PSP de construction d'une équipe
  * déjà créée. Même borne haute que le builder (`MAX_STARTING_PSP_POOL`).
  */

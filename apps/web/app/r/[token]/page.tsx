@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchServerJson, safeServerJson, getServerApiBase } from "../../lib/serverApi";
 import { prettifySlug, parseSkillList } from "../../lib/roster-display";
+import { rosterPlayersOf } from "../../lib/roster-players";
+import {
+  buildRosterShareDescription,
+  buildRosterShareTitle,
+} from "../../lib/roster-share-text";
 import ShareBar from "../../components/ShareBar";
 import PlayerAvatar from "../../components/PlayerAvatar";
 
@@ -23,6 +28,8 @@ interface PublicPlayer {
   av: number;
   skills: unknown;
   dead?: boolean;
+  /** Sorti du roster (licencié, ou tué depuis la règle de fin de match). */
+  firedAt?: string | null;
   imageUrl?: string | null;
 }
 interface PublicStarPlayer {
@@ -42,6 +49,9 @@ interface PublicTeam {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  /** Fluff saisi par le coach. Sert de texte d'aperçu au partage. */
+  description?: string | null;
+  logoUrl?: string | null;
   players: PublicPlayer[];
   starPlayers: PublicStarPlayer[];
 }
@@ -70,14 +80,31 @@ export async function generateMetadata({ params }: { params: { token: string } }
     return { title: "Équipe introuvable", robots: { index: false, follow: true } };
   }
   const race = prettifySlug(team.roster);
+  // `title` passe par le `title.template` de `app/layout.tsx` (« %s | Nuffle
+  // Arena ») ; `og:title` NON — ce template ne s'applique qu'a `<title>`.
+  // On y ecrit donc le nom du site explicitement, car c'est `og:title` que
+  // Discord, Slack et X affichent.
   const title = `${team.name} — Équipe Blood Bowl (${race})`;
-  const description = `Découvrez ${team.name}, équipe ${race} Blood Bowl : ${team.players.length} joueurs, valeur d'équipe ${formatGold(team.teamValue)} po. Composée sur Nuffle Arena.`;
+  const shareTitle = buildRosterShareTitle({ teamName: team.name, raceName: race });
+  const description = buildRosterShareDescription({
+    teamName: team.name,
+    raceName: race,
+    playerCount: rosterPlayersOf(team.players).length,
+    teamValue: team.teamValue,
+    description: team.description,
+  });
   return {
     title,
     description,
     alternates: { canonical: url },
-    openGraph: { title, description, type: "article", url, siteName: "Nuffle Arena" },
-    twitter: { card: "summary_large_image", title, description },
+    openGraph: {
+      title: shareTitle,
+      description,
+      type: "article",
+      url,
+      siteName: "Nuffle Arena",
+    },
+    twitter: { card: "summary_large_image", title: shareTitle, description },
   };
 }
 
@@ -89,7 +116,9 @@ export default async function PublicRosterPage({ params }: { params: { token: st
   const race = prettifySlug(team.roster);
   const rulesetLabel = RULESET_LABELS[team.ruleset] ?? team.ruleset;
   const shareUrl = `${SITE_URL}/r/${params.token}`;
-  const livePlayers = team.players.filter((p) => !p.dead);
+  // `!p.dead` seul laissait un LICENCIÉ dans l'effectif public : le filtre
+  // canonique porte sur `firedAt` (cf. `lib/roster-players`).
+  const livePlayers = rosterPlayersOf(team.players);
 
   return (
     <div className="max-w-4xl mx-auto w-full">
@@ -112,6 +141,17 @@ export default async function PublicRosterPage({ params }: { params: { token: st
             VE {formatGold(team.teamValue)} po
           </span>
         </div>
+
+        {/* Fluff du coach : c'est aussi le texte servi dans l'apercu de
+            partage, il doit donc etre lisible sur la page elle-meme. */}
+        {team.description ? (
+          <p
+            data-testid="public-team-description"
+            className="mt-4 max-w-2xl whitespace-pre-line font-body text-sm sm:text-base leading-relaxed text-nuffle-anthracite/80"
+          >
+            {team.description}
+          </p>
+        ) : null}
 
         <div className="mt-5">
           <ShareBar url={shareUrl} title={`${team.name} — mon équipe Blood Bowl sur Nuffle Arena`} />

@@ -1,3 +1,16 @@
+## [1.240.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.239.0...v1.240.0) (2026-08-31)
+
+
+### ✨ Features
+
+* **share:** apercu de partage d'un roster (logo, titre, description) ([583b08b](https://github.com/Ryxeuf/fantasy-football-game/commit/583b08b607a65bdab07ccf4cf861666ef5cb4a7c))
+* **teams:** reserver le bouton Journal aux admins sur la fiche d'equipe ([bbb4d7c](https://github.com/Ryxeuf/fantasy-football-game/commit/bbb4d7cc82efcd256f73fe026b2fd974f015474b))
+
+
+### 🐛 Bug Fixes
+
+* **db:** miroir SQLite de Team.description + e2e-api du partage ([ceaa7da](https://github.com/Ryxeuf/fantasy-football-game/commit/ceaa7dac2b530133baff455f91d79fa40d7702ce))
+
 ## [1.239.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.238.2...v1.239.0) (2026-08-27)
 
 
