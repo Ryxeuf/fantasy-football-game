@@ -28,13 +28,18 @@ import {
   maxTwoSkillPlayers,
   parseAdvancements,
   poolSpentForTeam,
+  resolveTournamentEliteSkills,
+  standardPspCost,
   tournamentSkillCost,
   type AdvancementType,
   type CharacteristicKind,
+  type FallbackPspCost,
   type PlayerAdvancement,
+  type Ruleset,
   type TournamentRulesetDefinition,
 } from '@bb/game-engine';
 import { getTournamentRulesetDefinition } from './tournament-ruleset-repository';
+import { getEliteSkillSlugs } from './elite-skills';
 import { isTeamRosterFrozen } from './team-lock-status';
 import { updateTeamValues } from '../utils/team-values';
 import {
@@ -82,6 +87,7 @@ export interface TeamPspPoolState {
 interface TeamRow {
   readonly id: string;
   readonly roster: string;
+  readonly ruleset: string | null;
   readonly startingPspPool: number;
   readonly tournamentRuleset: string | null;
 }
@@ -92,6 +98,7 @@ async function loadOwnedTeam(teamId: string, ownerId: string): Promise<TeamRow> 
     select: {
       id: true,
       roster: true,
+      ruleset: true,
       startingPspPool: true,
       tournamentRuleset: true,
     },
@@ -102,14 +109,49 @@ async function loadOwnedTeam(teamId: string, ownerId: string): Promise<TeamRow> 
   return team as TeamRow;
 }
 
+/**
+ * Barème de repli pour les améliorations écrites AVANT que le coût payé ne
+ * soit persisté (`pspCost`).
+ *
+ * `prisma/migrations/` est gitignoré (prod = `db push`) : ces enregistrements
+ * ne peuvent pas être backfillés, le rattrapage se fait donc à la lecture.
+ * Sous un règlement de tournoi, c'est SON barème qu'il faut re-appliquer —
+ * le barème standard sous-comptait le pool (Ogres NAF WC 2027 : 54 affichés
+ * pour 66 réellement dépensés, donc 12 PSP fantômes réputés disponibles).
+ */
+export async function fallbackPspCostForTeam(
+  tournamentRuleset: string | null,
+  ruleset: string | null,
+): Promise<FallbackPspCost> {
+  const pack = await packForTeam(tournamentRuleset);
+  if (!pack) return standardPspCost;
+  const elite = await eliteSkillsForPack(pack, ruleset);
+  return (adv, index) => {
+    if (adv.type !== 'primary' && adv.type !== 'secondary') {
+      return standardPspCost(adv, index);
+    }
+    return tournamentSkillCost(
+      pack,
+      index,
+      adv.type,
+      (adv as { skillSlug?: string }).skillSlug,
+      elite,
+    );
+  };
+}
+
 /** PSP déjà prélevés sur le pool par l'ensemble des joueurs de l'équipe. */
-export async function poolSpentForTeamId(teamId: string): Promise<number> {
+export async function poolSpentForTeamId(
+  teamId: string,
+  fallbackCost?: FallbackPspCost,
+): Promise<number> {
   const players = await prisma.teamPlayer.findMany({
     where: { teamId },
     select: { advancements: true },
   });
   return poolSpentForTeam(
     players.map((p: { advancements: unknown }) => parseAdvancements(p.advancements)),
+    fallbackCost,
   );
 }
 
@@ -131,7 +173,10 @@ export async function getTeamPspPoolState(
   ownerId: string,
 ): Promise<TeamPspPoolState> {
   const team = await loadOwnedTeam(teamId, ownerId);
-  const spent = await poolSpentForTeamId(teamId);
+  const spent = await poolSpentForTeamId(
+    teamId,
+    await fallbackPspCostForTeam(team.tournamentRuleset, team.ruleset),
+  );
   return {
     pool: team.startingPspPool,
     spent,
@@ -171,7 +216,10 @@ export async function setStartingPspPool(
     );
   }
 
-  const spent = await poolSpentForTeamId(teamId);
+  const spent = await poolSpentForTeamId(
+    teamId,
+    await fallbackPspCostForTeam(team.tournamentRuleset, team.ruleset),
+  );
   if (pool < spent) {
     throw new TeamAdvancementError(
       'pool-below-spent',
@@ -219,11 +267,38 @@ export function advancementCostFor(
   // Lot 6.2 — barème de l'ÉDITION de l'équipe quand le règlement n'impose
   // pas le sien. Absent ⇒ barème compilé (comportement d'avant le lot).
   schedule?: AdvancementSchedule,
+  /**
+   * Compétences Élite retenues par le règlement, résolues par
+   * `eliteSkillsForPack`.
+   *
+   * OBLIGATOIRE pour facturer le surcoût Élite : omis, `tournamentSkillCost`
+   * retombe sur la liste publiée par le règlement — vide pour le pack NAF
+   * WC 2027, qui facture pourtant un surcoût Élite. Le build passait bien
+   * cette liste, pas l'achat d'après-création : la MÊME compétence coûtait
+   * 8 PSP à la construction et 6 le lendemain.
+   */
+  eliteSkills?: ReadonlySet<string>,
 ): number {
   if (pack && (type === 'primary' || type === 'secondary')) {
-    return tournamentSkillCost(pack, alreadyTaken, type, skillSlug);
+    return tournamentSkillCost(pack, alreadyTaken, type, skillSlug, eliteSkills);
   }
   return getNextAdvancementPspCost(alreadyTaken, type, schedule);
+}
+
+/**
+ * Compétences Élite qu'un règlement facture : sa propre liste s'il en
+ * publie une, sinon celles de l'édition (`Skill.isElite`). Miroir exact de
+ * la résolution faite au build (`handleBuildTeam`).
+ */
+export async function eliteSkillsForPack(
+  pack: TournamentRulesetDefinition | null,
+  ruleset: string | null,
+): Promise<ReadonlySet<string> | undefined> {
+  if (!pack) return undefined;
+  return resolveTournamentEliteSkills(pack, [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...(await getEliteSkillSlugs(prisma as any, (ruleset as Ruleset) ?? undefined)),
+  ]);
 }
 
 /**

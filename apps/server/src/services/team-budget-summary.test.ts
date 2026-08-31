@@ -125,6 +125,82 @@ describe("buildTeamBudgetSummary", () => {
     // le calcul web ignorait.
     expect(summary.playersCost).toBe(550_000 + 20_000);
   });
+
+  /**
+   * Les améliorations se paient en PSP (pool de construction ou SPP gagnés
+   * en match), jamais en or. Les compter au budget affichait « Budget
+   * dépassé » sur une équipe construite au budget EXACT — et, via
+   * `syncDraftTreasury`, ramenait sa trésorerie à 0.
+   */
+  it("n'impute PAS les surcoûts d'avancement au budget d'or", async () => {
+    const withSkill = JSON.stringify([{ type: "primary", skillSlug: "block" }]);
+    const summary = await buildTeamBudgetSummary(
+      db(),
+      // Budget calé au centime sur les 11 embauches : 550k.
+      team({ initialBudget: 550 }),
+      [...players(10), ...players(1, withSkill)],
+      [],
+    );
+
+    expect(summary.playersHireCost).toBe(550_000);
+    expect(summary.advancementsCost).toBe(20_000);
+    expect(summary.playersCost).toBe(570_000);
+    // L'or engagé s'arrête aux embauches : le budget est tenu, pas dépassé.
+    expect(summary.totalSpent).toBe(550_000);
+    expect(summary.remaining).toBe(0);
+    // La VE, elle, inclut bien les augmentations.
+    expect(summary.teamValue).toBe(570_000);
+  });
+
+  it("garde l'invariant playersCost = embauches + augmentations", async () => {
+    const twoSkills = JSON.stringify([
+      { type: "primary", skillSlug: "block" },
+      { type: "secondary", skillSlug: "dodge" },
+    ]);
+    const summary = await buildTeamBudgetSummary(
+      db(),
+      team({ rerolls: 2, dedicatedFans: 3 }),
+      [...players(9), ...players(2, twoSkills)],
+      [{ cost: 100_000 }],
+    );
+
+    expect(summary.playersCost).toBe(
+      summary.playersHireCost + summary.advancementsCost,
+    );
+    expect(summary.totalSpent).toBe(
+      summary.playersHireCost +
+        summary.starPlayersCost +
+        summary.staffCost +
+        summary.rerollsCost +
+        summary.dedicatedFansCost,
+    );
+    expect(summary.remaining).toBe(summary.initialBudget - summary.totalSpent);
+  });
+
+  it("expose les deux postes qui séparent la VEA de la VE", async () => {
+    const absent = {
+      position: "position-inconnue-test",
+      advancements: "[]",
+      dead: false,
+      firedAt: null,
+      missNextMatch: true,
+    };
+    const summary = await buildTeamBudgetSummary(
+      db(),
+      team(),
+      [...players(10), absent],
+      [],
+    );
+
+    expect(summary.unavailablePlayersCost).toBe(50_000);
+    // Roster de test sans règle spéciale : aucune exonération.
+    expect(summary.cheapLinemenWaived).toBe(0);
+    expect(summary.currentValue).toBe(
+      summary.teamValue -
+        summary.unavailablePlayersCost -
+        summary.cheapLinemenWaived,
+    );
+  });
 });
 
 describe("creditInitialTreasury", () => {
@@ -226,6 +302,22 @@ describe("syncDraftTreasury", () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: "team-1" },
       data: { treasury: 0 },
+    });
+  });
+
+  it("ne confisque pas la trésorerie d'une équipe qui a acheté des compétences", async () => {
+    // Cas prod : budget 600k, 11 embauches à 550k ⇒ 50k de reliquat. Des
+    // compétences payées en PSP faisaient tomber ce reliquat à 0.
+    const withSkill = JSON.stringify([{ type: "primary", skillSlug: "block" }]);
+    const { prisma, update } = prismaFor(team({ initialBudget: 600 }), [
+      ...players(10),
+      ...players(1, withSkill),
+    ]);
+
+    await expect(syncDraftTreasury(prisma, "team-1")).resolves.toBe(50_000);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "team-1" },
+      data: { treasury: 50_000 },
     });
   });
 

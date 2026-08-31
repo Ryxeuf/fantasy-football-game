@@ -29,6 +29,8 @@ import {
 
 /** Ligne `TeamPlayer` minimale nécessaire au calcul de VE/VEA. */
 interface TeamValuePlayerRow {
+  /** Requis seulement par `computePlayerValuesFor` (indexation du résultat). */
+  id?: string;
   position: string;
   dead?: boolean | null;
   firedAt?: Date | null;
@@ -284,6 +286,81 @@ export function buildTeamValueData(
 }
 
 /**
+ * Dépendances de valorisation d'une équipe, résolues en une passe :
+ * compétences Élite, coûts staff, méta des postes, règles spéciales et
+ * barème d'avancement de l'édition.
+ */
+async function resolveTeamValueDeps(db: unknown, team: TeamValueTeamRow) {
+  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
+  const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
+  // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
+  // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
+  const [eliteSlugs, staffCosts, positionMeta, specialRules, schedule] =
+    await Promise.all([
+      getEliteSkillSlugs(db, ruleset),
+      resolveStaffCostsForTeam(db, team.roster, ruleset, format),
+      resolvePositionMetaForTeam(db, team.roster, ruleset),
+      resolveSpecialRulesForTeam(db, team.roster, ruleset),
+      // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
+      loadAdvancementSchedule(ruleset),
+    ]);
+  return { eliteSlugs, staffCosts, positionMeta, specialRules, schedule };
+}
+
+/** Valeur d'un joueur, décomposée. Tous les montants en po. */
+export interface PlayerValueBreakdown {
+  /** Coût d'embauche du poste (tarif base, ruleset de l'équipe). */
+  readonly hireCost: number;
+  /** Surcoûts d'avancement, Élite compris. */
+  readonly advancementsCost: number;
+  /** Valeur totale du joueur : `hireCost + advancementsCost`. */
+  readonly value: number;
+  /** Le joueur occupe un poste de Trois-quart (`isLineman`). */
+  readonly lineman: boolean;
+}
+
+/**
+ * Valeur de CHAQUE joueur d'une équipe, indexée par `TeamPlayer.id`.
+ *
+ * Même résolution que `computeTeamValueBreakdownFor` (coûts de poste en
+ * base, compétences Élite, barème de l'édition) : la colonne « Coût » de la
+ * fiche d'équipe s'aligne donc exactement sur la VE, au lieu d'afficher un
+ * tarif de recrue qui ignorait les compétences acquises.
+ */
+export async function computePlayerValuesFor(
+  db: unknown,
+  team: TeamValueTeamRow,
+  players: readonly TeamValuePlayerRow[],
+): Promise<Record<string, PlayerValueBreakdown>> {
+  const deps = await resolveTeamValueDeps(db, team);
+  const data = buildTeamValueData(
+    team,
+    players,
+    deps.eliteSlugs,
+    deps.staffCosts,
+    deps.positionMeta,
+    deps.specialRules,
+    deps.schedule,
+  );
+  // `buildTeamValueData` filtre morts et licenciés dans le même ordre : on
+  // ré-indexe donc sur la liste filtrée, pas sur `players`.
+  const alive = players.filter((p) => !p.dead && !p.firedAt);
+  const out: Record<string, PlayerValueBreakdown> = {};
+  alive.forEach((player, index) => {
+    const valued = data.players[index];
+    if (!player.id || !valued) return;
+    const hireCost = valued.hireCost ?? valued.cost;
+    out[player.id] = {
+      hireCost,
+      advancementsCost: valued.cost - hireCost,
+      value: valued.cost,
+      lineman: valued.lineman ?? false,
+    };
+  });
+  return out;
+}
+
+/**
  * Recalcule le détail VE/VEA d'une équipe SANS écriture.
  *
  * Source unique du calcul : `updateTeamValues` le persiste, le détail
@@ -315,28 +392,16 @@ export async function computeTeamValueBreakdownFor(
   team: TeamValueTeamRow,
   players: readonly TeamValuePlayerRow[],
 ): Promise<TeamValueBreakdown> {
-  const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
-  const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
-  // Compétences Élite du ruleset : +10 000 po de surcoût VE par avancement
-  // dont le skillSlug est Élite (une primaire Élite vaut 30 000 po).
-  const [eliteSlugs, staffCosts, positionMeta, specialRules, schedule] =
-    await Promise.all([
-      getEliteSkillSlugs(db, ruleset),
-      resolveStaffCostsForTeam(db, team.roster, ruleset, format),
-      resolvePositionMetaForTeam(db, team.roster, ruleset),
-      resolveSpecialRulesForTeam(db, team.roster, ruleset),
-      // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
-      loadAdvancementSchedule(ruleset),
-    ]);
+  const deps = await resolveTeamValueDeps(db, team);
   return calculateTeamValueBreakdown(
     buildTeamValueData(
       team,
       players,
-      eliteSlugs,
-      staffCosts,
-      positionMeta,
-      specialRules,
-      schedule,
+      deps.eliteSlugs,
+      deps.staffCosts,
+      deps.positionMeta,
+      deps.specialRules,
+      deps.schedule,
     ),
   );
 }

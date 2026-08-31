@@ -72,12 +72,18 @@ vi.mock("../utils/team-values", () => ({
   // le mock doit declarer TOUTES les methodes utilisees (cf. CLAUDE.md).
   computeTeamValueBreakdownFor: vi.fn().mockResolvedValue({
     playersCost: 0,
+    playersHireCost: 0,
+    advancementsCost: 0,
     availablePlayersCost: 0,
+    unavailablePlayersCost: 0,
+    cheapLinemenWaived: 0,
     staffCost: 0,
     rerollsCost: 0,
     teamValue: 0,
     currentValue: 0,
   }),
+  // Valeur par joueur servie a la fiche d'equipe (colonne « Cout »).
+  computePlayerValuesFor: vi.fn().mockResolvedValue({}),
 }));
 
 // Statut d'engagement de l'equipe : mocke pour piloter le verrouillage

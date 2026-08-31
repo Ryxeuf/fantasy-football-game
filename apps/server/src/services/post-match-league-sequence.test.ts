@@ -893,3 +893,159 @@ describe("applyAdvancementChoice — characteristic (BB2025)", () => {
     expect(out).toEqual({ skipped: true, reason: "missing-d8" });
   });
 });
+
+/**
+ * Coût PSP imposé et traçabilité du financement.
+ *
+ * Régression prod (Ogres, NAF World Cup 2027) : le build créditait le joueur
+ * du coût du règlement (Garde primaire Élite = 8) et cette fonction ne
+ * débitait que le barème standard (6). Les 2 PSP d'écart restaient sur le
+ * joueur — 12 sur l'équipe entière — dépensables ensuite HORS des règles du
+ * tournoi. Et faute de `pspCost` persisté, la comptabilité du pool retombait
+ * sur le barème standard et annonçait 54 dépensés sur 66.
+ */
+describe("applyAdvancementChoice — coût imposé et source de financement", () => {
+  function readyPlayer(spp: number, advancements = "[]") {
+    return {
+      id: "p1",
+      teamId: "t1",
+      spp,
+      skills: "",
+      advancements,
+      dead: false,
+      position: "ogre_bloqueur",
+      ma: 5,
+      st: 5,
+      ag: 4,
+      pa: 5,
+      av: 10,
+      team: { roster: "ogre", ruleset: "season_3" },
+    };
+  }
+
+  /** Améliorations écrites lors du dernier `teamPlayer.update`. */
+  function writtenAdvancements(): Array<Record<string, unknown>> {
+    const call = mocked.playerUpdate.mock.calls.at(-1);
+    return JSON.parse(call?.[0]?.data?.advancements ?? "[]");
+  }
+
+  it("débite le coût imposé et le persiste avec sa source (pool)", async () => {
+    mocked.playerFind.mockResolvedValue(readyPlayer(8));
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "guard",
+      pspCostOverride: 8,
+      fundedBy: "pool",
+    });
+
+    expect(out).toMatchObject({ applied: true });
+    // Le crédit du pool (8) est intégralement consommé : plus de SPP fantôme.
+    expect("newSpp" in out ? out.newSpp : null).toBe(0);
+    expect(mocked.playerUpdate.mock.calls.at(-1)?.[0].data.spp).toEqual({
+      decrement: 8,
+    });
+    expect(writtenAdvancements()).toEqual([
+      expect.objectContaining({
+        skillSlug: "guard",
+        type: "primary",
+        pspCost: 8,
+        fundedBy: "pool",
+      }),
+    ]);
+  });
+
+  it("refuse quand le coût imposé dépasse les PSP disponibles", async () => {
+    mocked.playerFind.mockResolvedValue(readyPlayer(7));
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "guard",
+      pspCostOverride: 8,
+    });
+
+    expect(out).toMatchObject({
+      skipped: true,
+      reason: "insufficient-spp",
+      required: 8,
+      available: 7,
+    });
+  });
+
+  it("marque `player` par défaut : un avancement de match ne touche pas le pool", async () => {
+    mocked.playerFind.mockResolvedValue(readyPlayer(20));
+
+    await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "guard",
+    });
+
+    expect(writtenAdvancements()).toEqual([
+      expect.objectContaining({ pspCost: 6, fundedBy: "player" }),
+    ]);
+  });
+
+  it("garde le barème de l'édition quand aucun coût n'est imposé", async () => {
+    mocked.playerFind.mockResolvedValue(readyPlayer(20));
+
+    await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "secondary",
+      skillSlug: "block",
+    });
+
+    // Secondaire, 1re amélioration : 10 PSP en Saison 3.
+    expect(mocked.playerUpdate.mock.calls.at(-1)?.[0].data.spp).toEqual({
+      decrement: 10,
+    });
+  });
+
+  it("ignore un coût imposé aberrant (négatif ou non fini)", async () => {
+    mocked.playerFind.mockResolvedValue(readyPlayer(20));
+
+    await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "guard",
+      pspCostOverride: -5,
+    });
+
+    // Repli sur le barème : 6 PSP, jamais un crédit gratuit.
+    expect(mocked.playerUpdate.mock.calls.at(-1)?.[0].data.spp).toEqual({
+      decrement: 6,
+    });
+  });
+
+  it("persiste aussi le coût sur une amélioration de caractéristique", async () => {
+    mocked.playerFind.mockResolvedValue(readyPlayer(16));
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "characteristic",
+      stat: "ma",
+      // Un D8 de 5 ouvre MA/PA (BB2025 p.37).
+      d8: 5,
+      pspCostOverride: 16,
+      fundedBy: "pool",
+    });
+
+    expect(out).toMatchObject({ applied: true });
+    expect(writtenAdvancements()).toEqual([
+      expect.objectContaining({
+        type: "characteristic",
+        stat: "ma",
+        pspCost: 16,
+        fundedBy: "pool",
+      }),
+    ]);
+  });
+});

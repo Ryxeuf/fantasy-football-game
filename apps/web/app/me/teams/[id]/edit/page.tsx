@@ -40,6 +40,10 @@ import {
   type RosterStaffConfig
 } from "@bb/game-engine";
 import { computeStaffSpend, type StaffCounts } from "../../staff-cost";
+import {
+  computeBuildBudget,
+  type AdvancementSurcharges,
+} from "./build-budget";
 import { buildImportantNotes } from "./important-notes";
 import PspPoolPanel from "./PspPoolPanel";
 import PlayerAdvancements from "./PlayerAdvancements";
@@ -565,19 +569,12 @@ export default function TeamEditPage() {
   const basePlayerCost = (position: string): number =>
     dbCostByPosition.get(position) ?? getPlayerCost(position, team?.roster || '');
 
-  // Calculer les coûts
-  const playersCost = players.reduce((total, player: any) => {
-    const base = basePlayerCost(player.position);
-    let adv = 0;
-    try {
-      const a = JSON.parse(player.advancements || '[]');
-      adv = a.reduce((s: number, x: any) => {
-        const type = x?.type as keyof typeof SURCHARGE_PER_ADVANCEMENT | undefined;
-        return s + (type && SURCHARGE_PER_ADVANCEMENT[type] ? SURCHARGE_PER_ADVANCEMENT[type] + eliteExtraPo(x) : 0);
-      }, 0);
-    } catch {}
-    return total + base + adv;
-  }, 0);
+  /** Barème des surcoûts de VE, injecté dans le calcul pur du budget. */
+  const surcharges: AdvancementSurcharges = {
+    byType: SURCHARGE_PER_ADVANCEMENT,
+    eliteExtra: ELITE_SKILL_SURCHARGE,
+    eliteSlugs: eliteSkillSlugs,
+  };
   // Contraintes du format de l'équipe (BB11 11-16 joueurs, Sevens 7-11) :
   // le plafond de 16 était écrit en dur et mentait aux équipes Sevens.
   const teamFormat: GameFormat = isGameFormat(team?.format) ? team.format : 'bb11';
@@ -600,9 +597,26 @@ export default function TeamEditPage() {
     0,
   );
   const budgetInPo = (team?.initialBudget || 0) * 1000;
-  const totalSpent = playersCost + staffSpend + starPlayersCost;
-  const remaining = budgetInPo - totalSpent;
-  const isOverBudget = remaining < 0;
+  // Le « Restant » comparait la VALEUR des joueurs au budget d'or : une
+  // équipe construite au budget exact puis améliorée sur son pool de PSP
+  // s'affichait « Budget dépassé ! » à hauteur de ses compétences (−240k sur
+  // une équipe Ogre NAF WC 2027). Le serveur, lui, n'a jamais compté que les
+  // embauches — la règle vit désormais dans `build-budget` (pur, testé).
+  const {
+    playersHireCost,
+    advancementsCost,
+    playersCost,
+    totalSpent,
+    remaining,
+    isOverBudget,
+  } = computeBuildBudget({
+    players,
+    hireCostOf: basePlayerCost,
+    staffSpend,
+    starPlayersCost,
+    budgetPo: budgetInPo,
+    surcharges,
+  });
 
   // Compteurs LOCAUX par poste (à partir du state `players`) : sert à filtrer
   // les positions ajoutables dans le modal, indépendamment du `canAdd` renvoyé
@@ -703,12 +717,21 @@ export default function TeamEditPage() {
               {Math.round(totalSpent / 1000)}k
             </div>
             <div className="text-[11px] text-gray-500 mt-1">
-              joueurs {Math.round(playersCost / 1000)}k + staff{" "}
+              embauches {Math.round(playersHireCost / 1000)}k + staff{" "}
               {Math.round(staffSpend / 1000)}k
               {starPlayersCost > 0
                 ? ` + stars ${Math.round(starPlayersCost / 1000)}k`
                 : ""}
             </div>
+            {advancementsCost > 0 ? (
+              <div
+                className="text-[11px] text-indigo-600 mt-1"
+                data-testid="edit-budget-advancements"
+              >
+                + {Math.round(advancementsCost / 1000)}k d&apos;augmentations
+                (payées en PSP, hors budget)
+              </div>
+            ) : null}
           </div>
           <div className={`bg-white rounded-lg p-3 sm:p-4 text-center border ${
             isOverBudget ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'

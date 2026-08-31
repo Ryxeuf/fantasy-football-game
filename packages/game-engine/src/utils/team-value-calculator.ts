@@ -81,14 +81,51 @@ export interface CalculatedValues {
  * faisait diverger le coût des joueurs affiché de la VE réelle (surcoûts
  * d'avancement et ruleset ignorés côté web).
  *
- * Invariant : `teamValue === playersCost + staffCost + rerollsCost` et
- * `currentValue === availablePlayersCost + staffCost + rerollsCost`.
+ * Invariants :
+ *  - `teamValue === playersCost + staffCost + rerollsCost`
+ *  - `currentValue === availablePlayersCost + staffCost + rerollsCost`
+ *  - `playersCost === playersHireCost + advancementsCost`
+ *  - `currentValue === teamValue − unavailablePlayersCost − cheapLinemenWaived`
+ *
+ * Le dernier est celui que l'UI rend lisible : tout écart VE → VEA se lit
+ * comme la somme de deux postes nommés, jamais comme un chiffre inexpliqué.
  */
 export interface TeamValueBreakdown {
   /** Coût de TOUS les joueurs engagés (base + surcoûts d'avancement). */
   readonly playersCost: number;
-  /** Idem, restreint aux joueurs disponibles pour le prochain match. */
+  /**
+   * Coût d'EMBAUCHE seul de tous les joueurs engagés, hors surcoûts
+   * d'avancement (po).
+   *
+   * C'est la part payée en OR à la construction. Les améliorations, elles,
+   * se paient en PSP (pool de construction ou SPP gagnés en match) : les
+   * compter au budget d'or affichait un « Budget restant » négatif sur une
+   * équipe pourtant construite au budget exact — et faisait tomber sa
+   * trésorerie à 0 via `syncDraftTreasury`.
+   */
+  readonly playersHireCost: number;
+  /**
+   * Surcoûts d'avancement de tous les joueurs engagés (po) :
+   * `playersCost − playersHireCost`. Entre dans la VE, jamais dans le
+   * budget de construction.
+   */
+  readonly advancementsCost: number;
+  /** Idem `playersCost`, restreint aux joueurs disponibles pour le prochain match. */
   readonly availablePlayersCost: number;
+  /**
+   * Valeur des joueurs qui ratent le prochain match (`available: false`) :
+   * la part de la VE que la VEA laisse de côté.
+   */
+  readonly unavailablePlayersCost: number;
+  /**
+   * Coût d'embauche annulé dans la VEA par « Trois-quarts à vil prix »
+   * (Ogres, Snotlings). 0 sans la règle.
+   *
+   * Exposé pour que l'UI puisse JUSTIFIER un écart VE/VEA sur une équipe
+   * qui n'a joué aucun match : sans cette ligne, une VEA inférieure à la VE
+   * passe pour un bug de calcul.
+   */
+  readonly cheapLinemenWaived: number;
   /** Cheerleaders + assistants + apothicaire (hors relances, hors fans). */
   readonly staffCost: number;
   /** Relances d'équipe. */
@@ -113,12 +150,24 @@ export function calculateTeamValueBreakdown(
   const cheapLinemen = (data.specialRules ?? []).includes(CHEAP_LINEMEN_RULE);
 
   let playersCost = 0;
+  let playersHireCost = 0;
   let availablePlayersCost = 0;
+  let unavailablePlayersCost = 0;
+  let cheapLinemenWaived = 0;
   for (const player of data.players) {
     playersCost += player.cost;
-    if (!player.available) continue;
+    // `hireCost` absent = « aucune augmentation » (cf. `TeamValuePlayer`) :
+    // le coût d'embauche vaut alors la valeur totale du joueur.
+    playersHireCost += Math.min(player.hireCost ?? player.cost, player.cost);
+    if (!player.available) {
+      unavailablePlayersCost += player.cost;
+      continue;
+    }
     const waived =
-      cheapLinemen && player.lineman ? (player.hireCost ?? player.cost) : 0;
+      cheapLinemen && player.lineman
+        ? Math.min(player.hireCost ?? player.cost, player.cost)
+        : 0;
+    cheapLinemenWaived += waived;
     availablePlayersCost += Math.max(0, player.cost - waived);
   }
   const staffCost = calculateStaffCost(data);
@@ -126,7 +175,11 @@ export function calculateTeamValueBreakdown(
 
   return {
     playersCost,
+    playersHireCost,
+    advancementsCost: playersCost - playersHireCost,
     availablePlayersCost,
+    unavailablePlayersCost,
+    cheapLinemenWaived,
     staffCost,
     rerollsCost,
     teamValue: playersCost + staffCost + rerollsCost,

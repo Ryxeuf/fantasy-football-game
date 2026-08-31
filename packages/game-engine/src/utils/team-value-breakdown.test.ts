@@ -71,7 +71,11 @@ describe("calculateTeamValueBreakdown", () => {
 
     expect(b).toEqual({
       playersCost: 0,
+      playersHireCost: 0,
+      advancementsCost: 0,
       availablePlayersCost: 0,
+      unavailablePlayersCost: 0,
+      cheapLinemenWaived: 0,
       staffCost: 0,
       rerollsCost: 0,
       teamValue: 0,
