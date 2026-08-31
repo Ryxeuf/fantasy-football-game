@@ -355,6 +355,21 @@ il perd Solitaire, garde ses PSP et l'évolution de l'étape 3. La saisie ne
 porte que l'id du journalier — le serveur redérive prix, poste, PSP
 officiels et évolution (`enrichJourneymanPurchases` + `buildJourneymanHire`).
 
+Le poste se choisit **par journalier**, pas par équipe. La colonne
+`journeymenHome/Away` porte les deux formes — `{ position }` (choix global,
+historique) et `{ positions: [slug | null] }` (rang → poste) — et le PATCH
+d'avant-match les FUSIONNE : écrire l'une sans l'autre effacerait le choix
+déjà posé. Un rang absent/inconnu retombe sur le choix global puis sur le
+Trois-quart de base, ce qui rend une feuille antérieure lisible sans backfill
+et préserve les choix quand le contingent grossit. Les quatre dérivations de
+la feuille passent par `journeymenChoiceInput`, sinon elles divergent.
+
+Éligibilité : le seul seuil « 0-12 ou plus » rate les Trois-quarts à quota
+réduit (Orques : Trois-quart Gobelin, 0-4), donc le choix que la règle
+publiée annonce. Un poste est retenu s'il est 0-12+ **ou** si ses Mots-clés
+déclarent « Trois-quart » (base d'abord, repli `KEYWORDS_SEASON3`). Le tri
+reste `max` décroissant : le 0-16 est toujours le DÉFAUT.
+
 ### Gel « version du match » : tout, dès l'OUVERTURE de la feuille
 
 Un gel partiel (en-tête seul) ou tardif (1re soumission) laisse une fenêtre
@@ -483,6 +498,43 @@ if (active.sourceType !== source || active.sourceId !== sourceId) {
 Piege associe : filtrer `dead: false` SANS `firedAt: null` (ou l'inverse)
 laisse passer la moitie des joueurs sortis. Garde CI :
 `services/player-status-filters.test.ts` (ratchet + exceptions justifiees).
+
+### Une colonne de RATTACHEMENT nullable ne peut pas servir de garde-fou
+
+`Match.leagueRoundId` est `String?` avec `onDelete: SetNull`, et
+`prisma/migrations/` est gitignoré (prod = `db push`) : elle est NULL sur les
+matchs antérieurs à la colonne comme sur ceux dont le round a été supprimé.
+Le garde-fou d'invalidation s'en servait pour reconnaître un match de
+play-off — d'où « Reversion impossible: playoffs-generated » sur un match de
+play-off bien réel. La source fiable est le lien OBLIGATOIRE :
+`LeaguePairing.roundId`. Règle : un garde-fou lit la colonne non nullable du
+chemin (ici le pairing), la nullable ne servant que de repli.
+
+Corollaire de la même famille : `LeagueRound.kind` a pour défaut `"regular"`,
+donc un tour de bracket créé à la main par le commissaire ne se déclare PAS
+play-off. `bracketSlot` suffit à le reconnaître.
+
+Piège voisin dans le même service : `advancePlayoffsAfterPairingComplete`
+numérotait le tour suivant `round.roundNumber + 1`, or `startPlayoffs` crée
+UN round par slot (demi 1 = N, demi 2 = N+1) — la finale visait donc le
+numéro du round frère et la contrainte unique `(seasonId, roundNumber)`
+faisait échouer sa création en silence. Tout nouveau round de saison doit
+s'allouer `max(roundNumber) + 1`.
+
+### Les Prières à Nuffle qui changent le barème de PSP
+
+Deux prières de la table D16 modifient les PSP et sont dérivables de la
+feuille : 10 « Passe Parfaite » (Réussite à 2 PSP) et 11 « Réception
+Étourdissante » (1 PSP au réceptionneur). Le réceptionneur d'une passe est
+saisi dans `targetPlayerId` et compté (`PlayerStatLine.receptions`), mais ne
+gagne RIEN par défaut : la Réussite revient au lanceur.
+
+`league-sheet-prayer-spp` (pur) alimente les deux chemins, qui ne peuvent
+donc pas diverger : `computeSheetSpp` (PSP affichés, et prix de recrutement
+d'un journalier) et `buildOfflineInputFromSummary` (PSP persistés, via le
+canal `sppBonus` déjà couvert par la reversion). Chaque côté n'applique que
+SES prières. La reconnaissance se fait sur le JET, `prayerId` étant absent
+des feuilles anciennes.
 
 ### Reglements de tournoi : base d'abord, moteur en repli
 
