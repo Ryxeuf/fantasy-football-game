@@ -28,6 +28,7 @@ import { useLanguage } from "../../../contexts/LanguageContext";
 import { UMAMI_EVENTS, trackUmamiEvent } from "../../../lib/umami-events";
 import { shouldShowTeamLoadError } from "./team-detail-error";
 import { rosterPlayersOf } from "../../../lib/roster-players";
+import { isAdminUser } from "../../../lib/user-roles";
 import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
@@ -158,6 +159,11 @@ export default function TeamDetailPage() {
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [data, setData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
+  // Le journal d'équipe est un outil d'investigation (qui a changé quoi, et
+  // quel a été le résultat) : il reste réservé aux admins côté interface.
+  // C'est un filtre d'AFFICHAGE — l'autorisation de `GET /team/:id/journal`
+  // reste celle du serveur (propriétaire, admin, commissaire).
+  const [isAdmin, setIsAdmin] = useState(false);
   const [rosterName, setRosterName] = useState<string>("");
   // Détail roster (positions + accès compétences + règles spéciales + ligues),
   // chargé depuis l'API publique pour enrichir la fiche d'équipe.
@@ -191,6 +197,7 @@ export default function TeamDetailPage() {
           return;
         }
         setUserName(me.user.name || me.user.username || me.user.email || "");
+        setIsAdmin(isAdminUser(me.user));
         // S25.5ae — apiRequest unwrap l'enveloppe ApiResponse<T>
         const d = await apiRequest<{
           team: { roster: string; ruleset?: string };
@@ -670,16 +677,18 @@ export default function TeamDetailPage() {
           >
             {t.teams.treasuryTitle ?? "Tresorerie"}
           </a>
-          {/* Journal : qui a modifie quoi, et quel a ete le resultat. Le
-              premier reflexe quand la tresorerie ou la VE affichee ne colle
-              pas a ce que le coach attend. */}
-          <a
-            data-testid="team-journal-link"
-            href={`/me/teams/${id}/journal`}
-            className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors text-center"
-          >
-            Journal
-          </a>
+          {/* Journal : qui a modifie quoi, et quel a ete le resultat. Outil
+              d'investigation, reserve aux admins dans l'interface — un coach
+              n'a pas a arbitrer un ecart de tresorerie sur sa propre fiche. */}
+          {isAdmin ? (
+            <a
+              data-testid="team-journal-link"
+              href={`/me/teams/${id}/journal`}
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-slate-600 text-white rounded hover:bg-slate-700 transition-colors text-center"
+            >
+              Journal
+            </a>
+          ) : null}
           <div className="relative">
             <button
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
