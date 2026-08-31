@@ -108,7 +108,9 @@ function kickoffEventLabel(id: string): string {
   // anciens identifiants : on les remappe pour éviter d'afficher un
   // slug brut dans la timeline.
   const resolvedId = LEGACY_KICKOFF_EVENT_IDS[id] ?? id;
-  const found = Object.values(KICKOFF_EVENTS).find((ev) => ev.id === resolvedId);
+  const found = Object.values(KICKOFF_EVENTS).find(
+    (ev) => ev.id === resolvedId,
+  );
   return found?.nameFr ?? id;
 }
 
@@ -480,18 +482,30 @@ export default function MatchSheetPage() {
       }),
     );
 
-  // Journaliers : choix du poste de lineman (PATCH pre-match dedie).
-  const saveJourneymenChoice = (side: "home" | "away", slug: string) =>
-    run(() =>
-      apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
+  // Journaliers : poste de CHAQUE journalier (PATCH pre-match dedie).
+  // On envoie la liste complete des rangs — le serveur fusionne avec ce qui
+  // est deja stocke, mais partir de l'etat affiche evite qu'un rang non
+  // encore choisi bascule si le contingent change entre-temps.
+  const saveJourneymanPosition = (
+    side: "home" | "away",
+    index: number,
+    slug: string,
+  ) =>
+    run(() => {
+      const team = side === "home" ? home : away;
+      const current = (team?.journeymen ?? []).map(
+        (j, i) => team?.journeymenChoices?.[i] ?? j.position ?? null,
+      );
+      const next = current.map((v, i) => (i === index ? slug : v));
+      return apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
         method: "PATCH",
         body: JSON.stringify(
           side === "home"
-            ? { journeymenChoiceHome: slug }
-            : { journeymenChoiceAway: slug },
+            ? { journeymenChoicesHome: next }
+            : { journeymenChoicesAway: next },
         ),
-      }),
-    );
+      });
+    });
 
   const savePreMatch = (v: PreMatchValues) =>
     run(() =>
@@ -781,8 +795,8 @@ export default function MatchSheetPage() {
           </div>
         </div>
         <p className="mt-2 text-center text-xs text-slate-500">
-          Sorties : {data.summary.casualtiesHome} / {data.summary.casualtiesAway}{" "}
-          · Statut :{" "}
+          Sorties : {data.summary.casualtiesHome} /{" "}
+          {data.summary.casualtiesAway} · Statut :{" "}
           <strong data-testid="sheet-status">
             {STATUS_LABELS[status] ?? status}
           </strong>
@@ -796,13 +810,17 @@ export default function MatchSheetPage() {
             team={home}
             side="home"
             editable={editable && (mySide === "home" || isCommissioner)}
-            onChoose={(slug) => saveJourneymenChoice("home", slug)}
+            onChoose={(index, slug) =>
+              saveJourneymanPosition("home", index, slug)
+            }
           />
           <JourneymenPanel
             team={away}
             side="away"
             editable={editable && (mySide === "away" || isCommissioner)}
-            onChoose={(slug) => saveJourneymenChoice("away", slug)}
+            onChoose={(index, slug) =>
+              saveJourneymanPosition("away", index, slug)
+            }
           />
         </div>
 
@@ -881,29 +899,29 @@ export default function MatchSheetPage() {
 
       {/* AVANT-MATCH */}
       {tab === "before" &&
-        ((isCoach || isCommissioner) ? (
-        <PreMatchPanel
-          initial={{
-            weatherTable: data.sheet.weatherTable ?? "",
-            weather: data.sheet.weather ?? "",
-            forfeitSide: data.sheet.forfeitSide ?? null,
-            tossWinner: data.sheet.tossWinner ?? null,
-            tossChoice: data.sheet.tossChoice ?? null,
-            popularityHome: data.sheet.popularityHome ?? null,
-            popularityAway: data.sheet.popularityAway ?? null,
-            inducementsHome: parseInducements(data.sheet.inducementsHome),
-            inducementsAway: parseInducements(data.sheet.inducementsAway),
-            prayersHome: parsePrayers(data.sheet.prayersHome),
-            prayersAway: parsePrayers(data.sheet.prayersAway),
-          }}
-          homeName={home?.name ?? "Domicile"}
-          awayName={away?.name ?? "Extérieur"}
-          homeFans={home?.dedicatedFans ?? null}
-          awayFans={away?.dedicatedFans ?? null}
-          disabled={!editable}
-          onSave={savePreMatch}
-          reference={data.reference}
-        />
+        (isCoach || isCommissioner ? (
+          <PreMatchPanel
+            initial={{
+              weatherTable: data.sheet.weatherTable ?? "",
+              weather: data.sheet.weather ?? "",
+              forfeitSide: data.sheet.forfeitSide ?? null,
+              tossWinner: data.sheet.tossWinner ?? null,
+              tossChoice: data.sheet.tossChoice ?? null,
+              popularityHome: data.sheet.popularityHome ?? null,
+              popularityAway: data.sheet.popularityAway ?? null,
+              inducementsHome: parseInducements(data.sheet.inducementsHome),
+              inducementsAway: parseInducements(data.sheet.inducementsAway),
+              prayersHome: parsePrayers(data.sheet.prayersHome),
+              prayersAway: parsePrayers(data.sheet.prayersAway),
+            }}
+            homeName={home?.name ?? "Domicile"}
+            awayName={away?.name ?? "Extérieur"}
+            homeFans={home?.dedicatedFans ?? null}
+            awayFans={away?.dedicatedFans ?? null}
+            disabled={!editable}
+            onSave={savePreMatch}
+            reference={data.reference}
+          />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
             L&apos;avant-match est réservé aux coachs et au commissaire.
@@ -912,178 +930,158 @@ export default function MatchSheetPage() {
 
       {/* AU COURS DU MATCH */}
       {tab === "during" && (
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
-          Au cours du match
-        </h2>
+        <section className="rounded-lg border bg-white p-4">
+          <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
+            Au cours du match
+          </h2>
 
-        {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}
-        {canEdit && (
-          <div className="space-y-2 rounded border bg-slate-50/60 p-3">
-            <h3 className="text-xs font-semibold text-slate-600">
-              Ajouter un évènement
-            </h3>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
-              <label className="text-xs">
-                Mi-temps
-                <select
-                  value={eventHalf}
-                  onChange={(e) =>
-                    setEventHalf(Number(e.target.value) === 2 ? 2 : 1)
-                  }
-                  data-testid="event-half"
-                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-                >
-                  <option value={1}>1re mi-temps</option>
-                  <option value={2}>2e mi-temps</option>
-                </select>
-              </label>
-              <label className="text-xs">
-                Tour
-                <select
-                  value={eventTurn}
-                  onChange={(e) => setEventTurn(e.target.value)}
-                  data-testid="event-turn"
-                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-                >
-                  <option value="">—</option>
-                  {Array.from({ length: 8 }, (_, i) => i + 1).map((t) => (
-                    <option key={t} value={t}>
-                      Tour {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-xs">
-                Type
-                <select
-                  value={kind}
-                  onChange={(e) => {
-                    const next = e.target.value as EventKind;
-                    setKind(next);
-                    // A62 — purge les champs qui ne s'appliquent plus.
-                    if (!hasTargetField(next)) setTargetPlayerId("");
-                    if (!INJURY_BEARING_KINDS.has(next)) {
-                      setInjurySeverity("");
-                      setInjuryStat("");
-                    }
-                  }}
-                  data-testid="event-kind"
-                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-                >
-                  {EVENT_KINDS.map((k) => (
-                    <option key={k.value} value={k.value}>
-                      {k.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="text-xs">
-                Équipe
-                <select
-                  value={team}
-                  onChange={(e) => {
-                    setTeam(e.target.value as "home" | "away");
-                    setActorPlayerId("");
-                    setTargetPlayerId("");
-                  }}
-                  className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-                >
-                  <option value="home">{home?.name ?? "Domicile"}</option>
-                  <option value="away">{away?.name ?? "Extérieur"}</option>
-                </select>
-              </label>
-              <label className="text-xs">
-                {kind === "other_elim" ? "Joueur éliminé" : "Acteur"}
-                <PlayerSelect
-                  team={eventTeam}
-                  value={actorPlayerId}
-                  onChange={setActorPlayerId}
-                  testId="event-actor"
-                />
-              </label>
-              {/* A62 — cible uniquement pour les évènements qui en portent une. */}
-              {TARGET_BEARING_KINDS.has(kind) && (
+          {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}
+          {canEdit && (
+            <div className="space-y-2 rounded border bg-slate-50/60 p-3">
+              <h3 className="text-xs font-semibold text-slate-600">
+                Ajouter un évènement
+              </h3>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
                 <label className="text-xs">
-                  {kind === "crowd_surge"
-                    ? "Joueur sorti (équipe adverse)"
-                    : "Cible (équipe adverse)"}
-                  <PlayerSelect
-                    team={team === "home" ? away : home}
-                    value={targetPlayerId}
-                    onChange={setTargetPlayerId}
-                    testId="event-target"
-                  />
-                </label>
-              )}
-              {/* FDM — passe réussie : le réceptionneur est un COÉQUIPIER.
-                  Il ne marque pas la Réussite (elle revient au lanceur) mais
-                  c'est lui que récompense la Prière à Nuffle « Réception
-                  Étourdissante » (1 PSP par réception). */}
-              {RECEIVER_BEARING_KINDS.has(kind) && (
-                <label className="text-xs">
-                  Réceptionneur (même équipe)
-                  <PlayerSelect
-                    team={eventTeam}
-                    value={targetPlayerId}
-                    onChange={setTargetPlayerId}
-                    testId="event-receiver"
-                  />
-                </label>
-              )}
-              {/* A56 — résultat de la table de coup d'envoi (2D6). */}
-              {kind === "kickoff" && (
-                <label className="text-xs">
-                  Évènement de coup d'envoi
+                  Mi-temps
                   <select
-                    value={kickoffEvent}
-                    onChange={(e) => setKickoffEvent(e.target.value)}
-                    data-testid="event-kickoff-event"
+                    value={eventHalf}
+                    onChange={(e) =>
+                      setEventHalf(Number(e.target.value) === 2 ? 2 : 1)
+                    }
+                    data-testid="event-half"
+                    className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                  >
+                    <option value={1}>1re mi-temps</option>
+                    <option value={2}>2e mi-temps</option>
+                  </select>
+                </label>
+                <label className="text-xs">
+                  Tour
+                  <select
+                    value={eventTurn}
+                    onChange={(e) => setEventTurn(e.target.value)}
+                    data-testid="event-turn"
                     className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                   >
                     <option value="">—</option>
-                    {KICKOFF_EVENT_OPTIONS.map((k) => (
+                    {Array.from({ length: 8 }, (_, i) => i + 1).map((t) => (
+                      <option key={t} value={t}>
+                        Tour {t}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs">
+                  Type
+                  <select
+                    value={kind}
+                    onChange={(e) => {
+                      const next = e.target.value as EventKind;
+                      setKind(next);
+                      // A62 — purge les champs qui ne s'appliquent plus.
+                      if (!hasTargetField(next)) setTargetPlayerId("");
+                      if (!INJURY_BEARING_KINDS.has(next)) {
+                        setInjurySeverity("");
+                        setInjuryStat("");
+                      }
+                    }}
+                    data-testid="event-kind"
+                    className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                  >
+                    {EVENT_KINDS.map((k) => (
                       <option key={k.value} value={k.value}>
                         {k.label}
                       </option>
                     ))}
                   </select>
                 </label>
-              )}
-              {/* A59/A61 — blessure saisissable aussi sur Sortie Public et Agression. */}
-              {INJURY_BEARING_KINDS.has(kind) && (
                 <label className="text-xs">
-                  Gravité de la blessure
+                  Équipe
                   <select
-                    value={injurySeverity}
+                    value={team}
                     onChange={(e) => {
-                      setInjurySeverity(e.target.value);
-                      if (e.target.value !== "stat_loss") setInjuryStat("");
+                      setTeam(e.target.value as "home" | "away");
+                      setActorPlayerId("");
+                      setTargetPlayerId("");
                     }}
-                    data-testid="event-injury-severity"
                     className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                   >
-                    {INJURY_SEVERITIES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
+                    <option value="home">{home?.name ?? "Domicile"}</option>
+                    <option value="away">{away?.name ?? "Extérieur"}</option>
                   </select>
                 </label>
-              )}
-              {/* A68 — Séquelle : choisir la caractéristique affectée. */}
-              {INJURY_BEARING_KINDS.has(kind) &&
-                injurySeverity === "stat_loss" && (
+                <label className="text-xs">
+                  {kind === "other_elim" ? "Joueur éliminé" : "Acteur"}
+                  <PlayerSelect
+                    team={eventTeam}
+                    value={actorPlayerId}
+                    onChange={setActorPlayerId}
+                    testId="event-actor"
+                  />
+                </label>
+                {/* A62 — cible uniquement pour les évènements qui en portent une. */}
+                {TARGET_BEARING_KINDS.has(kind) && (
                   <label className="text-xs">
-                    Caractéristique affectée
+                    {kind === "crowd_surge"
+                      ? "Joueur sorti (équipe adverse)"
+                      : "Cible (équipe adverse)"}
+                    <PlayerSelect
+                      team={team === "home" ? away : home}
+                      value={targetPlayerId}
+                      onChange={setTargetPlayerId}
+                      testId="event-target"
+                    />
+                  </label>
+                )}
+                {/* FDM — passe réussie : le réceptionneur est un COÉQUIPIER.
+                  Il ne marque pas la Réussite (elle revient au lanceur) mais
+                  c'est lui que récompense la Prière à Nuffle « Réception
+                  Étourdissante » (1 PSP par réception). */}
+                {RECEIVER_BEARING_KINDS.has(kind) && (
+                  <label className="text-xs">
+                    Réceptionneur (même équipe)
+                    <PlayerSelect
+                      team={eventTeam}
+                      value={targetPlayerId}
+                      onChange={setTargetPlayerId}
+                      testId="event-receiver"
+                    />
+                  </label>
+                )}
+                {/* A56 — résultat de la table de coup d'envoi (2D6). */}
+                {kind === "kickoff" && (
+                  <label className="text-xs">
+                    Évènement de coup d'envoi
                     <select
-                      value={injuryStat}
-                      onChange={(e) => setInjuryStat(e.target.value)}
-                      data-testid="event-injury-stat"
+                      value={kickoffEvent}
+                      onChange={(e) => setKickoffEvent(e.target.value)}
+                      data-testid="event-kickoff-event"
                       className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                     >
                       <option value="">—</option>
-                      {INJURY_STAT_OPTIONS.map((s) => (
+                      {KICKOFF_EVENT_OPTIONS.map((k) => (
+                        <option key={k.value} value={k.value}>
+                          {k.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {/* A59/A61 — blessure saisissable aussi sur Sortie Public et Agression. */}
+                {INJURY_BEARING_KINDS.has(kind) && (
+                  <label className="text-xs">
+                    Gravité de la blessure
+                    <select
+                      value={injurySeverity}
+                      onChange={(e) => {
+                        setInjurySeverity(e.target.value);
+                        if (e.target.value !== "stat_loss") setInjuryStat("");
+                      }}
+                      data-testid="event-injury-severity"
+                      className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                    >
+                      {INJURY_SEVERITIES.map((s) => (
                         <option key={s.value} value={s.value}>
                           {s.label}
                         </option>
@@ -1091,182 +1089,206 @@ export default function MatchSheetPage() {
                     </select>
                   </label>
                 )}
+                {/* A68 — Séquelle : choisir la caractéristique affectée. */}
+                {INJURY_BEARING_KINDS.has(kind) &&
+                  injurySeverity === "stat_loss" && (
+                    <label className="text-xs">
+                      Caractéristique affectée
+                      <select
+                        value={injuryStat}
+                        onChange={(e) => setInjuryStat(e.target.value)}
+                        data-testid="event-injury-stat"
+                        className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                      >
+                        <option value="">—</option>
+                        {INJURY_STAT_OPTIONS.map((s) => (
+                          <option key={s.value} value={s.value}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+              </div>
+              <button
+                type="button"
+                className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                onClick={addEvent}
+                disabled={
+                  busy || (injurySeverity === "stat_loss" && !injuryStat)
+                }
+                data-testid="add-event"
+              >
+                Ajouter l&apos;évènement
+              </button>
             </div>
-            <button
-              type="button"
-              className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
-              onClick={addEvent}
-              disabled={
-                busy || (injurySeverity === "stat_loss" && !injuryStat)
-              }
-              data-testid="add-event"
-            >
-              Ajouter l&apos;évènement
-            </button>
-          </div>
-        )}
-
-        {/* Timeline chronologique (colorée par équipe). */}
-        <div className={canEdit ? "mt-4" : ""}>
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Timeline
-          </h3>
-          {timeline.length === 0 ? (
-            <p className="text-sm text-slate-500">Aucun évènement saisi.</p>
-          ) : (
-            <ol
-              className="relative space-y-1 border-l-2 border-slate-200 pl-3"
-              data-testid="events-list"
-            >
-              {timeline.map(({ ev, m }, idx) => {
-                const evTeam = ev.team === "home" ? home : away;
-                const kindLabel =
-                  EVENT_KINDS.find((k) => k.value === ev.kind)?.label ??
-                  ev.kind;
-                const accent =
-                  ev.team === "home"
-                    ? data.reference.colors.home.primary
-                    : ev.team === "away"
-                      ? data.reference.colors.away.primary
-                      : "#94a3b8";
-                const prevHalf =
-                  idx > 0 ? (timeline[idx - 1].m.half ?? 1) : null;
-                const curHalf = m.half ?? 1;
-                const showHalfDivider = curHalf !== prevHalf;
-                return (
-                  <li key={ev.id} className="space-y-1">
-                    {showHalfDivider && (
-                      <div className="-ml-3 flex items-center gap-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-nuffle-bronze">
-                        <span className="h-2 w-2 rounded-full bg-nuffle-bronze" />
-                        {curHalf === 2 ? "2e mi-temps" : "1re mi-temps"}
-                      </div>
-                    )}
-                    <div
-                      className="flex items-center justify-between gap-2 rounded border border-l-4 bg-white px-2 py-1.5 text-sm"
-                      style={{ borderLeftColor: accent }}
-                    >
-                      <span className="min-w-0">
-                        {m.turn ? (
-                          <span
-                            className="mr-1.5 inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white"
-                            style={{ backgroundColor: accent }}
-                          >
-                            T{m.turn}
-                          </span>
-                        ) : null}
-                        <strong>{kindLabel}</strong>
-                        {/* A56 — affiche le résultat du coup d'envoi. */}
-                        {ev.kind === "kickoff" && ev.meta?.kickoffEvent
-                          ? ` : ${kickoffEventLabel(ev.meta.kickoffEvent)}`
-                          : ""}
-                        {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
-                        {ev.actorPlayerId
-                          ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
-                          : ""}
-                        {ev.targetPlayerId
-                          ? ` → ${playerName(
-                              // FDM — le réceptionneur d'une passe est dans
-                              // l'équipe de l'acteur, pas dans l'équipe
-                              // adverse comme une cible ordinaire.
-                              RECEIVER_BEARING_KINDS.has(ev.kind)
-                                ? evTeam
-                                : ev.team === "home"
-                                  ? away
-                                  : home,
-                              ev.targetPlayerId,
-                            )}`
-                          : ""}
-                        {ev.injurySeverity
-                          ? ` [${injurySeverityLabel(ev.injurySeverity)}${
-                              ev.injurySeverity === "stat_loss" &&
-                              ev.meta?.stat
-                                ? ` ${injuryStatLabel(ev.meta.stat)}`
-                                : ""
-                            }]`
-                          : ""}
-                      </span>
-                      {canEdit && (
-                        <button
-                          type="button"
-                          className="shrink-0 text-xs text-red-600"
-                          onClick={() => removeEvent(ev.id)}
-                          disabled={busy}
-                        >
-                          retirer
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
           )}
-        </div>
 
-        {data.summary.injuries.length > 0 && (
-          <div className="mt-3 text-xs text-slate-600">
-            <div className="mb-1 font-semibold">Blessures</div>
-            <ul className="space-y-0.5">
-              {data.summary.injuries.map((inj, i) => (
-                <li key={i}>
-                  {playerName(
-                    inj.side === "home" ? home : away,
-                    inj.playerId,
-                  )}{" "}
-                  — {injurySeverityLabel(inj.severity)}
-                  {inj.cause ? ` (${eventCauseLabel(inj.cause)})` : ""}
-                </li>
-              ))}
-            </ul>
+          {/* Timeline chronologique (colorée par équipe). */}
+          <div className={canEdit ? "mt-4" : ""}>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              Timeline
+            </h3>
+            {timeline.length === 0 ? (
+              <p className="text-sm text-slate-500">Aucun évènement saisi.</p>
+            ) : (
+              <ol
+                className="relative space-y-1 border-l-2 border-slate-200 pl-3"
+                data-testid="events-list"
+              >
+                {timeline.map(({ ev, m }, idx) => {
+                  const evTeam = ev.team === "home" ? home : away;
+                  const kindLabel =
+                    EVENT_KINDS.find((k) => k.value === ev.kind)?.label ??
+                    ev.kind;
+                  const accent =
+                    ev.team === "home"
+                      ? data.reference.colors.home.primary
+                      : ev.team === "away"
+                        ? data.reference.colors.away.primary
+                        : "#94a3b8";
+                  const prevHalf =
+                    idx > 0 ? (timeline[idx - 1].m.half ?? 1) : null;
+                  const curHalf = m.half ?? 1;
+                  const showHalfDivider = curHalf !== prevHalf;
+                  return (
+                    <li key={ev.id} className="space-y-1">
+                      {showHalfDivider && (
+                        <div className="-ml-3 flex items-center gap-2 pt-1 text-[11px] font-bold uppercase tracking-wide text-nuffle-bronze">
+                          <span className="h-2 w-2 rounded-full bg-nuffle-bronze" />
+                          {curHalf === 2 ? "2e mi-temps" : "1re mi-temps"}
+                        </div>
+                      )}
+                      <div
+                        className="flex items-center justify-between gap-2 rounded border border-l-4 bg-white px-2 py-1.5 text-sm"
+                        style={{ borderLeftColor: accent }}
+                      >
+                        <span className="min-w-0">
+                          {m.turn ? (
+                            <span
+                              className="mr-1.5 inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-white"
+                              style={{ backgroundColor: accent }}
+                            >
+                              T{m.turn}
+                            </span>
+                          ) : null}
+                          <strong>{kindLabel}</strong>
+                          {/* A56 — affiche le résultat du coup d'envoi. */}
+                          {ev.kind === "kickoff" && ev.meta?.kickoffEvent
+                            ? ` : ${kickoffEventLabel(ev.meta.kickoffEvent)}`
+                            : ""}
+                          {ev.team ? ` · ${evTeam?.name ?? ev.team}` : ""}
+                          {ev.actorPlayerId
+                            ? ` — ${playerName(evTeam, ev.actorPlayerId)}`
+                            : ""}
+                          {ev.targetPlayerId
+                            ? ` → ${playerName(
+                                // FDM — le réceptionneur d'une passe est dans
+                                // l'équipe de l'acteur, pas dans l'équipe
+                                // adverse comme une cible ordinaire.
+                                RECEIVER_BEARING_KINDS.has(ev.kind)
+                                  ? evTeam
+                                  : ev.team === "home"
+                                    ? away
+                                    : home,
+                                ev.targetPlayerId,
+                              )}`
+                            : ""}
+                          {ev.injurySeverity
+                            ? ` [${injurySeverityLabel(ev.injurySeverity)}${
+                                ev.injurySeverity === "stat_loss" &&
+                                ev.meta?.stat
+                                  ? ` ${injuryStatLabel(ev.meta.stat)}`
+                                  : ""
+                              }]`
+                            : ""}
+                        </span>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            className="shrink-0 text-xs text-red-600"
+                            onClick={() => removeEvent(ev.id)}
+                            disabled={busy}
+                          >
+                            retirer
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
           </div>
-        )}
-      </section>
+
+          {data.summary.injuries.length > 0 && (
+            <div className="mt-3 text-xs text-slate-600">
+              <div className="mb-1 font-semibold">Blessures</div>
+              <ul className="space-y-0.5">
+                {data.summary.injuries.map((inj, i) => (
+                  <li key={i}>
+                    {playerName(
+                      inj.side === "home" ? home : away,
+                      inj.playerId,
+                    )}{" "}
+                    — {injurySeverityLabel(inj.severity)}
+                    {inj.cause ? ` (${eventCauseLabel(inj.cause)})` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
       )}
 
       {/* FIN DU MATCH */}
       {tab === "after" &&
-        ((isCoach || isCommissioner) ? (
-        <div className="space-y-3">
-        {/* Haine (X) : le D6 est lancé SERVEUR à la validation. Sans ce
+        (isCoach || isCommissioner ? (
+          <div className="space-y-3">
+            {/* Haine (X) : le D6 est lancé SERVEUR à la validation. Sans ce
             panneau, le trait apparaîtrait sur la fiche du joueur sans
             explication — et un jet raté ne laisserait aucune trace. Il vit
             ici (conséquences d'après-match) et non sous « Évolutions » : le
             trait ne coûte pas de PSP et ne se choisit pas. */}
-        <HateRollsRecap
-          rolls={data.hateRolls ?? []}
-          teamNames={hateTeamNames}
-          ruleset={home?.ruleset ?? away?.ruleset}
-        />
-        <PostMatchPanel
-          initial={{
-            winningsHomeManual: data.sheet.winningsHomeManual ?? null,
-            winningsAwayManual: data.sheet.winningsAwayManual ?? null,
-            dedicatedFansDeltaHome: data.sheet.dedicatedFansDeltaHome ?? 0,
-            dedicatedFansDeltaAway: data.sheet.dedicatedFansDeltaAway ?? 0,
-            rankingBonusHome: data.sheet.rankingBonusHome ?? null,
-            rankingBonusAway: data.sheet.rankingBonusAway ?? null,
-            sppBonus: parseSppBonus(data.sheet.sppBonus),
-            motmPlayerIds: parseMotm(data.sheet.motmPlayerIds),
-            costlyErrorsHome: parseCostlyErrors(data.sheet.costlyErrorsHome),
-            costlyErrorsAway: parseCostlyErrors(data.sheet.costlyErrorsAway),
-            purchasesHome: parsePurchases(data.sheet.purchasesHome),
-            purchasesAway: parsePurchases(data.sheet.purchasesAway),
-            firedPlayerIds: parseArray<unknown>(
-              data.sheet.firedPlayerIds,
-            ).filter((s): s is string => typeof s === "string"),
-          }}
-          home={home}
-          away={away}
-          disabled={!editable}
-          onSave={savePostMatch}
-          computedSpp={computedSpp}
-          autoWinnings={{
-            home: data.sheet.winningsHome ?? 0,
-            away: data.sheet.winningsAway ?? 0,
-          }}
-          journeymanHireCost={journeymanHireCost}
-        />
-        </div>
+            <HateRollsRecap
+              rolls={data.hateRolls ?? []}
+              teamNames={hateTeamNames}
+              ruleset={home?.ruleset ?? away?.ruleset}
+            />
+            <PostMatchPanel
+              initial={{
+                winningsHomeManual: data.sheet.winningsHomeManual ?? null,
+                winningsAwayManual: data.sheet.winningsAwayManual ?? null,
+                dedicatedFansDeltaHome: data.sheet.dedicatedFansDeltaHome ?? 0,
+                dedicatedFansDeltaAway: data.sheet.dedicatedFansDeltaAway ?? 0,
+                rankingBonusHome: data.sheet.rankingBonusHome ?? null,
+                rankingBonusAway: data.sheet.rankingBonusAway ?? null,
+                sppBonus: parseSppBonus(data.sheet.sppBonus),
+                motmPlayerIds: parseMotm(data.sheet.motmPlayerIds),
+                costlyErrorsHome: parseCostlyErrors(
+                  data.sheet.costlyErrorsHome,
+                ),
+                costlyErrorsAway: parseCostlyErrors(
+                  data.sheet.costlyErrorsAway,
+                ),
+                purchasesHome: parsePurchases(data.sheet.purchasesHome),
+                purchasesAway: parsePurchases(data.sheet.purchasesAway),
+                firedPlayerIds: parseArray<unknown>(
+                  data.sheet.firedPlayerIds,
+                ).filter((s): s is string => typeof s === "string"),
+              }}
+              home={home}
+              away={away}
+              disabled={!editable}
+              onSave={savePostMatch}
+              computedSpp={computedSpp}
+              autoWinnings={{
+                home: data.sheet.winningsHome ?? 0,
+                away: data.sheet.winningsAway ?? 0,
+              }}
+              journeymanHireCost={journeymanHireCost}
+            />
+          </div>
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
             La fin de match est réservée aux coachs et au commissaire.
@@ -1288,11 +1310,12 @@ export default function MatchSheetPage() {
           <div className="flex gap-2 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700">
             <span aria-hidden>🛡️</span>
             <p>
-              La saisie des évolutions <strong>fait partie de la feuille de
-              match</strong> : choisis-les ici avec tes PSP projetés, puis
-              « Valider ma saisie » couvre le match dans son ensemble (fin de
-              match et évolutions comprises). Rien n&apos;est appliqué aux
-              rosters avant la <strong>validation du commissaire</strong>.
+              La saisie des évolutions{" "}
+              <strong>fait partie de la feuille de match</strong> : choisis-les
+              ici avec tes PSP projetés, puis « Valider ma saisie » couvre le
+              match dans son ensemble (fin de match et évolutions comprises).
+              Rien n&apos;est appliqué aux rosters avant la{" "}
+              <strong>validation du commissaire</strong>.
             </p>
           </div>
 
@@ -1317,9 +1340,8 @@ export default function MatchSheetPage() {
                   data-testid="commissioner-post-advancements"
                 >
                   <p className="text-sm text-slate-600">
-                    Le match est validé. En tant que commissaire, tu peux
-                    encore appliquer les évolutions en attente des deux
-                    équipes.
+                    Le match est validé. En tant que commissaire, tu peux encore
+                    appliquer les évolutions en attente des deux équipes.
                   </p>
                   {home?.teamId ? (
                     <div className="space-y-2">
@@ -1347,8 +1369,8 @@ export default function MatchSheetPage() {
               ) : myTeamId ? (
                 <div className="space-y-3">
                   <p className="text-sm text-slate-600">
-                    Le match est validé. S&apos;il reste des PSP à dépenser,
-                    tu peux encore faire évoluer tes joueurs ici.
+                    Le match est validé. S&apos;il reste des PSP à dépenser, tu
+                    peux encore faire évoluer tes joueurs ici.
                   </p>
                   {/* Édition inline (composant partagé avec la page level-up). */}
                   <AdvancementEditor
@@ -1412,8 +1434,8 @@ export default function MatchSheetPage() {
               {mySideSubmitted ? (
                 <p className="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   Ta saisie est validée : les évolutions sont figées avec le
-                  reste de la feuille. Utilise « Reprendre la saisie » pour
-                  les modifier.
+                  reste de la feuille. Utilise « Reprendre la saisie » pour les
+                  modifier.
                 </p>
               ) : null}
               <SheetAdvancementsEditor
@@ -1439,8 +1461,8 @@ export default function MatchSheetPage() {
             </div>
           ) : (
             <p className="text-sm text-slate-500">
-              Les évolutions sont saisies par chaque coach sur sa propre
-              équipe, pendant la saisie de la feuille.
+              Les évolutions sont saisies par chaque coach sur sa propre équipe,
+              pendant la saisie de la feuille.
             </p>
           )}
         </section>

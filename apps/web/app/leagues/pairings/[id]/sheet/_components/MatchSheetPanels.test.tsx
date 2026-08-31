@@ -72,7 +72,12 @@ const REFERENCE: MatchSheetReference = {
     away: [],
   },
   budget: {
-    home: { ctv: 1_000_000, treasury: 50_000, pettyCash: 150_000, maxBudget: 200_000 },
+    home: {
+      ctv: 1_000_000,
+      treasury: 50_000,
+      pettyCash: 150_000,
+      maxBudget: 200_000,
+    },
     away: { ctv: 1_150_000, treasury: 0, pettyCash: 0, maxBudget: 0 },
   },
   colors: {
@@ -280,7 +285,46 @@ describe("JourneymenPanel", () => {
     journeymenChoice: null,
   };
 
-  it("affiche le nombre de journaliers et le choix du poste", () => {
+  it("affiche le nombre de journaliers", () => {
+    render(
+      <JourneymenPanel
+        team={baseTeam}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("journeymen-home").textContent).toContain(
+      "2 journaliers",
+    );
+  });
+
+  // E37 — le choix était unique et noyé dans la phrase du bandeau
+  // (« je n'ai pas vu où pouvait être fait le choix »). Il y a désormais
+  // une ligne par journalier, sous un intitulé explicite.
+  it("expose UN sélecteur par journalier, avec son numéro et son nom", () => {
+    render(
+      <JourneymenPanel
+        team={baseTeam}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("journeymen-positions-home").textContent,
+    ).toContain("Poste de chaque journalier");
+    expect(screen.getByTestId("journeymen-position-home-0")).toBeTruthy();
+    expect(screen.getByTestId("journeymen-position-home-1")).toBeTruthy();
+    expect(screen.getByTestId("journeyman-row-home-0").textContent).toContain(
+      "N°12 Journalier 1",
+    );
+    expect(screen.getByTestId("journeyman-row-home-1").textContent).toContain(
+      "N°13 Journalier 2",
+    );
+  });
+
+  it("remonte le RANG du journalier modifié", () => {
     const onChoose = vi.fn();
     render(
       <JourneymenPanel
@@ -290,17 +334,38 @@ describe("JourneymenPanel", () => {
         onChoose={onChoose}
       />,
     );
-    expect(screen.getByTestId("journeymen-home").textContent).toContain(
-      "2 journaliers",
-    );
-    const select = screen.getByTestId("journeymen-position-home");
-    fireEvent.change(select, {
+    fireEvent.change(screen.getByTestId("journeymen-position-home-1"), {
       target: { value: "undead_trois_quart_zombie" },
     });
-    expect(onChoose).toHaveBeenCalledWith("undead_trois_quart_zombie");
+    expect(onChoose).toHaveBeenCalledWith(1, "undead_trois_quart_zombie");
   });
 
-  it("pas de sélecteur quand un seul poste de lineman", () => {
+  it("présélectionne le poste EFFECTIF de chaque journalier", () => {
+    render(
+      <JourneymenPanel
+        team={{
+          ...baseTeam,
+          journeymenChoices: [
+            "undead_trois_quart_squelette",
+            "undead_trois_quart_zombie",
+          ],
+        }}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(
+      (screen.getByTestId("journeymen-position-home-0") as HTMLSelectElement)
+        .value,
+    ).toBe("undead_trois_quart_squelette");
+    expect(
+      (screen.getByTestId("journeymen-position-home-1") as HTMLSelectElement)
+        .value,
+    ).toBe("undead_trois_quart_zombie");
+  });
+
+  it("un seul poste de Trois-quart : pas de sélecteur, mais le poste reste annoncé", () => {
     render(
       <JourneymenPanel
         team={{
@@ -314,7 +379,25 @@ describe("JourneymenPanel", () => {
         onChoose={() => {}}
       />,
     );
-    expect(screen.queryByTestId("journeymen-position-home")).toBeNull();
+    expect(screen.queryByTestId("journeymen-positions-home")).toBeNull();
+    expect(screen.getByTestId("journeymen-home").textContent).toContain(
+      "Journalier (Trois-quart Squelette)",
+    );
+  });
+
+  it("feuille verrouillée : les sélecteurs sont désactivés", () => {
+    render(
+      <JourneymenPanel
+        team={baseTeam}
+        side="home"
+        editable={false}
+        onChoose={() => {}}
+      />,
+    );
+    expect(
+      (screen.getByTestId("journeymen-position-home-0") as HTMLSelectElement)
+        .disabled,
+    ).toBe(true);
   });
 
   it("ne rend rien quand l'équipe aligne 11 joueurs (aucun journalier)", () => {
@@ -357,7 +440,9 @@ describe("PreMatchPanel — météo dépendante de la table", () => {
       />,
     );
     // La météo est désactivée tant qu'aucune table n'est choisie.
-    const weatherSelect = screen.getByTestId("weather-select") as HTMLSelectElement;
+    const weatherSelect = screen.getByTestId(
+      "weather-select",
+    ) as HTMLSelectElement;
     expect(weatherSelect.disabled).toBe(true);
 
     fireEvent.change(screen.getByTestId("weather-table-select"), {
@@ -645,20 +730,18 @@ describe("PreMatchPanel — budget coups de pouce", () => {
     const homeBlock = screen.getByTestId("inducements-home");
 
     // Ajout du magicien (150k) : dans le budget (200k) -> save actif.
-    fireEvent.change(
-      within(homeBlock).getByTestId("inducements-home-add"),
-      { target: { value: "wizard" } },
-    );
+    fireEvent.change(within(homeBlock).getByTestId("inducements-home-add"), {
+      target: { value: "wizard" },
+    });
     expect(within(homeBlock).getByText("Magicien")).toBeTruthy();
     expect(
       (screen.getByTestId("save-pre-match") as HTMLButtonElement).disabled,
     ).toBe(false);
 
     // Ajout du star player (380k) : total 530k > 200k -> dépassement.
-    fireEvent.change(
-      within(homeBlock).getByTestId("inducements-home-add"),
-      { target: { value: "star:morg" } },
-    );
+    fireEvent.change(within(homeBlock).getByTestId("inducements-home-add"), {
+      target: { value: "star:morg" },
+    });
     expect(
       within(homeBlock).getByTestId("inducements-home-remaining").textContent,
     ).toContain("Dépassé");
@@ -716,8 +799,12 @@ describe("PreMatchPanel — toss (vainqueur + choix du coup d'envoi)", () => {
       />,
     );
 
-    const winner = screen.getByTestId("toss-winner-select") as HTMLSelectElement;
-    const choice = screen.getByTestId("toss-choice-select") as HTMLSelectElement;
+    const winner = screen.getByTestId(
+      "toss-winner-select",
+    ) as HTMLSelectElement;
+    const choice = screen.getByTestId(
+      "toss-choice-select",
+    ) as HTMLSelectElement;
     // Le choix appartient au vainqueur : désactivé tant qu'il n'est pas saisi.
     expect(choice.disabled).toBe(true);
     expect(screen.queryByTestId("toss-kicking-team")).toBeNull();
@@ -727,15 +814,15 @@ describe("PreMatchPanel — toss (vainqueur + choix du coup d'envoi)", () => {
 
     // Vainqueur domicile qui choisit de recevoir -> l'extérieur engage.
     fireEvent.change(choice, { target: { value: "receive" } });
-    expect(
-      screen.getByTestId("toss-kicking-team").textContent,
-    ).toContain("Gouged Eye");
+    expect(screen.getByTestId("toss-kicking-team").textContent).toContain(
+      "Gouged Eye",
+    );
 
     // Vainqueur domicile qui choisit d'engager -> domicile engage.
     fireEvent.change(choice, { target: { value: "kick" } });
-    expect(
-      screen.getByTestId("toss-kicking-team").textContent,
-    ).toContain("Reikland");
+    expect(screen.getByTestId("toss-kicking-team").textContent).toContain(
+      "Reikland",
+    );
 
     fireEvent.click(screen.getByTestId("save-pre-match"));
     expect(onSave).toHaveBeenCalledWith(
@@ -755,12 +842,14 @@ describe("PreMatchPanel — toss (vainqueur + choix du coup d'envoi)", () => {
       />,
     );
 
-    const winner = screen.getByTestId("toss-winner-select") as HTMLSelectElement;
+    const winner = screen.getByTestId(
+      "toss-winner-select",
+    ) as HTMLSelectElement;
     // Valeurs initiales rechargées depuis la feuille.
     expect(winner.value).toBe("away");
-    expect(
-      screen.getByTestId("toss-kicking-team").textContent,
-    ).toContain("Gouged Eye");
+    expect(screen.getByTestId("toss-kicking-team").textContent).toContain(
+      "Gouged Eye",
+    );
 
     fireEvent.change(winner, { target: { value: "" } });
     expect(screen.queryByTestId("toss-kicking-team")).toBeNull();
@@ -822,9 +911,9 @@ describe("PreMatchPanel — Prières à Nuffle (D16)", () => {
       />,
     );
     expect(screen.queryByTestId("prayers-away-add")).toBeNull();
-    expect(
-      screen.getByTestId("prayers-away").textContent,
-    ).toContain("Maximum de 3");
+    expect(screen.getByTestId("prayers-away").textContent).toContain(
+      "Maximum de 3",
+    );
   });
 });
 
@@ -924,9 +1013,7 @@ describe("InvalidateControl — avertissements morts / licenciements", () => {
 
   it("demande confirmation en listant les deux effets", async () => {
     const onInvalidate = vi.fn().mockResolvedValue(undefined);
-    const confirmSpy = vi
-      .spyOn(window, "confirm")
-      .mockReturnValue(false);
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(
       <InvalidateControl
         canInvalidate

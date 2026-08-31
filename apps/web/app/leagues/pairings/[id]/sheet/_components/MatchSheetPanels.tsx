@@ -137,8 +137,13 @@ export interface SheetTeam {
   journeymen?: SheetJourneyman[];
   /** Postes de lineman offerts au choix du coach. */
   journeymenOptions?: { slug: string; name: string }[];
-  /** Poste choisi sur la feuille (null = défaut). */
+  /** Poste choisi sur la feuille pour tous les journaliers (null = défaut). */
   journeymenChoice?: string | null;
+  /**
+   * Poste EFFECTIF de chaque journalier, dans l'ordre de `journeymen`.
+   * Optionnel : rétro-compat avec un serveur antérieur au choix par rang.
+   */
+  journeymenChoices?: string[];
   /** Star Players engagés en coup de pouce (optionnel : rétro-compat API). */
   starPlayersHired?: SheetStarPlayer[];
 }
@@ -236,7 +241,10 @@ export function TeamValueStrip({
       }`}
     >
       <span title="Valeur d'Équipe Actuelle">
-        TV <strong className="text-slate-700">{formatGold(team.currentValue)}</strong>
+        TV{" "}
+        <strong className="text-slate-700">
+          {formatGold(team.currentValue)}
+        </strong>
       </span>
       <span title="Trésorerie (cagnotte)">
         Cagnotte{" "}
@@ -335,8 +343,14 @@ export function PlayerSelect({
 
 /**
  * Bandeau « Journaliers » d'une équipe : visible quand l'équipe aligne
- * moins de 11 joueurs disponibles. Propose le choix du poste de lineman
- * quand le roster en offre plusieurs (défaut : lineman de base).
+ * moins de 11 joueurs disponibles.
+ *
+ * Quand le roster offre PLUSIEURS postes de lineman (Orques : Trois-quart
+ * Orque ou Trois-quart Gobelin), chaque journalier a SON picker : le
+ * contingent se panache. Le choix était auparavant unique et noyé sur la
+ * même ligne que le texte du bandeau — d'où le « je n'ai pas vu où pouvait
+ * être fait le choix ». Il est désormais sur sa propre ligne, une par
+ * journalier, avec le poste effectif présélectionné.
  */
 export function JourneymenPanel({
   team,
@@ -347,46 +361,72 @@ export function JourneymenPanel({
   team: SheetTeam | null;
   side: "home" | "away";
   editable: boolean;
-  onChoose: (positionSlug: string) => void;
+  /** `index` = rang du journalier dans `team.journeymen`. */
+  onChoose: (index: number, positionSlug: string) => void;
 }) {
   const journeymen = team?.journeymen ?? [];
   if (!team || journeymen.length === 0) return null;
   const options = team.journeymenOptions ?? [];
-  const current =
-    team.journeymenChoice &&
-    options.some((o) => o.slug === team.journeymenChoice)
-      ? team.journeymenChoice
+  const effective = team.journeymenChoices ?? [];
+  /** Poste présélectionné du rang `i` : l'effectif, sinon le défaut. */
+  const currentFor = (i: number): string => {
+    const slug = effective[i] ?? journeymen[i]?.position;
+    return slug && options.some((o) => o.slug === slug)
+      ? slug
       : (options[0]?.slug ?? "");
+  };
   return (
     <div
       data-testid={`journeymen-${side}`}
-      className="flex flex-wrap items-center gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+      className="space-y-2 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
     >
-      <span aria-hidden>🧳</span>
-      <span>
-        <strong>{team.name}</strong> aligne{" "}
-        <strong>
-          {journeymen.length} journalier{journeymen.length > 1 ? "s" : ""}
-        </strong>{" "}
-        (moins de 11 joueurs disponibles).
-      </span>
-      {options.length > 1 && (
-        <label className="flex items-center gap-1">
-          Poste :
-          <select
-            value={current}
-            onChange={(e) => onChoose(e.target.value)}
-            disabled={!editable}
-            data-testid={`journeymen-position-${side}`}
-            className="rounded border px-1.5 py-1 text-xs"
-          >
-            {options.map((o) => (
-              <option key={o.slug} value={o.slug}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="flex flex-wrap items-center gap-2">
+        <span aria-hidden>🧳</span>
+        <span>
+          <strong>{team.name}</strong> aligne{" "}
+          <strong>
+            {journeymen.length} journalier{journeymen.length > 1 ? "s" : ""}
+          </strong>{" "}
+          (moins de 11 joueurs disponibles).
+        </span>
+      </div>
+      {options.length > 1 ? (
+        <div className="space-y-1" data-testid={`journeymen-positions-${side}`}>
+          <p className="font-semibold">
+            Poste de chaque journalier ({options.length} types de trois-quarts
+            disponibles) :
+          </p>
+          {journeymen.map((j, i) => (
+            <label
+              key={j.id}
+              className="flex flex-wrap items-center gap-1.5"
+              data-testid={`journeyman-row-${side}-${i}`}
+            >
+              <span className="w-28 shrink-0 font-medium">
+                N°{j.number} {j.name}
+              </span>
+              <select
+                value={currentFor(i)}
+                onChange={(e) => onChoose(i, e.target.value)}
+                disabled={!editable}
+                aria-label={`Poste du journalier ${i + 1}`}
+                data-testid={`journeymen-position-${side}-${i}`}
+                className="rounded border px-1.5 py-1 text-xs"
+              >
+                {options.map((o) => (
+                  <option key={o.slug} value={o.slug}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+      ) : (
+        <p className="text-amber-800/80">
+          Poste : {journeymen[0]?.positionName ?? "Journalier"} — seul type de
+          trois-quarts de ce roster.
+        </p>
       )}
     </div>
   );
@@ -507,10 +547,7 @@ function PrayersEditor({
             onChange={(e) => {
               const roll = Number(e.target.value);
               if (!roll) return;
-              onChange([
-                ...list,
-                { roll, prayerId: PRAYERS_TABLE[roll]?.id },
-              ]);
+              onChange([...list, { roll, prayerId: PRAYERS_TABLE[roll]?.id }]);
             }}
             data-testid={testId ? `${testId}-add` : undefined}
             className="w-full rounded border px-2 py-1.5 text-xs"
@@ -651,7 +688,10 @@ function InducementEditor({
             key={i}
             className="flex flex-wrap items-center gap-1.5 rounded border bg-white px-2 py-1.5"
           >
-            <span className="min-w-0 flex-1 truncate text-sm" title={opt?.description}>
+            <span
+              className="min-w-0 flex-1 truncate text-sm"
+              title={opt?.description}
+            >
               {it.name}
               {it.slug === "star_player" && (
                 <span className="ml-1 text-[10px] font-semibold text-nuffle-gold">
@@ -790,8 +830,7 @@ export function PreMatchPanel({
   // facteurs de popularité × 10k ; les +10k/TD s'ajoutent en cours de
   // match (gains auto recalculés côté serveur).
   const sharedWinnings = Math.floor(
-    (((Number(popH) || 0) + (Number(popA) || 0)) * WINNINGS_PER_POPULARITY) /
-      2,
+    (((Number(popH) || 0) + (Number(popA) || 0)) * WINNINGS_PER_POPULARITY) / 2,
   );
   const winningsH = sharedWinnings;
   const winningsA = sharedWinnings;
@@ -824,8 +863,7 @@ export function PreMatchPanel({
         weather,
         forfeitSide: forfeitSide === "" ? null : forfeitSide,
         tossWinner: tossWinner === "" ? null : tossWinner,
-        tossChoice:
-          tossWinner === "" || tossChoice === "" ? null : tossChoice,
+        tossChoice: tossWinner === "" || tossChoice === "" ? null : tossChoice,
         popularityHome: popH === "" ? null : Number(popH),
         popularityAway: popA === "" ? null : Number(popA),
         inducementsHome: indH,
@@ -1011,9 +1049,7 @@ export function PreMatchPanel({
               <input
                 type="checkbox"
                 checked={forfeitSide === c.side}
-                onChange={(e) =>
-                  setForfeitSide(e.target.checked ? c.side : "")
-                }
+                onChange={(e) => setForfeitSide(e.target.checked ? c.side : "")}
                 disabled={disabled}
                 data-testid={`forfeit-${c.side}`}
                 className="h-4 w-4 rounded border-slate-300"
@@ -1042,8 +1078,8 @@ export function PreMatchPanel({
                 </span>
               ) : null}
               <span className="mt-0.5 block text-[11px] text-slate-500">
-                Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10 000
-                po par TD marqué, +10 000 po si l&apos;équipe n&apos;a pas
+                Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10 000 po
+                par TD marqué, +10 000 po si l&apos;équipe n&apos;a pas
                 temporisé)
               </span>
             </label>
@@ -1377,8 +1413,8 @@ function ExpensiveMistakeHelper({
     return (
       <p className="text-[11px] text-slate-500" data-testid={testId}>
         Trésorerie estimée à cette étape :{" "}
-        {treasuryAtStep.toLocaleString("fr-FR")} po — sous 100 000 po, pas
-        de jet d&apos;Erreurs Coûteuses.
+        {treasuryAtStep.toLocaleString("fr-FR")} po — sous 100 000 po, pas de
+        jet d&apos;Erreurs Coûteuses.
       </p>
     );
   }
@@ -1553,8 +1589,7 @@ function PurchaseEditor({
           remaining < 0 ? "font-semibold text-red-600" : "text-slate-500"
         }`}
       >
-        Trésorerie disponible :{" "}
-        <strong>{formatGold(treasuryBefore)}</strong>
+        Trésorerie disponible : <strong>{formatGold(treasuryBefore)}</strong>
         {spent > 0 ? (
           <>
             {" "}
@@ -1633,9 +1668,7 @@ function PurchaseEditor({
               value={it.staff ?? ""}
               onChange={(e) =>
                 update(i, {
-                  staff: (e.target.value || undefined) as
-                    | StaffKind
-                    | undefined,
+                  staff: (e.target.value || undefined) as StaffKind | undefined,
                 })
               }
               disabled={disabled}
@@ -1959,8 +1992,8 @@ export function PostMatchPanel({
                 className="mt-1 block w-full rounded border px-2 py-2 text-sm"
               />
               <span className="mt-0.5 block text-[11px] text-slate-400">
-                Compté dans la colonne bonus (« Bo ») du classement, à part
-                des points génériques.
+                Compté dans la colonne bonus (« Bo ») du classement, à part des
+                points génériques.
               </span>
             </label>
 
@@ -2024,9 +2057,7 @@ export function PostMatchPanel({
                 testId={`purchases-${c.side}`}
                 team={c.team}
                 treasuryBefore={c.treasuryBeforePurchases}
-                journeymanHireCost={
-                  journeymanHireCost ?? (() => null)
-                }
+                journeymanHireCost={journeymanHireCost ?? (() => null)}
               />
               <p className="mt-1 text-[10px] text-slate-500">
                 « Dépense diverse » débite seulement la trésorerie (aucun
@@ -2137,8 +2168,8 @@ export function InvalidateControl({
         >
           ⚠️ {firedCount} joueur{firedCount > 1 ? "s" : ""} licencié
           {firedCount > 1 ? "s" : ""} par cette feuille{" "}
-          {firedCount > 1 ? "seront réintégrés" : "sera réintégré"} au roster
-          si vous invalidez la feuille.
+          {firedCount > 1 ? "seront réintégrés" : "sera réintégré"} au roster si
+          vous invalidez la feuille.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-2">
@@ -2154,7 +2185,9 @@ export function InvalidateControl({
           disabled={busy}
           onClick={async () => {
             const undone = [
-              deadCount > 0 ? `${deadCount} joueur(s) tué(s) ressuscité(s)` : null,
+              deadCount > 0
+                ? `${deadCount} joueur(s) tué(s) ressuscité(s)`
+                : null,
               firedCount > 0
                 ? `${firedCount} joueur(s) licencié(s) réintégré(s)`
                 : null,

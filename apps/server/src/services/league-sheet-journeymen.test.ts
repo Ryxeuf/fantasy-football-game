@@ -16,6 +16,8 @@ import {
   linemanPositionsForRoster,
   parseFrozenSheetRoster,
   parseJourneymenChoice,
+  parseJourneymenChoices,
+  journeymenChoiceInput,
   JOURNEYMAN_ID_PREFIX,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
@@ -49,7 +51,9 @@ describe("linemanPositionsForRoster", () => {
   it("retourne plusieurs choix quand le roster a plusieurs linemen (undead)", () => {
     const options = linemanPositionsForRoster("undead", "season_3");
     expect(options.length).toBeGreaterThan(1);
-    expect(options.map((o) => o.slug)).toContain("undead_trois_quart_squelette");
+    expect(options.map((o) => o.slug)).toContain(
+      "undead_trois_quart_squelette",
+    );
     expect(options.map((o) => o.slug)).toContain("undead_trois_quart_zombie");
   });
 
@@ -421,7 +425,194 @@ describe("journaliers de la version figée du match", () => {
     const frozen = parseFrozenSheetRoster(snapshot(10, [11]));
     expect(frozen?.players).toHaveLength(10);
     // Le gel exclut déjà morts, licenciés et absents : tous disponibles.
-    expect(frozen?.players.every((p) => !p.dead && !p.missNextMatch)).toBe(true);
+    expect(frozen?.players.every((p) => !p.dead && !p.missNextMatch)).toBe(
+      true,
+    );
     expect(frozen?.journeymen).toEqual([{ number: 11, name: "Journalier 1" }]);
+  });
+});
+
+// ───────────────────────────── E37 — CHOIX PAR JOURNALIER ─────────────────
+
+describe("linemanPositionsForRoster — Trois-quarts à quota réduit", () => {
+  // Règle publiée : « si la fiche d'équipe propose plusieurs postes de
+  // Trois-quart, le coach choisit le type de journalier ». Le seul seuil
+  // 0-12 ratait le Trois-quart Gobelin des Orques (0-4).
+  it("propose les DEUX Trois-quarts du roster orque", () => {
+    const slugs = linemanPositionsForRoster("orc", "season_3").map(
+      (o) => o.slug,
+    );
+    expect(slugs).toContain("orc_trois_quart_orque");
+    expect(slugs).toContain("orc_trois_quart_gobelin");
+  });
+
+  it("garde le Trois-quart 0-16 en TÊTE (défaut inchangé)", () => {
+    expect(linemanPositionsForRoster("orc", "season_3")[0].slug).toBe(
+      "orc_trois_quart_orque",
+    );
+  });
+
+  it("n'ouvre pas un poste qui n'est pas un Trois-quart", () => {
+    const slugs = linemanPositionsForRoster("orc", "season_3").map(
+      (o) => o.slug,
+    );
+    expect(slugs).not.toContain("orc_blitzer_orque");
+    expect(slugs).not.toContain("orc_troll");
+  });
+
+  it("retient un Trois-quart déclaré par les mots-clés de la BASE", () => {
+    const options = linemanPositionsForRoster("roster-x", undefined, [
+      {
+        slug: "x_lineman",
+        displayName: "Trois-quart X",
+        cost: 50,
+        max: 16,
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: "",
+      },
+      {
+        slug: "x_petit",
+        displayName: "Petit X",
+        cost: 40,
+        max: 4,
+        ma: 6,
+        st: 2,
+        ag: 3,
+        pa: 4,
+        av: 8,
+        skills: "",
+        keywords: "Gobelin, Trois-quart",
+      },
+      {
+        slug: "x_blitzer",
+        displayName: "Blitzer X",
+        cost: 90,
+        max: 4,
+        ma: 7,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 10,
+        skills: "",
+        keywords: "X, Blitzer",
+      },
+    ]);
+    expect(options.map((o) => o.slug)).toEqual(["x_lineman", "x_petit"]);
+  });
+});
+
+describe("deriveJourneymen — un poste par journalier", () => {
+  // 9 joueurs disponibles => 2 journaliers.
+  const orcInput = {
+    side: "home" as const,
+    roster: "orc",
+    ruleset: "season_3",
+    players: players(9),
+  };
+
+  it("panache les postes selon le rang", () => {
+    const derived = deriveJourneymen({
+      ...orcInput,
+      chosenPositions: ["orc_trois_quart_gobelin", "orc_trois_quart_orque"],
+    });
+    expect(derived.map((j) => j.position)).toEqual([
+      "orc_trois_quart_gobelin",
+      "orc_trois_quart_orque",
+    ]);
+    // Chaque journalier porte les stats ET le coût de SON poste.
+    expect(derived[0].cost).toBe(40_000);
+    expect(derived[1].cost).toBe(50_000);
+    expect(derived[0].stats.st).toBe(2);
+    expect(derived[1].stats.st).toBe(3);
+  });
+
+  it("un rang sans choix retombe sur le choix global", () => {
+    const derived = deriveJourneymen({
+      ...orcInput,
+      chosenPosition: "orc_trois_quart_gobelin",
+      chosenPositions: ["orc_trois_quart_orque", null],
+    });
+    expect(derived.map((j) => j.position)).toEqual([
+      "orc_trois_quart_orque",
+      "orc_trois_quart_gobelin",
+    ]);
+  });
+
+  it("un rang sans choix ET sans choix global retombe sur le Trois-quart de base", () => {
+    const derived = deriveJourneymen({
+      ...orcInput,
+      chosenPositions: [null, "orc_trois_quart_gobelin"],
+    });
+    expect(derived.map((j) => j.position)).toEqual([
+      "orc_trois_quart_orque",
+      "orc_trois_quart_gobelin",
+    ]);
+  });
+
+  it("ignore un slug inconnu du roster (pas de journalier fantôme)", () => {
+    const derived = deriveJourneymen({
+      ...orcInput,
+      chosenPositions: ["orc_troll", "slug-inexistant"],
+    });
+    expect(derived.map((j) => j.position)).toEqual([
+      "orc_trois_quart_orque",
+      "orc_trois_quart_orque",
+    ]);
+  });
+
+  it("chaque journalier garde Solitaire (4+)", () => {
+    const derived = deriveJourneymen({
+      ...orcInput,
+      chosenPositions: ["orc_trois_quart_gobelin", null],
+    });
+    for (const j of derived) {
+      expect(j.skills.split(",")).toContain("loner-4");
+    }
+  });
+});
+
+describe("parseJourneymenChoices", () => {
+  it("lit les deux formes (objet natif PG)", () => {
+    expect(
+      parseJourneymenChoices({ position: "a", positions: ["b", null, "c"] }),
+    ).toEqual({ position: "a", positions: ["b", null, "c"] });
+  });
+
+  it("lit la chaîne JSON du miroir sqlite", () => {
+    expect(
+      parseJourneymenChoices(JSON.stringify({ positions: ["b"] })),
+    ).toEqual({ position: null, positions: ["b"] });
+  });
+
+  it("reste tolérant : null, chaîne illisible, entrées non-string", () => {
+    expect(parseJourneymenChoices(null)).toEqual({
+      position: null,
+      positions: [],
+    });
+    expect(parseJourneymenChoices("{oops")).toEqual({
+      position: null,
+      positions: [],
+    });
+    expect(parseJourneymenChoices({ positions: [1, "", "ok"] })).toEqual({
+      position: null,
+      positions: [null, null, "ok"],
+    });
+  });
+
+  it("parseJourneymenChoice ne rend que le choix global (rétro-compat)", () => {
+    expect(parseJourneymenChoice({ position: "a", positions: ["b"] })).toBe(
+      "a",
+    );
+  });
+
+  it("journeymenChoiceInput s'étale dans un DeriveJourneymenInput", () => {
+    expect(journeymenChoiceInput({ position: "a", positions: ["b"] })).toEqual({
+      chosenPosition: "a",
+      chosenPositions: ["b"],
+    });
   });
 });
