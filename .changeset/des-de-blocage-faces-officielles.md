@@ -25,6 +25,10 @@ d'une autre face.
   les cinq icônes, leur nombre de faces, et la résolution d'un joueur Repoussé.
 - `@bb/ui` (icône, popup de choix, journal de match, notifications) et les
   traductions mobile reprennent les mêmes libellés.
+- `@bb/sim-engine` passe en `ENGINE_VER` 0.26.0 et `bench/bench-baseline.json`
+  est re-snapshoté : le resolver ne place plus STUMBLE en 5 et POW en 6, donc
+  les issues de match à seed constant bougent légèrement (la distribution du dé,
+  elle, est inchangée — écarts de 1 à 3 points sur 200 matchs).
 - Correction de règle dans le moteur : Défenseur Plaqué et Bousculé appliquaient
   le Plaquage AVANT la poussée. Une cible poussée hors du terrain encaissait
   donc le jet de blessure du blocage PUIS la Blessure par le Public — deux jets,
