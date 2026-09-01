@@ -183,6 +183,52 @@ describe("PublicRosterPage (/r/[token])", () => {
     expect(screen.getByTestId("public-finance-currentValue").textContent).toMatch(/1\s100K po/);
   });
 
+  it("explique l'écart VE → VEA quand le serveur le décompose", async () => {
+    // Cas prod : une équipe Ogre à 16 joueurs, VE 1 415K / VEA 1 265K sans
+    // aucun joueur indisponible. Les 150K sont « Trois-quarts à vil prix ».
+    state.team = {
+      ...TEAM,
+      budgetSummary: {
+        ...TEAM.budgetSummary,
+        teamValue: 1_415_000,
+        currentValue: 1_265_000,
+        unavailablePlayersCost: 0,
+        cheapLinemenWaived: 150_000,
+      },
+    };
+    await renderPage();
+
+    expect(screen.getByTestId("public-vea-gap-cheap-linemen").textContent).toBe(
+      "−150K po",
+    );
+    // Rien d'indisponible ⇒ pas de ligne d'indisponibilité.
+    expect(screen.queryByTestId("public-vea-gap-unavailable")).toBeNull();
+  });
+
+  it("liste aussi les joueurs indisponibles quand il y en a", async () => {
+    state.team = {
+      ...TEAM,
+      budgetSummary: {
+        ...TEAM.budgetSummary,
+        unavailablePlayersCost: 50_000,
+        cheapLinemenWaived: 0,
+      },
+    };
+    await renderPage();
+
+    expect(screen.getByTestId("public-vea-gap-unavailable").textContent).toBe(
+      "−50K po",
+    );
+    expect(screen.queryByTestId("public-vea-gap-cheap-linemen")).toBeNull();
+  });
+
+  it("n'affiche aucun bloc d'écart quand la VEA vaut la VE", async () => {
+    // Cas de loin le plus courant, et le seul où l'écart n'a rien à
+    // expliquer : le bloc ne doit pas s'afficher vide.
+    await renderPage();
+    expect(screen.queryByTestId("public-vea-gap")).toBeNull();
+  });
+
   it("affiche la valeur de chaque joueur de l'effectif", async () => {
     await renderPage();
     expect(screen.getByTestId("public-player-value-1").textContent).toBe("110K po");

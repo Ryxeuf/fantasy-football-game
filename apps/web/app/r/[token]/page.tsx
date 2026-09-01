@@ -66,6 +66,10 @@ interface PublicBudgetSummary {
   dedicatedFansCost?: number;
   teamValue?: number;
   currentValue?: number;
+  /** Valeur des joueurs indisponibles au prochain match (VE − VEA). */
+  unavailablePlayersCost?: number;
+  /** Embauches annulées dans la VEA par « Trois-quarts à vil prix ». */
+  cheapLinemenWaived?: number;
 }
 interface PublicTeam {
   id: string;
@@ -201,6 +205,14 @@ export default async function PublicRosterPage({ params }: { params: { token: st
   const currentValue = team.budgetSummary?.currentValue ?? team.currentValue ?? null;
   const playersCost = team.budgetSummary?.playersCost ?? null;
   const starPlayersCost = team.budgetSummary?.starPlayersCost ?? null;
+  // Écart VE → VEA, servi par le serveur et jamais re-dérivé ici. Une VEA
+  // inférieure à la VE sur une équipe qui n'a joué aucun match n'a que deux
+  // causes : des joueurs indisponibles, ou « Trois-quarts à vil prix » qui
+  // annule leur coût d'embauche. La fiche du coach les affiche déjà
+  // (`tv-ctv-gap`) ; sans elles ici, l'écart passe pour une erreur de calcul
+  // sur la seule surface que des inconnus consultent.
+  const unavailablePlayersCost = team.budgetSummary?.unavailablePlayersCost ?? 0;
+  const cheapLinemenWaived = team.budgetSummary?.cheapLinemenWaived ?? 0;
 
   return (
     <div className="max-w-5xl mx-auto w-full">
@@ -339,6 +351,46 @@ export default async function PublicRosterPage({ params }: { params: { token: st
             </div>
           ))}
         </div>
+
+        {unavailablePlayersCost > 0 || cheapLinemenWaived > 0 ? (
+          <div
+            data-testid="public-vea-gap"
+            className="mt-3 rounded-xl border border-nuffle-bronze/20 bg-[#FBF7EC] p-3 font-body text-xs text-nuffle-anthracite/80"
+          >
+            <p className="font-subtitle text-[10px] font-semibold uppercase tracking-wider text-nuffle-anthracite/55">
+              Pourquoi la VE actuelle diffère de la valeur d&apos;équipe
+            </p>
+            {cheapLinemenWaived > 0 ? (
+              <div className="mt-1.5 flex justify-between gap-2">
+                <span>Trois-quarts à vil prix (embauches à 0)</span>
+                <span
+                  data-testid="public-vea-gap-cheap-linemen"
+                  className="whitespace-nowrap font-mono"
+                >
+                  −{formatKpo(cheapLinemenWaived)}
+                </span>
+              </div>
+            ) : null}
+            {unavailablePlayersCost > 0 ? (
+              <div className="mt-1 flex justify-between gap-2">
+                <span>Joueurs indisponibles au prochain match</span>
+                <span
+                  data-testid="public-vea-gap-unavailable"
+                  className="whitespace-nowrap font-mono"
+                >
+                  −{formatKpo(unavailablePlayersCost)}
+                </span>
+              </div>
+            ) : null}
+            {cheapLinemenWaived > 0 ? (
+              <p className="mt-1.5 text-[11px] text-nuffle-anthracite/60">
+                Cette équipe traite le Coût d&apos;Embauche de ses Trois-quarts
+                comme nul dans la VE actuelle ; leurs augmentations de valeur
+                restent comptées.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       {/* CTA acquisition */}
