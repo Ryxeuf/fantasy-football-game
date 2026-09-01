@@ -22,10 +22,10 @@ fournit les libellés affichés par `BlockDiceIcon`.
 | `stumble.png` | Bousculé | 1 | Avec Esquive, devient Repoussé ; sinon, devient Défenseur Plaqué. |
 | `pow.png` | Défenseur Plaqué | 1 | On applique le Repoussé, PUIS la cible est Plaquée sur sa case d'arrivée. |
 
-> `player_down_2.png` est un doublon **obsolète** de `player_down.png`
-> (fichiers identiques au bit près), produit par une extraction qui supposait
-> à tort deux faces « Attaquant Plaqué ». La face en double est **Repoussé**.
-> Aucun code ne référence ce fichier.
+> Il n'y a **que cinq images** : une par icône. `player_down_2.png` — un
+> doublon au bit près de `player_down.png`, produit par une extraction qui
+> supposait à tort deux faces « Attaquant Plaqué » — a été supprimé. La face
+> en double est **Repoussé**, et `push_back.png` la couvre déjà.
 
 ## Utilisation dans le jeu
 
