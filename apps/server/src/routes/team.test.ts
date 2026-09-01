@@ -100,8 +100,11 @@ vi.mock("../services/team-budget-summary", async (importOriginal) => ({
 
 vi.mock("../services/team-lock-status", () => ({
   isTeamRosterFrozen: vi.fn().mockResolvedValue(false),
+  isTeamBuildLocked: vi.fn().mockResolvedValue(false),
   TEAM_ENGAGED_MESSAGE:
     "Cette equipe est engagee dans une competition (match, ligue ou coupe) et ne peut plus etre modifiee",
+  TEAM_BUILD_LOCKED_MESSAGE:
+    "Cette equipe est entree en jeu (feuille de match, coupe ou match) : ses achats de construction sont figes",
 }));
 
 vi.mock("../utils/star-player-validation", () => ({

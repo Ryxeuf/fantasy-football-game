@@ -48,6 +48,7 @@ import {
 import { getRosterFromDb } from '../utils/roster-helpers';
 import { serverLog } from '../utils/server-log';
 import {
+  isBuildLockedFor,
   isRosterFrozenFor,
   teamAccessWhere,
 } from '../services/team-edit-access';
@@ -479,13 +480,22 @@ export async function handleListAvailablePositions(
     // editable. L'UI conditionne le bouton "retirer" la-dessus. Pour un
     // admin le gel ne s'applique pas : la console doit donc l'annoncer
     // deverrouille, sinon elle masquerait des actions que le PUT accepte.
-    const frozen = await isRosterFrozenFor(req, teamId);
+    //
+    // `buildLocked` est le gel PLUS TARDIF des achats de construction (pool
+    // de PSP, competences payees dessus) : il ne tombe qu'a l'entree en jeu.
+    // Sans lui, la page d'edition redirigeait des l'INSCRIPTION en ligue et
+    // le coach ne pouvait plus corriger une competence achetee au build.
+    const [frozen, buildLocked] = await Promise.all([
+      isRosterFrozenFor(req, teamId),
+      isBuildLockedFor(req, teamId),
+    ]);
 
     sendSuccess(res, {
       availablePositions,
       currentPlayerCount: team.players.length,
       maxPlayers,
       frozen,
+      buildLocked,
     });
   } catch (e: unknown) {
     serverLog.error(

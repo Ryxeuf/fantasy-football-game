@@ -14,6 +14,7 @@ import {
   saveRosterSchema,
   designateCaptainSchema,
   updateStartingPspPoolSchema,
+  updateInitialBudgetSchema,
   renameTeamSchema,
   updateTeamDescriptionSchema,
 } from "../schemas/team.schemas";
@@ -277,11 +278,13 @@ router.get(
 export {
   handleGetTeamPspPool,
   handleUpdateTeamPspPool,
+  handleUpdateTeamInitialBudget,
   handleRemovePlayerAdvancement,
 } from './team-advancement-handlers';
 import {
   handleGetTeamPspPool as handleGetTeamPspPoolImpl,
   handleUpdateTeamPspPool as handleUpdateTeamPspPoolImpl,
+  handleUpdateTeamInitialBudget as handleUpdateTeamInitialBudgetImpl,
   handleRemovePlayerAdvancement as handleRemovePlayerAdvancementImpl,
 } from './team-advancement-handlers';
 
@@ -291,6 +294,12 @@ router.put(
   authUser,
   validate(updateStartingPspPoolSchema),
   handleUpdateTeamPspPoolImpl,
+);
+router.put(
+  "/:id/initial-budget",
+  authUser,
+  validate(updateInitialBudgetSchema),
+  handleUpdateTeamInitialBudgetImpl,
 );
 router.delete(
   "/:id/players/:playerId/advancements/:index",

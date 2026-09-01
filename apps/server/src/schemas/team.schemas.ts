@@ -267,3 +267,12 @@ export const updateStartingPspPoolSchema = z.object({
 export type UpdateStartingPspPoolBody = z.infer<
   typeof updateStartingPspPoolSchema
 >;
+
+/**
+ * Édition avancée : réglage du budget d'or de construction (`initialBudget`,
+ * en kpo). Mêmes bornes que le builder (100 → 2000 kpo).
+ */
+export const updateInitialBudgetSchema = z.object({
+  initialBudget: z.number().int().min(100).max(2000),
+});
+export type UpdateInitialBudgetBody = z.infer<typeof updateInitialBudgetSchema>;
