@@ -1,3 +1,10 @@
+## [1.240.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.240.0...v1.240.1) (2026-09-01)
+
+
+### 🐛 Bug Fixes
+
+* **dice:** faces officielles du dé de blocage et ordre « repousser puis plaquer » ([#1005](https://github.com/Ryxeuf/fantasy-football-game/issues/1005)) ([9600162](https://github.com/Ryxeuf/fantasy-football-game/commit/96001623397f505add2bd3ed2c3c7de0bcde1fcc))
+
 ## [1.240.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.239.0...v1.240.0) (2026-08-31)
 
 
