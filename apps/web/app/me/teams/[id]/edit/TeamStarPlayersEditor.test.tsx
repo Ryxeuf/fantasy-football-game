@@ -180,3 +180,52 @@ describe("TeamStarPlayersEditor", () => {
     ).toContain("Budget insuffisant");
   });
 });
+
+describe("TeamStarPlayersEditor — repli du bloc", () => {
+  it("replie le catalogue et garde le résumé visible", async () => {
+    wireApi();
+    renderEditor();
+    await waitFor(() =>
+      expect(screen.getByTestId("star-player-griff_oberwald")).toBeTruthy(),
+    );
+
+    fireEvent.click(screen.getByTestId("team-star-players-toggle"));
+
+    expect(screen.queryByTestId("star-player-griff_oberwald")).toBeNull();
+    // Le coach garde sous les yeux ce qu'il a engagé.
+    expect(
+      screen.getByTestId("team-star-players-summary").textContent,
+    ).toContain("280k po");
+    expect(
+      screen.getByTestId("team-star-players-toggle").getAttribute("aria-expanded"),
+    ).toBe("false");
+  });
+
+  it("mémorise le repli par équipe", async () => {
+    wireApi();
+    const { unmount } = renderEditor();
+    await waitFor(() =>
+      expect(screen.getByTestId("star-player-griff_oberwald")).toBeTruthy(),
+    );
+    fireEvent.click(screen.getByTestId("team-star-players-toggle"));
+    expect(localStorage.getItem("team_star_players_collapsed:T1")).toBe("1");
+    unmount();
+
+    renderEditor();
+    await waitFor(() =>
+      expect(screen.getByTestId("team-star-players-toggle")).toBeTruthy(),
+    );
+    expect(screen.queryByTestId("star-player-griff_oberwald")).toBeNull();
+  });
+
+  it("déplié par défaut sans préférence enregistrée", async () => {
+    wireApi();
+    renderEditor();
+    await waitFor(() =>
+      expect(screen.getByTestId("star-player-griff_oberwald")).toBeTruthy(),
+    );
+    expect(
+      screen.getByTestId("team-star-players-toggle").getAttribute("aria-expanded"),
+    ).toBe("true");
+  });
+});
