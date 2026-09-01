@@ -769,12 +769,27 @@ export default function TeamEditPage() {
         )}
       </div>
 
-      {/* Édition avancée : pool de PSP de construction (équipe libre). */}
+      {/* Édition avancée : budget d'or + pool de PSP de construction. */}
       {team && pspPool && (
         <PspPoolPanel
           teamId={id}
           state={pspPool}
-          onChange={setPspPool}
+          onChange={(next) => {
+            setPspPool(next);
+            // Le « Résumé budgétaire » ci-dessus lit `team.initialBudget` :
+            // sans cette recopie, régler le budget laissait le bandeau
+            // annoncer l'ancien plafond (et un « Restant » faux).
+            if (typeof next.initialBudget === "number") {
+              setData((prev: any) =>
+                prev
+                  ? {
+                      ...prev,
+                      team: { ...prev.team, initialBudget: next.initialBudget },
+                    }
+                  : prev,
+              );
+            }
+          }}
           tournamentLabel={pack?.nameFr ?? null}
           disabled={!canEdit}
         />
