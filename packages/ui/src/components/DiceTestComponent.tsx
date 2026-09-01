@@ -1,8 +1,9 @@
 import React from "react";
 import BlockDiceIcon from "./BlockDiceIcon";
-import type { BlockResult } from "@bb/game-engine";
+import { BLOCK_DIE_FACE_INFO, type BlockResult } from "@bb/game-engine";
 
 export default function DiceTestComponent() {
+  // Les cinq icones du de, dans l'ordre du livre.
   const diceResults: BlockResult[] = [
     "PLAYER_DOWN",
     "BOTH_DOWN",
@@ -27,19 +28,15 @@ export default function DiceTestComponent() {
               <BlockDiceIcon result={result} size={64} className="mx-auto" />
             </div>
             <h3 className="font-semibold text-sm mb-1">
-              {result === "PLAYER_DOWN" && "Player Down!"}
-              {result === "BOTH_DOWN" && "Both Down"}
-              {result === "PUSH_BACK" && "Push Back"}
-              {result === "STUMBLE" && "Stumble"}
-              {result === "POW" && "POW!"}
+              {BLOCK_DIE_FACE_INFO[result].nameFr}
             </h3>
+            <p className="text-[11px] text-gray-500 mb-1">
+              {BLOCK_DIE_FACE_INFO[result].faces === 1
+                ? "1 face"
+                : `${BLOCK_DIE_FACE_INFO[result].faces} faces`}
+            </p>
             <p className="text-xs text-gray-600">
-              {result === "PLAYER_DOWN" && "L'attaquant est mis au sol"}
-              {result === "BOTH_DOWN" && "Les deux joueurs sont mis au sol"}
-              {result === "PUSH_BACK" && "La cible est repoussée d'1 case"}
-              {result === "STUMBLE" &&
-                "Si la cible utilise Dodge, cela devient Push ; sinon, c'est POW!"}
-              {result === "POW" && "La cible est repoussée puis mise au sol"}
+              {BLOCK_DIE_FACE_INFO[result].effectFr}
             </p>
           </div>
         ))}

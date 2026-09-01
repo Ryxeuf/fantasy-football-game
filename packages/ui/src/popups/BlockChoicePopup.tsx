@@ -1,12 +1,6 @@
 import React from "react";
+import { BLOCK_DIE_FACE_INFO, type BlockResult } from "@bb/game-engine";
 import BlockDiceIcon from "../components/BlockDiceIcon";
-
-type BlockResult =
-  | "PLAYER_DOWN"
-  | "BOTH_DOWN"
-  | "PUSH_BACK"
-  | "STUMBLE"
-  | "POW";
 
 interface BlockChoicePopupProps {
   attackerName: string;
@@ -41,10 +35,13 @@ export default function BlockChoicePopup({
               <button
                 key={idx}
                 onClick={() => onChoose(opt)}
-                className="px-3 py-3 border rounded-lg hover:bg-gray-50 flex items-center justify-center"
-                title={opt}
+                className="px-3 py-3 border rounded-lg hover:bg-gray-50 flex flex-col items-center justify-center gap-1"
+                title={BLOCK_DIE_FACE_INFO[opt].effectFr}
               >
                 <BlockDiceIcon result={opt} size={48} />
+                <span className="text-[10px] leading-tight text-gray-600">
+                  {BLOCK_DIE_FACE_INFO[opt].nameFr}
+                </span>
               </button>
             ))}
           </div>

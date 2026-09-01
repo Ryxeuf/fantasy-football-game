@@ -4,6 +4,7 @@
  */
 
 import { RNG, Player, DiceResult, BlockResult, BlockDiceResult } from '../core/types';
+import { BLOCK_DIE_FACES } from '../mechanics/block-dice-faces';
 import { hasSkill } from '../skills/skill-effects';
 
 /**
@@ -140,24 +141,13 @@ export function performPickupRoll(player: Player, rng: RNG, modifiers: number = 
 
 /**
  * Converts a raw 1-6 die value to a BlockResult.
+ *
+ * Les six faces viennent de `BLOCK_DIE_FACES` (cf. `mechanics/block-dice-faces`),
+ * seule table de reference : `PUSH_BACK` y figure deux fois, les quatre
+ * autres icones une seule fois.
  */
 export function blockResultFromRoll(roll: number): BlockResult {
-  switch (roll) {
-    case 1:
-      return 'PLAYER_DOWN';
-    case 2:
-      return 'BOTH_DOWN';
-    case 3:
-      return 'PUSH_BACK';
-    case 4:
-      return 'STUMBLE';
-    case 5:
-      return 'POW';
-    case 6:
-      return 'PUSH_BACK';
-    default:
-      return 'PUSH_BACK';
-  }
+  return BLOCK_DIE_FACES[roll - 1] ?? 'PUSH_BACK';
 }
 
 /**

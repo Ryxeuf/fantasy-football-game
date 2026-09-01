@@ -1,40 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BlockDie, type BlockDieFace } from "./NuffleArt";
+import { BLOCK_DIE_FACES, BLOCK_DIE_FACE_LABELS } from "./block-dice-faces";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
  * Lanceur de dés de blocage interactif pour le hero.
  *
  * Pur front : aucun appel réseau. Reprend les illustrations `BlockDie`
- * pour rester homogène. Tire selon la distribution officielle du dé de
- * blocage Blood Bowl (6 faces : 1 Joueur à terre, 2 Repoussé, 1 Tous à
- * terre, 1 Hésitation, 1 POW). Respecte `prefers-reduced-motion`.
+ * pour rester homogène. Tire dans `BLOCK_DIE_FACES`, miroir de la table
+ * du moteur (`@bb/game-engine`) : six faces pour cinq icônes, dont deux
+ * `Repoussé`. Respecte `prefers-reduced-motion`.
  */
 
-// Distribution officielle des 6 faces du dé de blocage.
-const POOL: readonly BlockDieFace[] = ["down", "push", "push", "bothdown", "stumble", "pow"];
-
-const FACE_LABELS: Record<"fr" | "en", Record<BlockDieFace, string>> = {
-  fr: {
-    down: "Joueur à terre",
-    push: "Repoussé",
-    bothdown: "Tous à terre",
-    stumble: "Hésitation",
-    pow: "POW !",
-  },
-  en: {
-    down: "Player Down",
-    push: "Push Back",
-    bothdown: "Both Down",
-    stumble: "Stumble",
-    pow: "POW!",
-  },
-};
-
 function rollFace(): BlockDieFace {
-  return POOL[Math.floor(Math.random() * POOL.length)];
+  return BLOCK_DIE_FACES[Math.floor(Math.random() * BLOCK_DIE_FACES.length)];
 }
 
 function prefersReducedMotion(): boolean {
@@ -47,7 +28,11 @@ const COUNT = 3;
 export default function BlockDiceRoller() {
   const { language, t } = useLanguage();
   const lang = language === "en" ? "en" : "fr";
-  const [faces, setFaces] = useState<BlockDieFace[]>(["push", "pow", "stumble"]);
+  const [faces, setFaces] = useState<BlockDieFace[]>([
+    "push",
+    "pow",
+    "stumble",
+  ]);
   const [rolling, setRolling] = useState(false);
   const [rolled, setRolled] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -84,11 +69,25 @@ export default function BlockDiceRoller() {
     }, 640);
   }, [rolling, clearTimers]);
 
-  const labels = FACE_LABELS[lang];
+  const labels = BLOCK_DIE_FACE_LABELS[lang];
+  const settled = rolled && !rolling;
+
+  /**
+   * Un blocage ne retient qu'UN dé : on détaille donc l'effet du meilleur
+   * résultat pour l'attaquant plutôt que d'empiler trois explications.
+   */
+  const highlighted = useMemo(() => {
+    const best = [...faces].sort(
+      (a, b) => labels[b].attackerRank - labels[a].attackerRank,
+    )[0];
+    return best;
+  }, [faces, labels]);
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className={`flex items-center gap-2.5 ${rolling ? "animate-pulse" : ""}`}>
+      <div
+        className={`flex items-center gap-2.5 ${rolling ? "animate-pulse" : ""}`}
+      >
         {faces.map((face, i) => (
           <BlockDie
             key={i}
@@ -106,15 +105,33 @@ export default function BlockDiceRoller() {
         disabled={rolling}
         className="inline-flex items-center gap-2 rounded-full bg-[#1B1610] px-5 py-2 text-sm font-subtitle font-bold uppercase tracking-wide text-nuffle-gold ring-1 ring-nuffle-gold/50 shadow-[0_6px_16px_rgba(27,22,16,0.35)] transition-all hover:bg-[#241c12] hover:-translate-y-0.5 disabled:opacity-70 disabled:hover:translate-y-0"
       >
-        <span className={rolling ? "inline-block animate-spin" : "inline-block"} aria-hidden="true">⚄</span>
+        <span
+          className={rolling ? "inline-block animate-spin" : "inline-block"}
+          aria-hidden="true"
+        >
+          ⚄
+        </span>
         {t.home.diceRollerCta}
       </button>
 
-      <p className="min-h-[1.25rem] text-center text-xs font-subtitle text-nuffle-bronze/80" aria-live="polite">
-        {rolled && !rolling
-          ? faces.map((f) => labels[f]).join(" · ")
-          : t.home.diceRollerHint}
-      </p>
+      <div className="min-h-[3.5rem] max-w-[22rem]" aria-live="polite">
+        {settled ? (
+          <>
+            <p className="text-center text-xs font-subtitle font-bold uppercase tracking-wide text-nuffle-bronze">
+              {faces.map((f) => labels[f].name).join(" · ")}
+            </p>
+            <p className="mt-1 text-center text-[11px] leading-snug font-body text-nuffle-bronze/80">
+              <span className="font-semibold">{labels[highlighted].name}</span>
+              {" — "}
+              {labels[highlighted].effect}
+            </p>
+          </>
+        ) : (
+          <p className="text-center text-xs font-subtitle text-nuffle-bronze/80">
+            {t.home.diceRollerHint}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

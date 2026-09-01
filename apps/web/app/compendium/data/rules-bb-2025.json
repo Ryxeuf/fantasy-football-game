@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-08-25a",
+    "version": "2026-09-01a",
     "disclaimer": "Résumés de règles rédigés par Nuffle Arena à des fins d'aide de jeu (projet de fans indépendant, sans affiliation à Games Workshop). Ne remplace pas le livre de règles officiel."
   },
   "chapters": [
@@ -156,6 +156,93 @@
               "16",
               "**Entraînement intensif :** désignez au hasard 1 de vos joueurs en jeu : il gagne une Compétence Principale de votre choix pour tout le match."
             ]
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "des-de-blocage",
+      "title": "Dés de Blocage",
+      "summary": "Les cinq icônes du Dé de Blocage, leur nombre de faces et l'effet de chaque résultat, plus la résolution d'un joueur Repoussé.",
+      "sourcePages": [
+        "page-25"
+      ],
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Un D6 à cinq icônes"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le Dé de Blocage est un dé à six faces décorées de **cinq icônes** au lieu des chiffres 1 à 6. Chaque icône décrit une issue différente de l'Action de Blocage, du blocage réussi à la contre-attaque de la cible. **Repoussé** occupe deux faces ; les quatre autres résultats une seule chacun."
+        },
+        {
+          "type": "table",
+          "caption": "Faces du Dé de Blocage",
+          "columns": [
+            "Résultat",
+            "Faces",
+            "Effet"
+          ],
+          "rows": [
+            [
+              "Attaquant Plaqué",
+              "1",
+              "Le joueur qui a annoncé l'Action de Blocage est **Plaqué** sur-le-champ, exactement comme si la cible avait elle-même effectué une Action de Blocage contre lui."
+            ],
+            [
+              "Les Deux Plaqués",
+              "1",
+              "Les deux joueurs sont **Plaqués** l'un par l'autre, chacun restant sur sa propre case, comme si chacun avait bloqué l'autre."
+            ],
+            [
+              "Repoussé",
+              "2",
+              "La cible recule de **1 case**, poussée par l'attaquant. Ce dernier peut ensuite choisir de **Poursuivre** : il occupe alors la case que la cible vient de quitter."
+            ],
+            [
+              "Bousculé",
+              "1",
+              "Si la cible possède la Compétence **Esquive**, le résultat devient **Repoussé**. Sinon, il devient **Défenseur Plaqué**."
+            ],
+            [
+              "Défenseur Plaqué",
+              "1",
+              "On applique d'abord le **Repoussé**. Une fois la cible déplacée, elle est **Plaquée** par l'attaquant sur la case qu'elle occupe **à présent**."
+            ]
+          ]
+        },
+        {
+          "type": "callout",
+          "variant": "warning",
+          "title": "Défenseur Plaqué : d'abord pousser, ensuite plaquer",
+          "text": "L'ordre compte. La cible n'est pas mise au sol sur sa case de départ mais sur celle où la poussée l'a menée : c'est de là que partent le Jet d'Armure, le rebond du ballon qu'elle portait, et le risque de Blessure par le Public si la poussée l'a sortie du terrain."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Combien de dés, et qui choisit"
+        },
+        {
+          "type": "paragraph",
+          "text": "Le nombre de dés dépend de la Force de chaque joueur, Soutiens compris. Si on jette plusieurs Dés de Blocage, c'est le **Coach du joueur le plus fort** qui choisit lequel appliquer ; à Force égale, c'est le Coach de l'attaquant. Un seul dé est retenu : les autres sont écartés."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "Joueurs Repoussés"
+        },
+        {
+          "type": "paragraph",
+          "text": "Sur un résultat **Repoussé** ou **Défenseur Plaqué**, la cible recule de 1 case en s'éloignant du joueur qui a effectué l'Action de Blocage : les cases disponibles sont celles qui ne sont pas elles-mêmes adjacentes à l'attaquant. C'est le **Coach de l'attaquant** qui désigne la case, et il doit choisir une case **inoccupée**."
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            "Un joueur Repoussé **sur le ballon** le fait automatiquement rebondir — sans que cela constitue un Turnover.",
+            "S'il n'existe aucune case inoccupée, soit la poussée se propage en **Chaîne** au joueur qui occupe la case, soit la cible est Repoussée **hors du terrain** et risque une Blessure par le Public."
           ]
         }
       ]

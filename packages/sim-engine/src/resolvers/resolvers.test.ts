@@ -1,3 +1,4 @@
+import { BLOCK_DIE_FACES } from '@bb/game-engine';
 import { isMatchEvent } from '@bb/shared-types';
 import { describe, expect, it } from 'vitest';
 
@@ -424,7 +425,7 @@ describe('Block resolver — sprint 0.A.5', () => {
     for (let seed = 0; seed < 10_000; seed += 1) {
       const r = createRng(seed);
       const face = Math.floor(r.next() * 6) + 1;
-      if (face === 2) {
+      if (BLOCK_DIE_FACES[face - 1] === 'BOTH_DOWN') {
         // Single 1d block (equal ST)
         const state = baseState({
           players: [
@@ -459,7 +460,7 @@ describe('Block resolver — sprint 0.A.5', () => {
     for (let seed = 0; seed < 10_000; seed += 1) {
       const r = createRng(seed);
       const face = Math.floor(r.next() * 6) + 1;
-      if (face === 2) {
+      if (BLOCK_DIE_FACES[face - 1] === 'BOTH_DOWN') {
         const state = baseState({
           players: [
             { ...attacker, skills: ['wrestle'] },
@@ -490,7 +491,7 @@ describe('Block resolver — sprint 0.A.5', () => {
     for (let seed = 0; seed < 10_000; seed += 1) {
       const r = createRng(seed);
       const face = Math.floor(r.next() * 6) + 1;
-      if (face === 5) {
+      if (BLOCK_DIE_FACES[face - 1] === 'STUMBLE') {
         const state = baseState({
           players: [attacker, { ...defender, skills: ['dodge'] }],
         });

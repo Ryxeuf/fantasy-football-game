@@ -1,11 +1,11 @@
 import React from "react";
+import {
+  BLOCK_DIE_FACE_INFO,
+  blockResultDescriptionFr,
+  type BlockResult,
+} from "@bb/game-engine";
 
-type BlockResult =
-  | "PLAYER_DOWN"
-  | "BOTH_DOWN"
-  | "PUSH_BACK"
-  | "STUMBLE"
-  | "POW";
+export type { BlockResult };
 
 interface BlockDiceIconProps {
   result: BlockResult;
@@ -13,52 +13,36 @@ interface BlockDiceIconProps {
   className?: string;
 }
 
+/**
+ * Icône d'une face du Dé de Blocage.
+ *
+ * Les noms de fichiers sont historiques (`pow.png` = Défenseur Plaqué,
+ * `player_down.png` = Attaquant Plaqué) ; le libellé affiché vient, lui,
+ * de `BLOCK_DIE_FACE_INFO` — les noms officiels du livre.
+ */
+const IMAGE_BY_RESULT: Record<BlockResult, string> = {
+  PLAYER_DOWN: "/images/blocking_dice/player_down.png",
+  BOTH_DOWN: "/images/blocking_dice/both_down.png",
+  PUSH_BACK: "/images/blocking_dice/push_back.png",
+  STUMBLE: "/images/blocking_dice/stumble.png",
+  POW: "/images/blocking_dice/pow.png",
+};
+
 export default function BlockDiceIcon({
   result,
   size = 24,
   className = "",
 }: BlockDiceIconProps) {
-  // Mapping des résultats vers les noms de fichiers d'images
-  const getImagePath = (result: BlockResult): string => {
-    switch (result) {
-      case "PLAYER_DOWN":
-        return "/images/blocking_dice/player_down.png";
-      case "BOTH_DOWN":
-        return "/images/blocking_dice/both_down.png";
-      case "PUSH_BACK":
-        return "/images/blocking_dice/push_back.png";
-      case "STUMBLE":
-        return "/images/blocking_dice/stumble.png";
-      case "POW":
-        return "/images/blocking_dice/pow.png";
-      default:
-        return "/images/blocking_dice/player_down.png";
-    }
-  };
-
-  // Mapping des résultats vers des descriptions en français
-  const getDescription = (result: BlockResult): string => {
-    switch (result) {
-      case "PLAYER_DOWN":
-        return "Player Down! - L'attaquant est mis au sol";
-      case "BOTH_DOWN":
-        return "Both Down - Les deux joueurs sont mis au sol";
-      case "PUSH_BACK":
-        return "Push Back - La cible est repoussée d'1 case";
-      case "STUMBLE":
-        return "Stumble - Si la cible utilise Dodge, cela devient Push ; sinon, c'est POW!";
-      case "POW":
-        return "POW! - La cible est repoussée puis mise au sol";
-      default:
-        return "Résultat de blocage";
-    }
-  };
+  const src = IMAGE_BY_RESULT[result] ?? IMAGE_BY_RESULT.PLAYER_DOWN;
+  const description = BLOCK_DIE_FACE_INFO[result]
+    ? blockResultDescriptionFr(result)
+    : "Résultat de blocage";
 
   return (
     <img
-      src={getImagePath(result)}
-      alt={getDescription(result)}
-      title={getDescription(result)}
+      src={src}
+      alt={description}
+      title={description}
       style={{ width: size, height: size, objectFit: "contain" }}
       className={`inline-block ${className}`}
     />

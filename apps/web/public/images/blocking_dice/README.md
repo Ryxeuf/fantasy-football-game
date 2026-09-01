@@ -2,19 +2,36 @@
 
 Ce dossier contient les différentes faces des dés de blocage extraites de l'image `bb_dice_sides.png`.
 
-## Faces disponibles :
+## Le dé : six faces, cinq icônes
 
-- **player_down.png** : Player Down! - L'attaquant est mis au sol
-- **both_down.png** : Both Down - Les deux joueurs sont mis au sol (un joueur avec Block peut ignorer pour lui-même)
-- **push_back.png** : Push Back - La cible est repoussée d'1 case, l'attaquant peut suivre
-- **stumble.png** : Stumble - Si la cible utilise Dodge, cela devient Push ; sinon, c'est POW!
-- **pow.png** : POW! - La cible est repoussée puis mise au sol ; l'attaquant peut suivre
-- **player_down_2.png** : Deuxième face Player Down! (si présente)
+Le Dé de Blocage est un D6 décoré de **cinq icônes** différentes plutôt que
+des chiffres 1 à 6. C'est **Repoussé** qui occupe **deux faces** ; les quatre
+autres résultats n'en occupent qu'une chacun.
 
-## Utilisation dans le jeu :
+La table de référence est `BLOCK_DIE_FACES` /`BLOCK_DIE_FACE_INFO`
+(`packages/game-engine/src/mechanics/block-dice-faces.ts`) — c'est elle qui
+fournit les libellés affichés par `BlockDiceIcon`.
 
-Ces images peuvent être utilisées dans l'interface utilisateur pour afficher les résultats des jets de dés de blocage lors des actions de Block dans Blood Bowl.
+## Faces disponibles
 
-## Source :
+| Fichier | Résultat (VF) | Faces | Effet |
+|---|---|---|---|
+| `player_down.png` | Attaquant Plaqué | 1 | L'attaquant est Plaqué, comme si la cible l'avait bloqué. Turnover. |
+| `both_down.png` | Les Deux Plaqués | 1 | Les deux joueurs sont Plaqués, chacun sur sa case (Blocage / Lutte peuvent modifier l'issue). |
+| `push_back.png` | Repoussé | **2** | La cible recule de 1 case ; l'attaquant peut Poursuivre. |
+| `stumble.png` | Bousculé | 1 | Avec Esquive, devient Repoussé ; sinon, devient Défenseur Plaqué. |
+| `pow.png` | Défenseur Plaqué | 1 | On applique le Repoussé, PUIS la cible est Plaquée sur sa case d'arrivée. |
+
+> `player_down_2.png` est un doublon **obsolète** de `player_down.png`
+> (fichiers identiques au bit près), produit par une extraction qui supposait
+> à tort deux faces « Attaquant Plaqué ». La face en double est **Repoussé**.
+> Aucun code ne référence ce fichier.
+
+## Utilisation dans le jeu
+
+Ces images sont affichées par `BlockDiceIcon` (`@bb/ui`) pour les résultats de
+blocage : popup de choix du dé, journal de match, notifications.
+
+## Source
 
 Extrait de l'image `bb_dice_sides.png` située dans le dossier parent.

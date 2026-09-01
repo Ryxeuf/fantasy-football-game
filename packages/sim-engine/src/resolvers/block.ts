@@ -5,9 +5,9 @@
  * - Attacker must be standing and adjacent to the defender.
  * - Block dice count : `calculateBlockDiceCount` (1d / 2d / 3d) using
  *   strengths + assists. Higher-ST side picks ; ties picked by attacker.
- * - 6 face values : PLAYER_DOWN / BOTH_DOWN / PUSH_BACK / STUMBLE / POW.
- *   (Faces 4..6 used by BB2020 may map to BOTH_DOWN twice — kept simple
- *   here using a 6-face table that matches the canonical BB die.)
+ * - 5 icons over 6 faces : PLAYER_DOWN / BOTH_DOWN / PUSH_BACK ×2 /
+ *   STUMBLE / POW. The table itself lives in `@bb/game-engine`
+ *   (`BLOCK_DIE_FACES`) so engine, sim and site cannot drift apart.
  * - Skill interactions modelled :
  *   - Attacker `block` : turns BOTH_DOWN into "no effect" for him.
  *   - Defender `block` : turns BOTH_DOWN into "no effect" for him.
@@ -22,7 +22,7 @@
  */
 
 import type { MatchEvent } from '@bb/shared-types';
-import { calculateBlockDiceCount } from '@bb/game-engine';
+import { BLOCK_DIE_FACES, calculateBlockDiceCount } from '@bb/game-engine';
 
 import { rollD6 } from '../rng/seeded';
 
@@ -38,15 +38,6 @@ import {
 } from './types';
 
 export type BlockDieFace = 'PLAYER_DOWN' | 'BOTH_DOWN' | 'PUSH_BACK' | 'STUMBLE' | 'POW';
-
-const BLOCK_DIE_FACES: readonly BlockDieFace[] = [
-  'PLAYER_DOWN',
-  'BOTH_DOWN',
-  'PUSH_BACK',
-  'PUSH_BACK',
-  'STUMBLE',
-  'POW',
-];
 
 export interface BlockInput {
   attackerId: string;

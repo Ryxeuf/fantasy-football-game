@@ -349,12 +349,13 @@ export const EN_TRANSLATIONS = {
       title: "Block dice choice",
       chooserChoosing: "{{name}} chooses",
       chooseA11y: "Choose {{result}}",
+      // Official block die face names (cf. BLOCK_DIE_FACE_INFO).
       results: {
-        playerDown: "Attacker down",
-        bothDown: "Both down",
-        pushBack: "Push back",
+        playerDown: "Attacker Down",
+        bothDown: "Both Down",
+        pushBack: "Push Back",
         stumble: "Stumble",
-        pow: "POW!",
+        pow: "Defender Down",
       },
     },
     push: {

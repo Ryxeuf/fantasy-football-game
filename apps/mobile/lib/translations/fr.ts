@@ -415,12 +415,13 @@ export const FR_TRANSLATIONS = {
       title: "Choix du dé de blocage",
       chooserChoosing: "{{name}} choisit",
       chooseA11y: "Choisir {{result}}",
+      // Noms officiels des faces du dé (cf. BLOCK_DIE_FACE_INFO).
       results: {
-        playerDown: "Attaquant à terre",
-        bothDown: "Deux à terre",
+        playerDown: "Attaquant Plaqué",
+        bothDown: "Les Deux Plaqués",
         pushBack: "Repoussé",
-        stumble: "Trébuche",
-        pow: "POW !",
+        stumble: "Bousculé",
+        pow: "Défenseur Plaqué",
       },
     },
     push: {

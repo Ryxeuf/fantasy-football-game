@@ -125,12 +125,19 @@ function powPoints(): string {
   return pts.join(" ");
 }
 
+/**
+ * Noms officiels des cinq icônes du Dé de Blocage (livre 2025). Ils
+ * doivent rester ceux du moteur (`BLOCK_DIE_FACE_INFO`) et du compendium :
+ * les anciens libellés approximatifs (« Joueur à terre », « Hésitation »,
+ * « Tous à terre ») ne correspondaient à aucune face du dé, et `pow`
+ * portait carrément le nom d'une autre face.
+ */
 const DIE_LABEL: Record<BlockDieFace, string> = {
-  pow: "Joueur à terre",
+  pow: "Défenseur Plaqué",
   push: "Repoussé",
-  stumble: "Hésitation",
-  bothdown: "Tous à terre",
-  down: "Attaquant à terre",
+  stumble: "Bousculé",
+  bothdown: "Les Deux Plaqués",
+  down: "Attaquant Plaqué",
 };
 
 export function BlockDie({ face, className }: { readonly face: BlockDieFace; readonly className?: string }) {
@@ -178,16 +185,19 @@ export function BlockDie({ face, className }: { readonly face: BlockDieFace; rea
         </>
       )}
 
+      {/* Les Deux Plaqués : un crâne sur une explosion (icône du livre). */}
       {face === "bothdown" && (
-        <g fill="url(#bd-gold)">
-          {[12.5, 27.5].map((cx) => (
-            <g key={cx}>
-              <circle cx={cx} cy="17" r="5" />
-              <rect x={cx - 4} y="21" width="8" height="4.5" rx="1.4" />
-              <circle cx={cx - 1.9} cy="16.4" r="1.5" fill={COIN} />
-              <circle cx={cx + 1.9} cy="16.4" r="1.5" fill={COIN} />
-            </g>
-          ))}
+        <g>
+          <polygon points={powPoints()} fill="url(#bd-gold)" opacity="0.55" />
+          <g fill="url(#bd-gold)">
+            <circle cx="20" cy="18" r="6.4" />
+            <rect x="15.2" y="23" width="9.6" height="5.4" rx="1.7" />
+          </g>
+          <g fill={COIN}>
+            <circle cx="17.6" cy="17.4" r="1.9" />
+            <circle cx="22.4" cy="17.4" r="1.9" />
+            <path d="M20 19.2l1.3 2.4h-2.6z" />
+          </g>
         </g>
       )}
 

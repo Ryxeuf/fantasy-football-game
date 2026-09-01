@@ -1,6 +1,6 @@
 import React from "react";
 import { useToast, Toast } from "./Toaster";
-import { DiceResult, BlockResult } from "@bb/game-engine";
+import { BLOCK_DIE_FACE_INFO, DiceResult, BlockResult } from "@bb/game-engine";
 
 interface DiceNotificationProps {
   playerName: string;
@@ -153,16 +153,8 @@ function createBlockDiceToast(
     );
   };
 
-  const getResultMessage = (result: BlockResult) => {
-    const messages = {
-      PLAYER_DOWN: "Joueur au sol !",
-      BOTH_DOWN: "Les deux joueurs au sol !",
-      PUSH_BACK: "Poussée arrière !",
-      STUMBLE: "Trébuchement !",
-      POW: "Puissance !",
-    };
-    return messages[result];
-  };
+  const getResultMessage = (result: BlockResult) =>
+    BLOCK_DIE_FACE_INFO[result].nameFr;
 
   const getToastType = (result: BlockResult): Toast["type"] => {
     switch (result) {
