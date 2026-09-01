@@ -1193,7 +1193,10 @@ function handleStumble(state: GameState, attacker: Player, target: Player, rng: 
   if (checkDodgeNegatesStumble(target, attacker, state)) {
     return handlePushBack(state, attacker, target, rng);
   } else {
-    // Pas de Dodge - traiter comme POW (le défenseur tombe, PAS un turnover)
+    // Sans Esquive, Bousculé se lit Défenseur Plaqué : Repoussé d'abord,
+    // puis Plaqué sur la case d'arrivée (le défenseur tombe, PAS un
+    // turnover). Poussé hors du terrain, il n'y a plus de case où le
+    // plaquer : seule la Blessure par le Public s'applique.
     state.players = state.players.map(p => (p.id === target.id ? { ...p, stunned: true } : p));
 
     // Log de la mise au sol
@@ -1205,18 +1208,21 @@ function handleStumble(state: GameState, attacker: Player, target: Player, rng: 
     );
     state.gameLog = [...state.gameLog, stumbleDownLog];
 
+    // Meme raison que dans `handlePow` : la prediction doit lire l'etat
+    // POST-knockdown pour voir le meme Stand Firm que la poussee.
+    const surfs = willBePushedOffPitch(state, attacker, target);
+
     // Jet d'armure + blessure avec Mighty Blow
-    state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
+    if (!surfs) {
+      state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
+    }
 
     // Gérer la poussée avec choix de direction
-    const pushResult = handlePushWithChoice(state, attacker, target, 'STUMBLE', rng);
+    let pushResult = handlePushWithChoice(state, attacker, target, 'STUMBLE', rng);
 
-    // Si la cible avait le ballon, le perdre
+    // Si la cible avait le ballon, le perdre sur sa case d'arrivée
     if (target.hasBall) {
-      pushResult.players = pushResult.players.map(p =>
-        p.id === target.id ? { ...p, hasBall: false } : p
-      );
-      pushResult.ball = { ...target.pos };
+      pushResult = dropBallFromCurrentSquare(pushResult, target.id);
       // Note: bounceBall sera appelé par la fonction appelante
     }
 
@@ -1225,33 +1231,87 @@ function handleStumble(state: GameState, attacker: Player, target: Player, rng: 
 }
 
 /**
+ * Un Repoussé qui envoie la cible HORS du terrain la fait sortir avant
+ * tout Plaquage : le livre applique le Repoussé D'ABORD, puis plaque la
+ * cible « sur la case où elle se trouve à présent ». S'il n'y a plus de
+ * case, il n'y a pas de Plaquage — seule la Blessure par le Public
+ * s'applique.
+ *
+ * Sans ce test, `handlePow` / `handleStumble` roulaient l'armure et la
+ * blessure du blocage AVANT la poussée, puis `handlePushWithChoice`
+ * ajoutait la blessure par la foule : la cible encaissait DEUX jets de
+ * blessure et pouvait « mourir » deux fois sur un seul blocage.
+ */
+function willBePushedOffPitch(
+  state: GameState,
+  attacker: Player,
+  target: Player,
+): boolean {
+  // Stand Firm : la cible ne bouge pas, donc elle ne sort pas.
+  const currentTarget = state.players.find(p => p.id === target.id) ?? target;
+  if (isStandFirmActiveForBlock(state, attacker, currentTarget)) return false;
+
+  const directions = getPushDirections(attacker.pos, target.pos);
+  let hasOutOfBounds = false;
+  for (const dir of directions) {
+    const newPos = { x: target.pos.x + dir.x, y: target.pos.y + dir.y };
+    if (inBounds(state, newPos)) return false;
+    hasOutOfBounds = true;
+  }
+  return hasOutOfBounds;
+}
+
+/**
+ * Lâche le ballon de la cible sur la case qu'elle occupe APRÈS la
+ * poussée. Lire `target.pos` (capturé avant la poussée) laissait le
+ * ballon sur la case de départ alors que `applyChainPush` avait déjà
+ * fait suivre le porteur.
+ */
+function dropBallFromCurrentSquare(state: GameState, targetId: string): GameState {
+  const moved = state.players.find(p => p.id === targetId);
+  if (!moved || !moved.hasBall) return state;
+  return {
+    ...state,
+    players: state.players.map(p => (p.id === targetId ? { ...p, hasBall: false } : p)),
+    ball: { ...moved.pos },
+  };
+}
+
+/**
  * Gère le résultat POW
  */
 function handlePow(state: GameState, attacker: Player, target: Player, rng: RNG): GameState {
-  // La cible est repoussée puis mise au sol (le défenseur tombe, PAS un turnover)
+  // Défenseur Plaqué : on applique le Repoussé, PUIS la cible est plaquée
+  // sur la case où elle se trouve à présent (le défenseur tombe, PAS un
+  // turnover). Si la poussée la sort du terrain, il n'y a plus de case où
+  // la plaquer : seule la Blessure par le Public s'applique.
   state.players = state.players.map(p => (p.id === target.id ? { ...p, stunned: true } : p));
 
   // Log de la mise au sol
   const powLog = createLogEntry(
     'action',
-    `${target.name} est mis au sol par ${attacker.name} (POW!)`,
+    `${target.name} est mis au sol par ${attacker.name} (Défenseur Plaqué)`,
     attacker.id,
     attacker.team
   );
   state.gameLog = [...state.gameLog, powLog];
 
+  // APRES le passage a `stunned` : `handlePushWithChoice` evalue Stand Firm
+  // sur la cible deja tombee, la prediction doit voir le meme etat sous
+  // peine de diverger (et de reintroduire le double jet de blessure).
+  const surfs = willBePushedOffPitch(state, attacker, target);
+
   // Jet d'armure + blessure avec Mighty Blow
-  state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
+  if (!surfs) {
+    state = armorAndInjuryWithMightyBlow(state, target, attacker, rng);
+  }
 
   // Gérer la poussée avec choix de direction
-  const pushResult = handlePushWithChoice(state, attacker, target, 'POW', rng);
+  let pushResult = handlePushWithChoice(state, attacker, target, 'POW', rng);
 
-  // Si la cible avait le ballon, le perdre
+  // Si la cible avait le ballon, le perdre sur sa case d'arrivée
   if (target.hasBall) {
-    pushResult.players = pushResult.players.map(p =>
-      p.id === target.id ? { ...p, hasBall: false } : p
-    );
-    pushResult.ball = { ...target.pos };
+    pushResult = dropBallFromCurrentSquare(pushResult, target.id);
     // Note: bounceBall sera appelé par la fonction appelante
   }
 

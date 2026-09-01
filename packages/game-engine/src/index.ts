@@ -28,6 +28,16 @@ export * from './utils/team-value-calculator';
 export * from './mechanics/movement';
 export * from './mechanics/leap';
 export * from './actions/actions';
+// Table des faces du de de blocage (source unique)
+export {
+  BLOCK_DIE_FACES,
+  BLOCK_DIE_FACE_INFO,
+  blockResultNameFr,
+  blockResultNameEn,
+  blockResultDescriptionFr,
+  type BlockDieFaceInfo,
+} from './mechanics/block-dice-faces';
+
 // Export des fonctions de blocage (sans conflit)
 export {
   canBlock,

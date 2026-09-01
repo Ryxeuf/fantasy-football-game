@@ -1,5 +1,5 @@
 import React from "react";
-import type { GameLogEntry, BlockResult } from "@bb/game-engine";
+import { BLOCK_DIE_FACE_INFO, type GameLogEntry, type BlockResult } from "@bb/game-engine";
 import BlockDiceIcon from "./BlockDiceIcon";
 
 interface GameLogProps {
@@ -140,15 +140,9 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
                             className="border border-gray-300 rounded"
                           />
                           <span className="text-gray-600">
-                            {(entry as any).details.result === "PLAYER_DOWN" &&
-                              "Player Down!"}
-                            {(entry as any).details.result === "BOTH_DOWN" &&
-                              "Both Down"}
-                            {(entry as any).details.result === "PUSH_BACK" &&
-                              "Push Back"}
-                            {(entry as any).details.result === "STUMBLE" &&
-                              "Stumble"}
-                            {(entry as any).details.result === "POW" && "POW!"}
+                            {BLOCK_DIE_FACE_INFO[
+                              (entry as any).details.result as BlockResult
+                            ]?.nameFr ?? (entry as any).details.result}
                           </span>
                         </div>
                       )}

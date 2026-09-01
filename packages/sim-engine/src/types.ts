@@ -14,8 +14,14 @@ import type { PlayerMomentum } from './tactics/momentum';
 import type { TacticalProfile } from './tactics/tactical-profile';
 
 /** Identifies the package version that produced a SimResult. Used for replay
- *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5). */
-export const ENGINE_VER = '0.25.0';
+ *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
+ *
+ *  0.26.0 — le resolver de blocage consomme desormais `BLOCK_DIE_FACES` du
+ *  `@bb/game-engine` au lieu de sa propre table, qui placait STUMBLE en 5 et
+ *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
+ *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
+ *  le re-snapshot de `bench/bench-baseline.json`. */
+export const ENGINE_VER = '0.26.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */
