@@ -13,13 +13,20 @@
  *    access (competences), PSP suffisants. Append advancement,
  *    recalcule TV.
  *
- *    FINANCEMENT — tant que l'equipe est LIBRE (roster non fige), un
- *    avancement se paie EN PRIORITE sur le pool de PSP de construction
- *    de l'equipe (`Team.startingPspPool`), et seulement a defaut sur
- *    les SPP du joueur (nuls tant qu'il n'a pas joue). Le barème est
- *    alors celui du reglement de tournoi retenu a la creation, et ses
- *    restrictions s'appliquent. Une fois l'equipe engagee, on retombe
- *    sur le flux historique : SPP du joueur, barème standard.
+ *    FINANCEMENT — tant que l'equipe n'est pas ENTREE EN JEU
+ *    (`isTeamBuildLocked`), un avancement se paie EN PRIORITE sur le pool
+ *    de PSP de construction de l'equipe (`Team.startingPspPool`), et
+ *    seulement a defaut sur les SPP du joueur (nuls tant qu'il n'a pas
+ *    joue). Le barème est alors celui du reglement de tournoi retenu a la
+ *    creation, et ses restrictions s'appliquent. Une fois l'equipe entree
+ *    en jeu, on retombe sur le flux historique : SPP du joueur, barème
+ *    standard.
+ *
+ *    Le gel lu ici est `isTeamBuildLocked` et NON `isTeamRosterFrozen` :
+ *    ce dernier tombe des l'INSCRIPTION en ligue, si bien qu'un coach
+ *    inscrit ne pouvait plus rien acheter sur son pool alors qu'il peut
+ *    encore ANNULER ses achats (`removePlayerAdvancement`). Les deux sens
+ *    doivent s'ouvrir et se fermer ensemble.
  *
  *    ACCES COMPETENCES — les categories Principale/Secondaire, l'existence
  *    d'une competence et sa categorie sont lues EN BASE
@@ -68,7 +75,7 @@ import {
   type SkillCategoryCode,
 } from '../services/skill-access';
 import { resolveRandomPrimaryPool } from '../services/random-primary-pool';
-import { isTeamRosterFrozen } from '../services/team-lock-status';
+import { isTeamBuildLocked } from '../services/team-lock-status';
 import {
   advancementCostFor,
   assertTournamentAllowsAdvancement,
@@ -203,7 +210,7 @@ export async function handleUpdatePlayerSkills(
       startingPspPool?: number;
       tournamentRuleset?: string | null;
     };
-    const frozen = await isTeamRosterFrozen(teamId);
+    const frozen = await isTeamBuildLocked(teamId);
     const pack = frozen
       ? null
       : await packForTeam(teamRow.tournamentRuleset ?? null);

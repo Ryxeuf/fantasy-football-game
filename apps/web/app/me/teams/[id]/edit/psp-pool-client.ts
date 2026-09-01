@@ -9,14 +9,29 @@
 
 import { apiRequest } from "../../../../lib/api-client";
 
+/** Qui impose une valeur de construction (`null` = personne). */
+export type BuildSettingLock = "cup" | "tournament" | null;
+
 export interface TeamPspPoolState {
   readonly pool: number;
   readonly spent: number;
   readonly remaining: number;
-  /** Pool imposé par une coupe : non modifiable par le coach. */
+  /** Pool imposé (coupe ou règlement) : non modifiable par le coach. */
   readonly locked: boolean;
+  /**
+   * Champs ajoutés avec le verrouillage par règlement. Optionnels pour
+   * rétro-compat : le web peut se déployer avant le serveur, auquel cas on
+   * retombe sur `locked` seul et le budget n'est simplement pas proposé.
+   */
+  readonly lockedBy?: BuildSettingLock;
   /** Règlement de tournoi retenu à la création (null = barème standard). */
   readonly tournamentRuleset: string | null;
+  /** Budget d'or de construction, en kpo. */
+  readonly initialBudget?: number;
+  readonly budgetLocked?: boolean;
+  readonly budgetLockedBy?: BuildSettingLock;
+  /** L'équipe est entrée en jeu : plus aucun achat de construction. */
+  readonly buildLocked?: boolean;
 }
 
 export interface PlayerAdvancementView {
@@ -31,6 +46,10 @@ export interface PlayerAdvancementView {
 /** Borne haute du pool, miroir du builder et du schéma serveur. */
 export const MAX_STARTING_PSP_POOL = 200;
 
+/** Bornes du budget d'or, miroir du builder et du schéma serveur (kpo). */
+export const MIN_INITIAL_BUDGET_K = 100;
+export const MAX_INITIAL_BUDGET_K = 2000;
+
 export async function fetchPspPool(teamId: string): Promise<TeamPspPoolState> {
   return apiRequest<TeamPspPoolState>(`/team/${teamId}/psp-pool`);
 }
@@ -43,6 +62,23 @@ export async function savePspPool(
     method: "PUT",
     body: JSON.stringify({ startingPspPool }),
   });
+}
+
+export async function saveInitialBudget(
+  teamId: string,
+  initialBudget: number,
+): Promise<TeamPspPoolState> {
+  return apiRequest<TeamPspPoolState>(`/team/${teamId}/initial-budget`, {
+    method: "PUT",
+    body: JSON.stringify({ initialBudget }),
+  });
+}
+
+/** Libellé de la source d'un verrouillage, pour l'encart 🔒. */
+export function lockSourceLabel(by: BuildSettingLock | undefined): string {
+  return by === "tournament"
+    ? "son règlement de tournoi"
+    : "sa coupe";
 }
 
 export interface RemoveAdvancementResponse {

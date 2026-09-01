@@ -21,7 +21,9 @@ vi.mock("../prisma", () => ({
 
 vi.mock("../services/team-lock-status", () => ({
   isTeamRosterFrozen: vi.fn(async () => true),
+  isTeamBuildLocked: vi.fn(async () => true),
   TEAM_ENGAGED_MESSAGE: "Cette equipe est engagee",
+  TEAM_BUILD_LOCKED_MESSAGE: "Cette equipe est entree en jeu",
 }));
 
 vi.mock("../services/team-audit", () => ({
@@ -83,13 +85,17 @@ vi.mock("../utils/roster-helpers", () => ({
 
 import type { Response } from "express";
 import { prisma } from "../prisma";
-import { isTeamRosterFrozen } from "../services/team-lock-status";
+import {
+  isTeamBuildLocked,
+  isTeamRosterFrozen,
+} from "../services/team-lock-status";
 import { handleListAvailablePositions } from "./team-player-handlers";
 import { handleListTeamStarPlayers } from "./team-star-player-handlers";
 import { handlePutTeamInfo } from "./team-mutation-handlers";
 
 const mockPrisma = prisma as any;
 const mockedFrozen = vi.mocked(isTeamRosterFrozen);
+const mockedBuildLocked = vi.mocked(isTeamBuildLocked);
 
 const TEAM = {
   id: "team-1",
@@ -132,6 +138,7 @@ function fakeRes(): { res: Response; status: () => number | null; payload: () =>
 beforeEach(() => {
   vi.clearAllMocks();
   mockedFrozen.mockResolvedValue(true);
+  mockedBuildLocked.mockResolvedValue(false);
   mockPrisma.team.findFirst.mockResolvedValue({ ...TEAM });
   mockPrisma.teamSelection.findFirst.mockResolvedValue(null);
   mockPrisma.team.update.mockResolvedValue({ ...TEAM });
@@ -154,6 +161,8 @@ describe("liste des positions — GET /team/:id/available-positions", () => {
 
     expect(payload().data.frozen).toBe(false);
     expect(mockedFrozen).not.toHaveBeenCalled();
+    expect(payload().data.buildLocked).toBe(false);
+    expect(mockedBuildLocked).not.toHaveBeenCalled();
   });
 
   it("coach : reste contraint à ses équipes et subit le gel", async () => {
@@ -164,6 +173,17 @@ describe("liste des positions — GET /team/:id/available-positions", () => {
       expect.objectContaining({ where: { id: "team-1", ownerId: "admin-1" } }),
     );
     expect(payload().data.frozen).toBe(true);
+  });
+
+  it("coach : composition figée mais achats de construction encore ouverts", async () => {
+    // L'inscription en ligue fige la composition ; tant qu'aucune feuille de
+    // match n'est ouverte, les compétences achetées au build restent
+    // corrigibles. La page d'édition s'en sert pour ne PAS rediriger.
+    const { res, payload } = fakeRes();
+    await handleListAvailablePositions(reqAs(["user"]), res);
+
+    expect(payload().data.frozen).toBe(true);
+    expect(payload().data.buildLocked).toBe(false);
   });
 });
 

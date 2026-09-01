@@ -6,7 +6,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../prisma', () => ({
   prisma: {
-    team: { findFirst: vi.fn(), update: vi.fn() },
+    team: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     teamPlayer: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn(), findUnique: vi.fn() },
     cupParticipant: { findFirst: vi.fn() },
     // Le règlement de tournoi est résolu par le repository (base d'abord).
@@ -19,7 +19,13 @@ vi.mock('../prisma', () => ({
 }));
 
 vi.mock('./team-lock-status', () => ({
-  isTeamRosterFrozen: vi.fn(),
+  isTeamBuildLocked: vi.fn(),
+  TEAM_BUILD_LOCKED_MESSAGE: 'entree en jeu',
+}));
+
+vi.mock('./team-budget-summary', () => ({
+  buildTeamBudgetSummary: vi.fn(),
+  syncDraftTreasury: vi.fn(),
 }));
 
 vi.mock('../utils/team-values', () => ({
@@ -27,7 +33,11 @@ vi.mock('../utils/team-values', () => ({
 }));
 
 import { prisma } from '../prisma';
-import { isTeamRosterFrozen } from './team-lock-status';
+import { isTeamBuildLocked } from './team-lock-status';
+import {
+  buildTeamBudgetSummary,
+  syncDraftTreasury,
+} from './team-budget-summary';
 import {
   advancementCostFor,
   assertTournamentAllowsAdvancement,
@@ -35,24 +45,29 @@ import {
   getTeamPspPoolState,
   packForTeam,
   removePlayerAdvancement,
+  setInitialBudget,
   setStartingPspPool,
   TeamAdvancementError,
 } from './team-advancement-editing';
 
 const teamFindFirst = prisma.team.findFirst as unknown as ReturnType<typeof vi.fn>;
 const teamUpdate = prisma.team.update as unknown as ReturnType<typeof vi.fn>;
+const teamFindUnique = prisma.team.findUnique as unknown as ReturnType<typeof vi.fn>;
 const playerFindMany = prisma.teamPlayer.findMany as unknown as ReturnType<typeof vi.fn>;
 const playerFindFirst = prisma.teamPlayer.findFirst as unknown as ReturnType<typeof vi.fn>;
 const playerFindUnique = prisma.teamPlayer.findUnique as unknown as ReturnType<typeof vi.fn>;
 const playerUpdate = prisma.teamPlayer.update as unknown as ReturnType<typeof vi.fn>;
 const cupFindFirst = prisma.cupParticipant.findFirst as unknown as ReturnType<typeof vi.fn>;
 const skillFindMany = prisma.skill.findMany as unknown as ReturnType<typeof vi.fn>;
-const frozen = isTeamRosterFrozen as unknown as ReturnType<typeof vi.fn>;
+const frozen = isTeamBuildLocked as unknown as ReturnType<typeof vi.fn>;
+const budgetSummary = buildTeamBudgetSummary as unknown as ReturnType<typeof vi.fn>;
+const syncTreasury = syncDraftTreasury as unknown as ReturnType<typeof vi.fn>;
 
 const TEAM = {
   id: 'T1',
   roster: 'human',
   startingPspPool: 20,
+  initialBudget: 1000,
   tournamentRuleset: null as string | null,
 };
 
@@ -66,6 +81,9 @@ beforeEach(() => {
   teamUpdate.mockResolvedValue({});
   playerUpdate.mockResolvedValue({});
   playerFindUnique.mockResolvedValue({ id: 'P1' });
+  teamFindUnique.mockResolvedValue({ ...TEAM, players: [], starPlayers: [] });
+  budgetSummary.mockResolvedValue({ totalSpent: 0 });
+  syncTreasury.mockResolvedValue(0);
 });
 
 describe('getTeamPspPoolState', () => {
@@ -478,17 +496,32 @@ describe('fallbackPspCostForTeam — équipes construites avant `pspCost`', () =
     expect(state.spent).toBe(54);
   });
 
-  it('interdit de descendre le pool sous ce que le règlement a réellement facturé', async () => {
+  it("refuse tout réglage du pool : le règlement l'impose", async () => {
     teamFindFirst.mockResolvedValue(ogreTeam());
     playerFindMany.mockResolvedValue(OGRE_PICKS);
     eliteSkills('guard', 'block');
 
-    // 60 passait avant le correctif (54 « dépensés »), libérant un pool
-    // que les compétences déjà achetées avaient pourtant consommé.
+    // Le pool d'un tournoi officiel est publié par son règlement : le
+    // proposer réglable revenait à s'offrir des PSP hors barème.
     await expect(setStartingPspPool('T-OGRE', 'U1', 60)).rejects.toMatchObject({
-      code: 'pool-below-spent',
+      code: 'pool-locked',
     });
     expect(teamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("annonce le pool et le budget verrouillés par le règlement", async () => {
+    teamFindFirst.mockResolvedValue(ogreTeam());
+    playerFindMany.mockResolvedValue(OGRE_PICKS);
+    eliteSkills('guard', 'block');
+
+    const state = await getTeamPspPoolState('T-OGRE', 'U1');
+
+    expect(state).toMatchObject({
+      locked: true,
+      lockedBy: 'tournament',
+      budgetLocked: true,
+      budgetLockedBy: 'tournament',
+    });
   });
 
   it('préfère le coût persisté au barème de repli', async () => {
@@ -576,5 +609,108 @@ describe('advancementCostFor — surcoût Élite du règlement', () => {
     const pack = await packForTeam('naf_world_cup_2027');
     // Un règlement n'a de barème que pour les compétences au choix.
     expect(advancementCostFor(pack, 0, 'characteristic')).toBe(14);
+  });
+});
+
+
+/**
+ * Gel « entrée en jeu » vs bypass admin.
+ *
+ * Bug corrigé : `/available-positions` annonçait le roster déverrouillé à un
+ * admin (bypass) tandis que ces deux endpoints appelaient le gel en direct.
+ * La console ouvrait donc la page puis rendait 409 au premier clic.
+ */
+describe('bypass admin', () => {
+  beforeEach(() => {
+    teamFindFirst.mockResolvedValue({ ...TEAM });
+    frozen.mockResolvedValue(true);
+  });
+
+  it('règle le pool malgré le gel et lit hors périmètre propriétaire', async () => {
+    await setStartingPspPool('T1', 'ADMIN', 30, { isAdmin: true });
+    expect(teamUpdate).toHaveBeenCalledWith({
+      where: { id: 'T1' },
+      data: { startingPspPool: 30 },
+    });
+    // `ownerId` retiré du filtre : un admin agit sur n'importe quelle équipe.
+    expect(teamFindFirst.mock.calls[0][0].where).toEqual({
+      id: 'T1',
+      deletedAt: null,
+    });
+  });
+
+  it('annule une amélioration malgré le gel', async () => {
+    playerFindFirst.mockResolvedValue({
+      id: 'P1',
+      skills: 'block,dodge',
+      advancements: JSON.stringify([
+        { type: 'primary', skillSlug: 'dodge', pspCost: 6, fundedBy: 'pool' },
+      ]),
+      spp: 0,
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+    });
+    const res = await removePlayerAdvancement({
+      teamId: 'T1',
+      ownerId: 'ADMIN',
+      playerId: 'P1',
+      index: 0,
+      isAdmin: true,
+    });
+    expect(res.refunded).toBe(6);
+  });
+});
+
+describe('setInitialBudget', () => {
+  beforeEach(() => {
+    teamFindFirst.mockResolvedValue({ ...TEAM });
+    frozen.mockResolvedValue(false);
+  });
+
+  it('enregistre le budget et resynchronise la trésorerie du brouillon', async () => {
+    const state = await setInitialBudget('T1', 'U1', 1200);
+    expect(teamUpdate).toHaveBeenCalledWith({
+      where: { id: 'T1' },
+      data: { initialBudget: 1200 },
+    });
+    // Le reliquat EST la trésorerie d'une équipe en brouillon : sans ce
+    // recalcul, remonter le budget n'aurait crédité personne.
+    expect(syncTreasury).toHaveBeenCalled();
+    expect(state.initialBudget).toBe(1000); // relu depuis le mock de lecture
+  });
+
+  it('refuse un budget hors bornes', async () => {
+    await expect(setInitialBudget('T1', 'U1', 99)).rejects.toMatchObject({
+      code: 'budget-out-of-range',
+    });
+    await expect(setInitialBudget('T1', 'U1', 2001)).rejects.toMatchObject({
+      code: 'budget-out-of-range',
+    });
+    expect(teamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("refuse de descendre sous l'or déjà engagé", async () => {
+    budgetSummary.mockResolvedValue({ totalSpent: 950_000 });
+    await expect(setInitialBudget('T1', 'U1', 900)).rejects.toMatchObject({
+      code: 'budget-below-spent',
+    });
+    expect(teamUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuse un budget imposé par une coupe', async () => {
+    cupFindFirst.mockResolvedValue({ id: 'CP1' });
+    await expect(setInitialBudget('T1', 'U1', 1200)).rejects.toMatchObject({
+      code: 'budget-locked',
+    });
+  });
+
+  it('refuse une équipe entrée en jeu', async () => {
+    frozen.mockResolvedValue(true);
+    await expect(setInitialBudget('T1', 'U1', 1200)).rejects.toMatchObject({
+      code: 'team-frozen',
+    });
   });
 });

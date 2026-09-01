@@ -22,7 +22,7 @@ vi.mock('../prisma', () => ({
 }));
 
 vi.mock('../services/team-lock-status', () => ({
-  isTeamRosterFrozen: vi.fn(),
+  isTeamBuildLocked: vi.fn(),
 }));
 
 vi.mock('../utils/team-values', () => ({
@@ -34,7 +34,7 @@ vi.mock('../utils/server-log', () => ({
 }));
 
 import { prisma } from '../prisma';
-import { isTeamRosterFrozen } from '../services/team-lock-status';
+import { isTeamBuildLocked } from '../services/team-lock-status';
 import { handleUpdatePlayerSkills } from './team-player-skills-handler';
 import type { AuthenticatedRequest } from '../middleware/authUser';
 
@@ -52,7 +52,7 @@ const p = prisma as unknown as {
     findUnique: ReturnType<typeof vi.fn>;
   };
 };
-const frozen = isTeamRosterFrozen as unknown as ReturnType<typeof vi.fn>;
+const frozen = isTeamBuildLocked as unknown as ReturnType<typeof vi.fn>;
 
 function createRes() {
   const res: Partial<Response> & { statusCode?: number; payload?: any } = {};
@@ -186,7 +186,10 @@ describe('financement pool-first', () => {
     });
   });
 
-  it('ignore le pool quand l’équipe est engagée (roster figé)', async () => {
+  it('ignore le pool quand l’équipe est entrée en jeu', async () => {
+    // Le gel lu est `isTeamBuildLocked` : une simple inscription en ligue
+    // n'y suffit plus, sinon le coach pourrait encore ANNULER un achat sans
+    // pouvoir en refaire un.
     frozen.mockResolvedValue(true);
     p.team.findFirst.mockResolvedValue(
       team({

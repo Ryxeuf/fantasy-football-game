@@ -12,6 +12,13 @@
  * Les paires obligatoires sont gérées côté serveur (le partenaire est
  * recruté / retiré avec son binôme) : on se contente de recharger l'état
  * après chaque mutation.
+ *
+ * Le bloc est REPLIABLE : le catalogue fait plusieurs écrans à lui seul et
+ * s'intercalait entre le résumé budgétaire et l'effectif, que le coach vient
+ * justement comparer. L'en-tête garde l'essentiel visible une fois replié
+ * (combien de recrues, pour combien d'or) et le choix est mémorisé PAR
+ * ÉQUIPE dans `localStorage` — un coach qui replie ne veut pas le refaire à
+ * chaque retour sur la fiche.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -33,6 +40,11 @@ interface AvailabilityResponse {
   readonly maxPlayers: number;
   /** Budget restant, en K po. */
   readonly availableBudget: number;
+}
+
+/** Clé de mémorisation du repli, par équipe. */
+function collapseKey(teamId: string): string {
+  return `team_star_players_collapsed:${teamId}`;
 }
 
 interface TeamStarPlayersEditorProps {
@@ -62,6 +74,29 @@ export default function TeamStarPlayersEditor({
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Déplié par défaut (comportement historique). La préférence est lue dans
+  // un effet, pas dans l'initialiseur : `localStorage` n'existe pas au SSR.
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem(collapseKey(teamId)) === "1");
+    } catch {
+      // Stockage indisponible (navigation privée) : on reste déplié.
+    }
+  }, [teamId]);
+
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(collapseKey(teamId), next ? "1" : "0");
+      } catch {
+        // Sans stockage, le repli vaut pour la session en cours.
+      }
+      return next;
+    });
+  }, [teamId]);
 
   const reload = useCallback(async () => {
     const [hiredRes, availRes] = await Promise.all([
@@ -143,27 +178,54 @@ export default function TeamStarPlayersEditor({
   const budgetForSelector = availability.availableBudget * 1000 + hiredCostPo;
 
   return (
-    <div data-testid="team-star-players-editor" className="space-y-2">
-      {error && (
-        <p
-          data-testid="team-star-players-error"
-          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-        >
-          {error}
-        </p>
+    <div
+      data-testid="team-star-players-editor"
+      className="overflow-hidden rounded-xl border border-gray-200 bg-white"
+    >
+      <button
+        type="button"
+        data-testid="team-star-players-toggle"
+        aria-expanded={!collapsed}
+        aria-controls="team-star-players-body"
+        onClick={toggleCollapsed}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50"
+      >
+        <span className="font-semibold text-gray-900">⭐ Star Players</span>
+        <span className="flex items-center gap-2 text-xs text-gray-600">
+          <span data-testid="team-star-players-summary">
+            {hired.length} recruté{hired.length > 1 ? "s" : ""} ·{" "}
+            {Math.round(hiredCostPo / 1000)}k po
+          </span>
+          <span aria-hidden="true" className="text-base leading-none">
+            {collapsed ? "▸" : "▾"}
+          </span>
+        </span>
+      </button>
+
+      {!collapsed && (
+        <div id="team-star-players-body" className="space-y-2 px-4 pb-4">
+          {error && (
+            <p
+              data-testid="team-star-players-error"
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            >
+              {error}
+            </p>
+          )}
+          <StarPlayerSelector
+            roster={roster}
+            ruleset={ruleset}
+            regionalLeague={regionalLeague}
+            selectedStarPlayers={hired.map((sp) => sp.slug)}
+            onSelectionChange={(next) => void applySelection(next)}
+            currentPlayerCount={availability.currentPlayerCount}
+            availableBudget={Math.max(0, budgetForSelector)}
+            excludedSlugs={excludedSlugs}
+            maxTotalPlayers={availability.maxPlayers}
+            disabled={disabled || busy}
+          />
+        </div>
       )}
-      <StarPlayerSelector
-        roster={roster}
-        ruleset={ruleset}
-        regionalLeague={regionalLeague}
-        selectedStarPlayers={hired.map((sp) => sp.slug)}
-        onSelectionChange={(next) => void applySelection(next)}
-        currentPlayerCount={availability.currentPlayerCount}
-        availableBudget={Math.max(0, budgetForSelector)}
-        excludedSlugs={excludedSlugs}
-        maxTotalPlayers={availability.maxPlayers}
-        disabled={disabled || busy}
-      />
     </div>
   );
 }

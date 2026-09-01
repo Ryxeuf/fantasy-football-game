@@ -9,10 +9,15 @@
  * compétence devait recréer son équipe.
  *
  * Règles portées ici :
- *  - l'équipe doit être libre (`isTeamRosterFrozen` faux) : dès qu'elle est
- *    engagée en ligue, coupe ou match, son roster est figé ;
- *  - le pool ne peut pas descendre sous ce qui est déjà dépensé, ni être
- *    touché quand une coupe l'a imposé ;
+ *  - l'équipe ne doit pas être ENTRÉE EN JEU (`isTeamBuildLocked` faux). Le
+ *    gel de composition (`isTeamRosterFrozen`) tombe dès l'inscription à une
+ *    ligue : s'en servir ici condamnait un coach inscrit des semaines avant
+ *    le premier match à recréer son équipe pour défaire un achat. C'est
+ *    l'ouverture d'une feuille de match (ou l'entrée en jeu) qui fige ;
+ *  - le pool ne peut pas descendre sous ce qui est déjà dépensé, et NI le
+ *    pool NI le budget d'or ne se règlent quand une coupe ou un règlement de
+ *    tournoi publie leur valeur : les afficher modifiables laissait croire
+ *    qu'on pouvait s'offrir des PSP hors barème d'un tournoi officiel ;
  *  - le barème PSP est celui du **règlement de tournoi** de l'équipe quand
  *    elle en a un, sinon le barème standard BB2025 ;
  *  - une amélioration annulée rend ses PSP à sa source de financement et
@@ -40,8 +45,15 @@ import {
 } from '@bb/game-engine';
 import { getTournamentRulesetDefinition } from './tournament-ruleset-repository';
 import { getEliteSkillSlugs } from './elite-skills';
-import { isTeamRosterFrozen } from './team-lock-status';
+import {
+  isTeamBuildLocked,
+  TEAM_BUILD_LOCKED_MESSAGE,
+} from './team-lock-status';
 import { updateTeamValues } from '../utils/team-values';
+import {
+  buildTeamBudgetSummary,
+  syncDraftTreasury,
+} from './team-budget-summary';
 import {
   captureTeamState,
   safeRecordTeamAudit,
@@ -59,6 +71,9 @@ export type TeamAdvancementErrorCode =
   | 'pool-out-of-range'
   | 'player-not-found'
   | 'advancement-not-found'
+  | 'budget-locked'
+  | 'budget-below-spent'
+  | 'budget-out-of-range'
   | 'tournament-rules';
 
 /** Erreur typée : la route mappe le `code` vers un status HTTP. */
@@ -73,33 +88,74 @@ export class TeamAdvancementError extends Error {
   }
 }
 
-/** État du pool de PSP de construction d'une équipe. */
+/**
+ * Qui impose une valeur de construction. `null` = personne, le coach la règle.
+ *
+ * Deux sources seulement, et elles ne se cumulent pas dans l'affichage : la
+ * coupe (qui accorde un pool de départ) et le règlement de tournoi (qui
+ * publie un budget d'or ET un budget de compétences par roster).
+ */
+export type BuildSettingLock = 'cup' | 'tournament' | null;
+
+/** État du pool de PSP et du budget de construction d'une équipe. */
 export interface TeamPspPoolState {
   readonly pool: number;
   readonly spent: number;
   readonly remaining: number;
-  /** Le pool est imposé par une coupe : non modifiable par le coach. */
+  /** Le pool est imposé (coupe ou règlement) : non modifiable par le coach. */
   readonly locked: boolean;
+  readonly lockedBy: BuildSettingLock;
   /** Slug du règlement de tournoi de l'équipe (null = barème standard). */
   readonly tournamentRuleset: string | null;
+  /** Budget de construction, en kpo (`Team.initialBudget`). */
+  readonly initialBudget: number;
+  /** Le budget d'or est imposé (coupe ou règlement). */
+  readonly budgetLocked: boolean;
+  readonly budgetLockedBy: BuildSettingLock;
+  /**
+   * L'équipe est ENTRÉE EN JEU : plus aucun achat de construction, quelles
+   * que soient les deux serrures ci-dessus. Relatif à l'appelant (un admin
+   * le voit toujours à `false`, comme `frozen` sur `/available-positions`).
+   */
+  readonly buildLocked: boolean;
 }
+
+/** Bornes du budget de construction réglable à la main (miroir du builder). */
+export const MIN_INITIAL_BUDGET_K = 100;
+export const MAX_INITIAL_BUDGET_K = 2000;
 
 interface TeamRow {
   readonly id: string;
   readonly roster: string;
   readonly ruleset: string | null;
   readonly startingPspPool: number;
+  readonly initialBudget: number;
   readonly tournamentRuleset: string | null;
 }
 
-async function loadOwnedTeam(teamId: string, ownerId: string): Promise<TeamRow> {
+/**
+ * Qui édite. `isAdmin` reprend la posture de `services/team-edit-access` :
+ * un admin agit sur n'importe quelle équipe et n'est pas soumis au gel.
+ */
+export interface AdvancementEditingOptions {
+  readonly isAdmin?: boolean;
+}
+
+async function loadOwnedTeam(
+  teamId: string,
+  ownerId: string,
+  isAdmin = false,
+): Promise<TeamRow> {
   const team = await prisma.team.findFirst({
-    where: { id: teamId, ownerId, deletedAt: null },
+    where: isAdmin
+      ? { id: teamId, deletedAt: null }
+      : { id: teamId, ownerId, deletedAt: null },
     select: {
       id: true,
       roster: true,
       ruleset: true,
       startingPspPool: true,
+      initialBudget: true,
       tournamentRuleset: true,
     },
   });
@@ -156,10 +212,10 @@ export async function poolSpentForTeamId(
 }
 
 /**
- * Le pool est-il verrouillé ? Une coupe qui accorde des PSP de départ fige
- * la valeur : le coach ne doit pas pouvoir se la ré-attribuer à volonté.
+ * Une coupe accorde-t-elle son pool de départ à cette équipe ? Elle fige
+ * alors pool ET budget : le coach ne doit pas pouvoir se les ré-attribuer.
  */
-async function isPoolLocked(teamId: string): Promise<boolean> {
+async function isCupParticipant(teamId: string): Promise<boolean> {
   const participation = await prisma.cupParticipant.findFirst({
     where: { teamId },
     select: { id: true },
@@ -167,22 +223,61 @@ async function isPoolLocked(teamId: string): Promise<boolean> {
   return Boolean(participation);
 }
 
-/** État courant du pool, pour l'affichage de l'éditeur. */
+/**
+ * Le règlement de tournoi de l'équipe publie-t-il un budget d'or ET un
+ * budget de compétences POUR SON ROSTER ?
+ *
+ * `TournamentRosterRules` déclare les deux d'un bloc (`goldBudget`,
+ * `sppBudget`) : un règlement qui accepte le roster impose donc les deux.
+ * Un roster absent de `rosterRules` est interdit par le règlement — il ne
+ * lui impose rien, la construction retombe sur les valeurs libres.
+ */
+async function isImposedByTournament(team: TeamRow): Promise<boolean> {
+  const pack = await packForTeam(team.tournamentRuleset);
+  if (!pack) return false;
+  return Boolean(getTournamentRosterRules(pack, team.roster));
+}
+
+/** Qui impose les valeurs de construction de cette équipe (coupe > règlement). */
+async function resolveBuildLock(team: TeamRow): Promise<BuildSettingLock> {
+  if (await isCupParticipant(team.id)) return 'cup';
+  if (await isImposedByTournament(team)) return 'tournament';
+  return null;
+}
+
+/** Message de refus quand une valeur de construction est imposée. */
+function lockedMessage(by: Exclude<BuildSettingLock, null>, what: string): string {
+  return by === 'cup'
+    ? `${what} de cette équipe est imposé par une coupe`
+    : `${what} de cette équipe est imposé par son règlement de tournoi`;
+}
+
+/** État courant du pool et du budget, pour l'affichage de l'éditeur. */
 export async function getTeamPspPoolState(
   teamId: string,
   ownerId: string,
+  options: AdvancementEditingOptions = {},
 ): Promise<TeamPspPoolState> {
-  const team = await loadOwnedTeam(teamId, ownerId);
-  const spent = await poolSpentForTeamId(
-    teamId,
-    await fallbackPspCostForTeam(team.tournamentRuleset, team.ruleset),
-  );
+  const team = await loadOwnedTeam(teamId, ownerId, options.isAdmin);
+  const [spent, lockedBy, buildLocked] = await Promise.all([
+    poolSpentForTeamId(
+      teamId,
+      await fallbackPspCostForTeam(team.tournamentRuleset, team.ruleset),
+    ),
+    resolveBuildLock(team),
+    options.isAdmin ? Promise.resolve(false) : isTeamBuildLocked(teamId),
+  ]);
   return {
     pool: team.startingPspPool,
     spent,
     remaining: Math.max(0, team.startingPspPool - spent),
-    locked: await isPoolLocked(teamId),
+    locked: lockedBy !== null,
+    lockedBy,
     tournamentRuleset: team.tournamentRuleset,
+    initialBudget: team.initialBudget,
+    budgetLocked: lockedBy !== null,
+    budgetLockedBy: lockedBy,
+    buildLocked,
   };
 }
 
@@ -194,8 +289,9 @@ export async function setStartingPspPool(
   teamId: string,
   ownerId: string,
   pool: number,
+  options: AdvancementEditingOptions = {},
 ): Promise<TeamPspPoolState> {
-  const team = await loadOwnedTeam(teamId, ownerId);
+  const team = await loadOwnedTeam(teamId, ownerId, options.isAdmin);
 
   if (!Number.isInteger(pool) || pool < 0 || pool > MAX_STARTING_PSP_POOL) {
     throw new TeamAdvancementError(
@@ -203,16 +299,14 @@ export async function setStartingPspPool(
       `Le pool de PSP doit être un entier entre 0 et ${MAX_STARTING_PSP_POOL}`,
     );
   }
-  if (await isTeamRosterFrozen(teamId)) {
-    throw new TeamAdvancementError(
-      'team-frozen',
-      "Cette équipe est engagée en compétition : son pool de PSP est figé",
-    );
+  if (!options.isAdmin && (await isTeamBuildLocked(teamId))) {
+    throw new TeamAdvancementError('team-frozen', TEAM_BUILD_LOCKED_MESSAGE);
   }
-  if (await isPoolLocked(teamId)) {
+  const lockedBy = await resolveBuildLock(team);
+  if (lockedBy) {
     throw new TeamAdvancementError(
       'pool-locked',
-      'Le pool de PSP de cette équipe est imposé par une coupe',
+      lockedMessage(lockedBy, 'Le pool de PSP'),
     );
   }
 
@@ -248,8 +342,104 @@ export async function setStartingPspPool(
     spent,
     remaining: pool - spent,
     locked: false,
+    lockedBy: null,
     tournamentRuleset: team.tournamentRuleset,
+    initialBudget: team.initialBudget,
+    budgetLocked: false,
+    budgetLockedBy: null,
+    buildLocked: false,
   };
+}
+
+/**
+ * Règle le budget d'or de construction (`Team.initialBudget`, en kpo).
+ *
+ * Même posture que le pool : réglable tant que personne ne l'impose, figé dès
+ * qu'une coupe ou un règlement de tournoi publie sa valeur. Refuse de
+ * descendre sous ce qui est déjà engagé (joueurs + staff + Star Players) —
+ * `PUT /team/:id/roster` refuserait de toute façon la sauvegarde suivante, et
+ * l'équipe se retrouverait coincée en « budget dépassé ».
+ */
+export async function setInitialBudget(
+  teamId: string,
+  ownerId: string,
+  budgetK: number,
+  options: AdvancementEditingOptions = {},
+): Promise<TeamPspPoolState> {
+  const team = await loadOwnedTeam(teamId, ownerId, options.isAdmin);
+
+  if (
+    !Number.isInteger(budgetK) ||
+    budgetK < MIN_INITIAL_BUDGET_K ||
+    budgetK > MAX_INITIAL_BUDGET_K
+  ) {
+    throw new TeamAdvancementError(
+      'budget-out-of-range',
+      `Le budget doit être un entier entre ${MIN_INITIAL_BUDGET_K} et ${MAX_INITIAL_BUDGET_K} kpo`,
+    );
+  }
+  if (!options.isAdmin && (await isTeamBuildLocked(teamId))) {
+    throw new TeamAdvancementError('team-frozen', TEAM_BUILD_LOCKED_MESSAGE);
+  }
+  const lockedBy = await resolveBuildLock(team);
+  if (lockedBy) {
+    throw new TeamAdvancementError(
+      'budget-locked',
+      lockedMessage(lockedBy, "Le budget d'or"),
+    );
+  }
+
+  const spentPo = await committedGoldForTeam(teamId);
+  if (budgetK * 1000 < spentPo) {
+    const spentK = Math.ceil(spentPo / 1000);
+    throw new TeamAdvancementError(
+      'budget-below-spent',
+      `${spentK}k po sont déjà engagés : retire des joueurs ou du staff avant de descendre le budget à ${budgetK}k`,
+      { spentK, requested: budgetK },
+    );
+  }
+
+  const auditDb = prisma as unknown as TeamAuditPrismaLike;
+  const before = await captureTeamState(auditDb, teamId);
+
+  await prisma.team.update({
+    where: { id: teamId },
+    data: { initialBudget: budgetK },
+  });
+
+  await safeRecordTeamAudit(auditDb, {
+    teamId,
+    action: 'team.budget.update',
+    before,
+    details: { initialBudget: budgetK, committed: spentPo },
+  });
+
+  // Le reliquat du budget est la trésorerie d'une équipe en brouillon : sans
+  // ce recalcul, remonter le budget n'aurait crédité personne.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await syncDraftTreasury(prisma as any, teamId);
+
+  return getTeamPspPoolState(teamId, ownerId, options);
+}
+
+/** Or déjà engagé (embauches + staff + Star Players), en po. */
+async function committedGoldForTeam(teamId: string): Promise<number> {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: { players: true, starPlayers: true },
+  });
+  if (!team) return 0;
+  const summary = await buildTeamBudgetSummary(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prisma as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    team as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (team as any).players,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (team as any).starPlayers,
+  );
+  return summary.totalSpent;
 }
 
 /**
@@ -395,15 +585,13 @@ export async function removePlayerAdvancement(params: {
   readonly ownerId: string;
   readonly playerId: string;
   readonly index: number;
+  readonly isAdmin?: boolean;
 }): Promise<RemoveAdvancementResult> {
-  const { teamId, ownerId, playerId, index } = params;
-  await loadOwnedTeam(teamId, ownerId);
+  const { teamId, ownerId, playerId, index, isAdmin = false } = params;
+  await loadOwnedTeam(teamId, ownerId, isAdmin);
 
-  if (await isTeamRosterFrozen(teamId)) {
-    throw new TeamAdvancementError(
-      'team-frozen',
-      "Cette équipe est engagée en compétition : ses joueurs sont figés",
-    );
+  if (!isAdmin && (await isTeamBuildLocked(teamId))) {
+    throw new TeamAdvancementError('team-frozen', TEAM_BUILD_LOCKED_MESSAGE);
   }
 
   const player = await prisma.teamPlayer.findFirst({

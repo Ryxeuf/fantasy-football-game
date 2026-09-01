@@ -50,6 +50,7 @@ import PlayerAdvancements from "./PlayerAdvancements";
 import PlayerStatusTags from "./PlayerStatusTags";
 import TeamStarPlayersEditor from "./TeamStarPlayersEditor";
 import { rosterDraftSignature } from "./roster-draft";
+import { resolveEditAccess } from "./edit-access";
 import { useUnsavedChanges } from "../../../../hooks/useUnsavedChanges";
 import {
   fetchPspPool,
@@ -169,10 +170,14 @@ export default function TeamEditPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [availablePositions, setAvailablePositions] = useState<AvailablePosition[]>([]);
-  // Roster fige (equipe engagee dans un match/competition) => plancher de 11
-  // joueurs applique. Tant qu'il est en brouillon, on peut descendre sous 11
-  // pour remanier. Defaut `true` par prudence avant le 1er chargement.
-  const [frozen, setFrozen] = useState<boolean>(true);
+  // Les DEUX gels servis par `/available-positions` : `frozen` (composition,
+  // dès l'inscription) et `buildLocked` (achats de construction, seulement à
+  // l'entrée en jeu). `null` avant le 1er chargement — `resolveEditAccess`
+  // retombe alors sur le comportement le plus fermé.
+  const [locks, setLocks] = useState<{
+    frozen?: boolean;
+    buildLocked?: boolean;
+  } | null>(null);
   // Staff en cours d'edition remonte par `TeamInfoEditor` : le resume
   // budgetaire suit les modifications avant meme leur sauvegarde.
   const [staffDraft, setStaffDraft] = useState<StaffCounts | null>(null);
@@ -260,9 +265,11 @@ export default function TeamEditPage() {
         const [me, d, positionsData, pool] = await Promise.all([
           fetchJSON("/auth/me"),
           apiRequest<any>(`/team/${id}`),
-          apiRequest<{ availablePositions: AvailablePosition[]; frozen?: boolean }>(
-            `/team/${id}/available-positions`,
-          ),
+          apiRequest<{
+            availablePositions: AvailablePosition[];
+            frozen?: boolean;
+            buildLocked?: boolean;
+          }>(`/team/${id}/available-positions`),
           // Non bloquant : sans le pool, l'édition retombe sur les SPP joueur.
           fetchPspPool(id).catch(() => null),
         ]);
@@ -279,7 +286,10 @@ export default function TeamEditPage() {
           rosterDraftSignature(d.team?.name || "", d.team?.players || []),
         );
         setAvailablePositions(positionsData.availablePositions || []);
-        setFrozen(positionsData.frozen ?? true);
+        setLocks({
+          frozen: positionsData.frozen,
+          buildLocked: positionsData.buildLocked,
+        });
         setPspPool(pool);
 
         // Catalogue de compétences DB-backed, filtré par le ruleset réel de
@@ -373,14 +383,17 @@ export default function TeamEditPage() {
   );
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
 
-  // Rediriger si l'équipe ne peut pas être modifiée (match en cours) OU si
-  // elle est engagée (frozen) : une équipe engagée n'est jamais éditable ici,
-  // on redirige vers sa fiche détail.
+  // Redirection et lecture seule : la règle vit dans `resolveEditAccess`
+  // (pure, testée) pour que les deux gels ne se confondent plus.
+  const { redirect, rosterLocked } = resolveEditAccess({
+    canEdit,
+    ...(locks ?? {}),
+  });
   useEffect(() => {
-    if (!loading && (!canEdit || frozen)) {
+    if (!loading && redirect) {
       router.push(`/me/teams/${id}`);
     }
-  }, [loading, canEdit, frozen, id, router]);
+  }, [loading, redirect, id, router]);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -545,8 +558,8 @@ export default function TeamEditPage() {
     );
   }
 
-  if (!canEdit || frozen) {
-    return null; // Redirection en cours (match en cours ou équipe engagée)
+  if (redirect) {
+    return null; // Redirection en cours (match en cours ou équipe en jeu)
   }
 
   // Compétences Élite du catalogue (/api/skills) : +10k po de surcoût VE
@@ -630,6 +643,25 @@ export default function TeamEditPage() {
 
   return (
     <div className="w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Équipe engagée mais pas encore entrée en jeu : dire CE QUI reste
+          modifiable, sinon la page ressemble à un bug (tout est grisé). */}
+      {rosterLocked && (
+        <div
+          data-testid="edit-roster-locked-banner"
+          className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+        >
+          <div className="font-semibold">
+            🔒 Équipe engagée : sa composition est figée
+          </div>
+          <p className="mt-1">
+            Effectif, staff, Star Players, budget d&apos;or et nom de
+            l&apos;équipe ne changent plus. Les compétences achetées sur le
+            pool de PSP restent modifiables tant qu&apos;aucune feuille de
+            match n&apos;est ouverte pour cette équipe.
+          </p>
+        </div>
+      )}
+
       {/* Header avec actions */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div className="flex-1">
@@ -642,6 +674,7 @@ export default function TeamEditPage() {
             <input
               type="text"
               value={teamName}
+              disabled={rosterLocked}
               onChange={(e) => {
                 setTeamName(e.target.value);
                 if (validationErrors["teamName"]) {
@@ -650,7 +683,7 @@ export default function TeamEditPage() {
                   setValidationErrors(newErrors);
                 }
               }}
-              className={`w-full max-w-md px-3 py-2 border rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+              className={`w-full max-w-md px-3 py-2 border rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 ${
                 validationErrors["teamName"] ? "border-red-500" : "border-gray-300"
               }`}
               placeholder="Nom de l'équipe"
@@ -677,7 +710,13 @@ export default function TeamEditPage() {
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             onClick={handleSave}
-            disabled={saving}
+            data-testid="save-roster"
+            disabled={saving || rosterLocked}
+            title={
+              rosterLocked
+                ? "Équipe engagée : sa composition ne peut plus changer"
+                : undefined
+            }
             aria-busy={saving}
             className="px-4 sm:px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium text-sm sm:text-base inline-flex items-center justify-center gap-2"
           >
@@ -769,12 +808,27 @@ export default function TeamEditPage() {
         )}
       </div>
 
-      {/* Édition avancée : pool de PSP de construction (équipe libre). */}
+      {/* Édition avancée : budget d'or + pool de PSP de construction. */}
       {team && pspPool && (
         <PspPoolPanel
           teamId={id}
           state={pspPool}
-          onChange={setPspPool}
+          onChange={(next) => {
+            setPspPool(next);
+            // Le « Résumé budgétaire » ci-dessus lit `team.initialBudget` :
+            // sans cette recopie, régler le budget laissait le bandeau
+            // annoncer l'ancien plafond (et un « Restant » faux).
+            if (typeof next.initialBudget === "number") {
+              setData((prev: any) =>
+                prev
+                  ? {
+                      ...prev,
+                      team: { ...prev.team, initialBudget: next.initialBudget },
+                    }
+                  : prev,
+              );
+            }
+          }}
           tournamentLabel={pack?.nameFr ?? null}
           disabled={!canEdit}
         />
@@ -797,7 +851,9 @@ export default function TeamEditPage() {
             ruleset={team.ruleset}
             regionalLeague={team.regionalLeague ?? null}
             excludedSlugs={pack?.bannedStarPlayers}
-            disabled={!canEdit}
+            // Un recrutement engage le budget d'or : refusé serveur dès que
+            // la composition est figée.
+            disabled={!canEdit || rosterLocked}
             onChanged={() => {
               // Le recrutement bouge budget et VE : on relit la fiche.
               apiRequest<any>(`/team/${id}`)
@@ -852,12 +908,15 @@ export default function TeamEditPage() {
                 setNewPlayerForm({ position: '', name: '', number: nextNumber });
                 setShowAddPlayerForm(true);
               }}
-              disabled={players.length >= constraints.maxPlayers}
+              data-testid="add-player"
+              disabled={rosterLocked || players.length >= constraints.maxPlayers}
               className="px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium shadow-md hover:shadow-lg disabled:shadow-none whitespace-nowrap"
               title={
-                players.length >= constraints.maxPlayers
-                  ? `Maximum ${constraints.maxPlayers} joueurs par équipe`
-                  : "Ajouter un nouveau joueur"
+                rosterLocked
+                  ? "Équipe engagée : sa composition ne peut plus changer"
+                  : players.length >= constraints.maxPlayers
+                    ? `Maximum ${constraints.maxPlayers} joueurs par équipe`
+                    : "Ajouter un nouveau joueur"
               }
             >
               ➕ Ajouter un joueur ({players.length}/{constraints.maxPlayers})
@@ -905,8 +964,9 @@ export default function TeamEditPage() {
                         min="1"
                         max="99"
                         value={player.number}
+                        disabled={rosterLocked}
                         onChange={(e) => handlePlayerChange(index, "number", parseInt(e.target.value) || 0)}
-                        className={`w-16 px-2 py-1.5 border rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-16 px-2 py-1.5 border rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 ${
                           validationErrors[`number_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300"
                         }`}
                       />
@@ -920,8 +980,9 @@ export default function TeamEditPage() {
                       <input
                         type="text"
                         value={player.name}
+                        disabled={rosterLocked}
                         onChange={(e) => handlePlayerChange(index, "name", e.target.value)}
-                        className={`px-3 py-1.5 border rounded-lg w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`px-3 py-1.5 border rounded-lg w-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 ${
                           validationErrors[`name_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300"
                         }`}
                         placeholder="Nom du joueur"
@@ -1000,8 +1061,13 @@ export default function TeamEditPage() {
                         </button>
                         <button
                           onClick={() => handleDeletePlayer(player.id)}
-                          className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors font-medium"
-                          title="Retirer ce joueur"
+                          disabled={rosterLocked}
+                          className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                          title={
+                            rosterLocked
+                              ? "Équipe engagée : sa composition ne peut plus changer"
+                              : "Retirer ce joueur"
+                          }
                         >
                           🗑️
                         </button>
@@ -1042,8 +1108,9 @@ export default function TeamEditPage() {
                         min="1"
                         max="99"
                         value={player.number}
+                        disabled={rosterLocked}
                         onChange={(e) => handlePlayerChange(index, "number", parseInt(e.target.value) || 0)}
-                        className={`w-14 px-2 py-2 border rounded-lg text-center font-mono text-base font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-14 px-2 py-2 border rounded-lg text-center font-mono text-base font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 ${
                           validationErrors[`number_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300 bg-gray-50"
                         }`}
                       />
@@ -1052,8 +1119,9 @@ export default function TeamEditPage() {
                       <input
                         type="text"
                         value={player.name}
+                        disabled={rosterLocked}
                         onChange={(e) => handlePlayerChange(index, "name", e.target.value)}
-                        className={`w-full px-3 py-2 border rounded-lg text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        className={`w-full px-3 py-2 border rounded-lg text-base font-semibold focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:text-gray-500 ${
                           validationErrors[`name_${index}`] ? "border-red-500 bg-red-50" : "border-gray-300"
                         }`}
                         placeholder="Nom du joueur"
@@ -1163,8 +1231,13 @@ export default function TeamEditPage() {
                   </button>
                   <button
                     onClick={() => handleDeletePlayer(player.id)}
-                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors font-medium"
-                    title="Retirer ce joueur"
+                    disabled={rosterLocked}
+                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    title={
+                      rosterLocked
+                        ? "Équipe engagée : sa composition ne peut plus changer"
+                        : "Retirer ce joueur"
+                    }
                   >
                     🗑️
                   </button>
@@ -1998,7 +2071,9 @@ export default function TeamEditPage() {
               team: { ...prev.team, ...info }
             }));
           }}
-          disabled={!canEdit}
+          // Le staff se paie sur le budget de construction : refusé serveur
+          // dès que la composition est figée.
+          disabled={!canEdit || rosterLocked}
         />
       )}
 

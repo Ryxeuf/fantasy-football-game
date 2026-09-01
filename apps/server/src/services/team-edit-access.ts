@@ -15,7 +15,8 @@
  *     coach ne remanie pas la composition d'une équipe déjà engagée. Un
  *     admin, lui, intervient précisément sur ces équipes-là (erreur de
  *     saisie, litige de ligue) : le gel ne s'applique pas à lui
- *     (`isRosterFrozenFor`).
+ *     (`isRosterFrozenFor`). Même posture pour le gel plus tardif des achats
+ *     de construction (`isBuildLockedFor`).
  *
  * Rien n'est perdu en traçabilité : `TeamAuditEvent` journalise chaque
  * mutation, et `resolveActorRole` marque l'étape `admin` dès que l'acteur
@@ -24,7 +25,7 @@
 
 import type { AuthenticatedRequest } from "../middleware/authUser";
 import { hasRole } from "../utils/roles";
-import { isTeamRosterFrozen } from "./team-lock-status";
+import { isTeamBuildLocked, isTeamRosterFrozen } from "./team-lock-status";
 
 /** `where` Prisma d'accès à UNE équipe : `ownerId` sauf pour un admin. */
 export interface TeamAccessWhere {
@@ -63,4 +64,19 @@ export async function isRosterFrozenFor(
 ): Promise<boolean> {
   if (isAdminRequest(req)) return false;
   return isTeamRosterFrozen(teamId);
+}
+
+/**
+ * Les ACHATS DE CONSTRUCTION sont-ils figés POUR CET APPELANT ?
+ *
+ * Même bypass admin que `isRosterFrozenFor`. Les endpoints d'édition avancée
+ * appelaient `isTeamBuildLocked` en direct : la console admin ouvrait donc la
+ * page (gel annoncé faux) puis se prenait un 409 au premier clic.
+ */
+export async function isBuildLockedFor(
+  req: AuthenticatedRequest,
+  teamId: string,
+): Promise<boolean> {
+  if (isAdminRequest(req)) return false;
+  return isTeamBuildLocked(teamId);
 }

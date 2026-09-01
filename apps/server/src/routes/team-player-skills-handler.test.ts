@@ -25,7 +25,7 @@ vi.mock('../prisma', () => ({
 // Le handler interroge le gel du roster pour décider s'il peut puiser dans
 // le pool de PSP de construction. Équipe libre par défaut ici.
 vi.mock('../services/team-lock-status', () => ({
-  isTeamRosterFrozen: vi.fn().mockResolvedValue(false),
+  isTeamBuildLocked: vi.fn().mockResolvedValue(false),
 }));
 
 vi.mock('../utils/team-values', () => ({
