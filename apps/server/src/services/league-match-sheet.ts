@@ -64,7 +64,10 @@ import {
   type JourneymanSourcePosition,
   parseJourneymenChoice,
   parseJourneymenChoices,
+  rebakeFrozenJourneymen,
   splitSkillCsv,
+  sumJourneymenValue,
+  toFrozenJourneymanEntry,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
@@ -393,27 +396,15 @@ async function captureSideSnapshot(
   });
   if (journeymen.length === 0) return JSON.stringify(base);
   // Règle BB : les journaliers alignés comptent dans la VEA du match
-  // (CTV des coups de pouce) — leur valeur est figée avec l'en-tête.
-  const journeymenValue = journeymen.reduce((sum, j) => sum + j.cost, 0);
+  // (CTV des coups de pouce) — leur valeur est figée avec l'en-tête, et
+  // stockée À PART (`journeymenValue`) : un changement de poste d'avant-match
+  // la remplace sans avoir à re-dériver l'ancienne (cf. `rebakeFrozenJourneymen`).
+  const journeymenValue = sumJourneymenValue(journeymen);
   return JSON.stringify({
     ...base,
     currentValue: base.currentValue + journeymenValue,
-    players: [
-      ...base.players,
-      ...journeymen.map((j) => ({
-        name: j.name,
-        position: j.positionName,
-        number: j.number,
-        ma: j.stats.ma,
-        st: j.stats.st,
-        ag: j.stats.ag,
-        pa: j.stats.pa,
-        av: j.stats.av,
-        skills: j.skills,
-        spp: 0,
-        advancements: "[]",
-      })),
-    ],
+    journeymenValue,
+    players: [...base.players, ...journeymen.map(toFrozenJourneymanEntry)],
   });
 }
 
@@ -669,22 +660,132 @@ export async function updatePreMatch(input: {
   ensureEditable(sheet.status);
 
   const p = input.payload;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {};
+  const sheetColumns = sheet as SheetJourneymenColumns;
+
+  // Équipes live + postes lus en base, chargés au plus une fois (journaliers
+  // ET budget de coups de pouce en ont besoin).
+  let loaded: {
+    teams: Awaited<ReturnType<typeof loadSheetTeams>>;
+    positions: Awaited<ReturnType<typeof loadJourneymanPositions>>;
+  } | null = null;
+  const loadTeamsAndPositions = async () => {
+    if (!loaded) {
+      const teams = await loadSheetTeams(input.pairingId);
+      loaded = { teams, positions: await loadJourneymanPositions(teams) };
+    }
+    return loaded;
+  };
+
+  // Journaliers : postes de lineman choisis. La colonne porte les deux
+  // formes — `{ position }` (choix global, historique) et `{ positions }`
+  // (choix par rang). Un PATCH qui ne touche qu'une des deux PRESERVE
+  // l'autre : sans ca, choisir le poste du 2e journalier effacerait le
+  // choix global deja pose (et inversement).
+  const mergeJourneymenChoice = (
+    current: unknown,
+    position: string | null | undefined,
+    positions: readonly (string | null)[] | null | undefined,
+  ): { position?: string; positions?: (string | null)[] } | null => {
+    const previous = parseJourneymenChoices(current);
+    const nextPosition = position !== undefined ? position : previous.position;
+    const nextPositions =
+      positions !== undefined ? (positions ?? []) : previous.positions;
+    const merged: { position?: string; positions?: (string | null)[] } = {};
+    if (nextPosition) merged.position = nextPosition;
+    if (nextPositions.some((slug) => slug !== null)) {
+      merged.positions = [...nextPositions];
+    }
+    return Object.keys(merged).length > 0 ? merged : null;
+  };
+  // Le gel bake les journaliers (poste, stats, compétences) ET leur valeur
+  // dans la VEA figée : un changement de poste doit RE-GELER le côté, sinon
+  // ni la VEA affichée et budgétée ni le roster « version du match » ne
+  // suivent le choix — seuls les pickers d'évènements le faisaient.
+  const rebakeSide = async (
+    side: "home" | "away",
+    previousChoice: unknown,
+    nextChoice: unknown,
+  ): Promise<void> => {
+    const frozenRaw =
+      side === "home"
+        ? sheetColumns.rosterSnapshotHome
+        : sheetColumns.rosterSnapshotAway;
+    // Pas de gel complet : les journaliers sont dérivés en live à la lecture.
+    if (!frozenRaw || isHeaderOnlySnapshot(frozenRaw)) return;
+    const { teams, positions } = await loadTeamsAndPositions();
+    const team = side === "home" ? teams.home : teams.away;
+    if (!team) return;
+    const derive = (choiceRaw: unknown): SheetJourneyman[] =>
+      deriveSideJourneymen(
+        team,
+        side,
+        {
+          rosterSnapshotHome: sheetColumns.rosterSnapshotHome,
+          rosterSnapshotAway: sheetColumns.rosterSnapshotAway,
+          journeymenHome: side === "home" ? choiceRaw : undefined,
+          journeymenAway: side === "away" ? choiceRaw : undefined,
+        },
+        side === "home" ? positions.home : positions.away,
+      );
+    const json = rebakeFrozenJourneymen({
+      raw: frozenRaw,
+      previous: derive(previousChoice),
+      next: derive(nextChoice),
+    });
+    if (json) {
+      data[side === "home" ? "rosterSnapshotHome" : "rosterSnapshotAway"] =
+        json;
+    }
+  };
+  if (
+    p.journeymenChoiceHome !== undefined ||
+    p.journeymenChoicesHome !== undefined
+  ) {
+    data.journeymenHome = mergeJourneymenChoice(
+      sheetColumns.journeymenHome,
+      p.journeymenChoiceHome,
+      p.journeymenChoicesHome,
+    );
+    await rebakeSide("home", sheetColumns.journeymenHome, data.journeymenHome);
+  }
+  if (
+    p.journeymenChoiceAway !== undefined ||
+    p.journeymenChoicesAway !== undefined
+  ) {
+    data.journeymenAway = mergeJourneymenChoice(
+      sheetColumns.journeymenAway,
+      p.journeymenChoiceAway,
+      p.journeymenChoicesAway,
+    );
+    await rebakeSide("away", sheetColumns.journeymenAway, data.journeymenAway);
+  }
 
   // Coups de pouce : on borne la depense au budget officiel (petty cash +
   // tresorerie). Le petty cash depend des 2 CTV -> on charge les equipes et
   // calcule le budget une seule fois si une selection est presente. Les
-  // CTV/tresoreries sont figees au debut du match si le roster l'est deja.
+  // CTV/tresoreries sont figees au debut du match si le roster l'est deja —
+  // sur l'état RE-FIGÉ par ce même PATCH le cas échéant.
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
-    const teamsLive = await loadSheetTeams(input.pairingId);
-    const snapForBudget = sheet as {
-      rosterSnapshotHome?: unknown;
-      rosterSnapshotAway?: unknown;
-      journeymenHome?: unknown;
-      journeymenAway?: unknown;
+    const { teams: teamsLive, positions: journeymanPositions } =
+      await loadTeamsAndPositions();
+    const snapForBudget: SheetJourneymenColumns = {
+      rosterSnapshotHome:
+        data.rosterSnapshotHome ?? sheetColumns.rosterSnapshotHome,
+      rosterSnapshotAway:
+        data.rosterSnapshotAway ?? sheetColumns.rosterSnapshotAway,
+      journeymenHome:
+        data.journeymenHome !== undefined
+          ? data.journeymenHome
+          : sheetColumns.journeymenHome,
+      journeymenAway:
+        data.journeymenAway !== undefined
+          ? data.journeymenAway
+          : sheetColumns.journeymenAway,
     };
     // CTV du match = valeurs figées (ou live) + journaliers si la feuille
     // n'est pas encore figée (les snapshots portent déjà les journaliers).
-    const journeymanPositions = await loadJourneymanPositions(teamsLive);
     const teams = {
       home: withJourneymenValue(
         withFrozenTeamValues(teamsLive.home, snapForBudget.rosterSnapshotHome),
@@ -753,8 +854,6 @@ export async function updatePreMatch(input: {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: any = {};
   if (p.weatherTable !== undefined) data.weatherTable = p.weatherTable;
   if (p.weather !== undefined) data.weather = p.weather;
   if (p.forfeitSide !== undefined) data.forfeitSide = p.forfeitSide;
@@ -800,48 +899,6 @@ export async function updatePreMatch(input: {
     data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined)
     data.prayersAway = p.prayersAway ?? undefined;
-  // Journaliers : postes de lineman choisis. La colonne porte les deux
-  // formes — `{ position }` (choix global, historique) et `{ positions }`
-  // (choix par rang). Un PATCH qui ne touche qu'une des deux PRESERVE
-  // l'autre : sans ca, choisir le poste du 2e journalier effacerait le
-  // choix global deja pose (et inversement).
-  const mergeJourneymenChoice = (
-    current: unknown,
-    position: string | null | undefined,
-    positions: readonly (string | null)[] | null | undefined,
-  ): { position?: string; positions?: (string | null)[] } | null => {
-    const previous = parseJourneymenChoices(current);
-    const nextPosition = position !== undefined ? position : previous.position;
-    const nextPositions =
-      positions !== undefined ? (positions ?? []) : previous.positions;
-    const merged: { position?: string; positions?: (string | null)[] } = {};
-    if (nextPosition) merged.position = nextPosition;
-    if (nextPositions.some((slug) => slug !== null)) {
-      merged.positions = [...nextPositions];
-    }
-    return Object.keys(merged).length > 0 ? merged : null;
-  };
-  if (
-    p.journeymenChoiceHome !== undefined ||
-    p.journeymenChoicesHome !== undefined
-  ) {
-    data.journeymenHome = mergeJourneymenChoice(
-      (sheet as { journeymenHome?: unknown }).journeymenHome,
-      p.journeymenChoiceHome,
-      p.journeymenChoicesHome,
-    );
-  }
-  if (
-    p.journeymenChoiceAway !== undefined ||
-    p.journeymenChoicesAway !== undefined
-  ) {
-    data.journeymenAway = mergeJourneymenChoice(
-      (sheet as { journeymenAway?: unknown }).journeymenAway,
-      p.journeymenChoiceAway,
-      p.journeymenChoicesAway,
-    );
-  }
-
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data,

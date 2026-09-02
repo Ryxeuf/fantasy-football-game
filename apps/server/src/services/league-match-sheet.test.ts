@@ -2415,6 +2415,193 @@ describe("Lot G — league-match-sheet", () => {
   });
 
   // Polish — apres-match.
+  // Le gel bake les journaliers ET leur valeur dans la VEA figée : changer
+  // le poste d'un journalier doit re-geler le côté (VEA, roster du match).
+  describe("updatePreMatch — poste des journaliers (re-gel du snapshot)", () => {
+    const realPlayers = Array.from({ length: 9 }, (_, i) => ({
+      name: `J${i + 1}`,
+      position: "orc_blitzer",
+      number: i + 1,
+      spp: 0,
+    }));
+    const bakedOrc = (number: number) => ({
+      name: `Journalier ${number - 11}`,
+      position: "Journalier (Trois-quart Orque)",
+      number,
+      ma: 5,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 10,
+      skills: "loner-4",
+      spp: 0,
+      advancements: "[]",
+    });
+    const bakedGoblin = (number: number) => ({
+      ...bakedOrc(number),
+      position: "Journalier (Trois-quart Gobelin)",
+      ma: 6,
+      st: 2,
+      av: 8,
+      skills: "stunty,right-stuff,dodge,loner-4",
+    });
+    /** 9 joueurs + 2 Trois-quarts Orques : VEA figée 840k + 2 × 50k. */
+    const frozenHome = (extra: Record<string, unknown> = {}) =>
+      JSON.stringify({
+        capturedAt: 1,
+        roster: "orc",
+        currentValue: 940_000,
+        treasury: 30_000,
+        players: [...realPlayers, bakedOrc(12), bakedOrc(13)],
+        ...extra,
+      });
+
+    function mockOrcSheet(sheet: Record<string, unknown>) {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const players = (prefix: string, count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "orc_blitzer",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "H", roster: "orc", currentValue: 1, treasury: 0, players: players("h", 9) },
+        { id: "team-away", name: "A", roster: "orc", currentValue: 1, treasury: 0, players: players("a", 11) },
+      ]);
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+        ...sheet,
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+    }
+
+    it("re-bake le journalier changé de poste : VEA figée, stats, compétences, numéro conservé", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome(),
+        rosterSnapshotAway: JSON.stringify({ currentValue: 900_000, players: [] }),
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin", null] },
+      });
+
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.journeymenHome).toEqual({
+        positions: ["orc_trois_quart_gobelin", null],
+      });
+      const snap = JSON.parse(data.rosterSnapshotHome as string);
+      // 940k − 50k (Trois-quart Orque) + 40k (Trois-quart Gobelin).
+      expect(snap.currentValue).toBe(930_000);
+      expect(snap.journeymenValue).toBe(90_000);
+      expect(snap.treasury).toBe(30_000);
+      expect(snap.players).toHaveLength(11);
+      expect(snap.players[9]).toMatchObject({
+        number: 12,
+        name: "Journalier 1",
+        position: "Journalier (Trois-quart Gobelin)",
+        ma: 6,
+        st: 2,
+        av: 8,
+      });
+      expect(snap.players[9].skills.split(",")).toEqual(
+        expect.arrayContaining(["dodge", "loner-4"]),
+      );
+      expect(snap.players[10]).toMatchObject({
+        number: 13,
+        position: "Journalier (Trois-quart Orque)",
+      });
+      // L'autre côté n'est pas touché.
+      expect(data.rosterSnapshotAway).toBeUndefined();
+    });
+
+    it("revenir au poste initial rend la VEA figée d'origine", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome({
+          currentValue: 930_000,
+          journeymenValue: 90_000,
+          players: [...realPlayers, bakedGoblin(12), bakedOrc(13)],
+        }),
+        journeymenHome: { positions: ["orc_trois_quart_gobelin", null] },
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_orque", null] },
+      });
+
+      const snap = JSON.parse(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data
+          .rosterSnapshotHome as string,
+      );
+      expect(snap.currentValue).toBe(940_000);
+      expect(snap.journeymenValue).toBe(100_000);
+      expect(snap.players[9]).toMatchObject({
+        number: 12,
+        position: "Journalier (Trois-quart Orque)",
+        ma: 5,
+      });
+    });
+
+    it("gel « en-tête seul » : le choix est stocké, rien n'est re-baké (journaliers dérivés en live)", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: JSON.stringify({ headerOnly: true, currentValue: 940_000 }),
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin"] },
+      });
+
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.journeymenHome).toEqual({
+        positions: ["orc_trois_quart_gobelin"],
+      });
+      expect(data.rosterSnapshotHome).toBeUndefined();
+      expect(mockPrisma.team.findMany).not.toHaveBeenCalled();
+    });
+
+    it("la lecture sert ensuite la VEA re-figée, le budget et le journalier au nouveau poste", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome({
+          currentValue: 930_000,
+          journeymenValue: 90_000,
+          players: [...realPlayers, bakedGoblin(12), bakedOrc(13)],
+        }),
+        rosterSnapshotAway: JSON.stringify({ currentValue: 900_000, players: [] }),
+        journeymenHome: { positions: ["orc_trois_quart_gobelin", null] },
+      });
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+      expect(out.teams.home?.currentValue).toBe(930_000);
+      expect(out.reference.budget.home.ctv).toBe(930_000);
+      expect(out.teams.home?.journeymen?.map((j) => [j.number, j.position])).toEqual([
+        [12, "orc_trois_quart_gobelin"],
+        [13, "orc_trois_quart_orque"],
+      ]);
+      expect(out.teams.home?.journeymenChoices).toEqual([
+        "orc_trois_quart_gobelin",
+        "orc_trois_quart_orque",
+      ]);
+    });
+  });
+
   describe("updatePostMatch", () => {
     it("rejects a non-participant", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
