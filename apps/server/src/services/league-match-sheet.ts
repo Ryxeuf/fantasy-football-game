@@ -77,6 +77,7 @@ import {
 import {
   deriveSheetStarPlayers,
   isSyntheticSheetPlayerId,
+  syntheticSheetPlayerSide,
   type SheetStarPlayer,
 } from "./league-sheet-star-players";
 import { recordForfeit } from "./league-forfeit";
@@ -3130,11 +3131,15 @@ async function computeSheetSpp(input: {
   }
   for (const id of motm) {
     if (out[id] !== undefined) continue;
+    // Un JOURNALIER (ou un Star Player engagé) n'a pas de ligne dans
+    // `players` : son côté se lit dans son id. Sans ça, un journalier
+    // désigné Joueur du Match sans autre stat n'avait AUCUN PSP — il
+    // manquait aux paliers d'évolution et son recrutement partait de 0.
     const side = teams.home?.players.some((p) => p.id === id)
       ? "home"
       : teams.away?.players.some((p) => p.id === id)
         ? "away"
-        : null;
+        : syntheticSheetPlayerSide(id);
     if (!side) continue;
     out[id] = calculatePlayerSPP(
       {

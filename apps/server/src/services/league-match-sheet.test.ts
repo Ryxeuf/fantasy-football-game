@@ -1469,6 +1469,56 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.computedSpp["a-mvp"]).toBe(4);
     });
 
+    it("credite les PSP de JDM a un JOURNALIER sans stat-line (son cote se lit dans son id)", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        // Le journalier est Joueur du Match SANS aucun evenement : il n'a
+        // pas de ligne TeamPlayer, donc aucun cote via `players`.
+        motmPlayerIds: ["journeyman-home-1"],
+        events: [],
+        rosterSnapshotHome: JSON.stringify({ currentValue: 900_000 }),
+        rosterSnapshotAway: JSON.stringify({ currentValue: 900_000 }),
+      });
+      const players = (count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `p${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "human_trois_quart",
+          dead: false,
+          missNextMatch: false,
+          spp: 0,
+          skills: "",
+          advancements: "[]",
+          ma: 6,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        // 10 joueurs -> 1 journalier (journeyman-home-1).
+        { id: "team-home", name: "Reikland", roster: "human", players: players(10) },
+        { id: "team-away", name: "Gouged Eye", roster: "human", players: players(11) },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // JDM = 4 PSP : le palier d'evolution du journalier est propose DES la
+      // saisie, et son recrutement en fin de match part de ces PSP.
+      expect(out.computedSpp["journeyman-home-1"]).toBe(4);
+      expect(out.teams.home?.journeymen?.map((j) => j.id)).toEqual([
+        "journeyman-home-1",
+      ]);
+    });
+
     it("fige l'en-tete (TV/VEA/cagnotte/fans) aux valeurs du snapshot du match", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",

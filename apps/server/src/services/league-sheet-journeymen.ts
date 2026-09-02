@@ -51,6 +51,20 @@ export function isJourneymanId(id: string | null | undefined): boolean {
   return typeof id === "string" && id.startsWith(JOURNEYMAN_ID_PREFIX);
 }
 
+/**
+ * Côté qui aligne un journalier, lu dans son id (`journeyman-<side>-<n>`).
+ * `null` si l'id n'est pas celui d'un journalier.
+ */
+export function journeymanSide(
+  id: string | null | undefined,
+): "home" | "away" | null {
+  if (!isJourneymanId(id)) return null;
+  const rest = (id as string).slice(JOURNEYMAN_ID_PREFIX.length);
+  if (rest.startsWith("home-")) return "home";
+  if (rest.startsWith("away-")) return "away";
+  return null;
+}
+
 /** Seuil BB « 0-12 ou plus » : le Trois-quart « de base » d'une fiche. */
 const JOURNEYMAN_ELIGIBLE_MAX = 12;
 

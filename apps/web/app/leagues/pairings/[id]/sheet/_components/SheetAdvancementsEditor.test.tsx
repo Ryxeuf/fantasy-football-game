@@ -12,7 +12,7 @@ import {
   StagedAdvancementsRecap,
   type StagedAdvancementEntry,
 } from "./SheetAdvancementsEditor";
-import type { SheetPlayer } from "./MatchSheetPanels";
+import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
 const apiRequest = vi.fn();
 vi.mock("../../../../../lib/api-client", () => ({
@@ -35,8 +35,24 @@ function player(overrides: Partial<SheetPlayer> & { id: string }): SheetPlayer {
   };
 }
 
+/** Journalier orque : Trois-quart Gobelin (Principale A,K), 3 PSP ce match. */
+function journeyman(over: Partial<SheetJourneyman> = {}): SheetJourneyman {
+  return {
+    id: "journeyman-home-1",
+    number: 12,
+    name: "Journalier 1",
+    position: "orc_trois_quart_gobelin",
+    positionName: "Journalier (Trois-quart Gobelin)",
+    stats: { ma: 6, st: 2, ag: 3, pa: 4, av: 8 },
+    skills: "dodge,right-stuff,stunty,loner-4",
+    cost: 40_000,
+    ...over,
+  };
+}
+
 function setup(props: {
   players: SheetPlayer[];
+  journeymen?: SheetJourneyman[];
   staged?: StagedAdvancementEntry[];
   computedSpp?: Record<string, number>;
   onChange?: (next: StagedAdvancementEntry[]) => void;
@@ -48,6 +64,7 @@ function setup(props: {
         teamId="team-1"
         ruleset="season_3"
         players={props.players}
+        journeymen={props.journeymen}
         computedSpp={props.computedSpp ?? {}}
         sppBonus={[]}
         staged={props.staged ?? []}
@@ -142,6 +159,32 @@ describe("SheetAdvancementsEditor (staging feuille de match)", () => {
 
   it("affiche un état vide quand personne n'atteint de palier", async () => {
     setup({ players: [player({ id: "p1", spp: 0 })] });
+    expect(
+      await screen.findByTestId("sheet-advancements-empty"),
+    ).toBeTruthy();
+  });
+
+  // Le poste CHOISI pour le journalier (Trois-quart Orque / Gobelin) décide
+  // des catégories accessibles : il fait partie du libellé, pour que le
+  // coach voie que son changement de poste est bien pris en compte.
+  it("liste un journalier atteignant un palier, avec le poste choisi", async () => {
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 3 },
+    });
+    const row = await screen.findByTestId("level-up-row-journeyman-home-1");
+    expect(row.textContent).toContain("N°12 Journalier 1");
+    expect(row.textContent).toContain("Journalier (Trois-quart Gobelin)");
+    expect(row.textContent).toContain("3 PSP");
+  });
+
+  it("n'affiche pas un journalier sous le palier le moins cher", async () => {
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 2 },
+    });
     expect(
       await screen.findByTestId("sheet-advancements-empty"),
     ).toBeTruthy();

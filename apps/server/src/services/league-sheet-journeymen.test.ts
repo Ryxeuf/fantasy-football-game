@@ -13,6 +13,7 @@ import {
   deriveJourneymen,
   deriveMatchJourneymen,
   isJourneymanId,
+  journeymanSide,
   linemanPositionsForRoster,
   parseFrozenSheetRoster,
   parseJourneymenChoice,
@@ -39,6 +40,20 @@ describe("isJourneymanId", () => {
     expect(isJourneymanId("cku123abc")).toBe(false);
     expect(isJourneymanId(null)).toBe(false);
     expect(isJourneymanId(undefined)).toBe(false);
+  });
+});
+
+describe("journeymanSide", () => {
+  it("lit le côté dans l'id synthétique", () => {
+    expect(journeymanSide("journeyman-home-1")).toBe("home");
+    expect(journeymanSide("journeyman-away-3")).toBe("away");
+  });
+
+  it("null pour un id réel, un côté inconnu ou une valeur absente", () => {
+    expect(journeymanSide("cku123abc")).toBeNull();
+    expect(journeymanSide("journeyman-north-1")).toBeNull();
+    expect(journeymanSide(null)).toBeNull();
+    expect(journeymanSide(undefined)).toBeNull();
   });
 });
 

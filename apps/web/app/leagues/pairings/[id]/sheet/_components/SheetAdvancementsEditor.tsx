@@ -234,7 +234,9 @@ export function SheetAdvancementsEditor({
         matchId: "",
         seasonId: "",
         teamPlayerId: j.id,
-        playerName: `N°${j.number} ${j.name} (journalier)`,
+        // Le poste choisi (Trois-quart Orque / Gobelin…) fait partie du
+        // libellé : c'est LUI qui décide des catégories accessibles.
+        playerName: `N°${j.number} ${j.name} — ${j.positionName}`,
         spp: projected,
         advancementsTaken: 0,
         nextAdvancementCost: cheapestFirst,

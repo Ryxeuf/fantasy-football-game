@@ -10,6 +10,8 @@ import {
   isSheetStarPlayerId,
   isSyntheticSheetPlayerId,
   parseStarPlayerInducements,
+  sheetStarPlayerSide,
+  syntheticSheetPlayerSide,
 } from "./league-sheet-star-players";
 
 const mockGet = getStarPlayerBySlugDb as ReturnType<typeof vi.fn>;
@@ -119,6 +121,23 @@ describe("deriveSheetStarPlayers", () => {
     });
     expect(out).toHaveLength(1);
     expect(out[0].id).toBe("star-home-griff_oberwald");
+  });
+});
+
+describe("sheetStarPlayerSide / syntheticSheetPlayerSide", () => {
+  it("lit le côté d'un Star Player ou d'un journalier dans son id", () => {
+    expect(sheetStarPlayerSide("star-home-griff_oberwald")).toBe("home");
+    expect(sheetStarPlayerSide("star-away-griff_oberwald")).toBe("away");
+    expect(syntheticSheetPlayerSide("star-away-griff_oberwald")).toBe("away");
+    expect(syntheticSheetPlayerSide("journeyman-home-2")).toBe("home");
+  });
+
+  it("null pour un joueur réel ou un id mal formé", () => {
+    expect(sheetStarPlayerSide("cku123abc")).toBeNull();
+    expect(sheetStarPlayerSide("journeyman-home-1")).toBeNull();
+    expect(syntheticSheetPlayerSide("cku123abc")).toBeNull();
+    expect(syntheticSheetPlayerSide("star-north-x")).toBeNull();
+    expect(syntheticSheetPlayerSide(null)).toBeNull();
   });
 });
 

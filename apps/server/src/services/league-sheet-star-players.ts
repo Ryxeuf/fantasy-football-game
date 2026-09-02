@@ -18,13 +18,27 @@
 
 import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
-import { isJourneymanId } from "./league-sheet-journeymen";
+import { isJourneymanId, journeymanSide } from "./league-sheet-journeymen";
 
 export const STAR_PLAYER_ID_PREFIX = "star-";
 
 /** Un id de joueur synthétique « Star Player » de feuille de match. */
 export function isSheetStarPlayerId(id: string | null | undefined): boolean {
   return typeof id === "string" && id.startsWith(STAR_PLAYER_ID_PREFIX);
+}
+
+/**
+ * Côté qui a engagé un Star Player, lu dans son id (`star-<side>-<slug>`).
+ * `null` si l'id n'est pas celui d'un Star Player de la feuille.
+ */
+export function sheetStarPlayerSide(
+  id: string | null | undefined,
+): "home" | "away" | null {
+  if (!isSheetStarPlayerId(id)) return null;
+  const rest = (id as string).slice(STAR_PLAYER_ID_PREFIX.length);
+  if (rest.startsWith("home-")) return "home";
+  if (rest.startsWith("away-")) return "away";
+  return null;
 }
 
 /**
@@ -35,6 +49,18 @@ export function isSyntheticSheetPlayerId(
   id: string | null | undefined,
 ): boolean {
   return isJourneymanId(id) || isSheetStarPlayerId(id);
+}
+
+/**
+ * Côté d'un joueur SYNTHÉTIQUE de la feuille. Les joueurs réels sont
+ * résolus par leur équipe ; les synthétiques n'existant que sur la feuille,
+ * leur id est la seule source — c'est ce qui permet de créditer les PSP
+ * d'un Joueur du Match sans stat-line à un journalier.
+ */
+export function syntheticSheetPlayerSide(
+  id: string | null | undefined,
+): "home" | "away" | null {
+  return journeymanSide(id) ?? sheetStarPlayerSide(id);
 }
 
 /** Star Player aligné, exposé à l'UI comme un joueur de la feuille. */
