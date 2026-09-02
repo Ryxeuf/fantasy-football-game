@@ -2297,6 +2297,93 @@ describe("Lot G — league-match-sheet", () => {
         ).rejects.toMatchObject({ code: "advancement_invalid_player" });
       });
 
+      // Un journalier n'a pas de ligne TeamPlayer : l'appartenance passait
+      // par `team.players` seulement, et l'API refusait « Joueur
+      // journeyman-away-1 hors de l'équipe extérieur ».
+      function mockPairingWithJourneymen() {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        const players = (prefix: string, count: number) =>
+          Array.from({ length: count }, (_, i) => ({
+            id: `${prefix}${i + 1}`,
+            number: i + 1,
+            name: `J${i + 1}`,
+            position: "orc_blitzer",
+            dead: false,
+            missNextMatch: false,
+          }));
+        mockPrisma.team.findMany.mockResolvedValue([
+          // 11 joueurs : aucun journalier côté domicile.
+          { id: "team-home", name: "Home", roster: "orc", players: players("h", 11) },
+          // 10 joueurs : UN journalier (journeyman-away-1) côté extérieur.
+          { id: "team-away", name: "Away", roster: "orc", players: players("a", 10) },
+        ]);
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        mockPrisma.leagueMatchSheet.update.mockImplementation(
+          async (a: { data: Record<string, unknown> }) => ({
+            id: "ms1",
+            ...a.data,
+          }),
+        );
+      }
+
+      it("accepte l'évolution d'un JOURNALIER aligné par le côté visé", async () => {
+        mockPairingWithJourneymen();
+        await updatePostMatch({
+          pairingId: "pair-1",
+          userId: AWAY,
+          payload: {
+            advancementsAway: [
+              {
+                playerId: "journeyman-away-1",
+                type: "primary",
+                skillSlug: "block",
+              },
+            ],
+          },
+        });
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsAway).toEqual([
+          { playerId: "journeyman-away-1", type: "primary", skillSlug: "block" },
+        ]);
+      });
+
+      it("refuse un journalier de l'autre côté ou hors contingent", async () => {
+        mockPairingWithJourneymen();
+        // `journeyman-home-1` n'existe pas (le domicile joue à 11) et, de
+        // toute façon, ne serait pas un joueur de l'extérieur.
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: AWAY,
+            payload: {
+              advancementsAway: [
+                { playerId: "journeyman-home-1", type: "primary", skillSlug: "block" },
+              ],
+            },
+          }),
+        ).rejects.toMatchObject({ code: "advancement_invalid_player" });
+        // Un seul journalier aligné : le rang 2 n'existe pas.
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: AWAY,
+            payload: {
+              advancementsAway: [
+                { playerId: "journeyman-away-2", type: "primary", skillSlug: "block" },
+              ],
+            },
+          }),
+        ).rejects.toMatchObject({ code: "advancement_invalid_player" });
+      });
+
       it("stocke les évolutions stagées du coach pour son côté", async () => {
         mockPairingWithTeams();
         mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({

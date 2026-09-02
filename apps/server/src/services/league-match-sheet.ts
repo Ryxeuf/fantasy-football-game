@@ -55,6 +55,7 @@ import {
   buildJourneymanHire,
   deriveJourneymen,
   deriveMatchJourneymen,
+  isJourneymanId,
   journeymenChoiceInput,
   linemanPositionsForRoster,
   type JourneymanSourcePosition,
@@ -172,6 +173,42 @@ async function journeymanPositionsFor(
   } catch {
     return null;
   }
+}
+
+/** Colonnes de la feuille dont dependent les journaliers d'un cote. */
+interface SheetJourneymenColumns {
+  rosterSnapshotHome?: unknown;
+  rosterSnapshotAway?: unknown;
+  journeymenHome?: unknown;
+  journeymenAway?: unknown;
+}
+
+/**
+ * Journaliers de la VERSION DU MATCH d'un cote de la feuille : roster fige
+ * (ou live tant que la feuille ne l'est pas), choix de postes stockes et
+ * postes lus en base. UNE seule derivation pour tous les chemins qui
+ * doivent reconnaitre un journalier (appartenance d'une evolution stagee,
+ * tirage aleatoire, recrutement) : deux derivations divergentes feraient
+ * refuser cote serveur un journalier que la feuille affiche pourtant.
+ */
+function deriveSideJourneymen(
+  team: MatchSheetTeam,
+  side: "home" | "away",
+  sheet: SheetJourneymenColumns,
+  positions: readonly JourneymanSourcePosition[] | null | undefined,
+): SheetJourneyman[] {
+  return deriveMatchJourneymen({
+    side,
+    roster: team.roster,
+    ruleset: team.ruleset,
+    players: team.players,
+    ...journeymenChoiceInput(
+      side === "home" ? sheet.journeymenHome : sheet.journeymenAway,
+    ),
+    positions,
+    frozenRosterSnapshot:
+      side === "home" ? sheet.rosterSnapshotHome : sheet.rosterSnapshotAway,
+  });
 }
 
 export type MatchSheetStatus =
@@ -858,13 +895,37 @@ export async function updatePostMatch(input: {
       );
     }
     const teams = await loadSheetTeams(input.pairingId);
+    // Un JOURNALIER joue le match et peut prendre une évolution à l'étape 3
+    // (matérialisée s'il est recruté) : il appartient au côté qui l'aligne,
+    // sans avoir de ligne TeamPlayer. On le reconnaît par la même
+    // dérivation que celle qui l'affiche sur la feuille — sinon l'API
+    // refusait « Joueur journeyman-away-1 hors de l'équipe extérieur ».
+    const stagesJourneyman = [
+      ...(p.advancementsHome ?? []),
+      ...(p.advancementsAway ?? []),
+    ].some((e) => isJourneymanId(e.playerId));
+    const journeymanPositions = stagesJourneyman
+      ? await loadJourneymanPositions(teams)
+      : { home: null, away: null };
+    const sheetColumns = sheet as SheetJourneymenColumns;
     const assertOwnership = (
       entries: readonly StagedAdvancement[] | null | undefined,
       team: MatchSheetTeam | null,
+      side: "home" | "away",
       label: string,
     ): void => {
       if (!entries || entries.length === 0) return;
       const ids = new Set((team?.players ?? []).map((pl) => pl.id));
+      if (team && stagesJourneyman) {
+        for (const j of deriveSideJourneymen(
+          team,
+          side,
+          sheetColumns,
+          side === "home" ? journeymanPositions.home : journeymanPositions.away,
+        )) {
+          ids.add(j.id);
+        }
+      }
       for (const e of entries) {
         if (!ids.has(e.playerId)) {
           throw new MatchSheetError(
@@ -874,8 +935,8 @@ export async function updatePostMatch(input: {
         }
       }
     };
-    assertOwnership(p.advancementsHome, teams.home, "domicile");
-    assertOwnership(p.advancementsAway, teams.away, "extérieur");
+    assertOwnership(p.advancementsHome, teams.home, "home", "domicile");
+    assertOwnership(p.advancementsAway, teams.away, "away", "extérieur");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
