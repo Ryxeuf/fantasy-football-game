@@ -287,6 +287,7 @@ describe("buildJourneymanHire", () => {
   it("sans évolution : prix du poste, PSP du match conservés", () => {
     const hire = buildJourneymanHire({ journeyman, earnedSpp: 3 });
     expect(hire).toEqual({
+      advancementTaken: false,
       cost: 50_000,
       spp: 3,
       skills: "loner-4",
@@ -306,6 +307,7 @@ describe("buildJourneymanHire", () => {
         valueSurcharge: 20_000,
       },
     });
+    expect(hire.advancementTaken).toBe(true);
     expect(hire.cost).toBe(70_000);
     expect(hire.spp).toBe(0);
     expect(hire.skills).toBe("loner-4,block");
@@ -325,6 +327,7 @@ describe("buildJourneymanHire", () => {
         valueSurcharge: 20_000,
       },
     });
+    expect(hire.advancementTaken).toBe(false);
     expect(hire.cost).toBe(50_000);
     expect(hire.spp).toBe(3);
     expect(hire.advancements).toBe("[]");

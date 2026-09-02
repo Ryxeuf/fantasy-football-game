@@ -103,6 +103,13 @@ import {
   reverseAppliedAdvancements,
   type StagedAdvancement,
 } from "./league-sheet-advancements";
+import {
+  clearAdvancementTrace,
+  mergeAdvancementTraces,
+  reviewJourneymanAdvancements,
+  traceJourneymanAdvancements,
+  type JourneymanHireTrace,
+} from "./league-sheet-journeyman-advancements";
 import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
@@ -1583,9 +1590,16 @@ function enrichJourneymanPurchases(input: {
   schedule?: AdvancementSchedule;
   /** Roster figé de ce côté : les journaliers RECRUTABLES sont ceux du match. */
   frozenRosterSnapshot?: unknown;
-}): OfflinePurchaseInput[] {
+}): {
+  purchases: OfflinePurchaseInput[];
+  /** Journaliers recrutés qui avaient une évolution stagée : ce qu'elle est devenue. */
+  hires: Map<string, JourneymanHireTrace>;
+} {
   const { purchases, side, team, staged, computedSpp } = input;
-  if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
+  const hires = new Map<string, JourneymanHireTrace>();
+  if (!purchases.some((p) => p.kind === "journeyman")) {
+    return { purchases: [...purchases], hires };
+  }
   const journeymen = team
     ? deriveMatchJourneymen({
         side,
@@ -1600,7 +1614,7 @@ function enrichJourneymanPurchases(input: {
   const byId = new Map(journeymen.map((j) => [j.id, j]));
   const hired = new Set<string>();
 
-  return purchases.map((p) => {
+  const out = purchases.map((p) => {
     if (p.kind !== "journeyman") return p;
     const journeyman = p.journeymanId ? byId.get(p.journeymanId) : undefined;
     if (!journeyman || hired.has(journeyman.id)) {
@@ -1638,6 +1652,12 @@ function enrichJourneymanPurchases(input: {
           }
         : null,
     });
+    if (entry) {
+      hires.set(journeyman.id, {
+        advancementTaken: hire.advancementTaken,
+        pspCost: getNextAdvancementPspCost(0, entry.type, input.schedule),
+      });
+    }
     return {
       ...p,
       cost: hire.cost,
@@ -1649,6 +1669,7 @@ function enrichJourneymanPurchases(input: {
       stats: hire.stats,
     };
   });
+  return { purchases: out, hires };
 }
 
 export async function validateByCommissioner(input: {
@@ -1931,13 +1952,43 @@ export async function validateByCommissioner(input: {
       (teamsForBudget.away?.ruleset as Ruleset) ?? undefined,
     ),
   ]);
+  // Évolutions des JOURNALIERS : vérifiées ICI (pas de ligne TeamPlayer,
+  // donc pas d'`applyAdvancementChoice`) avant d'alimenter le recrutement —
+  // compétence possédée, candidats du tirage « Hasard », accès du poste. Une
+  // entrée refusée est écartée et tracée, jamais bloquante.
+  const journeymenOf = (side: "home" | "away"): SheetJourneyman[] => {
+    const team = side === "home" ? teamsForBudget.home : teamsForBudget.away;
+    if (!team) return [];
+    return deriveSideJourneymen(
+      team,
+      side,
+      sheetJourneymenForBudget,
+      side === "home" ? journeymanPositions.home : journeymanPositions.away,
+    );
+  };
+  const [reviewHome, reviewAway] = await Promise.all([
+    reviewJourneymanAdvancements({
+      sheetId: sheet.id,
+      ruleset: teamsForBudget.home?.ruleset ?? DEFAULT_RULESET,
+      journeymen: journeymenOf("home"),
+      positions: journeymanPositions.home,
+      staged: stagedHome,
+    }),
+    reviewJourneymanAdvancements({
+      sheetId: sheet.id,
+      ruleset: teamsForBudget.away?.ruleset ?? DEFAULT_RULESET,
+      journeymen: journeymenOf("away"),
+      positions: journeymanPositions.away,
+      staged: stagedAway,
+    }),
+  ]);
   const enrichedPurchases = {
     home: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesHome,
       side: "home",
       team: teamsForBudget.home,
       choiceRaw: sheetJourneymenChoice.journeymenHome,
-      staged: stagedHome,
+      staged: reviewHome.staged,
       computedSpp: computedSppForHire,
       positions: journeymanPositions.home,
       eliteSlugs: eliteSlugsForHire,
@@ -1949,7 +2000,7 @@ export async function validateByCommissioner(input: {
       side: "away",
       team: teamsForBudget.away,
       choiceRaw: sheetJourneymenChoice.journeymenAway,
-      staged: stagedAway,
+      staged: reviewAway.staged,
       computedSpp: computedSppForHire,
       positions: journeymanPositions.away,
       eliteSlugs: eliteSlugsForHire,
@@ -1960,8 +2011,8 @@ export async function validateByCommissioner(input: {
 
   const outcome = await recordOfflineLeagueResult({
     ...offlineInput,
-    purchasesHome: enrichedPurchases.home,
-    purchasesAway: enrichedPurchases.away,
+    purchasesHome: enrichedPurchases.home.purchases,
+    purchasesAway: enrichedPurchases.away.purchases,
     ...(rosterStaged(stagedHome).length > 0 ||
     rosterStaged(stagedAway).length > 0
       ? { applyAdvancements }
@@ -1973,6 +2024,32 @@ export async function validateByCommissioner(input: {
   if ("recorded" in outcome && outcome.recorded) {
     effects = { applied: true };
     hateRolls = outcome.hateRolls;
+    // Trace des évolutions de journaliers (refusée / non recruté / PSP
+    // insuffisants / appliquée), fusionnée avec celle du roster dans
+    // l'ORDRE de la saisie. Sans ça, les entrées de journaliers étaient
+    // perdues (liste réécrite = roster seul) ou « en attente » à jamais.
+    if (stagedHome.length > 0) {
+      advData.advancementsHome = mergeAdvancementTraces(
+        stagedHome,
+        advData.advancementsHome,
+        traceJourneymanAdvancements({
+          staged: stagedHome,
+          review: reviewHome,
+          hires: enrichedPurchases.home.hires,
+        }),
+      );
+    }
+    if (stagedAway.length > 0) {
+      advData.advancementsAway = mergeAdvancementTraces(
+        stagedAway,
+        advData.advancementsAway,
+        traceJourneymanAdvancements({
+          staged: stagedAway,
+          review: reviewAway,
+          hires: enrichedPurchases.away.hires,
+        }),
+      );
+    }
   } else if ("skipped" in outcome) {
     // already-scored / not-terminal-eligible : effets deja en place.
     effects = { applied: false, reason: outcome.reason };
@@ -2143,6 +2220,9 @@ export async function invalidateMatchSheet(input: {
   const sheetAppliedAdvancements = new Map<string, number>();
   for (const entry of [...stagedHome, ...stagedAway]) {
     if (entry.applied !== true) continue;
+    // L'évolution d'un journalier vit sur le joueur RECRUTÉ, que la
+    // reversion des achats retire : rien à déduire sur le roster.
+    if (isSyntheticSheetPlayerId(entry.playerId)) continue;
     sheetAppliedAdvancements.set(
       entry.playerId,
       (sheetAppliedAdvancements.get(entry.playerId) ?? 0) + 1,
@@ -2171,19 +2251,34 @@ export async function invalidateMatchSheet(input: {
   // `applied` pour qu'une re-validation ré-applique proprement.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const advData: any = {};
+  // Les journaliers n'ont pas de ligne TeamPlayer à reverser : leur
+  // évolution part avec le recrutement que la reversion offline retire. On
+  // ne nettoie que leurs marqueurs, pour qu'une re-validation les ré-évalue.
+  const reverseSide = async (
+    teamId: string,
+    staged: readonly StagedAdvancement[],
+  ): Promise<StagedAdvancement[]> => {
+    const roster = staged.filter((e) => !isSyntheticSheetPlayerId(e.playerId));
+    const reversed =
+      roster.length > 0
+        ? await reverseAppliedAdvancements({ teamId, entries: roster })
+        : [];
+    const byId = new Map(reversed.map((e) => [e.playerId, e]));
+    return staged.map((e) => byId.get(e.playerId) ?? clearAdvancementTrace(e));
+  };
   if (stagedHome.length > 0 || stagedAway.length > 0) {
     const teams = await loadSheetTeams(input.pairingId);
     if (stagedHome.length > 0 && teams.home?.teamId) {
-      advData.advancementsHome = await reverseAppliedAdvancements({
-        teamId: teams.home.teamId,
-        entries: stagedHome,
-      });
+      advData.advancementsHome = await reverseSide(
+        teams.home.teamId,
+        stagedHome,
+      );
     }
     if (stagedAway.length > 0 && teams.away?.teamId) {
-      advData.advancementsAway = await reverseAppliedAdvancements({
-        teamId: teams.away.teamId,
-        entries: stagedAway,
-      });
+      advData.advancementsAway = await reverseSide(
+        teams.away.teamId,
+        stagedAway,
+      );
     }
   }
 

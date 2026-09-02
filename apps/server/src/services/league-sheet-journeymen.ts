@@ -550,6 +550,8 @@ export interface JourneymanHireInput {
 }
 
 export interface JourneymanHire {
+  /** L'évolution stagée a été prise (PSP du match suffisants). */
+  readonly advancementTaken: boolean;
   /** Coût de recrutement (po) : poste + surcoût de l'évolution prise. */
   readonly cost: number;
   /** PSP restants après paiement de l'évolution. */
@@ -594,6 +596,7 @@ export function buildJourneymanHire(
   const takesAdvancement = adv !== null && earnedSpp >= adv.pspCost;
   if (!takesAdvancement) {
     return {
+      advancementTaken: false,
       cost: journeyman.cost,
       spp: Math.max(0, earnedSpp),
       skills: journeyman.skills,
@@ -607,6 +610,7 @@ export function buildJourneymanHire(
       ? [journeyman.skills, adv.skillSlug].filter((v) => v.length > 0).join(",")
       : journeyman.skills;
   return {
+    advancementTaken: true,
     cost: journeyman.cost + adv.valueSurcharge,
     spp: Math.max(0, earnedSpp - adv.pspCost),
     skills,
