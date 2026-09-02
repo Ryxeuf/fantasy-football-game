@@ -42,6 +42,7 @@ import {
   DEFAULT_RULESET,
   KEYWORDS_SEASON3,
   SKILL_ACCESS_SEASON3,
+  applyCharacteristicImprovement,
   type Ruleset,
 } from "@bb/game-engine";
 
@@ -664,25 +665,6 @@ export interface JourneymanHire {
   readonly stats: SheetJourneyman["stats"];
 }
 
-/** Effet d'une amélioration de caractéristique BB (ag/pa : la cible baisse). */
-function improveStat(
-  stats: SheetJourneyman["stats"],
-  stat: "ma" | "st" | "ag" | "pa" | "av",
-): SheetJourneyman["stats"] {
-  switch (stat) {
-    case "ma":
-      return { ...stats, ma: stats.ma + 1 };
-    case "st":
-      return { ...stats, st: stats.st + 1 };
-    case "av":
-      return { ...stats, av: stats.av + 1 };
-    case "ag":
-      return { ...stats, ag: stats.ag - 1 };
-    case "pa":
-      return stats.pa === null ? stats : { ...stats, pa: stats.pa - 1 };
-  }
-}
-
 /**
  * Calcule (pur) le recrutement d'un journalier : prix, PSP restants,
  * compétences, avancements et caractéristiques finales.
@@ -724,9 +706,11 @@ export function buildJourneymanHire(
         at: 0,
       },
     ]),
+    // Mêmes bornes BB2025 (MA ≤ 9, ST ≤ 5, AV ≤ 11, AG/PA ≥ 1) que pour un
+    // joueur du roster : un journalier recruté ne dépasse jamais la limite.
     stats:
       isCharacteristic && adv.stat
-        ? improveStat(journeyman.stats, adv.stat)
+        ? applyCharacteristicImprovement(journeyman.stats, adv.stat)
         : journeyman.stats,
   };
 }

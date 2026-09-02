@@ -336,6 +336,21 @@ describe("buildJourneymanHire", () => {
     expect(hire.advancements).toBe("[]");
   });
 
+  it("amélioration de caractéristique : bornée aux limites BB2025 (ST ≤ 5)", () => {
+    const hire = buildJourneymanHire({
+      journeyman: { ...journeyman, stats: { ...journeyman.stats, st: 5 } },
+      earnedSpp: 14,
+      advancement: {
+        type: "characteristic",
+        stat: "st",
+        d8: 8,
+        pspCost: 14,
+        valueSurcharge: 80_000,
+      },
+    });
+    expect(hire.stats.st).toBe(5);
+  });
+
   it("amélioration de caractéristique : stats finales + surcoût", () => {
     const hire = buildJourneymanHire({
       journeyman,

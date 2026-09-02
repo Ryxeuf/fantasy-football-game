@@ -89,13 +89,72 @@ beforeEach(() => {
 describe("verifyJourneymanAdvancement", () => {
   const base = { sheetId: "ms1", ruleset: "season_3", journeyman: ORC };
 
-  it("accepte une amélioration de caractéristique (validée par le schéma)", async () => {
-    await expect(
-      verifyJourneymanAdvancement({
-        ...base,
-        entry: entry({ type: "characteristic", skillSlug: null, stat: "ma", d8: 7 }),
-      }),
-    ).resolves.toEqual({ ok: true });
+  // Le schéma ne valide que la FORME de la caractéristique (stat parmi les
+  // cinq, D8 de 1 à 8) : la cohérence D8 / caractéristique et les bornes
+  // BB2025 sont celles d'`applyAdvancementChoice` pour un joueur du roster.
+  describe("amélioration de caractéristique", () => {
+    const characteristic = (over: Partial<StagedAdvancement>) =>
+      entry({ type: "characteristic", skillSlug: null, ...over });
+
+    it("accepte une caractéristique permise par le jet D8", async () => {
+      // 5 → MA ou PA.
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          entry: characteristic({ stat: "ma", d8: 5 }),
+        }),
+      ).resolves.toEqual({ ok: true });
+    });
+
+    it("refuse une caractéristique que le jet n'autorise pas (stat-roll-mismatch)", async () => {
+      // 1 → AV seulement : pas de Force choisie à la main.
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          entry: characteristic({ stat: "st", d8: 1 }),
+        }),
+      ).resolves.toEqual({ ok: false, reason: "stat-roll-mismatch" });
+    });
+
+    it("exige la caractéristique et un D8 valide", async () => {
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          entry: characteristic({ stat: null, d8: 5 }),
+        }),
+      ).resolves.toEqual({ ok: false, reason: "missing-stat" });
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          entry: characteristic({ stat: "ma", d8: null }),
+        }),
+      ).resolves.toEqual({ ok: false, reason: "missing-d8" });
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          entry: characteristic({ stat: "ma", d8: 9 }),
+        }),
+      ).resolves.toEqual({ ok: false, reason: "missing-d8" });
+    });
+
+    it("refuse une caractéristique déjà à sa limite ou sans valeur (stat-not-improvable)", async () => {
+      // Force déjà à 5 (limite BB2025), même sur un 8 « au choix ».
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          journeyman: { ...ORC, stats: { ...ORC.stats, st: 5 } },
+          entry: characteristic({ stat: "st", d8: 8 }),
+        }),
+      ).resolves.toEqual({ ok: false, reason: "stat-not-improvable" });
+      // Passe « — » (null) : rien à améliorer.
+      await expect(
+        verifyJourneymanAdvancement({
+          ...base,
+          journeyman: { ...ORC, stats: { ...ORC.stats, pa: null } },
+          entry: characteristic({ stat: "pa", d8: 2 }),
+        }),
+      ).resolves.toEqual({ ok: false, reason: "stat-not-improvable" });
+    });
   });
 
   it("refuse une compétence absente ou déjà possédée", async () => {
