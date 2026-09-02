@@ -48,7 +48,7 @@
 - [x] 5.2 `vitest run` web : `SeasonParticipants` (5/5) + `page`/`SeasonStandings` (27/27).
 - [x] 5.3 Garde-fou `routes/no-raw-body-cast.test.ts` vert (81/81).
 - [x] 5.4 `pnpm --filter web typecheck` vert.
-- [ ] 5.5 `pnpm --filter server typecheck` — à valider en CI (client Prisma
+- [x] 5.5 `pnpm --filter server typecheck` — à valider en CI (client Prisma
       non générable hors-ligne dans le sandbox).
 
 ## 6. Correctif + retrait de coach (suivi post-merge #930)

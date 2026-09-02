@@ -39,6 +39,6 @@
 - [x] 5.2 `vitest run` web : `auth-storage` (16) — vert.
 - [x] 5.3 Garde-fou `routes/no-raw-body-cast.test.ts` vert.
 - [x] 5.4 `pnpm --filter server typecheck` vert.
-- [ ] 5.5 `pnpm --filter web typecheck` : aucune nouvelle erreur introduite (les
+- [x] 5.5 `pnpm --filter web typecheck` : aucune nouvelle erreur introduite (les
       erreurs `typedRoutes`/`.next/types` préexistantes sur `main` ne touchent
       pas ces fichiers).

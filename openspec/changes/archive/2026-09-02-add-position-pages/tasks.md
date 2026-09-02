@@ -62,7 +62,7 @@
       `[slug]/[position]` est un enfant — la suite complète passe.
 - [ ] 5.3 *(optionnel)* E2E Playwright `/teams/skaven` → position → skill.
       Non lancé dans cet environnement (infra E2E non provisionnée).
-- [ ] 5.4 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
+- [x] 5.4 `/opsx:sync` (delta-spec → specs principales) puis `/opsx:archive`
       après merge de la PR.
 
 ## Lot 2 — B.4 Durcissement `/api/positions` — FAIT

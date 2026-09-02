@@ -1,7 +1,7 @@
 # Roadmap v2 — Sprints 24-27
 
-> Derniere mise a jour : 2026-06-15
-> Contexte : v1.173.x livree (beta publique). Roadmap v1 archivee dans
+> Derniere mise a jour : 2026-09-02
+> Contexte : v1.240.x livree (beta publique). Roadmap v1 archivee dans
 > [`archive/v1.73/`](./archive/v1.73/README.md). Cette nouvelle roadmap
 > couvre les 4 sprints initiaux S24-27 + sprints post-audit O-R derives
 > du gap analysis 2026-05-10.
@@ -40,6 +40,29 @@
   Nuffle + accueil personnalise, comparateur de rosters SSR + tier-list,
   notifications de re-engagement (Web Push + digest e-mail), onboarding
   "60 secondes", OpenSpec workflow.
+- **Ligues physiques : feuille de match v2 + confort** (2026-06-25→07-28) —
+  achats/licenciements hors ligne, verrouillage de l'edition d'equipe
+  engagee, cycle de vie des statuts de ligue, morts et licenciements traces
+  et reversibles, regle Capitaine, colonnes etendues du classement.
+- **Vague "gestion d'equipe & feuille de match"** (2026-08-17→09-01,
+  #938-#1006) — **69 PR, 859 fichiers, ~123 500 lignes, 197 nouveaux
+  fichiers de test, 6 modeles Prisma.** Quatre chantiers :
+  1. **Feuille de match conforme au livre** (18 PR) — sequence de fin de
+     match p.68, gel du match a l'ouverture, journaliers panachables et
+     Star Players synthetiques, PSP de reception, invalidation d'un match
+     de play-off, catalogue d'embauche.
+  2. **Valeur d'equipe qui cesse de mentir** (11 PR) — separation or /
+     valeur, Fans Devoues hors VE/VEA, "Trois-quarts a vil prix" en VEA,
+     surcout des competences d'Elite, VEA = VE − absents.
+  3. **Referentiels "base d'abord"** (6 PR) — audit statique vs BDD puis
+     lots 1→6 : coups de pouce, bareme d'avancement, regles speciales,
+     univers des rosters passent en base avec repli compile.
+  4. **Journal d'equipe** (#985) — `TeamAuditEvent` append-only (qui / quoi
+     / **quel resultat**), contexte ambiant `AsyncLocalStorage`, garde CI
+     a ratchet.
+
+  Recit complet :
+  [`sessions/2026-09-02-vague-gestion-equipe-et-feuille-de-match.md`](./sessions/2026-09-02-vague-gestion-equipe-et-feuille-de-match.md).
 
 ## Suivi qualite actif
 
@@ -47,6 +70,29 @@
   lot O.A.2-4 (17 tests `registry-wiring.test.ts`). Seul reste differe :
   Pile Driver (foul gratuit post-knockdown, action speciale). Detail :
   [`follow-up-b01.md`](./follow-up-b01.md).
+- ✅ **CI qui avalait les echecs de test clos** le 2026-08-31 (#1000). La
+  step "Unit tests" se terminait par `|| echo "..."`, ce qui noyait le code
+  de sortie de **toutes** les suites : `@bb/tests` et
+  `@bb/tests-integration` ont derive sans alerte. Les workspaces e2e sont
+  desormais exclus **par filtre**, les deux suites gatent la CI, et 27 tests
+  rouges ont ete repares.
+- ⚠️ **59 changesets non consommes** dans `.changeset/`, le plus ancien du
+  2026-07-22. `semantic-release` assure le versionnement reel (v1.240.1) et
+  `pnpm changeset:version` n'a jamais tourne sur cette serie : deux
+  mecanismes coexistent sans que l'un consomme l'autre. A trancher — les
+  consommer, ou documenter qu'ils servent de journal de release.
+
+## Journal de decisions (OpenSpec)
+
+Au 2026-09-02, **30 changes archives** (28 verses ce jour) dans
+[`openspec/changes/archive/`](../../openspec/changes/archive/) et **29
+capabilities** specifiees dans [`openspec/specs/`](../../openspec/specs/).
+Plus aucun change actif : la totalite du journal de decisions est passee en
+archive, delta-specs synchronisees.
+
+Les suites hors perimetre de ces changes sont remontees dans
+[`backlog/openspec-suites.md`](./backlog/openspec-suites.md) pour rester
+trouvables sans fouiller l'archive.
 
 ## Items ecartes / backlog
 
