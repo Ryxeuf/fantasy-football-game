@@ -640,6 +640,43 @@ describe("rebakeFrozenJourneymen (changement de poste d'avant-match)", () => {
     expect(JSON.parse(out as string).currentValue).toBe(920_000);
   });
 
+  it("snapshot antérieur au re-gel : la valeur retirée est celle des journaliers BAKÉS, pas du choix stocké", () => {
+    // Le poste avait été changé (choix stocké = 2 Gobelins) AVANT que le
+    // re-gel existe : le gel porte toujours 2 Trois-quarts Orques (2 × 50k
+    // dans la VEA figée), pas les 2 × 40k que re-dérive le choix stocké.
+    const previousFromStoredChoice = [
+      goblin("journeyman-home-1", 12),
+      goblin("journeyman-home-2", 13),
+    ];
+    const out = rebakeFrozenJourneymen({
+      raw: frozen(),
+      previous: previousFromStoredChoice,
+      next: [goblin("journeyman-home-1", 12), orc("journeyman-home-2", 13)],
+      roster: "orc",
+      ruleset: "season_3",
+    });
+    // 940k − 100k (bakés) + 90k, et non 940k − 80k + 90k.
+    expect(JSON.parse(out as string).currentValue).toBe(930_000);
+  });
+
+  it("libellé baké inconnu du roster : retombe sur le journalier re-dérivé du même rang", () => {
+    const out = rebakeFrozenJourneymen({
+      raw: frozen({
+        players: [
+          { name: "J1", position: "orc_blitzer", number: 1, spp: 0 },
+          { ...toFrozenJourneymanEntry(orcs[0]), position: "Journalier (Poste disparu)" },
+          toFrozenJourneymanEntry(orcs[1]),
+        ],
+      }),
+      previous: [goblin("journeyman-home-1", 12), orc("journeyman-home-2", 13)],
+      next: [],
+      roster: "orc",
+      ruleset: "season_3",
+    });
+    // 940k − (40k re-dérivé + 50k baké).
+    expect(JSON.parse(out as string).currentValue).toBe(850_000);
+  });
+
   it("suit un contingent qui disparaît", () => {
     const snap = JSON.parse(
       rebakeFrozenJourneymen({ raw: frozen(), previous: orcs, next: [] }) as string,

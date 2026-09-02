@@ -472,6 +472,29 @@ export function toFrozenJourneymanEntry(
 }
 
 /**
+ * Valeur des journaliers tels qu'ils sont BAKÉS dans le snapshot (snapshot
+ * sans `journeymenValue`) : le poste se relit dans le libellé de chaque
+ * entrée ; un libellé qui ne correspond à aucun poste retombe sur le
+ * journalier re-dérivé du même rang (puis sur la valeur de repli).
+ */
+function bakedJourneymenValue(
+  baked: readonly unknown[],
+  derived: readonly SheetJourneyman[],
+  positions: readonly JourneymanSourcePosition[],
+): number {
+  const costByLabel = new Map<string, number>();
+  for (const p of positions) {
+    costByLabel.set(`${FROZEN_JOURNEYMAN_POSITION_PREFIX} (${p.displayName})`, p.cost * 1000);
+  }
+  return baked.reduce<number>((sum, entry, i) => {
+    const label = (entry as { position?: unknown }).position;
+    const fromLabel =
+      typeof label === "string" ? costByLabel.get(label) : undefined;
+    return sum + (fromLabel ?? derived[i]?.cost ?? FALLBACK_COST);
+  }, 0);
+}
+
+/**
  * Re-bake (pur) les journaliers d'un snapshot FIGÉ après un changement de
  * poste d'avant-match.
  *
@@ -495,6 +518,16 @@ export function rebakeFrozenJourneymen(input: {
   readonly raw: unknown;
   readonly previous: readonly SheetJourneyman[];
   readonly next: readonly SheetJourneyman[];
+  /**
+   * Roster et postes (base, sinon catalogue) : servent à relire le POSTE des
+   * journaliers BAKÉS (libellé « Journalier (<poste>) ») quand le snapshot
+   * ne porte pas `journeymenValue`. C'est ce qui est réellement figé dans la
+   * VEA, alors que `previous` re-dérive le choix STOCKÉ — les deux divergent
+   * sur une feuille dont le poste avait changé avant que le re-gel existe.
+   */
+  readonly roster?: string;
+  readonly ruleset?: string;
+  readonly positions?: readonly JourneymanSourcePosition[] | null;
 }): string | null {
   const obj = parseJsonObject(input.raw);
   if (!obj || obj.headerOnly === true || !Array.isArray(obj.players)) {
@@ -505,7 +538,13 @@ export function rebakeFrozenJourneymen(input: {
     typeof v === "number" && Number.isFinite(v);
   const previousValue = isFiniteNumber(obj.journeymenValue)
     ? obj.journeymenValue
-    : sumJourneymenValue(input.previous);
+    : bakedJourneymenValue(
+        obj.players.filter(isFrozenJourneymanEntry),
+        input.previous,
+        input.roster !== undefined
+          ? rosterPositions(input.roster, input.ruleset, input.positions)
+          : [],
+      );
   const nextValue = sumJourneymenValue(input.next);
   return JSON.stringify({
     ...obj,
