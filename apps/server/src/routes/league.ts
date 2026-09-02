@@ -179,6 +179,7 @@ import {
   canInvalidateMatchSheet,
   getMatchSheet,
   listPendingValidationsForCommissioner,
+  rollJourneymanRandomPrimary,
   MatchSheetError,
 } from "../services/league-match-sheet";
 import {
@@ -191,6 +192,10 @@ import {
   type PostMatchBody,
   type InvalidateSheetBody,
 } from "../schemas/league-match-sheet.schemas";
+import {
+  rollRandomPrimarySchema,
+  type RollRandomPrimaryBody,
+} from "../schemas/advancement.schemas";
 import { playMecene, LeaguePatronError } from "../services/league-patron";
 import { listLeagueThemes } from "../services/league-themes";
 import {
@@ -282,7 +287,8 @@ function domainError(res: Response, e: unknown): void {
     const status =
       e.code === "pairing_not_found" ||
       e.code === "sheet_not_found" ||
-      e.code === "event_not_found"
+      e.code === "event_not_found" ||
+      e.code === "journeyman_not_found"
         ? 404
         : e.code === "forbidden" || e.code === "not_a_participant"
           ? 403
@@ -2094,6 +2100,33 @@ export async function handleUpdatePostMatch(
   }
 }
 
+/**
+ * POST /leagues/pairings/:pairingId/sheet/journeymen/:journeymanId/roll-random-primary
+ *
+ * Tirage « Compétence Principale au hasard » d'un journalier de la feuille
+ * (2 candidats, seed déterministe). Réservé au coach du côté du journalier
+ * et au commissaire, tant que la feuille n'est pas validée.
+ */
+export async function handleRollJourneymanRandomPrimary(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body: RollRandomPrimaryBody = req.body;
+  try {
+    const out = await rollJourneymanRandomPrimary({
+      pairingId: req.params.pairingId,
+      userId,
+      journeymanId: req.params.journeymanId,
+      category: body.category,
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** POST /leagues/pairings/:pairingId/sheet/invalidate (commissaire). */
 export async function handleInvalidateMatchSheet(
   req: AuthenticatedRequest,
@@ -3002,6 +3035,14 @@ router.post(
   authUser,
   validate(addEventSchema),
   handleAddMatchSheetEvent,
+);
+// Évolution d'un journalier : tirage « Hasard » servi par la feuille (pas
+// de ligne TeamPlayer pour l'endpoint d'équipe).
+router.post(
+  "/pairings/:pairingId/sheet/journeymen/:journeymanId/roll-random-primary",
+  authUser,
+  validate(rollRandomPrimarySchema),
+  handleRollJourneymanRandomPrimary,
 );
 router.delete(
   "/pairings/:pairingId/sheet/events/:eventId",

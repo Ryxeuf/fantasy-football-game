@@ -56,14 +56,20 @@ import {
   deriveJourneymen,
   deriveMatchJourneymen,
   isJourneymanId,
+  journeymanRandomPrimarySeed,
+  journeymanSide,
+  journeymanSkillAccess,
   journeymenChoiceInput,
   linemanPositionsForRoster,
   type JourneymanSourcePosition,
   parseJourneymenChoice,
   parseJourneymenChoices,
+  splitSkillCsv,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
+import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { parseAccessCsv } from "./skill-access";
 import {
   applyPrayerSppBonuses,
   computePrayerSppBonuses,
@@ -117,8 +123,11 @@ import {
   getFormatConstraints,
   isGameFormat,
   TEAM_ROSTERS,
+  isRandomSkillCategory,
+  rollRandomPrimaryCandidates,
   type AllowedRoster,
   type GameFormat,
+  type RandomSkillCategoryCode,
   type Ruleset,
   type TournamentRulesetDefinition,
 } from "@bb/game-engine";
@@ -237,7 +246,11 @@ export class MatchSheetError extends Error {
       | "inducement_over_budget"
       | "inducement_not_allowed"
       | "advancement_wrong_side"
-      | "advancement_invalid_player",
+      | "advancement_invalid_player"
+      | "journeyman_not_found"
+      | "invalid_category"
+      | "category_not_primary"
+      | "no_candidates",
     message: string,
   ) {
     super(message);
@@ -974,6 +987,108 @@ export async function updatePostMatch(input: {
     where: { id: sheet.id },
     data,
   });
+}
+
+/**
+ * Tirage « Compétence Principale au hasard » (livre p.121) pour un
+ * JOURNALIER de la feuille : catégorie choisie → 2 candidats, le coach en
+ * garde une et la stage comme une évolution `random-primary`.
+ *
+ * Un journalier n'a pas de ligne TeamPlayer : l'endpoint d'équipe
+ * (`/team/:teamId/players/:playerId/advancement/roll-random-primary`) ne
+ * peut pas le servir. Même contrat que lui — tirage AUTORITAIRE côté
+ * serveur et DÉTERMINISTE (seed = feuille + journalier + poste + catégorie,
+ * cf. `journeymanRandomPrimarySeed`), catégorie limitée aux Principales du
+ * poste, compétences déjà possédées exclues, pool filtré en base. La
+ * validation re-dérive les deux candidats et refuse une compétence qui n'en
+ * fait pas partie : impossible de s'offrir n'importe quelle Principale au
+ * tarif du hasard.
+ */
+export async function rollJourneymanRandomPrimary(input: {
+  pairingId: string;
+  userId: string;
+  journeymanId: string;
+  category: string;
+}): Promise<{
+  rolled: true;
+  category: RandomSkillCategoryCode;
+  candidates: string[];
+}> {
+  const ctx = await loadPairingContext(input.pairingId);
+  const side = coachSide(ctx, input.userId);
+  const commissioner = isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  const journeymanSideOf = journeymanSide(input.journeymanId);
+  if (!journeymanSideOf) {
+    throw new MatchSheetError(
+      "journeyman_not_found",
+      `Journalier ${input.journeymanId} inconnu de cette feuille`,
+    );
+  }
+  if (!commissioner && side !== journeymanSideOf) {
+    throw new MatchSheetError(
+      "advancement_wrong_side",
+      "Chaque coach ne tire que pour les journaliers de sa propre équipe",
+    );
+  }
+  if (!isRandomSkillCategory(input.category)) {
+    throw new MatchSheetError(
+      "invalid_category",
+      `Catégorie de compétence inconnue : ${input.category}`,
+    );
+  }
+  const category: RandomSkillCategoryCode = input.category;
+  const sheet = await loadSheetOrThrow(input.pairingId);
+  ensureEditable(sheet.status);
+
+  const teams = await loadSheetTeams(input.pairingId);
+  const team = journeymanSideOf === "home" ? teams.home : teams.away;
+  const positions = team
+    ? await journeymanPositionsFor(team.roster, team.ruleset)
+    : null;
+  const journeyman = team
+    ? deriveSideJourneymen(
+        team,
+        journeymanSideOf,
+        sheet as SheetJourneymenColumns,
+        positions,
+      ).find((j) => j.id === input.journeymanId)
+    : undefined;
+  if (!team || !journeyman) {
+    throw new MatchSheetError(
+      "journeyman_not_found",
+      `Journalier ${input.journeymanId} inconnu de cette feuille`,
+    );
+  }
+
+  // La catégorie doit être Principale pour le poste du journalier — quand
+  // l'accès est renseigné (Saison 3) ; sinon rien n'est imposé, comme pour
+  // un joueur du roster.
+  const access = journeymanSkillAccess(journeyman.position, positions);
+  if (access.primary != null && !parseAccessCsv(access.primary).has(category)) {
+    throw new MatchSheetError(
+      "category_not_primary",
+      `La catégorie ${category} n'est pas Principale pour ${journeyman.positionName}`,
+    );
+  }
+
+  const candidates = rollRandomPrimaryCandidates({
+    category,
+    ownedSlugs: splitSkillCsv(journeyman.skills),
+    seed: journeymanRandomPrimarySeed(sheet.id, journeyman, category),
+    // Même pool (filtré en base) que le tirage d'équipe et que la
+    // vérification à la validation.
+    pool: await resolveRandomPrimaryPool(category, team.ruleset),
+  });
+  if (candidates.length === 0) {
+    throw new MatchSheetError(
+      "no_candidates",
+      "Aucune compétence tirable dans cette catégorie pour ce journalier",
+    );
+  }
+  return { rolled: true, category, candidates };
 }
 
 function nextStatusOnSubmit(

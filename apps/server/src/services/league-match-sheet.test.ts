@@ -89,6 +89,7 @@ import {
   removeEvent,
   updatePreMatch,
   updatePostMatch,
+  rollJourneymanRandomPrimary,
   submitByCoach,
   unsubmitByCoach,
   validateByCommissioner,
@@ -109,7 +110,10 @@ import {
 } from "./league-sheet-advancements";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
-import { getSpecialRulesForTeam } from "@bb/game-engine";
+import {
+  getSpecialRulesForTeam,
+  RANDOM_PRIMARY_SKILL_TABLE_2025,
+} from "@bb/game-engine";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import { updateTeamValues } from "../utils/team-values";
@@ -2488,6 +2492,166 @@ describe("Lot G — league-match-sheet", () => {
           }),
         ).resolves.toBeDefined();
       });
+    });
+  });
+
+  // Tirage « Hasard » d'un journalier : servi par la feuille (pas de ligne
+  // TeamPlayer pour l'endpoint d'équipe), autoritaire et déterministe.
+  describe("rollJourneymanRandomPrimary", () => {
+    function mockOrcPairing(
+      sheet: Record<string, unknown> = { id: "ms1", status: "draft" },
+    ) {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const players = (prefix: string, count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "orc_blitzer",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Home", roster: "orc", players: players("h", 11) },
+        // 10 joueurs : UN journalier, Trois-quart Orque par défaut (G,S).
+        { id: "team-away", name: "Away", roster: "orc", players: players("a", 10) },
+      ]);
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(sheet);
+    }
+
+    it("tire 2 candidats de la catégorie, sans doublon avec les compétences du poste", async () => {
+      mockOrcPairing();
+      const out = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: AWAY,
+        journeymanId: "journeyman-away-1",
+        category: "S",
+      });
+      expect(out.rolled).toBe(true);
+      expect(out.category).toBe("S");
+      expect(out.candidates).toHaveLength(2);
+      expect(new Set(out.candidates).size).toBe(2);
+      for (const slug of out.candidates) {
+        expect(RANDOM_PRIMARY_SKILL_TABLE_2025.S).toContain(slug);
+      }
+    });
+
+    it("est DÉTERMINISTE : relancer donne la même paire", async () => {
+      mockOrcPairing();
+      const first = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: AWAY,
+        journeymanId: "journeyman-away-1",
+        category: "G",
+      });
+      const again = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        journeymanId: "journeyman-away-1",
+        category: "G",
+      });
+      expect(again.candidates).toEqual(first.candidates);
+    });
+
+    it("suit le poste CHOISI du journalier (Gobelin : Agilité Principale, Esquive exclue)", async () => {
+      mockOrcPairing({
+        id: "ms1",
+        status: "draft",
+        journeymenAway: { positions: ["orc_trois_quart_gobelin"] },
+      });
+      const out = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: AWAY,
+        journeymanId: "journeyman-away-1",
+        category: "A",
+      });
+      expect(out.candidates).toHaveLength(2);
+      // Le Trois-quart Gobelin possède déjà Esquive : jamais tirée.
+      expect(out.candidates).not.toContain("dodge");
+      for (const slug of out.candidates) {
+        expect(RANDOM_PRIMARY_SKILL_TABLE_2025.A).toContain(slug);
+      }
+    });
+
+    it("refuse une catégorie qui n'est pas Principale pour le poste", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "A",
+        }),
+      ).rejects.toMatchObject({ code: "category_not_primary" });
+    });
+
+    it("refuse une catégorie inconnue", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "Z",
+        }),
+      ).rejects.toMatchObject({ code: "invalid_category" });
+    });
+
+    it("un coach ne tire que pour SES journaliers (le commissaire pour les deux)", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: HOME,
+          journeymanId: "journeyman-away-1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "advancement_wrong_side" });
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: "stranger",
+          journeymanId: "journeyman-away-1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("journalier inconnu : id mal formé ou rang au-delà du contingent", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-2",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "journeyman_not_found" });
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: COMMISH,
+          journeymanId: "a1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "journeyman_not_found" });
+    });
+
+    it("feuille validée : plus de tirage", async () => {
+      mockOrcPairing({ id: "ms1", status: "validated" });
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "already_validated" });
     });
   });
 

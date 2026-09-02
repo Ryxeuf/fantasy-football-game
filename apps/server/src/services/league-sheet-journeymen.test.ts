@@ -13,8 +13,11 @@ import {
   deriveJourneymen,
   deriveMatchJourneymen,
   isJourneymanId,
+  journeymanRandomPrimarySeed,
   journeymanSide,
+  journeymanSkillAccess,
   linemanPositionsForRoster,
+  splitSkillCsv,
   parseFrozenSheetRoster,
   parseJourneymenChoice,
   parseJourneymenChoices,
@@ -54,6 +57,100 @@ describe("journeymanSide", () => {
     expect(journeymanSide("journeyman-north-1")).toBeNull();
     expect(journeymanSide(null)).toBeNull();
     expect(journeymanSide(undefined)).toBeNull();
+  });
+});
+
+describe("splitSkillCsv", () => {
+  it("découpe, trim et ignore les entrées vides", () => {
+    expect(splitSkillCsv(" block , dodge,,loner-4 ")).toEqual([
+      "block",
+      "dodge",
+      "loner-4",
+    ]);
+    expect(splitSkillCsv("")).toEqual([]);
+    expect(splitSkillCsv(null)).toEqual([]);
+  });
+});
+
+describe("journeymanSkillAccess", () => {
+  it("lit l'accès en base quand la ligne le renseigne", () => {
+    expect(
+      journeymanSkillAccess("orc_trois_quart_gobelin", [
+        {
+          slug: "orc_trois_quart_gobelin",
+          displayName: "Trois-quart Gobelin",
+          cost: 40,
+          max: 4,
+          ma: 6,
+          st: 2,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "stunty,right-stuff,dodge",
+          primarySkills: "A",
+          secondarySkills: "G,K",
+        },
+      ]),
+    ).toEqual({ primary: "A", secondary: "G,K" });
+  });
+
+  it("retombe sur la table compilée quand la base ne dit rien", () => {
+    // Ligne en base SANS accès (null/null) : c'est le catalogue qui parle.
+    expect(
+      journeymanSkillAccess("orc_trois_quart_gobelin", [
+        {
+          slug: "orc_trois_quart_gobelin",
+          displayName: "Trois-quart Gobelin",
+          cost: 40,
+          max: 4,
+          ma: 6,
+          st: 2,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "",
+          primarySkills: null,
+          secondarySkills: null,
+        },
+      ]),
+    ).toEqual({ primary: "A,K", secondary: "G,P,K" });
+    expect(journeymanSkillAccess("orc_trois_quart_orque", null)).toEqual({
+      primary: "G,S",
+      secondary: "A,K",
+    });
+  });
+
+  it("poste inconnu : accès non renseigné", () => {
+    expect(journeymanSkillAccess("poste-inconnu", [])).toEqual({
+      primary: null,
+      secondary: null,
+    });
+  });
+});
+
+describe("journeymanRandomPrimarySeed", () => {
+  const j = { id: "journeyman-home-1", position: "orc_trois_quart_orque" };
+
+  it("est stable pour la même feuille, le même journalier et la même catégorie", () => {
+    expect(journeymanRandomPrimarySeed("ms1", j, "G")).toBe(
+      journeymanRandomPrimarySeed("ms1", j, "G"),
+    );
+  });
+
+  it("change avec la feuille, le journalier, le poste ou la catégorie", () => {
+    const base = journeymanRandomPrimarySeed("ms1", j, "G");
+    expect(journeymanRandomPrimarySeed("ms2", j, "G")).not.toBe(base);
+    expect(
+      journeymanRandomPrimarySeed("ms1", { ...j, id: "journeyman-home-2" }, "G"),
+    ).not.toBe(base);
+    expect(
+      journeymanRandomPrimarySeed(
+        "ms1",
+        { ...j, position: "orc_trois_quart_gobelin" },
+        "G",
+      ),
+    ).not.toBe(base);
+    expect(journeymanRandomPrimarySeed("ms1", j, "S")).not.toBe(base);
   });
 });
 

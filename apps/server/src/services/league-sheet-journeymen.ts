@@ -41,6 +41,7 @@ import {
   TEAM_ROSTERS_BY_RULESET,
   DEFAULT_RULESET,
   KEYWORDS_SEASON3,
+  SKILL_ACCESS_SEASON3,
   type Ruleset,
 } from "@bb/game-engine";
 
@@ -145,6 +146,66 @@ export interface JourneymanSourcePosition {
    * slug. Servent à reconnaître un Trois-quart à quota réduit.
    */
   keywords?: string | null;
+  /**
+   * Accès aux compétences en évolution (CSV de codes `G/A/S/P/M/K`), lus en
+   * base (`Position.primarySkills` / `secondarySkills`). Absents sur le
+   * catalogue compilé : ils sont alors résolus par slug
+   * (`SKILL_ACCESS_SEASON3`). Servent au tirage aléatoire et au contrôle
+   * d'accès de l'évolution d'un journalier.
+   */
+  primarySkills?: string | null;
+  secondarySkills?: string | null;
+}
+
+/** Découpe un CSV de compétences en slugs (entrées vides ignorées). */
+export function splitSkillCsv(csv: string | null | undefined): string[] {
+  return (csv ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * Accès Principale/Secondaire du poste d'un journalier : la ligne lue en
+ * base quand elle renseigne l'un des deux, sinon la table compilée, sinon
+ * « non renseigné » (`null`, comme un poste Saison 2). Même résolution que
+ * l'éditeur web (base d'abord, repli compilé), pour que le serveur ne
+ * refuse jamais une catégorie que l'éditeur propose.
+ */
+export function journeymanSkillAccess(
+  position: string,
+  positions?: readonly JourneymanSourcePosition[] | null,
+): { primary: string | null; secondary: string | null } {
+  const row = positions?.find((p) => p.slug === position);
+  if (row && (row.primarySkills != null || row.secondarySkills != null)) {
+    return {
+      primary: row.primarySkills ?? null,
+      secondary: row.secondarySkills ?? null,
+    };
+  }
+  const compiled = SKILL_ACCESS_SEASON3[position];
+  return {
+    primary: compiled?.primary ?? null,
+    secondary: compiled?.secondary ?? null,
+  };
+}
+
+/**
+ * Seed du tirage « Compétence Principale au hasard » d'un journalier.
+ *
+ * Un journalier n'a pas de ligne TeamPlayer : son id (`journeyman-<side>-<n>`)
+ * se répète d'une feuille à l'autre, d'où la FEUILLE dans le seed. Le POSTE
+ * y figure aussi : changer le poste change le journalier (stats, compétences
+ * de base — donc les doublons exclus du tirage), et revenir au poste initial
+ * redonne la même paire (pas de relance par aller-retour). Le rang
+ * d'avancement est toujours 0 : un journalier débarque sans évolution.
+ */
+export function journeymanRandomPrimarySeed(
+  sheetId: string,
+  journeyman: { readonly id: string; readonly position: string },
+  category: string,
+): string {
+  return `sheet:${sheetId}:${journeyman.id}:${journeyman.position}:0:${category}`;
 }
 
 /**
