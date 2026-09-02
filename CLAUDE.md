@@ -771,6 +771,36 @@ quand on introduit un nouveau flag — soit le flag est coherent avec
 un comportement on/on, soit c'est un kill-switch (cf. pattern dedie
 ci-dessus) et doit etre liste dans `KILL_SWITCH_FLAGS`.
 
+### Un `|| echo` sur une step de test AVALE tous les echecs
+
+Piege le plus couteux de la vague d'aout 2026 (#1000) : la step « Unit tests »
+de `ci.yml` se terminait par `|| echo "..."`, cense tolerer les workspaces e2e
+qui n'ont pas leur infra sur le runner. En pratique il noyait le code de sortie
+de **toutes** les suites — `@bb/tests` et `@bb/tests-integration` ont derive au
+rouge pendant des semaines sans qu'aucune CI ne le signale (27 tests casses au
+moment de la decouverte).
+
+Regle : on **exclut par filtre** ce qui ne doit pas tourner, on n'avale jamais
+le code de sortie de la commande entiere.
+
+```yaml
+# NON — masque aussi les vrais echecs des suites qu'on voulait garder
+run: pnpm -w test || echo "certaines suites ne tournent pas ici"
+
+# OUI — les suites restantes gatent la CI
+# `--` transmet les filtres a TURBO (le script racine est `turbo run test`)
+run: pnpm -w test -- --filter='!@bb/tests-e2e-api' --filter='!@bb/tests-e2e-ui'
+```
+
+Le meme defaut subsiste ailleurs, non corrige a ce jour — le jour ou on y
+touche, c'est un filtre, pas un fallback :
+
+| Ou | Ligne |
+|---|---|
+| `ci.yml` step Typecheck | `pnpm -w run typecheck \|\| echo "No explicit typecheck scripts..."` |
+| `@bb/server`, `@bb/web`, `@bb/ui` | `"lint": "eslint . \|\| true"` |
+| `@bb/mobile` | pas de script `lint` du tout |
+
 ### Un merge fait par le GITHUB_TOKEN n'emet pas d'event `push`
 `auto-merge.yml` merge les PR avec `secrets.GITHUB_TOKEN`. GitHub
 **n'emet volontairement aucun event** (`push`, `pull_request`…) pour les
@@ -867,9 +897,17 @@ separe, la decision vit dans le change.
   "Workflow git" ci-dessus.
 - **Idees** : capturees via `/ideas` puis, si retenues sans suite
   immediate, ajoutees a `docs/roadmap/backlog/future-ideas.md`.
-- **Apres merge** : `/opsx:archive` deplace le change dans
-  `openspec/changes/archive/` (historique permanent versionne). Le
+- **Apres merge** : `/opsx:sync` **puis** `/opsx:archive`. Le sync verse la
+  delta-spec dans `openspec/specs/<capability>/spec.md` (`## ADDED
+  Requirements` → `## Requirements`, description → `## Purpose`) ; l'archive
+  deplace le change dans `openspec/changes/archive/YYYY-MM-DD-<nom>/`. Le
   recit de session reste dans `docs/roadmap/sessions/` comme avant.
+- **Ne PAS enterrer les suites en archivant.** Les taches d'un change
+  marquees « hors perimetre » / « hors lot » / « suites possibles » partent
+  avec lui dans l'archive. Elles se remontent dans
+  [`docs/roadmap/backlog/openspec-suites.md`](./docs/roadmap/backlog/openspec-suites.md)
+  — distinct de `future-ideas.md`, qui porte une gate de reactivation liee
+  aux KPI Pro League et ne s'applique PAS a ces suites.
 - Les fixes triviaux (typo, bump deps) n'ont pas besoin d'un change.
 
 ## Tests
@@ -986,6 +1024,22 @@ edition du `.json`, `pnpm --filter web typecheck` +
 - **2026-06-08** : Ligues — modeles `LeaguePool` + `LeagueMatch` avec
   config de points bonus + fonctionnalite "participant de test" (v1.172-
   1.173).
+- **2026-08-17→09-01** : **Vague « gestion d'equipe & feuille de match »**
+  (#938-#1006). 69 PR, 859 fichiers, ~123 500 lignes, 197 nouveaux fichiers
+  de test, 6 modeles Prisma (`TournamentRuleset`, `Inducement`,
+  `AdvancementCost`, `CharacteristicValue`, `RulesetConfig`,
+  `TeamAuditEvent`). Quatre chantiers : **feuille de match conforme au
+  livre** (sequence de fin de match p.68, gel a l'ouverture, journaliers
+  panachables, PSP de reception, invalidation d'un match de play-off,
+  catalogue d'embauche) ; **valeur d'equipe** (separation or/valeur, Fans
+  Devoues hors VE/VEA, « Trois-quarts a vil prix » en VEA, surcout des
+  competences d'Elite) ; **referentiels « base d'abord »** (audit + lots 1→6) ;
+  **journal d'equipe** (`TeamAuditEvent`). Plus la correction de la CI qui
+  **avalait les echecs de test** depuis des semaines (#1000, 27 tests
+  repares). Recit complet :
+  [`docs/roadmap/sessions/2026-09-02-vague-gestion-equipe-et-feuille-de-match.md`](./docs/roadmap/sessions/2026-09-02-vague-gestion-equipe-et-feuille-de-match.md).
+  Les regles et pieges qui en sortent sont consignes dans les sections
+  « Conventions code » et « Pieges connus » ci-dessus.
 - **2026-08-27** : Audit « statique vs base » + **lot 6** (modele de donnees
   « base d'abord ») : `Inducement`, `AdvancementCost`/`CharacteristicValue`/
   `RulesetConfig`, colonnes `pairWithSlug`/`maxBigGuys`/`displayNameEn`,
