@@ -12,7 +12,7 @@ import {
   StagedAdvancementsRecap,
   type StagedAdvancementEntry,
 } from "./SheetAdvancementsEditor";
-import type { SheetPlayer } from "./MatchSheetPanels";
+import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
 
 const apiRequest = vi.fn();
 vi.mock("../../../../../lib/api-client", () => ({
@@ -35,12 +35,29 @@ function player(overrides: Partial<SheetPlayer> & { id: string }): SheetPlayer {
   };
 }
 
+/** Journalier orque : Trois-quart Gobelin (Principale A,K), 3 PSP ce match. */
+function journeyman(over: Partial<SheetJourneyman> = {}): SheetJourneyman {
+  return {
+    id: "journeyman-home-1",
+    number: 12,
+    name: "Journalier 1",
+    position: "orc_trois_quart_gobelin",
+    positionName: "Journalier (Trois-quart Gobelin)",
+    stats: { ma: 6, st: 2, ag: 3, pa: 4, av: 8 },
+    skills: "dodge,right-stuff,stunty,loner-4",
+    cost: 40_000,
+    ...over,
+  };
+}
+
 function setup(props: {
   players: SheetPlayer[];
+  journeymen?: SheetJourneyman[];
   staged?: StagedAdvancementEntry[];
   computedSpp?: Record<string, number>;
   onChange?: (next: StagedAdvancementEntry[]) => void;
   disabled?: boolean;
+  pairingId?: string;
 }) {
   return render(
     <LanguageProvider>
@@ -48,11 +65,13 @@ function setup(props: {
         teamId="team-1"
         ruleset="season_3"
         players={props.players}
+        journeymen={props.journeymen}
         computedSpp={props.computedSpp ?? {}}
         sppBonus={[]}
         staged={props.staged ?? []}
         onChange={props.onChange ?? (() => undefined)}
         disabled={props.disabled}
+        pairingId={props.pairingId}
       />
     </LanguageProvider>,
   );
@@ -144,6 +163,107 @@ describe("SheetAdvancementsEditor (staging feuille de match)", () => {
     setup({ players: [player({ id: "p1", spp: 0 })] });
     expect(
       await screen.findByTestId("sheet-advancements-empty"),
+    ).toBeTruthy();
+  });
+
+  // Le poste CHOISI pour le journalier (Trois-quart Orque / Gobelin) décide
+  // des catégories accessibles : il fait partie du libellé, pour que le
+  // coach voie que son changement de poste est bien pris en compte.
+  it("liste un journalier atteignant un palier, avec le poste choisi", async () => {
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 3 },
+    });
+    const row = await screen.findByTestId("level-up-row-journeyman-home-1");
+    expect(row.textContent).toContain("N°12 Journalier 1");
+    expect(row.textContent).toContain("Journalier (Trois-quart Gobelin)");
+    expect(row.textContent).toContain("3 PSP");
+  });
+
+  it("n'affiche pas un journalier sous le palier le moins cher", async () => {
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 2 },
+    });
+    expect(
+      await screen.findByTestId("sheet-advancements-empty"),
+    ).toBeTruthy();
+  });
+
+  // La catégorie « Hasard » n'était pas proposée aux journaliers : le
+  // tirage d'équipe exige une ligne TeamPlayer. La feuille le sert.
+  it("ouvre le tirage « Hasard » à un journalier, servi par la route de la feuille", async () => {
+    const onChange = vi.fn();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/api/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "catch", nameFr: "Réception", category: "Agility" },
+            { slug: "diving-catch", nameFr: "Réception plongeante", category: "Agility" },
+          ],
+        });
+      if (path.includes("/roll-random-primary"))
+        return Promise.resolve({ candidates: ["catch", "diving-catch"] });
+      return Promise.resolve({});
+    });
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 3 },
+      pairingId: "pair-1",
+      onChange,
+    });
+    await screen.findByTestId("level-up-row-journeyman-home-1");
+    fireEvent.click(
+      screen.getByTestId("level-up-type-random-primary-journeyman-home-1"),
+    );
+    // Agilité est Principale pour un Trois-quart Gobelin (A,K).
+    fireEvent.click(screen.getByTestId("level-up-category-A-journeyman-home-1"));
+    fireEvent.click(screen.getByTestId("level-up-roll-journeyman-home-1"));
+    await screen.findByTestId("level-up-candidates-journeyman-home-1");
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      "/leagues/pairings/pair-1/sheet/journeymen/journeyman-home-1/roll-random-primary",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ category: "A" }),
+      }),
+    );
+    // Jamais l'endpoint d'équipe : le journalier n'y existe pas.
+    expect(
+      apiRequest.mock.calls.some(([path]) => String(path).includes("/team/")),
+    ).toBe(false);
+
+    fireEvent.click(
+      screen.getByTestId("level-up-candidate-catch-journeyman-home-1"),
+    );
+    fireEvent.click(screen.getByTestId("level-up-apply-journeyman-home-1"));
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          playerId: "journeyman-home-1",
+          type: "random-primary",
+          category: "A",
+          skillSlug: "catch",
+        },
+      ]),
+    );
+  });
+
+  it("sans pairing connu (rétro-compat), un journalier n'a que les choix libres", async () => {
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 3 },
+    });
+    await screen.findByTestId("level-up-row-journeyman-home-1");
+    expect(
+      screen.queryByTestId("level-up-type-random-primary-journeyman-home-1"),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("level-up-type-primary-journeyman-home-1"),
     ).toBeTruthy();
   });
 });

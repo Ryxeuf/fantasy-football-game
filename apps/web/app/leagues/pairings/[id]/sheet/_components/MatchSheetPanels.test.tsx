@@ -713,6 +713,35 @@ describe("PostMatchPanel — SPP estimés (auto)", () => {
     expect(block.textContent).toContain("+7");
     expect(block.textContent).toContain("Griff");
   });
+
+  it("inclut les journaliers (leurs PSP comptent à leur recrutement)", () => {
+    const teamWithJourneyman: SheetTeam = {
+      ...TEAM,
+      players: [sheetPlayer({ id: "p1", name: "Boris" })],
+      journeymen: [
+        {
+          id: "journeyman-home-1",
+          number: 12,
+          name: "Journalier 1",
+          position: "orc_trois_quart_gobelin",
+          positionName: "Journalier (Trois-quart Gobelin)",
+        },
+      ],
+    };
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={teamWithJourneyman}
+        away={null}
+        onSave={vi.fn()}
+        computedSpp={{ "journeyman-home-1": 4 }}
+      />,
+    );
+    const block = screen.getByTestId("auto-spp-home");
+    expect(block.textContent).toContain("N°12 Journalier 1");
+    expect(block.textContent).toContain("+4");
+    expect(block.textContent).not.toContain("Boris");
+  });
 });
 
 describe("PreMatchPanel — budget coups de pouce", () => {

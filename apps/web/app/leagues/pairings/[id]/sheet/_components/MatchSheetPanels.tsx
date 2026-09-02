@@ -2212,9 +2212,12 @@ export function PostMatchPanel({
               {/* SPP estimés (auto, depuis les évènements + MVP). Read-only :
                   le calcul officiel est appliqué à la validation. */}
               {(() => {
-                const players = (c.team?.players ?? []).filter(
-                  (p) => (computedSpp[p.id] ?? 0) > 0,
-                );
+                // Les journaliers gagnent aussi des PSP (ils comptent à leur
+                // recrutement, étape 4) : ils figurent dans l'estimation.
+                const players = [
+                  ...(c.team?.players ?? []),
+                  ...(c.team?.journeymen ?? []),
+                ].filter((p) => (computedSpp[p.id] ?? 0) > 0);
                 if (players.length === 0) return null;
                 const total = players.reduce(
                   (acc, p) => acc + (computedSpp[p.id] ?? 0),

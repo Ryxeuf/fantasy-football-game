@@ -89,6 +89,7 @@ import {
   removeEvent,
   updatePreMatch,
   updatePostMatch,
+  rollJourneymanRandomPrimary,
   submitByCoach,
   unsubmitByCoach,
   validateByCommissioner,
@@ -109,7 +110,11 @@ import {
 } from "./league-sheet-advancements";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
-import { getSpecialRulesForTeam } from "@bb/game-engine";
+import {
+  getSpecialRulesForTeam,
+  RANDOM_PRIMARY_SKILL_TABLE_2025,
+  surchargeForAdvancement,
+} from "@bb/game-engine";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import { updateTeamValues } from "../utils/team-values";
@@ -965,6 +970,187 @@ describe("Lot G — league-match-sheet", () => {
       expect(data.advancementsHome).toEqual(enriched);
     });
 
+    // Évolutions des JOURNALIERS : vérifiées à la validation (pas de ligne
+    // TeamPlayer), matérialisées au recrutement, tracées sur la feuille.
+    describe("évolutions des journaliers (étape 3, recrutement à l'étape 4)", () => {
+      const JOURNEYMAN = "journeyman-home-1";
+      const HIRE = { kind: "journeyman", name: "", cost: 0, journeymanId: JOURNEYMAN };
+
+      function mockJourneymanMatch(sheet: Record<string, unknown>) {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        const players = (prefix: string, count: number) =>
+          Array.from({ length: count }, (_, i) => ({
+            id: `${prefix}${i + 1}`,
+            number: i + 1,
+            name: `J${i + 1}`,
+            position: "human_blitzer",
+            dead: false,
+            missNextMatch: false,
+            spp: 0,
+            skills: "",
+            advancements: "[]",
+            ma: 7,
+            st: 3,
+            ag: 3,
+            pa: 4,
+            av: 9,
+          }));
+        mockPrisma.team.findMany.mockResolvedValue([
+          // 10 joueurs -> journeyman-home-1, Trois-quart humain (Principale G).
+          { id: "team-home", name: "H", roster: "human", players: players("h", 10) },
+          { id: "team-away", name: "A", roster: "orc", players: players("a", 11) },
+        ]);
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "both_submitted",
+          motmPlayerIds: [],
+          ...sheet,
+        });
+        // Le journalier marque un TD : 3 PSP, de quoi payer un tirage « Hasard ».
+        mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+          { kind: "touchdown", team: "home", actorPlayerId: JOURNEYMAN },
+        ]);
+        mockRecordOffline.mockResolvedValue({ recorded: true, hateRolls: [] });
+        mockPrisma.leagueMatchSheet.update.mockImplementation(
+          async (a: { data: Record<string, unknown> }) => ({
+            id: "ms1",
+            ...a.data,
+          }),
+        );
+      }
+
+      it("recrute le journalier avec la compétence tirée au sort et trace l'entrée appliquée", async () => {
+        mockJourneymanMatch({});
+        // Le tirage serveur donne les deux seuls candidats acceptés.
+        const roll = await rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: HOME,
+          journeymanId: JOURNEYMAN,
+          category: "G",
+        });
+        const skill = roll.candidates[0];
+        const staged = {
+          playerId: JOURNEYMAN,
+          type: "random-primary",
+          category: "G",
+          skillSlug: skill,
+        };
+        mockJourneymanMatch({ purchasesHome: [HIRE], advancementsHome: [staged] });
+
+        await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+        const offline = mockRecordOffline.mock.calls[0][0];
+        expect(offline.purchasesHome[0]).toMatchObject({
+          kind: "journeyman",
+          position: "human_trois_quart",
+          // Prix du poste + surcoût de VALEUR d'une Principale au hasard.
+          cost: 50_000 + surchargeForAdvancement({ type: "random-primary" }),
+          // 3 PSP gagnés - 3 PSP du 1er palier « Hasard ».
+          spp: 0,
+        });
+        expect(offline.purchasesHome[0].skills.split(",")).toContain(skill);
+        expect(JSON.parse(offline.purchasesHome[0].advancements)).toEqual([
+          { skillSlug: skill, type: "random-primary", isRandom: true, at: 0 },
+        ]);
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsHome).toEqual([
+          { ...staged, applied: true, cost: 3 },
+        ]);
+      });
+
+      it("écarte une compétence hors des deux candidats (anti-triche) : recruté au prix du poste, entrée refusée", async () => {
+        mockJourneymanMatch({});
+        const roll = await rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: HOME,
+          journeymanId: JOURNEYMAN,
+          category: "G",
+        });
+        const other = RANDOM_PRIMARY_SKILL_TABLE_2025.G.find(
+          (slug) => !roll.candidates.includes(slug),
+        ) as string;
+        const staged = {
+          playerId: JOURNEYMAN,
+          type: "random-primary",
+          category: "G",
+          skillSlug: other,
+        };
+        mockJourneymanMatch({ purchasesHome: [HIRE], advancementsHome: [staged] });
+
+        await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+        const offline = mockRecordOffline.mock.calls[0][0];
+        expect(offline.purchasesHome[0]).toMatchObject({
+          kind: "journeyman",
+          cost: 50_000,
+          spp: 3,
+          advancements: "[]",
+        });
+        expect(offline.purchasesHome[0].skills.split(",")).not.toContain(other);
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsHome).toEqual([
+          { ...staged, applied: false, skipReason: "random-not-in-candidates" },
+        ]);
+      });
+
+      it("journalier non recruté : l'entrée est CONSERVÉE et tracée, avec celle du roster, dans l'ordre", async () => {
+        const journeymanEntry = {
+          playerId: JOURNEYMAN,
+          type: "primary",
+          skillSlug: "block",
+        };
+        const rosterEntry = { playerId: "h1", type: "primary", skillSlug: "block" };
+        mockJourneymanMatch({ advancementsHome: [journeymanEntry, rosterEntry] });
+        mockRecordOffline.mockImplementation(
+          async (i: { applyAdvancements?: () => Promise<void> }) => {
+            await i.applyAdvancements?.();
+            return { recorded: true, hateRolls: [] };
+          },
+        );
+        const rosterApplied = { ...rosterEntry, applied: true, cost: 6 };
+        mockApplyStaged.mockResolvedValue([rosterApplied]);
+
+        await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+        // Le roster passe par `applyStagedAdvancements`, SANS le journalier.
+        expect(mockApplyStaged).toHaveBeenCalledWith({
+          teamId: "team-home",
+          entries: [rosterEntry],
+        });
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsHome).toEqual([
+          { ...journeymanEntry, applied: false, skipReason: "journeyman-not-hired" },
+          rosterApplied,
+        ]);
+      });
+
+      it("PSP du match insuffisants : recruté SANS son évolution (insufficient-spp)", async () => {
+        const staged = { playerId: JOURNEYMAN, type: "primary", skillSlug: "block" };
+        mockJourneymanMatch({ purchasesHome: [HIRE], advancementsHome: [staged] });
+        // Aucun évènement : 0 PSP, une Principale coûte 6.
+        mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+
+        await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+        const offline = mockRecordOffline.mock.calls[0][0];
+        expect(offline.purchasesHome[0]).toMatchObject({
+          kind: "journeyman",
+          cost: 50_000,
+          spp: 0,
+          advancements: "[]",
+        });
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsHome).toEqual([
+          { ...staged, applied: false, skipReason: "insufficient-spp" },
+        ]);
+      });
+    });
+
     it("n'applique PAS les évolutions quand le pipeline offline skip (déjà compté)", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
@@ -1467,6 +1653,56 @@ describe("Lot G — league-match-sheet", () => {
       // JDM = 4 PSP (bareme officiel BB2020/S3), des deux cotes.
       expect(out.computedSpp["h-mvp"]).toBe(4);
       expect(out.computedSpp["a-mvp"]).toBe(4);
+    });
+
+    it("credite les PSP de JDM a un JOURNALIER sans stat-line (son cote se lit dans son id)", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        // Le journalier est Joueur du Match SANS aucun evenement : il n'a
+        // pas de ligne TeamPlayer, donc aucun cote via `players`.
+        motmPlayerIds: ["journeyman-home-1"],
+        events: [],
+        rosterSnapshotHome: JSON.stringify({ currentValue: 900_000 }),
+        rosterSnapshotAway: JSON.stringify({ currentValue: 900_000 }),
+      });
+      const players = (count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `p${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "human_trois_quart",
+          dead: false,
+          missNextMatch: false,
+          spp: 0,
+          skills: "",
+          advancements: "[]",
+          ma: 6,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 9,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        // 10 joueurs -> 1 journalier (journeyman-home-1).
+        { id: "team-home", name: "Reikland", roster: "human", players: players(10) },
+        { id: "team-away", name: "Gouged Eye", roster: "human", players: players(11) },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // JDM = 4 PSP : le palier d'evolution du journalier est propose DES la
+      // saisie, et son recrutement en fin de match part de ces PSP.
+      expect(out.computedSpp["journeyman-home-1"]).toBe(4);
+      expect(out.teams.home?.journeymen?.map((j) => j.id)).toEqual([
+        "journeyman-home-1",
+      ]);
     });
 
     it("fige l'en-tete (TV/VEA/cagnotte/fans) aux valeurs du snapshot du match", async () => {
@@ -2179,6 +2415,193 @@ describe("Lot G — league-match-sheet", () => {
   });
 
   // Polish — apres-match.
+  // Le gel bake les journaliers ET leur valeur dans la VEA figée : changer
+  // le poste d'un journalier doit re-geler le côté (VEA, roster du match).
+  describe("updatePreMatch — poste des journaliers (re-gel du snapshot)", () => {
+    const realPlayers = Array.from({ length: 9 }, (_, i) => ({
+      name: `J${i + 1}`,
+      position: "orc_blitzer",
+      number: i + 1,
+      spp: 0,
+    }));
+    const bakedOrc = (number: number) => ({
+      name: `Journalier ${number - 11}`,
+      position: "Journalier (Trois-quart Orque)",
+      number,
+      ma: 5,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 10,
+      skills: "loner-4",
+      spp: 0,
+      advancements: "[]",
+    });
+    const bakedGoblin = (number: number) => ({
+      ...bakedOrc(number),
+      position: "Journalier (Trois-quart Gobelin)",
+      ma: 6,
+      st: 2,
+      av: 8,
+      skills: "stunty,right-stuff,dodge,loner-4",
+    });
+    /** 9 joueurs + 2 Trois-quarts Orques : VEA figée 840k + 2 × 50k. */
+    const frozenHome = (extra: Record<string, unknown> = {}) =>
+      JSON.stringify({
+        capturedAt: 1,
+        roster: "orc",
+        currentValue: 940_000,
+        treasury: 30_000,
+        players: [...realPlayers, bakedOrc(12), bakedOrc(13)],
+        ...extra,
+      });
+
+    function mockOrcSheet(sheet: Record<string, unknown>) {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const players = (prefix: string, count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "orc_blitzer",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "H", roster: "orc", currentValue: 1, treasury: 0, players: players("h", 9) },
+        { id: "team-away", name: "A", roster: "orc", currentValue: 1, treasury: 0, players: players("a", 11) },
+      ]);
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+        ...sheet,
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+    }
+
+    it("re-bake le journalier changé de poste : VEA figée, stats, compétences, numéro conservé", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome(),
+        rosterSnapshotAway: JSON.stringify({ currentValue: 900_000, players: [] }),
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin", null] },
+      });
+
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.journeymenHome).toEqual({
+        positions: ["orc_trois_quart_gobelin", null],
+      });
+      const snap = JSON.parse(data.rosterSnapshotHome as string);
+      // 940k − 50k (Trois-quart Orque) + 40k (Trois-quart Gobelin).
+      expect(snap.currentValue).toBe(930_000);
+      expect(snap.journeymenValue).toBe(90_000);
+      expect(snap.treasury).toBe(30_000);
+      expect(snap.players).toHaveLength(11);
+      expect(snap.players[9]).toMatchObject({
+        number: 12,
+        name: "Journalier 1",
+        position: "Journalier (Trois-quart Gobelin)",
+        ma: 6,
+        st: 2,
+        av: 8,
+      });
+      expect(snap.players[9].skills.split(",")).toEqual(
+        expect.arrayContaining(["dodge", "loner-4"]),
+      );
+      expect(snap.players[10]).toMatchObject({
+        number: 13,
+        position: "Journalier (Trois-quart Orque)",
+      });
+      // L'autre côté n'est pas touché.
+      expect(data.rosterSnapshotAway).toBeUndefined();
+    });
+
+    it("revenir au poste initial rend la VEA figée d'origine", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome({
+          currentValue: 930_000,
+          journeymenValue: 90_000,
+          players: [...realPlayers, bakedGoblin(12), bakedOrc(13)],
+        }),
+        journeymenHome: { positions: ["orc_trois_quart_gobelin", null] },
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_orque", null] },
+      });
+
+      const snap = JSON.parse(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data
+          .rosterSnapshotHome as string,
+      );
+      expect(snap.currentValue).toBe(940_000);
+      expect(snap.journeymenValue).toBe(100_000);
+      expect(snap.players[9]).toMatchObject({
+        number: 12,
+        position: "Journalier (Trois-quart Orque)",
+        ma: 5,
+      });
+    });
+
+    it("gel « en-tête seul » : le choix est stocké, rien n'est re-baké (journaliers dérivés en live)", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: JSON.stringify({ headerOnly: true, currentValue: 940_000 }),
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin"] },
+      });
+
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.journeymenHome).toEqual({
+        positions: ["orc_trois_quart_gobelin"],
+      });
+      expect(data.rosterSnapshotHome).toBeUndefined();
+      expect(mockPrisma.team.findMany).not.toHaveBeenCalled();
+    });
+
+    it("la lecture sert ensuite la VEA re-figée, le budget et le journalier au nouveau poste", async () => {
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome({
+          currentValue: 930_000,
+          journeymenValue: 90_000,
+          players: [...realPlayers, bakedGoblin(12), bakedOrc(13)],
+        }),
+        rosterSnapshotAway: JSON.stringify({ currentValue: 900_000, players: [] }),
+        journeymenHome: { positions: ["orc_trois_quart_gobelin", null] },
+      });
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+      expect(out.teams.home?.currentValue).toBe(930_000);
+      expect(out.reference.budget.home.ctv).toBe(930_000);
+      expect(out.teams.home?.journeymen?.map((j) => [j.number, j.position])).toEqual([
+        [12, "orc_trois_quart_gobelin"],
+        [13, "orc_trois_quart_orque"],
+      ]);
+      expect(out.teams.home?.journeymenChoices).toEqual([
+        "orc_trois_quart_gobelin",
+        "orc_trois_quart_orque",
+      ]);
+    });
+  });
+
   describe("updatePostMatch", () => {
     it("rejects a non-participant", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
@@ -2297,6 +2720,93 @@ describe("Lot G — league-match-sheet", () => {
         ).rejects.toMatchObject({ code: "advancement_invalid_player" });
       });
 
+      // Un journalier n'a pas de ligne TeamPlayer : l'appartenance passait
+      // par `team.players` seulement, et l'API refusait « Joueur
+      // journeyman-away-1 hors de l'équipe extérieur ».
+      function mockPairingWithJourneymen() {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        const players = (prefix: string, count: number) =>
+          Array.from({ length: count }, (_, i) => ({
+            id: `${prefix}${i + 1}`,
+            number: i + 1,
+            name: `J${i + 1}`,
+            position: "orc_blitzer",
+            dead: false,
+            missNextMatch: false,
+          }));
+        mockPrisma.team.findMany.mockResolvedValue([
+          // 11 joueurs : aucun journalier côté domicile.
+          { id: "team-home", name: "Home", roster: "orc", players: players("h", 11) },
+          // 10 joueurs : UN journalier (journeyman-away-1) côté extérieur.
+          { id: "team-away", name: "Away", roster: "orc", players: players("a", 10) },
+        ]);
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        mockPrisma.leagueMatchSheet.update.mockImplementation(
+          async (a: { data: Record<string, unknown> }) => ({
+            id: "ms1",
+            ...a.data,
+          }),
+        );
+      }
+
+      it("accepte l'évolution d'un JOURNALIER aligné par le côté visé", async () => {
+        mockPairingWithJourneymen();
+        await updatePostMatch({
+          pairingId: "pair-1",
+          userId: AWAY,
+          payload: {
+            advancementsAway: [
+              {
+                playerId: "journeyman-away-1",
+                type: "primary",
+                skillSlug: "block",
+              },
+            ],
+          },
+        });
+        const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+        expect(data.advancementsAway).toEqual([
+          { playerId: "journeyman-away-1", type: "primary", skillSlug: "block" },
+        ]);
+      });
+
+      it("refuse un journalier de l'autre côté ou hors contingent", async () => {
+        mockPairingWithJourneymen();
+        // `journeyman-home-1` n'existe pas (le domicile joue à 11) et, de
+        // toute façon, ne serait pas un joueur de l'extérieur.
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: AWAY,
+            payload: {
+              advancementsAway: [
+                { playerId: "journeyman-home-1", type: "primary", skillSlug: "block" },
+              ],
+            },
+          }),
+        ).rejects.toMatchObject({ code: "advancement_invalid_player" });
+        // Un seul journalier aligné : le rang 2 n'existe pas.
+        await expect(
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId: AWAY,
+            payload: {
+              advancementsAway: [
+                { playerId: "journeyman-away-2", type: "primary", skillSlug: "block" },
+              ],
+            },
+          }),
+        ).rejects.toMatchObject({ code: "advancement_invalid_player" });
+      });
+
       it("stocke les évolutions stagées du coach pour son côté", async () => {
         mockPairingWithTeams();
         mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
@@ -2351,6 +2861,166 @@ describe("Lot G — league-match-sheet", () => {
           }),
         ).resolves.toBeDefined();
       });
+    });
+  });
+
+  // Tirage « Hasard » d'un journalier : servi par la feuille (pas de ligne
+  // TeamPlayer pour l'endpoint d'équipe), autoritaire et déterministe.
+  describe("rollJourneymanRandomPrimary", () => {
+    function mockOrcPairing(
+      sheet: Record<string, unknown> = { id: "ms1", status: "draft" },
+    ) {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      const players = (prefix: string, count: number) =>
+        Array.from({ length: count }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `J${i + 1}`,
+          position: "orc_blitzer",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Home", roster: "orc", players: players("h", 11) },
+        // 10 joueurs : UN journalier, Trois-quart Orque par défaut (G,S).
+        { id: "team-away", name: "Away", roster: "orc", players: players("a", 10) },
+      ]);
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(sheet);
+    }
+
+    it("tire 2 candidats de la catégorie, sans doublon avec les compétences du poste", async () => {
+      mockOrcPairing();
+      const out = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: AWAY,
+        journeymanId: "journeyman-away-1",
+        category: "S",
+      });
+      expect(out.rolled).toBe(true);
+      expect(out.category).toBe("S");
+      expect(out.candidates).toHaveLength(2);
+      expect(new Set(out.candidates).size).toBe(2);
+      for (const slug of out.candidates) {
+        expect(RANDOM_PRIMARY_SKILL_TABLE_2025.S).toContain(slug);
+      }
+    });
+
+    it("est DÉTERMINISTE : relancer donne la même paire", async () => {
+      mockOrcPairing();
+      const first = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: AWAY,
+        journeymanId: "journeyman-away-1",
+        category: "G",
+      });
+      const again = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        journeymanId: "journeyman-away-1",
+        category: "G",
+      });
+      expect(again.candidates).toEqual(first.candidates);
+    });
+
+    it("suit le poste CHOISI du journalier (Gobelin : Agilité Principale, Esquive exclue)", async () => {
+      mockOrcPairing({
+        id: "ms1",
+        status: "draft",
+        journeymenAway: { positions: ["orc_trois_quart_gobelin"] },
+      });
+      const out = await rollJourneymanRandomPrimary({
+        pairingId: "pair-1",
+        userId: AWAY,
+        journeymanId: "journeyman-away-1",
+        category: "A",
+      });
+      expect(out.candidates).toHaveLength(2);
+      // Le Trois-quart Gobelin possède déjà Esquive : jamais tirée.
+      expect(out.candidates).not.toContain("dodge");
+      for (const slug of out.candidates) {
+        expect(RANDOM_PRIMARY_SKILL_TABLE_2025.A).toContain(slug);
+      }
+    });
+
+    it("refuse une catégorie qui n'est pas Principale pour le poste", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "A",
+        }),
+      ).rejects.toMatchObject({ code: "category_not_primary" });
+    });
+
+    it("refuse une catégorie inconnue", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "Z",
+        }),
+      ).rejects.toMatchObject({ code: "invalid_category" });
+    });
+
+    it("un coach ne tire que pour SES journaliers (le commissaire pour les deux)", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: HOME,
+          journeymanId: "journeyman-away-1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "advancement_wrong_side" });
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: "stranger",
+          journeymanId: "journeyman-away-1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("journalier inconnu : id mal formé ou rang au-delà du contingent", async () => {
+      mockOrcPairing();
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-2",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "journeyman_not_found" });
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: COMMISH,
+          journeymanId: "a1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "journeyman_not_found" });
+    });
+
+    it("feuille validée : plus de tirage", async () => {
+      mockOrcPairing({ id: "ms1", status: "validated" });
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "G",
+        }),
+      ).rejects.toMatchObject({ code: "already_validated" });
     });
   });
 
@@ -2523,6 +3193,67 @@ describe("Lot G — league-match-sheet", () => {
       });
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
       expect(data.advancementsHome).toEqual(cleaned);
+    });
+
+    it("ne reverse pas l'évolution d'un JOURNALIER (elle part avec son recrutement) : marqueurs nettoyés", async () => {
+      const journeymanEntry = {
+        playerId: "journeyman-home-1",
+        type: "random-primary",
+        category: "G",
+        skillSlug: "block",
+        applied: true,
+        cost: 3,
+      };
+      const rosterEntry = {
+        playerId: "h1",
+        type: "primary",
+        skillSlug: "block",
+        applied: true,
+        cost: 6,
+      };
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+        advancementsHome: [journeymanEntry, rosterEntry],
+      });
+      mockMergedPairing();
+      mockPrisma.leaguePairing.count.mockResolvedValue(0);
+      mockPrisma.match.findFirst.mockResolvedValue({ id: "m1" });
+      mockReverse.mockResolvedValue({ reversed: true, matchId: "m1" });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "H", roster: "human", players: [] },
+        { id: "team-away", name: "A", roster: "orc", players: [] },
+      ]);
+      const cleanedRoster = { playerId: "h1", type: "primary", skillSlug: "block" };
+      mockReverseStaged.mockResolvedValue([cleanedRoster]);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          ...a.data,
+        }),
+      );
+
+      await invalidateMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // Seul le roster est reversé ; le journalier n'a pas de ligne TeamPlayer.
+      expect(mockReverseStaged).toHaveBeenCalledWith({
+        teamId: "team-home",
+        entries: [rosterEntry],
+      });
+      expect(mockReverse).toHaveBeenCalledWith("m1", {
+        sheetAppliedAdvancements: new Map([["h1", 1]]),
+        removeConsumedAdvancements: false,
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.advancementsHome).toEqual([
+        {
+          ...journeymanEntry,
+          applied: undefined,
+          cost: undefined,
+          skipReason: undefined,
+        },
+        cleanedRoster,
+      ]);
     });
 
     it("aborts when reversion is impossible (e.g. a consumed level-up)", async () => {

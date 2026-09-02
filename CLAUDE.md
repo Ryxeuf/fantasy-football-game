@@ -370,6 +370,30 @@ publiée annonce. Un poste est retenu s'il est 0-12+ **ou** si ses Mots-clés
 déclarent « Trois-quart » (base d'abord, repli `KEYWORDS_SEASON3`). Le tri
 reste `max` décroissant : le 0-16 est toujours le DÉFAUT.
 
+Trois pièges rencontrés en corrigeant les journaliers (sept. 2026) :
+
+- **Appartenance** : tout contrôle « ce joueur est-il de ce côté ? » doit
+  ajouter les journaliers dérivés (`deriveSideJourneymen`) aux
+  `team.players`, sinon l'API refuse une évolution que la feuille propose
+  (« Joueur journeyman-away-1 hors de l'équipe extérieur »). Même règle pour
+  `computeSheetSpp` : le côté d'un id synthétique se lit dans l'id
+  (`syntheticSheetPlayerSide`) — un JDM journalier sans stat-line n'avait
+  sinon aucun PSP.
+- **Gel = re-gel** : le snapshot bake les journaliers ET leur valeur dans la
+  VEA figée. Toute mutation d'avant-match qui change un journalier (poste)
+  doit re-baker le côté (`rebakeFrozenJourneymen`), sinon la VEA/cagnotte et
+  le roster « version du match » divergent des pickers. La valeur du
+  contingent est stockée à part (`journeymenValue`) ; à défaut, on re-dérive
+  l'ancien choix (snapshots antérieurs, pas de backfill possible).
+- **Tirage « Hasard » sans TeamPlayer** : l'endpoint d'équipe ne sert pas les
+  journaliers ; la feuille tire (`rollJourneymanRandomPrimary`) avec un seed
+  feuille + journalier + POSTE + catégorie, et la validation re-dérive les
+  candidats (`verifyJourneymanAdvancement`). Un journalier n'ayant pas
+  d'`applyAdvancementChoice`, ce module porte ses contrôles, et la trace
+  (`applied`/`skipReason`) est fusionnée avec celle du roster dans l'ordre de
+  la saisie — auparavant, les entrées de journaliers étaient PERDUES à la
+  validation (liste réécrite = roster seul).
+
 ### Gel « version du match » : tout, dès l'OUVERTURE de la feuille
 
 Un gel partiel (en-tête seul) ou tardif (1re soumission) laisse une fenêtre

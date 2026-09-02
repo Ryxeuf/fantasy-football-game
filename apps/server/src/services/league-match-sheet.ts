@@ -55,14 +55,24 @@ import {
   buildJourneymanHire,
   deriveJourneymen,
   deriveMatchJourneymen,
+  isJourneymanId,
+  journeymanRandomPrimarySeed,
+  journeymanSide,
+  journeymanSkillAccess,
   journeymenChoiceInput,
   linemanPositionsForRoster,
   type JourneymanSourcePosition,
   parseJourneymenChoice,
   parseJourneymenChoices,
+  rebakeFrozenJourneymen,
+  splitSkillCsv,
+  sumJourneymenValue,
+  toFrozenJourneymanEntry,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
+import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { parseAccessCsv } from "./skill-access";
 import {
   applyPrayerSppBonuses,
   computePrayerSppBonuses,
@@ -76,6 +86,7 @@ import {
 import {
   deriveSheetStarPlayers,
   isSyntheticSheetPlayerId,
+  syntheticSheetPlayerSide,
   type SheetStarPlayer,
 } from "./league-sheet-star-players";
 import { recordForfeit } from "./league-forfeit";
@@ -95,6 +106,13 @@ import {
   reverseAppliedAdvancements,
   type StagedAdvancement,
 } from "./league-sheet-advancements";
+import {
+  clearAdvancementTrace,
+  mergeAdvancementTraces,
+  reviewJourneymanAdvancements,
+  traceJourneymanAdvancements,
+  type JourneymanHireTrace,
+} from "./league-sheet-journeyman-advancements";
 import { serverLog } from "../utils/server-log";
 import {
   WEATHER_TYPES,
@@ -115,8 +133,11 @@ import {
   getFormatConstraints,
   isGameFormat,
   TEAM_ROSTERS,
+  isRandomSkillCategory,
+  rollRandomPrimaryCandidates,
   type AllowedRoster,
   type GameFormat,
+  type RandomSkillCategoryCode,
   type Ruleset,
   type TournamentRulesetDefinition,
 } from "@bb/game-engine";
@@ -174,6 +195,42 @@ async function journeymanPositionsFor(
   }
 }
 
+/** Colonnes de la feuille dont dependent les journaliers d'un cote. */
+interface SheetJourneymenColumns {
+  rosterSnapshotHome?: unknown;
+  rosterSnapshotAway?: unknown;
+  journeymenHome?: unknown;
+  journeymenAway?: unknown;
+}
+
+/**
+ * Journaliers de la VERSION DU MATCH d'un cote de la feuille : roster fige
+ * (ou live tant que la feuille ne l'est pas), choix de postes stockes et
+ * postes lus en base. UNE seule derivation pour tous les chemins qui
+ * doivent reconnaitre un journalier (appartenance d'une evolution stagee,
+ * tirage aleatoire, recrutement) : deux derivations divergentes feraient
+ * refuser cote serveur un journalier que la feuille affiche pourtant.
+ */
+function deriveSideJourneymen(
+  team: MatchSheetTeam,
+  side: "home" | "away",
+  sheet: SheetJourneymenColumns,
+  positions: readonly JourneymanSourcePosition[] | null | undefined,
+): SheetJourneyman[] {
+  return deriveMatchJourneymen({
+    side,
+    roster: team.roster,
+    ruleset: team.ruleset,
+    players: team.players,
+    ...journeymenChoiceInput(
+      side === "home" ? sheet.journeymenHome : sheet.journeymenAway,
+    ),
+    positions,
+    frozenRosterSnapshot:
+      side === "home" ? sheet.rosterSnapshotHome : sheet.rosterSnapshotAway,
+  });
+}
+
 export type MatchSheetStatus =
   | "draft"
   | "submitted_home"
@@ -199,7 +256,11 @@ export class MatchSheetError extends Error {
       | "inducement_over_budget"
       | "inducement_not_allowed"
       | "advancement_wrong_side"
-      | "advancement_invalid_player",
+      | "advancement_invalid_player"
+      | "journeyman_not_found"
+      | "invalid_category"
+      | "category_not_primary"
+      | "no_candidates",
     message: string,
   ) {
     super(message);
@@ -335,27 +396,15 @@ async function captureSideSnapshot(
   });
   if (journeymen.length === 0) return JSON.stringify(base);
   // Règle BB : les journaliers alignés comptent dans la VEA du match
-  // (CTV des coups de pouce) — leur valeur est figée avec l'en-tête.
-  const journeymenValue = journeymen.reduce((sum, j) => sum + j.cost, 0);
+  // (CTV des coups de pouce) — leur valeur est figée avec l'en-tête, et
+  // stockée À PART (`journeymenValue`) : un changement de poste d'avant-match
+  // la remplace sans avoir à re-dériver l'ancienne (cf. `rebakeFrozenJourneymen`).
+  const journeymenValue = sumJourneymenValue(journeymen);
   return JSON.stringify({
     ...base,
     currentValue: base.currentValue + journeymenValue,
-    players: [
-      ...base.players,
-      ...journeymen.map((j) => ({
-        name: j.name,
-        position: j.positionName,
-        number: j.number,
-        ma: j.stats.ma,
-        st: j.stats.st,
-        ag: j.stats.ag,
-        pa: j.stats.pa,
-        av: j.stats.av,
-        skills: j.skills,
-        spp: 0,
-        advancements: "[]",
-      })),
-    ],
+    journeymenValue,
+    players: [...base.players, ...journeymen.map(toFrozenJourneymanEntry)],
   });
 }
 
@@ -611,22 +660,132 @@ export async function updatePreMatch(input: {
   ensureEditable(sheet.status);
 
   const p = input.payload;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = {};
+  const sheetColumns = sheet as SheetJourneymenColumns;
+
+  // Équipes live + postes lus en base, chargés au plus une fois (journaliers
+  // ET budget de coups de pouce en ont besoin).
+  let loaded: {
+    teams: Awaited<ReturnType<typeof loadSheetTeams>>;
+    positions: Awaited<ReturnType<typeof loadJourneymanPositions>>;
+  } | null = null;
+  const loadTeamsAndPositions = async () => {
+    if (!loaded) {
+      const teams = await loadSheetTeams(input.pairingId);
+      loaded = { teams, positions: await loadJourneymanPositions(teams) };
+    }
+    return loaded;
+  };
+
+  // Journaliers : postes de lineman choisis. La colonne porte les deux
+  // formes — `{ position }` (choix global, historique) et `{ positions }`
+  // (choix par rang). Un PATCH qui ne touche qu'une des deux PRESERVE
+  // l'autre : sans ca, choisir le poste du 2e journalier effacerait le
+  // choix global deja pose (et inversement).
+  const mergeJourneymenChoice = (
+    current: unknown,
+    position: string | null | undefined,
+    positions: readonly (string | null)[] | null | undefined,
+  ): { position?: string; positions?: (string | null)[] } | null => {
+    const previous = parseJourneymenChoices(current);
+    const nextPosition = position !== undefined ? position : previous.position;
+    const nextPositions =
+      positions !== undefined ? (positions ?? []) : previous.positions;
+    const merged: { position?: string; positions?: (string | null)[] } = {};
+    if (nextPosition) merged.position = nextPosition;
+    if (nextPositions.some((slug) => slug !== null)) {
+      merged.positions = [...nextPositions];
+    }
+    return Object.keys(merged).length > 0 ? merged : null;
+  };
+  // Le gel bake les journaliers (poste, stats, compétences) ET leur valeur
+  // dans la VEA figée : un changement de poste doit RE-GELER le côté, sinon
+  // ni la VEA affichée et budgétée ni le roster « version du match » ne
+  // suivent le choix — seuls les pickers d'évènements le faisaient.
+  const rebakeSide = async (
+    side: "home" | "away",
+    previousChoice: unknown,
+    nextChoice: unknown,
+  ): Promise<void> => {
+    const frozenRaw =
+      side === "home"
+        ? sheetColumns.rosterSnapshotHome
+        : sheetColumns.rosterSnapshotAway;
+    // Pas de gel complet : les journaliers sont dérivés en live à la lecture.
+    if (!frozenRaw || isHeaderOnlySnapshot(frozenRaw)) return;
+    const { teams, positions } = await loadTeamsAndPositions();
+    const team = side === "home" ? teams.home : teams.away;
+    if (!team) return;
+    const derive = (choiceRaw: unknown): SheetJourneyman[] =>
+      deriveSideJourneymen(
+        team,
+        side,
+        {
+          rosterSnapshotHome: sheetColumns.rosterSnapshotHome,
+          rosterSnapshotAway: sheetColumns.rosterSnapshotAway,
+          journeymenHome: side === "home" ? choiceRaw : undefined,
+          journeymenAway: side === "away" ? choiceRaw : undefined,
+        },
+        side === "home" ? positions.home : positions.away,
+      );
+    const json = rebakeFrozenJourneymen({
+      raw: frozenRaw,
+      previous: derive(previousChoice),
+      next: derive(nextChoice),
+    });
+    if (json) {
+      data[side === "home" ? "rosterSnapshotHome" : "rosterSnapshotAway"] =
+        json;
+    }
+  };
+  if (
+    p.journeymenChoiceHome !== undefined ||
+    p.journeymenChoicesHome !== undefined
+  ) {
+    data.journeymenHome = mergeJourneymenChoice(
+      sheetColumns.journeymenHome,
+      p.journeymenChoiceHome,
+      p.journeymenChoicesHome,
+    );
+    await rebakeSide("home", sheetColumns.journeymenHome, data.journeymenHome);
+  }
+  if (
+    p.journeymenChoiceAway !== undefined ||
+    p.journeymenChoicesAway !== undefined
+  ) {
+    data.journeymenAway = mergeJourneymenChoice(
+      sheetColumns.journeymenAway,
+      p.journeymenChoiceAway,
+      p.journeymenChoicesAway,
+    );
+    await rebakeSide("away", sheetColumns.journeymenAway, data.journeymenAway);
+  }
 
   // Coups de pouce : on borne la depense au budget officiel (petty cash +
   // tresorerie). Le petty cash depend des 2 CTV -> on charge les equipes et
   // calcule le budget une seule fois si une selection est presente. Les
-  // CTV/tresoreries sont figees au debut du match si le roster l'est deja.
+  // CTV/tresoreries sont figees au debut du match si le roster l'est deja —
+  // sur l'état RE-FIGÉ par ce même PATCH le cas échéant.
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
-    const teamsLive = await loadSheetTeams(input.pairingId);
-    const snapForBudget = sheet as {
-      rosterSnapshotHome?: unknown;
-      rosterSnapshotAway?: unknown;
-      journeymenHome?: unknown;
-      journeymenAway?: unknown;
+    const { teams: teamsLive, positions: journeymanPositions } =
+      await loadTeamsAndPositions();
+    const snapForBudget: SheetJourneymenColumns = {
+      rosterSnapshotHome:
+        data.rosterSnapshotHome ?? sheetColumns.rosterSnapshotHome,
+      rosterSnapshotAway:
+        data.rosterSnapshotAway ?? sheetColumns.rosterSnapshotAway,
+      journeymenHome:
+        data.journeymenHome !== undefined
+          ? data.journeymenHome
+          : sheetColumns.journeymenHome,
+      journeymenAway:
+        data.journeymenAway !== undefined
+          ? data.journeymenAway
+          : sheetColumns.journeymenAway,
     };
     // CTV du match = valeurs figées (ou live) + journaliers si la feuille
     // n'est pas encore figée (les snapshots portent déjà les journaliers).
-    const journeymanPositions = await loadJourneymanPositions(teamsLive);
     const teams = {
       home: withJourneymenValue(
         withFrozenTeamValues(teamsLive.home, snapForBudget.rosterSnapshotHome),
@@ -695,8 +854,6 @@ export async function updatePreMatch(input: {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data: any = {};
   if (p.weatherTable !== undefined) data.weatherTable = p.weatherTable;
   if (p.weather !== undefined) data.weather = p.weather;
   if (p.forfeitSide !== undefined) data.forfeitSide = p.forfeitSide;
@@ -742,48 +899,6 @@ export async function updatePreMatch(input: {
     data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined)
     data.prayersAway = p.prayersAway ?? undefined;
-  // Journaliers : postes de lineman choisis. La colonne porte les deux
-  // formes — `{ position }` (choix global, historique) et `{ positions }`
-  // (choix par rang). Un PATCH qui ne touche qu'une des deux PRESERVE
-  // l'autre : sans ca, choisir le poste du 2e journalier effacerait le
-  // choix global deja pose (et inversement).
-  const mergeJourneymenChoice = (
-    current: unknown,
-    position: string | null | undefined,
-    positions: readonly (string | null)[] | null | undefined,
-  ): { position?: string; positions?: (string | null)[] } | null => {
-    const previous = parseJourneymenChoices(current);
-    const nextPosition = position !== undefined ? position : previous.position;
-    const nextPositions =
-      positions !== undefined ? (positions ?? []) : previous.positions;
-    const merged: { position?: string; positions?: (string | null)[] } = {};
-    if (nextPosition) merged.position = nextPosition;
-    if (nextPositions.some((slug) => slug !== null)) {
-      merged.positions = [...nextPositions];
-    }
-    return Object.keys(merged).length > 0 ? merged : null;
-  };
-  if (
-    p.journeymenChoiceHome !== undefined ||
-    p.journeymenChoicesHome !== undefined
-  ) {
-    data.journeymenHome = mergeJourneymenChoice(
-      (sheet as { journeymenHome?: unknown }).journeymenHome,
-      p.journeymenChoiceHome,
-      p.journeymenChoicesHome,
-    );
-  }
-  if (
-    p.journeymenChoiceAway !== undefined ||
-    p.journeymenChoicesAway !== undefined
-  ) {
-    data.journeymenAway = mergeJourneymenChoice(
-      (sheet as { journeymenAway?: unknown }).journeymenAway,
-      p.journeymenChoiceAway,
-      p.journeymenChoicesAway,
-    );
-  }
-
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data,
@@ -858,13 +973,37 @@ export async function updatePostMatch(input: {
       );
     }
     const teams = await loadSheetTeams(input.pairingId);
+    // Un JOURNALIER joue le match et peut prendre une évolution à l'étape 3
+    // (matérialisée s'il est recruté) : il appartient au côté qui l'aligne,
+    // sans avoir de ligne TeamPlayer. On le reconnaît par la même
+    // dérivation que celle qui l'affiche sur la feuille — sinon l'API
+    // refusait « Joueur journeyman-away-1 hors de l'équipe extérieur ».
+    const stagesJourneyman = [
+      ...(p.advancementsHome ?? []),
+      ...(p.advancementsAway ?? []),
+    ].some((e) => isJourneymanId(e.playerId));
+    const journeymanPositions = stagesJourneyman
+      ? await loadJourneymanPositions(teams)
+      : { home: null, away: null };
+    const sheetColumns = sheet as SheetJourneymenColumns;
     const assertOwnership = (
       entries: readonly StagedAdvancement[] | null | undefined,
       team: MatchSheetTeam | null,
+      side: "home" | "away",
       label: string,
     ): void => {
       if (!entries || entries.length === 0) return;
       const ids = new Set((team?.players ?? []).map((pl) => pl.id));
+      if (team && stagesJourneyman) {
+        for (const j of deriveSideJourneymen(
+          team,
+          side,
+          sheetColumns,
+          side === "home" ? journeymanPositions.home : journeymanPositions.away,
+        )) {
+          ids.add(j.id);
+        }
+      }
       for (const e of entries) {
         if (!ids.has(e.playerId)) {
           throw new MatchSheetError(
@@ -874,8 +1013,8 @@ export async function updatePostMatch(input: {
         }
       }
     };
-    assertOwnership(p.advancementsHome, teams.home, "domicile");
-    assertOwnership(p.advancementsAway, teams.away, "extérieur");
+    assertOwnership(p.advancementsHome, teams.home, "home", "domicile");
+    assertOwnership(p.advancementsAway, teams.away, "away", "extérieur");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
@@ -912,6 +1051,108 @@ export async function updatePostMatch(input: {
     where: { id: sheet.id },
     data,
   });
+}
+
+/**
+ * Tirage « Compétence Principale au hasard » (livre p.121) pour un
+ * JOURNALIER de la feuille : catégorie choisie → 2 candidats, le coach en
+ * garde une et la stage comme une évolution `random-primary`.
+ *
+ * Un journalier n'a pas de ligne TeamPlayer : l'endpoint d'équipe
+ * (`/team/:teamId/players/:playerId/advancement/roll-random-primary`) ne
+ * peut pas le servir. Même contrat que lui — tirage AUTORITAIRE côté
+ * serveur et DÉTERMINISTE (seed = feuille + journalier + poste + catégorie,
+ * cf. `journeymanRandomPrimarySeed`), catégorie limitée aux Principales du
+ * poste, compétences déjà possédées exclues, pool filtré en base. La
+ * validation re-dérive les deux candidats et refuse une compétence qui n'en
+ * fait pas partie : impossible de s'offrir n'importe quelle Principale au
+ * tarif du hasard.
+ */
+export async function rollJourneymanRandomPrimary(input: {
+  pairingId: string;
+  userId: string;
+  journeymanId: string;
+  category: string;
+}): Promise<{
+  rolled: true;
+  category: RandomSkillCategoryCode;
+  candidates: string[];
+}> {
+  const ctx = await loadPairingContext(input.pairingId);
+  const side = coachSide(ctx, input.userId);
+  const commissioner = isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  const journeymanSideOf = journeymanSide(input.journeymanId);
+  if (!journeymanSideOf) {
+    throw new MatchSheetError(
+      "journeyman_not_found",
+      `Journalier ${input.journeymanId} inconnu de cette feuille`,
+    );
+  }
+  if (!commissioner && side !== journeymanSideOf) {
+    throw new MatchSheetError(
+      "advancement_wrong_side",
+      "Chaque coach ne tire que pour les journaliers de sa propre équipe",
+    );
+  }
+  if (!isRandomSkillCategory(input.category)) {
+    throw new MatchSheetError(
+      "invalid_category",
+      `Catégorie de compétence inconnue : ${input.category}`,
+    );
+  }
+  const category: RandomSkillCategoryCode = input.category;
+  const sheet = await loadSheetOrThrow(input.pairingId);
+  ensureEditable(sheet.status);
+
+  const teams = await loadSheetTeams(input.pairingId);
+  const team = journeymanSideOf === "home" ? teams.home : teams.away;
+  const positions = team
+    ? await journeymanPositionsFor(team.roster, team.ruleset)
+    : null;
+  const journeyman = team
+    ? deriveSideJourneymen(
+        team,
+        journeymanSideOf,
+        sheet as SheetJourneymenColumns,
+        positions,
+      ).find((j) => j.id === input.journeymanId)
+    : undefined;
+  if (!team || !journeyman) {
+    throw new MatchSheetError(
+      "journeyman_not_found",
+      `Journalier ${input.journeymanId} inconnu de cette feuille`,
+    );
+  }
+
+  // La catégorie doit être Principale pour le poste du journalier — quand
+  // l'accès est renseigné (Saison 3) ; sinon rien n'est imposé, comme pour
+  // un joueur du roster.
+  const access = journeymanSkillAccess(journeyman.position, positions);
+  if (access.primary != null && !parseAccessCsv(access.primary).has(category)) {
+    throw new MatchSheetError(
+      "category_not_primary",
+      `La catégorie ${category} n'est pas Principale pour ${journeyman.positionName}`,
+    );
+  }
+
+  const candidates = rollRandomPrimaryCandidates({
+    category,
+    ownedSlugs: splitSkillCsv(journeyman.skills),
+    seed: journeymanRandomPrimarySeed(sheet.id, journeyman, category),
+    // Même pool (filtré en base) que le tirage d'équipe et que la
+    // vérification à la validation.
+    pool: await resolveRandomPrimaryPool(category, team.ruleset),
+  });
+  if (candidates.length === 0) {
+    throw new MatchSheetError(
+      "no_candidates",
+      "Aucune compétence tirable dans cette catégorie pour ce journalier",
+    );
+  }
+  return { rolled: true, category, candidates };
 }
 
 function nextStatusOnSubmit(
@@ -1406,9 +1647,16 @@ function enrichJourneymanPurchases(input: {
   schedule?: AdvancementSchedule;
   /** Roster figé de ce côté : les journaliers RECRUTABLES sont ceux du match. */
   frozenRosterSnapshot?: unknown;
-}): OfflinePurchaseInput[] {
+}): {
+  purchases: OfflinePurchaseInput[];
+  /** Journaliers recrutés qui avaient une évolution stagée : ce qu'elle est devenue. */
+  hires: Map<string, JourneymanHireTrace>;
+} {
   const { purchases, side, team, staged, computedSpp } = input;
-  if (!purchases.some((p) => p.kind === "journeyman")) return [...purchases];
+  const hires = new Map<string, JourneymanHireTrace>();
+  if (!purchases.some((p) => p.kind === "journeyman")) {
+    return { purchases: [...purchases], hires };
+  }
   const journeymen = team
     ? deriveMatchJourneymen({
         side,
@@ -1423,7 +1671,7 @@ function enrichJourneymanPurchases(input: {
   const byId = new Map(journeymen.map((j) => [j.id, j]));
   const hired = new Set<string>();
 
-  return purchases.map((p) => {
+  const out = purchases.map((p) => {
     if (p.kind !== "journeyman") return p;
     const journeyman = p.journeymanId ? byId.get(p.journeymanId) : undefined;
     if (!journeyman || hired.has(journeyman.id)) {
@@ -1461,6 +1709,12 @@ function enrichJourneymanPurchases(input: {
           }
         : null,
     });
+    if (entry) {
+      hires.set(journeyman.id, {
+        advancementTaken: hire.advancementTaken,
+        pspCost: getNextAdvancementPspCost(0, entry.type, input.schedule),
+      });
+    }
     return {
       ...p,
       cost: hire.cost,
@@ -1472,6 +1726,7 @@ function enrichJourneymanPurchases(input: {
       stats: hire.stats,
     };
   });
+  return { purchases: out, hires };
 }
 
 export async function validateByCommissioner(input: {
@@ -1754,13 +2009,43 @@ export async function validateByCommissioner(input: {
       (teamsForBudget.away?.ruleset as Ruleset) ?? undefined,
     ),
   ]);
+  // Évolutions des JOURNALIERS : vérifiées ICI (pas de ligne TeamPlayer,
+  // donc pas d'`applyAdvancementChoice`) avant d'alimenter le recrutement —
+  // compétence possédée, candidats du tirage « Hasard », accès du poste. Une
+  // entrée refusée est écartée et tracée, jamais bloquante.
+  const journeymenOf = (side: "home" | "away"): SheetJourneyman[] => {
+    const team = side === "home" ? teamsForBudget.home : teamsForBudget.away;
+    if (!team) return [];
+    return deriveSideJourneymen(
+      team,
+      side,
+      sheetJourneymenForBudget,
+      side === "home" ? journeymanPositions.home : journeymanPositions.away,
+    );
+  };
+  const [reviewHome, reviewAway] = await Promise.all([
+    reviewJourneymanAdvancements({
+      sheetId: sheet.id,
+      ruleset: teamsForBudget.home?.ruleset ?? DEFAULT_RULESET,
+      journeymen: journeymenOf("home"),
+      positions: journeymanPositions.home,
+      staged: stagedHome,
+    }),
+    reviewJourneymanAdvancements({
+      sheetId: sheet.id,
+      ruleset: teamsForBudget.away?.ruleset ?? DEFAULT_RULESET,
+      journeymen: journeymenOf("away"),
+      positions: journeymanPositions.away,
+      staged: stagedAway,
+    }),
+  ]);
   const enrichedPurchases = {
     home: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesHome,
       side: "home",
       team: teamsForBudget.home,
       choiceRaw: sheetJourneymenChoice.journeymenHome,
-      staged: stagedHome,
+      staged: reviewHome.staged,
       computedSpp: computedSppForHire,
       positions: journeymanPositions.home,
       eliteSlugs: eliteSlugsForHire,
@@ -1772,7 +2057,7 @@ export async function validateByCommissioner(input: {
       side: "away",
       team: teamsForBudget.away,
       choiceRaw: sheetJourneymenChoice.journeymenAway,
-      staged: stagedAway,
+      staged: reviewAway.staged,
       computedSpp: computedSppForHire,
       positions: journeymanPositions.away,
       eliteSlugs: eliteSlugsForHire,
@@ -1783,8 +2068,8 @@ export async function validateByCommissioner(input: {
 
   const outcome = await recordOfflineLeagueResult({
     ...offlineInput,
-    purchasesHome: enrichedPurchases.home,
-    purchasesAway: enrichedPurchases.away,
+    purchasesHome: enrichedPurchases.home.purchases,
+    purchasesAway: enrichedPurchases.away.purchases,
     ...(rosterStaged(stagedHome).length > 0 ||
     rosterStaged(stagedAway).length > 0
       ? { applyAdvancements }
@@ -1796,6 +2081,32 @@ export async function validateByCommissioner(input: {
   if ("recorded" in outcome && outcome.recorded) {
     effects = { applied: true };
     hateRolls = outcome.hateRolls;
+    // Trace des évolutions de journaliers (refusée / non recruté / PSP
+    // insuffisants / appliquée), fusionnée avec celle du roster dans
+    // l'ORDRE de la saisie. Sans ça, les entrées de journaliers étaient
+    // perdues (liste réécrite = roster seul) ou « en attente » à jamais.
+    if (stagedHome.length > 0) {
+      advData.advancementsHome = mergeAdvancementTraces(
+        stagedHome,
+        advData.advancementsHome,
+        traceJourneymanAdvancements({
+          staged: stagedHome,
+          review: reviewHome,
+          hires: enrichedPurchases.home.hires,
+        }),
+      );
+    }
+    if (stagedAway.length > 0) {
+      advData.advancementsAway = mergeAdvancementTraces(
+        stagedAway,
+        advData.advancementsAway,
+        traceJourneymanAdvancements({
+          staged: stagedAway,
+          review: reviewAway,
+          hires: enrichedPurchases.away.hires,
+        }),
+      );
+    }
   } else if ("skipped" in outcome) {
     // already-scored / not-terminal-eligible : effets deja en place.
     effects = { applied: false, reason: outcome.reason };
@@ -1966,6 +2277,9 @@ export async function invalidateMatchSheet(input: {
   const sheetAppliedAdvancements = new Map<string, number>();
   for (const entry of [...stagedHome, ...stagedAway]) {
     if (entry.applied !== true) continue;
+    // L'évolution d'un journalier vit sur le joueur RECRUTÉ, que la
+    // reversion des achats retire : rien à déduire sur le roster.
+    if (isSyntheticSheetPlayerId(entry.playerId)) continue;
     sheetAppliedAdvancements.set(
       entry.playerId,
       (sheetAppliedAdvancements.get(entry.playerId) ?? 0) + 1,
@@ -1994,19 +2308,34 @@ export async function invalidateMatchSheet(input: {
   // `applied` pour qu'une re-validation ré-applique proprement.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const advData: any = {};
+  // Les journaliers n'ont pas de ligne TeamPlayer à reverser : leur
+  // évolution part avec le recrutement que la reversion offline retire. On
+  // ne nettoie que leurs marqueurs, pour qu'une re-validation les ré-évalue.
+  const reverseSide = async (
+    teamId: string,
+    staged: readonly StagedAdvancement[],
+  ): Promise<StagedAdvancement[]> => {
+    const roster = staged.filter((e) => !isSyntheticSheetPlayerId(e.playerId));
+    const reversed =
+      roster.length > 0
+        ? await reverseAppliedAdvancements({ teamId, entries: roster })
+        : [];
+    const byId = new Map(reversed.map((e) => [e.playerId, e]));
+    return staged.map((e) => byId.get(e.playerId) ?? clearAdvancementTrace(e));
+  };
   if (stagedHome.length > 0 || stagedAway.length > 0) {
     const teams = await loadSheetTeams(input.pairingId);
     if (stagedHome.length > 0 && teams.home?.teamId) {
-      advData.advancementsHome = await reverseAppliedAdvancements({
-        teamId: teams.home.teamId,
-        entries: stagedHome,
-      });
+      advData.advancementsHome = await reverseSide(
+        teams.home.teamId,
+        stagedHome,
+      );
     }
     if (stagedAway.length > 0 && teams.away?.teamId) {
-      advData.advancementsAway = await reverseAppliedAdvancements({
-        teamId: teams.away.teamId,
-        entries: stagedAway,
-      });
+      advData.advancementsAway = await reverseSide(
+        teams.away.teamId,
+        stagedAway,
+      );
     }
   }
 
@@ -3069,11 +3398,15 @@ async function computeSheetSpp(input: {
   }
   for (const id of motm) {
     if (out[id] !== undefined) continue;
+    // Un JOURNALIER (ou un Star Player engagé) n'a pas de ligne dans
+    // `players` : son côté se lit dans son id. Sans ça, un journalier
+    // désigné Joueur du Match sans autre stat n'avait AUCUN PSP — il
+    // manquait aux paliers d'évolution et son recrutement partait de 0.
     const side = teams.home?.players.some((p) => p.id === id)
       ? "home"
       : teams.away?.players.some((p) => p.id === id)
         ? "away"
-        : null;
+        : syntheticSheetPlayerSide(id);
     if (!side) continue;
     out[id] = calculatePlayerSPP(
       {

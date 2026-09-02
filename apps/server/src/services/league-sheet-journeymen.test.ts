@@ -13,11 +13,18 @@ import {
   deriveJourneymen,
   deriveMatchJourneymen,
   isJourneymanId,
+  journeymanRandomPrimarySeed,
+  journeymanSide,
+  journeymanSkillAccess,
   linemanPositionsForRoster,
+  splitSkillCsv,
   parseFrozenSheetRoster,
   parseJourneymenChoice,
   parseJourneymenChoices,
   journeymenChoiceInput,
+  rebakeFrozenJourneymen,
+  sumJourneymenValue,
+  toFrozenJourneymanEntry,
   JOURNEYMAN_ID_PREFIX,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
@@ -39,6 +46,114 @@ describe("isJourneymanId", () => {
     expect(isJourneymanId("cku123abc")).toBe(false);
     expect(isJourneymanId(null)).toBe(false);
     expect(isJourneymanId(undefined)).toBe(false);
+  });
+});
+
+describe("journeymanSide", () => {
+  it("lit le côté dans l'id synthétique", () => {
+    expect(journeymanSide("journeyman-home-1")).toBe("home");
+    expect(journeymanSide("journeyman-away-3")).toBe("away");
+  });
+
+  it("null pour un id réel, un côté inconnu ou une valeur absente", () => {
+    expect(journeymanSide("cku123abc")).toBeNull();
+    expect(journeymanSide("journeyman-north-1")).toBeNull();
+    expect(journeymanSide(null)).toBeNull();
+    expect(journeymanSide(undefined)).toBeNull();
+  });
+});
+
+describe("splitSkillCsv", () => {
+  it("découpe, trim et ignore les entrées vides", () => {
+    expect(splitSkillCsv(" block , dodge,,loner-4 ")).toEqual([
+      "block",
+      "dodge",
+      "loner-4",
+    ]);
+    expect(splitSkillCsv("")).toEqual([]);
+    expect(splitSkillCsv(null)).toEqual([]);
+  });
+});
+
+describe("journeymanSkillAccess", () => {
+  it("lit l'accès en base quand la ligne le renseigne", () => {
+    expect(
+      journeymanSkillAccess("orc_trois_quart_gobelin", [
+        {
+          slug: "orc_trois_quart_gobelin",
+          displayName: "Trois-quart Gobelin",
+          cost: 40,
+          max: 4,
+          ma: 6,
+          st: 2,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "stunty,right-stuff,dodge",
+          primarySkills: "A",
+          secondarySkills: "G,K",
+        },
+      ]),
+    ).toEqual({ primary: "A", secondary: "G,K" });
+  });
+
+  it("retombe sur la table compilée quand la base ne dit rien", () => {
+    // Ligne en base SANS accès (null/null) : c'est le catalogue qui parle.
+    expect(
+      journeymanSkillAccess("orc_trois_quart_gobelin", [
+        {
+          slug: "orc_trois_quart_gobelin",
+          displayName: "Trois-quart Gobelin",
+          cost: 40,
+          max: 4,
+          ma: 6,
+          st: 2,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          skills: "",
+          primarySkills: null,
+          secondarySkills: null,
+        },
+      ]),
+    ).toEqual({ primary: "A,K", secondary: "G,P,K" });
+    expect(journeymanSkillAccess("orc_trois_quart_orque", null)).toEqual({
+      primary: "G,S",
+      secondary: "A,K",
+    });
+  });
+
+  it("poste inconnu : accès non renseigné", () => {
+    expect(journeymanSkillAccess("poste-inconnu", [])).toEqual({
+      primary: null,
+      secondary: null,
+    });
+  });
+});
+
+describe("journeymanRandomPrimarySeed", () => {
+  const j = { id: "journeyman-home-1", position: "orc_trois_quart_orque" };
+
+  it("est stable pour la même feuille, le même journalier et la même catégorie", () => {
+    expect(journeymanRandomPrimarySeed("ms1", j, "G")).toBe(
+      journeymanRandomPrimarySeed("ms1", j, "G"),
+    );
+  });
+
+  it("change avec la feuille, le journalier, le poste ou la catégorie", () => {
+    const base = journeymanRandomPrimarySeed("ms1", j, "G");
+    expect(journeymanRandomPrimarySeed("ms2", j, "G")).not.toBe(base);
+    expect(
+      journeymanRandomPrimarySeed("ms1", { ...j, id: "journeyman-home-2" }, "G"),
+    ).not.toBe(base);
+    expect(
+      journeymanRandomPrimarySeed(
+        "ms1",
+        { ...j, position: "orc_trois_quart_gobelin" },
+        "G",
+      ),
+    ).not.toBe(base);
+    expect(journeymanRandomPrimarySeed("ms1", j, "S")).not.toBe(base);
   });
 });
 
@@ -175,6 +290,7 @@ describe("buildJourneymanHire", () => {
   it("sans évolution : prix du poste, PSP du match conservés", () => {
     const hire = buildJourneymanHire({ journeyman, earnedSpp: 3 });
     expect(hire).toEqual({
+      advancementTaken: false,
       cost: 50_000,
       spp: 3,
       skills: "loner-4",
@@ -194,6 +310,7 @@ describe("buildJourneymanHire", () => {
         valueSurcharge: 20_000,
       },
     });
+    expect(hire.advancementTaken).toBe(true);
     expect(hire.cost).toBe(70_000);
     expect(hire.spp).toBe(0);
     expect(hire.skills).toBe("loner-4,block");
@@ -213,6 +330,7 @@ describe("buildJourneymanHire", () => {
         valueSurcharge: 20_000,
       },
     });
+    expect(hire.advancementTaken).toBe(false);
     expect(hire.cost).toBe(50_000);
     expect(hire.spp).toBe(3);
     expect(hire.advancements).toBe("[]");
@@ -433,6 +551,135 @@ describe("journaliers de la version figée du match", () => {
 });
 
 // ───────────────────────────── E37 — CHOIX PAR JOURNALIER ─────────────────
+
+describe("rebakeFrozenJourneymen (changement de poste d'avant-match)", () => {
+  const orc = (id: string, number: number): SheetJourneyman => ({
+    id,
+    number,
+    name: `Journalier ${number - 11}`,
+    position: "orc_trois_quart_orque",
+    positionName: "Journalier (Trois-quart Orque)",
+    stats: { ma: 5, st: 3, ag: 3, pa: 4, av: 10 },
+    skills: "loner-4",
+    cost: 50_000,
+  });
+  const goblin = (id: string, number: number): SheetJourneyman => ({
+    ...orc(id, number),
+    position: "orc_trois_quart_gobelin",
+    positionName: "Journalier (Trois-quart Gobelin)",
+    stats: { ma: 6, st: 2, ag: 3, pa: 4, av: 8 },
+    skills: "stunty,right-stuff,dodge,loner-4",
+    cost: 40_000,
+  });
+  const orcs = [orc("journeyman-home-1", 12), orc("journeyman-home-2", 13)];
+  /** Gel d'un roster à 9 + 2 Trois-quarts Orques : VEA 840k + 2 × 50k. */
+  const frozen = (extra: Record<string, unknown> = {}) => ({
+    capturedAt: 1,
+    roster: "orc",
+    currentValue: 940_000,
+    treasury: 30_000,
+    players: [
+      { name: "J1", position: "orc_blitzer", number: 1, spp: 0 },
+      ...orcs.map(toFrozenJourneymanEntry),
+    ],
+    ...extra,
+  });
+
+  it("remplace les journaliers bakés et ajuste la VEA figée (ancienne valeur re-dérivée sans journeymenValue)", () => {
+    const out = rebakeFrozenJourneymen({
+      raw: JSON.stringify(frozen()),
+      previous: orcs,
+      next: [goblin("journeyman-home-1", 12), orc("journeyman-home-2", 13)],
+    });
+    const snap = JSON.parse(out as string);
+    // 940k − 50k (Orque) + 40k (Gobelin).
+    expect(snap.currentValue).toBe(930_000);
+    expect(snap.journeymenValue).toBe(90_000);
+    expect(snap.players).toHaveLength(3);
+    expect(snap.players[0]).toMatchObject({ name: "J1", position: "orc_blitzer" });
+    expect(snap.players[1]).toMatchObject({
+      number: 12,
+      name: "Journalier 1",
+      position: "Journalier (Trois-quart Gobelin)",
+      ma: 6,
+      st: 2,
+      av: 8,
+      skills: "stunty,right-stuff,dodge,loner-4",
+    });
+    expect(snap.players[2]).toMatchObject({
+      number: 13,
+      position: "Journalier (Trois-quart Orque)",
+    });
+    // Le reste de l'en-tête figé est préservé.
+    expect(snap).toMatchObject({ capturedAt: 1, roster: "orc", treasury: 30_000 });
+  });
+
+  it("retire la valeur STOCKÉE quand le snapshot la porte (objet natif PG)", () => {
+    // 120k stockés (prix corrigés en admin depuis le gel) : c'est cette
+    // valeur qui sort, pas les 100k re-dérivés de l'ancien choix.
+    const out = rebakeFrozenJourneymen({
+      raw: frozen({ currentValue: 960_000, journeymenValue: 120_000 }),
+      previous: orcs,
+      next: [goblin("journeyman-home-1", 12), goblin("journeyman-home-2", 13)],
+    });
+    expect(JSON.parse(out as string).currentValue).toBe(920_000);
+  });
+
+  it("suit un contingent qui disparaît", () => {
+    const snap = JSON.parse(
+      rebakeFrozenJourneymen({ raw: frozen(), previous: orcs, next: [] }) as string,
+    );
+    expect(snap.players).toHaveLength(1);
+    expect(snap.currentValue).toBe(840_000);
+    expect(snap.journeymenValue).toBe(0);
+  });
+
+  it("rien à re-baker : absent, illisible, en-tête seul, sans roster", () => {
+    const io = { previous: orcs, next: orcs };
+    expect(rebakeFrozenJourneymen({ raw: null, ...io })).toBeNull();
+    expect(rebakeFrozenJourneymen({ raw: "not-json", ...io })).toBeNull();
+    expect(
+      rebakeFrozenJourneymen({ raw: { headerOnly: true, currentValue: 1 }, ...io }),
+    ).toBeNull();
+    expect(rebakeFrozenJourneymen({ raw: { currentValue: 1 }, ...io })).toBeNull();
+  });
+});
+
+describe("sumJourneymenValue / toFrozenJourneymanEntry", () => {
+  it("somme les coûts du contingent", () => {
+    expect(sumJourneymenValue([{ cost: 50_000 }, { cost: 40_000 }])).toBe(90_000);
+    expect(sumJourneymenValue([])).toBe(0);
+  });
+
+  it("bake un journalier sous le libellé reconnu par parseFrozenSheetRoster", () => {
+    const entry = toFrozenJourneymanEntry({
+      id: "journeyman-home-1",
+      number: 12,
+      name: "Journalier 1",
+      position: "orc_trois_quart_gobelin",
+      positionName: "Journalier (Trois-quart Gobelin)",
+      stats: { ma: 6, st: 2, ag: 3, pa: 4, av: 8 },
+      skills: "stunty,right-stuff,dodge,loner-4",
+      cost: 40_000,
+    });
+    expect(entry).toEqual({
+      name: "Journalier 1",
+      position: "Journalier (Trois-quart Gobelin)",
+      number: 12,
+      ma: 6,
+      st: 2,
+      ag: 3,
+      pa: 4,
+      av: 8,
+      skills: "stunty,right-stuff,dodge,loner-4",
+      spp: 0,
+      advancements: "[]",
+    });
+    const parsed = parseFrozenSheetRoster({ players: [entry] });
+    expect(parsed?.journeymen).toEqual([{ number: 12, name: "Journalier 1" }]);
+    expect(parsed?.players).toEqual([]);
+  });
+});
 
 describe("linemanPositionsForRoster — Trois-quarts à quota réduit", () => {
   // Règle publiée : « si la fiche d'équipe propose plusieurs postes de

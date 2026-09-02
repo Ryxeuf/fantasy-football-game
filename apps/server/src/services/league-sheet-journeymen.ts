@@ -41,6 +41,7 @@ import {
   TEAM_ROSTERS_BY_RULESET,
   DEFAULT_RULESET,
   KEYWORDS_SEASON3,
+  SKILL_ACCESS_SEASON3,
   type Ruleset,
 } from "@bb/game-engine";
 
@@ -49,6 +50,20 @@ export const JOURNEYMAN_ID_PREFIX = "journeyman-";
 /** Un id de joueur synthétique « journalier » de feuille de match. */
 export function isJourneymanId(id: string | null | undefined): boolean {
   return typeof id === "string" && id.startsWith(JOURNEYMAN_ID_PREFIX);
+}
+
+/**
+ * Côté qui aligne un journalier, lu dans son id (`journeyman-<side>-<n>`).
+ * `null` si l'id n'est pas celui d'un journalier.
+ */
+export function journeymanSide(
+  id: string | null | undefined,
+): "home" | "away" | null {
+  if (!isJourneymanId(id)) return null;
+  const rest = (id as string).slice(JOURNEYMAN_ID_PREFIX.length);
+  if (rest.startsWith("home-")) return "home";
+  if (rest.startsWith("away-")) return "away";
+  return null;
 }
 
 /** Seuil BB « 0-12 ou plus » : le Trois-quart « de base » d'une fiche. */
@@ -131,6 +146,66 @@ export interface JourneymanSourcePosition {
    * slug. Servent à reconnaître un Trois-quart à quota réduit.
    */
   keywords?: string | null;
+  /**
+   * Accès aux compétences en évolution (CSV de codes `G/A/S/P/M/K`), lus en
+   * base (`Position.primarySkills` / `secondarySkills`). Absents sur le
+   * catalogue compilé : ils sont alors résolus par slug
+   * (`SKILL_ACCESS_SEASON3`). Servent au tirage aléatoire et au contrôle
+   * d'accès de l'évolution d'un journalier.
+   */
+  primarySkills?: string | null;
+  secondarySkills?: string | null;
+}
+
+/** Découpe un CSV de compétences en slugs (entrées vides ignorées). */
+export function splitSkillCsv(csv: string | null | undefined): string[] {
+  return (csv ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * Accès Principale/Secondaire du poste d'un journalier : la ligne lue en
+ * base quand elle renseigne l'un des deux, sinon la table compilée, sinon
+ * « non renseigné » (`null`, comme un poste Saison 2). Même résolution que
+ * l'éditeur web (base d'abord, repli compilé), pour que le serveur ne
+ * refuse jamais une catégorie que l'éditeur propose.
+ */
+export function journeymanSkillAccess(
+  position: string,
+  positions?: readonly JourneymanSourcePosition[] | null,
+): { primary: string | null; secondary: string | null } {
+  const row = positions?.find((p) => p.slug === position);
+  if (row && (row.primarySkills != null || row.secondarySkills != null)) {
+    return {
+      primary: row.primarySkills ?? null,
+      secondary: row.secondarySkills ?? null,
+    };
+  }
+  const compiled = SKILL_ACCESS_SEASON3[position];
+  return {
+    primary: compiled?.primary ?? null,
+    secondary: compiled?.secondary ?? null,
+  };
+}
+
+/**
+ * Seed du tirage « Compétence Principale au hasard » d'un journalier.
+ *
+ * Un journalier n'a pas de ligne TeamPlayer : son id (`journeyman-<side>-<n>`)
+ * se répète d'une feuille à l'autre, d'où la FEUILLE dans le seed. Le POSTE
+ * y figure aussi : changer le poste change le journalier (stats, compétences
+ * de base — donc les doublons exclus du tirage), et revenir au poste initial
+ * redonne la même paire (pas de relance par aller-retour). Le rang
+ * d'avancement est toujours 0 : un journalier débarque sans évolution.
+ */
+export function journeymanRandomPrimarySeed(
+  sheetId: string,
+  journeyman: { readonly id: string; readonly position: string },
+  category: string,
+): string {
+  return `sheet:${sheetId}:${journeyman.id}:${journeyman.position}:0:${category}`;
 }
 
 /**
@@ -341,6 +416,106 @@ export function parseFrozenSheetRoster(raw: unknown): FrozenSheetRoster | null {
   return { players, journeymen };
 }
 
+/** Un joueur du snapshot est un journalier baké (libellé « Journalier… »). */
+function isFrozenJourneymanEntry(entry: unknown): boolean {
+  if (!entry || typeof entry !== "object") return false;
+  const position = (entry as { position?: unknown }).position;
+  return (
+    typeof position === "string" &&
+    position.startsWith(FROZEN_JOURNEYMAN_POSITION_PREFIX)
+  );
+}
+
+/**
+ * Valeur totale (po) d'un contingent de journaliers : leur part de la VEA
+ * du match (règle BB — un journalier aligné compte dans la CTV).
+ */
+export function sumJourneymenValue(
+  journeymen: ReadonlyArray<{ readonly cost: number }>,
+): number {
+  return journeymen.reduce((sum, j) => sum + j.cost, 0);
+}
+
+/** Entrée d'un journalier telle que BAKÉE dans le snapshot de roster. */
+export interface FrozenJourneymanEntry {
+  readonly name: string;
+  /** Libellé « Journalier (<poste>) » : discrimine des joueurs réels. */
+  readonly position: string;
+  readonly number: number;
+  readonly ma: number;
+  readonly st: number;
+  readonly ag: number;
+  readonly pa: number | null;
+  readonly av: number;
+  readonly skills: string;
+  readonly spp: 0;
+  readonly advancements: "[]";
+}
+
+export function toFrozenJourneymanEntry(
+  j: SheetJourneyman,
+): FrozenJourneymanEntry {
+  return {
+    name: j.name,
+    position: j.positionName,
+    number: j.number,
+    ma: j.stats.ma,
+    st: j.stats.st,
+    ag: j.stats.ag,
+    pa: j.stats.pa,
+    av: j.stats.av,
+    skills: j.skills,
+    spp: 0,
+    advancements: "[]",
+  };
+}
+
+/**
+ * Re-bake (pur) les journaliers d'un snapshot FIGÉ après un changement de
+ * poste d'avant-match.
+ *
+ * Le gel bake les journaliers (poste, stats, compétences) ET leur valeur
+ * dans la VEA figée. Sans re-gel, changer le poste d'un journalier (Orques :
+ * Trois-quart Orque 50 k → Gobelin 40 k) ne touchait ni la VEA affichée et
+ * budgétée (cagnotte des coups de pouce) ni le roster « version du match » —
+ * seuls les pickers d'évènements suivaient le choix.
+ *
+ * `previous` / `next` sont les journaliers dérivés du roster FIGÉ avec
+ * l'ancien et le nouveau choix (numéros et noms bakés conservés par
+ * `deriveMatchJourneymen`). La valeur retirée est celle stockée à part
+ * (`journeymenValue`, snapshots récents) ou, à défaut, celle re-dérivée de
+ * l'ancien choix — un snapshot antérieur reste donc lisible sans backfill.
+ *
+ * Retourne le snapshot sérialisé, ou `null` s'il n'y a rien de figé à
+ * re-baker (absent, illisible, « en-tête seul » — les journaliers y sont
+ * alors ajoutés en live).
+ */
+export function rebakeFrozenJourneymen(input: {
+  readonly raw: unknown;
+  readonly previous: readonly SheetJourneyman[];
+  readonly next: readonly SheetJourneyman[];
+}): string | null {
+  const obj = parseJsonObject(input.raw);
+  if (!obj || obj.headerOnly === true || !Array.isArray(obj.players)) {
+    return null;
+  }
+  const realPlayers = obj.players.filter((e) => !isFrozenJourneymanEntry(e));
+  const isFiniteNumber = (v: unknown): v is number =>
+    typeof v === "number" && Number.isFinite(v);
+  const previousValue = isFiniteNumber(obj.journeymenValue)
+    ? obj.journeymenValue
+    : sumJourneymenValue(input.previous);
+  const nextValue = sumJourneymenValue(input.next);
+  return JSON.stringify({
+    ...obj,
+    currentValue: isFiniteNumber(obj.currentValue)
+      ? obj.currentValue - previousValue + nextValue
+      : obj.currentValue,
+    journeymenValue: nextValue,
+    players: [...realPlayers, ...input.next.map(toFrozenJourneymanEntry)],
+  });
+}
+
 /**
  * Journaliers de la « VERSION DU MATCH » : dérivés du roster FIGÉ dès qu'il
  * existe, du roster live sinon.
@@ -475,6 +650,8 @@ export interface JourneymanHireInput {
 }
 
 export interface JourneymanHire {
+  /** L'évolution stagée a été prise (PSP du match suffisants). */
+  readonly advancementTaken: boolean;
   /** Coût de recrutement (po) : poste + surcoût de l'évolution prise. */
   readonly cost: number;
   /** PSP restants après paiement de l'évolution. */
@@ -519,6 +696,7 @@ export function buildJourneymanHire(
   const takesAdvancement = adv !== null && earnedSpp >= adv.pspCost;
   if (!takesAdvancement) {
     return {
+      advancementTaken: false,
       cost: journeyman.cost,
       spp: Math.max(0, earnedSpp),
       skills: journeyman.skills,
@@ -532,6 +710,7 @@ export function buildJourneymanHire(
       ? [journeyman.skills, adv.skillSlug].filter((v) => v.length > 0).join(",")
       : journeyman.skills;
   return {
+    advancementTaken: true,
     cost: journeyman.cost + adv.valueSurcharge,
     spp: Math.max(0, earnedSpp - adv.pspCost),
     skills,

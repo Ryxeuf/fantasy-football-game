@@ -313,10 +313,20 @@ export interface PlayerRowProps {
   };
   /**
    * Restreint les types d'amélioration proposés. Sert aux JOURNALIERS de
-   * feuille de match : sans ligne `TeamPlayer`, le tirage `random-primary`
+   * feuille de match quand aucun tirage dédié (`rollRandomPrimary`) n'est
+   * fourni : sans ligne `TeamPlayer`, le tirage `random-primary` d'équipe
    * (autoritaire côté serveur) ne peut pas être joué pour eux.
    */
   allowedTypes?: readonly AdvancementType[];
+  /**
+   * Tirage `random-primary` à utiliser À LA PLACE de l'endpoint d'équipe
+   * (`/team/:teamId/players/:playerId/advancement/roll-random-primary`).
+   * Les journaliers de feuille de match sont tirés par la FEUILLE, qui
+   * seule connaît leur poste et leurs compétences.
+   */
+  rollRandomPrimary?: (
+    category: string,
+  ) => Promise<{ candidates: string[] }>;
 }
 
 export function PlayerRow({
@@ -326,6 +336,7 @@ export function PlayerRow({
   onApplied,
   stage,
   allowedTypes,
+  rollRandomPrimary,
 }: PlayerRowProps) {
   const { t, language } = useLanguage();
   const typeOptions = useMemo(
@@ -493,10 +504,12 @@ export function PlayerRow({
     setSkillSlug("");
     setRollCandidates(null);
     try {
-      const res = await apiRequest<{ candidates: string[] }>(
-        `/team/${teamId}/players/${item.teamPlayerId}/advancement/roll-random-primary`,
-        { method: "POST", body: JSON.stringify({ category }) },
-      );
+      const res = rollRandomPrimary
+        ? await rollRandomPrimary(category)
+        : await apiRequest<{ candidates: string[] }>(
+            `/team/${teamId}/players/${item.teamPlayerId}/advancement/roll-random-primary`,
+            { method: "POST", body: JSON.stringify({ category }) },
+          );
       setRollCandidates(res.candidates);
     } catch (e: unknown) {
       setError(
@@ -505,7 +518,14 @@ export function PlayerRow({
     } finally {
       setRolling(false);
     }
-  }, [category, rolling, teamId, item.teamPlayerId, t.teams.levelUpApplyError]);
+  }, [
+    category,
+    rolling,
+    teamId,
+    item.teamPlayerId,
+    rollRandomPrimary,
+    t.teams.levelUpApplyError,
+  ]);
 
   const d8AllowedStats: readonly CharacteristicKind[] =
     d8Roll != null ? characteristicOptionsForRoll(d8Roll) : [];
