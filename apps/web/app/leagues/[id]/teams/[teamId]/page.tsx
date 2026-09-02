@@ -122,8 +122,13 @@ interface RosterTeam {
   dedicatedFans: number;
   /** A11 — règles spéciales d'équipe (certaines impactent les PSP). */
   specialRules?: SpecialRuleView[];
-  /** A11 — type de ligue (ligues régionales). */
+  /**
+   * A11 — type de ligue (ligues régionales). A159 : le serveur ne sert que
+   * la Ligue RETENUE par l'équipe (toutes pour une équipe sans choix).
+   */
   regionalLeagues?: Array<{ slug: string; name: string }>;
+  /** A159 — slug de la Ligue retenue à la création (optionnel : rétro-compat API). */
+  regionalLeague?: string | null;
 }
 
 interface RosterResponse {

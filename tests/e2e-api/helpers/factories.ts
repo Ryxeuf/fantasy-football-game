@@ -11,7 +11,12 @@ import { post, get, unwrap } from "./api";
  * entre deux tests.
  */
 
-export type RosterKey = "skaven" | "lizardmen";
+/**
+ * Rosters seedés par `/__test/seed-rosters`. `orc` porte DEUX postes de
+ * Trois-quart (Orque 0-16, Gobelin 0-4) : c'est le cas « journaliers
+ * panachables » des feuilles de match de ligue (E37 / A161-A163).
+ */
+export type RosterKey = "skaven" | "lizardmen" | "orc";
 
 export interface Coach {
   email: string;

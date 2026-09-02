@@ -634,17 +634,17 @@ if (process.env.TEST_SQLITE === "1") {
       const { ownerId, name, roster } = req.body as {
         ownerId?: string;
         name?: string;
-        roster?: "skaven" | "lizardmen";
+        roster?: "skaven" | "lizardmen" | "orc";
       };
       if (!ownerId || !name || !roster) {
         return res
           .status(400)
           .json({ error: "ownerId, name et roster requis" });
       }
-      if (roster !== "skaven" && roster !== "lizardmen") {
+      if (roster !== "skaven" && roster !== "lizardmen" && roster !== "orc") {
         return res
           .status(400)
-          .json({ error: "roster doit être skaven ou lizardmen" });
+          .json({ error: "roster doit être skaven, lizardmen ou orc" });
       }
 
       const team = await prisma.team.create({
@@ -662,17 +662,20 @@ if (process.env.TEST_SQLITE === "1") {
         },
       });
 
-      // 11 linemen génériques, stats de base
+      // 11 linemen génériques, stats de base. Les Orques portent le slug
+      // réel de leur Trois-quart (poste seedé par /__test/seed-rosters) :
+      // c'est lui que lisent la valeur d'équipe et les journaliers.
+      const isOrc = roster === "orc";
       const players = Array.from({ length: 11 }, (_, i) => ({
         teamId: team.id,
         name: `${name} ${i + 1}`,
-        position: "Lineman",
+        position: isOrc ? "orc_trois_quart_orque" : "Lineman",
         number: i + 1,
-        ma: 6,
+        ma: isOrc ? 5 : 6,
         st: 3,
         ag: 3,
         pa: 4,
-        av: 9,
+        av: isOrc ? 10 : 9,
         skills: "",
       }));
       await prisma.teamPlayer.createMany({ data: players });
@@ -818,6 +821,120 @@ if (process.env.TEST_SQLITE === "1") {
         }
       }
 
+      // Orques : roster à DEUX postes de Trois-quart (Orque 0-16, Gobelin
+      // 0-4) — le cas « journaliers panachables » des feuilles de match de
+      // ligue (E37 / A161-A163). Le Gobelin porte ses compétences de base
+      // (Esquive, Poids Plume, Minus) et son accès Principale A,K, pour que
+      // le tirage « Hasard » d'un journalier gobelin exclue Esquive et tire
+      // dans la table Agilité. Cette table est seedée ENTIÈRE :
+      // `resolveRandomPrimaryPool` ne garde que les slugs présents en base
+      // dès qu'il en trouve un, et un catalogue partiel n'aurait rien à tirer.
+      const ORC_LINEMEN = [
+        {
+          slug: "orc_trois_quart_orque",
+          displayName: "Trois-quart Orque",
+          cost: 50,
+          max: 16,
+          ma: 5,
+          st: 3,
+          ag: 3,
+          pa: 4,
+          av: 10,
+          keywords: "Orque, Trois-quart",
+          primarySkills: "G,S",
+          secondarySkills: "A,K",
+          skills: [] as string[],
+        },
+        {
+          slug: "orc_trois_quart_gobelin",
+          displayName: "Trois-quart Gobelin",
+          cost: 40,
+          max: 4,
+          ma: 6,
+          st: 2,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          keywords: "Gobelin, Trois-quart",
+          primarySkills: "A,K",
+          secondarySkills: "G,P,K",
+          skills: ["dodge", "right-stuff", "stunty"],
+        },
+      ];
+      const ORC_SKILLS: Array<{
+        slug: string;
+        nameFr: string;
+        nameEn: string;
+        category: string;
+      }> = [
+        // Table « Compétence Principale au hasard » — Agilité (p.121).
+        { slug: "catch", nameFr: "Réception", nameEn: "Catch", category: "Agility" },
+        { slug: "diving-catch", nameFr: "Réception Plongeante", nameEn: "Diving Catch", category: "Agility" },
+        { slug: "diving-tackle", nameFr: "Tacle Plongeant", nameEn: "Diving Tackle", category: "Agility" },
+        { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge", category: "Agility" },
+        { slug: "defensive", nameFr: "Défenseur", nameEn: "Defensive", category: "Agility" },
+        { slug: "hit-and-run", nameFr: "Frappe-et-court", nameEn: "Hit and Run", category: "Agility" },
+        { slug: "jump-up", nameFr: "Rétablissement", nameEn: "Jump Up", category: "Agility" },
+        { slug: "leap", nameFr: "Saut", nameEn: "Leap", category: "Agility" },
+        { slug: "safe-pair-of-hands", nameFr: "Libération", nameEn: "Safe Pair of Hands", category: "Agility" },
+        { slug: "sidestep", nameFr: "Glissade Contrôlée", nameEn: "Sidestep", category: "Agility" },
+        { slug: "sprint", nameFr: "Sprint", nameEn: "Sprint", category: "Agility" },
+        { slug: "sure-feet", nameFr: "Équilibre", nameEn: "Sure Feet", category: "Agility" },
+        // Traits de base du Trois-quart Gobelin.
+        { slug: "right-stuff", nameFr: "Poids Plume", nameEn: "Right Stuff", category: "Trait" },
+        { slug: "stunty", nameFr: "Minus", nameEn: "Stunty", category: "Trait" },
+      ];
+      for (const ruleset of rulesets) {
+        const skillIdBySlug = new Map<string, string>();
+        for (const sk of ORC_SKILLS) {
+          const skill = await prisma.skill.upsert({
+            where: { slug_ruleset: { slug: sk.slug, ruleset } },
+            update: { category: sk.category },
+            create: {
+              slug: sk.slug,
+              ruleset,
+              nameFr: sk.nameFr,
+              nameEn: sk.nameEn,
+              description: `Description ${sk.nameFr}`,
+              descriptionEn: `Description ${sk.nameEn}`,
+              category: sk.category,
+            },
+          });
+          skillIdBySlug.set(sk.slug, skill.id);
+        }
+        const orc = await prisma.roster.upsert({
+          where: { slug_ruleset: { slug: "orc", ruleset } },
+          update: { budget: 1000 },
+          create: {
+            slug: "orc",
+            ruleset,
+            name: "Orques",
+            nameEn: "Orc",
+            budget: 1000,
+            tier: "II",
+          },
+        });
+        for (const lineman of ORC_LINEMEN) {
+          const { skills, ...columns } = lineman;
+          const position = await prisma.position.upsert({
+            where: { rosterId_slug: { rosterId: orc.id, slug: lineman.slug } },
+            update: { ...columns },
+            create: { rosterId: orc.id, min: 0, ...columns },
+          });
+          for (const skillSlug of skills) {
+            const skillId = skillIdBySlug.get(skillSlug);
+            if (!skillId) continue;
+            await prisma.positionSkill.upsert({
+              where: {
+                positionId_skillId: { positionId: position.id, skillId },
+              },
+              update: {},
+              create: { positionId: position.id, skillId },
+            });
+          }
+        }
+      }
+
       // Seed les feature flags de base. Les pages /play, /lobby, /waiting,
       // /leaderboard, etc. sont gatées par <OnlinePlayGate> qui exige le flag
       // `online_play`. En tests on s'appuie sur FEATURE_FLAGS_FORCE_ENABLED=true
@@ -889,7 +1006,7 @@ if (process.env.TEST_SQLITE === "1") {
       return res.json({
         ok: true,
         rulesets,
-        rosters: rosters.map((r) => r.slug),
+        rosters: [...rosters.map((r) => r.slug), "orc"],
         flags: flagSeeds.map((f) => f.key),
       });
     } catch (e: unknown) {

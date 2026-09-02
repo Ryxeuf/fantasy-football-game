@@ -1369,6 +1369,22 @@ function sumGold(raw: unknown): number {
 }
 
 /**
+ * A138 — écart de trésorerie entre les achats SAISIS et les achats ENRICHIS
+ * par le serveur. Le prix d'un journalier recruté (poste + évolution de
+ * l'étape 3, surcoût Élite, barème de l'édition) est recalculé à la
+ * validation (`enrichJourneymanPurchases`) : c'est LUI qui doit être débité,
+ * le montant saisi sur la feuille n'étant qu'un pré-remplissage. Les autres
+ * achats sont rendus tels quels par l'enrichissement, l'écart ne porte donc
+ * que sur les journaliers. Pur.
+ */
+export function purchasesGoldDelta(
+  raw: readonly OfflinePurchaseInput[],
+  enriched: readonly OfflinePurchaseInput[],
+): number {
+  return sumGold(enriched) - sumGold(raw);
+}
+
+/**
  * Joueurs de la feuille porteurs d'un slug de POSTE : le roster réel plus
  * les journaliers alignés (dérivés du même catalogue de positions). Sert à
  * résoudre leurs Mots-clés pour l'acquisition de Haine (X).
@@ -2075,6 +2091,21 @@ export async function validateByCommissioner(input: {
     ...offlineInput,
     purchasesHome: enrichedPurchases.home.purchases,
     purchasesAway: enrichedPurchases.away.purchases,
+    // A138 — le débit suit le prix RECALCULÉ des journaliers recrutés, pas
+    // le montant saisi par le coach (sinon le joueur rejoignait le roster à
+    // sa vraie valeur sans que la trésorerie ne la paie).
+    treasuryDebitHome:
+      (offlineInput.treasuryDebitHome ?? 0) +
+      purchasesGoldDelta(
+        offlineInput.purchasesHome,
+        enrichedPurchases.home.purchases,
+      ),
+    treasuryDebitAway:
+      (offlineInput.treasuryDebitAway ?? 0) +
+      purchasesGoldDelta(
+        offlineInput.purchasesAway,
+        enrichedPurchases.away.purchases,
+      ),
     ...(rosterStaged(stagedHome).length > 0 ||
     rosterStaged(stagedAway).length > 0
       ? { applyAdvancements }

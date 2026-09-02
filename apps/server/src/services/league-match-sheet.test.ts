@@ -22,6 +22,9 @@ vi.mock("../prisma", () => ({
     },
     team: { findMany: vi.fn() },
     match: { findFirst: vi.fn() },
+    // E30 — `loadLeagueSPPContext` lit la règle « Bagarreurs Brutaux » du
+    // roster. Non renseigné (undefined) ⇒ contexte neutre, comme avant.
+    roster: { findMany: vi.fn() },
   },
 }));
 
@@ -1063,6 +1066,42 @@ describe("Lot G — league-match-sheet", () => {
         ]);
       });
 
+      it("A138 — débite la trésorerie du prix RECALCULÉ du journalier (poste + évolution), pas du montant saisi", async () => {
+        mockJourneymanMatch({});
+        const roll = await rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: HOME,
+          journeymanId: JOURNEYMAN,
+          category: "G",
+        });
+        const staged = {
+          playerId: JOURNEYMAN,
+          type: "random-primary",
+          category: "G",
+          skillSlug: roll.candidates[0],
+        };
+        // Le montant saisi sur la feuille n'est qu'un pré-remplissage : ici
+        // laissé à 0. Une relance saisie à côté garde son montant.
+        mockJourneymanMatch({
+          purchasesHome: [
+            { ...HIRE, cost: 0 },
+            { kind: "reroll", name: "Relance", cost: 60_000 },
+          ],
+          advancementsHome: [staged],
+        });
+
+        await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+        const offline = mockRecordOffline.mock.calls[0][0];
+        const hirePrice =
+          50_000 + surchargeForAdvancement({ type: "random-primary" });
+        expect(offline.purchasesHome[0].cost).toBe(hirePrice);
+        expect(offline.purchasesHome[1].cost).toBe(60_000);
+        // Relance 60k + journalier au prix serveur : le 0 saisi est ignoré.
+        expect(offline.treasuryDebitHome).toBe(60_000 + hirePrice);
+        expect(offline.treasuryDebitAway).toBe(0);
+      });
+
       it("écarte une compétence hors des deux candidats (anti-triche) : recruté au prix du poste, entrée refusée", async () => {
         mockJourneymanMatch({});
         const roll = await rollJourneymanRandomPrimary({
@@ -1583,6 +1622,89 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.computedSpp["h-normal"] ?? 0).toBe(0);
       // Les 2 éliminations comptent au score de sorties de l'équipe.
       expect(out.summary.casualtiesHome).toBe(2);
+    });
+
+    it("E30 — Bagarreurs Brutaux : l'Action Spéciale ne rapporte rien sans Innovateur Violent, 3 PSP avec", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      // Le roster orque porte « Bagarreurs Brutaux » (Élimination à 3 PSP).
+      mockPrisma.roster.findMany.mockResolvedValue([
+        { slug: "orc", specialRules: "bagarreurs_brutaux" },
+        { slug: "human", specialRules: "" },
+      ]);
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [
+          // Action Spéciale par le porteur d'Innovateur Violent.
+          {
+            kind: "special_elim",
+            team: "home",
+            actorPlayerId: "h-violent",
+            targetPlayerId: "a-v1",
+            injurySeverity: "mng",
+          },
+          // Action Spéciale par un joueur SANS la compétence.
+          {
+            kind: "special_elim",
+            team: "home",
+            actorPlayerId: "h-normal",
+            targetPlayerId: "a-v2",
+            injurySeverity: "mng",
+          },
+          // Élimination sur Blocage du même joueur : là, le barème
+          // « Bagarreurs Brutaux » s'applique bien.
+          {
+            kind: "casualty",
+            team: "home",
+            actorPlayerId: "h-normal",
+            targetPlayerId: "a-v3",
+            injurySeverity: "mng",
+          },
+        ],
+      });
+      const orc = (id: string, name: string, skills: string) => ({
+        id,
+        number: 1,
+        name,
+        position: "orc_trois_quart_orque",
+        dead: false,
+        missNextMatch: false,
+        spp: 0,
+        skills,
+        advancements: "[]",
+        ma: 5,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 10,
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Gouged Eye",
+          roster: "orc",
+          players: [
+            orc("h-violent", "Grishnak", "chainsaw,violent-innovator"),
+            orc("h-normal", "Ugrok", "chainsaw"),
+          ],
+        },
+        { id: "team-away", name: "Reikland", roster: "human", players: [] },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      // Innovateur Violent + Bagarreurs Brutaux : 3 PSP pour l'Action Spéciale.
+      expect(out.computedSpp["h-violent"]).toBe(3);
+      // Sans Innovateur Violent : l'Action Spéciale ne rapporte RIEN, même
+      // en Bagarreurs Brutaux — seule l'élimination sur Blocage compte (3).
+      expect(out.computedSpp["h-normal"]).toBe(3);
+      // Les 3 sorties comptent au score d'éliminations de l'équipe.
+      expect(out.summary.casualtiesHome).toBe(3);
     });
 
     it("credite les PSP du JDM sans stat-line (palier propose AVANT validation)", async () => {

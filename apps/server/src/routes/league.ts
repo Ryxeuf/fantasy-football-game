@@ -48,6 +48,7 @@ import {
   resolveRegionalLeagues,
 } from "./public-rosters";
 import { loadTeamRulesCatalogue } from "../services/team-rules-catalogue";
+import { displayedRegionalLeagues } from "../services/roster-regional-rules";
 import { loadAdvancementSchedule } from "../services/advancement-schedule-repository";
 import {
   startSeason,
@@ -1464,6 +1465,8 @@ export async function handleGetLeagueTeamRoster(
         apothecary: true,
         dedicatedFans: true,
         logoUrl: true,
+        // A159 — Ligue régionale RETENUE par l'équipe : seule affichée.
+        regionalLeague: true,
         owner: { select: { coachName: true } },
       },
     })) as {
@@ -1475,6 +1478,7 @@ export async function handleGetLeagueTeamRoster(
       apothecary: boolean;
       dedicatedFans: number;
       logoUrl: string | null;
+      regionalLeague: string | null;
       owner: { coachName: string | null } | null;
     } | null;
     // FR20 — stats par joueur + blessures durables + dispo prochain match.
@@ -1660,12 +1664,20 @@ export async function handleGetLeagueTeamRoster(
       false,
       rulesCatalogue,
     );
-    const regionalLeagues = resolveRegionalLeagues(
+    // A159 — le ROSTER ouvre plusieurs Ligues, mais l'ÉQUIPE n'en retient
+    // qu'une à sa création : seule celle-ci est servie (toutes pour une
+    // équipe antérieure à la règle, ou si le choix a quitté le catalogue).
+    const rosterLeagues = resolveRegionalLeagues(
       rosterRow?.regionalRules ?? null,
       out.team.roster,
       ruleset,
       false,
       rulesCatalogue,
+    );
+    const regionalLeague = meta?.regionalLeague ?? null;
+    const regionalLeagues = displayedRegionalLeagues(
+      rosterLeagues,
+      regionalLeague,
     );
 
     sendSuccess(res, {
@@ -1683,6 +1695,7 @@ export async function handleGetLeagueTeamRoster(
         logoUrl: meta?.logoUrl ?? null,
         specialRules,
         regionalLeagues,
+        regionalLeague,
       },
       players,
       // Le commissaire peut retirer un joueur MORT du roster depuis cette
