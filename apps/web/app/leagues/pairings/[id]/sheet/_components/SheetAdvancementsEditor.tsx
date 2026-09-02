@@ -139,6 +139,13 @@ export interface SheetAdvancementsEditorProps {
   readonly onChange: (next: StagedAdvancementEntry[]) => void;
   /** Saisie verrouillée (côté déjà soumis / pas le coach). */
   readonly disabled?: boolean;
+  /**
+   * Pairing de la feuille : ouvre le tirage « Hasard » aux journaliers, servi
+   * par la feuille (`POST /leagues/pairings/:id/sheet/journeymen/:journeymanId/
+   * roll-random-primary`) — l'endpoint d'équipe ne les connaît pas. Absent ⇒
+   * seuls les choix libres leur restent proposés (rétro-compat).
+   */
+  readonly pairingId?: string;
 }
 
 /**
@@ -156,6 +163,7 @@ export function SheetAdvancementsEditor({
   staged,
   onChange,
   disabled,
+  pairingId,
 }: SheetAdvancementsEditorProps): JSX.Element {
   const catalog = useSkillCatalog(ruleset);
   const positionAccess = usePositionAccess(roster, ruleset);
@@ -285,10 +293,19 @@ export function SheetAdvancementsEditor({
       >
         {items.map((it) => {
           const entry = stagedByPlayer.get(it.teamPlayerId) ?? null;
-          // Un journalier n'a pas de ligne TeamPlayer : le tirage
-          // `random-primary` (autoritaire côté serveur) ne peut pas être
-          // joué pour lui — seuls les choix libres restent proposés.
+          // Un journalier n'a pas de ligne TeamPlayer : son tirage
+          // `random-primary` (autoritaire côté serveur) est servi par la
+          // FEUILLE, qui seule connaît son poste et ses compétences. Sans
+          // pairing connu, seuls les choix libres lui restent proposés.
           const isJourneyman = journeymanIds.has(it.teamPlayerId);
+          const journeymanRoll =
+            isJourneyman && pairingId
+              ? (category: string) =>
+                  apiRequest<{ candidates: string[] }>(
+                    `/leagues/pairings/${encodeURIComponent(pairingId)}/sheet/journeymen/${encodeURIComponent(it.teamPlayerId)}/roll-random-primary`,
+                    { method: "POST", body: JSON.stringify({ category }) },
+                  )
+              : undefined;
           return (
             <PlayerRow
               key={it.teamPlayerId}
@@ -297,10 +314,11 @@ export function SheetAdvancementsEditor({
               catalog={catalog}
               onApplied={() => undefined}
               allowedTypes={
-                isJourneyman
+                isJourneyman && !journeymanRoll
                   ? (["primary", "secondary", "characteristic"] as const)
                   : undefined
               }
+              rollRandomPrimary={journeymanRoll}
               stage={{
                 staged: entry,
                 disabled,

@@ -57,6 +57,7 @@ function setup(props: {
   computedSpp?: Record<string, number>;
   onChange?: (next: StagedAdvancementEntry[]) => void;
   disabled?: boolean;
+  pairingId?: string;
 }) {
   return render(
     <LanguageProvider>
@@ -70,6 +71,7 @@ function setup(props: {
         staged={props.staged ?? []}
         onChange={props.onChange ?? (() => undefined)}
         disabled={props.disabled}
+        pairingId={props.pairingId}
       />
     </LanguageProvider>,
   );
@@ -187,6 +189,81 @@ describe("SheetAdvancementsEditor (staging feuille de match)", () => {
     });
     expect(
       await screen.findByTestId("sheet-advancements-empty"),
+    ).toBeTruthy();
+  });
+
+  // La catégorie « Hasard » n'était pas proposée aux journaliers : le
+  // tirage d'équipe exige une ligne TeamPlayer. La feuille le sert.
+  it("ouvre le tirage « Hasard » à un journalier, servi par la route de la feuille", async () => {
+    const onChange = vi.fn();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.includes("/api/skills"))
+        return Promise.resolve({
+          skills: [
+            { slug: "catch", nameFr: "Réception", category: "Agility" },
+            { slug: "diving-catch", nameFr: "Réception plongeante", category: "Agility" },
+          ],
+        });
+      if (path.includes("/roll-random-primary"))
+        return Promise.resolve({ candidates: ["catch", "diving-catch"] });
+      return Promise.resolve({});
+    });
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 3 },
+      pairingId: "pair-1",
+      onChange,
+    });
+    await screen.findByTestId("level-up-row-journeyman-home-1");
+    fireEvent.click(
+      screen.getByTestId("level-up-type-random-primary-journeyman-home-1"),
+    );
+    // Agilité est Principale pour un Trois-quart Gobelin (A,K).
+    fireEvent.click(screen.getByTestId("level-up-category-A-journeyman-home-1"));
+    fireEvent.click(screen.getByTestId("level-up-roll-journeyman-home-1"));
+    await screen.findByTestId("level-up-candidates-journeyman-home-1");
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      "/leagues/pairings/pair-1/sheet/journeymen/journeyman-home-1/roll-random-primary",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({ category: "A" }),
+      }),
+    );
+    // Jamais l'endpoint d'équipe : le journalier n'y existe pas.
+    expect(
+      apiRequest.mock.calls.some(([path]) => String(path).includes("/team/")),
+    ).toBe(false);
+
+    fireEvent.click(
+      screen.getByTestId("level-up-candidate-catch-journeyman-home-1"),
+    );
+    fireEvent.click(screen.getByTestId("level-up-apply-journeyman-home-1"));
+    await waitFor(() =>
+      expect(onChange).toHaveBeenCalledWith([
+        {
+          playerId: "journeyman-home-1",
+          type: "random-primary",
+          category: "A",
+          skillSlug: "catch",
+        },
+      ]),
+    );
+  });
+
+  it("sans pairing connu (rétro-compat), un journalier n'a que les choix libres", async () => {
+    setup({
+      players: [],
+      journeymen: [journeyman()],
+      computedSpp: { "journeyman-home-1": 3 },
+    });
+    await screen.findByTestId("level-up-row-journeyman-home-1");
+    expect(
+      screen.queryByTestId("level-up-type-random-primary-journeyman-home-1"),
+    ).toBeNull();
+    expect(
+      screen.getByTestId("level-up-type-primary-journeyman-home-1"),
     ).toBeTruthy();
   });
 });

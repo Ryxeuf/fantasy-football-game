@@ -1413,6 +1413,7 @@ export default function MatchSheetPage() {
                   {home?.name ?? "Domicile"}
                 </h3>
                 <SheetAdvancementsEditor
+                  pairingId={pairingId}
                   teamId={home?.teamId ?? ""}
                   ruleset={home?.ruleset ?? "season_3"}
                   roster={home?.roster}
@@ -1430,6 +1431,7 @@ export default function MatchSheetPage() {
                   {away?.name ?? "Extérieur"}
                 </h3>
                 <SheetAdvancementsEditor
+                  pairingId={pairingId}
                   teamId={away?.teamId ?? ""}
                   ruleset={away?.ruleset ?? "season_3"}
                   roster={away?.roster}
@@ -1453,6 +1455,7 @@ export default function MatchSheetPage() {
                 </p>
               ) : null}
               <SheetAdvancementsEditor
+                pairingId={pairingId}
                 teamId={myTeamId}
                 ruleset={
                   (mySide === "home" ? home?.ruleset : away?.ruleset) ??
