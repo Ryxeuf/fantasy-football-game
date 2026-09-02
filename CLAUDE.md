@@ -398,6 +398,24 @@ Trois pièges rencontrés en corrigeant les journaliers (sept. 2026) :
   la saisie — auparavant, les entrées de journaliers étaient PERDUES à la
   validation (liste réécrite = roster seul).
 
+- **Prix recalculé ⇒ débit recalculé** : `enrichJourneymanPurchases` fixe le
+  prix d'un journalier recruté (poste + évolution + surcoût Élite), mais
+  `treasuryDebit*` était sommé AVANT, sur les montants saisis — un coach qui
+  laissait 0 obtenait un joueur à 60 000 po de valeur pour 0 po débité. Tout
+  enrichissement serveur d'un achat doit répercuter son écart sur le débit
+  (`purchasesGoldDelta`). La chaîne complète (poste → PSP → tirage →
+  évolution → recrutement → trésorerie) est rejouée sur une vraie base par
+  `tests/e2e-api/specs/leagues-sheet-journeymen-orc.spec.ts` ; les fixtures
+  `/__test/seed-rosters` portent pour cela le roster orque et la table
+  Agilité ENTIÈRE (`resolveRandomPrimaryPool` ne garde que les slugs présents
+  en base dès qu'il en trouve un — un catalogue partiel n'a rien à tirer).
+
+Piège voisin (A159) : une règle d'affichage posée côté web (« seule la Ligue
+retenue ») ne couvre que la page qui l'importe — le même roster, consulté
+depuis la section Ligue, passait par `GET /leagues/:id/teams/:teamId/roster`
+qui servait toutes les Ligues du roster. `displayedRegionalLeagues` existe
+désormais aussi côté serveur (`services/roster-regional-rules`).
+
 ### Gel « version du match » : tout, dès l'OUVERTURE de la feuille
 
 Un gel partiel (en-tête seul) ou tardif (1re soumission) laisse une fenêtre

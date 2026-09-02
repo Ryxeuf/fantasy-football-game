@@ -77,3 +77,29 @@ export function effectiveRegionalRules(
     source: "roster-defaults",
   };
 }
+
+/**
+ * Ligues régionales à AFFICHER pour une ÉQUIPE (A159).
+ *
+ * Un roster peut ouvrir plusieurs Ligues, mais une équipe n'en retient
+ * qu'UNE à sa création : elle seule débloque ses Star Players et ses Coups
+ * de Pouce. Montrer les autres sur la fiche d'une équipe laisse croire à un
+ * choix perdu. Même règle que `displayedRegionalLeagues` côté web
+ * (`/me/teams/[id]`), appliquée ici au roster servi dans la section Ligue :
+ *
+ * - un choix enregistré ⇒ cette Ligue SEULE ;
+ * - aucun choix (équipe antérieure à la règle) ⇒ toutes celles du roster,
+ *   qui restent effectivement toutes actives pour elle ;
+ * - un choix absent de la liste (Ligue renommée ou retirée du catalogue)
+ *   ⇒ toutes, plutôt qu'une section vide.
+ *
+ * PUR : ne mute pas la liste reçue.
+ */
+export function displayedRegionalLeagues<T extends { readonly slug: string }>(
+  leagues: readonly T[],
+  chosenSlug: string | null | undefined,
+): T[] {
+  if (!chosenSlug) return [...leagues];
+  const chosen = leagues.filter((l) => l.slug === chosenSlug);
+  return chosen.length > 0 ? chosen : [...leagues];
+}

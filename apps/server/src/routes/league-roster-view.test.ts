@@ -316,4 +316,70 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
     expect(payload.data.players[0].aggressions).toBe(0);
     expect(payload.data.players[1].aggressions).toBe(0);
   });
+  // A159 — « dans la section Ligue, afficher uniquement la Ligue choisie ».
+  // Le roster ouvre plusieurs Ligues régionales ; l'équipe n'en retient
+  // qu'une à sa création, et c'est elle seule qui la concerne.
+  describe("Ligue régionale retenue (A159)", () => {
+    const meta = {
+      teamValue: 1_000_000,
+      currentValue: 950_000,
+      rerolls: 2,
+      cheerleaders: 0,
+      assistants: 1,
+      apothecary: true,
+      dedicatedFans: 3,
+      owner: { coachName: "Sepp" },
+    };
+    const twoLeagues = JSON.stringify([
+      "old_world_classic",
+      "lustrian_superleague",
+    ]);
+
+    async function leaguesOf(regionalLeague: string | null): Promise<{
+      served: string[];
+      chosen: string | null;
+    }> {
+      mockPrisma.roster.findFirst.mockResolvedValue({
+        specialRules: null,
+        regionalRules: twoLeagues,
+      });
+      mockPrisma.team.findUnique.mockResolvedValue({ ...meta, regionalLeague });
+      const res = createRes();
+      await handleGetLeagueTeamRoster(createReq(), res);
+      expect(res.statusCode ?? 200).toBe(200);
+      const payload = res.payload as {
+        data: {
+          team: {
+            regionalLeagues: Array<{ slug: string; name: string }>;
+            regionalLeague: string | null;
+          };
+        };
+      };
+      return {
+        served: payload.data.team.regionalLeagues.map((l) => l.slug),
+        chosen: payload.data.team.regionalLeague,
+      };
+    }
+
+    it("ne sert QUE la Ligue retenue par l'équipe", async () => {
+      expect(await leaguesOf("lustrian_superleague")).toEqual({
+        served: ["lustrian_superleague"],
+        chosen: "lustrian_superleague",
+      });
+    });
+
+    it("sert toutes les Ligues du roster pour une équipe sans choix (antérieure à la règle)", async () => {
+      expect(await leaguesOf(null)).toEqual({
+        served: ["old_world_classic", "lustrian_superleague"],
+        chosen: null,
+      });
+    });
+
+    it("retombe sur toutes les Ligues quand le choix a quitté le catalogue", async () => {
+      expect(await leaguesOf("ligue_disparue")).toEqual({
+        served: ["old_world_classic", "lustrian_superleague"],
+        chosen: "ligue_disparue",
+      });
+    });
+  });
 });
