@@ -2557,6 +2557,31 @@ describe("Lot G — league-match-sheet", () => {
       });
     });
 
+    it("feuille antérieure au re-gel (poste changé sans re-gel) : la VEA repart des journaliers BAKÉS", async () => {
+      // Sous l'ancien code, le choix (2 Gobelins) a été stocké sans re-geler :
+      // le gel porte encore 2 Trois-quarts Orques (940k = 840k + 2 × 50k).
+      mockOrcSheet({
+        rosterSnapshotHome: frozenHome(),
+        journeymenHome: {
+          positions: ["orc_trois_quart_gobelin", "orc_trois_quart_gobelin"],
+        },
+      });
+
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin", null] },
+      });
+
+      const snap = JSON.parse(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data
+          .rosterSnapshotHome as string,
+      );
+      // 940k − 100k (bakés) + 90k (Gobelin + Orque) — et non 950k.
+      expect(snap.currentValue).toBe(930_000);
+      expect(snap.journeymenValue).toBe(90_000);
+    });
+
     it("gel « en-tête seul » : le choix est stocké, rien n'est re-baké (journaliers dérivés en live)", async () => {
       mockOrcSheet({
         rosterSnapshotHome: JSON.stringify({ headerOnly: true, currentValue: 940_000 }),

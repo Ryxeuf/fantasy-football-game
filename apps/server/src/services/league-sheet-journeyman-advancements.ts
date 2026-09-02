@@ -24,6 +24,8 @@
  */
 
 import {
+  canImproveCharacteristic,
+  characteristicOptionsForRoll,
   isRandomSkillCategory,
   rollRandomPrimaryCandidates,
 } from "@bb/game-engine";
@@ -55,7 +57,20 @@ export type JourneymanAdvancementSkipReason =
   | "category-not-primary"
   | "random-not-in-candidates"
   | "skill-excluded-from-selection"
-  | "skill-not-in-pool";
+  | "skill-not-in-pool"
+  | "missing-stat"
+  | "missing-d8"
+  | "stat-roll-mismatch"
+  | "stat-not-improvable";
+
+/**
+ * Tout ce qu'une entrée de journalier peut porter en `skipReason` après la
+ * séquence de fin de match : un refus de la revue, ou le sort du recrutement.
+ */
+export type JourneymanAdvancementOutcomeReason =
+  | JourneymanAdvancementSkipReason
+  | "journeyman-not-hired"
+  | "insufficient-spp";
 
 export type JourneymanAdvancementCheck =
   | { readonly ok: true }
@@ -74,9 +89,25 @@ export async function verifyJourneymanAdvancement(input: {
   readonly positions?: readonly JourneymanSourcePosition[] | null;
 }): Promise<JourneymanAdvancementCheck> {
   const { entry, journeyman } = input;
-  // Caractéristique : `stat` + `d8` sont validés par le schéma à la saisie ;
-  // pas de pool de compétences à contrôler.
-  if (entry.type === "characteristic") return { ok: true };
+  // Caractéristique : le schéma ne valide que la FORME (stat parmi les
+  // cinq, D8 entre 1 et 8), pas la cohérence. Mêmes règles que pour un
+  // joueur du roster (`applyAdvancementChoice`) : le jet D8 restreint les
+  // caractéristiques améliorables (BB2025), et la valeur ne doit pas être
+  // à sa limite — un journalier débarque sans amélioration antérieure.
+  if (entry.type === "characteristic") {
+    if (!entry.stat) return { ok: false, reason: "missing-stat" };
+    const roll = entry.d8;
+    if (typeof roll !== "number" || roll < 1 || roll > 8) {
+      return { ok: false, reason: "missing-d8" };
+    }
+    if (!characteristicOptionsForRoll(roll).includes(entry.stat)) {
+      return { ok: false, reason: "stat-roll-mismatch" };
+    }
+    if (!canImproveCharacteristic(journeyman.stats, entry.stat, 0)) {
+      return { ok: false, reason: "stat-not-improvable" };
+    }
+    return { ok: true };
+  }
   if (!entry.skillSlug) return { ok: false, reason: "missing-skill" };
   const owned = splitSkillCsv(journeyman.skills);
   if (owned.includes(entry.skillSlug)) {
@@ -210,36 +241,32 @@ export function traceJourneymanAdvancements(input: {
   /** Journaliers recrutés qui avaient une entrée stagée, par id. */
   readonly hires: ReadonlyMap<string, JourneymanHireTrace>;
 }): Map<string, StagedAdvancement> {
+  const refused = (
+    entry: StagedAdvancement,
+    skipReason: JourneymanAdvancementOutcomeReason,
+  ): StagedAdvancement => ({
+    ...clearAdvancementTrace(entry),
+    applied: false,
+    skipReason,
+  });
   const out = new Map<string, StagedAdvancement>();
   for (const entry of input.staged) {
     if (!isJourneymanId(entry.playerId)) continue;
     const refusal = input.review.refused.get(entry.playerId);
     if (refusal) {
-      out.set(entry.playerId, {
-        ...clearAdvancementTrace(entry),
-        applied: false,
-        skipReason: refusal,
-      });
+      out.set(entry.playerId, refused(entry, refusal));
       continue;
     }
     const hire = input.hires.get(entry.playerId);
     if (!hire) {
-      out.set(entry.playerId, {
-        ...clearAdvancementTrace(entry),
-        applied: false,
-        skipReason: "journeyman-not-hired",
-      });
+      out.set(entry.playerId, refused(entry, "journeyman-not-hired"));
       continue;
     }
     out.set(
       entry.playerId,
       hire.advancementTaken
         ? { ...clearAdvancementTrace(entry), applied: true, cost: hire.pspCost }
-        : {
-            ...clearAdvancementTrace(entry),
-            applied: false,
-            skipReason: "insufficient-spp",
-          },
+        : refused(entry, "insufficient-spp"),
     );
   }
   return out;

@@ -383,13 +383,17 @@ Trois pièges rencontrés en corrigeant les journaliers (sept. 2026) :
   VEA figée. Toute mutation d'avant-match qui change un journalier (poste)
   doit re-baker le côté (`rebakeFrozenJourneymen`), sinon la VEA/cagnotte et
   le roster « version du match » divergent des pickers. La valeur du
-  contingent est stockée à part (`journeymenValue`) ; à défaut, on re-dérive
-  l'ancien choix (snapshots antérieurs, pas de backfill possible).
+  contingent est stockée à part (`journeymenValue`) ; à défaut, on relit le
+  poste BAKÉ dans le libellé « Journalier (<poste>) » de chaque entrée — le
+  choix STOCKÉ peut en diverger sur une feuille dont le poste a changé avant
+  que le re-gel existe (pas de backfill possible).
 - **Tirage « Hasard » sans TeamPlayer** : l'endpoint d'équipe ne sert pas les
   journaliers ; la feuille tire (`rollJourneymanRandomPrimary`) avec un seed
   feuille + journalier + POSTE + catégorie, et la validation re-dérive les
   candidats (`verifyJourneymanAdvancement`). Un journalier n'ayant pas
-  d'`applyAdvancementChoice`, ce module porte ses contrôles, et la trace
+  d'`applyAdvancementChoice`, ce module porte TOUS ses contrôles — y compris
+  la caractéristique (cohérence D8 / caractéristique, bornes BB2025), que le
+  schéma Zod ne valide qu'en forme — et la trace
   (`applied`/`skipReason`) est fusionnée avec celle du roster dans l'ordre de
   la saisie — auparavant, les entrées de journaliers étaient PERDUES à la
   validation (liste réécrite = roster seul).

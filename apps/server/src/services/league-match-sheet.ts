@@ -733,6 +733,11 @@ export async function updatePreMatch(input: {
       raw: frozenRaw,
       previous: derive(previousChoice),
       next: derive(nextChoice),
+      // Postes du roster : relisent ce qui est réellement BAKÉ quand le
+      // snapshot ne porte pas encore `journeymenValue`.
+      roster: team.roster,
+      ruleset: team.ruleset,
+      positions: side === "home" ? positions.home : positions.away,
     });
     if (json) {
       data[side === "home" ? "rosterSnapshotHome" : "rosterSnapshotAway"] =
