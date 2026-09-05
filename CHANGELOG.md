@@ -1,3 +1,15 @@
+## [1.241.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.240.1...v1.241.0) (2026-09-05)
+
+
+### ✨ Features
+
+* **competitions:** documents officiels sur les ligues et les coupes ([#1011](https://github.com/Ryxeuf/fantasy-football-game/issues/1011)) ([f855079](https://github.com/Ryxeuf/fantasy-football-game/commit/f85507920b07038941b6b07cae19614bc284cfc4))
+
+
+### 📝 Documentation
+
+* état des lieux de la vague août 2026, roadmap et journal OpenSpec ([#1007](https://github.com/Ryxeuf/fantasy-football-game/issues/1007)) ([8748783](https://github.com/Ryxeuf/fantasy-football-game/commit/8748783833432a73d49e20a8c518871131af7367)), closes [#938](https://github.com/Ryxeuf/fantasy-football-game/issues/938) [#1006](https://github.com/Ryxeuf/fantasy-football-game/issues/1006) [#1000](https://github.com/Ryxeuf/fantasy-football-game/issues/1000)
+
 ## [1.240.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.240.0...v1.240.1) (2026-09-01)
 
 
