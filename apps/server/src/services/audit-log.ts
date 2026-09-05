@@ -51,10 +51,30 @@ export interface RecordAdminActionInput {
   userAgent?: string | null;
 }
 
-function serializeValue(
-  value: unknown,
-): string | typeof Prisma.JsonNull {
-  if (value === undefined || value === null) return Prisma.JsonNull;
+type AuditJsonInput = Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue;
+
+/**
+ * Sentinelle « pas de valeur » pour `oldValue` / `newValue`.
+ *
+ * La colonne est `Json?` en Postgres — Prisma exige alors `Prisma.JsonNull`,
+ * un `null` nu etant refuse. Mais le miroir sqlite des tests declare la meme
+ * colonne en `String?`, ou `Prisma.JsonNull` (un objet a l'execution) est
+ * refuse a son tour : l'insert echouait, et comme `safeRecordAdminAction*`
+ * avale l'erreur, l'action n'etait **pas** journalisee des qu'un seul des deux
+ * snapshots etait fourni (creation, upload, suppression). On aligne donc la
+ * sentinelle sur le provider, comme `team-audit-search` le fait deja.
+ */
+function emptyValue(): AuditJsonInput {
+  if (process.env.TEST_SQLITE === "1") {
+    // Le client est type depuis le schema POSTGRES : il ne peut pas exprimer
+    // le `String?` du miroir sqlite, d'ou le cast sur cette seule branche.
+    return null as unknown as Prisma.NullableJsonNullValueInput;
+  }
+  return Prisma.JsonNull;
+}
+
+function serializeValue(value: unknown): AuditJsonInput {
+  if (value === undefined || value === null) return emptyValue();
   return JSON.stringify(value);
 }
 

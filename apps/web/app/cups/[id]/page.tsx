@@ -4,6 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
+import CompetitionDocuments from "../../components/CompetitionDocuments";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import RosterBadge from "../../components/RosterBadge";
@@ -198,6 +199,9 @@ export default function CupDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  // Un admin gere les documents officiels de n'importe quelle coupe (le
+  // serveur l'autorise deja) : sans ce flag, l'UI le lui cacherait.
+  const [currentUserIsAdmin, setCurrentUserIsAdmin] = useState(false);
   const rulesetLabels: Record<string, string> = {
     season_2: "Saison 2",
     season_3: "Saison 3",
@@ -228,6 +232,11 @@ export default function CupDetailPage() {
         window.location.href = "/login";
         return;
       }
+      setCurrentUserIsAdmin(
+        Array.isArray(me.user.roles)
+          ? me.user.roles.includes("admin")
+          : me.user.role === "admin",
+      );
       const { cup: data } = await fetchJSON(`/cup/${cupId}`);
       setCup(data);
     } catch (e: any) {
@@ -437,6 +446,14 @@ export default function CupDetailPage() {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Documents officiels (règlement, affiche...). Dépôt réservé au
+          créateur de la coupe — et aux admins, reconnus côté serveur. */}
+      <CompetitionDocuments
+        scope="cups"
+        competitionId={cupId}
+        canManage={cup.isCreator === true || currentUserIsAdmin}
+      />
 
       {/* Cup Details */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">

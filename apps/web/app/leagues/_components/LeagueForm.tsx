@@ -9,6 +9,7 @@ import {
   INDUCEMENT_CATALOGUE,
 } from "@bb/game-engine";
 import { BonusRulesEditor } from "./BonusRulesEditor";
+import PendingCompetitionDocuments from "../../components/PendingCompetitionDocuments";
 import type { BonusRuleValue } from "./bonus-rules";
 
 // FR17 — coups de pouce paramétrables au niveau ligue (hors Star Players,
@@ -80,6 +81,14 @@ interface LeagueFormProps {
    */
   cancelHref: "/leagues" | Route<`/leagues/${string}`>;
   onSubmit: (values: LeagueFormValues) => void;
+  /**
+   * Documents officiels mis de cote pour un depot juste apres la creation
+   * (la ligue n'a pas encore d'id au moment du formulaire). Uniquement en
+   * mode `create` : en edition, le panneau de la fiche de ligue gere les
+   * documents directement contre l'API.
+   */
+  pendingDocuments?: readonly File[];
+  onPendingDocumentsChange?: (files: File[]) => void;
 }
 
 export function LeagueForm({
@@ -89,6 +98,8 @@ export function LeagueForm({
   error,
   cancelHref,
   onSubmit,
+  pendingDocuments,
+  onPendingDocumentsChange,
 }: LeagueFormProps) {
   const { t } = useLanguage();
   const [form, setForm] = useState<LeagueFormValues>({
@@ -428,6 +439,14 @@ export function LeagueForm({
           rules={form.bonusPointsConfig}
           onChange={(next) => updateField("bonusPointsConfig", next)}
         />
+
+        {mode === "create" && onPendingDocumentsChange ? (
+          <PendingCompetitionDocuments
+            files={pendingDocuments ?? []}
+            onChange={onPendingDocumentsChange}
+            disabled={submitting}
+          />
+        ) : null}
 
         <div className="flex items-center gap-3 pt-2">
           <button

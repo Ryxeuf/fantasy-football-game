@@ -1,4 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
 /**
  * Démarre le serveur Express/Socket.IO en mode SQLite in-memory pour la suite E2E API.
@@ -11,6 +13,12 @@ const API_PORT = process.env.API_PORT || "18002";
 const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ||
   "file:memdb-e2e?mode=memory&cache=shared";
+
+/** Dossier jetable des documents officiels uploades pendant la suite. */
+const COMPETITION_DOCUMENT_UPLOAD_DIR = path.join(
+  tmpdir(),
+  "nuffle-e2e-competition-documents",
+);
 
 // Active par défaut tous les feature flags pour la suite e2e-api.
 // Cf. apps/server/src/services/featureFlags.ts (FEATURE_FLAGS_FORCE_ENABLED).
@@ -70,6 +78,13 @@ export async function setup(): Promise<void> {
         TEST_DATABASE_URL,
         JWT_SECRET: process.env.JWT_SECRET || "e2e-jwt-secret",
         MATCH_SECRET: process.env.MATCH_SECRET || "e2e-match-secret",
+        // Documents officiels de competition : sans override, le serveur
+        // ecrirait dans `apps/web/public/documents/competitions` (dossier
+        // versionne). On isole les binaires uploades par la suite dans un
+        // dossier jetable.
+        COMPETITION_DOCUMENT_UPLOAD_DIR:
+          process.env.COMPETITION_DOCUMENT_UPLOAD_DIR ||
+          COMPETITION_DOCUMENT_UPLOAD_DIR,
       },
     });
     g.__e2eApiServerProc = serverProc;

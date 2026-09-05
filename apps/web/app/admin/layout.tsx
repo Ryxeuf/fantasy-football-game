@@ -39,6 +39,11 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
   }
   competitionItems.push(
     { href: "/admin/cups", label: "Coupes", icon: "🏆" },
+    {
+      href: "/admin/competition-documents",
+      label: "Documents officiels",
+      icon: "📎",
+    },
     { href: "/admin/nfl-fantasy", label: "NFL Fantasy", icon: "🐀" },
   );
 

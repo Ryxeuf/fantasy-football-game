@@ -221,6 +221,11 @@ export type LeagueInvitation = $Result.DefaultSelection<Prisma.$LeagueInvitation
  */
 export type CupInvitation = $Result.DefaultSelection<Prisma.$CupInvitationPayload>
 /**
+ * Model CompetitionDocument
+ * 
+ */
+export type CompetitionDocument = $Result.DefaultSelection<Prisma.$CompetitionDocumentPayload>
+/**
  * Model LeagueParticipant
  * 
  */
@@ -1020,6 +1025,16 @@ export class PrismaClient<
     * ```
     */
   get cupInvitation(): Prisma.CupInvitationDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.competitionDocument`: Exposes CRUD operations for the **CompetitionDocument** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CompetitionDocuments
+    * const competitionDocuments = await prisma.competitionDocument.findMany()
+    * ```
+    */
+  get competitionDocument(): Prisma.CompetitionDocumentDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.leagueParticipant`: Exposes CRUD operations for the **LeagueParticipant** model.
@@ -1921,6 +1936,7 @@ export namespace Prisma {
     LeaguePool: 'LeaguePool',
     LeagueInvitation: 'LeagueInvitation',
     CupInvitation: 'CupInvitation',
+    CompetitionDocument: 'CompetitionDocument',
     LeagueParticipant: 'LeagueParticipant',
     LeagueRound: 'LeagueRound',
     LeaguePairing: 'LeaguePairing',
@@ -1981,7 +1997,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "matchQueue" | "pushSubscription" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5016,6 +5032,80 @@ export namespace Prisma {
           count: {
             args: Prisma.CupInvitationCountArgs<ExtArgs>
             result: $Utils.Optional<CupInvitationCountAggregateOutputType> | number
+          }
+        }
+      }
+      CompetitionDocument: {
+        payload: Prisma.$CompetitionDocumentPayload<ExtArgs>
+        fields: Prisma.CompetitionDocumentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CompetitionDocumentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CompetitionDocumentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>
+          }
+          findFirst: {
+            args: Prisma.CompetitionDocumentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CompetitionDocumentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>
+          }
+          findMany: {
+            args: Prisma.CompetitionDocumentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>[]
+          }
+          create: {
+            args: Prisma.CompetitionDocumentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>
+          }
+          createMany: {
+            args: Prisma.CompetitionDocumentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CompetitionDocumentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>[]
+          }
+          delete: {
+            args: Prisma.CompetitionDocumentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>
+          }
+          update: {
+            args: Prisma.CompetitionDocumentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>
+          }
+          deleteMany: {
+            args: Prisma.CompetitionDocumentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CompetitionDocumentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CompetitionDocumentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>[]
+          }
+          upsert: {
+            args: Prisma.CompetitionDocumentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionDocumentPayload>
+          }
+          aggregate: {
+            args: Prisma.CompetitionDocumentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCompetitionDocument>
+          }
+          groupBy: {
+            args: Prisma.CompetitionDocumentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionDocumentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CompetitionDocumentCountArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionDocumentCountAggregateOutputType> | number
           }
         }
       }
@@ -8264,6 +8354,7 @@ export namespace Prisma {
     leaguePool?: LeaguePoolOmit
     leagueInvitation?: LeagueInvitationOmit
     cupInvitation?: CupInvitationOmit
+    competitionDocument?: CompetitionDocumentOmit
     leagueParticipant?: LeagueParticipantOmit
     leagueRound?: LeagueRoundOmit
     leaguePairing?: LeaguePairingOmit
@@ -8391,6 +8482,7 @@ export namespace Prisma {
     teams: number
     teamSelections: number
     createdCups: number
+    competitionDocuments: number
     createdLeagues: number
     createdLocalMatches: number
     featureFlagOverrides: number
@@ -8426,6 +8518,7 @@ export namespace Prisma {
     teams?: boolean | UserCountOutputTypeCountTeamsArgs
     teamSelections?: boolean | UserCountOutputTypeCountTeamSelectionsArgs
     createdCups?: boolean | UserCountOutputTypeCountCreatedCupsArgs
+    competitionDocuments?: boolean | UserCountOutputTypeCountCompetitionDocumentsArgs
     createdLeagues?: boolean | UserCountOutputTypeCountCreatedLeaguesArgs
     createdLocalMatches?: boolean | UserCountOutputTypeCountCreatedLocalMatchesArgs
     featureFlagOverrides?: boolean | UserCountOutputTypeCountFeatureFlagOverridesArgs
@@ -8499,6 +8592,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountCreatedCupsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CupWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCompetitionDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionDocumentWhereInput
   }
 
   /**
@@ -9082,12 +9182,14 @@ export namespace Prisma {
     participants: number
     invitations: number
     localMatches: number
+    documents: number
   }
 
   export type CupCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     participants?: boolean | CupCountOutputTypeCountParticipantsArgs
     invitations?: boolean | CupCountOutputTypeCountInvitationsArgs
     localMatches?: boolean | CupCountOutputTypeCountLocalMatchesArgs
+    documents?: boolean | CupCountOutputTypeCountDocumentsArgs
   }
 
   // Custom InputTypes
@@ -9120,6 +9222,13 @@ export namespace Prisma {
    */
   export type CupCountOutputTypeCountLocalMatchesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: LocalMatchWhereInput
+  }
+
+  /**
+   * CupCountOutputType without action
+   */
+  export type CupCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionDocumentWhereInput
   }
 
 
@@ -9161,11 +9270,13 @@ export namespace Prisma {
   export type LeagueCountOutputType = {
     seasons: number
     invitations: number
+    documents: number
   }
 
   export type LeagueCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     seasons?: boolean | LeagueCountOutputTypeCountSeasonsArgs
     invitations?: boolean | LeagueCountOutputTypeCountInvitationsArgs
+    documents?: boolean | LeagueCountOutputTypeCountDocumentsArgs
   }
 
   // Custom InputTypes
@@ -9191,6 +9302,13 @@ export namespace Prisma {
    */
   export type LeagueCountOutputTypeCountInvitationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: LeagueInvitationWhereInput
+  }
+
+  /**
+   * LeagueCountOutputType without action
+   */
+  export type LeagueCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionDocumentWhereInput
   }
 
 
@@ -10341,6 +10459,7 @@ export namespace Prisma {
     teams?: boolean | User$teamsArgs<ExtArgs>
     teamSelections?: boolean | User$teamSelectionsArgs<ExtArgs>
     createdCups?: boolean | User$createdCupsArgs<ExtArgs>
+    competitionDocuments?: boolean | User$competitionDocumentsArgs<ExtArgs>
     createdLeagues?: boolean | User$createdLeaguesArgs<ExtArgs>
     createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     matchQueue?: boolean | User$matchQueueArgs<ExtArgs>
@@ -10488,6 +10607,7 @@ export namespace Prisma {
     teams?: boolean | User$teamsArgs<ExtArgs>
     teamSelections?: boolean | User$teamSelectionsArgs<ExtArgs>
     createdCups?: boolean | User$createdCupsArgs<ExtArgs>
+    competitionDocuments?: boolean | User$competitionDocumentsArgs<ExtArgs>
     createdLeagues?: boolean | User$createdLeaguesArgs<ExtArgs>
     createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     matchQueue?: boolean | User$matchQueueArgs<ExtArgs>
@@ -10530,6 +10650,7 @@ export namespace Prisma {
       teams: Prisma.$TeamPayload<ExtArgs>[]
       teamSelections: Prisma.$TeamSelectionPayload<ExtArgs>[]
       createdCups: Prisma.$CupPayload<ExtArgs>[]
+      competitionDocuments: Prisma.$CompetitionDocumentPayload<ExtArgs>[]
       createdLeagues: Prisma.$LeaguePayload<ExtArgs>[]
       createdLocalMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
       matchQueue: Prisma.$MatchQueuePayload<ExtArgs> | null
@@ -11048,6 +11169,7 @@ export namespace Prisma {
     teams<T extends User$teamsArgs<ExtArgs> = {}>(args?: Subset<T, User$teamsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     teamSelections<T extends User$teamSelectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$teamSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdCups<T extends User$createdCupsArgs<ExtArgs> = {}>(args?: Subset<T, User$createdCupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    competitionDocuments<T extends User$competitionDocumentsArgs<ExtArgs> = {}>(args?: Subset<T, User$competitionDocumentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdLeagues<T extends User$createdLeaguesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdLeaguesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdLocalMatches<T extends User$createdLocalMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdLocalMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     matchQueue<T extends User$matchQueueArgs<ExtArgs> = {}>(args?: Subset<T, User$matchQueueArgs<ExtArgs>>): Prisma__MatchQueueClient<$Result.GetResult<Prisma.$MatchQueuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -11642,6 +11764,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CupScalarFieldEnum | CupScalarFieldEnum[]
+  }
+
+  /**
+   * User.competitionDocuments
+   */
+  export type User$competitionDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    where?: CompetitionDocumentWhereInput
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    cursor?: CompetitionDocumentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
   }
 
   /**
@@ -45787,6 +45933,7 @@ export namespace Prisma {
     participants?: boolean | Cup$participantsArgs<ExtArgs>
     invitations?: boolean | Cup$invitationsArgs<ExtArgs>
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
+    documents?: boolean | Cup$documentsArgs<ExtArgs>
     _count?: boolean | CupCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cup"]>
 
@@ -45882,6 +46029,7 @@ export namespace Prisma {
     participants?: boolean | Cup$participantsArgs<ExtArgs>
     invitations?: boolean | Cup$invitationsArgs<ExtArgs>
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
+    documents?: boolean | Cup$documentsArgs<ExtArgs>
     _count?: boolean | CupCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CupIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -45898,6 +46046,7 @@ export namespace Prisma {
       participants: Prisma.$CupParticipantPayload<ExtArgs>[]
       invitations: Prisma.$CupInvitationPayload<ExtArgs>[]
       localMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
+      documents: Prisma.$CompetitionDocumentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -46323,6 +46472,7 @@ export namespace Prisma {
     participants<T extends Cup$participantsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitations<T extends Cup$invitationsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     localMatches<T extends Cup$localMatchesArgs<ExtArgs> = {}>(args?: Subset<T, Cup$localMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    documents<T extends Cup$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -46840,6 +46990,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: LocalMatchScalarFieldEnum | LocalMatchScalarFieldEnum[]
+  }
+
+  /**
+   * Cup.documents
+   */
+  export type Cup$documentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    where?: CompetitionDocumentWhereInput
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    cursor?: CompetitionDocumentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
   }
 
   /**
@@ -54107,6 +54281,7 @@ export namespace Prisma {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     seasons?: boolean | League$seasonsArgs<ExtArgs>
     invitations?: boolean | League$invitationsArgs<ExtArgs>
+    documents?: boolean | League$documentsArgs<ExtArgs>
     _count?: boolean | LeagueCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["league"]>
 
@@ -54183,6 +54358,7 @@ export namespace Prisma {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     seasons?: boolean | League$seasonsArgs<ExtArgs>
     invitations?: boolean | League$invitationsArgs<ExtArgs>
+    documents?: boolean | League$documentsArgs<ExtArgs>
     _count?: boolean | LeagueCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -54198,6 +54374,7 @@ export namespace Prisma {
       creator: Prisma.$UserPayload<ExtArgs>
       seasons: Prisma.$LeagueSeasonPayload<ExtArgs>[]
       invitations: Prisma.$LeagueInvitationPayload<ExtArgs>[]
+      documents: Prisma.$CompetitionDocumentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -54619,6 +54796,7 @@ export namespace Prisma {
     creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     seasons<T extends League$seasonsArgs<ExtArgs> = {}>(args?: Subset<T, League$seasonsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitations<T extends League$invitationsArgs<ExtArgs> = {}>(args?: Subset<T, League$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    documents<T extends League$documentsArgs<ExtArgs> = {}>(args?: Subset<T, League$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -55106,6 +55284,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: LeagueInvitationScalarFieldEnum | LeagueInvitationScalarFieldEnum[]
+  }
+
+  /**
+   * League.documents
+   */
+  export type League$documentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    where?: CompetitionDocumentWhereInput
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    cursor?: CompetitionDocumentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
   }
 
   /**
@@ -60263,6 +60465,1277 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: CupInvitationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CompetitionDocument
+   */
+
+  export type AggregateCompetitionDocument = {
+    _count: CompetitionDocumentCountAggregateOutputType | null
+    _avg: CompetitionDocumentAvgAggregateOutputType | null
+    _sum: CompetitionDocumentSumAggregateOutputType | null
+    _min: CompetitionDocumentMinAggregateOutputType | null
+    _max: CompetitionDocumentMaxAggregateOutputType | null
+  }
+
+  export type CompetitionDocumentAvgAggregateOutputType = {
+    bytes: number | null
+    sortOrder: number | null
+  }
+
+  export type CompetitionDocumentSumAggregateOutputType = {
+    bytes: number | null
+    sortOrder: number | null
+  }
+
+  export type CompetitionDocumentMinAggregateOutputType = {
+    id: string | null
+    leagueId: string | null
+    cupId: string | null
+    title: string | null
+    description: string | null
+    filename: string | null
+    originalName: string | null
+    mimeType: string | null
+    bytes: number | null
+    uploadedById: string | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CompetitionDocumentMaxAggregateOutputType = {
+    id: string | null
+    leagueId: string | null
+    cupId: string | null
+    title: string | null
+    description: string | null
+    filename: string | null
+    originalName: string | null
+    mimeType: string | null
+    bytes: number | null
+    uploadedById: string | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CompetitionDocumentCountAggregateOutputType = {
+    id: number
+    leagueId: number
+    cupId: number
+    title: number
+    description: number
+    filename: number
+    originalName: number
+    mimeType: number
+    bytes: number
+    uploadedById: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CompetitionDocumentAvgAggregateInputType = {
+    bytes?: true
+    sortOrder?: true
+  }
+
+  export type CompetitionDocumentSumAggregateInputType = {
+    bytes?: true
+    sortOrder?: true
+  }
+
+  export type CompetitionDocumentMinAggregateInputType = {
+    id?: true
+    leagueId?: true
+    cupId?: true
+    title?: true
+    description?: true
+    filename?: true
+    originalName?: true
+    mimeType?: true
+    bytes?: true
+    uploadedById?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CompetitionDocumentMaxAggregateInputType = {
+    id?: true
+    leagueId?: true
+    cupId?: true
+    title?: true
+    description?: true
+    filename?: true
+    originalName?: true
+    mimeType?: true
+    bytes?: true
+    uploadedById?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CompetitionDocumentCountAggregateInputType = {
+    id?: true
+    leagueId?: true
+    cupId?: true
+    title?: true
+    description?: true
+    filename?: true
+    originalName?: true
+    mimeType?: true
+    bytes?: true
+    uploadedById?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CompetitionDocumentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionDocument to aggregate.
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionDocuments to fetch.
+     */
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CompetitionDocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionDocuments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionDocuments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CompetitionDocuments
+    **/
+    _count?: true | CompetitionDocumentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CompetitionDocumentAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CompetitionDocumentSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CompetitionDocumentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CompetitionDocumentMaxAggregateInputType
+  }
+
+  export type GetCompetitionDocumentAggregateType<T extends CompetitionDocumentAggregateArgs> = {
+        [P in keyof T & keyof AggregateCompetitionDocument]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCompetitionDocument[P]>
+      : GetScalarType<T[P], AggregateCompetitionDocument[P]>
+  }
+
+
+
+
+  export type CompetitionDocumentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionDocumentWhereInput
+    orderBy?: CompetitionDocumentOrderByWithAggregationInput | CompetitionDocumentOrderByWithAggregationInput[]
+    by: CompetitionDocumentScalarFieldEnum[] | CompetitionDocumentScalarFieldEnum
+    having?: CompetitionDocumentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CompetitionDocumentCountAggregateInputType | true
+    _avg?: CompetitionDocumentAvgAggregateInputType
+    _sum?: CompetitionDocumentSumAggregateInputType
+    _min?: CompetitionDocumentMinAggregateInputType
+    _max?: CompetitionDocumentMaxAggregateInputType
+  }
+
+  export type CompetitionDocumentGroupByOutputType = {
+    id: string
+    leagueId: string | null
+    cupId: string | null
+    title: string
+    description: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById: string | null
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
+    _count: CompetitionDocumentCountAggregateOutputType | null
+    _avg: CompetitionDocumentAvgAggregateOutputType | null
+    _sum: CompetitionDocumentSumAggregateOutputType | null
+    _min: CompetitionDocumentMinAggregateOutputType | null
+    _max: CompetitionDocumentMaxAggregateOutputType | null
+  }
+
+  type GetCompetitionDocumentGroupByPayload<T extends CompetitionDocumentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CompetitionDocumentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CompetitionDocumentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CompetitionDocumentGroupByOutputType[P]>
+            : GetScalarType<T[P], CompetitionDocumentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CompetitionDocumentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    title?: boolean
+    description?: boolean
+    filename?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    bytes?: boolean
+    uploadedById?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    league?: boolean | CompetitionDocument$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionDocument$cupArgs<ExtArgs>
+    uploader?: boolean | CompetitionDocument$uploaderArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionDocument"]>
+
+  export type CompetitionDocumentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    title?: boolean
+    description?: boolean
+    filename?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    bytes?: boolean
+    uploadedById?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    league?: boolean | CompetitionDocument$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionDocument$cupArgs<ExtArgs>
+    uploader?: boolean | CompetitionDocument$uploaderArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionDocument"]>
+
+  export type CompetitionDocumentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    title?: boolean
+    description?: boolean
+    filename?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    bytes?: boolean
+    uploadedById?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    league?: boolean | CompetitionDocument$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionDocument$cupArgs<ExtArgs>
+    uploader?: boolean | CompetitionDocument$uploaderArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionDocument"]>
+
+  export type CompetitionDocumentSelectScalar = {
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    title?: boolean
+    description?: boolean
+    filename?: boolean
+    originalName?: boolean
+    mimeType?: boolean
+    bytes?: boolean
+    uploadedById?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CompetitionDocumentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "cupId" | "title" | "description" | "filename" | "originalName" | "mimeType" | "bytes" | "uploadedById" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["competitionDocument"]>
+  export type CompetitionDocumentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    league?: boolean | CompetitionDocument$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionDocument$cupArgs<ExtArgs>
+    uploader?: boolean | CompetitionDocument$uploaderArgs<ExtArgs>
+  }
+  export type CompetitionDocumentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    league?: boolean | CompetitionDocument$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionDocument$cupArgs<ExtArgs>
+    uploader?: boolean | CompetitionDocument$uploaderArgs<ExtArgs>
+  }
+  export type CompetitionDocumentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    league?: boolean | CompetitionDocument$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionDocument$cupArgs<ExtArgs>
+    uploader?: boolean | CompetitionDocument$uploaderArgs<ExtArgs>
+  }
+
+  export type $CompetitionDocumentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CompetitionDocument"
+    objects: {
+      league: Prisma.$LeaguePayload<ExtArgs> | null
+      cup: Prisma.$CupPayload<ExtArgs> | null
+      uploader: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      leagueId: string | null
+      cupId: string | null
+      title: string
+      description: string | null
+      filename: string
+      originalName: string
+      mimeType: string
+      bytes: number
+      uploadedById: string | null
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["competitionDocument"]>
+    composites: {}
+  }
+
+  type CompetitionDocumentGetPayload<S extends boolean | null | undefined | CompetitionDocumentDefaultArgs> = $Result.GetResult<Prisma.$CompetitionDocumentPayload, S>
+
+  type CompetitionDocumentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CompetitionDocumentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CompetitionDocumentCountAggregateInputType | true
+    }
+
+  export interface CompetitionDocumentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CompetitionDocument'], meta: { name: 'CompetitionDocument' } }
+    /**
+     * Find zero or one CompetitionDocument that matches the filter.
+     * @param {CompetitionDocumentFindUniqueArgs} args - Arguments to find a CompetitionDocument
+     * @example
+     * // Get one CompetitionDocument
+     * const competitionDocument = await prisma.competitionDocument.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CompetitionDocumentFindUniqueArgs>(args: SelectSubset<T, CompetitionDocumentFindUniqueArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CompetitionDocument that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CompetitionDocumentFindUniqueOrThrowArgs} args - Arguments to find a CompetitionDocument
+     * @example
+     * // Get one CompetitionDocument
+     * const competitionDocument = await prisma.competitionDocument.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CompetitionDocumentFindUniqueOrThrowArgs>(args: SelectSubset<T, CompetitionDocumentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionDocument that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentFindFirstArgs} args - Arguments to find a CompetitionDocument
+     * @example
+     * // Get one CompetitionDocument
+     * const competitionDocument = await prisma.competitionDocument.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CompetitionDocumentFindFirstArgs>(args?: SelectSubset<T, CompetitionDocumentFindFirstArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionDocument that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentFindFirstOrThrowArgs} args - Arguments to find a CompetitionDocument
+     * @example
+     * // Get one CompetitionDocument
+     * const competitionDocument = await prisma.competitionDocument.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CompetitionDocumentFindFirstOrThrowArgs>(args?: SelectSubset<T, CompetitionDocumentFindFirstOrThrowArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CompetitionDocuments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CompetitionDocuments
+     * const competitionDocuments = await prisma.competitionDocument.findMany()
+     * 
+     * // Get first 10 CompetitionDocuments
+     * const competitionDocuments = await prisma.competitionDocument.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const competitionDocumentWithIdOnly = await prisma.competitionDocument.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CompetitionDocumentFindManyArgs>(args?: SelectSubset<T, CompetitionDocumentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CompetitionDocument.
+     * @param {CompetitionDocumentCreateArgs} args - Arguments to create a CompetitionDocument.
+     * @example
+     * // Create one CompetitionDocument
+     * const CompetitionDocument = await prisma.competitionDocument.create({
+     *   data: {
+     *     // ... data to create a CompetitionDocument
+     *   }
+     * })
+     * 
+     */
+    create<T extends CompetitionDocumentCreateArgs>(args: SelectSubset<T, CompetitionDocumentCreateArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CompetitionDocuments.
+     * @param {CompetitionDocumentCreateManyArgs} args - Arguments to create many CompetitionDocuments.
+     * @example
+     * // Create many CompetitionDocuments
+     * const competitionDocument = await prisma.competitionDocument.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CompetitionDocumentCreateManyArgs>(args?: SelectSubset<T, CompetitionDocumentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CompetitionDocuments and returns the data saved in the database.
+     * @param {CompetitionDocumentCreateManyAndReturnArgs} args - Arguments to create many CompetitionDocuments.
+     * @example
+     * // Create many CompetitionDocuments
+     * const competitionDocument = await prisma.competitionDocument.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CompetitionDocuments and only return the `id`
+     * const competitionDocumentWithIdOnly = await prisma.competitionDocument.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CompetitionDocumentCreateManyAndReturnArgs>(args?: SelectSubset<T, CompetitionDocumentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CompetitionDocument.
+     * @param {CompetitionDocumentDeleteArgs} args - Arguments to delete one CompetitionDocument.
+     * @example
+     * // Delete one CompetitionDocument
+     * const CompetitionDocument = await prisma.competitionDocument.delete({
+     *   where: {
+     *     // ... filter to delete one CompetitionDocument
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CompetitionDocumentDeleteArgs>(args: SelectSubset<T, CompetitionDocumentDeleteArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CompetitionDocument.
+     * @param {CompetitionDocumentUpdateArgs} args - Arguments to update one CompetitionDocument.
+     * @example
+     * // Update one CompetitionDocument
+     * const competitionDocument = await prisma.competitionDocument.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CompetitionDocumentUpdateArgs>(args: SelectSubset<T, CompetitionDocumentUpdateArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CompetitionDocuments.
+     * @param {CompetitionDocumentDeleteManyArgs} args - Arguments to filter CompetitionDocuments to delete.
+     * @example
+     * // Delete a few CompetitionDocuments
+     * const { count } = await prisma.competitionDocument.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CompetitionDocumentDeleteManyArgs>(args?: SelectSubset<T, CompetitionDocumentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionDocuments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CompetitionDocuments
+     * const competitionDocument = await prisma.competitionDocument.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CompetitionDocumentUpdateManyArgs>(args: SelectSubset<T, CompetitionDocumentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionDocuments and returns the data updated in the database.
+     * @param {CompetitionDocumentUpdateManyAndReturnArgs} args - Arguments to update many CompetitionDocuments.
+     * @example
+     * // Update many CompetitionDocuments
+     * const competitionDocument = await prisma.competitionDocument.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CompetitionDocuments and only return the `id`
+     * const competitionDocumentWithIdOnly = await prisma.competitionDocument.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CompetitionDocumentUpdateManyAndReturnArgs>(args: SelectSubset<T, CompetitionDocumentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CompetitionDocument.
+     * @param {CompetitionDocumentUpsertArgs} args - Arguments to update or create a CompetitionDocument.
+     * @example
+     * // Update or create a CompetitionDocument
+     * const competitionDocument = await prisma.competitionDocument.upsert({
+     *   create: {
+     *     // ... data to create a CompetitionDocument
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CompetitionDocument we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CompetitionDocumentUpsertArgs>(args: SelectSubset<T, CompetitionDocumentUpsertArgs<ExtArgs>>): Prisma__CompetitionDocumentClient<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CompetitionDocuments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentCountArgs} args - Arguments to filter CompetitionDocuments to count.
+     * @example
+     * // Count the number of CompetitionDocuments
+     * const count = await prisma.competitionDocument.count({
+     *   where: {
+     *     // ... the filter for the CompetitionDocuments we want to count
+     *   }
+     * })
+    **/
+    count<T extends CompetitionDocumentCountArgs>(
+      args?: Subset<T, CompetitionDocumentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CompetitionDocumentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CompetitionDocument.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CompetitionDocumentAggregateArgs>(args: Subset<T, CompetitionDocumentAggregateArgs>): Prisma.PrismaPromise<GetCompetitionDocumentAggregateType<T>>
+
+    /**
+     * Group by CompetitionDocument.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionDocumentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CompetitionDocumentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CompetitionDocumentGroupByArgs['orderBy'] }
+        : { orderBy?: CompetitionDocumentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CompetitionDocumentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCompetitionDocumentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CompetitionDocument model
+   */
+  readonly fields: CompetitionDocumentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CompetitionDocument.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CompetitionDocumentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    league<T extends CompetitionDocument$leagueArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionDocument$leagueArgs<ExtArgs>>): Prisma__LeagueClient<$Result.GetResult<Prisma.$LeaguePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    cup<T extends CompetitionDocument$cupArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionDocument$cupArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    uploader<T extends CompetitionDocument$uploaderArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionDocument$uploaderArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CompetitionDocument model
+   */
+  interface CompetitionDocumentFieldRefs {
+    readonly id: FieldRef<"CompetitionDocument", 'String'>
+    readonly leagueId: FieldRef<"CompetitionDocument", 'String'>
+    readonly cupId: FieldRef<"CompetitionDocument", 'String'>
+    readonly title: FieldRef<"CompetitionDocument", 'String'>
+    readonly description: FieldRef<"CompetitionDocument", 'String'>
+    readonly filename: FieldRef<"CompetitionDocument", 'String'>
+    readonly originalName: FieldRef<"CompetitionDocument", 'String'>
+    readonly mimeType: FieldRef<"CompetitionDocument", 'String'>
+    readonly bytes: FieldRef<"CompetitionDocument", 'Int'>
+    readonly uploadedById: FieldRef<"CompetitionDocument", 'String'>
+    readonly sortOrder: FieldRef<"CompetitionDocument", 'Int'>
+    readonly createdAt: FieldRef<"CompetitionDocument", 'DateTime'>
+    readonly updatedAt: FieldRef<"CompetitionDocument", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CompetitionDocument findUnique
+   */
+  export type CompetitionDocumentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionDocument to fetch.
+     */
+    where: CompetitionDocumentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionDocument findUniqueOrThrow
+   */
+  export type CompetitionDocumentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionDocument to fetch.
+     */
+    where: CompetitionDocumentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionDocument findFirst
+   */
+  export type CompetitionDocumentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionDocument to fetch.
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionDocuments to fetch.
+     */
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionDocuments.
+     */
+    cursor?: CompetitionDocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionDocuments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionDocuments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionDocuments.
+     */
+    distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionDocument findFirstOrThrow
+   */
+  export type CompetitionDocumentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionDocument to fetch.
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionDocuments to fetch.
+     */
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionDocuments.
+     */
+    cursor?: CompetitionDocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionDocuments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionDocuments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionDocuments.
+     */
+    distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionDocument findMany
+   */
+  export type CompetitionDocumentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionDocuments to fetch.
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionDocuments to fetch.
+     */
+    orderBy?: CompetitionDocumentOrderByWithRelationInput | CompetitionDocumentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CompetitionDocuments.
+     */
+    cursor?: CompetitionDocumentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionDocuments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionDocuments.
+     */
+    skip?: number
+    distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionDocument create
+   */
+  export type CompetitionDocumentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CompetitionDocument.
+     */
+    data: XOR<CompetitionDocumentCreateInput, CompetitionDocumentUncheckedCreateInput>
+  }
+
+  /**
+   * CompetitionDocument createMany
+   */
+  export type CompetitionDocumentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CompetitionDocuments.
+     */
+    data: CompetitionDocumentCreateManyInput | CompetitionDocumentCreateManyInput[]
+  }
+
+  /**
+   * CompetitionDocument createManyAndReturn
+   */
+  export type CompetitionDocumentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * The data used to create many CompetitionDocuments.
+     */
+    data: CompetitionDocumentCreateManyInput | CompetitionDocumentCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionDocument update
+   */
+  export type CompetitionDocumentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CompetitionDocument.
+     */
+    data: XOR<CompetitionDocumentUpdateInput, CompetitionDocumentUncheckedUpdateInput>
+    /**
+     * Choose, which CompetitionDocument to update.
+     */
+    where: CompetitionDocumentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionDocument updateMany
+   */
+  export type CompetitionDocumentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CompetitionDocuments.
+     */
+    data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionDocuments to update
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * Limit how many CompetitionDocuments to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionDocument updateManyAndReturn
+   */
+  export type CompetitionDocumentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * The data used to update CompetitionDocuments.
+     */
+    data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionDocuments to update
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * Limit how many CompetitionDocuments to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionDocument upsert
+   */
+  export type CompetitionDocumentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CompetitionDocument to update in case it exists.
+     */
+    where: CompetitionDocumentWhereUniqueInput
+    /**
+     * In case the CompetitionDocument found by the `where` argument doesn't exist, create a new CompetitionDocument with this data.
+     */
+    create: XOR<CompetitionDocumentCreateInput, CompetitionDocumentUncheckedCreateInput>
+    /**
+     * In case the CompetitionDocument was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CompetitionDocumentUpdateInput, CompetitionDocumentUncheckedUpdateInput>
+  }
+
+  /**
+   * CompetitionDocument delete
+   */
+  export type CompetitionDocumentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
+    /**
+     * Filter which CompetitionDocument to delete.
+     */
+    where: CompetitionDocumentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionDocument deleteMany
+   */
+  export type CompetitionDocumentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionDocuments to delete
+     */
+    where?: CompetitionDocumentWhereInput
+    /**
+     * Limit how many CompetitionDocuments to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionDocument.league
+   */
+  export type CompetitionDocument$leagueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the League
+     */
+    select?: LeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the League
+     */
+    omit?: LeagueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueInclude<ExtArgs> | null
+    where?: LeagueWhereInput
+  }
+
+  /**
+   * CompetitionDocument.cup
+   */
+  export type CompetitionDocument$cupArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    where?: CupWhereInput
+  }
+
+  /**
+   * CompetitionDocument.uploader
+   */
+  export type CompetitionDocument$uploaderArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * CompetitionDocument without action
+   */
+  export type CompetitionDocumentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionDocument
+     */
+    select?: CompetitionDocumentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionDocument
+     */
+    omit?: CompetitionDocumentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionDocumentInclude<ExtArgs> | null
   }
 
 
@@ -110845,6 +112318,25 @@ export namespace Prisma {
   export type CupInvitationScalarFieldEnum = (typeof CupInvitationScalarFieldEnum)[keyof typeof CupInvitationScalarFieldEnum]
 
 
+  export const CompetitionDocumentScalarFieldEnum: {
+    id: 'id',
+    leagueId: 'leagueId',
+    cupId: 'cupId',
+    title: 'title',
+    description: 'description',
+    filename: 'filename',
+    originalName: 'originalName',
+    mimeType: 'mimeType',
+    bytes: 'bytes',
+    uploadedById: 'uploadedById',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CompetitionDocumentScalarFieldEnum = (typeof CompetitionDocumentScalarFieldEnum)[keyof typeof CompetitionDocumentScalarFieldEnum]
+
+
   export const LeagueParticipantScalarFieldEnum: {
     id: 'id',
     seasonId: 'seasonId',
@@ -111772,6 +113264,7 @@ export namespace Prisma {
     teams?: TeamListRelationFilter
     teamSelections?: TeamSelectionListRelationFilter
     createdCups?: CupListRelationFilter
+    competitionDocuments?: CompetitionDocumentListRelationFilter
     createdLeagues?: LeagueListRelationFilter
     createdLocalMatches?: LocalMatchListRelationFilter
     matchQueue?: XOR<MatchQueueNullableScalarRelationFilter, MatchQueueWhereInput> | null
@@ -111842,6 +113335,7 @@ export namespace Prisma {
     teams?: TeamOrderByRelationAggregateInput
     teamSelections?: TeamSelectionOrderByRelationAggregateInput
     createdCups?: CupOrderByRelationAggregateInput
+    competitionDocuments?: CompetitionDocumentOrderByRelationAggregateInput
     createdLeagues?: LeagueOrderByRelationAggregateInput
     createdLocalMatches?: LocalMatchOrderByRelationAggregateInput
     matchQueue?: MatchQueueOrderByWithRelationInput
@@ -111915,6 +113409,7 @@ export namespace Prisma {
     teams?: TeamListRelationFilter
     teamSelections?: TeamSelectionListRelationFilter
     createdCups?: CupListRelationFilter
+    competitionDocuments?: CompetitionDocumentListRelationFilter
     createdLeagues?: LeagueListRelationFilter
     createdLocalMatches?: LocalMatchListRelationFilter
     matchQueue?: XOR<MatchQueueNullableScalarRelationFilter, MatchQueueWhereInput> | null
@@ -114555,6 +116050,7 @@ export namespace Prisma {
     participants?: CupParticipantListRelationFilter
     invitations?: CupInvitationListRelationFilter
     localMatches?: LocalMatchListRelationFilter
+    documents?: CompetitionDocumentListRelationFilter
   }
 
   export type CupOrderByWithRelationInput = {
@@ -114587,6 +116083,7 @@ export namespace Prisma {
     participants?: CupParticipantOrderByRelationAggregateInput
     invitations?: CupInvitationOrderByRelationAggregateInput
     localMatches?: LocalMatchOrderByRelationAggregateInput
+    documents?: CompetitionDocumentOrderByRelationAggregateInput
   }
 
   export type CupWhereUniqueInput = Prisma.AtLeast<{
@@ -114622,6 +116119,7 @@ export namespace Prisma {
     participants?: CupParticipantListRelationFilter
     invitations?: CupInvitationListRelationFilter
     localMatches?: LocalMatchListRelationFilter
+    documents?: CompetitionDocumentListRelationFilter
   }, "id">
 
   export type CupOrderByWithAggregationInput = {
@@ -115240,6 +116738,7 @@ export namespace Prisma {
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     seasons?: LeagueSeasonListRelationFilter
     invitations?: LeagueInvitationListRelationFilter
+    documents?: CompetitionDocumentListRelationFilter
   }
 
   export type LeagueOrderByWithRelationInput = {
@@ -115265,6 +116764,7 @@ export namespace Prisma {
     creator?: UserOrderByWithRelationInput
     seasons?: LeagueSeasonOrderByRelationAggregateInput
     invitations?: LeagueInvitationOrderByRelationAggregateInput
+    documents?: CompetitionDocumentOrderByRelationAggregateInput
   }
 
   export type LeagueWhereUniqueInput = Prisma.AtLeast<{
@@ -115293,6 +116793,7 @@ export namespace Prisma {
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     seasons?: LeagueSeasonListRelationFilter
     invitations?: LeagueInvitationListRelationFilter
+    documents?: CompetitionDocumentListRelationFilter
   }, "id">
 
   export type LeagueOrderByWithAggregationInput = {
@@ -115791,6 +117292,109 @@ export namespace Prisma {
     acceptedParticipantId?: StringNullableWithAggregatesFilter<"CupInvitation"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"CupInvitation"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CupInvitation"> | Date | string
+  }
+
+  export type CompetitionDocumentWhereInput = {
+    AND?: CompetitionDocumentWhereInput | CompetitionDocumentWhereInput[]
+    OR?: CompetitionDocumentWhereInput[]
+    NOT?: CompetitionDocumentWhereInput | CompetitionDocumentWhereInput[]
+    id?: StringFilter<"CompetitionDocument"> | string
+    leagueId?: StringNullableFilter<"CompetitionDocument"> | string | null
+    cupId?: StringNullableFilter<"CompetitionDocument"> | string | null
+    title?: StringFilter<"CompetitionDocument"> | string
+    description?: StringNullableFilter<"CompetitionDocument"> | string | null
+    filename?: StringFilter<"CompetitionDocument"> | string
+    originalName?: StringFilter<"CompetitionDocument"> | string
+    mimeType?: StringFilter<"CompetitionDocument"> | string
+    bytes?: IntFilter<"CompetitionDocument"> | number
+    uploadedById?: StringNullableFilter<"CompetitionDocument"> | string | null
+    sortOrder?: IntFilter<"CompetitionDocument"> | number
+    createdAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
+    updatedAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
+    league?: XOR<LeagueNullableScalarRelationFilter, LeagueWhereInput> | null
+    cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+    uploader?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type CompetitionDocumentOrderByWithRelationInput = {
+    id?: SortOrder
+    leagueId?: SortOrderInput | SortOrder
+    cupId?: SortOrderInput | SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    filename?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    bytes?: SortOrder
+    uploadedById?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    league?: LeagueOrderByWithRelationInput
+    cup?: CupOrderByWithRelationInput
+    uploader?: UserOrderByWithRelationInput
+  }
+
+  export type CompetitionDocumentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    filename?: string
+    AND?: CompetitionDocumentWhereInput | CompetitionDocumentWhereInput[]
+    OR?: CompetitionDocumentWhereInput[]
+    NOT?: CompetitionDocumentWhereInput | CompetitionDocumentWhereInput[]
+    leagueId?: StringNullableFilter<"CompetitionDocument"> | string | null
+    cupId?: StringNullableFilter<"CompetitionDocument"> | string | null
+    title?: StringFilter<"CompetitionDocument"> | string
+    description?: StringNullableFilter<"CompetitionDocument"> | string | null
+    originalName?: StringFilter<"CompetitionDocument"> | string
+    mimeType?: StringFilter<"CompetitionDocument"> | string
+    bytes?: IntFilter<"CompetitionDocument"> | number
+    uploadedById?: StringNullableFilter<"CompetitionDocument"> | string | null
+    sortOrder?: IntFilter<"CompetitionDocument"> | number
+    createdAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
+    updatedAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
+    league?: XOR<LeagueNullableScalarRelationFilter, LeagueWhereInput> | null
+    cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+    uploader?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id" | "filename">
+
+  export type CompetitionDocumentOrderByWithAggregationInput = {
+    id?: SortOrder
+    leagueId?: SortOrderInput | SortOrder
+    cupId?: SortOrderInput | SortOrder
+    title?: SortOrder
+    description?: SortOrderInput | SortOrder
+    filename?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    bytes?: SortOrder
+    uploadedById?: SortOrderInput | SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CompetitionDocumentCountOrderByAggregateInput
+    _avg?: CompetitionDocumentAvgOrderByAggregateInput
+    _max?: CompetitionDocumentMaxOrderByAggregateInput
+    _min?: CompetitionDocumentMinOrderByAggregateInput
+    _sum?: CompetitionDocumentSumOrderByAggregateInput
+  }
+
+  export type CompetitionDocumentScalarWhereWithAggregatesInput = {
+    AND?: CompetitionDocumentScalarWhereWithAggregatesInput | CompetitionDocumentScalarWhereWithAggregatesInput[]
+    OR?: CompetitionDocumentScalarWhereWithAggregatesInput[]
+    NOT?: CompetitionDocumentScalarWhereWithAggregatesInput | CompetitionDocumentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CompetitionDocument"> | string
+    leagueId?: StringNullableWithAggregatesFilter<"CompetitionDocument"> | string | null
+    cupId?: StringNullableWithAggregatesFilter<"CompetitionDocument"> | string | null
+    title?: StringWithAggregatesFilter<"CompetitionDocument"> | string
+    description?: StringNullableWithAggregatesFilter<"CompetitionDocument"> | string | null
+    filename?: StringWithAggregatesFilter<"CompetitionDocument"> | string
+    originalName?: StringWithAggregatesFilter<"CompetitionDocument"> | string
+    mimeType?: StringWithAggregatesFilter<"CompetitionDocument"> | string
+    bytes?: IntWithAggregatesFilter<"CompetitionDocument"> | number
+    uploadedById?: StringNullableWithAggregatesFilter<"CompetitionDocument"> | string | null
+    sortOrder?: IntWithAggregatesFilter<"CompetitionDocument"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"CompetitionDocument"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CompetitionDocument"> | Date | string
   }
 
   export type LeagueParticipantWhereInput = {
@@ -119762,6 +121366,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -119832,6 +121437,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -119902,6 +121508,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -119972,6 +121579,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -122936,6 +124544,7 @@ export namespace Prisma {
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateInput = {
@@ -122967,6 +124576,7 @@ export namespace Prisma {
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupUpdateInput = {
@@ -122998,6 +124608,7 @@ export namespace Prisma {
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateInput = {
@@ -123029,6 +124640,7 @@ export namespace Prisma {
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupCreateManyInput = {
@@ -123712,6 +125324,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateInput = {
@@ -123736,6 +125349,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUpdateInput = {
@@ -123760,6 +125374,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateInput = {
@@ -123784,6 +125399,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueCreateManyInput = {
@@ -124337,6 +125953,115 @@ export namespace Prisma {
     declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     acceptedParticipantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentCreateInput = {
+    id?: string
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutDocumentsInput
+    cup?: CupCreateNestedOneWithoutDocumentsInput
+    uploader?: UserCreateNestedOneWithoutCompetitionDocumentsInput
+  }
+
+  export type CompetitionDocumentUncheckedCreateInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionDocumentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutDocumentsNestedInput
+    cup?: CupUpdateOneWithoutDocumentsNestedInput
+    uploader?: UserUpdateOneWithoutCompetitionDocumentsNestedInput
+  }
+
+  export type CompetitionDocumentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentCreateManyInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionDocumentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -128851,6 +130576,12 @@ export namespace Prisma {
     none?: CupWhereInput
   }
 
+  export type CompetitionDocumentListRelationFilter = {
+    every?: CompetitionDocumentWhereInput
+    some?: CompetitionDocumentWhereInput
+    none?: CompetitionDocumentWhereInput
+  }
+
   export type LeagueListRelationFilter = {
     every?: LeagueWhereInput
     some?: LeagueWhereInput
@@ -129023,6 +130754,10 @@ export namespace Prisma {
   }
 
   export type CupOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CompetitionDocumentOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -131970,6 +133705,69 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type LeagueNullableScalarRelationFilter = {
+    is?: LeagueWhereInput | null
+    isNot?: LeagueWhereInput | null
+  }
+
+  export type CompetitionDocumentCountOrderByAggregateInput = {
+    id?: SortOrder
+    leagueId?: SortOrder
+    cupId?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    filename?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    bytes?: SortOrder
+    uploadedById?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CompetitionDocumentAvgOrderByAggregateInput = {
+    bytes?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type CompetitionDocumentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    leagueId?: SortOrder
+    cupId?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    filename?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    bytes?: SortOrder
+    uploadedById?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CompetitionDocumentMinOrderByAggregateInput = {
+    id?: SortOrder
+    leagueId?: SortOrder
+    cupId?: SortOrder
+    title?: SortOrder
+    description?: SortOrder
+    filename?: SortOrder
+    originalName?: SortOrder
+    mimeType?: SortOrder
+    bytes?: SortOrder
+    uploadedById?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CompetitionDocumentSumOrderByAggregateInput = {
+    bytes?: SortOrder
+    sortOrder?: SortOrder
+  }
+
   export type LeaguePairingListRelationFilter = {
     every?: LeaguePairingWhereInput
     some?: LeaguePairingWhereInput
@@ -134571,6 +136369,13 @@ export namespace Prisma {
     connect?: CupWhereUniqueInput | CupWhereUniqueInput[]
   }
 
+  export type CompetitionDocumentCreateNestedManyWithoutUploaderInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutUploaderInput, CompetitionDocumentUncheckedCreateWithoutUploaderInput> | CompetitionDocumentCreateWithoutUploaderInput[] | CompetitionDocumentUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutUploaderInput | CompetitionDocumentCreateOrConnectWithoutUploaderInput[]
+    createMany?: CompetitionDocumentCreateManyUploaderInputEnvelope
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+  }
+
   export type LeagueCreateNestedManyWithoutCreatorInput = {
     create?: XOR<LeagueCreateWithoutCreatorInput, LeagueUncheckedCreateWithoutCreatorInput> | LeagueCreateWithoutCreatorInput[] | LeagueUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: LeagueCreateOrConnectWithoutCreatorInput | LeagueCreateOrConnectWithoutCreatorInput[]
@@ -134804,6 +136609,13 @@ export namespace Prisma {
     connectOrCreate?: CupCreateOrConnectWithoutCreatorInput | CupCreateOrConnectWithoutCreatorInput[]
     createMany?: CupCreateManyCreatorInputEnvelope
     connect?: CupWhereUniqueInput | CupWhereUniqueInput[]
+  }
+
+  export type CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutUploaderInput, CompetitionDocumentUncheckedCreateWithoutUploaderInput> | CompetitionDocumentCreateWithoutUploaderInput[] | CompetitionDocumentUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutUploaderInput | CompetitionDocumentCreateOrConnectWithoutUploaderInput[]
+    createMany?: CompetitionDocumentCreateManyUploaderInputEnvelope
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
   export type LeagueUncheckedCreateNestedManyWithoutCreatorInput = {
@@ -135102,6 +136914,20 @@ export namespace Prisma {
     update?: CupUpdateWithWhereUniqueWithoutCreatorInput | CupUpdateWithWhereUniqueWithoutCreatorInput[]
     updateMany?: CupUpdateManyWithWhereWithoutCreatorInput | CupUpdateManyWithWhereWithoutCreatorInput[]
     deleteMany?: CupScalarWhereInput | CupScalarWhereInput[]
+  }
+
+  export type CompetitionDocumentUpdateManyWithoutUploaderNestedInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutUploaderInput, CompetitionDocumentUncheckedCreateWithoutUploaderInput> | CompetitionDocumentCreateWithoutUploaderInput[] | CompetitionDocumentUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutUploaderInput | CompetitionDocumentCreateOrConnectWithoutUploaderInput[]
+    upsert?: CompetitionDocumentUpsertWithWhereUniqueWithoutUploaderInput | CompetitionDocumentUpsertWithWhereUniqueWithoutUploaderInput[]
+    createMany?: CompetitionDocumentCreateManyUploaderInputEnvelope
+    set?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    disconnect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    delete?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    update?: CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput | CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput[]
+    updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput | CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput[]
+    deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
   }
 
   export type LeagueUpdateManyWithoutCreatorNestedInput = {
@@ -135569,6 +137395,20 @@ export namespace Prisma {
     update?: CupUpdateWithWhereUniqueWithoutCreatorInput | CupUpdateWithWhereUniqueWithoutCreatorInput[]
     updateMany?: CupUpdateManyWithWhereWithoutCreatorInput | CupUpdateManyWithWhereWithoutCreatorInput[]
     deleteMany?: CupScalarWhereInput | CupScalarWhereInput[]
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutUploaderInput, CompetitionDocumentUncheckedCreateWithoutUploaderInput> | CompetitionDocumentCreateWithoutUploaderInput[] | CompetitionDocumentUncheckedCreateWithoutUploaderInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutUploaderInput | CompetitionDocumentCreateOrConnectWithoutUploaderInput[]
+    upsert?: CompetitionDocumentUpsertWithWhereUniqueWithoutUploaderInput | CompetitionDocumentUpsertWithWhereUniqueWithoutUploaderInput[]
+    createMany?: CompetitionDocumentCreateManyUploaderInputEnvelope
+    set?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    disconnect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    delete?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    update?: CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput | CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput[]
+    updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput | CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput[]
+    deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
   }
 
   export type LeagueUncheckedUpdateManyWithoutCreatorNestedInput = {
@@ -137444,6 +139284,13 @@ export namespace Prisma {
     connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
   }
 
+  export type CompetitionDocumentCreateNestedManyWithoutCupInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutCupInput, CompetitionDocumentUncheckedCreateWithoutCupInput> | CompetitionDocumentCreateWithoutCupInput[] | CompetitionDocumentUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutCupInput | CompetitionDocumentCreateOrConnectWithoutCupInput[]
+    createMany?: CompetitionDocumentCreateManyCupInputEnvelope
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+  }
+
   export type CupParticipantUncheckedCreateNestedManyWithoutCupInput = {
     create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
@@ -137463,6 +139310,13 @@ export namespace Prisma {
     connectOrCreate?: LocalMatchCreateOrConnectWithoutCupInput | LocalMatchCreateOrConnectWithoutCupInput[]
     createMany?: LocalMatchCreateManyCupInputEnvelope
     connect?: LocalMatchWhereUniqueInput | LocalMatchWhereUniqueInput[]
+  }
+
+  export type CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutCupInput, CompetitionDocumentUncheckedCreateWithoutCupInput> | CompetitionDocumentCreateWithoutCupInput[] | CompetitionDocumentUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutCupInput | CompetitionDocumentCreateOrConnectWithoutCupInput[]
+    createMany?: CompetitionDocumentCreateManyCupInputEnvelope
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
   export type UserUpdateOneRequiredWithoutCreatedCupsNestedInput = {
@@ -137515,6 +139369,20 @@ export namespace Prisma {
     deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
   }
 
+  export type CompetitionDocumentUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutCupInput, CompetitionDocumentUncheckedCreateWithoutCupInput> | CompetitionDocumentCreateWithoutCupInput[] | CompetitionDocumentUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutCupInput | CompetitionDocumentCreateOrConnectWithoutCupInput[]
+    upsert?: CompetitionDocumentUpsertWithWhereUniqueWithoutCupInput | CompetitionDocumentUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CompetitionDocumentCreateManyCupInputEnvelope
+    set?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    disconnect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    delete?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    update?: CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput | CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutCupInput | CompetitionDocumentUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+  }
+
   export type CupParticipantUncheckedUpdateManyWithoutCupNestedInput = {
     create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
@@ -137555,6 +139423,20 @@ export namespace Prisma {
     update?: LocalMatchUpdateWithWhereUniqueWithoutCupInput | LocalMatchUpdateWithWhereUniqueWithoutCupInput[]
     updateMany?: LocalMatchUpdateManyWithWhereWithoutCupInput | LocalMatchUpdateManyWithWhereWithoutCupInput[]
     deleteMany?: LocalMatchScalarWhereInput | LocalMatchScalarWhereInput[]
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutCupInput, CompetitionDocumentUncheckedCreateWithoutCupInput> | CompetitionDocumentCreateWithoutCupInput[] | CompetitionDocumentUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutCupInput | CompetitionDocumentCreateOrConnectWithoutCupInput[]
+    upsert?: CompetitionDocumentUpsertWithWhereUniqueWithoutCupInput | CompetitionDocumentUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CompetitionDocumentCreateManyCupInputEnvelope
+    set?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    disconnect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    delete?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    update?: CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput | CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutCupInput | CompetitionDocumentUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
   }
 
   export type CupCreateNestedOneWithoutParticipantsInput = {
@@ -137749,6 +139631,13 @@ export namespace Prisma {
     connect?: LeagueInvitationWhereUniqueInput | LeagueInvitationWhereUniqueInput[]
   }
 
+  export type CompetitionDocumentCreateNestedManyWithoutLeagueInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutLeagueInput, CompetitionDocumentUncheckedCreateWithoutLeagueInput> | CompetitionDocumentCreateWithoutLeagueInput[] | CompetitionDocumentUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutLeagueInput | CompetitionDocumentCreateOrConnectWithoutLeagueInput[]
+    createMany?: CompetitionDocumentCreateManyLeagueInputEnvelope
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+  }
+
   export type LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput = {
     create?: XOR<LeagueSeasonCreateWithoutLeagueInput, LeagueSeasonUncheckedCreateWithoutLeagueInput> | LeagueSeasonCreateWithoutLeagueInput[] | LeagueSeasonUncheckedCreateWithoutLeagueInput[]
     connectOrCreate?: LeagueSeasonCreateOrConnectWithoutLeagueInput | LeagueSeasonCreateOrConnectWithoutLeagueInput[]
@@ -137761,6 +139650,13 @@ export namespace Prisma {
     connectOrCreate?: LeagueInvitationCreateOrConnectWithoutLeagueInput | LeagueInvitationCreateOrConnectWithoutLeagueInput[]
     createMany?: LeagueInvitationCreateManyLeagueInputEnvelope
     connect?: LeagueInvitationWhereUniqueInput | LeagueInvitationWhereUniqueInput[]
+  }
+
+  export type CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutLeagueInput, CompetitionDocumentUncheckedCreateWithoutLeagueInput> | CompetitionDocumentCreateWithoutLeagueInput[] | CompetitionDocumentUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutLeagueInput | CompetitionDocumentCreateOrConnectWithoutLeagueInput[]
+    createMany?: CompetitionDocumentCreateManyLeagueInputEnvelope
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
   export type UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput = {
@@ -137799,6 +139695,20 @@ export namespace Prisma {
     deleteMany?: LeagueInvitationScalarWhereInput | LeagueInvitationScalarWhereInput[]
   }
 
+  export type CompetitionDocumentUpdateManyWithoutLeagueNestedInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutLeagueInput, CompetitionDocumentUncheckedCreateWithoutLeagueInput> | CompetitionDocumentCreateWithoutLeagueInput[] | CompetitionDocumentUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutLeagueInput | CompetitionDocumentCreateOrConnectWithoutLeagueInput[]
+    upsert?: CompetitionDocumentUpsertWithWhereUniqueWithoutLeagueInput | CompetitionDocumentUpsertWithWhereUniqueWithoutLeagueInput[]
+    createMany?: CompetitionDocumentCreateManyLeagueInputEnvelope
+    set?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    disconnect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    delete?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    update?: CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput | CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput[]
+    updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput | CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput[]
+    deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+  }
+
   export type LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput = {
     create?: XOR<LeagueSeasonCreateWithoutLeagueInput, LeagueSeasonUncheckedCreateWithoutLeagueInput> | LeagueSeasonCreateWithoutLeagueInput[] | LeagueSeasonUncheckedCreateWithoutLeagueInput[]
     connectOrCreate?: LeagueSeasonCreateOrConnectWithoutLeagueInput | LeagueSeasonCreateOrConnectWithoutLeagueInput[]
@@ -137825,6 +139735,20 @@ export namespace Prisma {
     update?: LeagueInvitationUpdateWithWhereUniqueWithoutLeagueInput | LeagueInvitationUpdateWithWhereUniqueWithoutLeagueInput[]
     updateMany?: LeagueInvitationUpdateManyWithWhereWithoutLeagueInput | LeagueInvitationUpdateManyWithWhereWithoutLeagueInput[]
     deleteMany?: LeagueInvitationScalarWhereInput | LeagueInvitationScalarWhereInput[]
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput = {
+    create?: XOR<CompetitionDocumentCreateWithoutLeagueInput, CompetitionDocumentUncheckedCreateWithoutLeagueInput> | CompetitionDocumentCreateWithoutLeagueInput[] | CompetitionDocumentUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutLeagueInput | CompetitionDocumentCreateOrConnectWithoutLeagueInput[]
+    upsert?: CompetitionDocumentUpsertWithWhereUniqueWithoutLeagueInput | CompetitionDocumentUpsertWithWhereUniqueWithoutLeagueInput[]
+    createMany?: CompetitionDocumentCreateManyLeagueInputEnvelope
+    set?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    disconnect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    delete?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+    update?: CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput | CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput[]
+    updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput | CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput[]
+    deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
   }
 
   export type LeagueCreateNestedOneWithoutSeasonsInput = {
@@ -138319,6 +140243,54 @@ export namespace Prisma {
     delete?: TeamWhereInput | boolean
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutCupInvitationsInput, TeamUpdateWithoutCupInvitationsInput>, TeamUncheckedUpdateWithoutCupInvitationsInput>
+  }
+
+  export type LeagueCreateNestedOneWithoutDocumentsInput = {
+    create?: XOR<LeagueCreateWithoutDocumentsInput, LeagueUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: LeagueCreateOrConnectWithoutDocumentsInput
+    connect?: LeagueWhereUniqueInput
+  }
+
+  export type CupCreateNestedOneWithoutDocumentsInput = {
+    create?: XOR<CupCreateWithoutDocumentsInput, CupUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutDocumentsInput
+    connect?: CupWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutCompetitionDocumentsInput = {
+    create?: XOR<UserCreateWithoutCompetitionDocumentsInput, UserUncheckedCreateWithoutCompetitionDocumentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionDocumentsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type LeagueUpdateOneWithoutDocumentsNestedInput = {
+    create?: XOR<LeagueCreateWithoutDocumentsInput, LeagueUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: LeagueCreateOrConnectWithoutDocumentsInput
+    upsert?: LeagueUpsertWithoutDocumentsInput
+    disconnect?: LeagueWhereInput | boolean
+    delete?: LeagueWhereInput | boolean
+    connect?: LeagueWhereUniqueInput
+    update?: XOR<XOR<LeagueUpdateToOneWithWhereWithoutDocumentsInput, LeagueUpdateWithoutDocumentsInput>, LeagueUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type CupUpdateOneWithoutDocumentsNestedInput = {
+    create?: XOR<CupCreateWithoutDocumentsInput, CupUncheckedCreateWithoutDocumentsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutDocumentsInput
+    upsert?: CupUpsertWithoutDocumentsInput
+    disconnect?: CupWhereInput | boolean
+    delete?: CupWhereInput | boolean
+    connect?: CupWhereUniqueInput
+    update?: XOR<XOR<CupUpdateToOneWithWhereWithoutDocumentsInput, CupUpdateWithoutDocumentsInput>, CupUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type UserUpdateOneWithoutCompetitionDocumentsNestedInput = {
+    create?: XOR<UserCreateWithoutCompetitionDocumentsInput, UserUncheckedCreateWithoutCompetitionDocumentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionDocumentsInput
+    upsert?: UserUpsertWithoutCompetitionDocumentsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCompetitionDocumentsInput, UserUpdateWithoutCompetitionDocumentsInput>, UserUncheckedUpdateWithoutCompetitionDocumentsInput>
   }
 
   export type LeagueSeasonCreateNestedOneWithoutParticipantsInput = {
@@ -141146,6 +143118,7 @@ export namespace Prisma {
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutCreatorInput = {
@@ -141176,6 +143149,7 @@ export namespace Prisma {
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutCreatorInput = {
@@ -141185,6 +143159,45 @@ export namespace Prisma {
 
   export type CupCreateManyCreatorInputEnvelope = {
     data: CupCreateManyCreatorInput | CupCreateManyCreatorInput[]
+  }
+
+  export type CompetitionDocumentCreateWithoutUploaderInput = {
+    id?: string
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutDocumentsInput
+    cup?: CupCreateNestedOneWithoutDocumentsInput
+  }
+
+  export type CompetitionDocumentUncheckedCreateWithoutUploaderInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionDocumentCreateOrConnectWithoutUploaderInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    create: XOR<CompetitionDocumentCreateWithoutUploaderInput, CompetitionDocumentUncheckedCreateWithoutUploaderInput>
+  }
+
+  export type CompetitionDocumentCreateManyUploaderInputEnvelope = {
+    data: CompetitionDocumentCreateManyUploaderInput | CompetitionDocumentCreateManyUploaderInput[]
   }
 
   export type LeagueCreateWithoutCreatorInput = {
@@ -141208,6 +143221,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutCreatorInput = {
@@ -141231,6 +143245,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutCreatorInput = {
@@ -142277,6 +144292,41 @@ export namespace Prisma {
     rosterStartingPspOverrides?: StringNullableFilter<"Cup"> | string | null
   }
 
+  export type CompetitionDocumentUpsertWithWhereUniqueWithoutUploaderInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    update: XOR<CompetitionDocumentUpdateWithoutUploaderInput, CompetitionDocumentUncheckedUpdateWithoutUploaderInput>
+    create: XOR<CompetitionDocumentCreateWithoutUploaderInput, CompetitionDocumentUncheckedCreateWithoutUploaderInput>
+  }
+
+  export type CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    data: XOR<CompetitionDocumentUpdateWithoutUploaderInput, CompetitionDocumentUncheckedUpdateWithoutUploaderInput>
+  }
+
+  export type CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput = {
+    where: CompetitionDocumentScalarWhereInput
+    data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyWithoutUploaderInput>
+  }
+
+  export type CompetitionDocumentScalarWhereInput = {
+    AND?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+    OR?: CompetitionDocumentScalarWhereInput[]
+    NOT?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+    id?: StringFilter<"CompetitionDocument"> | string
+    leagueId?: StringNullableFilter<"CompetitionDocument"> | string | null
+    cupId?: StringNullableFilter<"CompetitionDocument"> | string | null
+    title?: StringFilter<"CompetitionDocument"> | string
+    description?: StringNullableFilter<"CompetitionDocument"> | string | null
+    filename?: StringFilter<"CompetitionDocument"> | string
+    originalName?: StringFilter<"CompetitionDocument"> | string
+    mimeType?: StringFilter<"CompetitionDocument"> | string
+    bytes?: IntFilter<"CompetitionDocument"> | number
+    uploadedById?: StringNullableFilter<"CompetitionDocument"> | string | null
+    sortOrder?: IntFilter<"CompetitionDocument"> | number
+    createdAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
+    updatedAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
+  }
+
   export type LeagueUpsertWithWhereUniqueWithoutCreatorInput = {
     where: LeagueWhereUniqueInput
     update: XOR<LeagueUpdateWithoutCreatorInput, LeagueUncheckedUpdateWithoutCreatorInput>
@@ -143159,6 +145209,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -143228,6 +145279,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -143313,6 +145365,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -143382,6 +145435,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -143451,6 +145505,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -143520,6 +145575,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -143605,6 +145661,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -143674,6 +145731,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -143743,6 +145801,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -143812,6 +145871,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -143897,6 +145957,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -143966,6 +146027,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -144035,6 +146097,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -144104,6 +146167,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -144189,6 +146253,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -144258,6 +146323,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -144327,6 +146393,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -144396,6 +146463,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -144481,6 +146549,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -144550,6 +146619,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -144619,6 +146689,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -144688,6 +146759,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -144773,6 +146845,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -144842,6 +146915,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -144911,6 +146985,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -144980,6 +147055,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -145054,6 +147130,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -145123,6 +147200,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -145208,6 +147286,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -145277,6 +147356,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -145357,6 +147437,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -145426,6 +147507,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -145555,6 +147637,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -145624,6 +147707,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -145738,6 +147822,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -145807,6 +147892,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -145875,6 +147961,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -145944,6 +148031,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -146018,6 +148106,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -146087,6 +148176,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -146380,6 +148470,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -146449,6 +148540,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -147001,6 +149093,7 @@ export namespace Prisma {
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -147070,6 +149163,7 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -147303,6 +149397,7 @@ export namespace Prisma {
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -147372,6 +149467,7 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -147524,6 +149620,7 @@ export namespace Prisma {
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -147593,6 +149690,7 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -148120,6 +150218,7 @@ export namespace Prisma {
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -148189,6 +150288,7 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -150286,6 +152386,7 @@ export namespace Prisma {
     createdMatches?: MatchCreateNestedManyWithoutCreatorInput
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -150355,6 +152456,7 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -150518,6 +152620,45 @@ export namespace Prisma {
     data: LocalMatchCreateManyCupInput | LocalMatchCreateManyCupInput[]
   }
 
+  export type CompetitionDocumentCreateWithoutCupInput = {
+    id?: string
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutDocumentsInput
+    uploader?: UserCreateNestedOneWithoutCompetitionDocumentsInput
+  }
+
+  export type CompetitionDocumentUncheckedCreateWithoutCupInput = {
+    id?: string
+    leagueId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionDocumentCreateOrConnectWithoutCupInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    create: XOR<CompetitionDocumentCreateWithoutCupInput, CompetitionDocumentUncheckedCreateWithoutCupInput>
+  }
+
+  export type CompetitionDocumentCreateManyCupInputEnvelope = {
+    data: CompetitionDocumentCreateManyCupInput | CompetitionDocumentCreateManyCupInput[]
+  }
+
   export type UserUpsertWithoutCreatedCupsInput = {
     update: XOR<UserUpdateWithoutCreatedCupsInput, UserUncheckedUpdateWithoutCreatedCupsInput>
     create: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
@@ -150567,6 +152708,7 @@ export namespace Prisma {
     createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -150636,6 +152778,7 @@ export namespace Prisma {
     createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -150715,6 +152858,22 @@ export namespace Prisma {
     data: XOR<LocalMatchUpdateManyMutationInput, LocalMatchUncheckedUpdateManyWithoutCupInput>
   }
 
+  export type CompetitionDocumentUpsertWithWhereUniqueWithoutCupInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    update: XOR<CompetitionDocumentUpdateWithoutCupInput, CompetitionDocumentUncheckedUpdateWithoutCupInput>
+    create: XOR<CompetitionDocumentCreateWithoutCupInput, CompetitionDocumentUncheckedCreateWithoutCupInput>
+  }
+
+  export type CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    data: XOR<CompetitionDocumentUpdateWithoutCupInput, CompetitionDocumentUncheckedUpdateWithoutCupInput>
+  }
+
+  export type CompetitionDocumentUpdateManyWithWhereWithoutCupInput = {
+    where: CompetitionDocumentScalarWhereInput
+    data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyWithoutCupInput>
+  }
+
   export type CupCreateWithoutParticipantsInput = {
     id?: string
     name: string
@@ -150743,6 +152902,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutParticipantsInput = {
@@ -150773,6 +152933,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutParticipantsInput = {
@@ -150896,6 +153057,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutParticipantsInput = {
@@ -150926,6 +153088,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type TeamUpsertWithoutCupParticipantsInput = {
@@ -151050,6 +153213,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
@@ -151119,6 +153283,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
@@ -151281,6 +153446,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
@@ -151350,6 +153516,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
@@ -151502,6 +153669,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
@@ -151571,6 +153739,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
@@ -151788,6 +153957,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutLocalMatchesInput = {
@@ -151818,6 +153988,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutLocalMatchesInput = {
@@ -151924,6 +154095,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
@@ -151993,6 +154165,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
@@ -152228,6 +154401,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutLocalMatchesInput = {
@@ -152258,6 +154432,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput = {
@@ -152451,6 +154626,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
@@ -152520,6 +154696,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
@@ -152655,6 +154832,45 @@ export namespace Prisma {
     data: LeagueInvitationCreateManyLeagueInput | LeagueInvitationCreateManyLeagueInput[]
   }
 
+  export type CompetitionDocumentCreateWithoutLeagueInput = {
+    id?: string
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    cup?: CupCreateNestedOneWithoutDocumentsInput
+    uploader?: UserCreateNestedOneWithoutCompetitionDocumentsInput
+  }
+
+  export type CompetitionDocumentUncheckedCreateWithoutLeagueInput = {
+    id?: string
+    cupId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionDocumentCreateOrConnectWithoutLeagueInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    create: XOR<CompetitionDocumentCreateWithoutLeagueInput, CompetitionDocumentUncheckedCreateWithoutLeagueInput>
+  }
+
+  export type CompetitionDocumentCreateManyLeagueInputEnvelope = {
+    data: CompetitionDocumentCreateManyLeagueInput | CompetitionDocumentCreateManyLeagueInput[]
+  }
+
   export type UserUpsertWithoutCreatedLeaguesInput = {
     update: XOR<UserUpdateWithoutCreatedLeaguesInput, UserUncheckedUpdateWithoutCreatedLeaguesInput>
     create: XOR<UserCreateWithoutCreatedLeaguesInput, UserUncheckedCreateWithoutCreatedLeaguesInput>
@@ -152705,6 +154921,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
@@ -152774,6 +154991,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
@@ -152856,6 +155074,22 @@ export namespace Prisma {
     data: XOR<LeagueInvitationUpdateManyMutationInput, LeagueInvitationUncheckedUpdateManyWithoutLeagueInput>
   }
 
+  export type CompetitionDocumentUpsertWithWhereUniqueWithoutLeagueInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    update: XOR<CompetitionDocumentUpdateWithoutLeagueInput, CompetitionDocumentUncheckedUpdateWithoutLeagueInput>
+    create: XOR<CompetitionDocumentCreateWithoutLeagueInput, CompetitionDocumentUncheckedCreateWithoutLeagueInput>
+  }
+
+  export type CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput = {
+    where: CompetitionDocumentWhereUniqueInput
+    data: XOR<CompetitionDocumentUpdateWithoutLeagueInput, CompetitionDocumentUncheckedUpdateWithoutLeagueInput>
+  }
+
+  export type CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput = {
+    where: CompetitionDocumentScalarWhereInput
+    data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyWithoutLeagueInput>
+  }
+
   export type LeagueCreateWithoutSeasonsInput = {
     id?: string
     name: string
@@ -152877,6 +155111,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutSeasonsInput = {
@@ -152900,6 +155135,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutSeasonsInput = {
@@ -153201,6 +155437,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutSeasonsInput = {
@@ -153224,6 +155461,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueParticipantUpsertWithWhereUniqueWithoutSeasonInput = {
@@ -153614,6 +155852,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutInvitationsInput = {
@@ -153637,6 +155876,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutInvitationsInput = {
@@ -153732,6 +155972,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -153801,6 +156042,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -153875,6 +156117,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -153944,6 +156187,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -154088,6 +156332,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutInvitationsInput = {
@@ -154111,6 +156356,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueSeasonUpsertWithoutInvitationsInput = {
@@ -154218,6 +156464,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -154287,6 +156534,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -154367,6 +156615,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -154436,6 +156685,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -154577,6 +156827,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutInvitationsInput = {
@@ -154607,6 +156858,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutInvitationsInput = {
@@ -154653,6 +156905,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -154722,6 +156975,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -154796,6 +157050,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -154865,6 +157120,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -155016,6 +157272,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutInvitationsInput = {
@@ -155046,6 +157303,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type UserUpsertWithoutCupInvitationsSentInput = {
@@ -155098,6 +157356,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -155167,6 +157426,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -155247,6 +157507,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -155316,6 +157577,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -155427,6 +157689,554 @@ export namespace Prisma {
     matchQueue?: MatchQueueUncheckedUpdateManyWithoutTeamNestedInput
     leagueParticipations?: LeagueParticipantUncheckedUpdateManyWithoutTeamNestedInput
     leagueInvitations?: LeagueInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
+  }
+
+  export type LeagueCreateWithoutDocumentsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
+    status?: string
+    isPublic?: boolean
+    maxParticipants?: number
+    allowedRosters?: string | null
+    allowedInducements?: string | null
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    tieBreakRules?: string | null
+    bonusPointsConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    creator: UserCreateNestedOneWithoutCreatedLeaguesInput
+    seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
+    invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
+  }
+
+  export type LeagueUncheckedCreateWithoutDocumentsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    creatorId: string
+    ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
+    status?: string
+    isPublic?: boolean
+    maxParticipants?: number
+    allowedRosters?: string | null
+    allowedInducements?: string | null
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    tieBreakRules?: string | null
+    bonusPointsConfig?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
+    invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
+  }
+
+  export type LeagueCreateOrConnectWithoutDocumentsInput = {
+    where: LeagueWhereUniqueInput
+    create: XOR<LeagueCreateWithoutDocumentsInput, LeagueUncheckedCreateWithoutDocumentsInput>
+  }
+
+  export type CupCreateWithoutDocumentsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
+    resurrectionMode?: boolean
+    tierBudgets?: string | null
+    rosterBudgetOverrides?: string | null
+    tierStartingPsp?: string | null
+    rosterStartingPspOverrides?: string | null
+    creator: UserCreateNestedOneWithoutCreatedCupsInput
+    participants?: CupParticipantCreateNestedManyWithoutCupInput
+    invitations?: CupInvitationCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateWithoutDocumentsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    creatorId: string
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
+    resurrectionMode?: boolean
+    tierBudgets?: string | null
+    rosterBudgetOverrides?: string | null
+    tierStartingPsp?: string | null
+    rosterStartingPspOverrides?: string | null
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupCreateOrConnectWithoutDocumentsInput = {
+    where: CupWhereUniqueInput
+    create: XOR<CupCreateWithoutDocumentsInput, CupUncheckedCreateWithoutDocumentsInput>
+  }
+
+  export type UserCreateWithoutCompetitionDocumentsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutCompetitionDocumentsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutCompetitionDocumentsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCompetitionDocumentsInput, UserUncheckedCreateWithoutCompetitionDocumentsInput>
+  }
+
+  export type LeagueUpsertWithoutDocumentsInput = {
+    update: XOR<LeagueUpdateWithoutDocumentsInput, LeagueUncheckedUpdateWithoutDocumentsInput>
+    create: XOR<LeagueCreateWithoutDocumentsInput, LeagueUncheckedCreateWithoutDocumentsInput>
+    where?: LeagueWhereInput
+  }
+
+  export type LeagueUpdateToOneWithWhereWithoutDocumentsInput = {
+    where?: LeagueWhereInput
+    data: XOR<LeagueUpdateWithoutDocumentsInput, LeagueUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type LeagueUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: IntFieldUpdateOperationsInput | number
+    allowedRosters?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    bonusPointsConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
+    seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
+    invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
+  }
+
+  export type LeagueUncheckedUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: IntFieldUpdateOperationsInput | number
+    allowedRosters?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    bonusPointsConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
+    invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
+  }
+
+  export type CupUpsertWithoutDocumentsInput = {
+    update: XOR<CupUpdateWithoutDocumentsInput, CupUncheckedUpdateWithoutDocumentsInput>
+    create: XOR<CupCreateWithoutDocumentsInput, CupUncheckedCreateWithoutDocumentsInput>
+    where?: CupWhereInput
+  }
+
+  export type CupUpdateToOneWithWhereWithoutDocumentsInput = {
+    where?: CupWhereInput
+    data: XOR<CupUpdateWithoutDocumentsInput, CupUncheckedUpdateWithoutDocumentsInput>
+  }
+
+  export type CupUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
+    resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
+    tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    invitations?: CupInvitationUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateWithoutDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
+    resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
+    tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+  }
+
+  export type UserUpsertWithoutCompetitionDocumentsInput = {
+    update: XOR<UserUpdateWithoutCompetitionDocumentsInput, UserUncheckedUpdateWithoutCompetitionDocumentsInput>
+    create: XOR<UserCreateWithoutCompetitionDocumentsInput, UserUncheckedCreateWithoutCompetitionDocumentsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCompetitionDocumentsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCompetitionDocumentsInput, UserUncheckedUpdateWithoutCompetitionDocumentsInput>
+  }
+
+  export type UserUpdateWithoutCompetitionDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCompetitionDocumentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
   }
 
   export type LeagueSeasonCreateWithoutParticipantsInput = {
@@ -159731,6 +162541,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -159800,6 +162611,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -159932,6 +162744,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -160001,6 +162814,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -160123,6 +162937,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -160192,6 +163007,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -160302,6 +163118,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -160371,6 +163188,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -160755,6 +163573,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -160824,6 +163643,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -160938,6 +163758,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -161007,6 +163828,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -161175,6 +163997,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -161244,6 +164067,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -161329,6 +164153,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -161398,6 +164223,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -161600,6 +164426,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -161669,6 +164496,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -161805,6 +164633,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -161874,6 +164703,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -162015,6 +164845,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -162084,6 +164915,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -162208,6 +165040,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -162277,6 +165110,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -162346,6 +165180,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -162415,6 +165250,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -162552,6 +165388,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -162621,6 +165458,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -162749,6 +165587,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -162818,6 +165657,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -162936,6 +165776,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -163005,6 +165846,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -163101,6 +165943,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -163170,6 +166013,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -163355,6 +166199,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -163424,6 +166269,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -163607,6 +166453,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -163676,6 +166523,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -163886,6 +166734,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -163955,6 +166804,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -164274,6 +167124,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -164343,6 +167194,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -164572,6 +167424,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -164641,6 +167494,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -164895,6 +167749,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -164964,6 +167819,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -165084,6 +167940,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -165153,6 +168010,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -165289,6 +168147,7 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -165358,6 +168217,7 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -165516,6 +168376,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -165585,6 +168446,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -165700,6 +168562,21 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+  }
+
+  export type CompetitionDocumentCreateManyUploaderInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type LeagueCreateManyCreatorInput = {
@@ -166331,6 +169208,7 @@ export namespace Prisma {
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutCreatorInput = {
@@ -166361,6 +169239,7 @@ export namespace Prisma {
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateManyWithoutCreatorInput = {
@@ -166390,6 +169269,51 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type CompetitionDocumentUpdateWithoutUploaderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutDocumentsNestedInput
+    cup?: CupUpdateOneWithoutDocumentsNestedInput
+  }
+
+  export type CompetitionDocumentUncheckedUpdateWithoutUploaderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyWithoutUploaderInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LeagueUpdateWithoutCreatorInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -166411,6 +169335,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutCreatorInput = {
@@ -166434,6 +169359,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateManyWithoutCreatorInput = {
@@ -167395,6 +170321,7 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -167464,6 +170391,7 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -168669,6 +171597,21 @@ export namespace Prisma {
     aiTeamSide?: string | null
   }
 
+  export type CompetitionDocumentCreateManyCupInput = {
+    id?: string
+    leagueId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById?: string | null
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type CupParticipantUpdateWithoutCupInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -168818,6 +171761,51 @@ export namespace Prisma {
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type CompetitionDocumentUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutDocumentsNestedInput
+    uploader?: UserUpdateOneWithoutCompetitionDocumentsNestedInput
+  }
+
+  export type CompetitionDocumentUncheckedUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LocalMatchActionCreateManyMatchInput = {
     id?: string
     half: number
@@ -168929,6 +171917,21 @@ export namespace Prisma {
     declinedAt?: Date | string | null
     cancelledAt?: Date | string | null
     acceptedParticipantId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionDocumentCreateManyLeagueInput = {
+    id?: string
+    cupId?: string | null
+    title: string
+    description?: string | null
+    filename: string
+    originalName: string
+    mimeType: string
+    bytes: number
+    uploadedById?: string | null
+    sortOrder?: number
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -169046,6 +172049,51 @@ export namespace Prisma {
     declinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     cancelledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     acceptedParticipantId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentUpdateWithoutLeagueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cup?: CupUpdateOneWithoutDocumentsNestedInput
+    uploader?: UserUpdateOneWithoutCompetitionDocumentsNestedInput
+  }
+
+  export type CompetitionDocumentUncheckedUpdateWithoutLeagueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionDocumentUncheckedUpdateManyWithoutLeagueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    filename?: StringFieldUpdateOperationsInput | string
+    originalName?: StringFieldUpdateOperationsInput | string
+    mimeType?: StringFieldUpdateOperationsInput | string
+    bytes?: IntFieldUpdateOperationsInput | number
+    uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
+    sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

@@ -131,6 +131,11 @@ backups/
 # Logos d'equipe uploades en dev (servis par Next). En prod : volume dedie.
 /apps/web/public/images/team-logos/*
 !/apps/web/public/images/team-logos/.gitkeep
+# Documents officiels des competitions (reglements PDF, affiches) uploades en
+# dev (servis par Next). En prod : volume dedie
+# (COMPETITION_DOCUMENT_UPLOAD_DIR).
+/apps/web/public/documents/competitions/*
+!/apps/web/public/documents/competitions/.gitkeep
 
 # Transcription verbatim du livre de regles BB (reproduction litterale, PI
 # Games Workshop). Reference LOCALE uniquement : ne JAMAIS versionner sur ce
