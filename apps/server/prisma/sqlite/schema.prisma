@@ -81,6 +81,7 @@ model User {
   teams                       Team[]
   teamSelections              TeamSelection[]
   createdCups                 Cup[]                       @relation("CupCreator")
+  competitionDocuments        CompetitionDocument[]       @relation("CompetitionDocumentUploader")
   createdLeagues              League[]                    @relation("LeagueCreator")
   createdLocalMatches         LocalMatch[]                @relation("LocalMatchCreator")
   eloRating                   Int                         @default(1000)
@@ -783,6 +784,7 @@ model Cup {
   participants CupParticipant[]
   invitations  CupInvitation[]
   localMatches LocalMatch[]
+  documents    CompetitionDocument[]
 
   @@index([creatorId])
   @@index([validated])
@@ -985,6 +987,7 @@ model League {
   seasons     LeagueSeason[]
   // Lot A — back-relation invitations envoyees pour cette ligue (mirror PG).
   invitations LeagueInvitation[]
+  documents   CompetitionDocument[]
 
   @@index([creatorId])
   @@index([status])
@@ -1109,6 +1112,32 @@ model CupInvitation {
   @@index([inviteeUserId, status])
   @@index([code])
   @@index([expiresAt, status])
+}
+
+// Miroir SQLite de CompetitionDocument (schema.prisma) — documents officiels
+// d'une ligue ou d'une coupe. FK polymorphe (leagueId XOR cupId).
+model CompetitionDocument {
+  id           String   @id @default(cuid())
+  league       League?  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId     String?
+  cup          Cup?     @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId        String?
+  title        String
+  description  String?
+  filename     String   @unique
+  originalName String
+  mimeType     String
+  bytes        Int
+  uploader     User?    @relation("CompetitionDocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedById String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([leagueId, sortOrder])
+  @@index([cupId, sortOrder])
+  @@index([uploadedById])
+  @@index([createdAt])
 }
 
 model LeagueParticipant {

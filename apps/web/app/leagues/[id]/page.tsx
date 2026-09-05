@@ -20,6 +20,7 @@ import { PoolsManagerPanel } from "./PoolsManagerPanel";
 import { ManualScheduleEditor } from "./ManualScheduleEditor";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
+import CompetitionDocuments from "../../components/CompetitionDocuments";
 import { getRosterName } from "@bb/game-engine";
 import type {
   LeagueDetail,
@@ -36,7 +37,15 @@ import type {
 // migres (cf. roadmap S25.5).
 
 interface MeResponse {
-  user: { id: string } | null;
+  user: { id: string; role?: string; roles?: string[] } | null;
+}
+
+/** Vrai si l'utilisateur porte le role admin (forme `role` ou `roles`). */
+function meIsAdmin(me: MeResponse): boolean {
+  const user = me.user;
+  if (!user) return false;
+  if (Array.isArray(user.roles)) return user.roles.includes("admin");
+  return user.role === "admin";
 }
 
 export default function LeagueDetailPage() {
@@ -65,6 +74,9 @@ export default function LeagueDetailPage() {
   const [seasonError, setSeasonError] = useState<string | null>(null);
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // Un admin gere les documents officiels de n'importe quelle ligue (le
+  // serveur l'autorise deja) : sans ce flag, l'UI le lui cacherait.
+  const [currentUserIsAdmin, setCurrentUserIsAdmin] = useState(false);
   const [newSeasonOpen, setNewSeasonOpen] = useState(false);
   const [joinSeasonOpen, setJoinSeasonOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -78,9 +90,15 @@ export default function LeagueDetailPage() {
     async function loadMe() {
       try {
         const me = await apiRequest<MeResponse>("/auth/me");
-        if (!cancelled) setCurrentUserId(me.user?.id ?? null);
+        if (!cancelled) {
+          setCurrentUserId(me.user?.id ?? null);
+          setCurrentUserIsAdmin(meIsAdmin(me));
+        }
       } catch {
-        if (!cancelled) setCurrentUserId(null);
+        if (!cancelled) {
+          setCurrentUserId(null);
+          setCurrentUserIsAdmin(false);
+        }
       }
     }
     loadMe();
@@ -400,6 +418,14 @@ export default function LeagueDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* Documents officiels (règlement, calendrier, affiche). Dépôt réservé
+          au commissaire — et aux admins, que le serveur reconnaît seul. */}
+      <CompetitionDocuments
+        scope="leagues"
+        competitionId={leagueId}
+        canManage={isCreator || currentUserIsAdmin}
+      />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">

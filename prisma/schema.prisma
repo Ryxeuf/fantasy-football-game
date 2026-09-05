@@ -142,6 +142,10 @@ model User {
   leagueInvitationsReceived   LeagueInvitation[]          @relation("LeagueInvitationInvitee")
   cupInvitationsSent          CupInvitation[]             @relation("CupInvitationInviter")
   cupInvitationsReceived      CupInvitation[]             @relation("CupInvitationInvitee")
+  // Documents officiels de competition uploades par ce coach (commissaire) ou
+  // par un admin. `onDelete: SetNull` cote document : la suppression d'un
+  // compte ne fait pas disparaitre le reglement de la ligue.
+  competitionDocuments        CompetitionDocument[]       @relation("CompetitionDocumentUploader")
 
   @@index([leaderboardStatus])
 }
@@ -1014,6 +1018,8 @@ model Cup {
   participants CupParticipant[]
   invitations  CupInvitation[]
   localMatches LocalMatch[]
+  /// Documents officiels (reglement, feuille de route, affiche...).
+  documents    CompetitionDocument[]
 
   @@index([creatorId])
   @@index([validated])
@@ -1076,6 +1082,52 @@ model CupInvitation {
   @@index([inviteeUserId, status])
   @@index([code])
   @@index([expiresAt, status])
+}
+
+/// Document OFFICIEL d'une competition (ligue/championnat ou coupe) : reglement
+/// PDF, calendrier, affiche, charte... Uploade par le commissaire (createur de
+/// la competition) ou par un admin, a la creation comme a n'importe quel moment
+/// de la vie de la competition — y compris apres son demarrage.
+///
+/// Rattachement POLYMORPHE par deux FK nullables (`leagueId` XOR `cupId`) :
+/// on garde ainsi les cascades Prisma natives (supprimer une ligue retire ses
+/// documents) et une seule table a administrer. L'invariant « exactement une
+/// des deux FK renseignee » n'est pas exprimable en Prisma : il est tenu par le
+/// service (`services/competition-documents.ts`), seul chemin d'ecriture.
+///
+/// Le BINAIRE vit sur le disque (`COMPETITION_DOCUMENT_UPLOAD_DIR`, servi par
+/// `express.static`) ; cette table porte les metadonnees et l'ordre d'affichage.
+/// `filename` est genere cote serveur (aucune portion du nom client) et unique :
+/// c'est la cle du fichier sur le disque.
+model CompetitionDocument {
+  id           String   @id @default(cuid())
+  league       League?  @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId     String?
+  cup          Cup?     @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId        String?
+  /// Libelle affiche (defaut : nom du fichier d'origine, sans extension).
+  title        String
+  description  String?
+  /// Nom du fichier sur le disque (genere cote serveur, anti path-traversal).
+  filename     String   @unique
+  /// Nom d'origine cote client, conserve pour l'affichage et le telechargement.
+  originalName String
+  /// Type reel detecte par magic bytes (jamais le Content-Type client).
+  mimeType     String
+  bytes        Int
+  /// Auteur de l'upload. Nullable : un compte supprime ne doit pas emporter le
+  /// document officiel de la competition.
+  uploader     User?    @relation("CompetitionDocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedById String?
+  /// Ordre d'affichage croissant (le commissaire classe ses documents).
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([leagueId, sortOrder])
+  @@index([cupId, sortOrder])
+  @@index([uploadedById])
+  @@index([createdAt])
 }
 
 // Modèle pour la file d'attente de matchmaking
@@ -1415,6 +1467,8 @@ model League {
   seasons     LeagueSeason[]
   // Lot A — back-relation invitations envoyees pour cette ligue.
   invitations LeagueInvitation[]
+  /// Documents officiels (reglement, calendrier PDF, affiche...).
+  documents   CompetitionDocument[]
 
   @@index([creatorId])
   @@index([status])

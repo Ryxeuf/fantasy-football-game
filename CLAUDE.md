@@ -681,6 +681,52 @@ les alignements conditionnes par la Ligue (`CONDITIONAL_GRANTS` — Nordiques
 + Clash du Chaos ⇒ Favori de Khorne) et les Ligues que la table ne sait pas
 exprimer (`IMPLICIT_LEAGUES` — le Clash du Chaos des Nordiques).
 
+### Upload de binaire : trois gardes, jamais le Content-Type client
+
+Quatre flux d'upload partagent exactement le meme squelette — images du blog
+(`utils/blog-upload`), logos d'equipe (`utils/team-logo-upload`), images de
+joueurs (`utils/player-image-upload`) et documents officiels de competition
+(`utils/competition-document-upload`). Tout nouvel upload le reprend :
+
+1. **Corps binaire brut** (`express.raw({ type: () => true, limit })`), pas de
+   multipart. La limite est portee par le PARSER : un depassement rend un 413
+   JSON propre avant toute lecture complete en memoire. Le handler narrow par
+   `Buffer.isBuffer(req.body)` — pas de cast, la garde `no-raw-body-cast`
+   interdit `req.body as`.
+2. **Type par magic bytes**, jamais le `Content-Type` ni l'extension (une
+   archive ZIP renommee `.pdf` doit sortir en 415).
+3. **Nom de fichier genere cote serveur** (`<slug>-<alea>.<ext>` via
+   `safeNameBase`) : aucune portion du nom client ne survit. La SUPPRESSION
+   revalide le nom (regex + confinement `path.resolve`) avant tout `unlink`.
+
+Le binaire va dans un dossier resolu **a l'appel** (`getXUploadDir()`, jamais
+fige a l'import — c'est ce qui rend l'override par env testable), servi par
+`express.static` monte AVANT le rate limiter et le mode maintenance.
+
+Piege propre a un upload adosse a une table : ecrire le fichier PUIS la ligne,
+et retirer le binaire si l'insert echoue — un fichier sans ligne est invisible
+de l'admin, donc impossible a purger. A la suppression, l'ordre s'inverse
+(ligne d'abord, binaire ensuite en best-effort) pour ne jamais lister un
+document sans fichier.
+
+### Rattachement POLYMORPHE : deux FK nullables, invariant tenu par le service
+
+`CompetitionDocument` s'accroche a une ligue OU a une coupe
+(`leagueId` XOR `cupId`, les deux nullables). Deux tables auraient duplique une
+regle metier identique des deux cotes — elle aurait derive. Deux FK nullables
+gardent les cascades Prisma natives et laissent UNE table a administrer.
+
+L'invariant « exactement une des deux FK renseignee » n'est pas exprimable en
+Prisma : il est tenu par le service, qui doit rester le **seul chemin
+d'ecriture** (`services/competition-documents.ts`). Corollaire cote lecture :
+la famille se deduit de la FK presente (`row.leagueId ? "league" : "cup"`),
+jamais d'une colonne de type dupliquee qui pourrait mentir.
+
+Meme logique cote routes : un seul jeu de handlers monte sur
+`/api/competitions/:kind/...` (`kind` = `leagues` | `cups`) plutot que des
+routes clonees dans `league.ts` et `cup.ts`. Doc :
+[`docs/competition-documents.md`](./docs/competition-documents.md).
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :

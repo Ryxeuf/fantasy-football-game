@@ -13,6 +13,10 @@ import {
   PLAYER_IMAGE_PUBLIC_PATH,
   getPlayerImageUploadDir,
 } from "./utils/player-image-upload";
+import {
+  COMPETITION_DOCUMENT_PUBLIC_PATH,
+  getCompetitionDocumentUploadDir,
+} from "./utils/competition-document-upload";
 import authRoutes from "./routes/auth";
 import authPrivacyRoutes from "./routes/auth-privacy";
 import authRefreshRoutes from "./routes/auth-refresh";
@@ -28,6 +32,8 @@ import adminInducementRoutes from "./routes/admin-inducements";
 import adminAdvancementCostRoutes from "./routes/admin-advancement-costs";
 import publicTournamentRulesetRoutes from "./routes/public-tournament-rulesets";
 import adminLeaguesRoutes from "./routes/admin-leagues";
+import competitionDocumentRoutes from "./routes/competition-documents";
+import adminCompetitionDocumentRoutes from "./routes/admin-competition-documents";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
 import adminSimReplaysRoutes from "./routes/admin-sim-replays";
@@ -217,6 +223,22 @@ app.use(
   }),
 );
 
+// Documents officiels des competitions (cf. routes/competition-documents.ts) :
+// reglements PDF, calendriers, affiches. Meme traitement que les autres
+// assets uploades (noms de fichiers uniques => cache long immutable), monte
+// avant le rate limiter et le mode maintenance pour qu'un reglement reste
+// telechargeable meme pendant une maintenance.
+app.use(
+  COMPETITION_DOCUMENT_PUBLIC_PATH,
+  express.static(getCompetitionDocumentUploadDir(), {
+    maxAge: "365d",
+    immutable: true,
+    fallthrough: true,
+    index: false,
+    dotfiles: "ignore",
+  }),
+);
+
 // Rate limiting global sur toutes les routes API (100 req/min par IP)
 app.use(apiRateLimiter);
 
@@ -368,6 +390,10 @@ app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 // L2.C.6 — admin leagues : reservation aux admins, route distincte
 // pour ne pas polluer /admin (qui devient un sac fourre-tout).
 app.use("/admin/leagues", adminLeaguesRoutes);
+// Documents officiels des competitions (ligues et coupes) : un seul jeu de
+// handlers pour les deux familles (`/api/competitions/:kind/...`).
+app.use("/api/competitions", competitionDocumentRoutes);
+app.use("/admin/competition-documents", adminCompetitionDocumentRoutes);
 app.use("/admin", adminAnalyticsRoutes);
 app.use("/admin/sim", adminSimRoutes);
 // Sprint Pro League 0.E.2 / 0.E.3 — exposition lecture seule des replays
@@ -465,6 +491,15 @@ if (process.env.TEST_SQLITE === "1") {
         (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'),
       );
       await safe("match", () => prisma.match.deleteMany({}));
+      // Documents officiels : cascade depuis League/Cup, mais on les retire
+      // explicitement pour que le reset reste deterministe quel que soit le
+      // mode referentiel du connecteur.
+      await safe(
+        "competitionDocument",
+        () =>
+          (prisma as any).competitionDocument?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
       // League hierarchy: participants/rounds cascade from seasons; seasons
       // and leagues must be removed before users (creatorId is RESTRICT).
       await safe(

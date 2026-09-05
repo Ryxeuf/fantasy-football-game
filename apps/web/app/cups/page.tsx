@@ -6,6 +6,8 @@ import { apiRequest } from "../lib/api-client";
 import { useTournamentRulesets } from "../lib/tournament-rulesets";
 import { RULESETS } from "@bb/game-engine";
 import PendingCupInvitations from "./PendingCupInvitations";
+import PendingCompetitionDocuments from "../components/PendingCompetitionDocuments";
+import { uploadPendingCompetitionDocuments } from "../lib/competition-documents";
 import {
   getRosterName,
 } from "@bb/game-engine";
@@ -120,6 +122,9 @@ export default function CupsPage() {
   const [passPoints, setPassPoints] = useState(2);
   // Règles avancées de composition (mode coupe).
   const [newCupDescription, setNewCupDescription] = useState("");
+  // Documents officiels choisis avant la creation : la coupe n'ayant pas
+  // encore d'id, ils sont deposes juste apres le POST.
+  const [newCupDocuments, setNewCupDocuments] = useState<File[]>([]);
   const [tierBudgets, setTierBudgets] = useState<Record<string, string>>({
     I: "",
     II: "",
@@ -288,6 +293,23 @@ export default function CupsPage() {
         rosterStartingPspOverrides:
           Object.keys(pspOverridesMap).length > 0 ? pspOverridesMap : undefined,
       });
+      // Depot des documents officiels choisis avant la creation. Un echec
+      // ici ne doit pas annuler la coupe (deja creee) : on le signale et le
+      // creform peut reessayer depuis la fiche de la coupe.
+      let documentFailures: string[] = [];
+      if (newCupDocuments.length > 0 && response.cup?.id) {
+        documentFailures = await uploadPendingCompetitionDocuments(
+          "cups",
+          response.cup.id,
+          newCupDocuments,
+        );
+        if (documentFailures.length > 0) {
+          setError(
+            `Coupe créée, mais certains documents n'ont pas pu être déposés : ${documentFailures.join(" — ")}`,
+          );
+        }
+      }
+      setNewCupDocuments([]);
       setNewCupName("");
       setNewCupIsPublic(true);
       setWinPoints(1000);
@@ -307,6 +329,12 @@ export default function CupsPage() {
       setRosterPspOverrides([]);
       setShowCreateForm(false);
       
+      // Un echec de depot de document doit rester lisible : on reste sur la
+      // page plutot que de rediriger sur un message qui disparaitrait.
+      if (documentFailures.length > 0) {
+        loadCups();
+        return;
+      }
       // Si la coupe est privée, rediriger vers la page de la coupe avec le lien
       if (!newCupIsPublic && response.cup) {
         router.push(`/cups/${response.cup.id}`);
@@ -417,6 +445,11 @@ export default function CupsPage() {
                 data-testid="cup-description-input"
               />
             </div>
+            <PendingCompetitionDocuments
+              files={newCupDocuments}
+              onChange={setNewCupDocuments}
+              disabled={creating}
+            />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Ruleset

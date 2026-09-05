@@ -22,8 +22,8 @@ interface CallArgs {
     action: string;
     entity: string;
     entityId: string | null;
-    oldValue: string | typeof Prisma.JsonNull;
-    newValue: string | typeof Prisma.JsonNull;
+    oldValue: string | null | typeof Prisma.JsonNull;
+    newValue: string | null | typeof Prisma.JsonNull;
     ipAddress: string | null;
     userAgent: string | null;
   };
@@ -120,6 +120,32 @@ describe("recordAdminAction", () => {
     const args = create.mock.calls[0][0];
     expect(args.data.oldValue).toBe('{"email":"x@y"}');
     expectJsonNull(args.data.newValue);
+  });
+
+  // Le miroir sqlite des tests declare `oldValue`/`newValue` en `String?` :
+  // `Prisma.JsonNull` (un objet a l'execution) y est refuse, et l'insert
+  // echouait en silence (l'erreur est avalee par `safeRecordAdminAction*`).
+  it("utilise un null nu quand le provider est le miroir sqlite", async () => {
+    const previous = process.env.TEST_SQLITE;
+    process.env.TEST_SQLITE = "1";
+    try {
+      const { prisma, create } = makeMockPrisma();
+      await recordAdminAction(prisma, {
+        userId: "admin-1",
+        action: "competition-document.upload",
+        entity: "CompetitionDocument",
+        entityId: "doc-1",
+        newValue: { filename: "reglement-aabbccddeeff.pdf" },
+      });
+      const args = create.mock.calls[0][0];
+      expect(args.data.oldValue).toBeNull();
+      expect(args.data.newValue).toBe(
+        '{"filename":"reglement-aabbccddeeff.pdf"}',
+      );
+    } finally {
+      if (previous === undefined) delete process.env.TEST_SQLITE;
+      else process.env.TEST_SQLITE = previous;
+    }
   });
 
   it("propage ipAddress et userAgent quand fournis", async () => {

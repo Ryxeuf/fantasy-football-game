@@ -7,6 +7,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { LeagueForm, type LeagueFormValues } from "../_components/LeagueForm";
+import { uploadPendingCompetitionDocuments } from "../../lib/competition-documents";
 import { serializeBonusRules } from "../_components/bonus-rules";
 
 // Formulaire de creation de ligue. Gate par le feature flag unique
@@ -27,11 +28,49 @@ export default function NewLeaguePage() {
   const flagEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Documents officiels choisis avant la creation : la ligue n'ayant pas
+  // encore d'id, ils sont deposes juste apres le POST.
+  const [pendingDocuments, setPendingDocuments] = useState<File[]>([]);
+  // Ligue deja creee dont seul le depot des documents a echoue. Sans cet
+  // etat, re-soumettre le formulaire creerait une SECONDE ligue : on rejoue
+  // alors uniquement l'upload.
+  const [createdLeagueId, setCreatedLeagueId] = useState<string | null>(null);
+
+  /**
+   * Depose les documents mis de cote. Renvoie `true` quand tout est passe ;
+   * sinon signale les echecs et laisse l'utilisateur reessayer.
+   */
+  const uploadDocuments = useCallback(
+    async (leagueId: string): Promise<boolean> => {
+      if (pendingDocuments.length === 0) return true;
+      const failures = await uploadPendingCompetitionDocuments(
+        "leagues",
+        leagueId,
+        pendingDocuments,
+      );
+      if (failures.length === 0) return true;
+      setError(
+        `Ligue créée, mais certains documents n'ont pas pu être déposés : ${failures.join(" — ")}`,
+      );
+      return false;
+    },
+    [pendingDocuments],
+  );
 
   const handleSubmit = useCallback(
     async (values: LeagueFormValues) => {
       setSubmitting(true);
       setError(null);
+      // Reprise apres un echec de depot : la ligue existe deja, on ne
+      // re-poste PAS /leagues (sinon doublon).
+      if (createdLeagueId) {
+        if (!(await uploadDocuments(createdLeagueId))) {
+          setSubmitting(false);
+          return;
+        }
+        router.push(`/leagues/${createdLeagueId}`);
+        return;
+      }
       try {
         const created = await apiRequest<CreatedLeague>("/leagues", {
           method: "POST",
@@ -55,13 +94,21 @@ export default function NewLeaguePage() {
             bonusPointsConfig: serializeBonusRules(values.bonusPointsConfig),
           }),
         });
+        // Depot des documents officiels choisis avant la creation. Un echec
+        // ici ne doit pas annuler la ligue (deja creee) : on le signale, on
+        // memorise son id et la prochaine soumission ne rejoue que l'upload.
+        if (!(await uploadDocuments(created.id))) {
+          setCreatedLeagueId(created.id);
+          setSubmitting(false);
+          return;
+        }
         router.push(`/leagues/${created.id}`);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : t.leagues.formSubmitError);
         setSubmitting(false);
       }
     },
-    [router, t.leagues.formSubmitError],
+    [router, t.leagues.formSubmitError, uploadDocuments, createdLeagueId],
   );
 
   // Gate cosmetique cote client (cf. LeagueGate). Sans le flag, on ne
@@ -90,12 +137,30 @@ export default function NewLeaguePage() {
         </p>
       </div>
 
+      {createdLeagueId ? (
+        <p
+          data-testid="new-league-created-notice"
+          className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3"
+        >
+          La ligue a bien été créée. Réessayez le dépôt, ou{" "}
+          <Link
+            href={`/leagues/${createdLeagueId}`}
+            className="underline font-medium"
+          >
+            ouvrez sa fiche
+          </Link>{" "}
+          pour ajouter les documents plus tard.
+        </p>
+      ) : null}
+
       <LeagueForm
         mode="create"
         submitting={submitting}
         error={error}
         cancelHref="/leagues"
         onSubmit={handleSubmit}
+        pendingDocuments={pendingDocuments}
+        onPendingDocumentsChange={setPendingDocuments}
       />
     </div>
   );
