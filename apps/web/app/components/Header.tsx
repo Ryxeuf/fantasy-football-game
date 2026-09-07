@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import Logo from "./Logo";
 import AuthBar from "../AuthBar";
 import LanguageSwitcher from "./LanguageSwitcher";
+import NotificationsBell from "./NotificationsBell";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useFeatureFlag } from "../hooks/useFeatureFlag";
 import {
@@ -280,8 +281,13 @@ export default function Header() {
       {/* Actions desktop */}
       <div className="hidden lg:flex items-center gap-2 xl:gap-3 flex-shrink-0">
         <LanguageSwitcher />
+        {/* Cloche + compteur de non lus (coach connecté uniquement). */}
+        <NotificationsBell />
         <AuthBar />
       </div>
+
+      {/* Cloche mobile/tablet : accessible sans ouvrir le menu. */}
+      <NotificationsBell variant="mobile" />
 
       {/* Bouton hamburger mobile/tablet */}
       <button

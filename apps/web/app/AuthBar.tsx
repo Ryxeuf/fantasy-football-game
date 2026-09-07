@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { API_BASE } from "./auth-client";
 import { useLanguage } from "./contexts/LanguageContext";
+import { useNotifications } from "./contexts/NotificationsContext";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 import { syncAuthCookie, clearAuthCookie } from "./lib/auth-cookie";
@@ -26,6 +27,8 @@ interface AuthBarProps {
 export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
+  // Compteur de non lus partagé (no-op hors provider, ex. tests isolés).
+  const { unreadCount } = useNotifications();
   const [hasToken, setHasToken] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -178,6 +181,16 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
     window.location.href = "/login";
   }
 
+  const unreadBadge =
+    unreadCount > 0 ? (
+      <span
+        data-testid="user-menu-unread-badge"
+        className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-nuffle-red text-white text-[10px] font-bold leading-none"
+      >
+        {unreadCount > 99 ? "99+" : unreadCount}
+      </span>
+    ) : null;
+
   const getInitials = (name?: string | null, email?: string) => {
     if (name) {
       return name
@@ -224,6 +237,14 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
           </a>
           <a href="/me/achievements" className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
             🏅 {t.auth.achievements || "Mes succès"}
+          </a>
+          <a
+            href="/me/notifications"
+            data-testid="mobile-user-menu-notifications"
+            className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            🔔 {t.auth.notifications}
+            {unreadBadge}
           </a>
         </div>
 
@@ -298,6 +319,15 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
                 </a>
                 <a href="/me/achievements" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors" onClick={() => setMenuOpen(false)}>
                   🏅 {t.auth.achievements || "Mes succès"}
+                </a>
+                <a
+                  href="/me/notifications"
+                  data-testid="user-menu-notifications"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  🔔 {t.auth.notifications}
+                  {unreadBadge}
                 </a>
               </div>
 

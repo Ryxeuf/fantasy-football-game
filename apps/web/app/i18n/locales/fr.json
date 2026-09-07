@@ -1,5 +1,6 @@
 {
   "nav": {
+    "notifications": "Notifications",
     "teams": "Équipes",
     "tools": "Outils",
     "compareTeams": "Comparer des équipes",
@@ -72,6 +73,7 @@
     "welcomeDismiss": "C'est parti !"
   },
   "auth": {
+    "notifications": "Notifications",
     "login": "Connexion",
     "register": "Inscription",
     "logout": "Se déconnecter",
@@ -1230,5 +1232,24 @@
       "footerCtaHub": "Rejoindre le hub →",
       "footerCtaGazette": "Lire la Gazette"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Invitations, appariements, matchs à valider, demandes d'ami : tout ce qui vous concerne, au même endroit.",
+    "navLabel": "Notifications",
+    "unreadAria": "{count} notification(s) non lue(s)",
+    "loading": "Chargement des notifications...",
+    "error": "Impossible de charger les notifications",
+    "empty": "Aucune notification pour le moment.",
+    "emptyHint": "Vous serez prévenu ici des invitations, appariements, matchs à valider et demandes d'ami.",
+    "markedRead": "Les nouvelles notifications ont été marquées comme lues.",
+    "newBadge": "Nouveau",
+    "open": "Ouvrir",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement...",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {count} min",
+    "hoursAgo": "il y a {count} h",
+    "daysAgo": "il y a {count} j"
   }
 }

@@ -17,7 +17,7 @@ import {
   beforeEach,
   afterEach,
 } from "vitest";
-import { render, screen, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, waitFor, cleanup, fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 
 vi.mock("./lib/featureFlags", () => ({
@@ -179,5 +179,43 @@ describe("AuthBar — session state", () => {
     });
     expect(window.localStorage.getItem("auth_token")).toBe("valid-access");
     expect(mockRefresh).not.toHaveBeenCalled();
+  });
+});
+
+describe("AuthBar — entrée Notifications du menu utilisateur", () => {
+  it("propose /me/notifications dans le menu déroulant (sans pastille hors provider)", async () => {
+    window.localStorage.setItem("auth_token", "valid-access");
+    fetchMock.mockImplementation((url: string) =>
+      String(url).includes("/auth/me")
+        ? Promise.resolve(
+            jsonResponse(200, { user: { email: "coach@nuffle.fr", roles: ["user"] } }),
+          )
+        : Promise.resolve(jsonResponse(200, {})),
+    );
+    const { container } = renderAuthBar();
+    const button = await waitFor(() => {
+      const b = container.querySelector('button[aria-label="Menu utilisateur"]');
+      expect(b).not.toBeNull();
+      return b as HTMLButtonElement;
+    });
+    fireEvent.click(button);
+    const link = await screen.findByTestId("user-menu-notifications");
+    expect(link.getAttribute("href")).toBe("/me/notifications");
+    expect(link.textContent).toContain("Notifications");
+    expect(screen.queryByTestId("user-menu-unread-badge")).toBeNull();
+  });
+
+  it("menu mobile : entrée Notifications présente", async () => {
+    window.localStorage.setItem("auth_token", "valid-access");
+    fetchMock.mockImplementation((url: string) =>
+      String(url).includes("/auth/me")
+        ? Promise.resolve(
+            jsonResponse(200, { user: { email: "coach@nuffle.fr", roles: ["user"] } }),
+          )
+        : Promise.resolve(jsonResponse(200, {})),
+    );
+    renderAuthBar(<AuthBar isMobileMenu />);
+    const link = await screen.findByTestId("mobile-user-menu-notifications");
+    expect(link.getAttribute("href")).toBe("/me/notifications");
   });
 });

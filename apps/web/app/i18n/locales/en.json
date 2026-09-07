@@ -1,5 +1,6 @@
 {
   "nav": {
+    "notifications": "Notifications",
     "teams": "Teams",
     "tools": "Tools",
     "compareTeams": "Compare rosters",
@@ -72,6 +73,7 @@
     "welcomeDismiss": "Let's go!"
   },
   "auth": {
+    "notifications": "Notifications",
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
@@ -1225,5 +1227,24 @@
       "footerCtaHub": "Join the hub →",
       "footerCtaGazette": "Read the Gazette"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Invitations, pairings, matches to validate, friend requests: everything that concerns you, in one place.",
+    "navLabel": "Notifications",
+    "unreadAria": "{count} unread notification(s)",
+    "loading": "Loading notifications...",
+    "error": "Unable to load notifications",
+    "empty": "No notifications yet.",
+    "emptyHint": "Invitations, pairings, matches to validate and friend requests will show up here.",
+    "markedRead": "New notifications have been marked as read.",
+    "newBadge": "New",
+    "open": "Open",
+    "loadMore": "Load more",
+    "loadingMore": "Loading...",
+    "justNow": "just now",
+    "minutesAgo": "{count} min ago",
+    "hoursAgo": "{count} h ago",
+    "daysAgo": "{count} d ago"
   }
 }
