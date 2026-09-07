@@ -87,6 +87,10 @@ import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import leagueInvitationRoutes from "./routes/league-invitation";
+import {
+  cupLifecycleRouter,
+  leagueLifecycleRouter,
+} from "./routes/competition-lifecycle";
 import leagueTestDataRoutes from "./routes/league-test-data";
 import { tutorialRouter, adminTutorialRouter } from "./routes/tutorial";
 import kofiRoutes from "./routes/kofi";
@@ -355,6 +359,10 @@ app.use("/api/admin/blog", adminBlogRoutes);
 // (/cup/invitations/..., /cup/me/..., /cup/coaches/...) ne doivent pas être
 // shadowées par `/:id` de cupRoutes.
 app.use("/cup", cupInvitationRoutes);
+// Archivage / suppression par le commissaire (POST /cup/:id/archive,
+// DELETE /cup/:id) : monté avant le routeur historique, qui ne définit
+// aucune de ces deux routes.
+app.use("/cup", cupLifecycleRouter);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(
@@ -376,6 +384,9 @@ app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
 app.use("/achievements", achievementsRoutes);
 app.use("/coach", publicCache(), coachRoutes);
+// Archivage / suppression par le commissaire (POST /leagues/:id/archive,
+// DELETE /leagues/:id) — cf. routes/competition-lifecycle.
+app.use("/leagues", leagueLifecycleRouter);
 app.use("/leagues", leagueRoutes);
 // Lot A — endpoints d'invitation (cree/liste/accepte/decline) et
 // autocomplete coachs. Monte sous /leagues pour partager le prefixe.

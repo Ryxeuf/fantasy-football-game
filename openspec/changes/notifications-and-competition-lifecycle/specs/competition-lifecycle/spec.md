@@ -43,8 +43,10 @@ avant d'appeler la route.
 À l'archivage comme à la suppression, chaque coach possédant une équipe
 inscrite à la compétition (hors auteur de l'action) DOIT recevoir une
 notification interne (`league.archived`, `league.deleted`, `cup.archived`,
-`cup.deleted`). Pour une suppression, la notification DOIT être créée
-**avant** l'effacement et ne porte pas de lien vers la compétition.
+`cup.deleted`). Pour une suppression, les destinataires DOIVENT être résolus
+**avant** l'effacement (la cascade emporte les inscriptions) et notifiés
+**après** sa réussite ; la notification ne porte pas de lien vers la
+compétition.
 
 #### Scenario: Archivage notifie les coachs inscrits
 

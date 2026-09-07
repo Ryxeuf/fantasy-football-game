@@ -75,9 +75,10 @@ le push et n'en dépend pas.
 - Archivage idempotent (`changed: false` si déjà archivé) ; aucun verrou de
   statut : un commissaire peut clore une ligue en cours (les feuilles et
   classements restent consultables, cf. page `/leagues/archived`).
-- Suppression : les participants sont résolus et notifiés **avant** le
-  `delete` (la cascade emporte saisons, poules, appariements, feuilles,
-  invitations, documents). `Match.leagueSeasonId` passe à `null`
+- Suppression : les participants sont résolus **avant** le `delete` (la
+  cascade emporte saisons, poules, appariements, feuilles, invitations,
+  documents) et notifiés **après** sa réussite — jamais d'annonce d'une
+  suppression qui a échoué. `Match.leagueSeasonId` passe à `null`
   (`onDelete: SetNull`) : les matchs joués en ligne survivent.
 - Routes : `routes/competition-lifecycle.ts` expose deux routeurs
   (`leagueLifecycleRouter`, `cupLifecycleRouter`) construits par la même
