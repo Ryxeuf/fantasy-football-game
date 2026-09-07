@@ -544,6 +544,13 @@ if (process.env.TEST_SQLITE === "1") {
         "friendship",
         () => (prisma as any).friendship?.deleteMany?.({}) ?? Promise.resolve(),
       );
+      // Notifications internes : pas de FK dans le miroir sqlite, purge
+      // explicite pour qu'un compteur de non lus ne fuie pas entre specs.
+      await safe(
+        "notification",
+        () =>
+          (prisma as any).notification?.deleteMany?.({}) ?? Promise.resolve(),
+      );
       await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
       await safe("team", () => prisma.team.deleteMany({}));
       // Feedback public : pas de FK vers User, on peut wiper a tout moment.

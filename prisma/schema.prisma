@@ -146,6 +146,8 @@ model User {
   // par un admin. `onDelete: SetNull` cote document : la suppression d'un
   // compte ne fait pas disparaitre le reglement de la ligue.
   competitionDocuments        CompetitionDocument[]       @relation("CompetitionDocumentUploader")
+  /// Notifications internes (in-app), cf. `services/in-app-notifications.ts`.
+  notifications               Notification[]
 
   @@index([leaderboardStatus])
 }
@@ -1361,6 +1363,32 @@ model EmailDigestPreference {
   unsubscribedAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+}
+
+/// Notification interne (in-app) adressee a un utilisateur.
+///
+/// Creee par les services metier via `createInAppNotification`
+/// (`services/in-app-notifications.ts`) — effet secondaire JAMAIS bloquant,
+/// independant des preferences push — et servie par `/notifications`.
+/// `kind` est un identifiant dot-case ("league.invitation", "friend.request",
+/// "league.archived"...), `url` un lien relatif web (null = pas de cible, ex :
+/// competition supprimee), `meta` des ids libres (objet natif en PG, chaine
+/// serialisee dans le miroir sqlite : parser tolerant cote lecture).
+/// `readAt` null = non lue ; le compteur du menu lit l'index (userId, readAt).
+model Notification {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  kind      String
+  title     String
+  body      String
+  url       String?
+  meta      Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 // L.1 — Modele ligue (Sprint 17 : infrastructure competitive).
