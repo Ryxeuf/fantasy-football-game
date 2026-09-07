@@ -1,4 +1,6 @@
 import { prisma } from "../prisma";
+import { createInAppNotification } from "./in-app-notifications";
+import { serverLog } from "../utils/server-log";
 
 /**
  * Systeme d'amis — logique metier
@@ -66,13 +68,61 @@ export async function sendFriendRequest(
     throw new Error("Une relation existe deja entre ces utilisateurs");
   }
 
-  return prisma.friendship.create({
+  const created = await prisma.friendship.create({
     data: {
       requesterId,
       receiverId,
       status: FriendshipStatus.Pending,
     },
   });
+
+  // Notification interne du destinataire : effet secondaire, jamais bloquant.
+  await notifyFriendEvent({
+    recipientUserId: receiverId,
+    actorUserId: requesterId,
+    kind: "friend.request",
+    title: "Demande d'ami",
+    body: (actor) => `${actor} souhaite t'ajouter en ami`,
+    friendshipId: created.id,
+  });
+
+  return created;
+}
+
+/**
+ * Notification interne d'un évènement d'amitié. Résout le nom de coach de
+ * l'acteur (repli « Un coach ») ; toute erreur est capturée : ni la demande
+ * ni la réponse ne doivent échouer à cause d'une notification.
+ */
+async function notifyFriendEvent(input: {
+  recipientUserId: string;
+  actorUserId: string;
+  kind: "friend.request" | "friend.accepted";
+  title: string;
+  body: (actorName: string) => string;
+  friendshipId: string;
+}): Promise<void> {
+  try {
+    const actor = (await prisma.user.findUnique({
+      where: { id: input.actorUserId },
+      select: { coachName: true },
+    })) as { coachName?: string | null } | null | undefined;
+    const actorName = actor?.coachName?.trim() || "Un coach";
+    await createInAppNotification({
+      userId: input.recipientUserId,
+      kind: input.kind,
+      title: input.title,
+      body: input.body(actorName),
+      // Pas de page « amis » côté web : notification informative, sans cible.
+      url: null,
+      meta: { friendshipId: input.friendshipId, actorUserId: input.actorUserId },
+    });
+  } catch (e: unknown) {
+    serverLog.error(
+      `[friendship] notify ${input.kind} failed for user ${input.recipientUserId}`,
+      e,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -132,6 +182,20 @@ export async function respondToFriendRequest(
   if (!updated) {
     throw new Error("Demande d'ami introuvable (post-update)");
   }
+
+  // Le demandeur apprend l'acceptation dans l'application (pas le refus :
+  // un refus reste silencieux, comme avant).
+  if (action === "accept") {
+    await notifyFriendEvent({
+      recipientUserId: updated.requesterId,
+      actorUserId: currentUserId,
+      kind: "friend.accepted",
+      title: "Demande d'ami acceptée",
+      body: (actor) => `${actor} a accepté ta demande d'ami`,
+      friendshipId: updated.id,
+    });
+  }
+
   return updated;
 }
 

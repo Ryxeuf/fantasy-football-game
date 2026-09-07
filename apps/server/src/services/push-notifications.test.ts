@@ -23,7 +23,15 @@ vi.mock("./notification-preferences", () => ({
     Turn: "turn",
     MatchFound: "matchFound",
     FriendMatchStarted: "friendMatchStarted",
+    LeagueRoundReminder: "leagueRoundReminder",
+    LeagueMatchValidation: "leagueMatchValidation",
   },
+}));
+
+// Historique interne : les fonctions de push ligue créent aussi une
+// notification in-app, indépendamment de la préférence push.
+vi.mock("./in-app-notifications", () => ({
+  createInAppNotification: vi.fn().mockResolvedValue(null),
 }));
 
 // Persistent store is now Prisma-backed. We back the mock with a tiny
@@ -102,8 +110,16 @@ import {
   sendTurnPush,
   sendMatchFoundPush,
   sendFriendMatchStartedPush,
+  sendLeagueRoundReminderPush,
+  sendLeagueMatchValidationPush,
+  buildLeagueRoundReminderBody,
   clearExpoSubscriptions,
 } from "./push-notifications";
+import { createInAppNotification } from "./in-app-notifications";
+import { shouldSendNotification } from "./notification-preferences";
+
+const mockInApp = createInAppNotification as ReturnType<typeof vi.fn>;
+const mockShouldSend = shouldSendNotification as ReturnType<typeof vi.fn>;
 
 describe("push-notifications", () => {
   beforeEach(() => {
@@ -426,5 +442,82 @@ describe("push-notifications", () => {
       expect(shouldSendNotification).toHaveBeenCalled();
       expect(webpush.sendNotification).toHaveBeenCalled();
     });
+  });
+});
+
+describe("push ligue → notification interne", () => {
+  beforeEach(() => {
+    mockInApp.mockClear();
+    mockShouldSend.mockResolvedValue(true);
+  });
+
+  it("sendLeagueRoundReminderPush crée une notification interne avec le lien de la ligue", () => {
+    sendLeagueRoundReminderPush({
+      userId: "coach-1",
+      leagueId: "lg-1",
+      seasonId: "s-1",
+      opponentCoachName: "Griff",
+      roundNumber: 3,
+      deadlineAt: new Date("2026-10-01T00:00:00.000Z"),
+    });
+    expect(mockInApp).toHaveBeenCalledTimes(1);
+    expect(mockInApp).toHaveBeenCalledWith({
+      userId: "coach-1",
+      kind: "league.round_pairing",
+      title: "Appariement de ligue",
+      body: "Apparie contre Griff pour la J3 (deadline 2026-10-01)",
+      url: "/leagues/lg-1",
+      meta: { leagueId: "lg-1", seasonId: "s-1", roundNumber: 3 },
+    });
+  });
+
+  it("la notification interne est créée MÊME si la préférence push est coupée", async () => {
+    mockShouldSend.mockResolvedValue(false);
+    sendLeagueRoundReminderPush({
+      userId: "coach-1",
+      leagueId: "lg-1",
+      seasonId: "s-1",
+      opponentCoachName: "Griff",
+      roundNumber: 1,
+      deadlineAt: null,
+    });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockInApp).toHaveBeenCalledTimes(1);
+    expect(mockInApp.mock.calls[0][0].body).toBe("Apparie contre Griff pour la J1");
+  });
+
+  it("sendLeagueMatchValidationPush notifie le commissaire vers la page de validation", () => {
+    sendLeagueMatchValidationPush({
+      commissionerUserId: "commish",
+      leagueId: "lg-1",
+      pairingId: "p-9",
+      homeTeamName: "Rats",
+      awayTeamName: "Lizards",
+    });
+    expect(mockInApp).toHaveBeenCalledWith({
+      userId: "commish",
+      kind: "league.match_validation",
+      title: "Match à valider",
+      body: "Match a valider : Rats vs Lizards",
+      url: "/leagues/lg-1/pending-validations",
+      meta: { leagueId: "lg-1", pairingId: "p-9" },
+    });
+  });
+
+  it("buildLeagueRoundReminderBody : avec et sans deadline", () => {
+    expect(
+      buildLeagueRoundReminderBody({
+        opponentCoachName: "A",
+        roundNumber: 2,
+        deadlineAt: null,
+      }),
+    ).toBe("Apparie contre A pour la J2");
+    expect(
+      buildLeagueRoundReminderBody({
+        opponentCoachName: "A",
+        roundNumber: 2,
+        deadlineAt: new Date("2026-01-02T12:00:00.000Z"),
+      }),
+    ).toBe("Apparie contre A pour la J2 (deadline 2026-01-02)");
   });
 });
