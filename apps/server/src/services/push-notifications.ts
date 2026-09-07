@@ -5,6 +5,7 @@ import {
   shouldSendNotification,
   NotificationType,
 } from "./notification-preferences";
+import { createInAppNotification } from "./in-app-notifications";
 
 // ---------------------------------------------------------------------------
 // VAPID Configuration
@@ -451,19 +452,43 @@ export interface LeagueRoundReminderInput {
   readonly deadlineAt: Date | null;
 }
 
+export function buildLeagueRoundReminderBody(
+  input: Pick<
+    LeagueRoundReminderInput,
+    "opponentCoachName" | "roundNumber" | "deadlineAt"
+  >,
+): string {
+  const deadlineLabel = input.deadlineAt
+    ? input.deadlineAt.toISOString().slice(0, 10)
+    : null;
+  return deadlineLabel
+    ? `Apparie contre ${input.opponentCoachName} pour la J${input.roundNumber} (deadline ${deadlineLabel})`
+    : `Apparie contre ${input.opponentCoachName} pour la J${input.roundNumber}`;
+}
+
 export function sendLeagueRoundReminderPush(
   input: LeagueRoundReminderInput,
 ): void {
+  const url = `/leagues/${input.leagueId}`;
+  const body = buildLeagueRoundReminderBody(input);
+  // Historique interne : AVANT et INDÉPENDAMMENT du contrôle de préférence
+  // push — un coach qui a coupé le push doit retrouver son appariement dans
+  // ses notifications. Ne throw jamais.
+  void createInAppNotification({
+    userId: input.userId,
+    kind: "league.round_pairing",
+    title: "Appariement de ligue",
+    body,
+    url,
+    meta: {
+      leagueId: input.leagueId,
+      seasonId: input.seasonId,
+      roundNumber: input.roundNumber,
+    },
+  });
   shouldSendNotification(input.userId, NotificationType.LeagueRoundReminder)
     .then(async (allowed) => {
       if (!allowed) return;
-      const url = `/leagues/${input.leagueId}`;
-      const deadlineLabel = input.deadlineAt
-        ? input.deadlineAt.toISOString().slice(0, 10)
-        : null;
-      const body = deadlineLabel
-        ? `Apparie contre ${input.opponentCoachName} pour la J${input.roundNumber} (deadline ${deadlineLabel})`
-        : `Apparie contre ${input.opponentCoachName} pour la J${input.roundNumber}`;
       const payload: PushPayload = {
         title: "Nuffle Arena",
         body,
@@ -506,16 +531,26 @@ export interface LeagueMatchValidationInput {
 export function sendLeagueMatchValidationPush(
   input: LeagueMatchValidationInput,
 ): void {
+  const url = `/leagues/${input.leagueId}/pending-validations`;
+  const body = `Match a valider : ${input.homeTeamName} vs ${input.awayTeamName}`;
+  // Historique interne, indépendant de la préférence push (cf. ci-dessus).
+  void createInAppNotification({
+    userId: input.commissionerUserId,
+    kind: "league.match_validation",
+    title: "Match à valider",
+    body,
+    url,
+    meta: { leagueId: input.leagueId, pairingId: input.pairingId },
+  });
   shouldSendNotification(
     input.commissionerUserId,
     NotificationType.LeagueMatchValidation,
   )
     .then(async (allowed) => {
       if (!allowed) return;
-      const url = `/leagues/${input.leagueId}/pending-validations`;
       const payload: PushPayload = {
         title: "Nuffle Arena",
-        body: `Match a valider : ${input.homeTeamName} vs ${input.awayTeamName}`,
+        body,
         icon: "/images/favicon-optimized.png",
         url,
         tag: `league-validate-${input.pairingId}`,

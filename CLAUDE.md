@@ -727,6 +727,24 @@ Meme logique cote routes : un seul jeu de handlers monte sur
 routes clonees dans `league.ts` et `cup.ts`. Doc :
 [`docs/competition-documents.md`](./docs/competition-documents.md).
 
+### Notification interne = effet secondaire jamais bloquant, hors preferences push
+
+`services/in-app-notifications.ts` est l'HISTORIQUE (table `Notification`)
+qui complete les canaux de livraison (push, e-mail). `createInAppNotification`
+ne throw jamais (echec journalise → `null`), et se branche AVANT le controle
+de preference push dans `push-notifications` : un coach qui a coupe le push
+garde ses notifications. Les lectures (`markNotificationRead`,
+`markAllNotificationsRead`) portent `userId` dans le WHERE — la notification
+d'un autre est un 404, jamais une fuite. Cote web, `useNotifications()` est
+un hook no-op hors provider (cf. « Provider global avec hook no-op
+fallback »), et la page `/me/notifications` marque lu a l'affichage. Doc :
+[`docs/notifications-in-app.md`](./docs/notifications-in-app.md).
+
+Meme famille : `services/competition-lifecycle.ts` (archiver / supprimer une
+ligue ou une coupe par son commissaire) resout les destinataires AVANT un
+`delete` en cascade et notifie APRES sa reussite — jamais d'annonce d'une
+suppression qui a echoue.
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :
@@ -1139,6 +1157,13 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `ALLOWED_TEAMS` → `Roster`, budget par defaut `Roster.budget`. Voir
   [`docs/audit-statique-vs-bdd-2026-08-27.md`](./docs/audit-statique-vs-bdd-2026-08-27.md)
   et [`docs/lot6-modele-de-donnees-2026-08-27.md`](./docs/lot6-modele-de-donnees-2026-08-27.md).
+- **2026-09-07** : Notifications internes + cycle de vie des competitions
+  (change OpenSpec `notifications-and-competition-lifecycle`) : modele
+  `Notification`, service/routes `/notifications`, cloche + compteur de non
+  lus dans le menu, page `/me/notifications` (lecture a la consultation),
+  archivage/suppression d'une ligue ou d'une coupe par son commissaire avec
+  notification des inscrits. Doc :
+  [`docs/notifications-in-app.md`](./docs/notifications-in-app.md).
 - **2026-06-13→15** : Vague acquisition/retention web (#890-#897).
   Refonte home Nuffle dans l'esprit BB + accueil personnalise (coach
   connecte vs marketing deconnecte) + SEO competences + stats live +

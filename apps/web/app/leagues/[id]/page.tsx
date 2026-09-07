@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
@@ -21,6 +21,7 @@ import { ManualScheduleEditor } from "./ManualScheduleEditor";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
+import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { getRosterName } from "@bb/game-engine";
 import type {
   LeagueDetail,
@@ -51,6 +52,7 @@ function meIsAdmin(me: MeResponse): boolean {
 export default function LeagueDetailPage() {
   const { t } = useLanguage();
   const params = useParams();
+  const router = useRouter();
   const leagueId = typeof params.id === "string" ? params.id : "";
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
 
@@ -722,6 +724,24 @@ export default function LeagueDetailPage() {
           ) : null}
         </section>
       ) : null}
+
+      {/* Archivage / suppression par le commissaire (ou un admin). Le
+          serveur re-vérifie l'autorisation ; ici on ne fait que masquer. */}
+      <CompetitionLifecyclePanel
+        kind="league"
+        competitionId={league.id}
+        name={league.name}
+        archived={league.status === "archived"}
+        canManage={leagueEnabled && (isCreator || currentUserIsAdmin)}
+        onArchived={() => {
+          apiRequest<{ league: LeagueDetail }>(`/leagues/${leagueId}`)
+            .then(({ league: data }) => setLeague(data))
+            .catch(() => {
+              /* tolere : le statut apparaitra au prochain refresh */
+            });
+        }}
+        onDeleted={() => router.push("/leagues")}
+      />
 
       {leagueEnabled && isCreator ? (
         <NewSeasonModal

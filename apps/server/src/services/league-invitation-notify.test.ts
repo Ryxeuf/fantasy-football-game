@@ -15,19 +15,29 @@ vi.mock("./mailer", () => ({
   sendEmail: vi.fn(),
 }));
 
+vi.mock("./in-app-notifications", () => ({
+  createInAppNotification: vi.fn(),
+}));
+
 vi.mock("../prisma", () => ({
   prisma: {
     user: { findUnique: vi.fn() },
   },
 }));
 
-import { notifyInvitedCoach, buildJoinUrl } from "./league-invitation-notify";
+import {
+  notifyInvitedCoach,
+  buildJoinUrl,
+  buildInAppUrl,
+} from "./league-invitation-notify";
 import { sendPushToUser } from "./push-notifications";
 import { sendEmail } from "./mailer";
+import { createInAppNotification } from "./in-app-notifications";
 import { prisma } from "../prisma";
 
 const mockSendPush = sendPushToUser as ReturnType<typeof vi.fn>;
 const mockSendEmail = sendEmail as ReturnType<typeof vi.fn>;
+const mockInApp = createInAppNotification as ReturnType<typeof vi.fn>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
 
@@ -297,5 +307,73 @@ describe("A2 — league-invitation-notify service", () => {
         }),
       ).resolves.toBeUndefined();
     });
+  });
+});
+
+describe("A2 — notification interne (in-app) de l'invité", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("crée une notification interne AVANT push/e-mail, avec le lien d'acceptation", async () => {
+    const order: string[] = [];
+    mockInApp.mockImplementation(async () => {
+      order.push("in-app");
+      return null;
+    });
+    mockSendPush.mockImplementation(async () => {
+      order.push("push");
+      return { sent: 0, failed: 0 };
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({ email: null });
+
+    await notifyInvitedCoach({
+      invitation: { inviteeUserId: "user-1", code: "abc123", leagueId: "lg-1" },
+      leagueName: "Skaven Cup",
+    });
+
+    expect(mockInApp).toHaveBeenCalledTimes(1);
+    expect(mockInApp).toHaveBeenCalledWith({
+      userId: "user-1",
+      kind: "league.invitation",
+      title: "Invitation à une ligue",
+      body: "Tu es invité à rejoindre la ligue « Skaven Cup »",
+      url: "/leagues/invitations/abc123",
+      meta: { leagueId: "lg-1", code: "abc123" },
+    });
+    expect(order).toEqual(["in-app", "push"]);
+  });
+
+  it("n'en crée aucune pour une invitation par e-mail seul ou par code public", async () => {
+    mockSendEmail.mockResolvedValue({ delivered: true });
+    await notifyInvitedCoach({
+      invitation: { inviteeEmail: "x@example.com", code: "abc" },
+      leagueName: "L",
+    });
+    await notifyInvitedCoach({ invitation: { code: "abc" }, leagueName: "L" });
+    expect(mockInApp).not.toHaveBeenCalled();
+  });
+
+  it("un rejet inattendu de la notification interne ne casse pas la suite (push + e-mail partent)", async () => {
+    mockInApp.mockRejectedValue(new Error("db down"));
+    mockSendPush.mockResolvedValue({ sent: 1, failed: 0 });
+    mockPrisma.user.findUnique.mockResolvedValue({ email: "c@example.com" });
+    mockSendEmail.mockResolvedValue({ delivered: true });
+
+    await expect(
+      notifyInvitedCoach({
+        invitation: { inviteeUserId: "user-1", code: "abc" },
+        leagueName: "L",
+      }),
+    ).resolves.toBeUndefined();
+    // La ceinture finale de notifyInvitedCoach absorbe l'exception : rien
+    // ne remonte. (Le contrat du service in-app est de ne jamais rejeter ;
+    // ce test couvre le cas où il y manquerait.)
+  });
+
+  it("buildInAppUrl : page d'acceptation si code, hub sinon", () => {
+    expect(buildInAppUrl("abc")).toBe("/leagues/invitations/abc");
+    expect(buildInAppUrl(null)).toBe("/leagues");
+    expect(buildInAppUrl(undefined)).toBe("/leagues");
   });
 });

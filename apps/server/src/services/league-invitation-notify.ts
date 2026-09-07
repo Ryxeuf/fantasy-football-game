@@ -20,6 +20,7 @@
 import { prisma } from "../prisma";
 import { sendPushToUser, type PushPayload } from "./push-notifications";
 import { sendEmail } from "./mailer";
+import { createInAppNotification } from "./in-app-notifications";
 import { serverLog } from "../utils/server-log";
 
 /**
@@ -31,6 +32,8 @@ export interface InvitationNotifyTarget {
   readonly inviteeUserId?: string | null;
   readonly inviteeEmail?: string | null;
   readonly code?: string | null;
+  /** Ligue visée — porté par la notification interne (`meta`). */
+  readonly leagueId?: string | null;
 }
 
 export interface NotifyInvitedCoachParams {
@@ -89,12 +92,33 @@ function buildEmailText(
   return `${base}.`;
 }
 
+/**
+ * Lien relatif web de la notification interne : la page d'acceptation quand
+ * le code est connu, sinon le hub des ligues.
+ */
+export function buildInAppUrl(code?: string | null): string {
+  return code ? `/leagues/invitations/${code}` : "/leagues";
+}
+
 async function notifyByUserId(
   userId: string,
   leagueName: string,
   code?: string | null,
   baseUrl?: string | null,
+  leagueId?: string | null,
 ): Promise<void> {
+  // Notification interne d'abord : indépendante des préférences push et de
+  // l'adresse e-mail, c'est le seul canal garanti dans l'application.
+  // `createInAppNotification` ne throw jamais (échec journalisé).
+  await createInAppNotification({
+    userId,
+    kind: "league.invitation",
+    title: NOTIFY_TITLE,
+    body: buildBody(leagueName),
+    url: buildInAppUrl(code),
+    meta: { leagueId: leagueId ?? null, code: code ?? null },
+  });
+
   const payload: PushPayload = {
     title: NOTIFY_TITLE,
     body: buildBody(leagueName),
@@ -173,6 +197,7 @@ export async function notifyInvitedCoach(
         leagueName,
         invitation.code,
         baseUrl,
+        invitation.leagueId,
       );
       return;
     }

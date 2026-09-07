@@ -20,7 +20,12 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("./in-app-notifications", () => ({
+  createInAppNotification: vi.fn().mockResolvedValue(null),
+}));
+
 import { prisma } from "../prisma";
+import { createInAppNotification } from "./in-app-notifications";
 import {
   sendFriendRequest,
   respondToFriendRequest,
@@ -32,6 +37,7 @@ import {
 } from "./friendship";
 
 const mockPrisma = prisma as any;
+const mockInApp = createInAppNotification as ReturnType<typeof vi.fn>;
 
 describe("Rule: Friendship service", () => {
   beforeEach(() => {
@@ -317,5 +323,101 @@ describe("Rule: Friendship service", () => {
       const result = await listAcceptedFriendIds("u-self");
       expect(result).not.toContain("u-self");
     });
+  });
+});
+
+describe("Friendship → notifications internes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  const alice = "user-alice";
+  const bob = "user-bob";
+
+  it("une demande envoyée notifie le destinataire avec le nom du demandeur", async () => {
+    mockPrisma.user.findFirst.mockResolvedValue({ id: bob });
+    mockPrisma.friendship.findFirst.mockResolvedValue(null);
+    mockPrisma.friendship.create.mockResolvedValue({
+      id: "f-1",
+      requesterId: alice,
+      receiverId: bob,
+      status: "pending",
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({ coachName: "Alice" });
+
+    await sendFriendRequest(alice, bob);
+
+    expect(mockInApp).toHaveBeenCalledTimes(1);
+    expect(mockInApp).toHaveBeenCalledWith({
+      userId: bob,
+      kind: "friend.request",
+      title: "Demande d'ami",
+      body: "Alice souhaite t'ajouter en ami",
+      url: null,
+      meta: { friendshipId: "f-1", actorUserId: alice },
+    });
+  });
+
+  it("repli « Un coach » quand le nom du demandeur est inconnu", async () => {
+    mockPrisma.user.findFirst.mockResolvedValue({ id: bob });
+    mockPrisma.friendship.findFirst.mockResolvedValue(null);
+    mockPrisma.friendship.create.mockResolvedValue({
+      id: "f-2",
+      requesterId: alice,
+      receiverId: bob,
+      status: "pending",
+    });
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+
+    await sendFriendRequest(alice, bob);
+    expect(mockInApp.mock.calls[0][0].body).toBe("Un coach souhaite t'ajouter en ami");
+  });
+
+  it("un échec du lookup de nom ne fait pas échouer la demande", async () => {
+    mockPrisma.user.findFirst.mockResolvedValue({ id: bob });
+    mockPrisma.friendship.findFirst.mockResolvedValue(null);
+    mockPrisma.friendship.create.mockResolvedValue({
+      id: "f-3",
+      requesterId: alice,
+      receiverId: bob,
+      status: "pending",
+    });
+    mockPrisma.user.findUnique.mockRejectedValue(new Error("db down"));
+
+    await expect(sendFriendRequest(alice, bob)).resolves.toMatchObject({
+      id: "f-3",
+    });
+    expect(mockInApp).not.toHaveBeenCalled();
+  });
+
+  it("l'acceptation notifie le demandeur ; le refus reste silencieux", async () => {
+    mockPrisma.friendship.updateMany.mockResolvedValue({ count: 1 });
+    mockPrisma.friendship.findUnique.mockResolvedValue({
+      id: "f-1",
+      requesterId: alice,
+      receiverId: bob,
+      status: "accepted",
+    });
+    mockPrisma.user.findUnique.mockResolvedValue({ coachName: "Bob" });
+
+    await respondToFriendRequest("f-1", bob, "accept");
+    expect(mockInApp).toHaveBeenCalledWith({
+      userId: alice,
+      kind: "friend.accepted",
+      title: "Demande d'ami acceptée",
+      body: "Bob a accepté ta demande d'ami",
+      url: null,
+      meta: { friendshipId: "f-1", actorUserId: bob },
+    });
+
+    mockInApp.mockClear();
+    mockPrisma.friendship.findUnique.mockResolvedValue({
+      id: "f-1",
+      requesterId: alice,
+      receiverId: bob,
+      status: "declined",
+    });
+    await respondToFriendRequest("f-1", bob, "decline");
+    expect(mockInApp).not.toHaveBeenCalled();
   });
 });

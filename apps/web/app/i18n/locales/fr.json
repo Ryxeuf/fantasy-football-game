@@ -1,5 +1,6 @@
 {
   "nav": {
+    "notifications": "Notifications",
     "teams": "Équipes",
     "tools": "Outils",
     "compareTeams": "Comparer des équipes",
@@ -72,6 +73,7 @@
     "welcomeDismiss": "C'est parti !"
   },
   "auth": {
+    "notifications": "Notifications",
     "login": "Connexion",
     "register": "Inscription",
     "logout": "Se déconnecter",
@@ -1230,5 +1232,45 @@
       "footerCtaHub": "Rejoindre le hub →",
       "footerCtaGazette": "Lire la Gazette"
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "description": "Invitations, appariements, matchs à valider, demandes d'ami : tout ce qui vous concerne, au même endroit.",
+    "navLabel": "Notifications",
+    "unreadAria": "{count} notification(s) non lue(s)",
+    "loading": "Chargement des notifications...",
+    "error": "Impossible de charger les notifications",
+    "empty": "Aucune notification pour le moment.",
+    "emptyHint": "Vous serez prévenu ici des invitations, appariements, matchs à valider et demandes d'ami.",
+    "markedRead": "Les nouvelles notifications ont été marquées comme lues.",
+    "newBadge": "Nouveau",
+    "open": "Ouvrir",
+    "loadMore": "Charger plus",
+    "loadingMore": "Chargement...",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {count} min",
+    "hoursAgo": "il y a {count} h",
+    "daysAgo": "il y a {count} j"
+  },
+  "competitionLifecycle": {
+    "title": "Gestion de la compétition",
+    "archiveTitle": "Archiver",
+    "archiveHintLeague": "La ligue passe en lecture seule : classements et feuilles de match restent consultables, plus aucune inscription ni saisie. Les coachs inscrits sont prévenus.",
+    "archiveHintCup": "La coupe passe en lecture seule : résultats et classement restent consultables, plus aucune inscription. Les coachs inscrits sont prévenus.",
+    "archiveButtonLeague": "Archiver la ligue",
+    "archiveButtonCup": "Archiver la coupe",
+    "archiveConfirm": "Archiver « {name} » ? Cette action est définitive.",
+    "archivedNotice": "Cette compétition est archivée : elle n'est plus modifiable.",
+    "archiveSuccess": "« {name} » a été archivée.",
+    "deleteTitle": "Supprimer",
+    "deleteHintLeague": "Suppression définitive de la ligue, de ses saisons, calendriers, feuilles de match, invitations et documents. Les équipes ne sont pas supprimées. Les coachs inscrits sont prévenus.",
+    "deleteHintCup": "Suppression définitive de la coupe, de ses inscriptions, invitations et documents. Les équipes et les matchs locaux ne sont pas supprimés. Les coachs inscrits sont prévenus.",
+    "deleteTypeName": "Pour confirmer, saisissez le nom exact : {name}",
+    "deleteInputPlaceholder": "Nom de la compétition",
+    "deleteButtonLeague": "Supprimer la ligue",
+    "deleteButtonCup": "Supprimer la coupe",
+    "deleteSuccess": "« {name} » a été supprimée.",
+    "working": "En cours...",
+    "error": "L'opération a échoué"
   }
 }

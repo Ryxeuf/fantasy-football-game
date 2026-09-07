@@ -12,12 +12,15 @@
 import { prisma } from "../prisma";
 import { sendPushToUser, type PushPayload } from "./push-notifications";
 import { sendEmail } from "./mailer";
+import { createInAppNotification } from "./in-app-notifications";
 import { serverLog } from "../utils/server-log";
 
 export interface CupInvitationNotifyTarget {
   readonly inviteeUserId?: string | null;
   readonly inviteeEmail?: string | null;
   readonly code?: string | null;
+  /** Coupe visée — porté par la notification interne (`meta`). */
+  readonly cupId?: string | null;
 }
 
 export interface NotifyInvitedCoachParams {
@@ -60,12 +63,29 @@ function buildEmailText(
   return `${base}.`;
 }
 
+/** Lien relatif web de la notification interne (page d'acceptation). */
+export function buildInAppUrl(code?: string | null): string {
+  return code ? `/cups/invitations/${code}` : "/cups";
+}
+
 async function notifyByUserId(
   userId: string,
   cupName: string,
   code?: string | null,
   baseUrl?: string | null,
+  cupId?: string | null,
 ): Promise<void> {
+  // Notification interne d'abord (cf. league-invitation-notify) : ne throw
+  // jamais, indépendante des préférences push.
+  await createInAppNotification({
+    userId,
+    kind: "cup.invitation",
+    title: NOTIFY_TITLE,
+    body: buildBody(cupName),
+    url: buildInAppUrl(code),
+    meta: { cupId: cupId ?? null, code: code ?? null },
+  });
+
   const payload: PushPayload = {
     title: NOTIFY_TITLE,
     body: buildBody(cupName),
@@ -120,7 +140,13 @@ export async function notifyInvitedCoach(
   const { invitation, cupName, baseUrl } = params;
   try {
     if (invitation.inviteeUserId) {
-      await notifyByUserId(invitation.inviteeUserId, cupName, invitation.code, baseUrl);
+      await notifyByUserId(
+        invitation.inviteeUserId,
+        cupName,
+        invitation.code,
+        baseUrl,
+        invitation.cupId,
+      );
       return;
     }
     if (invitation.inviteeEmail) {

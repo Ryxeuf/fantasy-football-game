@@ -78,6 +78,7 @@ import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
 import pushRoutes from "./routes/push";
+import notificationRoutes from "./routes/notifications";
 import emailDigestRoutes from "./routes/email-digest";
 import adminDigestRoutes from "./routes/admin-digest";
 import friendsRoutes from "./routes/friends";
@@ -86,6 +87,10 @@ import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import leagueInvitationRoutes from "./routes/league-invitation";
+import {
+  cupLifecycleRouter,
+  leagueLifecycleRouter,
+} from "./routes/competition-lifecycle";
 import leagueTestDataRoutes from "./routes/league-test-data";
 import { tutorialRouter, adminTutorialRouter } from "./routes/tutorial";
 import kofiRoutes from "./routes/kofi";
@@ -354,6 +359,10 @@ app.use("/api/admin/blog", adminBlogRoutes);
 // (/cup/invitations/..., /cup/me/..., /cup/coaches/...) ne doivent pas être
 // shadowées par `/:id` de cupRoutes.
 app.use("/cup", cupInvitationRoutes);
+// Archivage / suppression par le commissaire (POST /cup/:id/archive,
+// DELETE /cup/:id) : monté avant le routeur historique, qui ne définit
+// aucune de ces deux routes.
+app.use("/cup", cupLifecycleRouter);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(
@@ -367,12 +376,17 @@ app.use(
   leaderboardRoutes,
 );
 app.use("/push", pushRoutes);
+// Notifications internes (historique in-app, compteur de non lus du menu).
+app.use("/notifications", notificationRoutes);
 app.use("/email", emailDigestRoutes);
 app.use("/admin/digest", adminDigestRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
 app.use("/achievements", achievementsRoutes);
 app.use("/coach", publicCache(), coachRoutes);
+// Archivage / suppression par le commissaire (POST /leagues/:id/archive,
+// DELETE /leagues/:id) — cf. routes/competition-lifecycle.
+app.use("/leagues", leagueLifecycleRouter);
 app.use("/leagues", leagueRoutes);
 // Lot A — endpoints d'invitation (cree/liste/accepte/decline) et
 // autocomplete coachs. Monte sous /leagues pour partager le prefixe.
@@ -543,6 +557,13 @@ if (process.env.TEST_SQLITE === "1") {
       await safe(
         "friendship",
         () => (prisma as any).friendship?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      // Notifications internes : pas de FK dans le miroir sqlite, purge
+      // explicite pour qu'un compteur de non lus ne fuie pas entre specs.
+      await safe(
+        "notification",
+        () =>
+          (prisma as any).notification?.deleteMany?.({}) ?? Promise.resolve(),
       );
       await safe("teamPlayer", () => prisma.teamPlayer.deleteMany({}));
       await safe("team", () => prisma.team.deleteMany({}));
