@@ -1246,5 +1246,26 @@
     "minutesAgo": "{count} min ago",
     "hoursAgo": "{count} h ago",
     "daysAgo": "{count} d ago"
+  },
+  "competitionLifecycle": {
+    "title": "Competition management",
+    "archiveTitle": "Archive",
+    "archiveHintLeague": "The league becomes read-only: standings and match sheets stay available, no more registrations or entries. Registered coaches are notified.",
+    "archiveHintCup": "The cup becomes read-only: results and standings stay available, no more registrations. Registered coaches are notified.",
+    "archiveButtonLeague": "Archive the league",
+    "archiveButtonCup": "Archive the cup",
+    "archiveConfirm": "Archive “{name}”? This cannot be undone.",
+    "archivedNotice": "This competition is archived and can no longer be modified.",
+    "archiveSuccess": "“{name}” has been archived.",
+    "deleteTitle": "Delete",
+    "deleteHintLeague": "Permanently deletes the league with its seasons, schedules, match sheets, invitations and documents. Teams are kept. Registered coaches are notified.",
+    "deleteHintCup": "Permanently deletes the cup with its registrations, invitations and documents. Teams and local matches are kept. Registered coaches are notified.",
+    "deleteTypeName": "To confirm, type the exact name: {name}",
+    "deleteInputPlaceholder": "Competition name",
+    "deleteButtonLeague": "Delete the league",
+    "deleteButtonCup": "Delete the cup",
+    "deleteSuccess": "“{name}” has been deleted.",
+    "working": "Working...",
+    "error": "The operation failed"
   }
 }

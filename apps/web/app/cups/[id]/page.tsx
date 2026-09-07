@@ -5,6 +5,7 @@ import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
+import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import RosterBadge from "../../components/RosterBadge";
@@ -629,75 +630,54 @@ export default function CupDetailPage() {
                     )}
                   </div>
                 )}
-              {cup.isCreator &&
-                cup.status !== "archivee" &&
-                cup.status !== "ouverte" && (
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                    {cup.status === "terminee" ? (
-                      <>
-                        <span className="text-gray-600">
-                          Archiver la coupe :
-                        </span>
-                        <button
-                          onClick={async () => {
-                            if (
-                              !confirm(
-                                "Êtes-vous sûr de vouloir archiver cette coupe ? Cette action est irréversible.",
-                              )
-                            ) {
-                              return;
-                            }
-                            try {
-                              await postJSON(`/cup/${cupId}/status`, {
-                                status: "archivee",
-                              });
-                              loadCup();
-                            } catch (err: any) {
-                              setError(
-                                err.message || "Erreur lors de l'archivage",
-                              );
-                            }
-                          }}
-                          className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-all"
-                        >
-                          Archiver
-                        </button>
-                      </>
-                    ) : cup.status === "en_cours" ? (
-                      <>
-                        <span className="text-gray-600">
-                          Terminer la coupe :
-                        </span>
-                        <button
-                          onClick={async () => {
-                            if (
-                              !confirm(
-                                "Êtes-vous sûr de vouloir terminer cette coupe ?",
-                              )
-                            ) {
-                              return;
-                            }
-                            try {
-                              await postJSON(`/cup/${cupId}/status`, {
-                                status: "terminee",
-                              });
-                              loadCup();
-                            } catch (err: any) {
-                              setError(
-                                err.message ||
-                                  "Erreur lors de la mise à jour du statut",
-                              );
-                            }
-                          }}
-                          className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-all"
-                        >
-                          Terminer la coupe
-                        </button>
-                      </>
-                    ) : null}
-                  </div>
-                )}
+              {/* L'archivage (depuis n'importe quel statut) et la suppression
+                  vivent dans le panneau « Gestion de la compétition » plus bas. */}
+              {cup.isCreator && cup.status === "en_cours" && (
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="text-gray-600">Terminer la coupe :</span>
+                  <button
+                    onClick={async () => {
+                      if (
+                        !confirm(
+                          "Êtes-vous sûr de vouloir terminer cette coupe ?",
+                        )
+                      ) {
+                        return;
+                      }
+                      try {
+                        await postJSON(`/cup/${cupId}/status`, {
+                          status: "terminee",
+                        });
+                        loadCup();
+                      } catch (err: any) {
+                        setError(
+                          err.message ||
+                            "Erreur lors de la mise à jour du statut",
+                        );
+                      }
+                    }}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-all"
+                  >
+                    Terminer la coupe
+                  </button>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Archivage / suppression par le commissaire (ou un admin). */}
+          <div className="pt-4 border-t border-gray-200">
+            <CompetitionLifecyclePanel
+              kind="cup"
+              competitionId={cup.id}
+              name={cup.name}
+              archived={cup.status === "archivee"}
+              canManage={cup.isCreator === true || currentUserIsAdmin}
+              onArchived={() => {
+                void loadCup();
+              }}
+              onDeleted={() => router.push("/cups")}
+            />
           </div>
 
           {cup.isCreator && cup.status === "ouverte" && (
