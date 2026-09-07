@@ -78,6 +78,7 @@ import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
 import pushRoutes from "./routes/push";
+import notificationRoutes from "./routes/notifications";
 import emailDigestRoutes from "./routes/email-digest";
 import adminDigestRoutes from "./routes/admin-digest";
 import friendsRoutes from "./routes/friends";
@@ -367,6 +368,8 @@ app.use(
   leaderboardRoutes,
 );
 app.use("/push", pushRoutes);
+// Notifications internes (historique in-app, compteur de non lus du menu).
+app.use("/notifications", notificationRoutes);
 app.use("/email", emailDigestRoutes);
 app.use("/admin/digest", adminDigestRoutes);
 app.use("/friends", friendsRoutes);
