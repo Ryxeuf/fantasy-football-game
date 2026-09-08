@@ -798,6 +798,8 @@
     "adminSeasonRoundDurationLabel": "Round duration (days)",
     "adminSeasonConfirmRegenerate": "Regenerating the schedule will discard current pairings. Continue?",
     "adminSeasonConfirmClose": "Closing the season will cancel unplayed pairings. Continue?",
+    "adminSeasonReadyToCloseTitle": "All rounds have been played",
+    "adminSeasonReadyToCloseHint": "The season stays open until you close it: match sheets can still be corrected (invalidation). Closing freezes the final standings and publishes the awards.",
     "adminActionSuccess": "Action applied",
     "adminActionError": "Failed to apply action",
     "joinSeasonButton": "Register a team",

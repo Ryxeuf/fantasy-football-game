@@ -35,6 +35,7 @@ import {
 } from "./league-schedule";
 import { notifyParticipantsOfFirstRound } from "./league-round-reminder";
 import { persistSeasonAwards } from "./league-scoring";
+import { applyThemedSeasonClosure } from "./themed-season-closure";
 import { serverLog } from "../utils/server-log";
 
 export interface StartSeasonOptions {
@@ -486,9 +487,14 @@ export async function openSeasonForRegistration(
 }
 
 /**
- * Force la cloture d'une saison (admin). Met les pairings non joues
+ * Cloture d'une saison par le commissaire. Met les pairings non joues
  * en `cancelled` et passe la saison en `completed`. Ne touche pas aux
  * pairings deja `played` ou `forfeit_*`.
+ *
+ * C'est le SEUL chemin qui cloture une saison : le dernier resultat
+ * valide ne la ferme plus de lui-meme (le classement doit rester
+ * corrigeable tant que le commissaire n'a pas tranche). Le palmares et la
+ * cloture thematique sont donc declenches ici.
  */
 export async function closeSeason(seasonId: string): Promise<void> {
   const season = await prisma.leagueSeason.findUnique({
@@ -519,10 +525,25 @@ export async function closeSeason(seasonId: string): Promise<void> {
   });
 
   // L2.C.1 — fire-and-forget : snapshot d'awards de fin de saison.
-  // closeSeason est l'admin path (force close), il faut aussi
-  // creer le snapshot a ce moment. Idempotent via seasonId @unique.
+  // Idempotent via seasonId @unique.
   persistSeasonAwards(seasonId).catch((e: unknown) => {
     const msg = e instanceof Error ? e.message : "unknown";
     serverLog.error(`[closeSeason] persistSeasonAwards failed: ${msg}`);
   });
+  // S26.6f — point d'extension des saisons thematiques (champion). Non
+  // critique : un echec ne remet pas en cause la cloture.
+  applyThemedSeasonClosure(seasonId)
+    .then((r) => {
+      if (!r.skipped) {
+        serverLog.info(
+          "[themed-season-closure] champion:",
+          r.label,
+          r.championUserId,
+        );
+      }
+    })
+    .catch((e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(`[closeSeason] themed closure failed: ${msg}`);
+    });
 }

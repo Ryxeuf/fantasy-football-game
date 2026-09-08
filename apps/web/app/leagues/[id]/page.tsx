@@ -245,6 +245,18 @@ export default function LeagueDetailPage() {
     return season.participants.map((p) => p.teamId);
   }, [season]);
 
+  // Toutes les journées sont jouées : la saison reste `in_progress` jusqu'à
+  // la clôture par le commissaire (aucun résultat ne la ferme de lui-même,
+  // pour que le dernier match reste invalidable). Le panneau admin l'invite
+  // alors à clôturer.
+  const allRoundsPlayed = useMemo(
+    () =>
+      !!season &&
+      season.rounds.length > 0 &&
+      season.rounds.every((r) => r.status === "completed"),
+    [season],
+  );
+
   // FR2 — saison éditable (poules modifiables) tant qu'elle n'a pas démarré.
   const seasonEditable = useMemo(
     () => season?.status === "draft" || season?.status === "scheduled",
@@ -529,6 +541,7 @@ export default function LeagueDetailPage() {
                   seasonId={season.id}
                   status={season.status}
                   meceneEnabled={season.meceneEnabled === true}
+                  allRoundsPlayed={allRoundsPlayed}
                   onActionDone={() => {
                     if (selectedSeasonId) {
                       loadSeason(selectedSeasonId);

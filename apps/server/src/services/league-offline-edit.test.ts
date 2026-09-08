@@ -688,9 +688,10 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
         bonusBreakdown: null,
       },
     });
+    // Le round complete se re-ouvre en `in_progress` (statut connu de l'UI).
     expect(m.roundUpdate).toHaveBeenCalledWith({
       where: { id: "round-1" },
-      data: { status: "scheduled" },
+      data: { status: "in_progress" },
     });
   });
 

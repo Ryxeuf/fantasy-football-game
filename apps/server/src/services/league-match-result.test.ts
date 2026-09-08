@@ -5,7 +5,8 @@
  *  - ignore les matchs hors ligue
  *  - est idempotent (un match ne peut pas etre comptabilise deux fois)
  *  - distribue points/wins/losses/draws/td/cas selon le bareme de la ligue
- *  - marque round + saison "completed" quand plus aucun match n'est en attente
+ *  - marque le round "completed" quand plus aucun match n'est en attente,
+ *    mais laisse la saison `in_progress` (cloture manuelle du commissaire)
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -280,7 +281,7 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
     });
   });
 
-  it("marks the round completed when no pending match remains", async () => {
+  it("marks the round completed when no pending match remains, without closing the season", async () => {
     mockPrisma.match.findUnique.mockResolvedValue(baseMatch());
     mockPrisma.teamSelection.findMany.mockResolvedValue([
       { teamId: "team-A", userId: "user-A" },
@@ -298,10 +299,10 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
     );
     mockPrisma.match.count.mockResolvedValue(0); // no unfinished matches in round
     // findMany is called with where: { status: { not: "completed" } } —
-    // an empty result means "no round left -> season completed".
+    // an empty result means "no round left".
     mockPrisma.leagueRound.findMany.mockResolvedValue([]);
 
-    await recordLeagueMatchResult({
+    const result = await recordLeagueMatchResult({
       matchId: "match-1",
       scoreA: 2,
       scoreB: 0,
@@ -313,9 +314,14 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       where: { id: "round-1" },
       data: { status: "completed" },
     });
-    expect(mockPrisma.leagueSeason.update).toHaveBeenCalledWith({
-      where: { id: "season-1" },
-      data: { status: "completed" },
+    // La saison n'est JAMAIS cloturee par un resultat : le commissaire la
+    // cloture (closeSeason). Sinon le dernier match ne serait plus
+    // invalidable (« season-completed »).
+    expect(mockPrisma.leagueSeason.update).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      recorded: true,
+      roundCompleted: true,
+      seasonReadyToClose: true,
     });
   });
 

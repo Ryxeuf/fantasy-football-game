@@ -803,6 +803,8 @@
     "adminSeasonRoundDurationLabel": "Durée d'une journée (jours)",
     "adminSeasonConfirmRegenerate": "Régénérer le calendrier supprimera les pairings actuels. Continuer ?",
     "adminSeasonConfirmClose": "Clôturer la saison annulera les pairings non joués. Continuer ?",
+    "adminSeasonReadyToCloseTitle": "Toutes les journées sont jouées",
+    "adminSeasonReadyToCloseHint": "La saison reste ouverte tant que vous ne la clôturez pas : les feuilles de match restent corrigeables (invalidation). Clôturer fige le classement final et publie le palmarès.",
     "adminActionSuccess": "Action effectuée",
     "adminActionError": "Erreur lors de l'action",
     "joinSeasonButton": "Inscrire une équipe",
