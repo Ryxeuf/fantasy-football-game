@@ -1,3 +1,10 @@
+## [1.241.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.0...v1.241.1) (2026-09-08)
+
+
+### 🐛 Bug Fixes
+
+* ne plus publier le port 5433 de PostgreSQL sur l'hôte ([f8f3f57](https://github.com/Ryxeuf/fantasy-football-game/commit/f8f3f575feb482b54eea5309b109d66dee9a2029))
+
 ## [1.241.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.240.1...v1.241.0) (2026-09-05)
 
 
