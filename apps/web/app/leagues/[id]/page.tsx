@@ -653,6 +653,9 @@ export default function LeagueDetailPage() {
                   poolIdByParticipantId={poolIdByParticipantId}
                   leagueId={leagueId}
                   canViewRosters={canViewRosters}
+                  onPairingChanged={() => {
+                    if (selectedSeasonId) loadSeason(selectedSeasonId);
+                  }}
                 />
               </div>
 

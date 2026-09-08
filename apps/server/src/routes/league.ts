@@ -198,6 +198,14 @@ import {
   type RollRandomPrimaryBody,
 } from "../schemas/advancement.schemas";
 import { playMecene, LeaguePatronError } from "../services/league-patron";
+import {
+  schedulePairing,
+  LeaguePairingScheduleError,
+} from "../services/league-pairing-schedule";
+import {
+  schedulePairingSchema,
+  type SchedulePairingBody,
+} from "../schemas/league-pairing-schedule.schemas";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -372,6 +380,17 @@ function domainError(res: Response, e: unknown): void {
             e.code === "participant_not_active"
           ? 409
           : 400;
+    sendError(res, e.message, status);
+    return;
+  }
+  // Date prévisionnelle d'une rencontre (coachs / commissaire).
+  if (e instanceof LeaguePairingScheduleError) {
+    const status =
+      e.code === "pairing_not_found"
+        ? 404
+        : e.code === "forbidden"
+          ? 403
+          : 409;
     sendError(res, e.message, status);
     return;
   }
@@ -1203,6 +1222,30 @@ export async function handleUpdateManualPairing(
       targetRoundId: body.targetRoundId,
     });
     sendSuccess(res, pairing);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * PATCH /leagues/pairings/:pairingId/schedule — date prévisionnelle de la
+ * rencontre, posée par l'un des deux coachs ou par le commissaire.
+ * L'autorisation vit dans le service (il connaît les deux équipes).
+ */
+export async function handleSchedulePairing(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body: SchedulePairingBody = req.body;
+  try {
+    const result = await schedulePairing({
+      pairingId: req.params.pairingId,
+      userId,
+      scheduledAt: body.scheduledAt,
+    });
+    sendSuccess(res, result);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -2980,6 +3023,14 @@ router.patch(
   authUser,
   validate(updateManualPairingSchema),
   handleUpdateManualPairing,
+);
+// Date prévisionnelle d'une rencontre : les deux coachs impliqués ou le
+// commissaire (l'autorisation est résolue par le service).
+router.patch(
+  "/pairings/:pairingId/schedule",
+  authUser,
+  validate(schedulePairingSchema),
+  handleSchedulePairing,
 );
 
 // Lot C — gestion des poules (groups). Mutation reservee au

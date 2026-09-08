@@ -5,6 +5,12 @@ import { MatchdayExport } from "./MatchdayExport";
 import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
 import TeamLogo from "../../components/TeamLogo";
 import TeamRosterLink from "./TeamRosterLink";
+import { PairingScheduleEditor } from "./PairingScheduleEditor";
+import {
+  canSchedulePairing,
+  formatPlannedDate,
+  isPairingPlanned,
+} from "./pairing-status";
 import type {
   LeagueRoundDetail,
   LeaguePairingDetail,
@@ -31,6 +37,11 @@ interface SeasonCalendarProps {
   leagueId?: string | null;
   /** Consultation des rosters autorisee (commissaire ou coach inscrit). */
   canViewRosters?: boolean;
+  /**
+   * Rappele apres la pose d'une date previsionnelle (rechargement de la
+   * saison). Sans callback, l'editeur de date n'est pas propose.
+   */
+  onPairingChanged?: () => void;
 }
 
 interface PoolGroup {
@@ -117,6 +128,21 @@ export function pairingScoreLabel(
   return `${scoreHome} – ${scoreAway}`;
 }
 
+/**
+ * « Prevu le … » : une rencontre a jouer dont les coachs (ou le
+ * commissaire) ont pose la date. Remplace le libelle « A jouer ».
+ */
+export function pairingPlannedLabel(
+  pairing: Pick<LeaguePairingDetail, "status" | "scheduledAt">,
+  template: string,
+  language: string,
+): string | null {
+  if (!isPairingPlanned(pairing)) return null;
+  const date = formatPlannedDate(pairing.scheduledAt, language);
+  if (!date) return null;
+  return template.replace("{{date}}", date);
+}
+
 function formatDate(iso: string | null, locale: string): string | null {
   if (!iso) return null;
   try {
@@ -140,6 +166,7 @@ export function SeasonCalendar({
   poolIdByParticipantId = {},
   leagueId = null,
   canViewRosters = false,
+  onPairingChanged,
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
 
@@ -199,6 +226,11 @@ export function SeasonCalendar({
                   statusLabel={(p) =>
                     pairingScoreLabel(p) ??
                     matchSheetPendingLabel(p.matchSheet?.status) ??
+                    pairingPlannedLabel(
+                      p,
+                      t.leagues.pairingStatusPlanned,
+                      language,
+                    ) ??
                     pairingStatusBadge(p.status, t).label
                   }
                 />
@@ -230,6 +262,7 @@ export function SeasonCalendar({
                           canRecordResult={canRecordResult}
                           leagueId={leagueId}
                           canViewRosters={canViewRosters}
+                          onPairingChanged={onPairingChanged}
                         />
                       ))}
                     </ul>
@@ -254,6 +287,7 @@ export function SeasonCalendar({
                               canRecordResult={canRecordResult}
                               leagueId={leagueId}
                               canViewRosters={canViewRosters}
+                              onPairingChanged={onPairingChanged}
                             />
                           ))}
                         </ul>
@@ -276,6 +310,7 @@ interface PairingRowProps {
   canRecordResult?: boolean;
   leagueId?: string | null;
   canViewRosters?: boolean;
+  onPairingChanged?: () => void;
 }
 
 function PairingRow({
@@ -284,8 +319,9 @@ function PairingRow({
   canRecordResult,
   leagueId,
   canViewRosters,
+  onPairingChanged,
 }: PairingRowProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const isInvolved =
     currentUserId !== null &&
@@ -306,6 +342,19 @@ function PairingRow({
   const pendingLabel = matchSheetPendingLabel(pairing.matchSheet?.status);
   // Une fois validée, c'est le score qui s'affiche, pas « Joué ».
   const scoreLabel = pairingScoreLabel(pairing);
+  // Date convenue par les coachs : « Prévu le … » remplace « À jouer ».
+  const plannedLabel = pairingPlannedLabel(
+    pairing,
+    t.leagues.pairingStatusPlanned,
+    language,
+  );
+  const canSchedule =
+    !!onPairingChanged &&
+    canSchedulePairing({
+      pairing,
+      currentUserId,
+      isCommissioner: Boolean(canRecordResult),
+    });
 
   return (
     <li
@@ -355,6 +404,14 @@ function PairingRow({
           >
             {pendingLabel}
           </span>
+        ) : plannedLabel ? (
+          <span
+            data-testid={`pairing-planned-${pairing.id}`}
+            title={t.leagues.pairingScheduleLabel}
+            className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-sky-100 text-sky-800"
+          >
+            {plannedLabel}
+          </span>
         ) : (
           <span
             className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${statusBadge.className}`}
@@ -362,6 +419,13 @@ function PairingRow({
             {statusBadge.label}
           </span>
         )}
+        {canSchedule ? (
+          <PairingScheduleEditor
+            pairingId={pairing.id}
+            scheduledAt={pairing.scheduledAt}
+            onChanged={onPairingChanged as () => void}
+          />
+        ) : null}
         {canOpenSheet && !cancelled ? (
           <Link
             href={`/leagues/pairings/${pairing.id}/sheet`}

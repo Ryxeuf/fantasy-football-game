@@ -29,6 +29,7 @@ export type NotificationKind =
   | "league.invitation"
   | "cup.invitation"
   | "league.round_pairing"
+  | "league.pairing_scheduled"
   | "league.match_validation"
   | "friend.request"
   | "friend.accepted"
