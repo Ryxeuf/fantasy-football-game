@@ -545,6 +545,35 @@ Piege associe : filtrer `dead: false` SANS `firedAt: null` (ou l'inverse)
 laisse passer la moitie des joueurs sortis. Garde CI :
 `services/player-status-filters.test.ts` (ratchet + exceptions justifiees).
 
+### La clôture d'une saison est un acte du commissaire, jamais un effet de résultat
+
+Le dernier résultat validé fermait la saison de lui-même (`status =
+completed`), et l'erreur de saisie sur ce dernier match devenait définitive
+(« Reversion impossible: season-completed »). Règle : un résultat complète
+la JOURNÉE (et démarre les playoffs), jamais la saison. `closeSeason`
+(`POST /leagues/seasons/:id/close`) est le seul chemin de clôture — c'est lui
+qui persiste le palmarès et déclenche la clôture thématique, et le panneau
+admin invite à cliquer quand tout est joué. Une journée ré-ouverte par une
+invalidation repasse `in_progress` (jamais un statut hors
+`pending | in_progress | completed`, que l'UI afficherait en brut).
+
+### Rondes suisses de coupe : la FK vit sur le match, le classement reste dérivé
+
+`CupRound` / `CupPairing` (`docs/cup-swiss-rounds.md`) : le match local
+matérialise la rencontre par `LocalMatch.cupPairingId` (**unique**, comme
+`Match.leaguePairingId`) — c'est l'unicité qui empêche deux coachs de créer
+deux matchs pour la même rencontre (P2002 → 409), pas un verrou applicatif.
+Les exempts (`bye`) ne sont pas des points persistés : `cupByesByTeamId` les
+injecte dans `computeCupStandings` à la lecture. Le moteur `swiss-pairing`
+est pur (classement + historique → rencontres) : le service lui PASSE le
+classement, il ne le recalcule jamais.
+
+Piège de test associé : la suite `tests/e2e-api` réutilise un serveur déjà
+présent sur le port 18002 (`isServerUp`). Un serveur resté vivant d'un run
+précédent (ou lancé pour des captures) fait échouer TOUTE la suite en
+`ECONNREFUSED` quand il meurt en cours de route — tuer `src/index.ts` avant
+de relancer.
+
 ### Une colonne de RATTACHEMENT nullable ne peut pas servir de garde-fou
 
 `Match.leagueRoundId` est `String?` avec `onDelete: SetNull`, et
@@ -1157,6 +1186,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `ALLOWED_TEAMS` → `Roster`, budget par defaut `Roster.budget`. Voir
   [`docs/audit-statique-vs-bdd-2026-08-27.md`](./docs/audit-statique-vs-bdd-2026-08-27.md)
   et [`docs/lot6-modele-de-donnees-2026-08-27.md`](./docs/lot6-modele-de-donnees-2026-08-27.md).
+- **2026-09-08** : Ronde suisse des coupes, clôture manuelle de saison,
+  date prévisionnelle des rencontres, journées repensées (`MatchCard`
+  partagé), poule du coach en premier. Change OpenSpec
+  `swiss-cups-and-matchday-calendar`, doc
+  [`docs/cup-swiss-rounds.md`](./docs/cup-swiss-rounds.md).
 - **2026-09-07** : Notifications internes + cycle de vie des competitions
   (change OpenSpec `notifications-and-competition-lifecycle`) : modele
   `Notification`, service/routes `/notifications`, cloche + compteur de non

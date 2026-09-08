@@ -8,6 +8,7 @@ import CompetitionDocuments from "../../components/CompetitionDocuments";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
+import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
@@ -43,6 +44,8 @@ type CupTeamStats = {
   draws: number;
   losses: number;
   forfeits: number;
+  /** Exempts de ronde suisse (les points d'une victoire). Optionnel : API antérieure. */
+  byes?: number;
   touchdownsFor: number;
   touchdownsAgainst: number;
   touchdownDiff: number;
@@ -128,6 +131,8 @@ type Cup = {
     rosterStartingPspOverrides: Record<string, number>;
   };
   standings?: CupTeamStats[];
+  /** Rondes suisses (vide pour une coupe sans ronde). Optionnel : API antérieure. */
+  rounds?: CupRoundView[];
   actionAwards?: CupActionAwards;
   playerLeaderboards?: Record<string, CupPlayerStatRow[]>;
   playerLeaderboardCategories?: Array<{
@@ -742,6 +747,25 @@ export default function CupDetailPage() {
             )}
           </div>
 
+          {/* Rondes suisses : visibles dès que la coupe est validée (ou qu'une
+              ronde existe). Le commissaire y génère les rondes ; les coachs y
+              créent le match local de leur rencontre. */}
+          {(cup.status !== "ouverte" || (cup.rounds ?? []).length > 0) && (
+            <div className="pt-6 border-t border-gray-200">
+              <CupRoundsView
+                cupId={cup.id}
+                cupStatus={cup.status}
+                rounds={cup.rounds ?? []}
+                isCommissioner={cup.isCreator === true || currentUserIsAdmin}
+                myTeamIds={cup.userParticipatingTeamIds ?? []}
+                participantCount={cup.participantCount}
+                onChanged={() => {
+                  void loadCup();
+                }}
+              />
+            </div>
+          )}
+
           {cup.standings && cup.standings.length > 0 && (
             <div className="pt-6 border-t border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
@@ -761,6 +785,14 @@ export default function CupDetailPage() {
                       <th className="px-2 py-2 text-center font-semibold">V</th>
                       <th className="px-2 py-2 text-center font-semibold">N</th>
                       <th className="px-2 py-2 text-center font-semibold">D</th>
+                      {cup.standings.some((t) => (t.byes ?? 0) > 0) && (
+                        <th
+                          className="px-2 py-2 text-center font-semibold"
+                          title="Exempts (ronde suisse) : les points d'une victoire"
+                        >
+                          Ex.
+                        </th>
+                      )}
                       <th className="px-2 py-2 text-center font-semibold">
                         TD+
                       </th>
@@ -810,6 +842,9 @@ export default function CupDetailPage() {
                         <td className="px-2 py-1 text-center">{team.wins}</td>
                         <td className="px-2 py-1 text-center">{team.draws}</td>
                         <td className="px-2 py-1 text-center">{team.losses}</td>
+                        {cup.standings!.some((t) => (t.byes ?? 0) > 0) && (
+                          <td className="px-2 py-1 text-center">{team.byes ?? 0}</td>
+                        )}
                         <td className="px-2 py-1 text-center">
                           {team.touchdownsFor}
                         </td>

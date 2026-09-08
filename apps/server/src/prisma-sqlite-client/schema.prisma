@@ -353,6 +353,8 @@ model Team {
   cupInvitations       CupInvitation[]     @relation("CupInvitationTeam")
   localMatchesAsTeamA  LocalMatch[]        @relation("LocalMatchTeamA")
   localMatchesAsTeamB  LocalMatch[]        @relation("LocalMatchTeamB")
+  cupPairingsHome      CupPairing[]        @relation("CupPairingHome")
+  cupPairingsAway      CupPairing[]        @relation("CupPairingAway")
   matchQueue           MatchQueue[]
   leagueParticipations LeagueParticipant[]
   // Lot A — invitations qui ciblent cette equipe specifique (mirror PG).
@@ -784,6 +786,8 @@ model Cup {
   participants CupParticipant[]
   invitations  CupInvitation[]
   localMatches LocalMatch[]
+  /// Rondes d'appariement (ronde suisse).
+  rounds       CupRound[]
   documents    CompetitionDocument[]
 
   @@index([creatorId])
@@ -809,6 +813,59 @@ model CupParticipant {
   @@unique([cupId, teamId])
   @@index([cupId])
   @@index([teamId])
+}
+
+/// Ronde d'une coupe (miroir SQLite de schema.prisma). Une coupe enchaîne des
+/// rondes numérotées ; chaque ronde apparie les équipes inscrites selon le
+/// classement courant : un adversaire au score proche, jamais le même deux
+/// fois. Générée par `services/cup-rounds` (moteur pur `swiss-pairing`).
+model CupRound {
+  id          String    @id @default(cuid())
+  cup         Cup       @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId       String
+  roundNumber Int
+  name        String?
+  /// Système d'appariement ayant produit la ronde : "swiss". Réservé pour
+  /// d'autres systèmes (saisie manuelle…).
+  system      String    @default("swiss")
+  /// "pending" | "in_progress" | "completed"
+  status      String    @default("pending")
+  scheduledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  pairings CupPairing[]
+
+  @@unique([cupId, roundNumber])
+  @@index([cupId])
+}
+
+/// Rencontre d'une ronde de coupe. `awayTeamId` null = équipe EXEMPTÉE
+/// (nombre impair d'inscrits) : l'exempt marque les points d'une victoire
+/// (cf. `cupScoring`, `byes`). Le match local qui matérialise la rencontre
+/// est rattaché par `LocalMatch.cupPairingId` à sa création.
+model CupPairing {
+  id          String      @id @default(cuid())
+  round       CupRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId     String
+  /// Ordre d'affichage (table 1 = tête de classement).
+  tableNumber Int         @default(1)
+  homeTeam    Team        @relation("CupPairingHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId  String
+  awayTeam    Team?       @relation("CupPairingAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId  String?
+  /// "scheduled" | "in_progress" | "played" | "bye" | "cancelled"
+  status      String      @default("scheduled")
+  /// Date prévisionnelle convenue par les coachs (ou le commissaire).
+  scheduledAt DateTime?
+  localMatch  LocalMatch?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([roundId])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([status])
 }
 
 // Modèle pour la file d'attente de matchmaking
@@ -897,6 +954,12 @@ model LocalMatch {
   // Relation optionnelle avec une coupe
   cup   Cup?    @relation(fields: [cupId], references: [id], onDelete: SetNull)
   cupId String?
+
+  // Rencontre de ronde (ronde suisse de coupe) que ce match matérialise.
+  // Unique : une rencontre ne génère qu'un seul match. SetNull : la
+  // suppression de la ronde ne supprime pas le match joué.
+  cupPairing   CupPairing? @relation(fields: [cupPairingId], references: [id], onDelete: SetNull)
+  cupPairingId String?     @unique
 
   // Lien de partage pour inviter le second joueur
   shareToken String? @unique // Token unique pour le lien de partage

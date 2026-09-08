@@ -172,8 +172,10 @@ describe("E2E API — MVP ligue : create -> start -> launch -> forfeit -> standi
     expect(forfeit.recorded).toBe(true);
     expect(forfeit.side).toBe("home");
 
-    // 11. Verifie que le pairing est `forfeit_home`, le round
-    // `completed`, et la saison `completed`.
+    // 11. Verifie que le pairing est `forfeit_home` et le round
+    // `completed`. La saison, elle, RESTE `in_progress` : sa cloture est un
+    // acte du commissaire (le dernier resultat ne la ferme plus de lui-meme,
+    // pour rester corrigeable).
     const detail3 = unwrap(
       await get<{ success: true; data: SeasonDetailDTO }>(
         `/leagues/seasons/${season.id}`,
@@ -183,7 +185,24 @@ describe("E2E API — MVP ligue : create -> start -> launch -> forfeit -> standi
     const pairing3 = detail3.season.rounds[0].pairings[0];
     expect(pairing3.status).toBe("forfeit_home");
     expect(detail3.season.rounds[0].status).toBe("completed");
-    expect(detail3.season.status).toBe("completed");
+    expect(detail3.season.status).toBe("in_progress");
+
+    // 11b. Le commissaire cloture la saison explicitement.
+    const closed = unwrap(
+      await post<{ success: true; data: { seasonId: string; status: string } }>(
+        `/leagues/seasons/${season.id}/close`,
+        creator.token,
+        {},
+      ),
+    );
+    expect(closed.status).toBe("completed");
+    const detail4 = unwrap(
+      await get<{ success: true; data: SeasonDetailDTO }>(
+        `/leagues/seasons/${season.id}`,
+        creator.token,
+      ),
+    );
+    expect(detail4.season.status).toBe("completed");
 
     // 12. Verifie le classement : winner away (1 win, 2-0 TD,
     // bareme.winPoints=3 par default), loser home (1 loss, 0-2 TD,

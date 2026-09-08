@@ -6,8 +6,15 @@
  *    (wins/draws/losses/points/touchdowns/casualties) en une seule
  *    transaction,
  *  - marquer `Match.leagueScoredAt` pour empecher la double comptabilisation,
- *  - promouvoir le round puis la saison en "completed" quand toutes les
- *    rencontres sont reportees.
+ *  - promouvoir le round en "completed" quand toutes ses rencontres sont
+ *    reportees, et demarrer les playoffs quand la phase reguliere s'acheve.
+ *
+ * La SAISON, elle, n'est jamais cloturee ici : sa cloture est un acte du
+ * commissaire (`closeSeason`, `POST /leagues/seasons/:id/close`). Quand le
+ * dernier resultat fermait la saison de lui-meme, une erreur de saisie sur
+ * ce dernier match devenait definitive (« Reversion impossible:
+ * season-completed »). Le resultat expose `seasonReadyToClose` pour que
+ * l'UI invite le commissaire a cloturer.
  *
  * Ne fait rien pour les matchs non rattaches a une ligue : une ligue doit
  * avoir ete creee, une saison ouverte et des rounds planifies (L.3/L.4) et
@@ -26,9 +33,7 @@ import {
   isInPlacement,
   type SeasonMatchOutcome,
 } from "./season-elo";
-import { applyThemedSeasonClosure } from "./themed-season-closure";
 import { runPostMatchLeagueSequence } from "./post-match-league-sequence";
-import { persistSeasonAwards } from "./league-scoring";
 import {
   startPlayoffs,
   advancePlayoffsWithWinner,
@@ -74,7 +79,11 @@ export type RecordMatchResultOutcome =
       readonly winner: MatchWinner;
       readonly pointsDelta: { readonly teamA: number; readonly teamB: number };
       readonly roundCompleted: boolean;
-      readonly seasonCompleted: boolean;
+      /**
+       * Toutes les journees (playoffs compris) sont jouees : la saison
+       * reste `in_progress` et attend la cloture du commissaire.
+       */
+      readonly seasonReadyToClose: boolean;
       readonly seasonElo: SeasonEloSnapshot;
     }
   | {
@@ -288,7 +297,7 @@ export async function recordLeagueMatchResult(
   await prisma.$transaction(updates);
 
   let roundCompleted = false;
-  let seasonCompleted = false;
+  let seasonReadyToClose = false;
 
   if (match.leagueRoundId) {
     // L2.A.5 — La completion du round se base desormais sur les
@@ -329,8 +338,8 @@ export async function recordLeagueMatchResult(
       if (remainingRounds.length === 0) {
         // L2.C.3 — playoffs : si la saison a `playoffSize > 0` et
         // qu'aucun round playoff n'a encore ete cree, on declenche
-        // le bracket et on garde la saison `in_progress`. La saison
-        // ne se cloturera qu'apres la finale.
+        // le bracket. Dans tous les cas la saison reste `in_progress` :
+        // seul le commissaire la cloture.
         const seasonRow = await prisma.leagueSeason.findUnique({
           where: { id: seasonId },
           select: { playoffSize: true },
@@ -348,48 +357,14 @@ export async function recordLeagueMatchResult(
             );
           });
         } else {
-          await prisma.leagueSeason.update({
-            where: { id: seasonId },
-            data: { status: "completed" },
-          });
-          seasonCompleted = true;
-
-          // L2.C.1 — fire-and-forget : persistance du snapshot d'awards
-          // de fin de saison. Echec non-bloquant : le score reste
-          // compte meme si l'award n'est pas cree (la page recap peut
-          // toujours recalculer a la demande via computeSeasonRecap).
-          persistSeasonAwards(seasonId)
-            .then((r) => {
-              if (r.created) {
-                serverLog.info(
-                  `[league-scoring] season=${seasonId} award persisted (id=${r.awardId})`,
-                );
-              }
-            })
-            .catch((e: unknown) => {
-              const msg = e instanceof Error ? e.message : "unknown";
-              serverLog.error(
-                `[league-scoring] persistSeasonAwards failed: ${msg}`,
-              );
-            });
-
-          // S26.6f — fire-and-forget : la cloture thematique est un point
-          // d'extension non critique. Si elle echoue, le match reste
-          // correctement comptabilise et la saison reste cloturee.
-          applyThemedSeasonClosure(seasonId)
-            .then((r) => {
-              if (!r.skipped) {
-                serverLog.info(
-                  "[themed-season-closure] champion:",
-                  r.label,
-                  r.championUserId,
-                );
-              }
-            })
-            .catch((e: unknown) => {
-              const msg = e instanceof Error ? e.message : "unknown";
-              serverLog.error("[themed-season-closure] error:", msg);
-            });
+          // Toutes les journees sont jouees : la saison RESTE `in_progress`.
+          // La cloture (classement fige, palmares, cloture thematique) est
+          // un acte du commissaire — cf. `closeSeason`. Cloturer ici rendait
+          // le dernier resultat non-invalidable (`season-completed`).
+          seasonReadyToClose = true;
+          serverLog.info(
+            `[league-match-result] season=${seasonId} all rounds completed, awaiting commissioner closure`,
+          );
         }
       }
     }
@@ -432,7 +407,7 @@ export async function recordLeagueMatchResult(
     winner,
     pointsDelta: { teamA: basePointsA, teamB: basePointsB },
     roundCompleted,
-    seasonCompleted,
+    seasonReadyToClose,
     seasonElo: {
       oldRatingA: participantA.seasonElo,
       oldRatingB: participantB.seasonElo,

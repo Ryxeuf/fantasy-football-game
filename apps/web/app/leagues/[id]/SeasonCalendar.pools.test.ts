@@ -54,6 +54,26 @@ describe("groupPairingsByPool", () => {
     expect(groups!.find((g) => g.poolName === "Poule A")!.pairings).toHaveLength(2);
   });
 
+  it("place la poule du coach connecté en premier", () => {
+    const groups = groupPairingsByPool(
+      [pairing("1", "p1"), pairing("2", "p2")],
+      poolNames,
+      { p1: "A", p2: "B" },
+      "B",
+    );
+    expect(groups!.map((g) => g.poolId)).toEqual(["B", "A"]);
+  });
+
+  it("garde l'ordre alphabétique sans poule préférée", () => {
+    const groups = groupPairingsByPool(
+      [pairing("1", "p1"), pairing("2", "p2")],
+      poolNames,
+      { p1: "B", p2: "A" },
+      null,
+    );
+    expect(groups!.map((g) => g.poolId)).toEqual(["A", "B"]);
+  });
+
   it("regroupe les non-affectés sous un groupe nul", () => {
     const groups = groupPairingsByPool(
       [pairing("1", "p1"), pairing("2", "p2")],

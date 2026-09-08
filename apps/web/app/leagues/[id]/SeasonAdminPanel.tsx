@@ -13,7 +13,10 @@ import type { LeagueSeasonStatus } from "./types";
 //   - Regenerate         : visible tant que la saison n'est pas
 //                          completed et qu'aucun match n'a ete joue
 //                          (la verification finale reste serveur)
-//   - Close              : visible si in_progress ou scheduled
+//   - Close              : visible si in_progress ou scheduled. La cloture
+//                          est un acte du commissaire : aucun resultat ne
+//                          ferme la saison de lui-meme (`allRoundsPlayed`
+//                          signale que tout est joue et qu'il peut cloturer).
 //
 // Le composant est rendu uniquement par le parent quand
 //   `isCreator && v2UiEnabled` est vrai. Pas de second gate ici.
@@ -23,6 +26,11 @@ interface SeasonAdminPanelProps {
   status: LeagueSeasonStatus | string;
   /** L2.B.5 — etat actuel de l'option "coup de mecene" sur la saison. */
   meceneEnabled: boolean;
+  /**
+   * Toutes les journees (playoffs compris) sont jouees : la saison attend
+   * la cloture du commissaire. Affiche l'invitation a cloturer.
+   */
+  allRoundsPlayed?: boolean;
   onActionDone: () => void;
 }
 
@@ -32,6 +40,7 @@ export function SeasonAdminPanel({
   seasonId,
   status,
   meceneEnabled,
+  allRoundsPlayed = false,
   onActionDone,
 }: SeasonAdminPanelProps) {
   const { t } = useLanguage();
@@ -134,6 +143,8 @@ export function SeasonAdminPanel({
   const canStart = status === "draft" || status === "scheduled";
   const canRegenerate = status !== "completed";
   const canClose = status === "scheduled" || status === "in_progress";
+  // Tout est joue : la cloture devient l'action attendue (bouton principal).
+  const readyToClose = canClose && status === "in_progress" && allRoundsPlayed;
 
   return (
     <section
@@ -160,6 +171,20 @@ export function SeasonAdminPanel({
           className="rounded border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2 text-sm"
         >
           {success}
+        </div>
+      ) : null}
+
+      {readyToClose ? (
+        <div
+          data-testid="admin-season-ready-to-close"
+          className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
+        >
+          <span className="font-semibold">
+            ✅ {t.leagues.adminSeasonReadyToCloseTitle}
+          </span>
+          <span className="mt-0.5 block text-xs text-emerald-800">
+            {t.leagues.adminSeasonReadyToCloseHint}
+          </span>
         </div>
       ) : null}
 
@@ -238,7 +263,11 @@ export function SeasonAdminPanel({
             data-testid="admin-action-close"
             onClick={onClose}
             disabled={busy !== null}
-            className="px-3 py-1.5 rounded-md bg-white border border-red-300 text-red-700 text-sm hover:bg-red-50 disabled:opacity-50"
+            className={
+              readyToClose
+                ? "px-3 py-1.5 rounded-md bg-emerald-600 border border-emerald-700 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+                : "px-3 py-1.5 rounded-md bg-white border border-red-300 text-red-700 text-sm hover:bg-red-50 disabled:opacity-50"
+            }
           >
             {t.leagues.adminSeasonClose}
           </button>

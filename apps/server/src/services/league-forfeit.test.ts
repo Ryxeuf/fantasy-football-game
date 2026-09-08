@@ -4,7 +4,8 @@
  * Couvre :
  *  - recordForfeit : 404 / etat non terminal / match deja compte /
  *    application correcte (winner/loser, points, TD, status)
- *  - completion automatique de round et saison apres dernier forfait
+ *  - completion automatique du round apres dernier forfait (la saison
+ *    reste `in_progress` : cloture manuelle du commissaire)
  *  - sweepDeadlinePairings : selection par deadline, batch limit,
  *    delegation a recordForfeit
  */
@@ -184,7 +185,7 @@ describe("recordForfeit", () => {
     });
   });
 
-  it("auto-completes the round and the season after the last forfeit", async () => {
+  it("auto-completes the round after the last forfeit but leaves the season open", async () => {
     mocked.pairFind.mockResolvedValue(buildPairing());
     mocked.seasonFind.mockResolvedValue({ league: BAREME });
     mocked.pairCount.mockResolvedValue(0); // no other pending pairings
@@ -196,10 +197,8 @@ describe("recordForfeit", () => {
       where: { id: "round-1" },
       data: { status: "completed" },
     });
-    expect(mocked.seasonUpdate).toHaveBeenCalledWith({
-      where: { id: "season-1" },
-      data: { status: "completed" },
-    });
+    // Cloture manuelle : un dernier forfait ne fige pas la saison.
+    expect(mocked.seasonUpdate).not.toHaveBeenCalled();
   });
 
   it("does not complete the round when other pairings are still pending", async () => {

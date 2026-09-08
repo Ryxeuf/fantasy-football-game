@@ -28,7 +28,9 @@ import { serverLog } from "../utils/server-log";
 export type NotificationKind =
   | "league.invitation"
   | "cup.invitation"
+  | "cup.round_pairing"
   | "league.round_pairing"
+  | "league.pairing_scheduled"
   | "league.match_validation"
   | "friend.request"
   | "friend.accepted"

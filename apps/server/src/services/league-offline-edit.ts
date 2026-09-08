@@ -734,11 +734,14 @@ export async function reverseOfflineLeagueResult(
       },
     }),
   );
+  // Un round complete se re-ouvre en `in_progress` (statut connu du
+  // calendrier : `pending` | `in_progress` | `completed`), pas en un statut
+  // orphelin que l'UI afficherait en brut.
   if (round && round.status === "completed") {
     ops.push(
       prisma.leagueRound.update({
         where: { id: round.id },
-        data: { status: "scheduled" },
+        data: { status: "in_progress" },
       }),
     );
   }

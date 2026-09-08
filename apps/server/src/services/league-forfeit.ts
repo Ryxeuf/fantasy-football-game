@@ -35,7 +35,6 @@
  */
 
 import { prisma } from "../prisma";
-import { persistSeasonAwards } from "./league-scoring";
 import {
   startPlayoffs,
   advancePlayoffsWithWinner,
@@ -246,9 +245,14 @@ export async function recordForfeit(
 }
 
 /**
- * Complete un round (puis la saison / les playoffs) quand tous ses
- * pairings sont dans un etat terminal. Reutilise par le chemin de saisie
- * offline (`recordOfflineLeagueResult`) en plus du forfait.
+ * Complete un round quand tous ses pairings sont dans un etat terminal,
+ * et demarre les playoffs quand la phase reguliere s'acheve. Reutilise par
+ * le chemin de saisie offline (`recordOfflineLeagueResult`) en plus du
+ * forfait.
+ *
+ * La saison n'est PAS cloturee ici : la cloture est un acte du commissaire
+ * (`closeSeason`). Un dernier forfait qui fermait la saison de lui-meme
+ * rendait ce resultat non-invalidable (« season-completed »).
  */
 export async function maybeCompleteRoundAndSeason(
   roundId: string,
@@ -273,8 +277,8 @@ export async function maybeCompleteRoundAndSeason(
   });
   if (remaining.length === 0) {
     // L2.C.3 — playoffs : si la saison a `playoffSize > 0` et qu'aucun
-    // round playoff n'a encore ete cree, on demarre le bracket et on
-    // garde la saison `in_progress`.
+    // round playoff n'a encore ete cree, on demarre le bracket. La saison
+    // reste `in_progress` dans tous les cas (cloture manuelle).
     const seasonRow = await prisma.leagueSeason.findUnique({
       where: { id: seasonId },
       select: { playoffSize: true },
@@ -292,18 +296,9 @@ export async function maybeCompleteRoundAndSeason(
       });
       return;
     }
-    await prisma.leagueSeason.update({
-      where: { id: seasonId },
-      data: { status: "completed" },
-    });
-    // L2.C.1 — fire-and-forget : snapshot d'awards quand la saison
-    // se cloture par un forfait final.
-    persistSeasonAwards(seasonId).catch((e: unknown) => {
-      const msg = e instanceof Error ? e.message : "unknown";
-      serverLog.error(
-        `[league-forfeit] persistSeasonAwards failed: ${msg}`,
-      );
-    });
+    serverLog.info(
+      `[league-forfeit] season=${seasonId} all rounds completed, awaiting commissioner closure`,
+    );
   }
 }
 

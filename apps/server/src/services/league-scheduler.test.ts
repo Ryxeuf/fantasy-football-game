@@ -49,7 +49,25 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// closeSeason est desormais le seul chemin de cloture : il porte le
+// palmares et la cloture thematique (fire-and-forget).
+vi.mock("./league-scoring", () => ({
+  persistSeasonAwards: vi.fn(async () => ({
+    created: true,
+    awardId: "aw-1",
+    recap: {},
+  })),
+}));
+vi.mock("./themed-season-closure", () => ({
+  applyThemedSeasonClosure: vi.fn(async () => ({
+    skipped: true,
+    reason: "not_themed",
+  })),
+}));
+
 import { prisma } from "../prisma";
+import { persistSeasonAwards } from "./league-scoring";
+import { applyThemedSeasonClosure } from "./themed-season-closure";
 import {
   startSeason,
   regenerateSchedule,
@@ -391,6 +409,17 @@ describe("league-scheduler.closeSeason", () => {
       where: { id: "s1" },
       data: { status: "completed" },
     });
+    // Palmares + cloture thematique : declenches par la cloture manuelle,
+    // puisque plus aucun resultat ne cloture la saison de lui-meme.
+    expect(persistSeasonAwards).toHaveBeenCalledWith("s1");
+    expect(applyThemedSeasonClosure).toHaveBeenCalledWith("s1");
+  });
+
+  it("does not trigger awards nor themed closure when already completed", async () => {
+    mocked.seasonFind.mockResolvedValue({ id: "s1", status: "completed" });
+    await closeSeason("s1");
+    expect(persistSeasonAwards).not.toHaveBeenCalled();
+    expect(applyThemedSeasonClosure).not.toHaveBeenCalled();
   });
 });
 

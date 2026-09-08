@@ -141,7 +141,7 @@ describe("recordOfflineLeagueResult (option b)", () => {
       winner: "A",
       pointsDelta: { teamA: 3, teamB: 0 },
       roundCompleted: false,
-      seasonCompleted: false,
+      seasonReadyToClose: false,
     });
   });
 
@@ -748,7 +748,7 @@ describe("recordOfflineLeagueResult — Haine (X)", () => {
       winner: "A",
       pointsDelta: { teamA: 3, teamB: 0 },
       roundCompleted: false,
-      seasonCompleted: false,
+      seasonReadyToClose: false,
     });
     m.pairFind.mockResolvedValue(buildPairing());
   });

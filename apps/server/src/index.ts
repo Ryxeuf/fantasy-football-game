@@ -74,6 +74,7 @@ import nflFantasyTeamsRoutes from "./routes/nfl-fantasy-teams";
 import nflFantasyPublicRoutes from "./routes/nfl-fantasy-public";
 import cupRoutes from "./routes/cup";
 import cupInvitationRoutes from "./routes/cup-invitation";
+import cupRoundRoutes from "./routes/cup-rounds";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
@@ -363,6 +364,9 @@ app.use("/cup", cupInvitationRoutes);
 // DELETE /cup/:id) : monté avant le routeur historique, qui ne définit
 // aucune de ces deux routes.
 app.use("/cup", cupLifecycleRouter);
+// Rondes suisses : `/cup/:id/rounds` et `/cup/pairings/...`, montées avant
+// `cupRoutes` dont le `GET /:id` avalerait `/pairings`.
+app.use("/cup", cupRoundRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(
@@ -535,6 +539,26 @@ if (process.env.TEST_SQLITE === "1") {
       await safe(
         "league",
         () => (prisma as any).league?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      // Rondes de coupe (cascade depuis Cup, purge explicite pour rester
+      // deterministe) puis matchs locaux (FK RESTRICT vers Team/User).
+      await safe(
+        "cupPairing",
+        () => (prisma as any).cupPairing?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe(
+        "cupRound",
+        () => (prisma as any).cupRound?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe(
+        "localMatchAction",
+        () =>
+          (prisma as any).localMatchAction?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
+      await safe(
+        "localMatch",
+        () => (prisma as any).localMatch?.deleteMany?.({}) ?? Promise.resolve(),
       );
       // Cup hierarchy (creator is RESTRICT vs User).
       await safe(

@@ -70,7 +70,7 @@ describe("SeasonCalendar — nom du coach par équipe", () => {
   it("affiche le coach quand l'API le fournit", () => {
     renderCalendar(true);
     expect(screen.getByTestId("pairing-coach-home").textContent).toBe(
-      "(Coach Griff)",
+      "Coach Griff",
     );
   });
 
