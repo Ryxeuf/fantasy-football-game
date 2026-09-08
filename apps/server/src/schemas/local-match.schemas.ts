@@ -16,6 +16,9 @@ export const createLocalMatchSchema = z.object({
   teamAId: z.string().min(1, "teamAId est requis"),
   teamBId: z.string().optional().nullable(),
   cupId: z.string().optional().nullable(),
+  // Rencontre de ronde (ronde suisse de coupe) que ce match materialise :
+  // impose la coupe et les deux equipes.
+  cupPairingId: z.string().optional().nullable(),
   isPublic: z.boolean().optional(),
 });
 

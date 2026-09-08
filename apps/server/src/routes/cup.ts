@@ -42,6 +42,7 @@ import {
   CupRegistrationError,
   type CupRegistrationErrorCode,
 } from "../services/cup-registration";
+import { cupByesByTeamId, listCupRounds } from "../services/cup-rounds";
 
 /** Mappe un code d'erreur d'inscription coupe vers un status HTTP. */
 function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
@@ -560,10 +561,15 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       .filter((p: any) => userTeamIds.has(p.team.id))
       .map((p: any) => p.team.id);
 
+    // Rondes suisses (vide pour une coupe sans ronde) : les exempts valent
+    // les points d'une victoire au classement.
+    const rounds = await listCupRounds(cup.id);
+
     // Calculer le classement de la coupe à partir des matchs terminés
     const standingsResult = computeCupStandings(
       cup as unknown as CupWithParticipantsAndScoring,
       (cup.localMatches || []) as unknown as LocalMatchWithRelations[],
+      { byesByTeamId: cupByesByTeamId(rounds) },
     );
 
     // Classements individuels (par joueur) — équivalent leaderboards de ligue,
@@ -604,6 +610,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       actionAwards: standingsResult.awards,
       playerLeaderboards,
       playerLeaderboardCategories: CUP_LEADERBOARD_CATEGORIES,
+      rounds,
       matches: (cup.localMatches || []).map((m: any) => ({
         id: m.id,
         name: m.name,

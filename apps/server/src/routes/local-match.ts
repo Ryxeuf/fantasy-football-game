@@ -50,6 +50,13 @@ import {
 } from "../schemas/local-match.schemas";
 import { serverLog } from "../utils/server-log";
 import { buildInducementContext } from "../services/inducement-context";
+import {
+  attachLocalMatchToCupPairing,
+  detachLocalMatchFromCupPairing,
+  resolveCupPairingForMatch,
+  settleCupPairingForLocalMatch,
+  CupRoundError,
+} from "../services/cup-rounds";
 
 const router = Router();
 
@@ -268,7 +275,28 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 // POST /local-match - Créer une nouvelle partie offline
 router.post("/", authUser, validate(createLocalMatchSchema), async (req: AuthenticatedRequest, res) => {
   try {
-    const { name, teamAId, teamBId, cupId, isPublic } = req.body;
+    const { name, teamAId, teamBId, isPublic, cupPairingId } = req.body;
+    let { cupId } = req.body;
+
+    // Rencontre de ronde suisse : elle impose la coupe et les deux equipes,
+    // et ne peut etre materialisee qu'une fois.
+    if (cupPairingId) {
+      try {
+        const resolved = await resolveCupPairingForMatch({
+          pairingId: cupPairingId,
+          teamAId,
+          teamBId: teamBId ?? null,
+          cupId: cupId ?? null,
+        });
+        cupId = resolved.cupId;
+      } catch (e: unknown) {
+        if (e instanceof CupRoundError) {
+          const status = e.code === "pairing_not_found" ? 404 : e.code === "team_mismatch" ? 400 : 409;
+          return res.status(status).json({ error: e.message });
+        }
+        throw e;
+      }
+    }
     
     // Si une coupe est fournie, teamBId est requis
     if (cupId && !teamBId) {
@@ -376,13 +404,18 @@ router.post("/", authUser, validate(createLocalMatchSchema), async (req: Authent
     
     // Créer la partie offline
     // Note: teamBId peut être null si pas de coupe (sera rempli par le second joueur)
-    const localMatch = await prisma.localMatch.create({
+    let localMatch;
+    try {
+      localMatch = await prisma.localMatch.create({
       data: {
         name: name?.trim() || null,
         creatorId: req.user!.id,
         teamAId,
         teamBId: teamBId || null,
         cupId: cupId || null,
+        // Rencontre de ronde suisse : `cupPairingId` est UNIQUE, deux coachs
+        // qui creent en meme temps ne peuvent pas produire deux matchs.
+        cupPairingId: cupPairingId || null,
         status,
         isPublic: isPublic === false ? false : true,
         shareToken,
@@ -424,6 +457,30 @@ router.post("/", authUser, validate(createLocalMatchSchema), async (req: Authent
         } : undefined,
       },
     });
+    } catch (createError: unknown) {
+      const code = (createError as { code?: string } | null)?.code;
+      if (cupPairingId && code === "P2002") {
+        return res.status(409).json({
+          error: "Un match vient d'etre cree pour cette rencontre par l'autre coach",
+        });
+      }
+      throw createError;
+    }
+
+    // La rencontre passe « match en cours » : ecriture conditionnelle sur
+    // son statut. Si elle n'etait plus a jouer (annulee entre-temps), on
+    // retire notre match plutot que de laisser un match orphelin.
+    if (cupPairingId) {
+      const attached = await attachLocalMatchToCupPairing({
+        pairingId: cupPairingId,
+      });
+      if (!attached) {
+        await prisma.localMatch.delete({ where: { id: localMatch.id } });
+        return res.status(409).json({
+          error: "Un match vient d'etre cree pour cette rencontre par l'autre coach",
+        });
+      }
+    }
     
     res.status(201).json({ localMatch });
   } catch (e: any) {
@@ -1106,6 +1163,16 @@ router.post("/:id/complete", authUser, validate(completeLocalMatchSchema), async
       }
     }
 
+    // Rencontre de ronde suisse : le resultat est acquis, la rencontre passe
+    // `played` et la ronde se complete si c'etait la derniere. Non bloquant.
+    if (localMatch.cupPairingId) {
+      try {
+        await settleCupPairingForLocalMatch(localMatch.id);
+      } catch (cupError) {
+        serverLog.error("Erreur lors de la cloture de la rencontre de coupe:", cupError);
+      }
+    }
+
     res.json({ localMatch: updatedMatch, sppUpdatedCount, deathsPersistedCount, injuriesPersistedCount });
   } catch (e: any) {
     serverLog.error("Erreur lors de la finalisation de la partie offline:", e);
@@ -1200,6 +1267,20 @@ router.patch("/:id/status", authUser, validate(updateLocalMatchStatusSchema), as
         },
       },
     });
+
+    // Rencontre de ronde suisse : un match annule libere la rencontre, un
+    // match force `completed` la cloture. Non bloquant.
+    if (localMatch.cupPairingId) {
+      try {
+        if (status === "cancelled") {
+          await detachLocalMatchFromCupPairing(localMatch.id);
+        } else if (status === "completed") {
+          await settleCupPairingForLocalMatch(localMatch.id);
+        }
+      } catch (cupError) {
+        serverLog.error("Erreur lors de la mise a jour de la rencontre de coupe:", cupError);
+      }
+    }
     
     res.json({ localMatch: updatedMatch });
   } catch (e: any) {
@@ -1224,6 +1305,11 @@ router.delete("/:id", authUser, async (req: AuthenticatedRequest, res) => {
     // Seul le créateur ou un admin peut supprimer
     if (localMatch.creatorId !== req.user!.id && !isAdmin) {
       return res.status(403).json({ error: "Seul le créateur ou un administrateur peut supprimer cette partie" });
+    }
+
+    // Rencontre de ronde suisse : la rencontre redevient a jouer.
+    if (localMatch.cupPairingId) {
+      await detachLocalMatchFromCupPairing(localMatch.id);
     }
     
     await prisma.localMatch.delete({

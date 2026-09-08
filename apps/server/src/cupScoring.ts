@@ -71,6 +71,12 @@ export type CupTeamStats = {
   draws: number;
   losses: number;
   forfeits: number;
+  /**
+   * Rondes où l'équipe a été exemptée (ronde suisse, nombre impair
+   * d'inscrits). Un exempt vaut les points d'une victoire mais ne compte
+   * ni comme match joué, ni en TD.
+   */
+  byes: number;
   touchdownsFor: number;
   touchdownsAgainst: number;
   touchdownDiff: number;
@@ -113,6 +119,11 @@ export type CupStandingsResult = {
   awards: CupAwards;
 };
 
+export type CupStandingsOptions = {
+  /** Nombre d'exempts (rondes suisses) par teamId. */
+  byesByTeamId?: Readonly<Record<string, number>>;
+};
+
 function makeEmptyStats(team: CupParticipantTeam): CupTeamStats {
   return {
     teamId: team.id,
@@ -124,6 +135,7 @@ function makeEmptyStats(team: CupParticipantTeam): CupTeamStats {
     draws: 0,
     losses: 0,
     forfeits: 0,
+    byes: 0,
     touchdownsFor: 0,
     touchdownsAgainst: 0,
     touchdownDiff: 0,
@@ -150,6 +162,7 @@ function makeEmptyStats(team: CupParticipantTeam): CupTeamStats {
 export function computeCupStandings(
   cup: CupWithParticipantsAndScoring,
   matches: LocalMatchWithRelations[],
+  options: CupStandingsOptions = {},
 ): CupStandingsResult {
   const scoringConfig: CupScoringConfig = {
     winPoints: cup.winPoints,
@@ -253,6 +266,13 @@ export function computeCupStandings(
     }
   }
 
+  // Exempts de ronde suisse : les points d'une victoire, sans match joué.
+  for (const [teamId, byes] of Object.entries(options.byesByTeamId ?? {})) {
+    const stats = statsByTeam.get(teamId);
+    if (!stats || !Number.isFinite(byes) || byes <= 0) continue;
+    stats.byes += Math.floor(byes);
+  }
+
   const teamStats: CupTeamStats[] = [];
 
   for (const stats of statsByTeam.values()) {
@@ -266,7 +286,8 @@ export function computeCupStandings(
       stats.wins * scoringConfig.winPoints +
       stats.draws * scoringConfig.drawPoints +
       stats.losses * scoringConfig.lossPoints +
-      stats.forfeits * scoringConfig.forfeitPoints;
+      stats.forfeits * scoringConfig.forfeitPoints +
+      stats.byes * scoringConfig.winPoints;
 
     stats.actionPoints =
       stats.touchdownsFor * scoringConfig.touchdownPoints +

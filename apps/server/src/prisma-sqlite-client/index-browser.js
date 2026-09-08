@@ -580,6 +580,30 @@ exports.Prisma.CupParticipantScalarFieldEnum = {
   pspPoolGranted: 'pspPoolGranted'
 };
 
+exports.Prisma.CupRoundScalarFieldEnum = {
+  id: 'id',
+  cupId: 'cupId',
+  roundNumber: 'roundNumber',
+  name: 'name',
+  system: 'system',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CupPairingScalarFieldEnum = {
+  id: 'id',
+  roundId: 'roundId',
+  tableNumber: 'tableNumber',
+  homeTeamId: 'homeTeamId',
+  awayTeamId: 'awayTeamId',
+  status: 'status',
+  scheduledAt: 'scheduledAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.MatchQueueScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -634,6 +658,7 @@ exports.Prisma.LocalMatchScalarFieldEnum = {
   teamAId: 'teamAId',
   teamBId: 'teamBId',
   cupId: 'cupId',
+  cupPairingId: 'cupPairingId',
   shareToken: 'shareToken',
   teamAOwnerValidated: 'teamAOwnerValidated',
   teamBOwnerValidated: 'teamBOwnerValidated',
@@ -1469,6 +1494,8 @@ exports.Prisma.ModelName = {
   RulesetConfig: 'RulesetConfig',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
+  CupRound: 'CupRound',
+  CupPairing: 'CupPairing',
   MatchQueue: 'MatchQueue',
   PushSubscription: 'PushSubscription',
   Notification: 'Notification',
