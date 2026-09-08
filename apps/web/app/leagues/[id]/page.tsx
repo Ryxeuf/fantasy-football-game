@@ -20,6 +20,7 @@ import { PoolsManagerPanel } from "./PoolsManagerPanel";
 import { ManualScheduleEditor } from "./ManualScheduleEditor";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
+import { putPoolFirst } from "./pool-order";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { getRosterName } from "@bb/game-engine";
@@ -296,6 +297,14 @@ export default function LeagueDetailPage() {
       ) ?? null
     );
   }, [season, currentUserId]);
+
+  // La poule du coach connecté s'affiche en premier (calendrier et
+  // classements) : il vient d'abord voir la sienne.
+  const myPoolId = myParticipant?.poolId ?? null;
+  const orderedPoolStandings = useMemo(
+    () => putPoolFirst(poolStandings, (p) => p.poolId, myPoolId),
+    [poolStandings, myPoolId],
+  );
 
   /**
    * Consultation des rosters : commissaire ou coach inscrit. Meme porte que
@@ -656,6 +665,7 @@ export default function LeagueDetailPage() {
                   onPairingChanged={() => {
                     if (selectedSeasonId) loadSeason(selectedSeasonId);
                   }}
+                  preferredPoolId={myPoolId}
                 />
               </div>
 
@@ -664,14 +674,22 @@ export default function LeagueDetailPage() {
                   {t.leagues.standingsSection}
                 </h3>
                 {/* FR6 — un classement par poule si la saison en a, sinon global. */}
-                {poolStandings.length > 0 ? (
-                  <div className="space-y-4">
-                    {poolStandings.map((pool) => (
+                {orderedPoolStandings.length > 0 ? (
+                  <div className="space-y-4" data-testid="pool-standings-list">
+                    {orderedPoolStandings.map((pool) => (
                       <div key={pool.poolId} data-testid={`pool-standings-${pool.poolId}`}>
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="text-sm font-semibold text-nuffle-anthracite">
                             {pool.poolName}
                           </h4>
+                          {pool.poolId === myPoolId ? (
+                            <span
+                              data-testid={`pool-standings-mine-${pool.poolId}`}
+                              className="text-[11px] uppercase tracking-wide bg-nuffle-gold/15 border border-nuffle-gold/40 text-nuffle-bronze px-2 py-0.5 rounded"
+                            >
+                              {t.leagues.myPoolBadge}
+                            </span>
+                          ) : null}
                           {pool.qualifiesForPlayoffs > 0 ? (
                             <span className="text-[11px] uppercase tracking-wide bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
                               {pool.qualifiesForPlayoffs} qualifié(s) PO

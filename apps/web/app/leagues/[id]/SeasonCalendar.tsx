@@ -6,6 +6,7 @@ import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
 import TeamLogo from "../../components/TeamLogo";
 import TeamRosterLink from "./TeamRosterLink";
 import { PairingScheduleEditor } from "./PairingScheduleEditor";
+import { putPoolFirst } from "./pool-order";
 import {
   canSchedulePairing,
   formatPlannedDate,
@@ -42,6 +43,8 @@ interface SeasonCalendarProps {
    * saison). Sans callback, l'editeur de date n'est pas propose.
    */
   onPairingChanged?: () => void;
+  /** Poule du coach connecte : affichee en premier dans chaque journee. */
+  preferredPoolId?: string | null;
 }
 
 interface PoolGroup {
@@ -54,11 +57,15 @@ interface PoolGroup {
  * FR5 — regroupe les pairings d'une journée par poule (via la poule du
  * participant à domicile). Retourne `null` si aucun groupement n'est
  * pertinent (pas de poules, ou une seule poule effective).
+ *
+ * Les poules sont triées par nom, sauf `preferredPoolId` (la poule du
+ * coach connecté) qui passe en tête.
  */
 export function groupPairingsByPool(
   pairings: LeaguePairingDetail[],
   poolNamesById: Record<string, string>,
   poolIdByParticipantId: Record<string, string | null>,
+  preferredPoolId: string | null = null,
 ): PoolGroup[] | null {
   if (Object.keys(poolNamesById).length === 0) return null;
   const groups = new Map<string | null, PoolGroup>();
@@ -77,9 +84,10 @@ export function groupPairingsByPool(
   }
   // Pas de découpage utile si tous les pairings tombent dans une seule poule.
   if (groups.size <= 1) return null;
-  return Array.from(groups.values()).sort((a, b) =>
+  const sorted = Array.from(groups.values()).sort((a, b) =>
     (a.poolName ?? "￿").localeCompare(b.poolName ?? "￿"),
   );
+  return putPoolFirst(sorted, (g) => g.poolId, preferredPoolId);
 }
 
 /**
@@ -167,6 +175,7 @@ export function SeasonCalendar({
   leagueId = null,
   canViewRosters = false,
   onPairingChanged,
+  preferredPoolId = null,
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
 
@@ -250,6 +259,7 @@ export function SeasonCalendar({
                   pairings,
                   poolNamesById,
                   poolIdByParticipantId,
+                  preferredPoolId,
                 );
                 if (!groups) {
                   return (

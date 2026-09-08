@@ -680,6 +680,7 @@
     "roundStatusPending": "Upcoming",
     "roundStatusInProgress": "In progress",
     "roundStatusCompleted": "Played",
+    "myPoolBadge": "My pool",
     "standingsSection": "Standings",
     "standingsEmpty": "No team registered to compute standings.",
     "standingsRank": "#",

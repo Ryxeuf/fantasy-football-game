@@ -655,3 +655,76 @@ describe("LeagueDetailPage", () => {
     });
   });
 });
+
+describe("LeagueDetailPage — la poule du coach connecté d'abord", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorageMock.getItem.mockReturnValue("test-token");
+  });
+
+  const seasonWithPools = {
+    ...mockSeason,
+    participants: [
+      { ...mockSeason.participants[0], poolId: "pool-a" },
+      { ...mockSeason.participants[1], poolId: "pool-b" },
+    ],
+  };
+  const standingsWithPools = {
+    ...mockStandings,
+    pools: [
+      {
+        poolId: "pool-a",
+        poolName: "Poule A",
+        poolOrder: 0,
+        qualifiesForPlayoffs: 0,
+        standings: [mockStandings.standings[0]],
+      },
+      {
+        poolId: "pool-b",
+        poolName: "Poule B",
+        poolOrder: 1,
+        qualifiesForPlayoffs: 0,
+        standings: [mockStandings.standings[1]],
+      },
+    ],
+  };
+
+  it("affiche la poule du participant connecté en premier", async () => {
+    // Coach Alice (u2) est en poule B, déclarée en second par le commissaire.
+    mockApi({
+      league: mockLeague,
+      season: seasonWithPools,
+      standings: standingsWithPools,
+      meUserId: "u2",
+    });
+    renderWithProvider();
+    await waitFor(() => {
+      expect(screen.getByTestId("pool-standings-list")).toBeTruthy();
+    });
+    const list = screen.getByTestId("pool-standings-list");
+    const ids = Array.from(list.children).map((el) =>
+      el.getAttribute("data-testid"),
+    );
+    expect(ids).toEqual(["pool-standings-pool-b", "pool-standings-pool-a"]);
+    expect(screen.getByTestId("pool-standings-mine-pool-b")).toBeTruthy();
+    expect(screen.queryByTestId("pool-standings-mine-pool-a")).toBeNull();
+  });
+
+  it("garde l'ordre du commissaire pour un visiteur sans équipe", async () => {
+    mockApi({
+      league: mockLeague,
+      season: seasonWithPools,
+      standings: standingsWithPools,
+      meUserId: "visitor",
+    });
+    renderWithProvider();
+    await waitFor(() => {
+      expect(screen.getByTestId("pool-standings-list")).toBeTruthy();
+    });
+    const ids = Array.from(screen.getByTestId("pool-standings-list").children).map(
+      (el) => el.getAttribute("data-testid"),
+    );
+    expect(ids).toEqual(["pool-standings-pool-a", "pool-standings-pool-b"]);
+    expect(screen.queryByTestId("pool-standings-mine-pool-a")).toBeNull();
+  });
+});

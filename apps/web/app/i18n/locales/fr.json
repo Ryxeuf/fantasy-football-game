@@ -685,6 +685,7 @@
     "roundStatusPending": "À venir",
     "roundStatusInProgress": "En cours",
     "roundStatusCompleted": "Jouée",
+    "myPoolBadge": "Ma poule",
     "standingsSection": "Classement",
     "standingsEmpty": "Aucune équipe inscrite pour calculer le classement.",
     "standingsRank": "#",
