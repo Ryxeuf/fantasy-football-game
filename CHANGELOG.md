@@ -1,3 +1,10 @@
+## [1.241.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.1...v1.241.2) (2026-09-08)
+
+
+### 🐛 Bug Fixes
+
+* **league:** la clôture d'une saison est un acte du commissaire ([#1013](https://github.com/Ryxeuf/fantasy-football-game/issues/1013)) ([0c41934](https://github.com/Ryxeuf/fantasy-football-game/commit/0c419345c5ebf165dd32ce6a13ca4de71562bb4d))
+
 ## [1.241.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.0...v1.241.1) (2026-09-08)
 
 
