@@ -11,8 +11,9 @@ services:
     image: postgres:16
     restart: unless-stopped
     container_name: nufflearena_db
-    ports:
-      - "5433:5432"
+    # Port 5433 supprimé le 2026-09-08 : docker-proxy publiait la base sur
+    # 0.0.0.0 en contournant UFW (exposée à Internet). Accès local :
+    # docker exec nufflearena_db psql -U bb_user bb_db
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-bb_user}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
