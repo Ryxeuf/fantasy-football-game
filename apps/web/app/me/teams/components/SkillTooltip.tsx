@@ -16,6 +16,7 @@ import {
   resolveFromCatalog,
 } from "../skills-catalog-context";
 import { getSkillCategoryLabel } from "../../../lib/skill-category-labels";
+import { getSkillCategoryColor } from "../../../lib/skill-category-colors";
 import {
   getSkillActivation,
   getSkillActivationHint,
@@ -132,18 +133,6 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     setSkillDescription(null);
   };
 
-  // Fonction pour obtenir la couleur selon la catégorie
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "General": return "bg-blue-100 text-blue-800";
-      case "Agility": return "bg-green-100 text-green-800";
-      case "Strength": return "bg-red-100 text-red-800";
-      case "Passing": return "bg-purple-100 text-purple-800";
-      case "Mutation": return "bg-orange-100 text-orange-800";
-      case "Trait": return "bg-gray-100 text-gray-800";
-      default: return "bg-gray-100 text-gray-600";
-    }
-  };
 
   return (
     <div className="relative">
@@ -152,7 +141,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         {baseSkillSlugs.map((skillSlug, index) => {
           const skillInfo = resolveSkill(skillSlug);
           const displayName = skillLabel(skillSlug, skillInfo);
-          const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
+          const categoryColor = getSkillCategoryColor(skillInfo?.category);
           const baseSkillText = language === "fr" ? "Compétence de base" : "Base skill";
 
           return (
@@ -180,7 +169,7 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
         {acquiredSkillSlugs.map((skillSlug, index) => {
           const skillInfo = resolveSkill(skillSlug);
           const displayName = skillLabel(skillSlug, skillInfo);
-          const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600";
+          const categoryColor = getSkillCategoryColor(skillInfo?.category);
           const acquiredSkillText = language === "fr" ? "Compétence acquise" : "Acquired skill";
 
           return (
