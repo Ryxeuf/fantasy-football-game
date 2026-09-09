@@ -138,6 +138,10 @@ export async function getCupInvitationByCode(code: string) {
           name: true,
           ruleset: true,
           format: true,
+          // Le lien « Construire une équipe pour cette coupe » porte le
+          // règlement pour que le builder applique budget et pool de PSP
+          // dès le premier rendu (cf. `buildForCupHref`).
+          tournamentRuleset: true,
           status: true,
           validated: true,
           isPublic: true,

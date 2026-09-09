@@ -22,6 +22,7 @@ import TeamLogoPicker from "../components/TeamLogoPicker";
 import { uploadTeamLogo } from "../components/team-logo-client";
 import { BUILDER_DEFAULTS, readBuilderParams } from "./builder-url-params";
 import { defaultBudgetK } from "./default-budget";
+import { resolveBuildBudget, type CupBuildRules } from "./build-budget";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -94,12 +95,8 @@ type Roster = {
 };
 
 /** Règles de composition d'une coupe (Flow B), renvoyées par GET /cup/:id. */
-type CupRulesConfig = {
+type CupRulesConfig = CupBuildRules & {
   resurrectionMode: boolean;
-  tierBudgets: Record<string, number>;
-  rosterBudgetOverrides: Record<string, number>;
-  tierStartingPsp: Record<string, number>;
-  rosterStartingPspOverrides: Record<string, number>;
 };
 
 export default function NewTeamBuilder() {
@@ -191,22 +188,16 @@ export default function NewTeamBuilder() {
   );
 
   // Un règlement choisi force l'édition, le format et le mode avancé
-  // (achats de compétences depuis le pool de SPP du pack). En Flow B
-  // (coupe), c'est la coupe qui pilote déjà ces valeurs.
+  // (achats de compétences depuis le pool de SPP du pack). Vrai AUSSI en
+  // Flow B (coupe) : une coupe à règlement impose le pack à ses équipes, et
+  // c'est lui qui décide de l'édition et du format (le serveur refuse tout
+  // écart, cf. `team-build-handler`).
   useEffect(() => {
-    if (!pack || cupId) return;
+    if (!pack) return;
     setRuleset(pack.edition);
     setFormat(pack.format);
     setAdvancedMode(true);
-  }, [pack, cupId]);
-
-  // Budget d'or + pool de SPP (net de la taxe Star Players) imposés par le
-  // tier du roster dans le pack.
-  useEffect(() => {
-    if (!pack || cupId || !packRules) return;
-    setTeamValue(packRules.goldBudget);
-    setStartingPspPool(Math.max(0, packRules.sppBudget - packStarTax));
-  }, [pack, cupId, packRules, packStarTax]);
+  }, [pack]);
 
   // Purge les Star Players bannis (ou tous, si le roster n'y a pas droit)
   // quand un règlement devient actif.
@@ -452,23 +443,26 @@ export default function NewTeamBuilder() {
       });
   }, [cupId]);
 
-  // Flow B — résout budget + pool imposés pour le roster sélectionné.
-  // Précédence : override roster > budget du tier > budget par défaut.
+  // Budget d'or + pool de PSP IMPOSÉS, toutes sources confondues. La règle
+  // (règlement de tournoi > règles de coupe > rien) vit dans un module pur
+  // qui reproduit la précédence du serveur : sans ça, une équipe construite
+  // depuis une coupe à règlement repartait avec le budget natif du roster et
+  // un pool de 0 PSP — donc aucune compétence achetable.
   useEffect(() => {
-    if (!cupId || !cupRules) return;
-    const r = rosters.find((x) => x.slug === rosterId);
-    if (!r || r.tier == null || r.budget == null) return;
-    const budget =
-      cupRules.rosterBudgetOverrides[r.slug] ??
-      cupRules.tierBudgets[r.tier] ??
-      r.budget;
-    const pool =
-      cupRules.rosterStartingPspOverrides[r.slug] ??
-      cupRules.tierStartingPsp[r.tier] ??
-      0;
-    setTeamValue(budget);
-    setStartingPspPool(pool);
-  }, [cupId, cupRules, rosters, rosterId]);
+    const imposed = resolveBuildBudget({
+      packRules,
+      packStarTax,
+      cupRules: cupId ? cupRules : null,
+      roster: rosters.find((x) => x.slug === rosterId) ?? null,
+    });
+    if (!imposed) return;
+    setTeamValue((current) =>
+      current === imposed.teamValue ? current : imposed.teamValue,
+    );
+    setStartingPspPool((current) =>
+      current === imposed.startingPspPool ? current : imposed.startingPspPool,
+    );
+  }, [packRules, packStarTax, cupId, cupRules, rosters, rosterId]);
 
   // Clone — préremplit le builder depuis une équipe de base (compo + staff +
   // stars). Le roster déclenche le chargement des positions qui applique la
@@ -1056,9 +1050,12 @@ export default function NewTeamBuilder() {
                   data-testid={cupId ? "cup-locked-budget" : "pack-locked-budget"}
                 >
                   <span className="text-xs text-amber-800">
-                    {cupId
-                      ? "🔒 Budget imposé par la coupe"
-                      : t.teams.tournamentRulesetLockedBudget}
+                    {/* Une coupe à règlement délègue budget ET pool au pack
+                        (précédence serveur) : le dire, sinon le coach cherche
+                        un budget de coupe qui ne s'applique pas. */}
+                    {pack
+                      ? t.teams.tournamentRulesetLockedBudget
+                      : "🔒 Budget imposé par la coupe"}
                   </span>
                   <span className="text-base font-semibold text-amber-900 tabular-nums">
                     {teamValue}
