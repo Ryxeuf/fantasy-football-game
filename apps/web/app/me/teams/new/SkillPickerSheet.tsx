@@ -28,6 +28,7 @@ import {
   type SkillCatalogItem,
   type SkillOption,
 } from "./build-advancement-rules";
+import { getSkillAccessPalette } from "../../../lib/skill-category-colors";
 
 const TYPE_LABELS: Record<BuildAdvancementType, string> = {
   primary: "Principale",
@@ -252,7 +253,7 @@ export default function SkillPickerSheet({
                 onClick={() => setCategory(category === code ? "" : code)}
                 aria-pressed={category === code}
                 data-testid={`skill-picker-cat-${code}`}
-                className={chipClass(category === code)}
+                className={categoryChipClass(category === code, code)}
               >
                 {CATEGORY_LABELS[code]}
               </button>
@@ -306,7 +307,11 @@ export default function SkillPickerSheet({
                               >
                                 {option.skill.nameFr}
                               </span>
-                              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-gray-500">
+                              <span
+                                className={`rounded-full border px-1.5 py-0.5 text-[10px] font-semibold uppercase ${getSkillAccessPalette(
+                                  option.category,
+                                ).base} ${getSkillAccessPalette(option.category).border}`}
+                              >
                                 {CATEGORY_LABELS[option.category]}
                               </span>
                               {option.isElite && (
@@ -350,6 +355,19 @@ function chipClass(active: boolean): string {
   const base =
     "flex min-h-[36px] shrink-0 items-center rounded-full border px-3 text-xs font-medium transition";
   return active
-    ? `${base} border-indigo-500 bg-indigo-500 text-white`
-    : `${base} border-gray-300 bg-white text-gray-600 hover:border-indigo-300`;
+    ? `${base} border-nuffle-anthracite bg-nuffle-anthracite text-white`
+    : `${base} border-gray-300 bg-white text-gray-600 hover:border-gray-400`;
+}
+
+/**
+ * Chip d'une catégorie : couleur OFFICIELLE de la catégorie (`code` =
+ * G/A/S/P/M/K), variante pleine quand elle filtre la liste.
+ */
+function categoryChipClass(active: boolean, code: string): string {
+  const base =
+    "flex min-h-[36px] shrink-0 items-center rounded-full border px-3 text-xs font-medium transition";
+  const palette = getSkillAccessPalette(code);
+  return active
+    ? `${base} ${palette.solid}`
+    : `${base} ${palette.base} ${palette.border} hover:brightness-95`;
 }

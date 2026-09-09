@@ -19,6 +19,7 @@ import {
 import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getSkillEliteHint, getSkillEliteLabel } from "../lib/skill-elite";
+import { getSkillAccessPalette } from "../lib/skill-category-colors";
 
 export type AdvancementType =
   | "primary"
@@ -192,19 +193,29 @@ function chipClass(active: boolean, disabled = false): string {
 
 /**
  * E2/E6 — chip de catégorie de compétence : TOUTES les catégories sont
- * affichées ; celles autorisées par le type d'avancement sont en BLEU et
- * cliquables, les autres grisées et non sélectionnables.
+ * affichées ; celles autorisées par le type d'avancement sont cliquables,
+ * les autres grisées et non sélectionnables.
+ *
+ * Chaque chip porte la couleur OFFICIELLE de sa catégorie (`code` = G/A/S/P/
+ * M/K) plutôt qu'un bleu unique : c'est ici qu'un coach choisit la catégorie
+ * d'une montée de niveau, donc l'endroit où le code couleur sert le plus.
+ * La sélection se lit à la variante PLEINE de la même teinte.
  */
-function categoryChipClass(active: boolean, accessible: boolean): string {
+function categoryChipClass(
+  active: boolean,
+  accessible: boolean,
+  code: string,
+): string {
   const base =
     "inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition select-none";
   if (!accessible) {
     return `${base} cursor-not-allowed border-gray-200 bg-gray-50 text-gray-300`;
   }
+  const palette = getSkillAccessPalette(code);
   if (active) {
-    return `${base} border-blue-600 bg-blue-600 text-white shadow-sm`;
+    return `${base} ${palette.solid} shadow-sm`;
   }
-  return `${base} border-blue-400 bg-blue-50 text-blue-700 hover:bg-blue-100`;
+  return `${base} ${palette.base} ${palette.border} hover:brightness-95`;
 }
 
 export interface AdvancementEditorProps {
@@ -785,8 +796,9 @@ export function PlayerRow({
                     Aucune catégorie principale pour ce joueur.
                   </div>
                 ) : (
-                  // E2/E6 — toutes les catégories affichées : accessibles en
-                  // bleu, les autres grisées non sélectionnables.
+                  // E2/E6 — toutes les catégories affichées : accessibles
+                  // à leur couleur officielle, les autres grisées et non
+                  // sélectionnables.
                   <div className="flex flex-wrap gap-1.5">
                     {CATEGORY_ORDER.map((code) => {
                       const accessible = primaryCategories.includes(code);
@@ -806,6 +818,7 @@ export function PlayerRow({
                           className={categoryChipClass(
                             category === code,
                             accessible,
+                            code,
                           )}
                         >
                           {CATEGORY_LABELS[code]}
@@ -925,8 +938,9 @@ export function PlayerRow({
               </div>
             ) : hasAccess ? (
               <div className="flex flex-col gap-1.5">
-                {/* E2/E6 — catégories : autorisées en bleu (filtre),
-                    non autorisées grisées non sélectionnables. */}
+                {/* E2/E6 — catégories : autorisées à leur couleur
+                    officielle (filtre), non autorisées grisées et non
+                    sélectionnables. */}
                 <div
                   className="flex flex-wrap gap-1.5"
                   role="group"
@@ -954,7 +968,7 @@ export function PlayerRow({
                                   : "Principale"
                               } pour ce joueur`
                         }
-                        className={categoryChipClass(active, accessible)}
+                        className={categoryChipClass(active, accessible, code)}
                       >
                         {CATEGORY_LABELS[code]}
                       </button>
