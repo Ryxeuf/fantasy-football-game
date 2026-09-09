@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext";
 
 // Sprint Ligues v2 PR2 — `LeagueDetailPage` consomme `useFeatureFlag`
@@ -315,6 +315,41 @@ describe("LeagueDetailPage", () => {
     expect(screen.getAllByText("Dwarf Brawlers").length).toBeGreaterThanOrEqual(1);
     const rows = screen.getAllByTestId(/standings-row-/);
     expect(rows.length).toBe(2);
+  });
+
+  it("replie et déplie la zone Classement", async () => {
+    mockApi({ league: mockLeague, season: mockSeason, standings: mockStandings });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("league-standings")).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByTestId("league-standings-section-toggle"));
+    expect(screen.queryByTestId("league-standings")).toBeNull();
+    // Le barème reste visible : il vit à côté de la zone, pas dedans.
+    expect(screen.getByTestId("league-scoring-config")).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId("league-standings-section-toggle"));
+    expect(screen.getByTestId("league-standings")).toBeTruthy();
+  });
+
+  it("affiche le système de points au-dessus du classement", async () => {
+    mockApi({ league: mockLeague, season: mockSeason, standings: mockStandings });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("league-scoring-config")).toBeTruthy();
+    });
+    // L'ordre du DOM fait foi : le barème PRÉCÈDE la zone de classement.
+    const scoring = screen.getByTestId("league-scoring-config");
+    const standings = screen.getByTestId("league-standings-section");
+    expect(
+      scoring.compareDocumentPosition(standings) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it("renders the participants list for the selected season", async () => {

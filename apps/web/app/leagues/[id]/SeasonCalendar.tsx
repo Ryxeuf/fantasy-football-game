@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { MatchdayExport } from "./MatchdayExport";
@@ -11,6 +11,7 @@ import MatchCard, {
 import TeamRosterLink from "./TeamRosterLink";
 import { PairingScheduleEditor } from "./PairingScheduleEditor";
 import { putPoolFirst } from "./pool-order";
+import { CollapseToggle } from "../../components/CollapseToggle";
 import {
   canSchedulePairing,
   formatPlannedDate,
@@ -244,6 +245,20 @@ export function SeasonCalendar({
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
   const [filter, setFilter] = useState<CalendarFilter>("all");
+  // Journées repliées, par id. Un Set d'EXCEPTIONS plutôt qu'un état par
+  // journée : le calendrier arrive déplié, et une journée ajoutée ensuite
+  // (nouvelle journée du commissaire) l'est aussi, sans initialisation.
+  const [collapsedRounds, setCollapsedRounds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+
+  const toggleRound = useCallback((roundId: string) => {
+    setCollapsedRounds((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(roundId)) next.add(roundId);
+      return next;
+    });
+  }, []);
 
   const statusLabels: Record<string, string> = {
     pending: t.leagues.roundStatusPending,
@@ -281,8 +296,18 @@ export function SeasonCalendar({
     { key: "played", label: t.leagues.calendarFilterPlayed },
   ];
 
+  // « Tout replier » tant qu'au moins une journée VISIBLE est dépliée :
+  // le bouton propose toujours l'action qui change quelque chose.
+  const anyExpanded = visibleRounds.some((r) => !collapsedRounds.has(r.id));
+  const toggleAll = () => {
+    setCollapsedRounds(
+      anyExpanded ? new Set(visibleRounds.map((r) => r.id)) : new Set(),
+    );
+  };
+
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
       {rounds.length > 1 ? (
         <div
           data-testid="calendar-filters"
@@ -311,6 +336,17 @@ export function SeasonCalendar({
           ))}
         </div>
       ) : null}
+        {visibleRounds.length > 0 ? (
+          <button
+            type="button"
+            data-testid="calendar-toggle-all"
+            onClick={toggleAll}
+            className="rounded-md border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          >
+            {anyExpanded ? t.leagues.collapseAll : t.leagues.expandAll}
+          </button>
+        ) : null}
+      </div>
 
       {visibleRounds.length === 0 ? (
         <div
@@ -334,6 +370,7 @@ export function SeasonCalendar({
           const statusLabel = statusLabels[roundStatus] ?? roundStatus;
           const pairings = round.pairings ?? [];
           const progress = roundProgress(round);
+          const expanded = !collapsedRounds.has(round.id);
           const progressPct =
             progress.total > 0
               ? Math.round((progress.played / progress.total) * 100)
@@ -366,6 +403,17 @@ export function SeasonCalendar({
             >
               <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 bg-gray-50/60 px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
+                  <CollapseToggle
+                    open={expanded}
+                    onToggle={() => toggleRound(round.id)}
+                    label={`${
+                      expanded
+                        ? t.leagues.collapseSection
+                        : t.leagues.expandSection
+                    } — ${label}`}
+                    controls={`league-round-${round.id}-body`}
+                    testId={`league-round-toggle-${round.id}`}
+                  />
                   <span
                     className="inline-flex h-10 min-w-[2.75rem] items-center justify-center rounded-lg bg-nuffle-anthracite px-2 font-score text-xl tracking-wider text-white"
                     aria-hidden="true"
@@ -437,7 +485,11 @@ export function SeasonCalendar({
                 </div>
               </header>
 
-              <div className="space-y-3 p-3 sm:p-4">
+              <div
+                id={`league-round-${round.id}-body`}
+                hidden={!expanded}
+                className="space-y-3 p-3 sm:p-4"
+              >
                 {pairings.length === 0 ? (
                   <div
                     data-testid={`league-round-${round.id}-pairings-empty`}
