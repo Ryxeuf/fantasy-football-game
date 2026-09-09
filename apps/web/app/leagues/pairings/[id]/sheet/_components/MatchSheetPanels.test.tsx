@@ -780,6 +780,26 @@ describe("PreMatchPanel — budget coups de pouce", () => {
   });
 });
 
+describe("PreMatchPanel — libellé « Petite Monnaie »", () => {
+  // Le terme officiel FR du livre est « Petite Monnaie » : l'anglicisme
+  // « Petty cash » ne doit plus apparaître dans l'avant-match.
+  it("affiche la Petite Monnaie et jamais « Petty cash »", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+      />,
+    );
+
+    const homeBlock = screen.getByTestId("inducements-home");
+    expect(within(homeBlock).getByText(/Petite Monnaie/)).toBeTruthy();
+    expect(within(homeBlock).queryByText(/Petty/i)).toBeNull();
+  });
+});
+
 describe("PreMatchPanel — forfait par équipe", () => {
   it("coche le forfait d'une équipe, exclut l'autre, et l'enregistre", () => {
     const onSave = vi.fn();

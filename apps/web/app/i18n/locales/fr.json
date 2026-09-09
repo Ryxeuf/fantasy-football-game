@@ -696,6 +696,16 @@
     "pairingStatusValidated": "Résultat validé",
     "pairingSheetOpen": "Feuille de match",
     "pairingSheetView": "Voir la feuille",
+    "nextMatchesSection": "Vos prochains matchs",
+    "nextMatchesEmpty": "Aucun match à venir pour votre équipe.",
+    "nextMatchesVersus": "contre",
+    "nextMatchesHome": "à domicile",
+    "nextMatchesAway": "à l'extérieur",
+    "nextMatchesNoDate": "Date à convenir",
+    "collapseAll": "Tout replier",
+    "expandAll": "Tout déplier",
+    "collapseSection": "Replier",
+    "expandSection": "Déplier",
     "standingsSection": "Classement",
     "standingsEmpty": "Aucune équipe inscrite pour calculer le classement.",
     "standingsRank": "#",
@@ -909,7 +919,7 @@
   },
   "inducements": {
     "title": "Inducements",
-    "pettyCash": "Petty Cash",
+    "pettyCash": "Petite Monnaie",
     "budget": "Budget total",
     "remaining": "Restant",
     "totalCost": "Coût total",
@@ -920,7 +930,7 @@
     "selectInducements": "Choisissez vos inducements",
     "waitingOpponent": "En attente de l'adversaire...",
     "phaseTitle": "Phase d'Inducements",
-    "phaseDescription": "Sélectionnez vos inducements pour ce match. L'équipe désavantagée reçoit du Petty Cash."
+    "phaseDescription": "Sélectionnez vos inducements pour ce match. L'équipe désavantagée reçoit de la Petite Monnaie."
   },
   "support": {
     "navLabel": "Soutenir",

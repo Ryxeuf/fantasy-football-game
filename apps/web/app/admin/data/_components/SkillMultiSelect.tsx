@@ -9,6 +9,7 @@
 
 import { useMemo } from "react";
 import { ChipMultiSelect, type ChipGroupStyle, type ChipOption } from "./ChipMultiSelect";
+import { getSkillCategoryColor } from "../../../lib/skill-category-colors";
 
 export interface SkillOption {
   slug: string;
@@ -17,14 +18,22 @@ export interface SkillOption {
   category?: string;
 }
 
-/** Couleurs et libellés FR des catégories de compétences BB. */
+/**
+ * Couleurs et libellés FR des catégories de compétences BB. Les couleurs
+ * viennent de la source unique `lib/skill-category-colors` : les badges de
+ * l'admin et ceux du roster ne peuvent donc pas diverger.
+ */
 export const SKILL_CATEGORY_STYLES: Record<string, ChipGroupStyle> = {
-  General: { label: "Général", chipClass: "bg-blue-100 text-blue-800 border-blue-300" },
-  Agility: { label: "Agilité", chipClass: "bg-green-100 text-green-800 border-green-300" },
-  Strength: { label: "Force", chipClass: "bg-red-100 text-red-800 border-red-300" },
-  Passing: { label: "Passe", chipClass: "bg-purple-100 text-purple-800 border-purple-300" },
-  Mutation: { label: "Mutation", chipClass: "bg-orange-100 text-orange-800 border-orange-300" },
-  Trait: { label: "Trait", chipClass: "bg-gray-100 text-gray-800 border-gray-300" },
+  General: { label: "Général", chipClass: getSkillCategoryColor("General", true) },
+  Agility: { label: "Agilité", chipClass: getSkillCategoryColor("Agility", true) },
+  Strength: { label: "Force", chipClass: getSkillCategoryColor("Strength", true) },
+  Passing: { label: "Passe", chipClass: getSkillCategoryColor("Passing", true) },
+  Mutation: { label: "Mutation", chipClass: getSkillCategoryColor("Mutation", true) },
+  Trait: { label: "Trait", chipClass: getSkillCategoryColor("Trait", true) },
+  "Scélérates": {
+    label: "Scélérate",
+    chipClass: getSkillCategoryColor("Scélérates", true),
+  },
 };
 
 interface SkillMultiSelectProps {

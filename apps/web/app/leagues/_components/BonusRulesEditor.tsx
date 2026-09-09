@@ -13,6 +13,7 @@ import {
   presetToRule,
   emptyBonusRule,
 } from "./bonus-rules";
+import { appliesLabel, conditionLabel } from "./bonus-rule-labels";
 
 // E1 — Editeur de regles de points bonus de ligue. Le commissaire
 // compose une liste de regles (preset rapide ou regle personnalisee)
@@ -259,38 +260,4 @@ function presetLabel(t: Translations, key: string): string {
   }
 }
 
-function conditionLabel(t: Translations, type: BonusConditionType): string {
-  switch (type) {
-    case "tds_scored_gte":
-      return t.leagues.bonusCondTdsScored;
-    case "tds_conceded_lte":
-      return t.leagues.bonusCondTdsConceded;
-    case "cas_inflicted_gte":
-      return t.leagues.bonusCondCasInflicted;
-    case "killings_gte":
-      return t.leagues.bonusCondKillings;
-    case "completions_gte":
-      return t.leagues.bonusCondCompletions;
-    case "margin_gte":
-      return t.leagues.bonusCondMargin;
-    case "clean_sheet":
-      return t.leagues.bonusCondCleanSheet;
-    case "shut_out_win":
-      return t.leagues.bonusCondShutoutWin;
-  }
-}
 
-function appliesLabel(t: Translations, applies: BonusAppliesTo): string {
-  switch (applies) {
-    case "both":
-      return t.leagues.bonusAppliesBoth;
-    case "home":
-      return t.leagues.bonusAppliesHome;
-    case "away":
-      return t.leagues.bonusAppliesAway;
-    case "winner":
-      return t.leagues.bonusAppliesWinner;
-    case "loser":
-      return t.leagues.bonusAppliesLoser;
-  }
-}

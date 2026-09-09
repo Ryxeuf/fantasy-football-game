@@ -24,11 +24,15 @@ export type EventKind =
 // touché). Pour les autres (TD, passe, interception, lancer de
 // coéquipier, expulsion, temporisation, autre élimination), le champ
 // Cible est masqué.
+//
+// « Vol Fatal » : un atterrissage peut se faire SUR un adversaire et le
+// plaquer — l'atterrissage porte donc lui aussi une cible adverse.
 export const TARGET_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
   "casualty",
   "aggression",
   "crowd_surge",
   "special_elim",
+  "ttm_landing",
 ]);
 
 // A59/A61 — types pouvant porter une blessure : élimination sur blocage,
@@ -42,6 +46,9 @@ export const INJURY_BEARING_KINDS: ReadonlySet<EventKind> = new Set([
   "other_elim",
   "special_elim",
   "stalling",
+  // Atterrissage sur une case occupée (« Vol Fatal ») : l'adversaire
+  // plaqué peut sortir.
+  "ttm_landing",
 ]);
 
 // FDM — le RÉCEPTIONNEUR d'une passe réussie. Contrairement à la « Cible »
@@ -82,6 +89,11 @@ export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
     "La blessure éventuelle frappe le joueur qui temporise : personne ne l’inflige, aucun PSP.",
   crowd_surge:
     "Sortie infligée par le public : aucun joueur ne la revendique, donc aucun PSP.",
+  // Règle BB S3 : atterrir sur un adversaire et le plaquer ne rapporte
+  // rien… sauf au porteur de « Vol Fatal », qui touche les PSP
+  // d’Élimination. L’atterrissage lui-même vaut toujours 1 PSP.
+  ttm_landing:
+    "1 PSP au joueur lancé. En cas d’atterrissage SUR un adversaire, renseigne la cible et sa blessure : l’Élimination ne rapporte des PSP (2, ou 3 en Bagarreurs Brutaux) que si le joueur lancé a « Vol Fatal ».",
 };
 
 /** Rappel de règle du type d'évènement, ou `null` s'il n'y a rien à dire. */

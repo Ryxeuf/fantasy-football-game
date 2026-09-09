@@ -8,10 +8,12 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
+import { NextMatchesPanel } from "./NextMatchesPanel";
 import { InviteCoachModal } from "./InviteCoachModal";
 import { SentInvitationsPanel } from "./SentInvitationsPanel";
 import { TestParticipantButton } from "./TestParticipantButton";
 import { SeasonStandings } from "./SeasonStandings";
+import { ScoringSystemPanel } from "./ScoringSystemPanel";
 import { PlayoffBracketView } from "./PlayoffBracketView";
 import { SeasonParticipants } from "./SeasonParticipants";
 import { NewSeasonModal } from "./NewSeasonModal";
@@ -22,6 +24,7 @@ import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
 import { putPoolFirst } from "./pool-order";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
+import { CollapsibleSection } from "../../components/CollapsibleSection";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { getRosterName } from "@bb/game-engine";
 import type {
@@ -418,30 +421,6 @@ export default function LeagueDetailPage() {
         </p>
       </div>
 
-      <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
-          {t.leagues.scoringConfig}
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-          <div>
-            {t.leagues.scoreWin} : <strong>{league.winPoints}</strong>{" "}
-            {t.leagues.points}
-          </div>
-          <div>
-            {t.leagues.scoreDraw} : <strong>{league.drawPoints}</strong>{" "}
-            {t.leagues.points}
-          </div>
-          <div>
-            {t.leagues.scoreLoss} : <strong>{league.lossPoints}</strong>{" "}
-            {t.leagues.points}
-          </div>
-          <div>
-            {t.leagues.scoreForfeit} :{" "}
-            <strong>{league.forfeitPoints}</strong> {t.leagues.points}
-          </div>
-        </div>
-      </section>
-
       {/* Documents officiels (règlement, calendrier, affiche). Dépôt réservé
           au commissaire — et aux admins, que le serveur reconnaît seul. */}
       <CompetitionDocuments
@@ -638,6 +617,13 @@ export default function LeagueDetailPage() {
                 </div>
               ) : null}
 
+              {/* Les prochaines rencontres DU COACH, avant le calendrier
+                  complet : c'est la question qu'il se pose en arrivant. */}
+              <NextMatchesPanel
+                rounds={season.rounds}
+                currentUserId={currentUserId}
+              />
+
               <div className="space-y-3">
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.calendarSection}
@@ -669,40 +655,67 @@ export default function LeagueDetailPage() {
                 />
               </div>
 
-              <div className="space-y-3">
-                <h3 className="text-md font-semibold text-nuffle-anthracite">
-                  {t.leagues.standingsSection}
-                </h3>
+              {/* Le barème vit juste au-dessus du classement : c'est là
+                  qu'on lit une colonne « Pts » et qu'on a besoin de savoir
+                  d'où elle sort — points bonus compris. */}
+              <ScoringSystemPanel
+                winPoints={league.winPoints}
+                drawPoints={league.drawPoints}
+                lossPoints={league.lossPoints}
+                forfeitPoints={league.forfeitPoints}
+                bonusPointsConfig={league.bonusPointsConfig}
+              />
+
+              <CollapsibleSection
+                testId="league-standings-section"
+                collapseLabel={t.leagues.collapseSection}
+                expandLabel={t.leagues.expandSection}
+                title={
+                  <h3 className="text-md font-semibold text-nuffle-anthracite">
+                    {t.leagues.standingsSection}
+                  </h3>
+                }
+              >
                 {/* FR6 — un classement par poule si la saison en a, sinon global. */}
                 {orderedPoolStandings.length > 0 ? (
                   <div className="space-y-4" data-testid="pool-standings-list">
                     {orderedPoolStandings.map((pool) => (
-                      <div key={pool.poolId} data-testid={`pool-standings-${pool.poolId}`}>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="text-sm font-semibold text-nuffle-anthracite">
-                            {pool.poolName}
-                          </h4>
-                          {pool.poolId === myPoolId ? (
-                            <span
-                              data-testid={`pool-standings-mine-${pool.poolId}`}
-                              className="text-[11px] uppercase tracking-wide bg-nuffle-gold/15 border border-nuffle-gold/40 text-nuffle-bronze px-2 py-0.5 rounded"
-                            >
-                              {t.leagues.myPoolBadge}
-                            </span>
-                          ) : null}
-                          {pool.qualifiesForPlayoffs > 0 ? (
-                            <span className="text-[11px] uppercase tracking-wide bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-                              {pool.qualifiesForPlayoffs} qualifié(s) PO
-                            </span>
-                          ) : null}
-                        </div>
+                      // Chaque poule se replie séparément : avec 4 poules,
+                      // le coach ne garde ouverte que la sienne.
+                      <CollapsibleSection
+                        key={pool.poolId}
+                        testId={`pool-standings-${pool.poolId}`}
+                        className="space-y-1"
+                        collapseLabel={t.leagues.collapseSection}
+                        expandLabel={t.leagues.expandSection}
+                        title={
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h4 className="text-sm font-semibold text-nuffle-anthracite">
+                              {pool.poolName}
+                            </h4>
+                            {pool.poolId === myPoolId ? (
+                              <span
+                                data-testid={`pool-standings-mine-${pool.poolId}`}
+                                className="text-[11px] uppercase tracking-wide bg-nuffle-gold/15 border border-nuffle-gold/40 text-nuffle-bronze px-2 py-0.5 rounded"
+                              >
+                                {t.leagues.myPoolBadge}
+                              </span>
+                            ) : null}
+                            {pool.qualifiesForPlayoffs > 0 ? (
+                              <span className="text-[11px] uppercase tracking-wide bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+                                {pool.qualifiesForPlayoffs} qualifié(s) PO
+                              </span>
+                            ) : null}
+                          </div>
+                        }
+                      >
                         <SeasonStandings
                           rows={pool.standings}
                           showSeasonElo={showSeasonElo}
                           leagueId={leagueId}
                           canViewRosters={canViewRosters}
                         />
-                      </div>
+                      </CollapsibleSection>
                     ))}
                   </div>
                 ) : (
@@ -713,7 +726,7 @@ export default function LeagueDetailPage() {
                     canViewRosters={canViewRosters}
                   />
                 )}
-              </div>
+              </CollapsibleSection>
 
               {/* L2.C.3 — bracket de playoffs (rendu null si pas
                   encore declenche : playoffSize=0 OU saison reguliere

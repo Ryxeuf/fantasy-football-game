@@ -10,6 +10,7 @@ import {
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
 import { getSkillCategoryLabel } from "../lib/skill-category-labels";
+import { getSkillCategoryColor } from "../lib/skill-category-colors";
 import {
   getSkillActivation,
   getSkillActivationHint,
@@ -99,24 +100,12 @@ export default function SkillTooltip({ skillSlug, className = "" }: SkillTooltip
       getSkillDescription(hoveredSkill, language)
     : null;
 
-  // Fonction pour obtenir la couleur selon la catégorie
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "General": return "bg-blue-100 text-blue-800 border-blue-300";
-      case "Agility": return "bg-green-100 text-green-800 border-green-300";
-      case "Strength": return "bg-red-100 text-red-800 border-red-300";
-      case "Passing": return "bg-purple-100 text-purple-800 border-purple-300";
-      case "Mutation": return "bg-orange-100 text-orange-800 border-orange-300";
-      case "Trait": return "bg-gray-100 text-gray-800 border-gray-300";
-      default: return "bg-gray-100 text-gray-600 border-gray-300";
-    }
-  };
 
   const skillInfo =
     resolveFromCatalog(catalog, skillSlug, language) ??
     getSkillDescription(skillSlug, language);
   const displayName = skillInfo?.name || skillSlug;
-  const categoryColor = skillInfo ? getCategoryColor(skillInfo.category) : "bg-gray-100 text-gray-600 border-gray-300";
+  const categoryColor = getSkillCategoryColor(skillInfo?.category, true);
 
   return (
     <>

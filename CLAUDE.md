@@ -986,6 +986,22 @@ const decoded = decodeURIComponent(link.href.replace(/\+/g, " "));
 
 ## Workflow git
 
+### Consignes permanentes d'une vague de corrections
+
+Posées le 2026-09-09, à appliquer SYSTÉMATIQUEMENT dès qu'une demande
+porte une liste de points à corriger, sans qu'il faille les redemander :
+
+1. **Une seule branche pour l'ensemble**, en **commits atomiques** — un
+   commit par point, qui se relit et se `revert` seul.
+2. **Des tests couvrant CHAQUE point.** Un point sans test n'est pas
+   livré. La logique de sélection/dérivation part dans un module pur
+   testable sans Prisma ni DOM (cf. `next-matches`,
+   `league-sheet-frozen-skills`).
+3. **Pousser la branche et ouvrir la PR** une fois la vague complète.
+4. **Surveiller et corriger la CI ET les conflits de merge** jusqu'au
+   vert (cf. « Webhooks PR » ci-dessous : on attend les events, on ne
+   `sleep` pas).
+
 ### Branches
 - Branche par lot : `claude/<scope>-<short-desc>`. Ex :
   `claude/lot-k-applier-audit`, `claude/lot-l-player-match-history`.
