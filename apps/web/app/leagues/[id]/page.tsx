@@ -12,6 +12,7 @@ import { InviteCoachModal } from "./InviteCoachModal";
 import { SentInvitationsPanel } from "./SentInvitationsPanel";
 import { TestParticipantButton } from "./TestParticipantButton";
 import { SeasonStandings } from "./SeasonStandings";
+import { ScoringSystemPanel } from "./ScoringSystemPanel";
 import { PlayoffBracketView } from "./PlayoffBracketView";
 import { SeasonParticipants } from "./SeasonParticipants";
 import { NewSeasonModal } from "./NewSeasonModal";
@@ -418,30 +419,6 @@ export default function LeagueDetailPage() {
         </p>
       </div>
 
-      <section className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
-        <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
-          {t.leagues.scoringConfig}
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-          <div>
-            {t.leagues.scoreWin} : <strong>{league.winPoints}</strong>{" "}
-            {t.leagues.points}
-          </div>
-          <div>
-            {t.leagues.scoreDraw} : <strong>{league.drawPoints}</strong>{" "}
-            {t.leagues.points}
-          </div>
-          <div>
-            {t.leagues.scoreLoss} : <strong>{league.lossPoints}</strong>{" "}
-            {t.leagues.points}
-          </div>
-          <div>
-            {t.leagues.scoreForfeit} :{" "}
-            <strong>{league.forfeitPoints}</strong> {t.leagues.points}
-          </div>
-        </div>
-      </section>
-
       {/* Documents officiels (règlement, calendrier, affiche). Dépôt réservé
           au commissaire — et aux admins, que le serveur reconnaît seul. */}
       <CompetitionDocuments
@@ -673,6 +650,16 @@ export default function LeagueDetailPage() {
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
                   {t.leagues.standingsSection}
                 </h3>
+                {/* Le barème vit juste au-dessus du classement : c'est là
+                    qu'on lit une colonne « Pts » et qu'on a besoin de savoir
+                    d'où elle sort — points bonus compris. */}
+                <ScoringSystemPanel
+                  winPoints={league.winPoints}
+                  drawPoints={league.drawPoints}
+                  lossPoints={league.lossPoints}
+                  forfeitPoints={league.forfeitPoints}
+                  bonusPointsConfig={league.bonusPointsConfig}
+                />
                 {/* FR6 — un classement par poule si la saison en a, sinon global. */}
                 {orderedPoolStandings.length > 0 ? (
                   <div className="space-y-4" data-testid="pool-standings-list">
