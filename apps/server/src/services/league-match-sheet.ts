@@ -1790,11 +1790,16 @@ export async function validateByCommissioner(input: {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
   };
+  const frozenForSpp = {
+    home: sheetSnapForSpp.rosterSnapshotHome,
+    away: sheetSnapForSpp.rosterSnapshotAway,
+  };
   const summary = summarizeMatchSheet(events, {
-    violentInnovators: collectViolentInnovators(teamsForBudgetLive, {
-      home: sheetSnapForSpp.rosterSnapshotHome,
-      away: sheetSnapForSpp.rosterSnapshotAway,
-    }),
+    violentInnovators: collectViolentInnovators(
+      teamsForBudgetLive,
+      frozenForSpp,
+    ),
+    fatalFlighters: collectFatalFlighters(teamsForBudgetLive, frozenForSpp),
   });
 
   // Forfait declare a l'avant-match : on route vers recordForfeit (le cote
@@ -2844,16 +2849,51 @@ function parseFrozenTeamValues(raw: unknown): {
  * (feuille antérieure au gel complet), on retombe sur le roster live.
  */
 export function collectViolentInnovators(
-  teams: {
-    home: MatchSheetTeam | null;
-    away: MatchSheetTeam | null;
-  },
-  /** Snapshots gelés de la feuille (« version du match »). */
-  frozen?: {
-    home?: unknown;
-    away?: unknown;
-  },
+  teams: MatchSheetTeamsBySide,
+  frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
+  return collectSkillHolders(teams, "violent-innovator", frozen);
+}
+
+/**
+ * Ids des joueurs (des 2 équipes) ayant la compétence « Vol Fatal ». Le
+ * summarizer ne crédite les PSP d'une Élimination infligée en atterrissant
+ * sur un adversaire lors d'un Lancer de Coéquipier (`ttm_landing`) qu'à
+ * ces joueurs (règle BB S3).
+ *
+ * Mêmes règles de lecture que `collectViolentInnovators` : compétences du
+ * COUP D'ENVOI.
+ */
+export function collectFatalFlighters(
+  teams: MatchSheetTeamsBySide,
+  frozen?: MatchSheetFrozenBySide,
+): Set<string> {
+  return collectSkillHolders(teams, "fatal-flight", frozen);
+}
+
+interface MatchSheetTeamsBySide {
+  home: MatchSheetTeam | null;
+  away: MatchSheetTeam | null;
+}
+
+/** Snapshots gelés de la feuille (« version du match »). */
+interface MatchSheetFrozenBySide {
+  home?: unknown;
+  away?: unknown;
+}
+
+/**
+ * Ids des joueurs des 2 équipes portant un slug de compétence, lu dans les
+ * compétences du COUP D'ENVOI. Les CSV de compétences viennent de sources
+ * multiples (seed, admin, évolution) : la variante à underscore et la
+ * casse sont acceptées.
+ */
+function collectSkillHolders(
+  teams: MatchSheetTeamsBySide,
+  slug: string,
+  frozen?: MatchSheetFrozenBySide,
+): Set<string> {
+  const wanted = new Set([slug, slug.replace(/-/g, "_")]);
   const out = new Set<string>();
   for (const side of ["home", "away"] as const) {
     const team = teams[side];
@@ -2863,12 +2903,7 @@ export function collectViolentInnovators(
       const slugs = (skillsById.get(p.id) ?? "")
         .split(",")
         .map((sk) => sk.trim().toLowerCase());
-      if (
-        slugs.includes("violent-innovator") ||
-        slugs.includes("violent_innovator")
-      ) {
-        out.add(p.id);
-      }
+      if (slugs.some((sk) => wanted.has(sk))) out.add(p.id);
     }
   }
   return out;
@@ -3649,11 +3684,13 @@ export async function getMatchSheet(input: {
       journeymanPositions.away,
     ),
   };
+  const frozenForRead = {
+    home: sheetSnapRaw.rosterSnapshotHome,
+    away: sheetSnapRaw.rosterSnapshotAway,
+  };
   const summary = summarizeMatchSheet(events, {
-    violentInnovators: collectViolentInnovators(teamsLive, {
-      home: sheetSnapRaw.rosterSnapshotHome,
-      away: sheetSnapRaw.rosterSnapshotAway,
-    }),
+    violentInnovators: collectViolentInnovators(teamsLive, frozenForRead),
+    fatalFlighters: collectFatalFlighters(teamsLive, frozenForRead),
   });
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la

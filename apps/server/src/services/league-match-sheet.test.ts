@@ -103,6 +103,7 @@ import {
   listPendingValidationsForCommissioner,
   buildMatchSheetReference,
   collectViolentInnovators,
+  collectFatalFlighters,
   MatchSheetError,
 } from "./league-match-sheet";
 import { recordOfflineLeagueResult } from "./league-offline-result";
@@ -4068,5 +4069,67 @@ describe("collectViolentInnovators — E30", () => {
       });
       expect([...set]).toEqual(["h1"]);
     });
+  });
+});
+
+// « Vol Fatal » : le joueur LANCÉ qui atterrit sur une case occupée et
+// plaque l'adversaire gagne les PSP d'Élimination si celui-ci sort.
+describe("collectFatalFlighters", () => {
+  const player = (id: string, skills: string | null) =>
+    ({ id, skills }) as never;
+  const side = (players: unknown[]) =>
+    ({ players }) as unknown as Parameters<typeof collectFatalFlighters>[0]["home"];
+
+  it("retient les joueurs des DEUX équipes portant la compétence", () => {
+    const set = collectFatalFlighters({
+      home: side([player("h1", "right-stuff,fatal-flight"), player("h2", "dodge")]),
+      away: side([player("a1", "fatal-flight")]),
+    });
+    expect([...set].sort()).toEqual(["a1", "h1"]);
+  });
+
+  it("accepte la variante à underscore et la casse", () => {
+    const set = collectFatalFlighters({
+      home: side([player("h1", "Fatal_Flight"), player("h2", " FATAL-FLIGHT ")]),
+      away: null,
+    });
+    expect([...set].sort()).toEqual(["h1", "h2"]);
+  });
+
+  it("ne retient personne sans la compétence", () => {
+    const set = collectFatalFlighters({
+      home: side([player("h1", "stunty,right-stuff"), player("h2", null)]),
+      away: side([player("a1", "")]),
+    });
+    expect(set.size).toBe(0);
+  });
+
+  it("ne confond pas une compétence dont le nom la contient", () => {
+    const set = collectFatalFlighters({
+      home: side([player("h1", "fatal-flight-plus")]),
+      away: null,
+    });
+    expect(set.size).toBe(0);
+  });
+
+  it("tolère une équipe absente (forfait, feuille incomplète)", () => {
+    expect(collectFatalFlighters({ home: null, away: null }).size).toBe(0);
+  });
+
+  it("lit les compétences DU COUP D'ENVOI, pas celles du roster live", () => {
+    const named = (
+      id: string,
+      number: number,
+      name: string,
+      skills: string | null,
+    ) => ({ id, number, name, skills }) as never;
+    const set = collectFatalFlighters(
+      {
+        home: side([named("h1", 3, "Wilhelm", "right-stuff,fatal-flight")]),
+        away: null,
+      },
+      { home: { players: [{ number: 3, name: "Wilhelm", skills: "right-stuff" }] } },
+    );
+    expect(set.size).toBe(0);
   });
 });

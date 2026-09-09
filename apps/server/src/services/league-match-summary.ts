@@ -129,6 +129,7 @@ const CASUALTY_BEARING = new Set<MatchEventKind>([
   "crowd_surge",
   "special_elim",
   "stalling",
+  "ttm_landing",
 ]);
 
 /**
@@ -150,6 +151,16 @@ export interface MatchSummaryOptions {
    * calculatePlayerSPP).
    */
   readonly violentInnovators?: ReadonlySet<string>;
+  /**
+   * Ids des joueurs ayant la compétence « Vol Fatal » (fatal-flight).
+   * BB S3 : lors d'un Lancer de Coéquipier, le joueur LANCÉ qui atterrit
+   * (ou rebondit) sur une case occupée et plaque l'adversaire gagne les
+   * PSP d'Élimination si celui-ci sort (2, ou 3 via le modificateur
+   * Bagarreurs Brutaux appliqué en aval par `calculatePlayerSPP`).
+   * Sans la compétence, l'Élimination est bien consignée mais ne
+   * rapporte rien à son auteur.
+   */
+  readonly fatalFlighters?: ReadonlySet<string>;
 }
 
 /**
@@ -231,6 +242,30 @@ export function summarizeMatchSheet(
         // est le joueur LANCE, qui gagne 1 PSP (cf. spp-tracking).
         if (ev.actorPlayerId && team) {
           ensureStat(ev.actorPlayerId, team).ttmLandings += 1;
+        }
+        // « Vol Fatal » : le joueur lancé atterrit sur une case occupée et
+        // plaque l'adversaire. L'Élimination est consignée quoi qu'il
+        // arrive (la victime sort), mais elle ne rapporte les PSP
+        // d'Élimination qu'au porteur de la compétence.
+        const ttmSeverity = normalizeSeverity(ev.injurySeverity);
+        if (!ttmSeverity) break;
+        if (team === "home") casualtiesHome += 1;
+        else if (team === "away") casualtiesAway += 1;
+        if (
+          ev.actorPlayerId &&
+          team &&
+          options.fatalFlighters?.has(ev.actorPlayerId)
+        ) {
+          ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
+        }
+        if (ev.targetPlayerId) {
+          injuries.push({
+            playerId: ev.targetPlayerId,
+            severity: ttmSeverity,
+            side: team ? opposite(team) : "home",
+            cause: ev.causeDetail ?? ev.kind,
+            causedByPlayerId: ev.actorPlayerId ?? null,
+          });
         }
         break;
       }

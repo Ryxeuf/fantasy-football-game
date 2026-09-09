@@ -399,6 +399,80 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.playerStats.find((p) => p.playerId === "h5")).toBeUndefined();
   });
 
+  // « Vol Fatal » — le joueur LANCÉ qui atterrit sur une case occupée et
+  // plaque l'adversaire gagne les PSP d'Élimination si celui-ci sort.
+  it("ttm_landing : PSP d'élimination réservés à Vol Fatal", () => {
+    const events: MatchEventInput[] = [
+      // h9 a Vol Fatal, h8 non.
+      {
+        kind: "ttm_landing",
+        team: "home",
+        actorPlayerId: "h9",
+        targetPlayerId: "a5",
+        injurySeverity: "dead",
+      },
+      {
+        kind: "ttm_landing",
+        team: "home",
+        actorPlayerId: "h8",
+        targetPlayerId: "a6",
+        injurySeverity: "badly_hurt",
+      },
+    ];
+    const out = summarizeMatchSheet(events, {
+      fatalFlighters: new Set(["h9"]),
+    });
+    // Les 2 éliminations comptent pour l'équipe et blessent la cible…
+    expect(out.casualtiesHome).toBe(2);
+    expect(out.injuries.map((i) => i.playerId)).toEqual(["a5", "a6"]);
+    expect(out.injuries[0]?.side).toBe("away");
+    expect(out.injuries[0]?.causedByPlayerId).toBe("h9");
+    // …mais seul le porteur de Vol Fatal crédite des PSP d'Élimination.
+    const h9 = out.playerStats.find((p) => p.playerId === "h9");
+    const h8 = out.playerStats.find((p) => p.playerId === "h8");
+    expect(h9?.casualtiesInflicted).toBe(1);
+    expect(h8?.casualtiesInflicted).toBe(0);
+    // L'atterrissage lui-même reste crédité aux deux (1 PSP chacun).
+    expect(h9?.ttmLandings).toBe(1);
+    expect(h8?.ttmLandings).toBe(1);
+  });
+
+  it("ttm_landing sans option : aucun PSP d'élimination crédité (défaut)", () => {
+    const out = summarizeMatchSheet([
+      {
+        kind: "ttm_landing",
+        team: "away",
+        actorPlayerId: "a1",
+        targetPlayerId: "h1",
+        injurySeverity: "mng",
+      },
+    ]);
+    expect(out.casualtiesAway).toBe(1);
+    expect(out.injuries.map((i) => i.playerId)).toEqual(["h1"]);
+    const a1 = out.playerStats.find((p) => p.playerId === "a1");
+    expect(a1?.casualtiesInflicted).toBe(0);
+    expect(a1?.ttmLandings).toBe(1);
+  });
+
+  it("ttm_landing sans gravité : atterrissage seul, aucune sortie", () => {
+    const out = summarizeMatchSheet(
+      [
+        {
+          kind: "ttm_landing",
+          team: "home",
+          actorPlayerId: "h9",
+          targetPlayerId: "a5",
+        },
+      ],
+      { fatalFlighters: new Set(["h9"]) },
+    );
+    expect(out.casualtiesHome).toBe(0);
+    expect(out.injuries).toHaveLength(0);
+    const h9 = out.playerStats.find((p) => p.playerId === "h9");
+    expect(h9?.ttmLandings).toBe(1);
+    expect(h9?.casualtiesInflicted).toBe(0);
+  });
+
   it("special_elim : PSP d'élimination réservés à Innovateur Violent", () => {
     const events: MatchEventInput[] = [
       // h3 a Innovateur Violent, h4 non.

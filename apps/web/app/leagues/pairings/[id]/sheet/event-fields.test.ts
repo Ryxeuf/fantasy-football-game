@@ -22,6 +22,15 @@ describe("event-fields — Temporisation", () => {
     expect(TARGET_BEARING_KINDS.has("stalling")).toBe(false);
   });
 
+  // « Vol Fatal » : le joueur lancé peut atterrir SUR un adversaire et le
+  // plaquer — l'atterrissage porte donc une cible adverse et sa blessure.
+  it("ttm_landing porte une cible adverse ET une blessure", () => {
+    expect(TARGET_BEARING_KINDS.has("ttm_landing")).toBe(true);
+    expect(INJURY_BEARING_KINDS.has("ttm_landing")).toBe(true);
+    // Ce n'est PAS un réceptionneur : la cible est dans l'équipe adverse.
+    expect(RECEIVER_BEARING_KINDS.has("ttm_landing")).toBe(false);
+  });
+
   it("les kinds historiques porteurs de blessure sont inchangés", () => {
     for (const kind of [
       "casualty",
@@ -39,7 +48,6 @@ describe("event-fields — Temporisation", () => {
       "interception",
       "expulsion",
       "team_throw",
-      "ttm_landing",
     ] as const) {
       expect(INJURY_BEARING_KINDS.has(kind), kind).toBe(false);
     }
@@ -85,6 +93,7 @@ describe("event-fields — réceptionneur de passe", () => {
       "aggression",
       "crowd_surge",
       "special_elim",
+      "ttm_landing",
     ] as const) {
       expect(hasTargetField(kind), kind).toBe(true);
     }
@@ -96,7 +105,6 @@ describe("event-fields — réceptionneur de passe", () => {
       "expulsion",
       "stalling",
       "team_throw",
-      "ttm_landing",
       "other_elim",
     ] as const) {
       expect(hasTargetField(kind), kind).toBe(false);
@@ -123,10 +131,19 @@ describe("eventKindHint — rappels de règle sur les PSP (E30)", () => {
       "casualty",
       "pass_complete",
       "interception",
-      "ttm_landing",
     ] as const) {
       expect(eventKindHint(kind)).toBeNull();
     }
+  });
+
+  // « Vol Fatal » — le joueur lancé qui atterrit SUR un adversaire et
+  // l'élimine touche les PSP d'Élimination. Sans la compétence, la sortie
+  // est consignée mais ne rapporte rien : le coach doit le savoir avant de
+  // croire à une perte de saisie.
+  it("explique le cas « Vol Fatal » sur un atterrissage", () => {
+    const hint = eventKindHint("ttm_landing");
+    expect(hint).toContain("Vol Fatal");
+    expect(hint).toContain("1 PSP");
   });
 
   it("ne commente pas non plus les évènements sans PSP par nature", () => {
