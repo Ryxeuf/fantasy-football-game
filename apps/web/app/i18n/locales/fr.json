@@ -909,7 +909,7 @@
   },
   "inducements": {
     "title": "Inducements",
-    "pettyCash": "Petty Cash",
+    "pettyCash": "Petite Monnaie",
     "budget": "Budget total",
     "remaining": "Restant",
     "totalCost": "Coût total",
@@ -920,7 +920,7 @@
     "selectInducements": "Choisissez vos inducements",
     "waitingOpponent": "En attente de l'adversaire...",
     "phaseTitle": "Phase d'Inducements",
-    "phaseDescription": "Sélectionnez vos inducements pour ce match. L'équipe désavantagée reçoit du Petty Cash."
+    "phaseDescription": "Sélectionnez vos inducements pour ce match. L'équipe désavantagée reçoit de la Petite Monnaie."
   },
   "support": {
     "navLabel": "Soutenir",

@@ -616,7 +616,7 @@ function findWeatherTable(
  * Sélecteur de coups de pouce piloté par le catalogue officiel :
  * un menu déroulant (coups de pouce + star players de l'équipe) ajoute des
  * lignes au coût auto-rempli. La quantité est bornée par `maxQuantity`. Le
- * total est confronté au budget (petty cash + trésorerie).
+ * total est confronté au budget (Petite Monnaie + trésorerie).
  */
 function InducementEditor({
   list,
@@ -697,7 +697,7 @@ function InducementEditor({
         </div>
         <div className="flex justify-between text-[11px] text-slate-500">
           <span>
-            Petty cash {formatGold(budget.pettyCash)} + cagnotte{" "}
+            Petite Monnaie {formatGold(budget.pettyCash)} + cagnotte{" "}
             {formatGold(budget.treasury)}
           </span>
           <span
