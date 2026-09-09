@@ -3985,4 +3985,88 @@ describe("collectViolentInnovators — E30", () => {
   it("tolère une équipe absente (forfait, feuille incomplète)", () => {
     expect(collectViolentInnovators({ home: null, away: null }).size).toBe(0);
   });
+
+  // Une feuille PASSÉE ne doit pas bouger quand le roster bouge : la
+  // compétence gagnée à l'étape 3 de la séquence de fin de match (p.68)
+  // rétro-ajoutait +2 PSP à chaque élimination par Action Spéciale déjà
+  // consignée.
+  describe("gel de la feuille (« version du match »)", () => {
+    const frozenPlayer = (number: number, name: string, skills: string) => ({
+      number,
+      name,
+      skills,
+    });
+    const namedPlayer = (
+      id: string,
+      number: number,
+      name: string,
+      skills: string | null,
+    ) => ({ id, number, name, skills }) as never;
+
+    it("IGNORE une compétence acquise APRÈS le coup d'envoi", () => {
+      const set = collectViolentInnovators(
+        {
+          home: side([
+            namedPlayer("h1", 1, "Griff", "block,violent-innovator"),
+          ]),
+          away: null,
+        },
+        {
+          home: { players: [frozenPlayer(1, "Griff", "block")] },
+        },
+      );
+      expect(set.size).toBe(0);
+    });
+
+    it("retient la compétence déjà présente AU coup d'envoi", () => {
+      const set = collectViolentInnovators(
+        {
+          home: side([
+            namedPlayer("h1", 1, "Griff", "block,violent-innovator"),
+          ]),
+          away: null,
+        },
+        {
+          home: {
+            players: [frozenPlayer(1, "Griff", "block,violent-innovator")],
+          },
+        },
+      );
+      expect([...set]).toEqual(["h1"]);
+    });
+
+    it("gèle chaque côté INDÉPENDAMMENT", () => {
+      const set = collectViolentInnovators(
+        {
+          home: side([namedPlayer("h1", 1, "Griff", "violent-innovator")]),
+          away: side([namedPlayer("a1", 1, "Karla", "violent-innovator")]),
+        },
+        {
+          // Domicile gelé sans la compétence, extérieur avec.
+          home: { players: [frozenPlayer(1, "Griff", "block")] },
+          away: { players: [frozenPlayer(1, "Karla", "violent-innovator")] },
+        },
+      );
+      expect([...set]).toEqual(["a1"]);
+    });
+
+    it("retombe sur le roster live sans gel exploitable (feuille ancienne)", () => {
+      const set = collectViolentInnovators(
+        {
+          home: side([namedPlayer("h1", 1, "Griff", "violent-innovator")]),
+          away: null,
+        },
+        { home: { headerOnly: true } },
+      );
+      expect([...set]).toEqual(["h1"]);
+    });
+
+    it("se comporte comme avant quand aucun gel n'est passé", () => {
+      const set = collectViolentInnovators({
+        home: side([namedPlayer("h1", 1, "Griff", "violent-innovator")]),
+        away: null,
+      });
+      expect([...set]).toEqual(["h1"]);
+    });
+  });
 });
