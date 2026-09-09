@@ -8,6 +8,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
+import { NextMatchesPanel } from "./NextMatchesPanel";
 import { InviteCoachModal } from "./InviteCoachModal";
 import { SentInvitationsPanel } from "./SentInvitationsPanel";
 import { TestParticipantButton } from "./TestParticipantButton";
@@ -614,6 +615,13 @@ export default function LeagueDetailPage() {
                   ) : null}
                 </div>
               ) : null}
+
+              {/* Les prochaines rencontres DU COACH, avant le calendrier
+                  complet : c'est la question qu'il se pose en arrivant. */}
+              <NextMatchesPanel
+                rounds={season.rounds}
+                currentUserId={currentUserId}
+              />
 
               <div className="space-y-3">
                 <h3 className="text-md font-semibold text-nuffle-anthracite">
