@@ -206,6 +206,11 @@ import {
   schedulePairingSchema,
   type SchedulePairingBody,
 } from "../schemas/league-pairing-schedule.schemas";
+import {
+  sendRoundFollowups,
+  LeagueRoundFollowupError,
+} from "../services/league-round-followup-notify";
+import { resolveWebOrigin } from "../config";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -381,6 +386,11 @@ function domainError(res: Response, e: unknown): void {
           ? 409
           : 400;
     sendError(res, e.message, status);
+    return;
+  }
+  // Relance d'une journée (commissaire).
+  if (e instanceof LeagueRoundFollowupError) {
+    sendError(res, e.message, e.code === "round_not_found" ? 404 : 403);
     return;
   }
   // Date prévisionnelle d'une rencontre (coachs / commissaire).
@@ -1244,6 +1254,32 @@ export async function handleSchedulePairing(
       pairingId: req.params.pairingId,
       userId,
       scheduledAt: body.scheduledAt,
+    });
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * POST /leagues/rounds/:roundId/remind — relance d'une journée.
+ *
+ * Le commissaire écrit d'un coup aux coachs dont la rencontre n'est pas
+ * planifiée, et à ceux dont la date est passée sans feuille de match. Sans
+ * corps : il n'y a rien à paramétrer, les deux cas et leurs textes sont la
+ * règle (cf. `league-round-followup`).
+ */
+export async function handleRemindRound(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const result = await sendRoundFollowups({
+      roundId: req.params.roundId,
+      userId,
+      baseUrl: resolveWebOrigin(req.get("Origin")),
     });
     sendSuccess(res, result);
   } catch (e: unknown) {
@@ -3032,6 +3068,8 @@ router.patch(
   validate(schedulePairingSchema),
   handleSchedulePairing,
 );
+// Relance d'une journée : réservé au commissaire (le service tranche).
+router.post("/rounds/:roundId/remind", authUser, handleRemindRound);
 
 // Lot C — gestion des poules (groups). Mutation reservee au
 // commissaire ; lecture publique pour permettre l'affichage des

@@ -652,6 +652,7 @@ export default function LeagueDetailPage() {
                     if (selectedSeasonId) loadSeason(selectedSeasonId);
                   }}
                   preferredPoolId={myPoolId}
+                  isCommissioner={leagueEnabled && isCreator}
                 />
               </div>
 
