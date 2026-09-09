@@ -4,6 +4,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
+import {
+  getSkillCategoryColor,
+  getSkillCategorySolidColor,
+} from "../lib/skill-category-colors";
 import { getSkillCategoryLabel } from "../lib/skill-category-labels";
 import {
   getSkillActivation,
@@ -185,10 +189,11 @@ export default function SkillsClient({
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              aria-pressed={selectedCategory === null}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                 selectedCategory === null
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? "border-nuffle-anthracite bg-nuffle-anthracite text-white"
+                  : "border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               {t.skills.allCategories}
@@ -199,10 +204,11 @@ export default function SkillsClient({
                 <button
                   key={category.name}
                   onClick={() => setSelectedCategory(category.name)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  aria-pressed={selectedCategory === category.name}
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
                     selectedCategory === category.name
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      ? getSkillCategorySolidColor(category.key)
+                      : getSkillCategoryColor(category.key, true)
                   }`}
                 >
                   {iconSrc && (
@@ -302,26 +308,10 @@ export default function SkillsClient({
                       </div>
                       <div className="sm:ml-4 flex-shrink-0">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            skill.category === "General"
-                              ? "bg-blue-100 text-blue-800"
-                              : skill.category === "Agility"
-                                ? "bg-green-100 text-green-800"
-                                : skill.category === "Strength"
-                                  ? "bg-red-100 text-red-800"
-                                  : skill.category === "Passing"
-                                    ? "bg-purple-100 text-purple-800"
-                                    : skill.category === "Mutation" ||
-                                        skill.category === "Mutations"
-                                      ? "bg-orange-100 text-orange-800"
-                                      : skill.category === "Trait" ||
-                                          skill.category === "Traits" ||
-                                          skill.category === "StarPlayerRule"
-                                        ? "bg-gray-100 text-gray-800"
-                                        : skill.category === "Extraordinary"
-                                          ? "bg-yellow-100 text-yellow-800"
-                                          : "bg-gray-100 text-gray-600"
-                          }`}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${getSkillCategoryColor(
+                            skill.category,
+                            true,
+                          )}`}
                         >
                           {SKILL_CATEGORY_ICONS[skill.category] && (
                             <Image

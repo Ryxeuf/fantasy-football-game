@@ -6,6 +6,7 @@ import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
+import { buildForCupHref } from "../build-for-cup-href";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
@@ -1290,7 +1291,7 @@ export default function CupDetailPage() {
                     onClick={() =>
                       selectedTeamId &&
                       router.push(
-                        `/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}&fromTeamId=${selectedTeamId}`,
+                        buildForCupHref(cup, selectedTeamId),
                       )
                     }
                     disabled={!selectedTeamId}
@@ -1330,7 +1331,7 @@ export default function CupDetailPage() {
         {!cup.hasTeamParticipating && cup.status === "ouverte" && (
           <div className="mt-3">
             <a
-              href={`/me/teams/new?cupId=${cup.id}&ruleset=${cup.ruleset}&format=${cup.format ?? "bb11"}`}
+              href={buildForCupHref(cup)}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90 transition-all"
               data-testid="cup-build-for-cup"
             >

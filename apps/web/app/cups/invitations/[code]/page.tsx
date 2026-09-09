@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import { getRosterName } from "@bb/game-engine";
+import { buildForCupHref } from "../../build-for-cup-href";
 
 type InvitationInfo = {
   code: string;
@@ -16,6 +17,8 @@ type InvitationInfo = {
     name: string;
     ruleset: string;
     format: string | null;
+    /** Règlement de tournoi imposé (optionnel : serveur antérieur). */
+    tournamentRuleset?: string | null;
     status: string;
     validated: boolean;
   };
@@ -204,7 +207,7 @@ export default function CupInvitationPage() {
           )}
 
           <a
-            href={`/me/teams/new?cupId=${info.cup.id}&ruleset=${info.cup.ruleset}&format=${info.cup.format ?? "bb11"}`}
+            href={buildForCupHref(info.cup)}
             className="block text-center px-5 py-2.5 bg-nuffle-gold text-white rounded-lg font-medium hover:bg-nuffle-gold/90"
           >
             🛠️ Construire une équipe pour cette coupe

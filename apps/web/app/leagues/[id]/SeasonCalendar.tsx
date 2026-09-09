@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { MatchdayExport } from "./MatchdayExport";
+import { RoundFollowupButton } from "./RoundFollowupButton";
 import { PairingBonusBreakdown } from "./PairingBonusBreakdown";
 import MatchCard, {
   type MatchCardStatus,
@@ -51,6 +52,11 @@ interface SeasonCalendarProps {
   onPairingChanged?: () => void;
   /** Poule du coach connecte : affichee en premier dans chaque journee. */
   preferredPoolId?: string | null;
+  /**
+   * Commissaire de la ligue : seul à voir le bouton « Relancer » d'une
+   * journée (le serveur re-tranche, cf. `sendRoundFollowups`).
+   */
+  isCommissioner?: boolean;
 }
 
 interface PoolGroup {
@@ -242,6 +248,7 @@ export function SeasonCalendar({
   canViewRosters = false,
   onPairingChanged,
   preferredPoolId = null,
+  isCommissioner = false,
 }: SeasonCalendarProps) {
   const { t, language } = useLanguage();
   const [filter, setFilter] = useState<CalendarFilter>("all");
@@ -468,6 +475,12 @@ export function SeasonCalendar({
                         style={{ width: `${progressPct}%` }}
                       />
                     </div>
+                  ) : null}
+                  {isCommissioner ? (
+                    <RoundFollowupButton
+                      roundId={round.id}
+                      roundNumber={round.roundNumber}
+                    />
                   ) : null}
                   <MatchdayExport
                     round={round}

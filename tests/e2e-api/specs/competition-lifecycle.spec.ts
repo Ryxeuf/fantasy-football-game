@@ -130,6 +130,15 @@ describe("E2E API — cycle de vie des compétitions", () => {
       );
       expect(archives.leagues.map((l) => l.id)).toContain(leagueId);
 
+      // …et SEULEMENT là : la liste de base ne la sert plus.
+      const active = unwrap(
+        await get<{ success: true; data: { leagues: League[] } }>(
+          "/leagues",
+          alice.token,
+        ),
+      );
+      expect(active.leagues.map((l) => l.id)).not.toContain(leagueId);
+
       // Idempotent.
       const again = unwrap(
         await post<{ success: true; data: ArchiveResult }>(
