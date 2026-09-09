@@ -870,6 +870,48 @@ des tests et de gameplay direct ne passe pas de weights -> hot cache.
 
 ## Pieges connus
 
+### Une précédence dupliquée client/serveur finit par diverger
+
+Le serveur résout les budgets de coupe PUIS exécute son bloc `if (pack)`
+(`routes/team-build-handler`), qui les écrase : **le règlement de tournoi
+prime sur la coupe**. Le builder web appliquait l'inverse — ses deux effets
+« pack » étaient gardés par `if (… || cupId) return`, et l'effet de coupe
+posait `?? 0` sur le pool. Une équipe construite DEPUIS une coupe à
+règlement repartait donc avec le budget natif du roster et **0 PSP** : aucune
+compétence achetable, alors que la même équipe construite hors compétition
+en proposait.
+
+Règle : une règle de précédence que le client doit reproduire va dans un
+module PUR qui la porte en un seul endroit (`me/teams/new/build-budget`), pas
+dans des `useEffect` gardés — deux effets qui posent la même valeur sous des
+dépendances différentes ne se départagent pas, ils oscillent. Le commentaire
+du module cite le fichier serveur qu'il reproduit.
+
+Corollaire d'UI : quand une compétition impose un règlement, le libellé
+« imposé par la coupe » ment. C'est le règlement qui impose, et le dire évite
+de chercher un budget de coupe qui ne s'applique pas.
+
+### Un statut terminal ne se filtre pas dans la page, mais dans le service
+
+Les ligues `archived` remontaient dans `/leagues` parce que `listLeagues`
+sans `status` ne filtrait rien. Le correctif vit dans le service (le même
+endpoint sert la home, la liste et les futurs consommateurs), pas dans la
+page — et `?status=archived` reste servi, c'est de lui que vit la page
+d'archives. Penser au `count` de pagination : il doit voir le MÊME périmètre
+que le `findMany`, sinon la pagination compte des lignes qu'elle ne sert pas.
+
+Corollaire : retirer l'option du filtre de la page. La laisser aurait redonné,
+depuis la liste de base, exactement la vue dont on venait de la débarrasser.
+
+### Un nom de service déjà pris fait deux sujets d'un seul mot
+
+`league-round-reminder.ts` existait pour l'annonce « vous avez été apparié
+pour la J{n} » (avec sa préférence push `LeagueRoundReminder`). La relance
+d'une journée par le commissaire est un tout autre sujet : elle s'appelle
+`league-round-followup`. Vérifier qu'un nom est libre AVANT d'écrire le
+module — le collision se voit sinon au moment où deux tags de log identiques
+apparaissent dans le même run de tests.
+
 ### Une compétence déjà possédée n'est refusée nulle part par défaut
 
 `applyAdvancementChoice` concaténait un doublon dans le CSV `skills` (le
@@ -1202,6 +1244,13 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `ALLOWED_TEAMS` → `Roster`, budget par defaut `Roster.budget`. Voir
   [`docs/audit-statique-vs-bdd-2026-08-27.md`](./docs/audit-statique-vs-bdd-2026-08-27.md)
   et [`docs/lot6-modele-de-donnees-2026-08-27.md`](./docs/lot6-modele-de-donnees-2026-08-27.md).
+- **2026-09-09** : Règlement de tournoi en coupe (le pack prime sur la coupe
+  côté builder, pool de PSP rendu aux équipes de coupe), code couleur
+  officiel des catégories de compétences (source unique + contraintes de
+  contraste sur le blanc et le jaune), ligues archivées sorties de la liste
+  de base, bouton de relance d'une journée (`POST
+  /leagues/rounds/:id/remind`). PR #1015, change OpenSpec
+  `cup-build-skill-colors-archives-followup` (archivé).
 - **2026-09-08** : Ronde suisse des coupes, clôture manuelle de saison,
   date prévisionnelle des rencontres, journées repensées (`MatchCard`
   partagé), poule du coach en premier. Change OpenSpec

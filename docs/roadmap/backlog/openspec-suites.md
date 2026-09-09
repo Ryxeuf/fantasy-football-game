@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-09-02
+> Dernière mise à jour : 2026-09-09
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -80,6 +80,31 @@ Source : `add-position-pages` (archivé 2026-09-02).
 
 - **JSON-LD `ItemList`** des positions sur `/teams/[slug]`.
 - **E2E Playwright** `/teams/skaven` → position → compétence.
+
+## Construction d'équipe, couleurs des compétences, archives et relance
+
+Source : `cup-build-skill-colors-archives-followup` (archivé 2026-09-09).
+
+- **Résolution serveur du budget de construction** : la précédence
+  « règlement de tournoi > règles de coupe > rien » existe en DEUX
+  implémentations (`services/cup-rules` + le bloc `if (pack)` de
+  `routes/team-build-handler` côté serveur, `me/teams/new/build-budget`
+  côté web). C'est précisément leur divergence qui a causé le bug corrigé
+  ici. La faire résoudre par le serveur et la servir au builder demande de
+  connaître le roster AVANT que le coach l'ait choisi (donc un endpoint par
+  roster, ou la table complète servie d'un coup) — hors proportion pour un
+  correctif, à reprendre quand l'occasion se présente.
+- **Code couleur des compétences côté Expo** : `lib/skill-category-colors`
+  est un module web (classes Tailwind). L'application mobile n'en profite
+  pas ; il faudrait en extraire les teintes sous une forme partageable.
+- **Icônes de catégorie** (`lib/skill-category-icons`) : elles ne suivent
+  pas encore le code couleur, elles sont posées à côté du badge.
+- **Relance planifiée** : aujourd'hui la relance d'une journée est un acte
+  manuel du commissaire. Un rappel automatique (J-2 avant la date convenue,
+  J+1 après) supposerait un cron et une trace d'envoi pour ne pas spammer —
+  la relance manuelle ne persiste volontairement rien.
+- **Relance par rencontre** : ne réveiller qu'un binôme plutôt que toute la
+  journée.
 
 ## Opérations à faire au déploiement
 
