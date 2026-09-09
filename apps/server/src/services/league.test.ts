@@ -828,6 +828,53 @@ describe("Rule: League service", () => {
       );
     });
 
+    // Les ligues archivees n'ont plus d'action possible : elles noyaient
+    // les ligues vivantes dans la liste de base. Elles vivent desormais
+    // uniquement sur la page « Ligues archivees ».
+    it("excludes archived leagues when no status is requested", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({});
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where.status).toEqual({ not: "archived" });
+      // Le comptage de pagination doit voir le meme perimetre.
+      expect(mockPrisma.league.count.mock.calls[0][0].where.status).toEqual({
+        not: "archived",
+      });
+    });
+
+    it("excludes archived leagues for a viewer's own private leagues too", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: creatorId });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where.status).toEqual({ not: "archived" });
+    });
+
+    it("still serves archived leagues when asked for explicitly", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ status: "archived" });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where.status).toBe("archived");
+    });
+
+    it("keeps any other explicit status untouched", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ status: "completed" });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where.status).toBe("completed");
+    });
+
     // Regression : un coach convie a une ligue privee doit la voir dans
     // sa liste tant que l'invitation est en attente (avant meme d'avoir
     // rejoint, donc sans LeagueParticipant).

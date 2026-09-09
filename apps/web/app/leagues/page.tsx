@@ -35,12 +35,16 @@ interface League {
 
 type StatusFilter = "all" | LeagueStatus;
 
+/**
+ * Statuts proposés au filtre. Les ligues ARCHIVÉES n'y figurent pas : elles
+ * ne s'affichent plus dans la liste de base (le serveur les exclut quand
+ * aucun statut n'est demandé) et vivent sur `/leagues/archived`.
+ */
 const STATUS_VALUES: LeagueStatus[] = [
   "draft",
   "open",
   "in_progress",
   "completed",
-  "archived",
 ];
 
 // S25.5c — chemin relatif (sans API_BASE) : `apiRequest` re-prefixe en

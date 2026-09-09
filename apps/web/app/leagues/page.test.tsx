@@ -174,6 +174,43 @@ describe("LeaguesPage", () => {
     });
   });
 
+  // Les ligues archivees ne s'affichent plus dans la liste de base (le
+  // serveur les exclut sans filtre explicite) : le filtre ne doit donc pas
+  // proposer de les y ramener. Elles vivent sur `/leagues/archived`.
+  it("ne propose pas le statut « archivée » dans le filtre", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockLeaguesData),
+    });
+
+    renderWithProvider();
+
+    await waitFor(() => {
+      expect(screen.getByText("Open 5 Teams")).toBeTruthy();
+    });
+
+    const select = screen.getByTestId(
+      "leagues-status-filter",
+    ) as HTMLSelectElement;
+    const values = Array.from(select.options).map((o) => o.value);
+    expect(values).not.toContain("archived");
+    expect(values).toEqual(["all", "draft", "open", "in_progress", "completed"]);
+  });
+
+  it("renvoie vers la page des ligues archivées", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockLeaguesData),
+    });
+
+    renderWithProvider();
+
+    const link = (await screen.findByTestId(
+      "leagues-archived-link",
+    )) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/leagues/archived");
+  });
+
   it("links each league row to its detail page", async () => {
     mockFetch.mockResolvedValue({
       ok: true,

@@ -31,6 +31,7 @@ import {
   type SeasonExtraStats,
 } from "./league-standings-stats";
 import { serverLog } from "../utils/server-log";
+import { LEAGUE_ARCHIVED_STATUS } from "./competition-lifecycle";
 
 export type LeagueStatus =
   | "draft"
@@ -522,6 +523,12 @@ export async function listLeagues(filter: ListLeaguesFilter) {
   }
   if (filter.status) {
     where.status = filter.status;
+  } else {
+    // Sans filtre explicite, les ligues ARCHIVÉES sortent de la liste : elles
+    // n'ont plus d'action possible et noyaient les ligues vivantes. Elles
+    // restent servies quand on les demande nommément (`?status=archived`),
+    // ce que fait la page « Ligues archivées ».
+    where.status = { not: LEAGUE_ARCHIVED_STATUS };
   }
   // S25.6 — defaults raisonnables si limit/offset non fournis. Cap a 100
   // pour eviter qu'un caller passe une valeur exagerement grande.
