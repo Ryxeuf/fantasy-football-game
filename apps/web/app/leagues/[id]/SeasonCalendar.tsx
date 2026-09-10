@@ -23,6 +23,7 @@ import type {
   LeaguePairingDetail,
   LeaguePairingTeamDetail,
 } from "./types";
+import { dynamicRoute } from "../../lib/typed-route";
 
 // Sprint Ligues v2 PR2 — calendrier interactif (ligue 100% physique).
 // Une carte par journée ; chaque rencontre est une `MatchCard` (les deux
@@ -675,7 +676,7 @@ function PairingRow({
           ) : null}
           {canOpenSheet && !cancelled ? (
             <Link
-              href={`/leagues/pairings/${pairing.id}/sheet`}
+              href={dynamicRoute(`/leagues/pairings/${pairing.id}/sheet`)}
               data-testid={`pairing-sheet-${pairing.id}`}
               className="text-xs px-2 py-1 rounded border border-nuffle-gold text-nuffle-anthracite font-medium hover:bg-nuffle-gold/10"
             >

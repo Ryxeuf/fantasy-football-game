@@ -12,6 +12,7 @@
 
 import Link from "next/link";
 import { useLanguage } from "../contexts/LanguageContext";
+import { dynamicRoute } from "../lib/typed-route";
 
 export type CatalogToolId =
   | "teams"
@@ -87,7 +88,7 @@ export default function CatalogToolsBar({
       {visible.map((tool) => (
         <Link
           key={tool.id}
-          href={tool.href}
+          href={dynamicRoute(tool.href)}
           data-testid={`catalog-tool-${tool.id}`}
           className="group flex flex-col rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow"
         >

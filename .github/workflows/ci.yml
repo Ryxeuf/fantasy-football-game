@@ -42,7 +42,11 @@ jobs:
       - name: Lint
         run: pnpm lint
       - name: Typecheck
-        run: pnpm -w run typecheck || echo "No explicit typecheck scripts in some packages"
+        # Le `|| echo` qui pendait ici avalait le code de sortie de TOUS les
+        # workspaces — le meme defaut qui avait laisse 27 tests casses passer
+        # inapercus pendant des semaines (#1000). Les 8 workspaces ont un
+        # script `typecheck` et sont verts : la step gate desormais la CI.
+        run: pnpm -w run typecheck
       - name: Build
         run: pnpm build
       - name: Unit tests

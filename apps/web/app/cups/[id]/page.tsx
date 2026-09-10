@@ -11,10 +11,12 @@ import { buildForCupHref } from "../build-for-cup-href";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
+import CupStandings from "./CupStandings";
 import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
+import { dynamicRoute } from "../../lib/typed-route";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -826,104 +828,7 @@ export default function CupDetailPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 Classement
               </h2>
-              <div className="overflow-x-auto -mx-2 sm:mx-0">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-100 text-gray-700">
-                      <th className="px-2 py-2 text-left font-semibold">#</th>
-                      <th className="px-2 py-2 text-left font-semibold">
-                        Équipe
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        MJ
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">V</th>
-                      <th className="px-2 py-2 text-center font-semibold">N</th>
-                      <th className="px-2 py-2 text-center font-semibold">D</th>
-                      {cup.standings.some((t) => (t.byes ?? 0) > 0) && (
-                        <th
-                          className="px-2 py-2 text-center font-semibold"
-                          title="Exempts (ronde suisse) : les points d'une victoire"
-                        >
-                          Ex.
-                        </th>
-                      )}
-                      <th className="px-2 py-2 text-center font-semibold">
-                        TD+
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        TD-
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        Diff TD
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        Passe
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        Sorties
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        Agr
-                      </th>
-                      <th className="px-2 py-2 text-center font-semibold">
-                        Pts
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cup.standings.map((team, index) => (
-                      <tr
-                        key={team.teamId}
-                        className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                      >
-                        <td className="px-2 py-1 text-center text-gray-700">
-                          {index + 1}
-                        </td>
-                        <td className="px-2 py-1 text-gray-900 font-medium">
-                          <span className="inline-flex items-center gap-2">
-                            <TeamLogo
-                              slug={team.roster}
-                              logoUrl={team.logoUrl ?? null}
-                              size={22}
-                              className="shrink-0"
-                            />
-                            {team.teamName}
-                          </span>
-                        </td>
-                        <td className="px-2 py-1 text-center">
-                          {team.matchesPlayed}
-                        </td>
-                        <td className="px-2 py-1 text-center">{team.wins}</td>
-                        <td className="px-2 py-1 text-center">{team.draws}</td>
-                        <td className="px-2 py-1 text-center">{team.losses}</td>
-                        {cup.standings!.some((t) => (t.byes ?? 0) > 0) && (
-                          <td className="px-2 py-1 text-center">{team.byes ?? 0}</td>
-                        )}
-                        <td className="px-2 py-1 text-center">
-                          {team.touchdownsFor}
-                        </td>
-                        <td className="px-2 py-1 text-center">
-                          {team.touchdownsAgainst}
-                        </td>
-                        <td className="px-2 py-1 text-center">
-                          {team.touchdownDiff}
-                        </td>
-                        <td className="px-2 py-1 text-center">{team.passes}</td>
-                        <td className="px-2 py-1 text-center">
-                          {team.blockCasualties}
-                        </td>
-                        <td className="px-2 py-1 text-center">
-                          {team.foulCasualties}
-                        </td>
-                        <td className="px-2 py-1 text-center font-semibold text-nuffle-anthracite">
-                          {team.totalPoints}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <CupStandings standings={cup.standings} />
             </div>
           )}
           {/* S27.1j — bracket visuel additif (vue chronologique) */}
@@ -1345,7 +1250,7 @@ export default function CupDetailPage() {
                     onClick={() =>
                       selectedTeamId &&
                       router.push(
-                        buildForCupHref(cup, selectedTeamId),
+                        dynamicRoute(buildForCupHref(cup, selectedTeamId)),
                       )
                     }
                     disabled={!selectedTeamId}

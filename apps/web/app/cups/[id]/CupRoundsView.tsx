@@ -19,6 +19,7 @@ import {
   type CupRoundSystem,
   type ManualPairingDraft,
 } from "./manual-round";
+import { dynamicRoute } from "../../lib/typed-route";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -520,7 +521,7 @@ function CupPairingCard({
         <>
           {canOpenSheet ? (
             <Link
-              href={matchSheetHref("cup", pairing.id)}
+              href={dynamicRoute(matchSheetHref("cup", pairing.id))}
               data-testid={`cup-pairing-sheet-${pairing.id}`}
               title={t.cups.sheetOpenHint}
               className="text-xs px-2 py-1 rounded bg-nuffle-anthracite text-white font-medium hover:bg-nuffle-anthracite/90"
