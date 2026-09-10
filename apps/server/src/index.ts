@@ -77,6 +77,7 @@ import cupInvitationRoutes from "./routes/cup-invitation";
 import cupRoundRoutes from "./routes/cup-rounds";
 import cupMatchSheetRoutes from "./routes/cup-match-sheet";
 import cupPoolRoutes from "./routes/cup-pools";
+import cupPlayoffRoutes from "./routes/cup-playoffs";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
@@ -375,6 +376,8 @@ app.use("/cup", cupMatchSheetRoutes);
 // Poules : `/cup/:id/pools` et `/cup/pools/:poolId`, montées avant
 // `cupRoutes` pour la même raison que ci-dessus.
 app.use("/cup", cupPoolRoutes);
+// Play-offs : `/cup/:id/playoffs...`, montés avant `cupRoutes`.
+app.use("/cup", cupPlayoffRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(

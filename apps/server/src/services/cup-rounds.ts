@@ -953,7 +953,49 @@ export async function settleCupPairingForLocalMatch(
     });
   }
   const roundCompleted = await maybeCompleteCupRound(pairing.roundId);
+  // Bracket : le vainqueur monte d'un tour. Jamais bloquant — un échec ici
+  // ne doit pas faire échouer la clôture d'une rencontre déjà jouée ; le
+  // commissaire peut relancer l'avancement en re-validant le résultat.
+  await advanceCupBracketAfterMatch(localMatchId, pairing.id).catch(
+    (e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[cup-rounds] avancement du bracket échoué (match=${localMatchId}): ${msg}`,
+      );
+    },
+  );
   return { settled: true, roundCompleted };
+}
+
+/**
+ * Fait monter le vainqueur d'une rencontre de bracket. Un MATCH NUL ne fait
+ * avancer personne : la rencontre doit être rejouée ou son résultat corrigé.
+ * Inventer un qualifié serait pire que de laisser le slot vide.
+ *
+ * Import paresseux : `cup-playoffs` importe `cup-rounds` (pour `CupActor` et
+ * la lecture des rondes) — le charger au sommet créerait un cycle.
+ */
+async function advanceCupBracketAfterMatch(
+  localMatchId: string,
+  pairingId: string,
+): Promise<void> {
+  const match = (await prisma.localMatch.findUnique({
+    where: { id: localMatchId },
+    select: { teamAId: true, teamBId: true, scoreTeamA: true, scoreTeamB: true },
+  })) as {
+    teamAId: string;
+    teamBId: string | null;
+    scoreTeamA: number | null;
+    scoreTeamB: number | null;
+  } | null;
+  if (!match || !match.teamBId) return;
+  const a = match.scoreTeamA ?? 0;
+  const b = match.scoreTeamB ?? 0;
+  if (a === b) return;
+  const winnerTeamId = a > b ? match.teamAId : match.teamBId;
+
+  const { advanceCupPlayoffs } = await import("./cup-playoffs");
+  await advanceCupPlayoffs({ pairingId, winnerTeamId });
 }
 
 /** Match local annulé ou supprimé -> la rencontre redevient à jouer. */

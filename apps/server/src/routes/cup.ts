@@ -1022,6 +1022,20 @@ router.patch(
       if (body.tieBreakRules !== undefined) {
         data.tieBreakRules = serializeTieBreakRules(body.tieBreakRules);
       }
+      if (body.playoffSize !== undefined) {
+        // Le bracket est SEEDÉ à sa génération : en changer la taille après
+        // coup laisserait des rondes dont le nombre ne correspond plus.
+        const bracketRounds = await prisma.cupRound.count({
+          where: { cupId, kind: "playoff" },
+        });
+        if (bracketRounds > 0) {
+          return res.status(409).json({
+            error:
+              "Bracket déjà généré : sa taille n'est plus modifiable",
+          });
+        }
+        data.playoffSize = body.playoffSize;
+      }
       if (Object.keys(data).length === 0) {
         return res.status(400).json({ error: "Aucune modification fournie" });
       }
@@ -1044,6 +1058,7 @@ router.patch(
           foulCasualtyPoints: true,
           passPoints: true,
           tieBreakRules: true,
+          playoffSize: true,
         },
       });
 

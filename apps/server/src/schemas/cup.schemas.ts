@@ -143,6 +143,11 @@ export const updateCupSchema = z.object({
   foulCasualtyPoints: z.number().int().min(-1000).max(1000).optional(),
   passPoints: z.number().int().min(-1000).max(1000).optional(),
   tieBreakRules: tieBreakRulesSchema.optional(),
+  /**
+   * Taille du bracket de play-off : 0 (aucun), 2, 4 ou 8. Le service refuse
+   * de la changer une fois le bracket généré.
+   */
+  playoffSize: z.union([z.literal(0), z.literal(2), z.literal(4), z.literal(8)]).optional(),
 });
 
 export type UpdateCupInput = z.infer<typeof updateCupSchema>;
