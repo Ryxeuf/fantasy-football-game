@@ -123,13 +123,24 @@ function formatCupRules(cup: {
 
 /**
  * `true` si la coupe applique un ajustement de composition (budget ou PSP par
- * tier/roster). Le mode résurrection n'est PAS un ajustement de composition.
- * Sert à décider si l'on peut « inscrire tel quel » (aucun ajustement) ou si
- * l'inscription passe forcément par une adaptation.
+ * tier/roster, ou règlement de tournoi). Le mode résurrection n'est PAS un
+ * ajustement de composition. Sert à décider si l'on peut « inscrire tel
+ * quel » (aucun ajustement) ou si l'inscription passe forcément par une
+ * adaptation.
+ *
+ * Le RÈGLEMENT DE TOURNOI en fait partie : il impose son budget d'or, son
+ * pool de PSP et ses restrictions de Star Players, et l'inscription refuse
+ * (`tournament_ruleset_mismatch`) toute équipe qui n'a pas été construite
+ * avec lui. Une coupe sous NAF World Cup sans budget par tier proposait
+ * pourtant « Inscrire tel quel » — un bouton qui ne pouvait que renvoyer une
+ * erreur.
  */
-function isCupAdjusted(cup: CupRulesConfig): boolean {
+export function isCupAdjusted(
+  cup: CupRulesConfig & { tournamentRuleset?: string | null },
+): boolean {
   const rc = formatCupRules(cup);
   return (
+    Boolean(cup.tournamentRuleset) ||
     Object.keys(rc.tierBudgets).length > 0 ||
     Object.keys(rc.rosterBudgetOverrides).length > 0 ||
     Object.keys(rc.tierStartingPsp).length > 0 ||
