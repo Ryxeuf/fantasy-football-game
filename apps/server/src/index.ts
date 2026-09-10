@@ -522,6 +522,22 @@ if (process.env.TEST_SQLITE === "1") {
           (prisma as any).competitionDocument?.deleteMany?.({}) ??
           Promise.resolve(),
       );
+      // Feuilles de match : elles cascadent depuis LeaguePairing ET depuis
+      // CupPairing (rattachement polymorphe), mais on les retire d'abord pour
+      // que le reset reste deterministe quel que soit le mode referentiel du
+      // connecteur (les cascades sont emulees cote SQLite).
+      await safe(
+        "leagueMatchEvent",
+        () =>
+          (prisma as any).leagueMatchEvent?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
+      await safe(
+        "leagueMatchSheet",
+        () =>
+          (prisma as any).leagueMatchSheet?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
       // League hierarchy: participants/rounds cascade from seasons; seasons
       // and leagues must be removed before users (creatorId is RESTRICT).
       await safe(
