@@ -432,6 +432,27 @@ export function isCupBracketVisible(
   return playoffsPublished !== false;
 }
 
+/**
+ * PUR — rondes servies au CALENDRIER selon le lecteur.
+ *
+ * Gater `getCupBracket` seul ne suffit pas : le calendrier annoncerait les
+ * rondes de bracket (et donc les têtes de série) avant publication. Le
+ * CLASSEMENT, lui, se calcule toujours sur toutes les rondes — masquer une
+ * ronde ne doit pas changer les points d'un exempt.
+ */
+export function visibleCupRounds<T extends { readonly kind?: string }>(
+  rounds: readonly T[],
+  opts: {
+    readonly isCommissioner: boolean;
+    readonly playoffsPublished: boolean | null | undefined;
+  },
+): T[] {
+  if (opts.isCommissioner || isCupBracketVisible(opts.playoffsPublished)) {
+    return [...rounds];
+  }
+  return rounds.filter((r) => r.kind !== "playoff");
+}
+
 export async function setCupPlayoffsPublished(input: {
   readonly cupId: string;
   readonly actor: CupActor;

@@ -12,6 +12,8 @@ import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
 import CupStandings from "./CupStandings";
+import CupPoolsManagerPanel from "./CupPoolsManagerPanel";
+import CupPlayoffBracketView from "./CupPlayoffBracketView";
 import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
@@ -118,6 +120,12 @@ type Cup = {
     ruleset: string;
     /** Logo uploadé par le coach (null => logo dérivé du roster). */
     logoUrl?: string | null;
+    /**
+     * Identifiant de l'INSCRIPTION (`id` est celui de l'ÉQUIPE) : c'est lui
+     * que prend l'affectation en poule. Optionnel : API antérieure.
+     */
+    participantId?: string;
+    poolId?: string | null;
     owner: {
       id: string;
       coachName: string;
@@ -140,6 +148,19 @@ type Cup = {
     rosterStartingPspOverrides: Record<string, number>;
   };
   standings?: CupTeamStats[];
+  /**
+   * Classements par poule. Vide/absent quand la coupe n'a pas de poule :
+   * l'écran retombe alors sur le seul classement général.
+   */
+  poolStandings?: Array<{
+    poolId: string;
+    poolName: string;
+    poolOrder: number;
+    qualifiesForPlayoffs: number;
+    standings: CupTeamStats[];
+  }>;
+  /** Taille du bracket de play-offs (0 = aucun). Optionnel : API antérieure. */
+  playoffSize?: number;
   /** Rondes suisses (vide pour une coupe sans ronde). Optionnel : API antérieure. */
   rounds?: CupRoundView[];
   actionAwards?: CupActionAwards;
@@ -800,6 +821,31 @@ export default function CupDetailPage() {
             )}
           </div>
 
+          {/* Poules : composition réservée au commissaire. Figée dès la
+              première ronde — réaffecter après coup réécrirait un classement
+              déjà joué (le serveur refuse, l'écran passe en lecture seule). */}
+          {(cup.isCreator === true || currentUserIsAdmin) && (
+            <div className="pt-6 border-t border-gray-200">
+              <CupPoolsManagerPanel
+                cupId={cup.id}
+                participants={(cup.participants ?? [])
+                  .filter(
+                    (p): p is typeof p & { participantId: string } =>
+                      typeof p.participantId === "string",
+                  )
+                  .map((p) => ({
+                    participantId: p.participantId,
+                    teamName: p.name,
+                    poolId: p.poolId ?? null,
+                  }))}
+                editable={(cup.rounds ?? []).length === 0}
+                onChanged={() => {
+                  void loadCup();
+                }}
+              />
+            </div>
+          )}
+
           {/* Rondes suisses : visibles dès que la coupe est validée (ou qu'une
               ronde existe). Le commissaire y génère les rondes ; les coachs y
               créent le match local de leur rencontre. */}
@@ -828,7 +874,47 @@ export default function CupDetailPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 Classement
               </h2>
-              <CupStandings standings={cup.standings} />
+              {/*
+                Une coupe à poules a UN classement par poule — le général
+                mélangerait des équipes qui ne se rencontrent pas. La barre
+                de qualification est marquée par le quota de la poule.
+              */}
+              {(cup.poolStandings ?? []).length > 0 ? (
+                <div className="space-y-5">
+                  {(cup.poolStandings ?? []).map((pool) => (
+                    <div key={pool.poolId} className="space-y-2">
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+                        {pool.poolName}
+                      </h3>
+                      <CupStandings
+                        standings={pool.standings}
+                        testId={`cup-standings-${pool.poolId}`}
+                        qualifies={pool.qualifiesForPlayoffs}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <CupStandings standings={cup.standings} />
+              )}
+            </div>
+          )}
+
+          {/* Play-offs : le panneau de lancement n'apparaît qu'au
+              commissaire ; le bracket, à tous, une fois publié. */}
+          {cup.status !== "ouverte" && (
+            <div className="pt-6 border-t border-gray-200">
+              <CupPlayoffBracketView
+                cupId={cup.id}
+                isCommissioner={cup.isCreator === true || currentUserIsAdmin}
+                eligibleTeams={(cup.participants ?? []).map((p) => ({
+                  id: p.id,
+                  name: p.name,
+                }))}
+                onChanged={() => {
+                  void loadCup();
+                }}
+              />
             </div>
           )}
           {/* S27.1j — bracket visuel additif (vue chronologique) */}

@@ -41,6 +41,7 @@ import {
   CupPlayoffError,
   getCupBracket,
   isCupBracketVisible,
+  visibleCupRounds,
   overrideCupPlayoffSeeds,
   setCupPlayoffsPublished,
   startCupPlayoffs,
@@ -87,6 +88,59 @@ beforeEach(() => {
   vi.mocked(computeCupStandings).mockReturnValue(
     standings(["t1", "t2", "t3", "t4", "t5"]) as never,
   );
+});
+
+describe("visibleCupRounds", () => {
+  const ROUNDS = [
+    { id: "r1", kind: "regular" },
+    { id: "r2", kind: "playoff" },
+    { id: "r3" }, // ronde antérieure à la colonne : `kind` absent
+  ];
+
+  it("masque le bracket non publié au coach — sinon les têtes fuitent", () => {
+    expect(
+      visibleCupRounds(ROUNDS, {
+        isCommissioner: false,
+        playoffsPublished: false,
+      }).map((r) => r.id),
+    ).toEqual(["r1", "r3"]);
+  });
+
+  it("le montre au commissaire, publié ou non", () => {
+    expect(
+      visibleCupRounds(ROUNDS, {
+        isCommissioner: true,
+        playoffsPublished: false,
+      }),
+    ).toHaveLength(3);
+  });
+
+  it("le montre à tous une fois publié", () => {
+    expect(
+      visibleCupRounds(ROUNDS, {
+        isCommissioner: false,
+        playoffsPublished: true,
+      }),
+    ).toHaveLength(3);
+  });
+
+  it("`null` (coupe antérieure à la colonne) reste VISIBLE — aucun backfill possible", () => {
+    expect(
+      visibleCupRounds(ROUNDS, {
+        isCommissioner: false,
+        playoffsPublished: null,
+      }),
+    ).toHaveLength(3);
+  });
+
+  it("ne mute pas la liste reçue", () => {
+    const out = visibleCupRounds(ROUNDS, {
+      isCommissioner: true,
+      playoffsPublished: null,
+    });
+    expect(out).not.toBe(ROUNDS);
+    expect(ROUNDS).toHaveLength(3);
+  });
 });
 
 describe("bracketSlotLabel", () => {

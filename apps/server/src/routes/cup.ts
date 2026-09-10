@@ -46,6 +46,7 @@ import {
   type CupRegistrationErrorCode,
 } from "../services/cup-registration";
 import { cupByesByTeamId, listCupRounds } from "../services/cup-rounds";
+import { visibleCupRounds } from "../services/cup-playoffs";
 import {
   normalizeCupTieBreakRules,
   parseCupTieBreakRules,
@@ -614,13 +615,23 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
     // Rondes suisses (vide pour une coupe sans ronde) : les exempts valent
     // les points d'une victoire au classement.
-    const rounds = await listCupRounds(cup.id);
+    const allRounds = await listCupRounds(cup.id);
+
+    // Le bracket non publié ne doit fuiter par AUCUNE lecture — le classement,
+    // lui, reste calculé sur TOUTES les rondes (cf. `visibleCupRounds`).
+    const rounds = visibleCupRounds(allRounds, {
+      isCommissioner:
+        cup.creatorId === req.user!.id || hasRole(req.user!.roles, "admin"),
+      playoffsPublished:
+        (cup as unknown as { playoffsPublished?: boolean | null })
+          .playoffsPublished ?? null,
+    });
 
     // Calculer le classement de la coupe à partir des matchs terminés
     const standingsResult = computeCupStandings(
       cup as unknown as CupWithParticipantsAndScoring,
       (cup.localMatches || []) as unknown as LocalMatchWithRelations[],
-      { byesByTeamId: cupByesByTeamId(rounds) },
+      { byesByTeamId: cupByesByTeamId(allRounds) },
     );
 
     // Classements individuels (par joueur) — équivalent leaderboards de ligue,
@@ -649,6 +660,13 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         roster: p.team.roster,
         ruleset: p.team.ruleset,
         owner: p.team.owner,
+        /**
+         * Identifiant de l'INSCRIPTION (et non de l'équipe) : c'est lui que
+         * prend l'affectation en poule. Champ ajouté — un client antérieur
+         * l'ignore.
+         */
+        participantId: p.id,
+        poolId: p.poolId ?? null,
       })),
       createdAt: cup.createdAt,
       updatedAt: cup.updatedAt,
@@ -678,6 +696,13 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         ),
       ),
       playoffSize: (cup as unknown as { playoffSize?: number }).playoffSize ?? 0,
+      /**
+       * Bracket publié. `null` = coupe antérieure à la colonne (donc
+       * VISIBLE) ; `false` = généré mais gardé pour le commissaire.
+       */
+      playoffsPublished:
+        (cup as unknown as { playoffsPublished?: boolean | null })
+          .playoffsPublished ?? null,
       actionAwards: standingsResult.awards,
       playerLeaderboards,
       playerLeaderboardCategories: CUP_LEADERBOARD_CATEGORIES,

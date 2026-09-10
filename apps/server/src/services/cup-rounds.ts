@@ -122,6 +122,14 @@ export interface CupRoundView {
   readonly roundNumber: number;
   readonly name: string | null;
   readonly system: string;
+  /**
+   * `regular` (phase de classement) ou `playoff` (bracket). Défaut de
+   * colonne : une ronde antérieure remonte donc `regular`, ce qui est
+   * exact — le bracket n'existait pas.
+   */
+  readonly kind: string;
+  /** Slot du bracket (`qf1`, `sf2`, `final`…). `null` hors play-off. */
+  readonly bracketSlot: string | null;
   readonly status: string;
   readonly scheduledAt: string | null;
   readonly createdAt: string;
@@ -181,6 +189,9 @@ interface RoundRow {
   roundNumber: number;
   name: string | null;
   system: string;
+  /** Colonnes à défaut/nullables : absentes d'une base non encore poussée. */
+  kind?: string | null;
+  bracketSlot?: string | null;
   status: string;
   scheduledAt: Date | null;
   createdAt: Date;
@@ -204,6 +215,8 @@ function toRoundView(round: RoundRow): CupRoundView {
     roundNumber: round.roundNumber,
     name: round.name,
     system: round.system,
+    kind: round.kind ?? "regular",
+    bracketSlot: round.bracketSlot ?? null,
     status: round.status,
     scheduledAt: round.scheduledAt ? round.scheduledAt.toISOString() : null,
     createdAt: round.createdAt.toISOString(),
