@@ -50,6 +50,15 @@ import {
   normalizeCupTieBreakRules,
   parseCupTieBreakRules,
 } from "../services/cup-standings-order";
+import { groupCupStandingsByPool } from "../services/cup-pool";
+
+/** Poule telle que `GET /cup/:id` la charge (ordre + quota). */
+interface CupPoolRow {
+  id: string;
+  name: string;
+  order: number;
+  qualifiesForPlayoffs: number;
+}
 
 /** Mappe un code d'erreur d'inscription coupe vers un status HTTP. */
 function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
@@ -492,6 +501,16 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
             },
           },
         },
+        pools: {
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            name: true,
+            order: true,
+            color: true,
+            qualifiesForPlayoffs: true,
+          },
+        },
         localMatches: {
           where: { status: "completed" },
           include: {
@@ -643,6 +662,22 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       ),
       rulesConfig: formatCupRules(cup as unknown as CupRulesConfig),
       standings: standingsResult.teamStats,
+      /**
+       * Classements par poule. Vide quand la coupe n'a pas de poules —
+       * l'écran retombe alors sur le seul classement général.
+       */
+      poolStandings: groupCupStandingsByPool(
+        standingsResult.teamStats,
+        (cup as unknown as { pools?: CupPoolRow[] }).pools ?? [],
+        new Map(
+          (
+            (cup as unknown as {
+              participants: Array<{ poolId?: string | null; team: { id: string } }>;
+            }).participants ?? []
+          ).map((p) => [p.team.id, p.poolId ?? null]),
+        ),
+      ),
+      playoffSize: (cup as unknown as { playoffSize?: number }).playoffSize ?? 0,
       actionAwards: standingsResult.awards,
       playerLeaderboards,
       playerLeaderboardCategories: CUP_LEADERBOARD_CATEGORIES,
