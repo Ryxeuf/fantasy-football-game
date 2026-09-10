@@ -165,3 +165,32 @@ export async function captureRosterSnapshot(
   if (!team) return null;
   return buildRosterSnapshot(team as unknown as TeamForSnapshot, Date.now());
 }
+
+/**
+ * Parse tolérant d'une colonne portant un `RosterSnapshot` : objet natif
+ * (PostgreSQL `Json`), chaîne JSON sérialisée (miroir SQLite en test),
+ * `null` / `undefined` (participant historique sans snapshot) ou contenu
+ * illisible. Retourne `null` dès que la forme n'est pas exploitable — un
+ * snapshot à moitié lu vaut moins que pas de snapshot du tout (l'appelant
+ * retombe alors sur l'état live).
+ *
+ * PUR : aucune I/O.
+ */
+export function parseRosterSnapshot(raw: unknown): RosterSnapshot | null {
+  let obj: unknown = raw;
+  if (typeof raw === 'string') {
+    if (raw.trim() === '') return null;
+    try {
+      obj = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+  const candidate = obj as Partial<RosterSnapshot>;
+  // Un snapshot « en-tête seul » (feuille de match legacy) ne porte pas de
+  // roster : il ne peut pas servir de version du match.
+  if (!Array.isArray(candidate.players)) return null;
+  if (typeof candidate.roster !== 'string') return null;
+  return candidate as RosterSnapshot;
+}

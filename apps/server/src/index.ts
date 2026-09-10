@@ -75,6 +75,7 @@ import nflFantasyPublicRoutes from "./routes/nfl-fantasy-public";
 import cupRoutes from "./routes/cup";
 import cupInvitationRoutes from "./routes/cup-invitation";
 import cupRoundRoutes from "./routes/cup-rounds";
+import cupMatchSheetRoutes from "./routes/cup-match-sheet";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
@@ -364,9 +365,12 @@ app.use("/cup", cupInvitationRoutes);
 // DELETE /cup/:id) : monté avant le routeur historique, qui ne définit
 // aucune de ces deux routes.
 app.use("/cup", cupLifecycleRouter);
-// Rondes suisses : `/cup/:id/rounds` et `/cup/pairings/...`, montées avant
+// Rondes : `/cup/:id/rounds` et `/cup/pairings/...`, montées avant
 // `cupRoutes` dont le `GET /:id` avalerait `/pairings`.
 app.use("/cup", cupRoundRoutes);
+// Feuille de match de coupe : mêmes handlers que la ligue (cf.
+// `routes/cup-match-sheet`), montée avant `cupRoutes` pour la même raison.
+app.use("/cup", cupMatchSheetRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(
