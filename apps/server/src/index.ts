@@ -75,6 +75,7 @@ import nflFantasyPublicRoutes from "./routes/nfl-fantasy-public";
 import cupRoutes from "./routes/cup";
 import cupInvitationRoutes from "./routes/cup-invitation";
 import cupRoundRoutes from "./routes/cup-rounds";
+import cupMatchSheetRoutes from "./routes/cup-match-sheet";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
@@ -364,9 +365,12 @@ app.use("/cup", cupInvitationRoutes);
 // DELETE /cup/:id) : monté avant le routeur historique, qui ne définit
 // aucune de ces deux routes.
 app.use("/cup", cupLifecycleRouter);
-// Rondes suisses : `/cup/:id/rounds` et `/cup/pairings/...`, montées avant
+// Rondes : `/cup/:id/rounds` et `/cup/pairings/...`, montées avant
 // `cupRoutes` dont le `GET /:id` avalerait `/pairings`.
 app.use("/cup", cupRoundRoutes);
+// Feuille de match de coupe : mêmes handlers que la ligue (cf.
+// `routes/cup-match-sheet`), montée avant `cupRoutes` pour la même raison.
+app.use("/cup", cupMatchSheetRoutes);
 app.use("/cup", cupRoutes);
 app.use("/local-match", localMatchRoutes);
 app.use(
@@ -516,6 +520,22 @@ if (process.env.TEST_SQLITE === "1") {
         "competitionDocument",
         () =>
           (prisma as any).competitionDocument?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
+      // Feuilles de match : elles cascadent depuis LeaguePairing ET depuis
+      // CupPairing (rattachement polymorphe), mais on les retire d'abord pour
+      // que le reset reste deterministe quel que soit le mode referentiel du
+      // connecteur (les cascades sont emulees cote SQLite).
+      await safe(
+        "leagueMatchEvent",
+        () =>
+          (prisma as any).leagueMatchEvent?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
+      await safe(
+        "leagueMatchSheet",
+        () =>
+          (prisma as any).leagueMatchSheet?.deleteMany?.({}) ??
           Promise.resolve(),
       );
       // League hierarchy: participants/rounds cascade from seasons; seasons

@@ -45993,6 +45993,7 @@ export namespace Prisma {
     blockCasualtyPoints: number | null
     foulCasualtyPoints: number | null
     passPoints: number | null
+    tieBreakRules: string | null
     resurrectionMode: boolean | null
     tierBudgets: string | null
     rosterBudgetOverrides: string | null
@@ -46021,6 +46022,7 @@ export namespace Prisma {
     blockCasualtyPoints: number | null
     foulCasualtyPoints: number | null
     passPoints: number | null
+    tieBreakRules: string | null
     resurrectionMode: boolean | null
     tierBudgets: string | null
     rosterBudgetOverrides: string | null
@@ -46049,6 +46051,7 @@ export namespace Prisma {
     blockCasualtyPoints: number
     foulCasualtyPoints: number
     passPoints: number
+    tieBreakRules: number
     resurrectionMode: number
     tierBudgets: number
     rosterBudgetOverrides: number
@@ -46101,6 +46104,7 @@ export namespace Prisma {
     blockCasualtyPoints?: true
     foulCasualtyPoints?: true
     passPoints?: true
+    tieBreakRules?: true
     resurrectionMode?: true
     tierBudgets?: true
     rosterBudgetOverrides?: true
@@ -46129,6 +46133,7 @@ export namespace Prisma {
     blockCasualtyPoints?: true
     foulCasualtyPoints?: true
     passPoints?: true
+    tieBreakRules?: true
     resurrectionMode?: true
     tierBudgets?: true
     rosterBudgetOverrides?: true
@@ -46157,6 +46162,7 @@ export namespace Prisma {
     blockCasualtyPoints?: true
     foulCasualtyPoints?: true
     passPoints?: true
+    tieBreakRules?: true
     resurrectionMode?: true
     tierBudgets?: true
     rosterBudgetOverrides?: true
@@ -46272,6 +46278,7 @@ export namespace Prisma {
     blockCasualtyPoints: number
     foulCasualtyPoints: number
     passPoints: number
+    tieBreakRules: string | null
     resurrectionMode: boolean
     tierBudgets: string | null
     rosterBudgetOverrides: string | null
@@ -46319,6 +46326,7 @@ export namespace Prisma {
     blockCasualtyPoints?: boolean
     foulCasualtyPoints?: boolean
     passPoints?: boolean
+    tieBreakRules?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46354,6 +46362,7 @@ export namespace Prisma {
     blockCasualtyPoints?: boolean
     foulCasualtyPoints?: boolean
     passPoints?: boolean
+    tieBreakRules?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46383,6 +46392,7 @@ export namespace Prisma {
     blockCasualtyPoints?: boolean
     foulCasualtyPoints?: boolean
     passPoints?: boolean
+    tieBreakRules?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46412,6 +46422,7 @@ export namespace Prisma {
     blockCasualtyPoints?: boolean
     foulCasualtyPoints?: boolean
     passPoints?: boolean
+    tieBreakRules?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46419,7 +46430,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
@@ -46470,6 +46481,7 @@ export namespace Prisma {
       blockCasualtyPoints: number
       foulCasualtyPoints: number
       passPoints: number
+      tieBreakRules: string | null
       resurrectionMode: boolean
       tierBudgets: string | null
       rosterBudgetOverrides: string | null
@@ -46924,6 +46936,7 @@ export namespace Prisma {
     readonly blockCasualtyPoints: FieldRef<"Cup", 'Int'>
     readonly foulCasualtyPoints: FieldRef<"Cup", 'Int'>
     readonly passPoints: FieldRef<"Cup", 'Int'>
+    readonly tieBreakRules: FieldRef<"Cup", 'String'>
     readonly resurrectionMode: FieldRef<"Cup", 'Boolean'>
     readonly tierBudgets: FieldRef<"Cup", 'String'>
     readonly rosterBudgetOverrides: FieldRef<"Cup", 'String'>
@@ -48870,8 +48883,12 @@ export namespace Prisma {
       roundNumber: number
       name: string | null
       /**
-       * Système d'appariement ayant produit la ronde : "swiss". Réservé pour
-       * d'autres systèmes (saisie manuelle…).
+       * Système d'appariement ayant produit la ronde :
+       * "swiss"  — appariement suisse sur le classement courant ;
+       * "random" — tirage au sort (typiquement la 1re ronde) ;
+       * "manual" — rencontres posées à la main par le commissaire.
+       * Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
+       * aucun backfill n'est nécessaire.
        */
       system: string
       /**
@@ -49985,6 +50002,7 @@ export namespace Prisma {
     homeTeam?: boolean | TeamDefaultArgs<ExtArgs>
     awayTeam?: boolean | CupPairing$awayTeamArgs<ExtArgs>
     localMatch?: boolean | CupPairing$localMatchArgs<ExtArgs>
+    matchSheet?: boolean | CupPairing$matchSheetArgs<ExtArgs>
   }, ExtArgs["result"]["cupPairing"]>
 
   export type CupPairingSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -50035,6 +50053,7 @@ export namespace Prisma {
     homeTeam?: boolean | TeamDefaultArgs<ExtArgs>
     awayTeam?: boolean | CupPairing$awayTeamArgs<ExtArgs>
     localMatch?: boolean | CupPairing$localMatchArgs<ExtArgs>
+    matchSheet?: boolean | CupPairing$matchSheetArgs<ExtArgs>
   }
   export type CupPairingIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     round?: boolean | CupRoundDefaultArgs<ExtArgs>
@@ -50054,6 +50073,10 @@ export namespace Prisma {
       homeTeam: Prisma.$TeamPayload<ExtArgs>
       awayTeam: Prisma.$TeamPayload<ExtArgs> | null
       localMatch: Prisma.$LocalMatchPayload<ExtArgs> | null
+      /**
+       * Feuille de match de coupe (miroir SQLite de schema.prisma).
+       */
+      matchSheet: Prisma.$LeagueMatchSheetPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -50472,6 +50495,7 @@ export namespace Prisma {
     homeTeam<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     awayTeam<T extends CupPairing$awayTeamArgs<ExtArgs> = {}>(args?: Subset<T, CupPairing$awayTeamArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     localMatch<T extends CupPairing$localMatchArgs<ExtArgs> = {}>(args?: Subset<T, CupPairing$localMatchArgs<ExtArgs>>): Prisma__LocalMatchClient<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    matchSheet<T extends CupPairing$matchSheetArgs<ExtArgs> = {}>(args?: Subset<T, CupPairing$matchSheetArgs<ExtArgs>>): Prisma__LeagueMatchSheetClient<$Result.GetResult<Prisma.$LeagueMatchSheetPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -50939,6 +50963,25 @@ export namespace Prisma {
      */
     include?: LocalMatchInclude<ExtArgs> | null
     where?: LocalMatchWhereInput
+  }
+
+  /**
+   * CupPairing.matchSheet
+   */
+  export type CupPairing$matchSheetArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueMatchSheet
+     */
+    select?: LeagueMatchSheetSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueMatchSheet
+     */
+    omit?: LeagueMatchSheetOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueMatchSheetInclude<ExtArgs> | null
+    where?: LeagueMatchSheetWhereInput
   }
 
   /**
@@ -69572,6 +69615,7 @@ export namespace Prisma {
   export type LeagueMatchSheetMinAggregateOutputType = {
     id: string | null
     pairingId: string | null
+    cupPairingId: string | null
     status: string | null
     submittedByHomeAt: Date | null
     submittedByAwayAt: Date | null
@@ -69603,6 +69647,7 @@ export namespace Prisma {
   export type LeagueMatchSheetMaxAggregateOutputType = {
     id: string | null
     pairingId: string | null
+    cupPairingId: string | null
     status: string | null
     submittedByHomeAt: Date | null
     submittedByAwayAt: Date | null
@@ -69634,6 +69679,7 @@ export namespace Prisma {
   export type LeagueMatchSheetCountAggregateOutputType = {
     id: number
     pairingId: number
+    cupPairingId: number
     status: number
     submittedByHomeAt: number
     submittedByAwayAt: number
@@ -69714,6 +69760,7 @@ export namespace Prisma {
   export type LeagueMatchSheetMinAggregateInputType = {
     id?: true
     pairingId?: true
+    cupPairingId?: true
     status?: true
     submittedByHomeAt?: true
     submittedByAwayAt?: true
@@ -69745,6 +69792,7 @@ export namespace Prisma {
   export type LeagueMatchSheetMaxAggregateInputType = {
     id?: true
     pairingId?: true
+    cupPairingId?: true
     status?: true
     submittedByHomeAt?: true
     submittedByAwayAt?: true
@@ -69776,6 +69824,7 @@ export namespace Prisma {
   export type LeagueMatchSheetCountAggregateInputType = {
     id?: true
     pairingId?: true
+    cupPairingId?: true
     status?: true
     submittedByHomeAt?: true
     submittedByAwayAt?: true
@@ -69910,7 +69959,8 @@ export namespace Prisma {
 
   export type LeagueMatchSheetGroupByOutputType = {
     id: string
-    pairingId: string
+    pairingId: string | null
+    cupPairingId: string | null
     status: string
     submittedByHomeAt: Date | null
     submittedByAwayAt: Date | null
@@ -69978,6 +70028,7 @@ export namespace Prisma {
   export type LeagueMatchSheetSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     pairingId?: boolean
+    cupPairingId?: boolean
     status?: boolean
     submittedByHomeAt?: boolean
     submittedByAwayAt?: boolean
@@ -70021,7 +70072,8 @@ export namespace Prisma {
     journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
+    pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
+    cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
     events?: boolean | LeagueMatchSheet$eventsArgs<ExtArgs>
     _count?: boolean | LeagueMatchSheetCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueMatchSheet"]>
@@ -70029,6 +70081,7 @@ export namespace Prisma {
   export type LeagueMatchSheetSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     pairingId?: boolean
+    cupPairingId?: boolean
     status?: boolean
     submittedByHomeAt?: boolean
     submittedByAwayAt?: boolean
@@ -70072,12 +70125,14 @@ export namespace Prisma {
     journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
+    pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
+    cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
   }, ExtArgs["result"]["leagueMatchSheet"]>
 
   export type LeagueMatchSheetSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     pairingId?: boolean
+    cupPairingId?: boolean
     status?: boolean
     submittedByHomeAt?: boolean
     submittedByAwayAt?: boolean
@@ -70121,12 +70176,14 @@ export namespace Prisma {
     journeymenAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
+    pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
+    cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
   }, ExtArgs["result"]["leagueMatchSheet"]>
 
   export type LeagueMatchSheetSelectScalar = {
     id?: boolean
     pairingId?: boolean
+    cupPairingId?: boolean
     status?: boolean
     submittedByHomeAt?: boolean
     submittedByAwayAt?: boolean
@@ -70172,28 +70229,33 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
+  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
   export type LeagueMatchSheetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
+    pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
+    cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
     events?: boolean | LeagueMatchSheet$eventsArgs<ExtArgs>
     _count?: boolean | LeagueMatchSheetCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueMatchSheetIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
+    pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
+    cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
   }
   export type LeagueMatchSheetIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    pairing?: boolean | LeaguePairingDefaultArgs<ExtArgs>
+    pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
+    cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
   }
 
   export type $LeagueMatchSheetPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "LeagueMatchSheet"
     objects: {
-      pairing: Prisma.$LeaguePairingPayload<ExtArgs>
+      pairing: Prisma.$LeaguePairingPayload<ExtArgs> | null
+      cupPairing: Prisma.$CupPairingPayload<ExtArgs> | null
       events: Prisma.$LeagueMatchEventPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
-      pairingId: string
+      pairingId: string | null
+      cupPairingId: string | null
       status: string
       submittedByHomeAt: Date | null
       submittedByAwayAt: Date | null
@@ -70640,7 +70702,8 @@ export namespace Prisma {
    */
   export interface Prisma__LeagueMatchSheetClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    pairing<T extends LeaguePairingDefaultArgs<ExtArgs> = {}>(args?: Subset<T, LeaguePairingDefaultArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    pairing<T extends LeagueMatchSheet$pairingArgs<ExtArgs> = {}>(args?: Subset<T, LeagueMatchSheet$pairingArgs<ExtArgs>>): Prisma__LeaguePairingClient<$Result.GetResult<Prisma.$LeaguePairingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    cupPairing<T extends LeagueMatchSheet$cupPairingArgs<ExtArgs> = {}>(args?: Subset<T, LeagueMatchSheet$cupPairingArgs<ExtArgs>>): Prisma__CupPairingClient<$Result.GetResult<Prisma.$CupPairingPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     events<T extends LeagueMatchSheet$eventsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueMatchSheet$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueMatchEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -70673,6 +70736,7 @@ export namespace Prisma {
   interface LeagueMatchSheetFieldRefs {
     readonly id: FieldRef<"LeagueMatchSheet", 'String'>
     readonly pairingId: FieldRef<"LeagueMatchSheet", 'String'>
+    readonly cupPairingId: FieldRef<"LeagueMatchSheet", 'String'>
     readonly status: FieldRef<"LeagueMatchSheet", 'String'>
     readonly submittedByHomeAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
     readonly submittedByAwayAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
@@ -71107,6 +71171,44 @@ export namespace Prisma {
      * Limit how many LeagueMatchSheets to delete.
      */
     limit?: number
+  }
+
+  /**
+   * LeagueMatchSheet.pairing
+   */
+  export type LeagueMatchSheet$pairingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeaguePairing
+     */
+    select?: LeaguePairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeaguePairing
+     */
+    omit?: LeaguePairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeaguePairingInclude<ExtArgs> | null
+    where?: LeaguePairingWhereInput
+  }
+
+  /**
+   * LeagueMatchSheet.cupPairing
+   */
+  export type LeagueMatchSheet$cupPairingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPairing
+     */
+    select?: CupPairingSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPairing
+     */
+    omit?: CupPairingOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPairingInclude<ExtArgs> | null
+    where?: CupPairingWhereInput
   }
 
   /**
@@ -115998,6 +116100,7 @@ export namespace Prisma {
     blockCasualtyPoints: 'blockCasualtyPoints',
     foulCasualtyPoints: 'foulCasualtyPoints',
     passPoints: 'passPoints',
+    tieBreakRules: 'tieBreakRules',
     resurrectionMode: 'resurrectionMode',
     tierBudgets: 'tierBudgets',
     rosterBudgetOverrides: 'rosterBudgetOverrides',
@@ -116340,6 +116443,7 @@ export namespace Prisma {
   export const LeagueMatchSheetScalarFieldEnum: {
     id: 'id',
     pairingId: 'pairingId',
+    cupPairingId: 'cupPairingId',
     status: 'status',
     submittedByHomeAt: 'submittedByHomeAt',
     submittedByAwayAt: 'submittedByAwayAt',
@@ -119988,6 +120092,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFilter<"Cup"> | number
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
+    tieBreakRules?: StringNullableFilter<"Cup"> | string | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
     tierBudgets?: StringNullableFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
@@ -120022,6 +120127,7 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    tieBreakRules?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrderInput | SortOrder
     rosterBudgetOverrides?: SortOrderInput | SortOrder
@@ -120059,6 +120165,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFilter<"Cup"> | number
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
+    tieBreakRules?: StringNullableFilter<"Cup"> | string | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
     tierBudgets?: StringNullableFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
@@ -120093,6 +120200,7 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    tieBreakRules?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrderInput | SortOrder
     rosterBudgetOverrides?: SortOrderInput | SortOrder
@@ -120129,6 +120237,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntWithAggregatesFilter<"Cup"> | number
     foulCasualtyPoints?: IntWithAggregatesFilter<"Cup"> | number
     passPoints?: IntWithAggregatesFilter<"Cup"> | number
+    tieBreakRules?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     resurrectionMode?: BoolWithAggregatesFilter<"Cup"> | boolean
     tierBudgets?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableWithAggregatesFilter<"Cup"> | string | null
@@ -120300,6 +120409,7 @@ export namespace Prisma {
     homeTeam?: XOR<TeamScalarRelationFilter, TeamWhereInput>
     awayTeam?: XOR<TeamNullableScalarRelationFilter, TeamWhereInput> | null
     localMatch?: XOR<LocalMatchNullableScalarRelationFilter, LocalMatchWhereInput> | null
+    matchSheet?: XOR<LeagueMatchSheetNullableScalarRelationFilter, LeagueMatchSheetWhereInput> | null
   }
 
   export type CupPairingOrderByWithRelationInput = {
@@ -120316,6 +120426,7 @@ export namespace Prisma {
     homeTeam?: TeamOrderByWithRelationInput
     awayTeam?: TeamOrderByWithRelationInput
     localMatch?: LocalMatchOrderByWithRelationInput
+    matchSheet?: LeagueMatchSheetOrderByWithRelationInput
   }
 
   export type CupPairingWhereUniqueInput = Prisma.AtLeast<{
@@ -120335,6 +120446,7 @@ export namespace Prisma {
     homeTeam?: XOR<TeamScalarRelationFilter, TeamWhereInput>
     awayTeam?: XOR<TeamNullableScalarRelationFilter, TeamWhereInput> | null
     localMatch?: XOR<LocalMatchNullableScalarRelationFilter, LocalMatchWhereInput> | null
+    matchSheet?: XOR<LeagueMatchSheetNullableScalarRelationFilter, LeagueMatchSheetWhereInput> | null
   }, "id">
 
   export type CupPairingOrderByWithAggregationInput = {
@@ -121935,7 +122047,8 @@ export namespace Prisma {
     OR?: LeagueMatchSheetWhereInput[]
     NOT?: LeagueMatchSheetWhereInput | LeagueMatchSheetWhereInput[]
     id?: StringFilter<"LeagueMatchSheet"> | string
-    pairingId?: StringFilter<"LeagueMatchSheet"> | string
+    pairingId?: StringNullableFilter<"LeagueMatchSheet"> | string | null
+    cupPairingId?: StringNullableFilter<"LeagueMatchSheet"> | string | null
     status?: StringFilter<"LeagueMatchSheet"> | string
     submittedByHomeAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
     submittedByAwayAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
@@ -121979,13 +122092,15 @@ export namespace Prisma {
     journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
-    pairing?: XOR<LeaguePairingScalarRelationFilter, LeaguePairingWhereInput>
+    pairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
+    cupPairing?: XOR<CupPairingNullableScalarRelationFilter, CupPairingWhereInput> | null
     events?: LeagueMatchEventListRelationFilter
   }
 
   export type LeagueMatchSheetOrderByWithRelationInput = {
     id?: SortOrder
-    pairingId?: SortOrder
+    pairingId?: SortOrderInput | SortOrder
+    cupPairingId?: SortOrderInput | SortOrder
     status?: SortOrder
     submittedByHomeAt?: SortOrderInput | SortOrder
     submittedByAwayAt?: SortOrderInput | SortOrder
@@ -122030,12 +122145,14 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     pairing?: LeaguePairingOrderByWithRelationInput
+    cupPairing?: CupPairingOrderByWithRelationInput
     events?: LeagueMatchEventOrderByRelationAggregateInput
   }
 
   export type LeagueMatchSheetWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     pairingId?: string
+    cupPairingId?: string
     AND?: LeagueMatchSheetWhereInput | LeagueMatchSheetWhereInput[]
     OR?: LeagueMatchSheetWhereInput[]
     NOT?: LeagueMatchSheetWhereInput | LeagueMatchSheetWhereInput[]
@@ -122082,13 +122199,15 @@ export namespace Prisma {
     journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
-    pairing?: XOR<LeaguePairingScalarRelationFilter, LeaguePairingWhereInput>
+    pairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
+    cupPairing?: XOR<CupPairingNullableScalarRelationFilter, CupPairingWhereInput> | null
     events?: LeagueMatchEventListRelationFilter
-  }, "id" | "pairingId">
+  }, "id" | "pairingId" | "cupPairingId">
 
   export type LeagueMatchSheetOrderByWithAggregationInput = {
     id?: SortOrder
-    pairingId?: SortOrder
+    pairingId?: SortOrderInput | SortOrder
+    cupPairingId?: SortOrderInput | SortOrder
     status?: SortOrder
     submittedByHomeAt?: SortOrderInput | SortOrder
     submittedByAwayAt?: SortOrderInput | SortOrder
@@ -122144,7 +122263,8 @@ export namespace Prisma {
     OR?: LeagueMatchSheetScalarWhereWithAggregatesInput[]
     NOT?: LeagueMatchSheetScalarWhereWithAggregatesInput | LeagueMatchSheetScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"LeagueMatchSheet"> | string
-    pairingId?: StringWithAggregatesFilter<"LeagueMatchSheet"> | string
+    pairingId?: StringNullableWithAggregatesFilter<"LeagueMatchSheet"> | string | null
+    cupPairingId?: StringNullableWithAggregatesFilter<"LeagueMatchSheet"> | string | null
     status?: StringWithAggregatesFilter<"LeagueMatchSheet"> | string
     submittedByHomeAt?: DateTimeNullableWithAggregatesFilter<"LeagueMatchSheet"> | Date | string | null
     submittedByAwayAt?: DateTimeNullableWithAggregatesFilter<"LeagueMatchSheet"> | Date | string | null
@@ -128740,6 +128860,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -128774,6 +128895,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -128806,6 +128928,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -128840,6 +128963,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -128873,6 +128997,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -128900,6 +129025,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -128928,6 +129054,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -129094,6 +129221,7 @@ export namespace Prisma {
     homeTeam: TeamCreateNestedOneWithoutCupPairingsHomeInput
     awayTeam?: TeamCreateNestedOneWithoutCupPairingsAwayInput
     localMatch?: LocalMatchCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingUncheckedCreateInput = {
@@ -129107,6 +129235,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     localMatch?: LocalMatchUncheckedCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetUncheckedCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingUpdateInput = {
@@ -129120,6 +129249,7 @@ export namespace Prisma {
     homeTeam?: TeamUpdateOneRequiredWithoutCupPairingsHomeNestedInput
     awayTeam?: TeamUpdateOneWithoutCupPairingsAwayNestedInput
     localMatch?: LocalMatchUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateInput = {
@@ -129133,6 +129263,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     localMatch?: LocalMatchUncheckedUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUncheckedUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingCreateManyInput = {
@@ -130948,13 +131079,15 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    pairing: LeaguePairingCreateNestedOneWithoutMatchSheetInput
+    pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
+    cupPairing?: CupPairingCreateNestedOneWithoutMatchSheetInput
     events?: LeagueMatchEventCreateNestedManyWithoutMatchSheetInput
   }
 
   export type LeagueMatchSheetUncheckedCreateInput = {
     id?: string
-    pairingId: string
+    pairingId?: string | null
+    cupPairingId?: string | null
     status?: string
     submittedByHomeAt?: Date | string | null
     submittedByAwayAt?: Date | string | null
@@ -131046,13 +131179,15 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    pairing?: LeaguePairingUpdateOneRequiredWithoutMatchSheetNestedInput
+    pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
+    cupPairing?: CupPairingUpdateOneWithoutMatchSheetNestedInput
     events?: LeagueMatchEventUpdateManyWithoutMatchSheetNestedInput
   }
 
   export type LeagueMatchSheetUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    pairingId?: StringFieldUpdateOperationsInput | string
+    pairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupPairingId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     submittedByHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     submittedByAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -131101,7 +131236,8 @@ export namespace Prisma {
 
   export type LeagueMatchSheetCreateManyInput = {
     id?: string
-    pairingId: string
+    pairingId?: string | null
+    cupPairingId?: string | null
     status?: string
     submittedByHomeAt?: Date | string | null
     submittedByAwayAt?: Date | string | null
@@ -131196,7 +131332,8 @@ export namespace Prisma {
 
   export type LeagueMatchSheetUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
-    pairingId?: StringFieldUpdateOperationsInput | string
+    pairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupPairingId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     submittedByHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     submittedByAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -137423,6 +137560,7 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    tieBreakRules?: SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrder
     rosterBudgetOverrides?: SortOrder
@@ -137462,6 +137600,7 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    tieBreakRules?: SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrder
     rosterBudgetOverrides?: SortOrder
@@ -137490,6 +137629,7 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    tieBreakRules?: SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrder
     rosterBudgetOverrides?: SortOrder
@@ -137610,6 +137750,11 @@ export namespace Prisma {
   export type LocalMatchNullableScalarRelationFilter = {
     is?: LocalMatchWhereInput | null
     isNot?: LocalMatchWhereInput | null
+  }
+
+  export type LeagueMatchSheetNullableScalarRelationFilter = {
+    is?: LeagueMatchSheetWhereInput | null
+    isNot?: LeagueMatchSheetWhereInput | null
   }
 
   export type CupPairingCountOrderByAggregateInput = {
@@ -138581,11 +138726,6 @@ export namespace Prisma {
     isNot?: MatchWhereInput | null
   }
 
-  export type LeagueMatchSheetNullableScalarRelationFilter = {
-    is?: LeagueMatchSheetWhereInput | null
-    isNot?: LeagueMatchSheetWhereInput | null
-  }
-
   export type LeaguePairingCountOrderByAggregateInput = {
     id?: SortOrder
     roundId?: SortOrder
@@ -138641,11 +138781,6 @@ export namespace Prisma {
     bonusPointsAway?: SortOrder
   }
 
-  export type LeaguePairingScalarRelationFilter = {
-    is?: LeaguePairingWhereInput
-    isNot?: LeaguePairingWhereInput
-  }
-
   export type LeagueMatchEventListRelationFilter = {
     every?: LeagueMatchEventWhereInput
     some?: LeagueMatchEventWhereInput
@@ -138659,6 +138794,7 @@ export namespace Prisma {
   export type LeagueMatchSheetCountOrderByAggregateInput = {
     id?: SortOrder
     pairingId?: SortOrder
+    cupPairingId?: SortOrder
     status?: SortOrder
     submittedByHomeAt?: SortOrder
     submittedByAwayAt?: SortOrder
@@ -138722,6 +138858,7 @@ export namespace Prisma {
   export type LeagueMatchSheetMaxOrderByAggregateInput = {
     id?: SortOrder
     pairingId?: SortOrder
+    cupPairingId?: SortOrder
     status?: SortOrder
     submittedByHomeAt?: SortOrder
     submittedByAwayAt?: SortOrder
@@ -138753,6 +138890,7 @@ export namespace Prisma {
   export type LeagueMatchSheetMinOrderByAggregateInput = {
     id?: SortOrder
     pairingId?: SortOrder
+    cupPairingId?: SortOrder
     status?: SortOrder
     submittedByHomeAt?: SortOrder
     submittedByAwayAt?: SortOrder
@@ -144309,10 +144447,22 @@ export namespace Prisma {
     connect?: LocalMatchWhereUniqueInput
   }
 
+  export type LeagueMatchSheetCreateNestedOneWithoutCupPairingInput = {
+    create?: XOR<LeagueMatchSheetCreateWithoutCupPairingInput, LeagueMatchSheetUncheckedCreateWithoutCupPairingInput>
+    connectOrCreate?: LeagueMatchSheetCreateOrConnectWithoutCupPairingInput
+    connect?: LeagueMatchSheetWhereUniqueInput
+  }
+
   export type LocalMatchUncheckedCreateNestedOneWithoutCupPairingInput = {
     create?: XOR<LocalMatchCreateWithoutCupPairingInput, LocalMatchUncheckedCreateWithoutCupPairingInput>
     connectOrCreate?: LocalMatchCreateOrConnectWithoutCupPairingInput
     connect?: LocalMatchWhereUniqueInput
+  }
+
+  export type LeagueMatchSheetUncheckedCreateNestedOneWithoutCupPairingInput = {
+    create?: XOR<LeagueMatchSheetCreateWithoutCupPairingInput, LeagueMatchSheetUncheckedCreateWithoutCupPairingInput>
+    connectOrCreate?: LeagueMatchSheetCreateOrConnectWithoutCupPairingInput
+    connect?: LeagueMatchSheetWhereUniqueInput
   }
 
   export type CupRoundUpdateOneRequiredWithoutPairingsNestedInput = {
@@ -144351,6 +144501,16 @@ export namespace Prisma {
     update?: XOR<XOR<LocalMatchUpdateToOneWithWhereWithoutCupPairingInput, LocalMatchUpdateWithoutCupPairingInput>, LocalMatchUncheckedUpdateWithoutCupPairingInput>
   }
 
+  export type LeagueMatchSheetUpdateOneWithoutCupPairingNestedInput = {
+    create?: XOR<LeagueMatchSheetCreateWithoutCupPairingInput, LeagueMatchSheetUncheckedCreateWithoutCupPairingInput>
+    connectOrCreate?: LeagueMatchSheetCreateOrConnectWithoutCupPairingInput
+    upsert?: LeagueMatchSheetUpsertWithoutCupPairingInput
+    disconnect?: LeagueMatchSheetWhereInput | boolean
+    delete?: LeagueMatchSheetWhereInput | boolean
+    connect?: LeagueMatchSheetWhereUniqueInput
+    update?: XOR<XOR<LeagueMatchSheetUpdateToOneWithWhereWithoutCupPairingInput, LeagueMatchSheetUpdateWithoutCupPairingInput>, LeagueMatchSheetUncheckedUpdateWithoutCupPairingInput>
+  }
+
   export type LocalMatchUncheckedUpdateOneWithoutCupPairingNestedInput = {
     create?: XOR<LocalMatchCreateWithoutCupPairingInput, LocalMatchUncheckedCreateWithoutCupPairingInput>
     connectOrCreate?: LocalMatchCreateOrConnectWithoutCupPairingInput
@@ -144359,6 +144519,16 @@ export namespace Prisma {
     delete?: LocalMatchWhereInput | boolean
     connect?: LocalMatchWhereUniqueInput
     update?: XOR<XOR<LocalMatchUpdateToOneWithWhereWithoutCupPairingInput, LocalMatchUpdateWithoutCupPairingInput>, LocalMatchUncheckedUpdateWithoutCupPairingInput>
+  }
+
+  export type LeagueMatchSheetUncheckedUpdateOneWithoutCupPairingNestedInput = {
+    create?: XOR<LeagueMatchSheetCreateWithoutCupPairingInput, LeagueMatchSheetUncheckedCreateWithoutCupPairingInput>
+    connectOrCreate?: LeagueMatchSheetCreateOrConnectWithoutCupPairingInput
+    upsert?: LeagueMatchSheetUpsertWithoutCupPairingInput
+    disconnect?: LeagueMatchSheetWhereInput | boolean
+    delete?: LeagueMatchSheetWhereInput | boolean
+    connect?: LeagueMatchSheetWhereUniqueInput
+    update?: XOR<XOR<LeagueMatchSheetUpdateToOneWithWhereWithoutCupPairingInput, LeagueMatchSheetUpdateWithoutCupPairingInput>, LeagueMatchSheetUncheckedUpdateWithoutCupPairingInput>
   }
 
   export type UserCreateNestedOneWithoutMatchQueueInput = {
@@ -145557,6 +145727,12 @@ export namespace Prisma {
     connect?: LeaguePairingWhereUniqueInput
   }
 
+  export type CupPairingCreateNestedOneWithoutMatchSheetInput = {
+    create?: XOR<CupPairingCreateWithoutMatchSheetInput, CupPairingUncheckedCreateWithoutMatchSheetInput>
+    connectOrCreate?: CupPairingCreateOrConnectWithoutMatchSheetInput
+    connect?: CupPairingWhereUniqueInput
+  }
+
   export type LeagueMatchEventCreateNestedManyWithoutMatchSheetInput = {
     create?: XOR<LeagueMatchEventCreateWithoutMatchSheetInput, LeagueMatchEventUncheckedCreateWithoutMatchSheetInput> | LeagueMatchEventCreateWithoutMatchSheetInput[] | LeagueMatchEventUncheckedCreateWithoutMatchSheetInput[]
     connectOrCreate?: LeagueMatchEventCreateOrConnectWithoutMatchSheetInput | LeagueMatchEventCreateOrConnectWithoutMatchSheetInput[]
@@ -145571,12 +145747,24 @@ export namespace Prisma {
     connect?: LeagueMatchEventWhereUniqueInput | LeagueMatchEventWhereUniqueInput[]
   }
 
-  export type LeaguePairingUpdateOneRequiredWithoutMatchSheetNestedInput = {
+  export type LeaguePairingUpdateOneWithoutMatchSheetNestedInput = {
     create?: XOR<LeaguePairingCreateWithoutMatchSheetInput, LeaguePairingUncheckedCreateWithoutMatchSheetInput>
     connectOrCreate?: LeaguePairingCreateOrConnectWithoutMatchSheetInput
     upsert?: LeaguePairingUpsertWithoutMatchSheetInput
+    disconnect?: LeaguePairingWhereInput | boolean
+    delete?: LeaguePairingWhereInput | boolean
     connect?: LeaguePairingWhereUniqueInput
     update?: XOR<XOR<LeaguePairingUpdateToOneWithWhereWithoutMatchSheetInput, LeaguePairingUpdateWithoutMatchSheetInput>, LeaguePairingUncheckedUpdateWithoutMatchSheetInput>
+  }
+
+  export type CupPairingUpdateOneWithoutMatchSheetNestedInput = {
+    create?: XOR<CupPairingCreateWithoutMatchSheetInput, CupPairingUncheckedCreateWithoutMatchSheetInput>
+    connectOrCreate?: CupPairingCreateOrConnectWithoutMatchSheetInput
+    upsert?: CupPairingUpsertWithoutMatchSheetInput
+    disconnect?: CupPairingWhereInput | boolean
+    delete?: CupPairingWhereInput | boolean
+    connect?: CupPairingWhereUniqueInput
+    update?: XOR<XOR<CupPairingUpdateToOneWithWhereWithoutMatchSheetInput, CupPairingUpdateWithoutMatchSheetInput>, CupPairingUncheckedUpdateWithoutMatchSheetInput>
   }
 
   export type LeagueMatchEventUpdateManyWithoutMatchSheetNestedInput = {
@@ -148024,6 +148212,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -148056,6 +148245,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -149203,6 +149393,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFilter<"Cup"> | number
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
+    tieBreakRules?: StringNullableFilter<"Cup"> | string | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
     tierBudgets?: StringNullableFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
@@ -154985,6 +155176,7 @@ export namespace Prisma {
     round: CupRoundCreateNestedOneWithoutPairingsInput
     awayTeam?: TeamCreateNestedOneWithoutCupPairingsAwayInput
     localMatch?: LocalMatchCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingUncheckedCreateWithoutHomeTeamInput = {
@@ -154997,6 +155189,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     localMatch?: LocalMatchUncheckedCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetUncheckedCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingCreateOrConnectWithoutHomeTeamInput = {
@@ -155018,6 +155211,7 @@ export namespace Prisma {
     round: CupRoundCreateNestedOneWithoutPairingsInput
     homeTeam: TeamCreateNestedOneWithoutCupPairingsHomeInput
     localMatch?: LocalMatchCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingUncheckedCreateWithoutAwayTeamInput = {
@@ -155030,6 +155224,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     localMatch?: LocalMatchUncheckedCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetUncheckedCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingCreateOrConnectWithoutAwayTeamInput = {
@@ -158020,6 +158215,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -158053,6 +158249,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -158181,6 +158378,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -158214,6 +158412,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -158332,6 +158531,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -158365,6 +158565,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -158391,6 +158592,7 @@ export namespace Prisma {
     homeTeam: TeamCreateNestedOneWithoutCupPairingsHomeInput
     awayTeam?: TeamCreateNestedOneWithoutCupPairingsAwayInput
     localMatch?: LocalMatchCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingUncheckedCreateWithoutRoundInput = {
@@ -158403,6 +158605,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     localMatch?: LocalMatchUncheckedCreateNestedOneWithoutCupPairingInput
+    matchSheet?: LeagueMatchSheetUncheckedCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingCreateOrConnectWithoutRoundInput = {
@@ -158445,6 +158648,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -158478,6 +158682,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -158751,6 +158956,109 @@ export namespace Prisma {
     create: XOR<LocalMatchCreateWithoutCupPairingInput, LocalMatchUncheckedCreateWithoutCupPairingInput>
   }
 
+  export type LeagueMatchSheetCreateWithoutCupPairingInput = {
+    id?: string
+    status?: string
+    submittedByHomeAt?: Date | string | null
+    submittedByAwayAt?: Date | string | null
+    validatedAt?: Date | string | null
+    validatedById?: string | null
+    invalidatedAt?: Date | string | null
+    invalidationReason?: string | null
+    weatherTable?: string | null
+    weather?: string | null
+    popularityHome?: number | null
+    popularityAway?: number | null
+    forfeitSide?: string | null
+    tossWinner?: string | null
+    tossChoice?: string | null
+    inducementsHome?: NullableJsonNullValueInput | InputJsonValue
+    inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    prayersHome?: NullableJsonNullValueInput | InputJsonValue
+    prayersAway?: NullableJsonNullValueInput | InputJsonValue
+    scoreHome?: number
+    scoreAway?: number
+    winningsHome?: number
+    winningsAway?: number
+    winningsHomeManual?: number | null
+    winningsAwayManual?: number | null
+    dedicatedFansDeltaHome?: number | null
+    dedicatedFansDeltaAway?: number | null
+    rankingBonusHome?: number | null
+    rankingBonusAway?: number | null
+    sppBonus?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsHome?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsAway?: NullableJsonNullValueInput | InputJsonValue
+    motmPlayerIds?: JsonNullValueInput | InputJsonValue
+    purchasesHome?: NullableJsonNullValueInput | InputJsonValue
+    purchasesAway?: NullableJsonNullValueInput | InputJsonValue
+    firedPlayerIds?: NullableJsonNullValueInput | InputJsonValue
+    advancementsHome?: NullableJsonNullValueInput | InputJsonValue
+    advancementsAway?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
+    events?: LeagueMatchEventCreateNestedManyWithoutMatchSheetInput
+  }
+
+  export type LeagueMatchSheetUncheckedCreateWithoutCupPairingInput = {
+    id?: string
+    pairingId?: string | null
+    status?: string
+    submittedByHomeAt?: Date | string | null
+    submittedByAwayAt?: Date | string | null
+    validatedAt?: Date | string | null
+    validatedById?: string | null
+    invalidatedAt?: Date | string | null
+    invalidationReason?: string | null
+    weatherTable?: string | null
+    weather?: string | null
+    popularityHome?: number | null
+    popularityAway?: number | null
+    forfeitSide?: string | null
+    tossWinner?: string | null
+    tossChoice?: string | null
+    inducementsHome?: NullableJsonNullValueInput | InputJsonValue
+    inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    prayersHome?: NullableJsonNullValueInput | InputJsonValue
+    prayersAway?: NullableJsonNullValueInput | InputJsonValue
+    scoreHome?: number
+    scoreAway?: number
+    winningsHome?: number
+    winningsAway?: number
+    winningsHomeManual?: number | null
+    winningsAwayManual?: number | null
+    dedicatedFansDeltaHome?: number | null
+    dedicatedFansDeltaAway?: number | null
+    rankingBonusHome?: number | null
+    rankingBonusAway?: number | null
+    sppBonus?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsHome?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsAway?: NullableJsonNullValueInput | InputJsonValue
+    motmPlayerIds?: JsonNullValueInput | InputJsonValue
+    purchasesHome?: NullableJsonNullValueInput | InputJsonValue
+    purchasesAway?: NullableJsonNullValueInput | InputJsonValue
+    firedPlayerIds?: NullableJsonNullValueInput | InputJsonValue
+    advancementsHome?: NullableJsonNullValueInput | InputJsonValue
+    advancementsAway?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
+  }
+
+  export type LeagueMatchSheetCreateOrConnectWithoutCupPairingInput = {
+    where: LeagueMatchSheetWhereUniqueInput
+    create: XOR<LeagueMatchSheetCreateWithoutCupPairingInput, LeagueMatchSheetUncheckedCreateWithoutCupPairingInput>
+  }
+
   export type CupRoundUpsertWithoutPairingsInput = {
     update: XOR<CupRoundUpdateWithoutPairingsInput, CupRoundUncheckedUpdateWithoutPairingsInput>
     create: XOR<CupRoundCreateWithoutPairingsInput, CupRoundUncheckedCreateWithoutPairingsInput>
@@ -159019,6 +159327,115 @@ export namespace Prisma {
     aiDifficulty?: NullableStringFieldUpdateOperationsInput | string | null
     aiTeamSide?: NullableStringFieldUpdateOperationsInput | string | null
     actions?: LocalMatchActionUncheckedUpdateManyWithoutMatchNestedInput
+  }
+
+  export type LeagueMatchSheetUpsertWithoutCupPairingInput = {
+    update: XOR<LeagueMatchSheetUpdateWithoutCupPairingInput, LeagueMatchSheetUncheckedUpdateWithoutCupPairingInput>
+    create: XOR<LeagueMatchSheetCreateWithoutCupPairingInput, LeagueMatchSheetUncheckedCreateWithoutCupPairingInput>
+    where?: LeagueMatchSheetWhereInput
+  }
+
+  export type LeagueMatchSheetUpdateToOneWithWhereWithoutCupPairingInput = {
+    where?: LeagueMatchSheetWhereInput
+    data: XOR<LeagueMatchSheetUpdateWithoutCupPairingInput, LeagueMatchSheetUncheckedUpdateWithoutCupPairingInput>
+  }
+
+  export type LeagueMatchSheetUpdateWithoutCupPairingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    submittedByHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    submittedByAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    validatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    validatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    invalidatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invalidationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    weatherTable?: NullableStringFieldUpdateOperationsInput | string | null
+    weather?: NullableStringFieldUpdateOperationsInput | string | null
+    popularityHome?: NullableIntFieldUpdateOperationsInput | number | null
+    popularityAway?: NullableIntFieldUpdateOperationsInput | number | null
+    forfeitSide?: NullableStringFieldUpdateOperationsInput | string | null
+    tossWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementsHome?: NullableJsonNullValueInput | InputJsonValue
+    inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    prayersHome?: NullableJsonNullValueInput | InputJsonValue
+    prayersAway?: NullableJsonNullValueInput | InputJsonValue
+    scoreHome?: IntFieldUpdateOperationsInput | number
+    scoreAway?: IntFieldUpdateOperationsInput | number
+    winningsHome?: IntFieldUpdateOperationsInput | number
+    winningsAway?: IntFieldUpdateOperationsInput | number
+    winningsHomeManual?: NullableIntFieldUpdateOperationsInput | number | null
+    winningsAwayManual?: NullableIntFieldUpdateOperationsInput | number | null
+    dedicatedFansDeltaHome?: NullableIntFieldUpdateOperationsInput | number | null
+    dedicatedFansDeltaAway?: NullableIntFieldUpdateOperationsInput | number | null
+    rankingBonusHome?: NullableIntFieldUpdateOperationsInput | number | null
+    rankingBonusAway?: NullableIntFieldUpdateOperationsInput | number | null
+    sppBonus?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsHome?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsAway?: NullableJsonNullValueInput | InputJsonValue
+    motmPlayerIds?: JsonNullValueInput | InputJsonValue
+    purchasesHome?: NullableJsonNullValueInput | InputJsonValue
+    purchasesAway?: NullableJsonNullValueInput | InputJsonValue
+    firedPlayerIds?: NullableJsonNullValueInput | InputJsonValue
+    advancementsHome?: NullableJsonNullValueInput | InputJsonValue
+    advancementsAway?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
+    events?: LeagueMatchEventUpdateManyWithoutMatchSheetNestedInput
+  }
+
+  export type LeagueMatchSheetUncheckedUpdateWithoutCupPairingInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    pairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    submittedByHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    submittedByAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    validatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    validatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    invalidatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    invalidationReason?: NullableStringFieldUpdateOperationsInput | string | null
+    weatherTable?: NullableStringFieldUpdateOperationsInput | string | null
+    weather?: NullableStringFieldUpdateOperationsInput | string | null
+    popularityHome?: NullableIntFieldUpdateOperationsInput | number | null
+    popularityAway?: NullableIntFieldUpdateOperationsInput | number | null
+    forfeitSide?: NullableStringFieldUpdateOperationsInput | string | null
+    tossWinner?: NullableStringFieldUpdateOperationsInput | string | null
+    tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementsHome?: NullableJsonNullValueInput | InputJsonValue
+    inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    prayersHome?: NullableJsonNullValueInput | InputJsonValue
+    prayersAway?: NullableJsonNullValueInput | InputJsonValue
+    scoreHome?: IntFieldUpdateOperationsInput | number
+    scoreAway?: IntFieldUpdateOperationsInput | number
+    winningsHome?: IntFieldUpdateOperationsInput | number
+    winningsAway?: IntFieldUpdateOperationsInput | number
+    winningsHomeManual?: NullableIntFieldUpdateOperationsInput | number | null
+    winningsAwayManual?: NullableIntFieldUpdateOperationsInput | number | null
+    dedicatedFansDeltaHome?: NullableIntFieldUpdateOperationsInput | number | null
+    dedicatedFansDeltaAway?: NullableIntFieldUpdateOperationsInput | number | null
+    rankingBonusHome?: NullableIntFieldUpdateOperationsInput | number | null
+    rankingBonusAway?: NullableIntFieldUpdateOperationsInput | number | null
+    sppBonus?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsHome?: NullableJsonNullValueInput | InputJsonValue
+    costlyErrorsAway?: NullableJsonNullValueInput | InputJsonValue
+    motmPlayerIds?: JsonNullValueInput | InputJsonValue
+    purchasesHome?: NullableJsonNullValueInput | InputJsonValue
+    purchasesAway?: NullableJsonNullValueInput | InputJsonValue
+    firedPlayerIds?: NullableJsonNullValueInput | InputJsonValue
+    advancementsHome?: NullableJsonNullValueInput | InputJsonValue
+    advancementsAway?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotHome?: NullableJsonNullValueInput | InputJsonValue
+    rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
+    journeymenHome?: NullableJsonNullValueInput | InputJsonValue
+    journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
   }
 
   export type UserCreateWithoutMatchQueueInput = {
@@ -159812,6 +160229,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -159845,6 +160263,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -159871,6 +160290,7 @@ export namespace Prisma {
     round: CupRoundCreateNestedOneWithoutPairingsInput
     homeTeam: TeamCreateNestedOneWithoutCupPairingsHomeInput
     awayTeam?: TeamCreateNestedOneWithoutCupPairingsAwayInput
+    matchSheet?: LeagueMatchSheetCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingUncheckedCreateWithoutLocalMatchInput = {
@@ -159883,6 +160303,7 @@ export namespace Prisma {
     scheduledAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
+    matchSheet?: LeagueMatchSheetUncheckedCreateNestedOneWithoutCupPairingInput
   }
 
   export type CupPairingCreateOrConnectWithoutLocalMatchInput = {
@@ -160295,6 +160716,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -160328,6 +160750,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -160360,6 +160783,7 @@ export namespace Prisma {
     round?: CupRoundUpdateOneRequiredWithoutPairingsNestedInput
     homeTeam?: TeamUpdateOneRequiredWithoutCupPairingsHomeNestedInput
     awayTeam?: TeamUpdateOneWithoutCupPairingsAwayNestedInput
+    matchSheet?: LeagueMatchSheetUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateWithoutLocalMatchInput = {
@@ -160372,6 +160796,7 @@ export namespace Prisma {
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    matchSheet?: LeagueMatchSheetUncheckedUpdateOneWithoutCupPairingNestedInput
   }
 
   export type LocalMatchActionUpsertWithWhereUniqueWithoutMatchInput = {
@@ -162770,6 +163195,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -162803,6 +163229,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -163221,6 +163648,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -163254,6 +163682,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -163727,6 +164156,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -163760,6 +164190,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -164011,6 +164442,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -164044,6 +164476,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -165225,11 +165658,13 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    cupPairing?: CupPairingCreateNestedOneWithoutMatchSheetInput
     events?: LeagueMatchEventCreateNestedManyWithoutMatchSheetInput
   }
 
   export type LeagueMatchSheetUncheckedCreateWithoutPairingInput = {
     id?: string
+    cupPairingId?: string | null
     status?: string
     submittedByHomeAt?: Date | string | null
     submittedByAwayAt?: Date | string | null
@@ -165557,11 +165992,13 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cupPairing?: CupPairingUpdateOneWithoutMatchSheetNestedInput
     events?: LeagueMatchEventUpdateManyWithoutMatchSheetNestedInput
   }
 
   export type LeagueMatchSheetUncheckedUpdateWithoutPairingInput = {
     id?: StringFieldUpdateOperationsInput | string
+    cupPairingId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     submittedByHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     submittedByAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -165645,6 +166082,37 @@ export namespace Prisma {
     create: XOR<LeaguePairingCreateWithoutMatchSheetInput, LeaguePairingUncheckedCreateWithoutMatchSheetInput>
   }
 
+  export type CupPairingCreateWithoutMatchSheetInput = {
+    id?: string
+    tableNumber?: number
+    status?: string
+    scheduledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    round: CupRoundCreateNestedOneWithoutPairingsInput
+    homeTeam: TeamCreateNestedOneWithoutCupPairingsHomeInput
+    awayTeam?: TeamCreateNestedOneWithoutCupPairingsAwayInput
+    localMatch?: LocalMatchCreateNestedOneWithoutCupPairingInput
+  }
+
+  export type CupPairingUncheckedCreateWithoutMatchSheetInput = {
+    id?: string
+    roundId: string
+    tableNumber?: number
+    homeTeamId: string
+    awayTeamId?: string | null
+    status?: string
+    scheduledAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    localMatch?: LocalMatchUncheckedCreateNestedOneWithoutCupPairingInput
+  }
+
+  export type CupPairingCreateOrConnectWithoutMatchSheetInput = {
+    where: CupPairingWhereUniqueInput
+    create: XOR<CupPairingCreateWithoutMatchSheetInput, CupPairingUncheckedCreateWithoutMatchSheetInput>
+  }
+
   export type LeagueMatchEventCreateWithoutMatchSheetInput = {
     id?: string
     kind: string
@@ -165719,6 +166187,43 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     match?: MatchUncheckedUpdateOneWithoutLeaguePairingNestedInput
+  }
+
+  export type CupPairingUpsertWithoutMatchSheetInput = {
+    update: XOR<CupPairingUpdateWithoutMatchSheetInput, CupPairingUncheckedUpdateWithoutMatchSheetInput>
+    create: XOR<CupPairingCreateWithoutMatchSheetInput, CupPairingUncheckedCreateWithoutMatchSheetInput>
+    where?: CupPairingWhereInput
+  }
+
+  export type CupPairingUpdateToOneWithWhereWithoutMatchSheetInput = {
+    where?: CupPairingWhereInput
+    data: XOR<CupPairingUpdateWithoutMatchSheetInput, CupPairingUncheckedUpdateWithoutMatchSheetInput>
+  }
+
+  export type CupPairingUpdateWithoutMatchSheetInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    tableNumber?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    round?: CupRoundUpdateOneRequiredWithoutPairingsNestedInput
+    homeTeam?: TeamUpdateOneRequiredWithoutCupPairingsHomeNestedInput
+    awayTeam?: TeamUpdateOneWithoutCupPairingsAwayNestedInput
+    localMatch?: LocalMatchUpdateOneWithoutCupPairingNestedInput
+  }
+
+  export type CupPairingUncheckedUpdateWithoutMatchSheetInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    roundId?: StringFieldUpdateOperationsInput | string
+    tableNumber?: IntFieldUpdateOperationsInput | number
+    homeTeamId?: StringFieldUpdateOperationsInput | string
+    awayTeamId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    localMatch?: LocalMatchUncheckedUpdateOneWithoutCupPairingNestedInput
   }
 
   export type LeagueMatchEventUpsertWithWhereUniqueWithoutMatchSheetInput = {
@@ -165798,12 +166303,14 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    pairing: LeaguePairingCreateNestedOneWithoutMatchSheetInput
+    pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
+    cupPairing?: CupPairingCreateNestedOneWithoutMatchSheetInput
   }
 
   export type LeagueMatchSheetUncheckedCreateWithoutEventsInput = {
     id?: string
-    pairingId: string
+    pairingId?: string | null
+    cupPairingId?: string | null
     status?: string
     submittedByHomeAt?: Date | string | null
     submittedByAwayAt?: Date | string | null
@@ -165910,12 +166417,14 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    pairing?: LeaguePairingUpdateOneRequiredWithoutMatchSheetNestedInput
+    pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
+    cupPairing?: CupPairingUpdateOneWithoutMatchSheetNestedInput
   }
 
   export type LeagueMatchSheetUncheckedUpdateWithoutEventsInput = {
     id?: StringFieldUpdateOperationsInput | string
-    pairingId?: StringFieldUpdateOperationsInput | string
+    pairingId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupPairingId?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     submittedByHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     submittedByAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174532,6 +175041,7 @@ export namespace Prisma {
     blockCasualtyPoints?: number
     foulCasualtyPoints?: number
     passPoints?: number
+    tieBreakRules?: string | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -175180,6 +175690,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -175212,6 +175723,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -175244,6 +175756,7 @@ export namespace Prisma {
     blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -177078,6 +177591,7 @@ export namespace Prisma {
     round?: CupRoundUpdateOneRequiredWithoutPairingsNestedInput
     awayTeam?: TeamUpdateOneWithoutCupPairingsAwayNestedInput
     localMatch?: LocalMatchUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateWithoutHomeTeamInput = {
@@ -177090,6 +177604,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     localMatch?: LocalMatchUncheckedUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUncheckedUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateManyWithoutHomeTeamInput = {
@@ -177113,6 +177628,7 @@ export namespace Prisma {
     round?: CupRoundUpdateOneRequiredWithoutPairingsNestedInput
     homeTeam?: TeamUpdateOneRequiredWithoutCupPairingsHomeNestedInput
     localMatch?: LocalMatchUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateWithoutAwayTeamInput = {
@@ -177125,6 +177641,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     localMatch?: LocalMatchUncheckedUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUncheckedUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateManyWithoutAwayTeamInput = {
@@ -177962,6 +178479,7 @@ export namespace Prisma {
     homeTeam?: TeamUpdateOneRequiredWithoutCupPairingsHomeNestedInput
     awayTeam?: TeamUpdateOneWithoutCupPairingsAwayNestedInput
     localMatch?: LocalMatchUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateWithoutRoundInput = {
@@ -177974,6 +178492,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     localMatch?: LocalMatchUncheckedUpdateOneWithoutCupPairingNestedInput
+    matchSheet?: LeagueMatchSheetUncheckedUpdateOneWithoutCupPairingNestedInput
   }
 
   export type CupPairingUncheckedUpdateManyWithoutRoundInput = {

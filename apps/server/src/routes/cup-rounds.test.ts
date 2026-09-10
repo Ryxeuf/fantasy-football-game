@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../services/cup-rounds", () => ({
   listCupRounds: vi.fn(),
+  generateCupRound: vi.fn(),
   generateSwissCupRound: vi.fn(),
   deleteLastCupRound: vi.fn(),
   scheduleCupPairing: vi.fn(),
@@ -24,12 +25,14 @@ vi.mock("../prisma", () => ({ prisma: {} }));
 
 import type { Response } from "express";
 import {
+  generateCupRound,
   generateSwissCupRound,
   listCupRounds,
   scheduleCupPairing,
   CupRoundError,
 } from "../services/cup-rounds";
 import {
+  handleGenerateCupRound,
   handleGenerateSwissRound,
   handleListCupRounds,
   handleScheduleCupPairing,
@@ -40,6 +43,7 @@ type MockFn = ReturnType<typeof vi.fn>;
 const mocked = {
   list: listCupRounds as unknown as MockFn,
   generate: generateSwissCupRound as unknown as MockFn,
+  generateAny: generateCupRound as unknown as MockFn,
   schedule: scheduleCupPairing as unknown as MockFn,
 };
 
@@ -111,5 +115,57 @@ describe("routes cup-rounds", () => {
       scheduledAt: null,
     });
     expect(res.status).toHaveBeenCalledWith(200);
+  });
+});
+
+describe("POST /cup/:id/rounds — systèmes d'appariement", () => {
+  it("transmet le système et les rencontres saisies au service", async () => {
+    mocked.generateAny.mockResolvedValue({ id: "r1", roundNumber: 2 });
+    const pairings = [{ homeTeamId: "t1", awayTeamId: "t2" }];
+    const res = makeRes();
+    await handleGenerateCupRound(
+      makeReq({ body: { system: "manual", pairings } }) as AuthenticatedRequest,
+      res,
+    );
+    expect(mocked.generateAny).toHaveBeenCalledWith({
+      cupId: "cup-1",
+      actor: { userId: "u1", isAdmin: true },
+      system: "manual",
+      pairings,
+    });
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it("accepte un tirage au sort sans rencontres", async () => {
+    mocked.generateAny.mockResolvedValue({ id: "r1", roundNumber: 1 });
+    const res = makeRes();
+    await handleGenerateCupRound(
+      makeReq({ body: { system: "random" } }) as AuthenticatedRequest,
+      res,
+    );
+    expect(mocked.generateAny).toHaveBeenCalledWith(
+      expect.objectContaining({ system: "random", pairings: undefined }),
+    );
+  });
+
+  it("traduit une saisie manuelle incohérente en 400 (et non en 409)", async () => {
+    mocked.generateAny.mockRejectedValue(
+      new CupRoundError("invalid_pairings", "L'équipe t1 apparaît deux fois"),
+    );
+    const res = makeRes();
+    await handleGenerateCupRound(
+      makeReq({ body: { system: "manual", pairings: [] } }) as AuthenticatedRequest,
+      res,
+    );
+    expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it("traduit un refus d'autorisation en 403", async () => {
+    mocked.generateAny.mockRejectedValue(
+      new CupRoundError("forbidden", "Seul le créateur"),
+    );
+    const res = makeRes();
+    await handleGenerateCupRound(makeReq() as AuthenticatedRequest, res);
+    expect(res.status).toHaveBeenCalledWith(403);
   });
 });

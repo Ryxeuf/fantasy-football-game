@@ -1,3 +1,8 @@
+import {
+  makeCupStandingsComparator,
+  parseCupTieBreakRules,
+} from "./services/cup-standings-order";
+
 export type CupScoringConfig = {
   winPoints: number;
   drawPoints: number;
@@ -57,6 +62,12 @@ export type CupWithParticipantsAndScoring = {
   blockCasualtyPoints: number;
   foulCasualtyPoints: number;
   passPoints: number;
+  /**
+   * Criteres de departage configures (chaine JSON `["points","cas_for"]`,
+   * ou tableau natif selon le pilote). Absent / null / illisible =>
+   * ordre historique (cf. `DEFAULT_CUP_TIE_BREAK_RULES`).
+   */
+  tieBreakRules?: unknown;
   participants: CupParticipantWithTeam[];
 };
 
@@ -300,21 +311,11 @@ export function computeCupStandings(
     teamStats.push({ ...stats });
   }
 
-  teamStats.sort((a, b) => {
-    if (b.totalPoints !== a.totalPoints) {
-      return b.totalPoints - a.totalPoints;
-    }
-    if (b.touchdownDiff !== a.touchdownDiff) {
-      return b.touchdownDiff - a.touchdownDiff;
-    }
-    if (b.touchdownsFor !== a.touchdownsFor) {
-      return b.touchdownsFor - a.touchdownsFor;
-    }
-    if (b.wins !== a.wins) {
-      return b.wins - a.wins;
-    }
-    return a.teamName.localeCompare(b.teamName);
-  });
+  // Departages configurables par le commissaire (`Cup.tieBreakRules`). Sans
+  // configuration, l'ordre historique est conserve a l'identique.
+  teamStats.sort(
+    makeCupStandingsComparator(parseCupTieBreakRules(cup.tieBreakRules)),
+  );
 
   // Construire les "podiums" par pôle d'actions
   const asAwardEntries = (

@@ -52,6 +52,11 @@ import {
 } from "./invalidate-consumed";
 import { RosterSection } from "./_components/RosterSection";
 import TeamLogo from "../../../../components/TeamLogo";
+import {
+  competitionBackLabel,
+  competitionHref,
+  isCupCompetition,
+} from "../../../../lib/competition-links";
 
 // Feuille de match v2 (ligue physique) — saisie mobile-first.
 // Sections RÉSUMÉ / AVANT-MATCH / AU COURS DU MATCH / FIN DU MATCH.
@@ -219,7 +224,22 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur pré-fix (repli sur `viewerRole`).
    */
   viewerTeamId?: string | null;
-  /** Ligue du pairing (lien retour). Optionnel : rétro-compat serveur pré-fix. */
+  /**
+   * Compétition d'origine. Absent = serveur antérieur au support des
+   * coupes : on retombe sur « ligue », comportement historique.
+   */
+  competitionKind?: "league" | "cup";
+  /** Ce que la validation écrira. En coupe, tout est `false`. */
+  competitionRules?: {
+    sppEnabled?: boolean;
+    injuriesPersisted?: boolean;
+    economyEnabled?: boolean;
+    advancementsEnabled?: boolean;
+    purchasesEnabled?: boolean;
+    firingsEnabled?: boolean;
+    resurrection?: boolean;
+  };
+  /** Compétition du pairing (lien retour). Optionnel : rétro-compat pré-fix. */
   leagueId?: string;
   leagueName?: string;
   teams: { home: SheetTeam | null; away: SheetTeam | null };
@@ -732,17 +752,32 @@ export default function MatchSheetPage() {
     );
   }
 
+  // Une coupe se joue en résurrection : ni fin de match, ni évolutions.
+  const isCup = isCupCompetition(data.competitionKind);
+
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4" data-testid="match-sheet">
       {/* Retour vers la page de la ligue */}
       {data.leagueId && (
         <Link
-          href={`/leagues/${data.leagueId}`}
+          href={competitionHref(data.competitionKind, data.leagueId)}
           className="inline-block text-sm text-nuffle-bronze hover:underline"
           data-testid="back-to-league"
         >
-          ← Retour à la ligue{data.leagueName ? ` « ${data.leagueName} »` : ""}
+          {competitionBackLabel(data.competitionKind, data.leagueName)}
         </Link>
+      )}
+      {isCup && (
+        <p
+          data-testid="cup-sheet-notice"
+          className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+        >
+          <strong>Coupe — mode résurrection.</strong> La saisie est celle
+          d&apos;une ligue, mais la validation n&apos;écrit rien sur les
+          équipes : aucun PSP, aucune blessure ni mort conservée, aucun gain
+          d&apos;or, de fans, d&apos;évolution ou d&apos;achat. Chaque
+          rencontre se joue avec le roster d&apos;inscription, tel quel.
+        </p>
       )}
       {/* RÉSUMÉ */}
       <section className="rounded-lg border bg-white p-4">
@@ -862,9 +897,18 @@ export default function MatchSheetPage() {
           [
             { id: "before", label: "Avant-match" },
             { id: "during", label: "En cours" },
-            { id: "after", label: "Fin du match" },
-            { id: "advancements", label: "Évolutions" },
-          ] as const
+            // Ces deux phases n'existent pas en coupe : rien n'y est
+            // persisté, les afficher inviterait à une saisie sans effet.
+            ...(isCup
+              ? []
+              : ([
+                  { id: "after", label: "Fin du match" },
+                  { id: "advancements", label: "Évolutions" },
+                ] as const)),
+          ] as ReadonlyArray<{
+            id: "before" | "during" | "after" | "advancements";
+            label: string;
+          }>
         ).map((t) => {
           const activeTab = tab === t.id;
           return (
@@ -1253,8 +1297,9 @@ export default function MatchSheetPage() {
         </section>
       )}
 
-      {/* FIN DU MATCH */}
-      {tab === "after" &&
+      {/* FIN DU MATCH — hors coupe (aucun effet d'après-match). */}
+      {!isCup &&
+        tab === "after" &&
         (isCoach || isCommissioner ? (
           <div className="space-y-3">
             {/* Haine (X) : le D6 est lancé SERVEUR à la validation. Sans ce
@@ -1309,8 +1354,8 @@ export default function MatchSheetPage() {
           </p>
         ))}
 
-      {/* ÉVOLUTIONS DES JOUEURS */}
-      {tab === "advancements" && (
+      {/* ÉVOLUTIONS DES JOUEURS — hors coupe (aucun PSP gagné). */}
+      {!isCup && tab === "advancements" && (
         <section
           className="space-y-3 rounded-lg border bg-white p-4"
           data-testid="advancements-panel"

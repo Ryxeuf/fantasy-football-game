@@ -190,6 +190,73 @@ describe("E2E API — rondes suisses de coupe", () => {
     expect(again.status).toBe(409);
   });
 
+  it("génère une ronde tirée au sort, puis une ronde composée à la main", async () => {
+    const { cupId, commish, coaches } = await setupCup("sys");
+
+    // Ronde 1 tirée au sort : 5 inscrits -> 2 rencontres + 1 exempt.
+    const drawn = unwrap(
+      await post<{ data: { round: RoundDTO } }>(
+        `/cup/${cupId}/rounds`,
+        commish.token,
+        { system: "random" },
+      ),
+    ).round;
+    expect(drawn.pairings.filter((p) => p.status === "scheduled")).toHaveLength(2);
+    expect(drawn.pairings.filter((p) => p.status === "bye")).toHaveLength(1);
+
+    // Le tirage est REJOUABLE : deux appels sur la même coupe et le même
+    // numéro de ronde donnent le même appariement.
+    await rawDelete(`/cup/${cupId}/rounds/last`, commish.token);
+    const again = unwrap(
+      await post<{ data: { round: RoundDTO } }>(
+        `/cup/${cupId}/rounds`,
+        commish.token,
+        { system: "random" },
+      ),
+    ).round;
+    const pairKeys = (r: RoundDTO) =>
+      r.pairings
+        .map((p) => [p.homeTeam.id, p.awayTeam?.id ?? "bye"].join(">"))
+        .sort();
+    expect(pairKeys(again)).toEqual(pairKeys(drawn));
+
+    // Ronde manuelle : le commissaire pose lui-même une seule rencontre.
+    for (const p of again.pairings.filter((x) => x.status === "scheduled")) {
+      await rawPost(`/cup/pairings/${p.id}/cancel`, commish.token, {});
+    }
+    const manual = unwrap(
+      await post<{ data: { round: RoundDTO } }>(
+        `/cup/${cupId}/rounds`,
+        commish.token,
+        {
+          system: "manual",
+          pairings: [
+            { homeTeamId: coaches[0].teamId, awayTeamId: coaches[1].teamId },
+            { homeTeamId: coaches[2].teamId, awayTeamId: null },
+          ],
+        },
+      ),
+    ).round;
+    expect(manual.pairings.filter((p) => p.status === "scheduled")).toHaveLength(1);
+    const manualBye = manual.pairings.find((p) => p.status === "bye")!;
+    expect(manualBye.homeTeam.id).toBe(coaches[2].teamId);
+    // Les deux inscrits laissés de côté ne jouent tout simplement pas.
+    expect(manual.pairings).toHaveLength(2);
+  });
+
+  it("refuse une saisie manuelle incohérente avec un 400", async () => {
+    const { cupId, commish, coaches } = await setupCup("bad");
+    const res = await rawPost(`/cup/${cupId}/rounds`, commish.token, {
+      system: "manual",
+      pairings: [
+        { homeTeamId: coaches[0].teamId, awayTeamId: coaches[1].teamId },
+        { homeTeamId: coaches[0].teamId, awayTeamId: coaches[2].teamId },
+      ],
+    });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(await res.json())).toMatch(/deux fois/);
+  });
+
   it("refuse une ronde sur une coupe encore ouverte aux inscriptions", async () => {
     const alice = await seedAndLogin("open-alice@swiss.test", "pwd", "Alice");
     const created = await post<{ cup: { id: string } }>("/cup", alice.token, {

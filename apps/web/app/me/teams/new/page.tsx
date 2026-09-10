@@ -169,8 +169,11 @@ export default function NewTeamBuilder() {
   // Règlements servis par l'API (édités en admin), plus par le registre du
   // moteur : les fonctions pures ci-dessous prennent la définition en
   // argument, seule sa provenance change.
-  const { rulesets: availableRulesets, bySlug: rulesetsBySlug } =
-    useTournamentRulesets();
+  const {
+    rulesets: availableRulesets,
+    bySlug: rulesetsBySlug,
+    loading: rulesetsLoading,
+  } = useTournamentRulesets();
   const pack = useMemo(
     () => (tournamentRuleset ? (rulesetsBySlug.get(tournamentRuleset) ?? null) : null),
     [tournamentRuleset, rulesetsBySlug],
@@ -738,10 +741,26 @@ export default function NewTeamBuilder() {
     }
   }
 
+  /**
+   * Règlement IMPOSÉ mais introuvable côté client : le règlement a été
+   * désactivé en admin (la liste publique ne sert que les règlements
+   * proposables) ou l'appel a échoué (`fetchTournamentRulesets` rend `[]`).
+   *
+   * Sans garde, `resolveBuildBudget` retombait alors sur la branche « coupe »
+   * — budget natif du roster (1 000 kpo) et pool de 0 PSP, donc aucune
+   * compétence achetable — SANS rien dire, et le serveur refusait ensuite
+   * l'équipe. C'est exactement le symptôme rapporté sur une coupe World Cup.
+   * On le dit, et on bloque la création plutôt que de laisser construire une
+   * équipe inutilisable.
+   */
+  const packUnresolved =
+    Boolean(tournamentRuleset) && !pack && !rulesetsLoading;
+
   const isTeamValid =
     formatValidation.valid &&
     remainingBudget >= 0 &&
     packPlanValidation.valid &&
+    !packUnresolved &&
     // Plusieurs Ligues ouvertes ⇒ le choix est OBLIGATOIRE : le serveur
     // refuse (422) une création sans Ligue, autant bloquer le bouton.
     !regionalLeagueMissing &&
@@ -1110,6 +1129,21 @@ export default function NewTeamBuilder() {
               ? `Blood Bowl à Sept — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs · max ${constraints.maxNonLinemen} non-Linemen · relances ×${constraints.rerollCostMultiplier} · sans Star Players`
               : `Blood Bowl à 11 — ${constraints.startingBudget}${t.teams.kpo} · ${constraints.minPlayers}–${constraints.maxPlayers} joueurs`}
           </p>
+
+          {/* Règlement IMPOSÉ mais introuvable : on le DIT. Le silence
+              renvoyait le coach vers le budget natif du roster et un pool de
+              0 PSP, pour une équipe que l'inscription refuserait ensuite. */}
+          {packUnresolved && (
+            <p
+              data-testid="pack-unresolved"
+              className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800"
+            >
+              Le règlement de tournoi imposé (<code>{tournamentRuleset}</code>)
+              est introuvable : ses budgets et son pool de PSP ne peuvent pas
+              être appliqués. Rechargez la page ; si le problème persiste,
+              prévenez le commissaire — le règlement a pu être désactivé.
+            </p>
+          )}
 
           {/* Règlement de tournoi : règles imposées au roster sélectionné. */}
           {pack && (

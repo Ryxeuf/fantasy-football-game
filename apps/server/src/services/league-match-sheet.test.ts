@@ -8,6 +8,11 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     leaguePairing: { findUnique: vi.fn(), count: vi.fn() },
+    // Résolution POLYMORPHE de la rencontre (ligue puis coupe) : le mock
+    // doit déclarer les deux, sinon `resolveCompetitionPairing` casse.
+    // Non renseigné (undefined) ⇒ ce n'est pas une coupe, comme avant.
+    cupPairing: { findUnique: vi.fn() },
+    cupParticipant: { findMany: vi.fn() },
     leagueMatchSheet: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
@@ -44,6 +49,7 @@ vi.mock("./league-offline-edit", () => ({
 // NB : `vi.resetAllMocks()` efface l'implémentation → la re-poser dans le test.
 vi.mock("./cup-roster-snapshot", () => ({
   captureRosterSnapshot: vi.fn(),
+  parseRosterSnapshot: vi.fn(() => null),
 }));
 
 vi.mock("./push-notifications", () => ({

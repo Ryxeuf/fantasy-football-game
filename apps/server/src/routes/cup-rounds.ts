@@ -1,9 +1,11 @@
 /**
- * Rondes d'une coupe (ronde suisse). Monté sur `/cup` AVANT `cupRoutes`
+ * Rondes d'une coupe. Monté sur `/cup` AVANT `cupRoutes`
  * (dont le `GET /:id` avalerait `/pairings/...`).
  *
  *   GET    /cup/:id/rounds                  rondes + rencontres (auth)
- *   POST   /cup/:id/rounds/swiss            génère la ronde suivante (commissaire)
+ *   POST   /cup/:id/rounds                  génère la ronde suivante, au choix
+ *                                           tirée au sort / suisse / manuelle
+ *   POST   /cup/:id/rounds/swiss            idem, forcé en suisse (historique)
  *   DELETE /cup/:id/rounds/last             supprime la dernière ronde (commissaire)
  *   PATCH  /cup/pairings/:pairingId/schedule date prévisionnelle (coachs / commissaire)
  *   POST   /cup/pairings/:pairingId/cancel  annule une rencontre (commissaire)
@@ -26,12 +28,17 @@ import {
 import {
   cancelCupPairing,
   deleteLastCupRound,
+  generateCupRound,
   generateSwissCupRound,
   listCupRounds,
   scheduleCupPairing,
   CupRoundError,
   type CupActor,
 } from "../services/cup-rounds";
+import {
+  generateCupRoundSchema,
+  type GenerateCupRoundBody,
+} from "../schemas/cup-round.schemas";
 
 function actorFromRequest(
   req: AuthenticatedRequest,
@@ -54,7 +61,11 @@ function cupRoundError(res: Response, e: unknown): void {
         ? 404
         : e.code === "forbidden"
           ? 403
-          : 409;
+          : // Une saisie manuelle incohérente est une erreur de REQUÊTE
+            // (l'appelant peut la corriger), pas un conflit d'état.
+            e.code === "invalid_pairings" || e.code === "unknown_system"
+            ? 400
+            : 409;
     sendError(res, e.message, status);
     return;
   }
@@ -83,6 +94,26 @@ export async function handleGenerateSwissRound(
   if (!actor) return;
   try {
     const round = await generateSwissCupRound({ cupId: req.params.id, actor });
+    sendSuccess(res, { round }, 201);
+  } catch (e: unknown) {
+    cupRoundError(res, e);
+  }
+}
+
+export async function handleGenerateCupRound(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const actor = actorFromRequest(req, res);
+  if (!actor) return;
+  const body: GenerateCupRoundBody = req.body;
+  try {
+    const round = await generateCupRound({
+      cupId: req.params.id,
+      actor,
+      system: body.system,
+      pairings: body.pairings,
+    });
     sendSuccess(res, { round }, 201);
   } catch (e: unknown) {
     cupRoundError(res, e);
@@ -138,6 +169,12 @@ export async function handleCancelCupPairing(
 
 const router = Router();
 router.get("/:id/rounds", authUser, handleListCupRounds);
+router.post(
+  "/:id/rounds",
+  authUser,
+  validate(generateCupRoundSchema),
+  handleGenerateCupRound,
+);
 router.post("/:id/rounds/swiss", authUser, handleGenerateSwissRound);
 router.delete("/:id/rounds/last", authUser, handleDeleteLastCupRound);
 router.patch(

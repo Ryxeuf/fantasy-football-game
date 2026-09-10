@@ -28,7 +28,9 @@ import {
   type CupWithParticipantsAndScoring,
   type LocalMatchWithRelations,
 } from "../cupScoring";
-import { generateSwissRound } from "./swiss-pairing";
+import { generateSwissRound, type SwissRoundResult } from "./swiss-pairing";
+import { generateRandomRound } from "./random-pairing";
+import type { CupRoundSystem } from "./cup-round-systems";
 import { createInAppNotification } from "./in-app-notifications";
 import { serverLog } from "../utils/server-log";
 
@@ -45,7 +47,9 @@ export type CupRoundErrorCode =
   | "pairing_closed"
   | "pairing_bye"
   | "pairing_has_match"
-  | "team_mismatch";
+  | "team_mismatch"
+  | "unknown_system"
+  | "invalid_pairings";
 
 export class CupRoundError extends Error {
   constructor(
@@ -55,6 +59,18 @@ export class CupRoundError extends Error {
     super(message);
     this.name = "CupRoundError";
   }
+}
+
+export {
+  CUP_ROUND_SYSTEMS,
+  isCupRoundSystem,
+  type CupRoundSystem,
+} from "./cup-round-systems";
+
+/** Rencontre saisie à la main. `awayTeamId` null = équipe exemptée. */
+export interface ManualCupPairingInput {
+  readonly homeTeamId: string;
+  readonly awayTeamId?: string | null;
 }
 
 export interface CupActor {
@@ -276,15 +292,22 @@ function ensureCommissioner(
 }
 
 /**
- * Génère la ronde suivante (ronde suisse) : classement courant -> moteur
- * pur -> `CupRound` + `CupPairing` en une transaction. Refus si la coupe
- * n'est pas en cours, s'il y a moins de deux inscrits, ou si la ronde
- * précédente n'est pas terminée.
+ * Génère la ronde suivante d'une coupe. Trois systèmes (cf.
+ * `CUP_ROUND_SYSTEMS`) : tirage au sort, ronde suisse, ou saisie manuelle.
+ * Les trois partagent les MÊMES garde-fous — coupe en cours, deux inscrits
+ * au minimum, ronde précédente terminée — et produisent la même chose :
+ * `CupRound` + `CupPairing` en une transaction, puis notification des
+ * coachs appariés. Seul l'appariement change.
+ *
+ * `pairings` n'est lu qu'en mode `manual` ; il est alors OBLIGATOIRE.
  */
-export async function generateSwissCupRound(input: {
+export async function generateCupRound(input: {
   cupId: string;
   actor: CupActor;
+  system?: CupRoundSystem;
+  pairings?: readonly ManualCupPairingInput[];
 }): Promise<CupRoundView> {
+  const system: CupRoundSystem = input.system ?? "swiss";
   const cupHeader = await loadCupForActor(input.cupId);
   ensureCommissioner(cupHeader, input.actor);
   if (cupHeader.status === "terminee" || cupHeader.status === "archivee") {
@@ -378,19 +401,28 @@ export async function generateSwissCupRound(input: {
     }
   }
 
-  const result = generateSwissRound(
-    ranked.map((teamId) => ({ teamId })),
-    { playedPairs, byes, homeCounts },
-  );
-
   const roundNumber = (lastRound?.roundNumber ?? 0) + 1;
+  const history = { playedPairs, byes, homeCounts };
+  const result: SwissRoundResult =
+    system === "manual"
+      ? buildManualRound(input.pairings, teamIds)
+      : system === "random"
+        ? // Graine = coupe + numéro de ronde : le tirage est REJOUABLE (deux
+          // appels rendent la même ronde) et deux rondes de la même coupe ne
+          // partagent pas leur ordre.
+          generateRandomRound(ranked, history, `${cup.id}:${roundNumber}`)
+        : generateSwissRound(
+            ranked.map((teamId) => ({ teamId })),
+            history,
+          );
+
   const created = (await prisma.$transaction(async (tx: typeof prisma) => {
     const round = (await tx.cupRound.create({
       data: {
         cupId: cup.id,
         roundNumber,
         name: `Ronde ${roundNumber}`,
-        system: "swiss",
+        system,
         status: "pending",
       },
       select: { id: true },
@@ -429,6 +461,102 @@ export async function generateSwissCupRound(input: {
   const view = await loadRoundView(created.id);
   await notifyRoundPairings(cup.id, cupHeader.name, view);
   return view;
+}
+
+/**
+ * Rétro-compatibilité : `POST /cup/:id/rounds/swiss` existait avant les
+ * autres systèmes et reste servi tel quel.
+ */
+export async function generateSwissCupRound(input: {
+  cupId: string;
+  actor: CupActor;
+}): Promise<CupRoundView> {
+  return generateCupRound({ ...input, system: "swiss" });
+}
+
+/**
+ * Valide et met en forme des rencontres saisies à la main.
+ *
+ * Le commissaire pose ce qu'il veut, mais une ronde reste une ronde : une
+ * équipe ne peut pas jouer deux fois, ni contre elle-même, ni contre une
+ * équipe non inscrite, et il ne peut y avoir qu'un seul exempt (par
+ * définition, l'exempt est celui qui reste). Une saisie qui violerait ça
+ * produirait un classement faux, pas une ronde exotique — d'où le refus.
+ *
+ * Une équipe inscrite mais ABSENTE de la saisie est acceptée : elle ne joue
+ * simplement pas cette ronde (report, forfait à venir). C'est le propre de
+ * la saisie manuelle, et c'est ce qui la distingue d'un appariement généré.
+ */
+export function buildManualRound(
+  pairings: readonly ManualCupPairingInput[] | undefined,
+  participantIds: readonly string[],
+): SwissRoundResult {
+  if (!pairings || pairings.length === 0) {
+    throw new CupRoundError(
+      "invalid_pairings",
+      "Saisie manuelle : aucune rencontre fournie",
+    );
+  }
+  const allowed = new Set(participantIds);
+  const used = new Set<string>();
+  const out: Array<{ home: string; away: string; table: number }> = [];
+  let bye: string | null = null;
+
+  pairings.forEach((p, index) => {
+    const home = p.homeTeamId;
+    const away = p.awayTeamId ?? null;
+    if (!allowed.has(home)) {
+      throw new CupRoundError(
+        "invalid_pairings",
+        `Équipe non inscrite à la coupe : ${home}`,
+      );
+    }
+    if (used.has(home)) {
+      throw new CupRoundError(
+        "invalid_pairings",
+        `L'équipe ${home} apparaît deux fois dans la ronde`,
+      );
+    }
+    used.add(home);
+
+    if (away === null) {
+      if (bye !== null) {
+        throw new CupRoundError(
+          "invalid_pairings",
+          "Une ronde ne peut compter qu'une seule équipe exemptée",
+        );
+      }
+      bye = home;
+      return;
+    }
+    if (away === home) {
+      throw new CupRoundError(
+        "invalid_pairings",
+        "Une équipe ne peut pas s'affronter elle-même",
+      );
+    }
+    if (!allowed.has(away)) {
+      throw new CupRoundError(
+        "invalid_pairings",
+        `Équipe non inscrite à la coupe : ${away}`,
+      );
+    }
+    if (used.has(away)) {
+      throw new CupRoundError(
+        "invalid_pairings",
+        `L'équipe ${away} apparaît deux fois dans la ronde`,
+      );
+    }
+    used.add(away);
+    out.push({ home, away, table: index + 1 });
+  });
+
+  // Tables renumérotées en continu : l'exempt ne doit pas laisser un trou.
+  return {
+    pairings: out.map((p, i) => ({ ...p, table: i + 1 })),
+    bye,
+    rematchForced: false,
+  };
 }
 
 async function loadRoundView(roundId: string): Promise<CupRoundView> {

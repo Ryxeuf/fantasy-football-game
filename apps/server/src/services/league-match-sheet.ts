@@ -91,7 +91,25 @@ import {
 } from "./league-sheet-star-players";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
-import { captureRosterSnapshot } from "./cup-roster-snapshot";
+import {
+  captureRosterSnapshot,
+  parseRosterSnapshot,
+  type RosterSnapshot,
+} from "./cup-roster-snapshot";
+import {
+  canInvalidateCupMatchSheet,
+  revertCupMatchSheet,
+  settleCupMatchSheet,
+  sheetEventsToLocalMatchActions,
+  type CupSheetEvent,
+} from "./cup-match-sheet";
+import {
+  resolveCompetitionPairing,
+  sheetWhere,
+  type CompetitionKind,
+  type CompetitionPairingContext,
+  type CompetitionSheetRules,
+} from "./competition-match-sheet-context";
 import { frozenSkillsByPlayerId } from "./league-sheet-frozen-skills";
 import {
   resolveSpecialRulesForTeam,
@@ -273,57 +291,49 @@ export type CoachSide = "home" | "away";
 
 interface PairingContext {
   pairingId: string;
+  /** Compétition d'origine : une coupe n'applique aucun effet d'après-match. */
+  kind: CompetitionKind;
+  /** Id de la compétition (ligue OU coupe). */
   leagueId: string;
+  /** Nom de la compétition (ligue OU coupe). */
   leagueName: string;
   creatorId: string;
+  homeTeamId: string;
+  awayTeamId: string;
   homeOwnerId: string;
   awayOwnerId: string;
+  rules: CompetitionSheetRules;
 }
 
 /**
- * Resout le contexte d'autorisation d'un pairing : ligue, commissaire,
+ * Resout le contexte d'autorisation d'un pairing : competition, commissaire,
  * owners des deux equipes. Source unique pour tous les checks de role.
+ *
+ * POLYMORPHE depuis les coupes : la resolution passe par
+ * `resolveCompetitionPairing`, qui tente la ligue puis la coupe. Les champs
+ * `leagueId` / `leagueName` gardent leur nom (des dizaines d'appelants) mais
+ * portent desormais la COMPETITION, ligue ou coupe.
  */
 async function loadPairingContext(pairingId: string): Promise<PairingContext> {
-  const pairing = (await prisma.leaguePairing.findUnique({
-    where: { id: pairingId },
-    select: {
-      id: true,
-      round: {
-        select: {
-          season: {
-            select: {
-              league: { select: { id: true, name: true, creatorId: true } },
-            },
-          },
-        },
-      },
-      homeParticipant: { select: { team: { select: { ownerId: true } } } },
-      awayParticipant: { select: { team: { select: { ownerId: true } } } },
-    },
-  })) as {
-    id: string;
-    round: {
-      season: { league: { id: string; name: string; creatorId: string } };
-    };
-    homeParticipant: { team: { ownerId: string } } | null;
-    awayParticipant: { team: { ownerId: string } } | null;
-  } | null;
-
-  if (!pairing) {
+  const ctx: CompetitionPairingContext | null =
+    await resolveCompetitionPairing(pairingId);
+  if (!ctx) {
     throw new MatchSheetError(
       "pairing_not_found",
       `Pairing introuvable: ${pairingId}`,
     );
   }
-  const league = pairing.round.season.league;
   return {
-    pairingId: pairing.id,
-    leagueId: league.id,
-    leagueName: league.name ?? "",
-    creatorId: league.creatorId,
-    homeOwnerId: pairing.homeParticipant?.team.ownerId ?? "",
-    awayOwnerId: pairing.awayParticipant?.team.ownerId ?? "",
+    pairingId: ctx.pairingId,
+    kind: ctx.kind,
+    leagueId: ctx.competitionId,
+    leagueName: ctx.competitionName,
+    creatorId: ctx.creatorId,
+    homeTeamId: ctx.homeTeamId,
+    awayTeamId: ctx.awayTeamId,
+    homeOwnerId: ctx.homeOwnerId,
+    awayOwnerId: ctx.awayOwnerId,
+    rules: ctx.rules,
   };
 }
 
@@ -356,6 +366,12 @@ async function captureSideSnapshot(
   journeymenChoiceRaw: unknown,
   /** Valeurs déjà figées à préserver (regel d'une feuille legacy). */
   preserved: ReturnType<typeof parseFrozenTeamValues> = null,
+  /**
+   * Roster D'INSCRIPTION (coupe, mode résurrection) : quand il existe, c'est
+   * LUI la « version du match » — une coupe rejoue le roster inscrit tel
+   * quel à chaque ronde, sans jamais partir de l'état live.
+   */
+  registered: RosterSnapshot | null = null,
 ): Promise<string | null> {
   if (!team?.teamId) return null;
   // VE/VEA fraîches AVANT capture : la VEA exclut les joueurs absents
@@ -371,10 +387,14 @@ async function captureSideSnapshot(
     );
   }
   // Les joueurs absents (missNextMatch) ne participent pas au match : ils
-  // sont exclus de la « version du match » figée.
-  const snap = await captureRosterSnapshot(team.teamId, {
-    excludeMissNextMatch: true,
-  });
+  // sont exclus de la « version du match » figée. En résurrection, le
+  // snapshot d'inscription prime : rien de ce qui s'est passé depuis
+  // (blessure, achat, évolution hors compétition) ne doit entrer.
+  const snap =
+    registered ??
+    (await captureRosterSnapshot(team.teamId, {
+      excludeMissNextMatch: true,
+    }));
   if (!snap) return null;
   const base = {
     ...snap,
@@ -410,13 +430,50 @@ async function captureSideSnapshot(
 }
 
 /**
+ * Rosters D'INSCRIPTION des deux équipes d'une rencontre de coupe
+ * (`CupParticipant.rosterSnapshot`, posé par `registerTeamToCup`).
+ *
+ * C'est la traduction littérale de « chaque match se joue avec le roster
+ * initial tel quel » : la feuille d'une coupe ne gèle pas l'état live mais
+ * l'état inscrit, donc identique d'une ronde à l'autre. Hors résurrection
+ * (ligue), la map est vide et le gel part du roster live comme avant.
+ *
+ * Best-effort : un snapshot absent (participant historique) retombe sur le
+ * gel live plutôt que de bloquer l'ouverture de la feuille.
+ */
+async function registrationSnapshots(
+  ctx: PairingContext,
+): Promise<Map<string, RosterSnapshot>> {
+  const out = new Map<string, RosterSnapshot>();
+  if (!ctx.rules.resurrection || ctx.kind !== "cup") return out;
+  const teamIds = [ctx.homeTeamId, ctx.awayTeamId].filter(Boolean);
+  if (teamIds.length === 0) return out;
+  try {
+    const rows = (await prisma.cupParticipant.findMany({
+      where: { cupId: ctx.leagueId, teamId: { in: teamIds } },
+      select: { teamId: true, rosterSnapshot: true },
+    })) as Array<{ teamId: string; rosterSnapshot: unknown }>;
+    for (const row of rows) {
+      const parsed = parseRosterSnapshot(row.rosterSnapshot);
+      if (parsed) out.set(row.teamId, parsed);
+    }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-match-sheet] lecture des rosters d'inscription échouée: ${msg}`,
+    );
+  }
+  return out;
+}
+
+/**
  * Gèle les deux côtés d'une feuille. `sheet` porte l'état déjà figé : un
  * côté déjà gelé COMPLET est laissé tel quel ; un gel « en-tête seul »
  * (feuilles antérieures) est complété en préservant ses valeurs.
  * Retourne les colonnes à écrire (vide = rien à faire).
  */
 async function captureMatchSnapshots(
-  pairingId: string,
+  ctx: PairingContext,
   sheet: {
     rosterSnapshotHome?: unknown;
     rosterSnapshotAway?: unknown;
@@ -430,13 +487,15 @@ async function captureMatchSnapshots(
     const needsHome = needs(sheet.rosterSnapshotHome);
     const needsAway = needs(sheet.rosterSnapshotAway);
     if (!needsHome && !needsAway) return data;
-    const teams = await loadSheetTeams(pairingId);
+    const teams = await loadSheetTeams(ctx);
+    const registeredByTeamId = await registrationSnapshots(ctx);
     if (needsHome) {
       const json = await captureSideSnapshot(
         teams.home,
         "home",
         sheet.journeymenHome,
         parseFrozenTeamValues(sheet.rosterSnapshotHome),
+        registeredByTeamId.get(ctx.homeTeamId) ?? null,
       );
       if (json) data.rosterSnapshotHome = json;
     }
@@ -446,6 +505,7 @@ async function captureMatchSnapshots(
         "away",
         sheet.journeymenAway,
         parseFrozenTeamValues(sheet.rosterSnapshotAway),
+        registeredByTeamId.get(ctx.awayTeamId) ?? null,
       );
       if (json) data.rosterSnapshotAway = json;
     }
@@ -496,17 +556,17 @@ export async function createMatchSheet(input: {
     );
   }
   const existing = await prisma.leagueMatchSheet.findUnique({
-    where: { pairingId: input.pairingId },
+    where: sheetWhere(ctx),
   });
   if (existing) return existing;
 
   const created = await prisma.leagueMatchSheet.create({
-    data: { pairingId: input.pairingId, status: "draft" },
+    data: { ...sheetWhere(ctx), status: "draft" },
   });
 
   // Gel complet au démarrage (best-effort) : roster, staff, VE/VEA,
   // trésoreries et fans sont figés dès l'ouverture de la feuille.
-  const snapshots = await captureMatchSnapshots(input.pairingId, created);
+  const snapshots = await captureMatchSnapshots(ctx, created);
   if (Object.keys(snapshots).length > 0) {
     try {
       return await prisma.leagueMatchSheet.update({
@@ -523,9 +583,9 @@ export async function createMatchSheet(input: {
   return created;
 }
 
-async function loadSheetOrThrow(pairingId: string) {
+async function loadSheetOrThrow(ctx: PairingContext) {
   const sheet = await prisma.leagueMatchSheet.findUnique({
-    where: { pairingId },
+    where: sheetWhere(ctx),
   });
   if (!sheet) {
     throw new MatchSheetError(
@@ -568,7 +628,7 @@ export async function addEvent(input: {
       `Type d'evenement invalide: ${String(input.event.kind)}`,
     );
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
   // Mi-temps / tour : portes via meta (pas de colonne dediee). On fusionne
@@ -605,7 +665,7 @@ export async function removeEvent(input: {
   if (!coachSide(ctx, input.userId) && !isCommissioner(ctx, input.userId)) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
   const ev = await prisma.leagueMatchEvent.findUnique({
@@ -657,7 +717,7 @@ export async function updatePreMatch(input: {
   if (!coachSide(ctx, input.userId) && !isCommissioner(ctx, input.userId)) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
   const p = input.payload;
@@ -673,7 +733,7 @@ export async function updatePreMatch(input: {
   } | null = null;
   const loadTeamsAndPositions = async () => {
     if (!loaded) {
-      const teams = await loadSheetTeams(input.pairingId);
+      const teams = await loadSheetTeams(ctx);
       loaded = { teams, positions: await loadJourneymanPositions(teams) };
     }
     return loaded;
@@ -957,7 +1017,7 @@ export async function updatePostMatch(input: {
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
   const p = input.payload;
@@ -978,7 +1038,7 @@ export async function updatePostMatch(input: {
         "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
       );
     }
-    const teams = await loadSheetTeams(input.pairingId);
+    const teams = await loadSheetTeams(ctx);
     // Un JOURNALIER joue le match et peut prendre une évolution à l'étape 3
     // (matérialisée s'il est recruté) : il appartient au côté qui l'aligne,
     // sans avoir de ligne TeamPlayer. On le reconnaît par la même
@@ -1110,10 +1170,10 @@ export async function rollJourneymanRandomPrimary(input: {
     );
   }
   const category: RandomSkillCategoryCode = input.category;
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
-  const teams = await loadSheetTeams(input.pairingId);
+  const teams = await loadSheetTeams(ctx);
   const team = journeymanSideOf === "home" ? teams.home : teams.away;
   const positions = team
     ? await journeymanPositionsFor(team.roster, team.ruleset)
@@ -1192,7 +1252,7 @@ export async function submitByCoach(input: {
       "Seuls les 2 coachs peuvent soumettre leur saisie",
     );
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
@@ -1202,7 +1262,7 @@ export async function submitByCoach(input: {
   // capture avait échoué) est rattrapée ici, en préservant les valeurs
   // déjà figées. Best-effort : un échec ne bloque pas la soumission.
   const snapshotData = await captureMatchSnapshots(
-    input.pairingId,
+    ctx,
     sheet as {
       rosterSnapshotHome?: unknown;
       rosterSnapshotAway?: unknown;
@@ -1273,7 +1333,7 @@ export async function unsubmitByCoach(input: {
   if (!side) {
     throw new MatchSheetError("not_a_participant", "Reserve aux coachs");
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
@@ -1751,6 +1811,26 @@ function enrichJourneymanPurchases(input: {
   return { purchases: out, hires };
 }
 
+/**
+ * Resolution `playerId -> nom` pour la materialisation d'une feuille de
+ * coupe. Couvre le roster, les journaliers et les Star Players engages : le
+ * classement individuel d'une coupe affiche un NOM, et un id synthetique
+ * (journalier, star) n'a aucune ligne `TeamPlayer` a interroger.
+ */
+function cupPlayerNameResolver(teams: {
+  home: MatchSheetTeam | null;
+  away: MatchSheetTeam | null;
+}): (playerId: string) => string | null {
+  const names = new Map<string, string>();
+  for (const team of [teams.home, teams.away]) {
+    if (!team) continue;
+    for (const p of team.players ?? []) names.set(p.id, p.name);
+    for (const j of team.journeymen ?? []) names.set(j.id, j.name);
+    for (const sp of team.starPlayersHired ?? []) names.set(sp.id, sp.name);
+  }
+  return (playerId: string) => names.get(playerId) ?? null;
+}
+
 export async function validateByCommissioner(input: {
   pairingId: string;
   userId: string;
@@ -1772,7 +1852,7 @@ export async function validateByCommissioner(input: {
       "Seul le commissaire peut valider la feuille",
     );
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
@@ -1783,7 +1863,7 @@ export async function validateByCommissioner(input: {
   })) as Array<MatchEventInput & { meta?: unknown }>;
   // Les PSP d'une Élimination sur Action Spéciale ne vont qu'aux joueurs
   // ayant Innovateur Violent : le summarizer a besoin de leurs ids.
-  const teamsForBudgetLive = await loadSheetTeams(input.pairingId);
+  const teamsForBudgetLive = await loadSheetTeams(ctx);
   // … lues dans le gel de la feuille : la validation et la lecture doivent
   // créditer exactement les mêmes joueurs (cf. `collectViolentInnovators`).
   const sheetSnapForSpp = sheet as {
@@ -1802,10 +1882,55 @@ export async function validateByCommissioner(input: {
     fatalFlighters: collectFatalFlighters(teamsForBudgetLive, frozenForSpp),
   });
 
+  const forfeitSide = (sheet as { forfeitSide?: string | null }).forfeitSide;
+
+  // Coupe : aucun effet d'apres-match. Le resultat est materialise en match
+  // local (le classement d'une coupe en derive), et RIEN n'est ecrit sur les
+  // equipes — ni PSP, ni blessure, ni or, ni evolution (cf. CUP_SHEET_RULES).
+  if (ctx.kind === "cup") {
+    const scoreHome =
+      forfeitSide === "home" ? 0 : forfeitSide === "away" ? 2 : summary.scoreHome;
+    const scoreAway =
+      forfeitSide === "away" ? 0 : forfeitSide === "home" ? 2 : summary.scoreAway;
+    const nameOf = cupPlayerNameResolver(teamsForBudgetLive);
+    const settled = await settleCupMatchSheet({
+      cupId: ctx.leagueId,
+      cupPairingId: ctx.pairingId,
+      homeTeamId: ctx.homeTeamId,
+      awayTeamId: ctx.awayTeamId,
+      creatorId: ctx.creatorId,
+      scoreHome,
+      scoreAway,
+      // Un forfait n'a ni geste ni statistique : seul le score compte.
+      actions: forfeitSide
+        ? []
+        : sheetEventsToLocalMatchActions(events as CupSheetEvent[], nameOf),
+    });
+    const updatedCup = await prisma.leagueMatchSheet.update({
+      where: { id: sheet.id },
+      data: {
+        status: "validated",
+        validatedAt: new Date(),
+        validatedById: input.userId,
+        scoreHome,
+        scoreAway,
+      },
+    });
+    serverLog.info(
+      `[cup-match-sheet] validated pairing=${ctx.pairingId} match=${settled.localMatchId}`,
+    );
+    return {
+      sheet: updatedCup,
+      summary,
+      effects: { applied: true },
+      // Haine (X) est une acquisition de competence : hors sujet en coupe.
+      hateRolls: [],
+    };
+  }
+
   // Forfait declare a l'avant-match : on route vers recordForfeit (le cote
   // adverse gagne 2-0, bareme forfeit) au lieu de la saisie normale. Pas de
   // SPP/tresorerie : un match forfait n'a pas de stats.
-  const forfeitSide = (sheet as { forfeitSide?: string | null }).forfeitSide;
   if (forfeitSide === "home" || forfeitSide === "away") {
     const ff = await recordForfeit({
       pairingId: input.pairingId,
@@ -2195,6 +2320,16 @@ export async function validateByCommissioner(input: {
 export async function canInvalidateMatchSheet(input: {
   pairingId: string;
 }): Promise<{ ok: boolean; reason?: string }> {
+  // Coupe : rien n'a ete applique aux equipes, il n'y a donc rien a
+  // « deconsommer ». La seule borne est le palmarese de la coupe.
+  const cupPairing = (await prisma.cupPairing.findUnique({
+    where: { id: input.pairingId },
+    select: { round: { select: { cupId: true } } },
+  })) as { round: { cupId: string } } | null;
+  if (cupPairing) {
+    return canInvalidateCupMatchSheet({ cupId: cupPairing.round.cupId });
+  }
+
   const pairing = (await prisma.leaguePairing.findUnique({
     where: { id: input.pairingId },
     select: {
@@ -2291,7 +2426,7 @@ export async function invalidateMatchSheet(input: {
       "Seul le commissaire peut invalider la feuille",
     );
   }
-  const sheet = await loadSheetOrThrow(input.pairingId);
+  const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status !== "validated") {
     throw new MatchSheetError(
       "not_validated",
@@ -2303,8 +2438,28 @@ export async function invalidateMatchSheet(input: {
   if (!window.ok) {
     throw new MatchSheetError(
       "invalidation_window_closed",
-      "Fenetre de correction fermee : les 2 equipes ont deja rejoue",
+      ctx.kind === "cup"
+        ? "Coupe terminee : son palmares est fige"
+        : "Fenetre de correction fermee : les 2 equipes ont deja rejoue",
     );
+  }
+
+  // Coupe : la validation n'a ecrit qu'un match local synthetique. Le
+  // retirer suffit — le classement, entierement derive, revient de lui-meme.
+  if (ctx.kind === "cup") {
+    await revertCupMatchSheet({ cupPairingId: ctx.pairingId });
+    const updatedCup = await prisma.leagueMatchSheet.update({
+      where: { id: sheet.id },
+      data: {
+        status: "invalidated",
+        invalidatedAt: new Date(),
+        invalidationReason: input.reason ?? null,
+      },
+    });
+    serverLog.info(
+      `[cup-match-sheet] invalidated pairing=${ctx.pairingId} by=${input.userId}`,
+    );
+    return { sheet: updatedCup };
   }
 
   // Retrouve le Match offline synthetique du pairing pour le reverser.
@@ -2375,7 +2530,7 @@ export async function invalidateMatchSheet(input: {
     return staged.map((e) => byId.get(e.playerId) ?? clearAdvancementTrace(e));
   };
   if (stagedHome.length > 0 || stagedAway.length > 0) {
-    const teams = await loadSheetTeams(input.pairingId);
+    const teams = await loadSheetTeams(ctx);
     if (stagedHome.length > 0 && teams.home?.teamId) {
       advData.advancementsHome = await reverseSide(
         teams.home.teamId,
@@ -2410,25 +2565,29 @@ export async function invalidateMatchSheet(input: {
  * un commissaire (status `both_submitted`). Source de la cloche de
  * notification + page "Matchs a valider".
  *
- * Filtre les pairings dont la ligue a `creatorId === userId`. Une
- * seule requete Prisma (nested filter), ordonnee par anciennete.
+ * Couvre les DEUX competitions : une feuille de coupe attend sa validation
+ * comme une feuille de ligue, et le commissaire n'a qu'une seule boite.
+ * `kind` dit d'ou vient la rencontre pour que l'UI pointe la bonne page ;
+ * `seasonId` / `seasonName` restent servis pour la ligue (une coupe n'a pas
+ * de saison : la « journee » est le numero de ronde).
  */
+export interface PendingValidationItem {
+  readonly kind: CompetitionKind;
+  readonly pairingId: string;
+  readonly matchSheetId: string;
+  readonly leagueId: string;
+  readonly leagueName: string;
+  readonly seasonId: string;
+  readonly seasonName: string;
+  readonly roundNumber: number;
+  readonly homeTeamName: string;
+  readonly awayTeamName: string;
+  readonly bothSubmittedAt: Date | null;
+}
+
 export async function listPendingValidationsForCommissioner(
   userId: string,
-): Promise<
-  Array<{
-    pairingId: string;
-    matchSheetId: string;
-    leagueId: string;
-    leagueName: string;
-    seasonId: string;
-    seasonName: string;
-    roundNumber: number;
-    homeTeamName: string;
-    awayTeamName: string;
-    bothSubmittedAt: Date | null;
-  }>
-> {
+): Promise<PendingValidationItem[]> {
   const sheets = (await prisma.leagueMatchSheet.findMany({
     where: {
       status: "both_submitted",
@@ -2480,23 +2639,93 @@ export async function listPendingValidationsForCommissioner(
     };
   }>;
 
-  return sheets.map((s) => {
-    const home = s.submittedByHomeAt?.getTime() ?? 0;
-    const away = s.submittedByAwayAt?.getTime() ?? 0;
-    const bothMs = Math.max(home, away);
-    return {
-      pairingId: s.pairingId,
-      matchSheetId: s.id,
-      leagueId: s.pairing.round.season.league.id,
-      leagueName: s.pairing.round.season.league.name,
-      seasonId: s.pairing.round.season.id,
-      seasonName: s.pairing.round.season.name,
-      roundNumber: s.pairing.round.roundNumber,
-      homeTeamName: s.pairing.homeParticipant?.team.name ?? "?",
-      awayTeamName: s.pairing.awayParticipant?.team.name ?? "?",
-      bothSubmittedAt: bothMs > 0 ? new Date(bothMs) : null,
+  const bothSubmittedAt = (row: {
+    submittedByHomeAt: Date | null;
+    submittedByAwayAt: Date | null;
+  }): Date | null => {
+    const bothMs = Math.max(
+      row.submittedByHomeAt?.getTime() ?? 0,
+      row.submittedByAwayAt?.getTime() ?? 0,
+    );
+    return bothMs > 0 ? new Date(bothMs) : null;
+  };
+
+  const leagueItems: PendingValidationItem[] = sheets
+    .filter((s) => Boolean(s.pairing) && Boolean(s.pairingId))
+    .map((s) => ({
+    kind: "league" as const,
+    pairingId: s.pairingId ?? "",
+    matchSheetId: s.id,
+    leagueId: s.pairing.round.season.league.id,
+    leagueName: s.pairing.round.season.league.name,
+    seasonId: s.pairing.round.season.id,
+    seasonName: s.pairing.round.season.name,
+    roundNumber: s.pairing.round.roundNumber,
+    homeTeamName: s.pairing.homeParticipant?.team.name ?? "?",
+    awayTeamName: s.pairing.awayParticipant?.team.name ?? "?",
+    bothSubmittedAt: bothSubmittedAt(s),
+  }));
+
+  const cupSheets = (await prisma.leagueMatchSheet.findMany({
+    where: {
+      status: "both_submitted",
+      cupPairing: { round: { cup: { creatorId: userId } } },
+    },
+    orderBy: { updatedAt: "asc" },
+    select: {
+      id: true,
+      cupPairingId: true,
+      submittedByHomeAt: true,
+      submittedByAwayAt: true,
+      cupPairing: {
+        select: {
+          round: {
+            select: {
+              roundNumber: true,
+              cup: { select: { id: true, name: true } },
+            },
+          },
+          homeTeam: { select: { name: true } },
+          awayTeam: { select: { name: true } },
+        },
+      },
+    },
+  })) as Array<{
+    id: string;
+    cupPairingId: string | null;
+    submittedByHomeAt: Date | null;
+    submittedByAwayAt: Date | null;
+    cupPairing: {
+      round: { roundNumber: number; cup: { id: string; name: string } };
+      homeTeam: { name: string } | null;
+      awayTeam: { name: string } | null;
     };
-  });
+  }>;
+
+  const cupItems: PendingValidationItem[] = cupSheets
+    // Le filtre Prisma garantit deja la relation ; le narrow evite qu'une
+    // ligne incomplete (rencontre supprimee entre-temps) fasse tomber
+    // TOUTE la boite du commissaire pour une seule feuille.
+    .filter((s) => Boolean(s.cupPairing) && Boolean(s.cupPairingId))
+    .map((s) => ({
+      kind: "cup" as const,
+      pairingId: s.cupPairingId ?? "",
+      matchSheetId: s.id,
+      leagueId: s.cupPairing.round.cup.id,
+      leagueName: s.cupPairing.round.cup.name,
+      // Une coupe n'a pas de saison : on ne fabrique pas d'id fantome.
+      seasonId: "",
+      seasonName: "",
+      roundNumber: s.cupPairing.round.roundNumber,
+      homeTeamName: s.cupPairing.homeTeam?.name ?? "?",
+      awayTeamName: s.cupPairing.awayTeam?.name ?? "?",
+      bothSubmittedAt: bothSubmittedAt(s),
+    }));
+
+  return [...leagueItems, ...cupItems].sort(
+    (a, b) =>
+      (a.bothSubmittedAt?.getTime() ?? 0) - (b.bothSubmittedAt?.getTime() ?? 0),
+  );
 }
 
 /**
@@ -2632,23 +2861,11 @@ function positionNamesForRoster(roster: string): Map<string, string> {
  * morts sont inclus mais flagges (`dead`) pour l'affichage.
  */
 async function loadSheetTeams(
-  pairingId: string,
+  ctx: PairingContext,
 ): Promise<{ home: MatchSheetTeam | null; away: MatchSheetTeam | null }> {
-  const pairing = (await prisma.leaguePairing.findUnique({
-    where: { id: pairingId },
-    select: {
-      homeParticipant: { select: { teamId: true } },
-      awayParticipant: { select: { teamId: true } },
-    },
-  })) as {
-    homeParticipant: { teamId: string } | null;
-    awayParticipant: { teamId: string } | null;
-  } | null;
-
-  const teamIds = [
-    pairing?.homeParticipant?.teamId,
-    pairing?.awayParticipant?.teamId,
-  ].filter((id): id is string => Boolean(id));
+  const teamIds = [ctx.homeTeamId, ctx.awayTeamId].filter((id): id is string =>
+    Boolean(id),
+  );
 
   if (teamIds.length === 0) return { home: null, away: null };
 
@@ -2791,8 +3008,8 @@ async function loadSheetTeams(
     };
   };
   return {
-    home: toTeam(pairing?.homeParticipant?.teamId),
-    away: toTeam(pairing?.awayParticipant?.teamId),
+    home: toTeam(ctx.homeTeamId),
+    away: toTeam(ctx.awayTeamId),
   };
 }
 
@@ -3274,6 +3491,25 @@ async function loadLeagueInducementRules(pairingId: string): Promise<{
   pack: TournamentRulesetDefinition | null;
 }> {
   try {
+    // Coupe : c'est LE reglement de tournoi de la coupe qui borne les coups
+    // de pouce (une coupe n'a pas d'allowlist propre).
+    const cupRow = (await prisma.cupPairing.findUnique({
+      where: { id: pairingId },
+      select: {
+        round: { select: { cup: { select: { tournamentRuleset: true } } } },
+      },
+    })) as {
+      round?: { cup?: { tournamentRuleset?: string | null } };
+    } | null;
+    if (cupRow) {
+      return {
+        allowlist: null,
+        pack: await getTournamentRulesetDefinition(
+          cupRow.round?.cup?.tournamentRuleset ?? null,
+        ),
+      };
+    }
+
     const row = (await prisma.leaguePairing.findUnique({
       where: { id: pairingId },
       select: {
@@ -3573,7 +3809,15 @@ export async function getMatchSheet(input: {
 }): Promise<{
   sheet: unknown;
   summary: MatchSummary;
-  /** Ligue du pairing : permet à l'UI un lien retour vers la page de la ligue. */
+  /**
+   * Compétition d'origine de la rencontre. L'UI en déduit la page de retour
+   * (`/leagues/:id` ou `/cups/:id`) et les panneaux à masquer : une coupe
+   * n'a ni gains, ni évolutions, ni achats d'après-match.
+   */
+  competitionKind: CompetitionKind;
+  /** Ce que la validation écrira réellement (tout `false` en coupe). */
+  competitionRules: CompetitionSheetRules;
+  /** Compétition du pairing : permet à l'UI un lien retour vers sa page. */
   leagueId: string;
   leagueName: string;
   viewerRole: "home" | "away" | "commissioner" | "none";
@@ -3598,7 +3842,7 @@ export async function getMatchSheet(input: {
   const side = coachSide(ctx, input.userId);
   const commissioner = isCommissioner(ctx, input.userId);
   const sheet = await prisma.leagueMatchSheet.findUnique({
-    where: { pairingId: input.pairingId },
+    where: sheetWhere(ctx),
     include: { events: { orderBy: { occurredAt: "asc" } } },
   });
   if (!sheet) {
@@ -3623,7 +3867,7 @@ export async function getMatchSheet(input: {
       !sheetSnapRaw.rosterSnapshotAway ||
       isHeaderOnlySnapshot(sheetSnapRaw.rosterSnapshotAway))
   ) {
-    const backfill = await captureMatchSnapshots(input.pairingId, sheetSnapRaw);
+    const backfill = await captureMatchSnapshots(ctx, sheetSnapRaw);
     if (Object.keys(backfill).length > 0) {
       try {
         await prisma.leagueMatchSheet.update({
@@ -3639,7 +3883,7 @@ export async function getMatchSheet(input: {
       }
     }
   }
-  const teamsLive = await loadSheetTeams(input.pairingId);
+  const teamsLive = await loadSheetTeams(ctx);
   // Feuille pas encore figée : rafraîchit VE/VEA (la VEA exclut les
   // joueurs absents) — la valeur stockée peut être obsolète (blessure
   // appliquée sans recalcul). Self-healing, best-effort.
@@ -3812,6 +4056,14 @@ export async function getMatchSheet(input: {
       winningsAway: autoWinnings.away,
     } as typeof sheet,
     summary,
+    /**
+     * Competition d'origine. `leagueId` / `leagueName` portent la
+     * COMPETITION (ligue OU coupe) : c'est `competitionKind` qui dit vers
+     * quelle page revenir et quelles regles s'appliquent.
+     */
+    competitionKind: ctx.kind,
+    /** Ce que la validation ecrira (une coupe n'ecrit rien sur les equipes). */
+    competitionRules: ctx.rules,
     leagueId: ctx.leagueId,
     leagueName: ctx.leagueName,
     teams: teamsWithJourneymen,

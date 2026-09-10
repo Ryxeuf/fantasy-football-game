@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { createCupSchema, updateCupRulesSchema } from "./cup.schemas";
+import {
+  updateCupSchema, createCupSchema, updateCupRulesSchema } from "./cup.schemas";
 
 describe("createCupSchema (S27.1i monthlyYear/Month)", () => {
   it("accepte un payload sans monthlyYear/Month (cup privee retro-compat)", () => {
@@ -104,5 +105,48 @@ describe("règles de composition (createCupSchema + updateCupRulesSchema)", () =
   it("accepte un patch partiel (résurrection seule)", () => {
     const r = updateCupRulesSchema.safeParse({ resurrectionMode: false });
     expect(r.success).toBe(true);
+  });
+});
+
+describe("updateCupSchema — édition d'une coupe par son commissaire", () => {
+  it("accepte un patch partiel", () => {
+    const out = updateCupSchema.safeParse({ name: "Coupe des Sables" });
+    expect(out.success).toBe(true);
+  });
+
+  it("accepte un barème et des critères de départage", () => {
+    const out = updateCupSchema.safeParse({
+      winPoints: 3,
+      drawPoints: 1,
+      tieBreakRules: ["points", "cas_for"],
+    });
+    expect(out.success).toBe(true);
+  });
+
+  it("accepte `null` pour revenir à l'ordre par défaut", () => {
+    expect(updateCupSchema.safeParse({ tieBreakRules: null }).success).toBe(
+      true,
+    );
+  });
+
+  it("refuse un nom vide et une liste de départages démesurée", () => {
+    expect(updateCupSchema.safeParse({ name: "   " }).success).toBe(false);
+    expect(
+      updateCupSchema.safeParse({
+        tieBreakRules: Array.from({ length: 17 }, () => "points"),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("ne laisse pas rééditer l'édition, le format ni le règlement", () => {
+    const out = updateCupSchema.parse({
+      name: "OK",
+      ruleset: "season_2",
+      format: "sevens",
+      tournamentRuleset: "naf_world_cup_2027",
+    } as Record<string, unknown>);
+    expect(out).not.toHaveProperty("ruleset");
+    expect(out).not.toHaveProperty("format");
+    expect(out).not.toHaveProperty("tournamentRuleset");
   });
 });
