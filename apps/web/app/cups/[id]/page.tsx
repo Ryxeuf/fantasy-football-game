@@ -1418,11 +1418,16 @@ export default function CupDetailPage() {
               <p className="mb-2">
                 Vous devez créer une équipe pour participer à une coupe.
               </p>
+              {/* Le lien DOIT porter le contexte de la coupe : sans lui, le
+                  builder repart sur le budget natif du roster (1 000 kpo) et
+                  un pool de 0 PSP, et l'équipe obtenue est refusée à
+                  l'inscription (édition, format ou règlement différents). */}
               <a
-                href="/me/teams/new"
+                href={buildForCupHref(cup)}
+                data-testid="cup-build-first-team"
                 className="text-blue-600 hover:text-blue-800 underline"
               >
-                Créer une équipe →
+                Créer une équipe pour cette coupe →
               </a>
             </div>
           )}
