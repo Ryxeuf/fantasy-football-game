@@ -833,6 +833,21 @@ coupe passe `en_cours` à la validation, bien avant) — sauf le QUOTA de
 qualifiés, qui ne gouverne que le seeding et reste corrigeable. Doc :
 [`docs/cup-pools-and-playoffs.md`](./docs/cup-pools-and-playoffs.md).
 
+Le GROUPEMENT par poule (calendrier, classement) est lui aussi commun aux deux
+compétitions : `lib/competition-pools.groupByPool` prend un `poolIdOf` en
+argument et ne connaît aucun des deux modèles — la ligue lit la poule par son
+PARTICIPANT, la coupe par son ÉQUIPE. Deux règles à ne pas perdre :
+
+- **`null` veut dire « à plat »**, pas « un seul groupe ». Quand une seule
+  poule est représentée, on ne coiffe pas la journée d'un bandeau qui
+  n'apprend rien — et c'est ce qui rend le groupement invisible sur les
+  compétitions sans poule, donc sur tout l'existant.
+- **Une ronde de BRACKET ne se groupe jamais.** Une finale oppose par
+  construction les qualifiés de deux poules ; la rattacher à celle de son
+  équipe à domicile serait faux. Cette règle-là vit dans l'adaptateur de la
+  coupe, pas dans le moteur : la ligue n'en a pas besoin, son bracket vivant
+  dans un écran séparé.
+
 ### Un tirage au sort, c'est un appariement suisse sur un ordre mélangé
 
 `generateSwissRound` apparie DANS L'ORDRE qu'on lui donne, en évitant les
