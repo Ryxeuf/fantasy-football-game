@@ -1,18 +1,42 @@
-# Rondes suisses des coupes
+# Rondes de coupe (tirage au sort, suisse, saisie manuelle)
 
-> Comment une coupe enchaîne des rondes appariées selon le classement, et
-> comment un match local matérialise une rencontre. Décision détaillée dans
-> `openspec/changes/swiss-cups-and-matchday-calendar/`.
+> Comment une coupe enchaîne des rondes, et comment une rencontre se joue.
+> Décision détaillée dans `openspec/changes/swiss-cups-and-matchday-calendar/`
+> et `openspec/changes/cups-managed-like-leagues/`.
 
 ## Principe
 
 Une coupe validée (`status = en_cours`) se joue en **rondes**. À chaque
 ronde, le commissaire (créateur de la coupe, ou un admin) appelle
-`POST /cup/:id/rounds/swiss` : les équipes inscrites sont appariées dans
-l'ordre du **classement courant** (`computeCupStandings`, exempts compris),
-chacune contre l'adversaire le plus proche qu'elle n'a **pas encore
-rencontré**. Nombre impair : la dernière équipe non encore exemptée est
-**exempte** (`bye`) et marque les points d'une victoire.
+`POST /cup/:id/rounds` en choisissant son **système d'appariement** :
+
+| `system` | Quand | Comment |
+|---|---|---|
+| `random` | typiquement la 1re ronde (le classement est vide) | ordre tiré au sort, puis appariement suisse |
+| `swiss` (défaut) | rondes suivantes | ordre du **classement courant** |
+| `manual` | poules imposées, contrainte de calendrier, rattrapage | rencontres posées par le commissaire |
+
+En `swiss`, les équipes inscrites sont appariées dans l'ordre du **classement
+courant** (`computeCupStandings`, exempts compris), chacune contre
+l'adversaire le plus proche qu'elle n'a **pas encore rencontré**. Nombre
+impair : la dernière équipe non encore exemptée est **exempte** (`bye`) et
+marque les points d'une victoire.
+
+Le **tirage au sort** n'est pas un second moteur : `random-pairing` mélange
+l'ordre (Fisher-Yates piloté par une graine `<cupId>:<roundNumber>`) puis
+délègue au moteur suisse — il hérite donc du « zéro rematch », de l'exempt
+tournant et de l'équilibrage des réceptions. La graine rend le tirage
+**rejouable** : un double clic ne produit pas deux rondes différentes, et une
+ronde supprimée puis régénérée revient à l'identique.
+
+La **saisie manuelle** (`pairings: [{ homeTeamId, awayTeamId }]`,
+`awayTeamId` absent ou `null` = exempte) refuse en `400` ce qui rendrait le
+classement faux : une équipe deux fois dans la ronde, une équipe contre
+elle-même, une équipe hors de la coupe, deux exempts, une saisie vide. En
+revanche, une équipe inscrite ABSENTE de la saisie est acceptée : elle ne joue
+pas cette ronde — c'est le propre du mode manuel.
+
+`POST /cup/:id/rounds/swiss` reste servi tel quel (rétro-compatibilité).
 
 Le moteur (`services/swiss-pairing.ts`) est **pur** : classement + historique
 en entrée, rencontres + exempt en sortie, sans I/O. Zéro rematch tant qu'un
@@ -24,7 +48,7 @@ qui a le moins reçu, à égalité au mieux classé. Déterministe.
 
 | Modèle | Rôle |
 |---|---|
-| `CupRound` | ronde numérotée d'une coupe (`system = swiss`, `status` pending / in_progress / completed) |
+| `CupRound` | ronde numérotée d'une coupe (`system` = random / swiss / manual, `status` pending / in_progress / completed) |
 | `CupPairing` | rencontre d'une ronde : `homeTeamId`, `awayTeamId` (null = exempt), `tableNumber`, `status`, `scheduledAt` |
 | `LocalMatch.cupPairingId` | **unique** — le match local qui matérialise la rencontre (`onDelete: SetNull`) |
 
@@ -35,6 +59,11 @@ supprimer une ronde ne supprime pas un match joué. Le classement reste
 (`cupByesByTeamId` → `computeCupStandings(cup, matches, { byesByTeamId })`).
 
 ## Cycle d'une rencontre
+
+Le chemin NORMAL de saisie d'un résultat est la **feuille de match**, la même
+qu'en ligue (cf. [`cup-match-sheet.md`](./cup-match-sheet.md)) : sa validation
+matérialise elle-même le `LocalMatch` de la rencontre. Le cycle ci-dessous
+reste celui du match local créé à la main, toujours possible.
 
 ```
 scheduled ──POST /local-match { cupPairingId }──▶ in_progress ──/complete──▶ played
@@ -70,6 +99,9 @@ annulation. Colonne « Ex. » au classement dès qu'une équipe a été exempte.
 
 - `services/swiss-pairing.test.ts` — moteur (rematch, exempt tournant, retour
   arrière, 24 équipes × 5 rondes).
+- `services/random-pairing.test.ts` — mélange déterministe, héritage des
+  garanties du moteur suisse.
+- `services/cup-manual-round.test.ts` — garde-fous de la saisie manuelle.
 - `services/cup-rounds.test.ts`, `routes/cup-rounds.test.ts`,
   `cupScoring.byes.test.ts`, `CupRoundsView.test.tsx`.
 - `tests/e2e-api/specs/cup-swiss-rounds.spec.ts` — flux complet sur base

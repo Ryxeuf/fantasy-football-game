@@ -738,6 +738,61 @@ de l'admin, donc impossible a purger. A la suppression, l'ordre s'inverse
 (ligne d'abord, binaire ensuite en best-effort) pour ne jamais lister un
 document sans fichier.
 
+### Une COUPE est une ligue moins ses effets — jamais un second code
+
+Une rencontre de coupe se saisissait dans un `LocalMatch` (journal d'actions
+libre), une rencontre de ligue sur une feuille de match. Deux mécaniques pour
+la même chose : un correctif de feuille ne profitait qu'à la moitié des
+compétitions. La feuille (`LeagueMatchSheet`) est désormais POLYMORPHE
+(`pairingId` XOR `cupPairingId`, cf. le patron ci-dessous) et le MÊME service
+la sert des deux côtés.
+
+Ce qui rend la généralisation tenable sans toucher les ~4 000 lignes du
+service : toutes ses fonctions prennent `{ pairingId }`, et
+`resolveCompetitionPairing` (`services/competition-match-sheet-context`)
+cherche la rencontre dans `LeaguePairing` PUIS `CupPairing` — les `cuid()`
+sont uniques d'une table à l'autre. Seuls les trois helpers qui relisaient
+encore le pairing prennent le contexte au lieu d'un id.
+
+La différence de compétition est un JEU DE RÈGLES nommé, pas un
+`if (kind === "cup")` disséminé :
+
+```ts
+export const CUP_SHEET_RULES: CompetitionSheetRules = {
+  sppEnabled: false, injuriesPersisted: false, economyEnabled: false,
+  advancementsEnabled: false, purchasesEnabled: false, firingsEnabled: false,
+  resurrection: true, // roster d'INSCRIPTION rejoué à chaque ronde
+};
+```
+
+Il est SERVI à l'UI (`competitionRules`), qui masque ses panneaux sans avoir à
+redéduire la règle. Le jour où une ligue amicale voudra « sans blessures »,
+c'est une constante de plus, pas une branche de plus.
+
+Corollaire côté classement : celui d'une coupe est DÉRIVÉ de ses `LocalMatch`.
+Plutôt que d'apprendre à trois lectures (classement, podiums, classements
+individuels) à lire aussi une feuille, la validation MATÉRIALISE la rencontre
+en `LocalMatch` complété + `LocalMatchAction` — exactement ce que la ligue
+fait avec son `Match` offline synthétique. L'invalidation le supprime, et le
+classement revient de lui-même. Doc :
+[`docs/cup-match-sheet.md`](./docs/cup-match-sheet.md).
+
+Piège de nommage : `LeagueMatchSheet` GARDE son nom malgré son rôle élargi.
+`db push` traite un renommage de modèle comme DROP + CREATE — le renommer
+perdrait toutes les feuilles de prod.
+
+### Un tirage au sort, c'est un appariement suisse sur un ordre mélangé
+
+`generateSwissRound` apparie DANS L'ORDRE qu'on lui donne, en évitant les
+rematches (retour arrière), en faisant tourner l'exempt et en équilibrant les
+réceptions. `random-pairing` ne réécrit donc rien : il mélange (Fisher-Yates
+piloté par une graine) et délègue.
+
+La graine est `<cupId>:<roundNumber>`, jamais `Math.random()` : le tirage est
+REJOUABLE (un double clic ne produit pas deux rondes, une ronde supprimée puis
+régénérée revient à l'identique) et deux rondes d'une même coupe ne partagent
+pas leur ordre.
+
 ### Rattachement POLYMORPHE : deux FK nullables, invariant tenu par le service
 
 `CompetitionDocument` s'accroche a une ligue OU a une coupe
@@ -1202,6 +1257,17 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `ALLOWED_TEAMS` → `Roster`, budget par defaut `Roster.budget`. Voir
   [`docs/audit-statique-vs-bdd-2026-08-27.md`](./docs/audit-statique-vs-bdd-2026-08-27.md)
   et [`docs/lot6-modele-de-donnees-2026-08-27.md`](./docs/lot6-modele-de-donnees-2026-08-27.md).
+- **2026-09-10** : **Les coupes se gèrent comme les ligues** — feuille de
+  match commune (`LeagueMatchSheet` polymorphe ligue XOR coupe, jeu de règles
+  par compétition : une coupe n'écrit ni PSP, ni blessure, ni or, ni
+  évolution, et rejoue le roster d'inscription), résultat matérialisé en
+  `LocalMatch` pour que le classement dérivé ne bouge pas, trois systèmes
+  d'appariement (tirage au sort rejouable, suisse, saisie manuelle), critères
+  de classement configurables et édition d'une coupe. Change OpenSpec
+  `cups-managed-like-leagues`, docs
+  [`docs/cup-match-sheet.md`](./docs/cup-match-sheet.md) et
+  [`docs/cup-swiss-rounds.md`](./docs/cup-swiss-rounds.md), récit
+  [`docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md`](./docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md).
 - **2026-09-08** : Ronde suisse des coupes, clôture manuelle de saison,
   date prévisionnelle des rencontres, journées repensées (`MatchCard`
   partagé), poule du coach en premier. Change OpenSpec
