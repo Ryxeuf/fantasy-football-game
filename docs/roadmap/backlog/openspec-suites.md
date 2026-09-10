@@ -89,12 +89,14 @@ classement et l'édition d'une coupe sont livrés. La parité UI, elle, n'est
 pas complète — 26 000 lignes d'écrans de ligue contre 4 700 de coupe au
 départ. Restent :
 
-- **Poules de coupe** : `LeaguePool` a son équivalent côté ligue
-  (`PoolsManagerPanel`, classement par poule, calendrier groupé, poule du
-  coach en premier). Une coupe ne sait pas encore répartir ses inscrits.
-- **Playoffs de coupe** : la ligue a un bracket complet (`PlayoffBracketView`,
-  seeds éditables, lancement, publication) ; la coupe n'a que le
-  `CupBracketView` chronologique en lecture seule.
+- ~~**Poules de coupe**~~ — livré par `cup-pools-and-playoffs` (2026-09-10) :
+  `CupPool`, appariement par groupe, classement par poule,
+  `CupPoolsManagerPanel`.
+- ~~**Playoffs de coupe**~~ — livré par `cup-pools-and-playoffs` (2026-09-10) :
+  bracket seedé (moteur partagé avec la ligue), publication différée, seeds
+  éditables, `CupPlayoffBracketView`. Reste ouvert côté coupe : le
+  **calendrier groupé par poule** et la **poule du coach en premier**, que la
+  ligue a et que `cups/[id]` n'a pas encore.
 - **Export PDF d'une ronde** (`MatchdayExport` côté ligue).
 - **Relance des coachs d'une ronde** (`league-round-followup` côté ligue).
 - **Page de récapitulatif et palmarès d'une coupe** : les championnats de
