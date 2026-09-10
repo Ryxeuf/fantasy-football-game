@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-09-02
+> Dernière mise à jour : 2026-09-10
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -80,6 +80,39 @@ Source : `add-position-pages` (archivé 2026-09-02).
 
 - **JSON-LD `ItemList`** des positions sur `/teams/[slug]`.
 - **E2E Playwright** `/teams/skaven` → position → compétence.
+
+## Coupes gérées comme les ligues
+
+Source : `cups-managed-like-leagues` (archivé 2026-09-10).
+La feuille de match, les trois systèmes d'appariement, les critères de
+classement et l'édition d'une coupe sont livrés. La parité UI, elle, n'est
+pas complète — 26 000 lignes d'écrans de ligue contre 4 700 de coupe au
+départ. Restent :
+
+- **Poules de coupe** : `LeaguePool` a son équivalent côté ligue
+  (`PoolsManagerPanel`, classement par poule, calendrier groupé, poule du
+  coach en premier). Une coupe ne sait pas encore répartir ses inscrits.
+- **Playoffs de coupe** : la ligue a un bracket complet (`PlayoffBracketView`,
+  seeds éditables, lancement, publication) ; la coupe n'a que le
+  `CupBracketView` chronologique en lecture seule.
+- **Export PDF d'une ronde** (`MatchdayExport` côté ligue).
+- **Relance des coachs d'une ronde** (`league-round-followup` côté ligue).
+- **Page de récapitulatif et palmarès d'une coupe** : les championnats de
+  coupe sont recalculés à la demande (`getCoachCupChampionships`) et ne sont
+  jamais persistés ; une clôture de coupe ne fige donc aucun palmarès.
+- **Éditeur de roster commissaire côté coupe** (le dossier `commissioner/`
+  des ligues, 1 700 lignes).
+- **i18n de `apps/web/app/cups/[id]/page.tsx`** : encore majoritairement en
+  français en dur, là où la page de ligue passe intégralement par
+  `useLanguage()`. Même remarque pour `cups/page.tsx`, `cups/archived/` et
+  `admin/cups/**`, qui réimplémentent aussi leur propre `fetchJSON` au lieu
+  d'`apiRequest`.
+- **`POST /team/create-from-roster`** (assistant « première équipe »)
+  n'applique ni contexte de coupe ni pool de PSP : une équipe créée par ce
+  chemin pour une coupe à règlement est refusée à l'inscription.
+- **Miroir SQLite** : `LeagueMatchEvent.meta` y est `String?` alors que
+  PostgreSQL accepte un objet — la mi-temps et le tour d'un évènement ne sont
+  donc pas testables en e2e-api.
 
 ## Opérations à faire au déploiement
 
