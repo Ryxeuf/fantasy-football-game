@@ -10,11 +10,21 @@ import MatchCard, {
 } from "../../components/competition/MatchCard";
 import ScheduleEditor from "../../components/competition/ScheduleEditor";
 import { formatPlannedDate } from "../../leagues/[id]/pairing-status";
+import { matchSheetHref } from "../../lib/competition-links";
+import {
+  availableTeams,
+  CUP_ROUND_SYSTEMS,
+  hasDuplicateTeam,
+  toManualPairingsPayload,
+  type CupRoundSystem,
+  type ManualPairingDraft,
+} from "./manual-round";
 
 /**
- * Rondes suisses d'une coupe : génération par le commissaire, rencontres
- * en `MatchCard` (même présentation que les journées de ligue), création
- * du match local par l'un des deux coachs, date prévisionnelle, annulation.
+ * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
+ * suisse ou saisie manuelle), rencontres en `MatchCard` (même présentation
+ * que les journées de ligue), feuille de match identique à celle des ligues,
+ * date prévisionnelle, annulation.
  */
 
 export interface CupPairingTeamView {
@@ -54,6 +64,12 @@ export interface CupRoundView {
   pairings: CupPairingView[];
 }
 
+/** Équipe inscrite, pour composer une ronde à la main. */
+export interface CupRoundParticipant {
+  id: string;
+  name: string;
+}
+
 interface CupRoundsViewProps {
   cupId: string;
   /** "ouverte" | "en_cours" | "terminee" | "archivee" */
@@ -64,6 +80,8 @@ interface CupRoundsViewProps {
   /** Équipes du coach connecté inscrites à la coupe. */
   myTeamIds: string[];
   participantCount: number;
+  /** Inscrits, requis pour la saisie manuelle. Absent = mode indisponible. */
+  participants?: readonly CupRoundParticipant[];
   /** Rappelé après toute mutation (rechargement de la coupe). */
   onChanged: () => void;
 }
@@ -103,12 +121,17 @@ export default function CupRoundsView({
   isCommissioner,
   myTeamIds,
   participantCount,
+  participants = [],
   onChanged,
 }: CupRoundsViewProps) {
   const { t, language } = useLanguage();
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Défaut : tirage au sort tant qu'aucune ronde n'existe (le classement est
+  // vide, une « suisse » s'y réduirait à l'ordre alphabétique), suisse ensuite.
+  const [system, setSystem] = useState<CupRoundSystem>("random");
+  const [manual, setManual] = useState<readonly ManualPairingDraft[]>([]);
   const mine = useMemo(() => new Set(myTeamIds), [myTeamIds]);
 
   const lastRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
@@ -133,10 +156,23 @@ export default function CupRoundsView({
     }
   };
 
+  const manualDuplicate = hasDuplicateTeam(manual);
+  const manualReady = manual.length > 0 && !manualDuplicate;
+  const generateBlockedByManual = system === "manual" && !manualReady;
+
   const generate = () =>
-    run("generate", () =>
-      apiRequest(`/cup/${cupId}/rounds/swiss`, { method: "POST", body: "{}" }),
-    );
+    run("generate", async () => {
+      await apiRequest(`/cup/${cupId}/rounds`, {
+        method: "POST",
+        body: JSON.stringify({
+          system,
+          ...(system === "manual"
+            ? { pairings: toManualPairingsPayload(manual) }
+            : {}),
+        }),
+      });
+      setManual([]);
+    });
   const deleteLast = () => {
     if (!lastRound) return;
     if (!confirm(fill(t.cups.swissConfirmDelete, { n: lastRound.roundNumber }))) return;
@@ -177,6 +213,25 @@ export default function CupRoundsView({
       .finally(() => setBusy(null));
   };
 
+  const systemLabel = (value: CupRoundSystem): string =>
+    value === "random"
+      ? t.cups.roundSystemRandom
+      : value === "manual"
+        ? t.cups.roundSystemManual
+        : t.cups.roundSystemSwiss;
+  const systemHint = (value: CupRoundSystem): string =>
+    value === "random"
+      ? t.cups.roundSystemRandomHint
+      : value === "manual"
+        ? t.cups.roundSystemManualHint
+        : t.cups.roundSystemSwissHint;
+  const systemBadge = (value: string): string =>
+    value === "random"
+      ? t.cups.roundSystemBadgeRandom
+      : value === "manual"
+        ? t.cups.roundSystemBadgeManual
+        : t.cups.roundSystemBadgeSwiss;
+
   const roundStatusLabels: Record<string, string> = {
     pending: t.cups.swissRoundStatusPending,
     in_progress: t.cups.swissRoundStatusInProgress,
@@ -205,7 +260,7 @@ export default function CupRoundsView({
             <button
               type="button"
               data-testid="cup-swiss-generate"
-              disabled={!canGenerate || busy !== null}
+              disabled={!canGenerate || generateBlockedByManual || busy !== null}
               onClick={generate}
               title={
                 lastOpen && lastRound
@@ -230,6 +285,49 @@ export default function CupRoundsView({
           </div>
         ) : null}
       </div>
+
+      {isCommissioner && canGenerate ? (
+        <div
+          data-testid="cup-round-system"
+          className="rounded-lg border border-gray-200 bg-gray-50/70 p-3"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {t.cups.roundSystemLabel}
+            </span>
+            {CUP_ROUND_SYSTEMS.map((value) => (
+              <label
+                key={value}
+                className={`cursor-pointer rounded-full border px-3 py-1 text-xs font-medium ${
+                  system === value
+                    ? "border-nuffle-gold bg-nuffle-gold/10 text-nuffle-anthracite"
+                    : "border-gray-300 text-gray-600 hover:bg-white"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="cup-round-system"
+                  className="sr-only"
+                  value={value}
+                  checked={system === value}
+                  data-testid={`cup-round-system-${value}`}
+                  onChange={() => setSystem(value)}
+                />
+                {systemLabel(value)}
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-gray-500">{systemHint(system)}</p>
+          {system === "manual" ? (
+            <ManualRoundEditor
+              participants={participants}
+              pairings={manual}
+              onChange={setManual}
+              duplicate={manualDuplicate}
+            />
+          ) : null}
+        </div>
+      ) : null}
 
       {isCommissioner && lastOpen && lastRound ? (
         <p data-testid="cup-swiss-blocked" className="text-xs text-gray-500">
@@ -285,6 +383,12 @@ export default function CupRoundsView({
                         <h3 className="font-semibold text-nuffle-anthracite">
                           {round.name ?? fill(t.cups.swissRoundLabel, { n: round.roundNumber })}
                         </h3>
+                        <span
+                          data-testid={`cup-round-system-badge-${round.id}`}
+                          className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+                        >
+                          {systemBadge(round.system)}
+                        </span>
                         <span
                           data-testid={`cup-round-status-${round.id}`}
                           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
@@ -392,6 +496,9 @@ function CupPairingCard({
   const canCreate = involved && pairing.status === "scheduled" && !pairing.localMatch;
   const canSchedule = (involved || isCommissioner) && open && !isBye;
   const canCancel = isCommissioner && open && !isBye && !pairing.localMatch;
+  // La feuille est le chemin NORMAL de saisie d'un résultat de coupe : elle
+  // est la même qu'en ligue, et reste consultable une fois validée.
+  const canOpenSheet = (involved || isCommissioner) && !isBye;
 
   return (
     <MatchCard
@@ -411,6 +518,16 @@ function CupPairingCard({
       }
       actions={
         <>
+          {canOpenSheet ? (
+            <Link
+              href={matchSheetHref("cup", pairing.id)}
+              data-testid={`cup-pairing-sheet-${pairing.id}`}
+              title={t.cups.sheetOpenHint}
+              className="text-xs px-2 py-1 rounded bg-nuffle-anthracite text-white font-medium hover:bg-nuffle-anthracite/90"
+            >
+              📝 {t.cups.sheetOpen}
+            </Link>
+          ) : null}
           {canCreate ? (
             <button
               type="button"
@@ -464,5 +581,104 @@ function CupPairingCard({
         </>
       }
     />
+  );
+}
+
+/**
+ * Composition d'une ronde à la main. Chaque ligne est une rencontre ; la
+ * liste « Extérieur » propose « — Exempte — » pour déclarer l'équipe qui ne
+ * joue pas. Les équipes déjà engagées disparaissent des autres listes :
+ * c'est ce qui empêche, à la saisie, la faute que le serveur refuserait.
+ */
+function ManualRoundEditor({
+  participants,
+  pairings,
+  onChange,
+  duplicate,
+}: {
+  participants: readonly CupRoundParticipant[];
+  pairings: readonly ManualPairingDraft[];
+  onChange: (next: readonly ManualPairingDraft[]) => void;
+  duplicate: boolean;
+}) {
+  const { t } = useLanguage();
+  const update = (index: number, patch: Partial<ManualPairingDraft>) =>
+    onChange(pairings.map((p, i) => (i === index ? { ...p, ...patch } : p)));
+
+  return (
+    <div data-testid="cup-manual-editor" className="mt-3 space-y-2">
+      {pairings.map((pairing, index) => (
+        <div key={index} className="flex flex-wrap items-center gap-2">
+          <select
+            aria-label={t.cups.manualHome}
+            data-testid={`cup-manual-home-${index}`}
+            value={pairing.homeTeamId}
+            onChange={(e) => update(index, { homeTeamId: e.target.value })}
+            className="rounded border border-gray-300 px-2 py-1 text-sm"
+          >
+            <option value="">{t.cups.manualPick}</option>
+            {availableTeams(participants, pairings, pairing.homeTeamId).map(
+              (team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ),
+            )}
+          </select>
+          <span className="text-xs text-gray-400">vs</span>
+          <select
+            aria-label={t.cups.manualAway}
+            data-testid={`cup-manual-away-${index}`}
+            value={pairing.awayTeamId ?? ""}
+            onChange={(e) =>
+              update(index, { awayTeamId: e.target.value || null })
+            }
+            className="rounded border border-gray-300 px-2 py-1 text-sm"
+          >
+            <option value="">{t.cups.manualByeOption}</option>
+            {availableTeams(participants, pairings, pairing.awayTeamId).map(
+              (team) => (
+                <option key={team.id} value={team.id}>
+                  {team.name}
+                </option>
+              ),
+            )}
+          </select>
+          <button
+            type="button"
+            data-testid={`cup-manual-remove-${index}`}
+            onClick={() => onChange(pairings.filter((_, i) => i !== index))}
+            className="text-xs text-red-600 hover:underline"
+          >
+            {t.cups.manualRemovePairing}
+          </button>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          data-testid="cup-manual-add"
+          onClick={() =>
+            onChange([...pairings, { homeTeamId: "", awayTeamId: "" }])
+          }
+          className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-white"
+        >
+          + {t.cups.manualAddPairing}
+        </button>
+        {pairings.length === 0 ? (
+          <span data-testid="cup-manual-empty" className="text-xs text-gray-500">
+            {t.cups.manualEmpty}
+          </span>
+        ) : null}
+        {duplicate ? (
+          <span
+            data-testid="cup-manual-duplicate"
+            className="text-xs font-medium text-red-600"
+          >
+            {t.cups.manualDuplicate}
+          </span>
+        ) : null}
+      </div>
+    </div>
   );
 }

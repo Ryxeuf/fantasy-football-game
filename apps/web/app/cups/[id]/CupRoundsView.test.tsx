@@ -80,6 +80,7 @@ function renderView(props: {
   myTeamIds?: string[];
   cupStatus?: string;
   participantCount?: number;
+  participants?: Array<{ id: string; name: string }>;
 }) {
   const onChanged = vi.fn();
   render(
@@ -91,6 +92,7 @@ function renderView(props: {
         isCommissioner={props.isCommissioner ?? false}
         myTeamIds={props.myTeamIds ?? []}
         participantCount={props.participantCount ?? 5}
+        participants={props.participants ?? []}
         onChanged={onChanged}
       />
     </LanguageProvider>,
@@ -161,7 +163,73 @@ describe("CupRoundsView", () => {
     expect(generate.textContent).toContain("ronde 2");
     fireEvent.click(generate);
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
-    expect(apiRequest.mock.calls[0][0]).toBe("/cup/cup-1/rounds/swiss");
+    expect(apiRequest.mock.calls[0][0]).toBe("/cup/cup-1/rounds");
+    // Défaut hors première ronde : tirage au sort tant que le commissaire
+    // n'a rien choisi d'autre — le système part TOUJOURS dans le corps.
+    expect(
+      JSON.parse((apiRequest.mock.calls[0][1] as { body: string }).body),
+    ).toMatchObject({ system: "random" });
+  });
+
+  it("propose les trois systèmes d'appariement au commissaire", () => {
+    renderView({
+      rounds: [round([PLAYED, BYE], { status: "completed" })],
+      isCommissioner: true,
+    });
+    for (const system of ["random", "swiss", "manual"]) {
+      expect(screen.getByTestId(`cup-round-system-${system}`)).toBeTruthy();
+    }
+  });
+
+  it("bloque la génération manuelle tant qu'aucune rencontre n'est saisie", () => {
+    renderView({
+      rounds: [round([PLAYED, BYE], { status: "completed" })],
+      isCommissioner: true,
+      participants: [
+        { id: "t1", name: "Alpha" },
+        { id: "t2", name: "Bravo" },
+      ],
+    });
+    fireEvent.click(screen.getByTestId("cup-round-system-manual"));
+    expect(screen.getByTestId("cup-manual-empty")).toBeTruthy();
+    expect(
+      (screen.getByTestId("cup-swiss-generate") as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+
+  it("envoie les rencontres composées à la main", async () => {
+    const onChanged = renderView({
+      rounds: [round([PLAYED, BYE], { status: "completed" })],
+      isCommissioner: true,
+      participants: [
+        { id: "t1", name: "Alpha" },
+        { id: "t2", name: "Bravo" },
+      ],
+    });
+    fireEvent.click(screen.getByTestId("cup-round-system-manual"));
+    fireEvent.click(screen.getByTestId("cup-manual-add"));
+    fireEvent.change(screen.getByTestId("cup-manual-home-0"), {
+      target: { value: "t1" },
+    });
+    fireEvent.change(screen.getByTestId("cup-manual-away-0"), {
+      target: { value: "t2" },
+    });
+    fireEvent.click(screen.getByTestId("cup-swiss-generate"));
+    await waitFor(() => expect(onChanged).toHaveBeenCalled());
+    expect(
+      JSON.parse((apiRequest.mock.calls[0][1] as { body: string }).body),
+    ).toEqual({
+      system: "manual",
+      pairings: [{ homeTeamId: "t1", awayTeamId: "t2" }],
+    });
+  });
+
+  it("ouvre la feuille de match d'une rencontre, comme en ligue", () => {
+    renderView({ rounds: [round([OPEN, BYE])], isCommissioner: true });
+    const link = screen.getByTestId("cup-pairing-sheet-p2");
+    expect(link.getAttribute("href")).toBe("/cups/pairings/p2/sheet");
+    // Un exempt n'a pas de feuille : il n'y a pas de match à saisir.
+    expect(screen.queryByTestId("cup-pairing-sheet-p3")).toBeNull();
   });
 
   it("propose la suppression de la dernière ronde seulement sans match créé", () => {

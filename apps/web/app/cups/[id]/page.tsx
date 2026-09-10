@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
@@ -10,6 +11,7 @@ import { buildForCupHref } from "../build-for-cup-href";
 import CupBracketView from "./CupBracketView";
 import CupInvitationsManager from "./CupInvitationsManager";
 import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
+import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
@@ -101,6 +103,8 @@ type Cup = {
     email: string;
   };
   creatorId: string;
+  /** Description libre saisie à la création (absente = rien à afficher). */
+  description?: string | null;
   validated: boolean;
   isPublic: boolean;
   status: string; // "ouverte", "en_cours", "terminee", "archivee"
@@ -124,6 +128,8 @@ type Cup = {
   hasTeamParticipating?: boolean;
   userParticipatingTeamIds?: string[]; // Liste des IDs des équipes de l'utilisateur qui participent
   scoringConfig?: CupScoringConfig;
+  /** Critères de départage EFFECTIFS servis par l'API (défaut compris). */
+  tieBreakRules?: string[];
   rulesConfig?: {
     resurrectionMode: boolean;
     tierBudgets: Record<string, number>;
@@ -417,6 +423,24 @@ export default function CupDetailPage() {
             {" • "}
             {cup.participantCount} équipe{cup.participantCount > 1 ? "s" : ""}
           </p>
+          {cup.description && (
+            <p
+              data-testid="cup-description"
+              className="text-sm text-gray-700 mt-2 whitespace-pre-line"
+            >
+              {cup.description}
+            </p>
+          )}
+          {(cup.isCreator === true || currentUserIsAdmin) &&
+            cup.status !== "archivee" && (
+              <Link
+                href={`/cups/${cup.id}/edit`}
+                data-testid="cup-edit-cta"
+                className="mt-3 inline-block rounded-lg border border-nuffle-gold px-3 py-1.5 text-sm font-medium text-nuffle-anthracite hover:bg-nuffle-gold/10"
+              >
+                ✏️ Modifier la coupe
+              </Link>
+            )}
           {!cup.isPublic && cup.isCreator && (
             <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm font-medium text-blue-900 mb-2">
@@ -501,6 +525,32 @@ export default function CupDetailPage() {
                   )}
                 </span>
               </div>
+              {cup.tieBreakRules && cup.tieBreakRules.length > 0 && (
+                <div
+                  data-testid="cup-tiebreak-rules"
+                  className="mt-4 pt-4 border-t border-gray-200"
+                >
+                  <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                    Critères de classement
+                  </h3>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Départages appliqués dans cet ordre, du premier au dernier.
+                  </p>
+                  <ol className="flex flex-wrap items-center gap-1.5">
+                    {cup.tieBreakRules.map((slug, index) => (
+                      <li
+                        key={slug}
+                        className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700"
+                      >
+                        <span className="tabular-nums text-gray-400">
+                          {index + 1}.
+                        </span>{" "}
+                        {CUP_TIE_BREAK_LABELS[slug] ?? slug}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
               {cup.scoringConfig && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">
@@ -760,6 +810,10 @@ export default function CupDetailPage() {
                 isCommissioner={cup.isCreator === true || currentUserIsAdmin}
                 myTeamIds={cup.userParticipatingTeamIds ?? []}
                 participantCount={cup.participantCount}
+                participants={(cup.participants ?? []).map((p) => ({
+                  id: p.id,
+                  name: p.name,
+                }))}
                 onChanged={() => {
                   void loadCup();
                 }}
