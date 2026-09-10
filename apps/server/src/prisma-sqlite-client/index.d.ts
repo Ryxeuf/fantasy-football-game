@@ -169,11 +169,16 @@ export type Cup = $Result.DefaultSelection<Prisma.$CupPayload>
  */
 export type CupParticipant = $Result.DefaultSelection<Prisma.$CupParticipantPayload>
 /**
- * Model CupRound
+ * Model CupPool
  * Ronde d'une coupe (miroir SQLite de schema.prisma). Une coupe enchaîne des
  * rondes numérotées ; chaque ronde apparie les équipes inscrites selon le
  * classement courant : un adversaire au score proche, jamais le même deux
  * fois. Générée par `services/cup-rounds` (moteur pur `swiss-pairing`).
+ */
+export type CupPool = $Result.DefaultSelection<Prisma.$CupPoolPayload>
+/**
+ * Model CupRound
+ * 
  */
 export type CupRound = $Result.DefaultSelection<Prisma.$CupRoundPayload>
 /**
@@ -948,6 +953,16 @@ export class PrismaClient<
     * ```
     */
   get cupParticipant(): Prisma.CupParticipantDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.cupPool`: Exposes CRUD operations for the **CupPool** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CupPools
+    * const cupPools = await prisma.cupPool.findMany()
+    * ```
+    */
+  get cupPool(): Prisma.CupPoolDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.cupRound`: Exposes CRUD operations for the **CupRound** model.
@@ -1979,6 +1994,7 @@ export namespace Prisma {
     RulesetConfig: 'RulesetConfig',
     Cup: 'Cup',
     CupParticipant: 'CupParticipant',
+    CupPool: 'CupPool',
     CupRound: 'CupRound',
     CupPairing: 'CupPairing',
     MatchQueue: 'MatchQueue',
@@ -2053,7 +2069,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -4348,6 +4364,80 @@ export namespace Prisma {
           count: {
             args: Prisma.CupParticipantCountArgs<ExtArgs>
             result: $Utils.Optional<CupParticipantCountAggregateOutputType> | number
+          }
+        }
+      }
+      CupPool: {
+        payload: Prisma.$CupPoolPayload<ExtArgs>
+        fields: Prisma.CupPoolFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CupPoolFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CupPoolFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>
+          }
+          findFirst: {
+            args: Prisma.CupPoolFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CupPoolFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>
+          }
+          findMany: {
+            args: Prisma.CupPoolFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>[]
+          }
+          create: {
+            args: Prisma.CupPoolCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>
+          }
+          createMany: {
+            args: Prisma.CupPoolCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CupPoolCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>[]
+          }
+          delete: {
+            args: Prisma.CupPoolDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>
+          }
+          update: {
+            args: Prisma.CupPoolUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>
+          }
+          deleteMany: {
+            args: Prisma.CupPoolDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CupPoolUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CupPoolUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>[]
+          }
+          upsert: {
+            args: Prisma.CupPoolUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CupPoolPayload>
+          }
+          aggregate: {
+            args: Prisma.CupPoolAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCupPool>
+          }
+          groupBy: {
+            args: Prisma.CupPoolGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CupPoolGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CupPoolCountArgs<ExtArgs>
+            result: $Utils.Optional<CupPoolCountAggregateOutputType> | number
           }
         }
       }
@@ -8622,6 +8712,7 @@ export namespace Prisma {
     rulesetConfig?: RulesetConfigOmit
     cup?: CupOmit
     cupParticipant?: CupParticipantOmit
+    cupPool?: CupPoolOmit
     cupRound?: CupRoundOmit
     cupPairing?: CupPairingOmit
     matchQueue?: MatchQueueOmit
@@ -9479,6 +9570,7 @@ export namespace Prisma {
 
   export type CupCountOutputType = {
     participants: number
+    pools: number
     invitations: number
     localMatches: number
     rounds: number
@@ -9487,6 +9579,7 @@ export namespace Prisma {
 
   export type CupCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     participants?: boolean | CupCountOutputTypeCountParticipantsArgs
+    pools?: boolean | CupCountOutputTypeCountPoolsArgs
     invitations?: boolean | CupCountOutputTypeCountInvitationsArgs
     localMatches?: boolean | CupCountOutputTypeCountLocalMatchesArgs
     rounds?: boolean | CupCountOutputTypeCountRoundsArgs
@@ -9509,6 +9602,13 @@ export namespace Prisma {
    */
   export type CupCountOutputTypeCountParticipantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CupParticipantWhereInput
+  }
+
+  /**
+   * CupCountOutputType without action
+   */
+  export type CupCountOutputTypeCountPoolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupPoolWhereInput
   }
 
   /**
@@ -9537,6 +9637,37 @@ export namespace Prisma {
    */
   export type CupCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CompetitionDocumentWhereInput
+  }
+
+
+  /**
+   * Count Type CupPoolCountOutputType
+   */
+
+  export type CupPoolCountOutputType = {
+    participants: number
+  }
+
+  export type CupPoolCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    participants?: boolean | CupPoolCountOutputTypeCountParticipantsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CupPoolCountOutputType without action
+   */
+  export type CupPoolCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPoolCountOutputType
+     */
+    select?: CupPoolCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CupPoolCountOutputType without action
+   */
+  export type CupPoolCountOutputTypeCountParticipantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupParticipantWhereInput
   }
 
 
@@ -45959,6 +46090,7 @@ export namespace Prisma {
     blockCasualtyPoints: number | null
     foulCasualtyPoints: number | null
     passPoints: number | null
+    playoffSize: number | null
   }
 
   export type CupSumAggregateOutputType = {
@@ -45970,6 +46102,7 @@ export namespace Prisma {
     blockCasualtyPoints: number | null
     foulCasualtyPoints: number | null
     passPoints: number | null
+    playoffSize: number | null
   }
 
   export type CupMinAggregateOutputType = {
@@ -45994,6 +46127,8 @@ export namespace Prisma {
     foulCasualtyPoints: number | null
     passPoints: number | null
     tieBreakRules: string | null
+    playoffSize: number | null
+    playoffsPublished: boolean | null
     resurrectionMode: boolean | null
     tierBudgets: string | null
     rosterBudgetOverrides: string | null
@@ -46023,6 +46158,8 @@ export namespace Prisma {
     foulCasualtyPoints: number | null
     passPoints: number | null
     tieBreakRules: string | null
+    playoffSize: number | null
+    playoffsPublished: boolean | null
     resurrectionMode: boolean | null
     tierBudgets: string | null
     rosterBudgetOverrides: string | null
@@ -46052,6 +46189,8 @@ export namespace Prisma {
     foulCasualtyPoints: number
     passPoints: number
     tieBreakRules: number
+    playoffSize: number
+    playoffsPublished: number
     resurrectionMode: number
     tierBudgets: number
     rosterBudgetOverrides: number
@@ -46070,6 +46209,7 @@ export namespace Prisma {
     blockCasualtyPoints?: true
     foulCasualtyPoints?: true
     passPoints?: true
+    playoffSize?: true
   }
 
   export type CupSumAggregateInputType = {
@@ -46081,6 +46221,7 @@ export namespace Prisma {
     blockCasualtyPoints?: true
     foulCasualtyPoints?: true
     passPoints?: true
+    playoffSize?: true
   }
 
   export type CupMinAggregateInputType = {
@@ -46105,6 +46246,8 @@ export namespace Prisma {
     foulCasualtyPoints?: true
     passPoints?: true
     tieBreakRules?: true
+    playoffSize?: true
+    playoffsPublished?: true
     resurrectionMode?: true
     tierBudgets?: true
     rosterBudgetOverrides?: true
@@ -46134,6 +46277,8 @@ export namespace Prisma {
     foulCasualtyPoints?: true
     passPoints?: true
     tieBreakRules?: true
+    playoffSize?: true
+    playoffsPublished?: true
     resurrectionMode?: true
     tierBudgets?: true
     rosterBudgetOverrides?: true
@@ -46163,6 +46308,8 @@ export namespace Prisma {
     foulCasualtyPoints?: true
     passPoints?: true
     tieBreakRules?: true
+    playoffSize?: true
+    playoffsPublished?: true
     resurrectionMode?: true
     tierBudgets?: true
     rosterBudgetOverrides?: true
@@ -46279,6 +46426,8 @@ export namespace Prisma {
     foulCasualtyPoints: number
     passPoints: number
     tieBreakRules: string | null
+    playoffSize: number
+    playoffsPublished: boolean | null
     resurrectionMode: boolean
     tierBudgets: string | null
     rosterBudgetOverrides: string | null
@@ -46327,6 +46476,8 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    playoffSize?: boolean
+    playoffsPublished?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46334,6 +46485,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
+    pools?: boolean | Cup$poolsArgs<ExtArgs>
     invitations?: boolean | Cup$invitationsArgs<ExtArgs>
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
     rounds?: boolean | Cup$roundsArgs<ExtArgs>
@@ -46363,6 +46515,8 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    playoffSize?: boolean
+    playoffsPublished?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46393,6 +46547,8 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    playoffSize?: boolean
+    playoffsPublished?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46423,6 +46579,8 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    playoffSize?: boolean
+    playoffsPublished?: boolean
     resurrectionMode?: boolean
     tierBudgets?: boolean
     rosterBudgetOverrides?: boolean
@@ -46430,10 +46588,11 @@ export namespace Prisma {
     rosterStartingPspOverrides?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
+    pools?: boolean | Cup$poolsArgs<ExtArgs>
     invitations?: boolean | Cup$invitationsArgs<ExtArgs>
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
     rounds?: boolean | Cup$roundsArgs<ExtArgs>
@@ -46452,6 +46611,7 @@ export namespace Prisma {
     objects: {
       creator: Prisma.$UserPayload<ExtArgs>
       participants: Prisma.$CupParticipantPayload<ExtArgs>[]
+      pools: Prisma.$CupPoolPayload<ExtArgs>[]
       invitations: Prisma.$CupInvitationPayload<ExtArgs>[]
       localMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
       /**
@@ -46482,6 +46642,8 @@ export namespace Prisma {
       foulCasualtyPoints: number
       passPoints: number
       tieBreakRules: string | null
+      playoffSize: number
+      playoffsPublished: boolean | null
       resurrectionMode: boolean
       tierBudgets: string | null
       rosterBudgetOverrides: string | null
@@ -46883,6 +47045,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     participants<T extends Cup$participantsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    pools<T extends Cup$poolsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$poolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitations<T extends Cup$invitationsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     localMatches<T extends Cup$localMatchesArgs<ExtArgs> = {}>(args?: Subset<T, Cup$localMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rounds<T extends Cup$roundsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$roundsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupRoundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -46937,6 +47100,8 @@ export namespace Prisma {
     readonly foulCasualtyPoints: FieldRef<"Cup", 'Int'>
     readonly passPoints: FieldRef<"Cup", 'Int'>
     readonly tieBreakRules: FieldRef<"Cup", 'String'>
+    readonly playoffSize: FieldRef<"Cup", 'Int'>
+    readonly playoffsPublished: FieldRef<"Cup", 'Boolean'>
     readonly resurrectionMode: FieldRef<"Cup", 'Boolean'>
     readonly tierBudgets: FieldRef<"Cup", 'String'>
     readonly rosterBudgetOverrides: FieldRef<"Cup", 'String'>
@@ -47360,6 +47525,30 @@ export namespace Prisma {
   }
 
   /**
+   * Cup.pools
+   */
+  export type Cup$poolsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    where?: CupPoolWhereInput
+    orderBy?: CupPoolOrderByWithRelationInput | CupPoolOrderByWithRelationInput[]
+    cursor?: CupPoolWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CupPoolScalarFieldEnum | CupPoolScalarFieldEnum[]
+  }
+
+  /**
    * Cup.invitations
    */
   export type Cup$invitationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -47501,6 +47690,7 @@ export namespace Prisma {
     createdAt: Date | null
     rosterSnapshot: string | null
     pspPoolGranted: number | null
+    poolId: string | null
   }
 
   export type CupParticipantMaxAggregateOutputType = {
@@ -47510,6 +47700,7 @@ export namespace Prisma {
     createdAt: Date | null
     rosterSnapshot: string | null
     pspPoolGranted: number | null
+    poolId: string | null
   }
 
   export type CupParticipantCountAggregateOutputType = {
@@ -47519,6 +47710,7 @@ export namespace Prisma {
     createdAt: number
     rosterSnapshot: number
     pspPoolGranted: number
+    poolId: number
     _all: number
   }
 
@@ -47538,6 +47730,7 @@ export namespace Prisma {
     createdAt?: true
     rosterSnapshot?: true
     pspPoolGranted?: true
+    poolId?: true
   }
 
   export type CupParticipantMaxAggregateInputType = {
@@ -47547,6 +47740,7 @@ export namespace Prisma {
     createdAt?: true
     rosterSnapshot?: true
     pspPoolGranted?: true
+    poolId?: true
   }
 
   export type CupParticipantCountAggregateInputType = {
@@ -47556,6 +47750,7 @@ export namespace Prisma {
     createdAt?: true
     rosterSnapshot?: true
     pspPoolGranted?: true
+    poolId?: true
     _all?: true
   }
 
@@ -47652,6 +47847,7 @@ export namespace Prisma {
     createdAt: Date
     rosterSnapshot: string | null
     pspPoolGranted: number
+    poolId: string | null
     _count: CupParticipantCountAggregateOutputType | null
     _avg: CupParticipantAvgAggregateOutputType | null
     _sum: CupParticipantSumAggregateOutputType | null
@@ -47680,8 +47876,10 @@ export namespace Prisma {
     createdAt?: boolean
     rosterSnapshot?: boolean
     pspPoolGranted?: boolean
+    poolId?: boolean
     cup?: boolean | CupDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    pool?: boolean | CupParticipant$poolArgs<ExtArgs>
   }, ExtArgs["result"]["cupParticipant"]>
 
   export type CupParticipantSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -47691,8 +47889,10 @@ export namespace Prisma {
     createdAt?: boolean
     rosterSnapshot?: boolean
     pspPoolGranted?: boolean
+    poolId?: boolean
     cup?: boolean | CupDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    pool?: boolean | CupParticipant$poolArgs<ExtArgs>
   }, ExtArgs["result"]["cupParticipant"]>
 
   export type CupParticipantSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -47702,8 +47902,10 @@ export namespace Prisma {
     createdAt?: boolean
     rosterSnapshot?: boolean
     pspPoolGranted?: boolean
+    poolId?: boolean
     cup?: boolean | CupDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    pool?: boolean | CupParticipant$poolArgs<ExtArgs>
   }, ExtArgs["result"]["cupParticipant"]>
 
   export type CupParticipantSelectScalar = {
@@ -47713,20 +47915,24 @@ export namespace Prisma {
     createdAt?: boolean
     rosterSnapshot?: boolean
     pspPoolGranted?: boolean
+    poolId?: boolean
   }
 
-  export type CupParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cupId" | "teamId" | "createdAt" | "rosterSnapshot" | "pspPoolGranted", ExtArgs["result"]["cupParticipant"]>
+  export type CupParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cupId" | "teamId" | "createdAt" | "rosterSnapshot" | "pspPoolGranted" | "poolId", ExtArgs["result"]["cupParticipant"]>
   export type CupParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cup?: boolean | CupDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    pool?: boolean | CupParticipant$poolArgs<ExtArgs>
   }
   export type CupParticipantIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cup?: boolean | CupDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    pool?: boolean | CupParticipant$poolArgs<ExtArgs>
   }
   export type CupParticipantIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cup?: boolean | CupDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
+    pool?: boolean | CupParticipant$poolArgs<ExtArgs>
   }
 
   export type $CupParticipantPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -47734,6 +47940,7 @@ export namespace Prisma {
     objects: {
       cup: Prisma.$CupPayload<ExtArgs>
       team: Prisma.$TeamPayload<ExtArgs>
+      pool: Prisma.$CupPoolPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -47742,6 +47949,7 @@ export namespace Prisma {
       createdAt: Date
       rosterSnapshot: string | null
       pspPoolGranted: number
+      poolId: string | null
     }, ExtArgs["result"]["cupParticipant"]>
     composites: {}
   }
@@ -48138,6 +48346,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     cup<T extends CupDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CupDefaultArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     team<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    pool<T extends CupParticipant$poolArgs<ExtArgs> = {}>(args?: Subset<T, CupParticipant$poolArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -48173,6 +48382,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"CupParticipant", 'DateTime'>
     readonly rosterSnapshot: FieldRef<"CupParticipant", 'String'>
     readonly pspPoolGranted: FieldRef<"CupParticipant", 'Int'>
+    readonly poolId: FieldRef<"CupParticipant", 'String'>
   }
     
 
@@ -48567,6 +48777,25 @@ export namespace Prisma {
   }
 
   /**
+   * CupParticipant.pool
+   */
+  export type CupParticipant$poolArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    where?: CupPoolWhereInput
+  }
+
+  /**
    * CupParticipant without action
    */
   export type CupParticipantDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -48582,6 +48811,1169 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: CupParticipantInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CupPool
+   */
+
+  export type AggregateCupPool = {
+    _count: CupPoolCountAggregateOutputType | null
+    _avg: CupPoolAvgAggregateOutputType | null
+    _sum: CupPoolSumAggregateOutputType | null
+    _min: CupPoolMinAggregateOutputType | null
+    _max: CupPoolMaxAggregateOutputType | null
+  }
+
+  export type CupPoolAvgAggregateOutputType = {
+    order: number | null
+    qualifiesForPlayoffs: number | null
+  }
+
+  export type CupPoolSumAggregateOutputType = {
+    order: number | null
+    qualifiesForPlayoffs: number | null
+  }
+
+  export type CupPoolMinAggregateOutputType = {
+    id: string | null
+    cupId: string | null
+    name: string | null
+    order: number | null
+    color: string | null
+    qualifiesForPlayoffs: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CupPoolMaxAggregateOutputType = {
+    id: string | null
+    cupId: string | null
+    name: string | null
+    order: number | null
+    color: string | null
+    qualifiesForPlayoffs: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CupPoolCountAggregateOutputType = {
+    id: number
+    cupId: number
+    name: number
+    order: number
+    color: number
+    qualifiesForPlayoffs: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CupPoolAvgAggregateInputType = {
+    order?: true
+    qualifiesForPlayoffs?: true
+  }
+
+  export type CupPoolSumAggregateInputType = {
+    order?: true
+    qualifiesForPlayoffs?: true
+  }
+
+  export type CupPoolMinAggregateInputType = {
+    id?: true
+    cupId?: true
+    name?: true
+    order?: true
+    color?: true
+    qualifiesForPlayoffs?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CupPoolMaxAggregateInputType = {
+    id?: true
+    cupId?: true
+    name?: true
+    order?: true
+    color?: true
+    qualifiesForPlayoffs?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CupPoolCountAggregateInputType = {
+    id?: true
+    cupId?: true
+    name?: true
+    order?: true
+    color?: true
+    qualifiesForPlayoffs?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CupPoolAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CupPool to aggregate.
+     */
+    where?: CupPoolWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupPools to fetch.
+     */
+    orderBy?: CupPoolOrderByWithRelationInput | CupPoolOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CupPoolWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupPools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupPools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CupPools
+    **/
+    _count?: true | CupPoolCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CupPoolAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CupPoolSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CupPoolMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CupPoolMaxAggregateInputType
+  }
+
+  export type GetCupPoolAggregateType<T extends CupPoolAggregateArgs> = {
+        [P in keyof T & keyof AggregateCupPool]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCupPool[P]>
+      : GetScalarType<T[P], AggregateCupPool[P]>
+  }
+
+
+
+
+  export type CupPoolGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CupPoolWhereInput
+    orderBy?: CupPoolOrderByWithAggregationInput | CupPoolOrderByWithAggregationInput[]
+    by: CupPoolScalarFieldEnum[] | CupPoolScalarFieldEnum
+    having?: CupPoolScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CupPoolCountAggregateInputType | true
+    _avg?: CupPoolAvgAggregateInputType
+    _sum?: CupPoolSumAggregateInputType
+    _min?: CupPoolMinAggregateInputType
+    _max?: CupPoolMaxAggregateInputType
+  }
+
+  export type CupPoolGroupByOutputType = {
+    id: string
+    cupId: string
+    name: string
+    order: number
+    color: string | null
+    qualifiesForPlayoffs: number
+    createdAt: Date
+    updatedAt: Date
+    _count: CupPoolCountAggregateOutputType | null
+    _avg: CupPoolAvgAggregateOutputType | null
+    _sum: CupPoolSumAggregateOutputType | null
+    _min: CupPoolMinAggregateOutputType | null
+    _max: CupPoolMaxAggregateOutputType | null
+  }
+
+  type GetCupPoolGroupByPayload<T extends CupPoolGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CupPoolGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CupPoolGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CupPoolGroupByOutputType[P]>
+            : GetScalarType<T[P], CupPoolGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CupPoolSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cupId?: boolean
+    name?: boolean
+    order?: boolean
+    color?: boolean
+    qualifiesForPlayoffs?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    participants?: boolean | CupPool$participantsArgs<ExtArgs>
+    _count?: boolean | CupPoolCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cupPool"]>
+
+  export type CupPoolSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cupId?: boolean
+    name?: boolean
+    order?: boolean
+    color?: boolean
+    qualifiesForPlayoffs?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cupPool"]>
+
+  export type CupPoolSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    cupId?: boolean
+    name?: boolean
+    order?: boolean
+    color?: boolean
+    qualifiesForPlayoffs?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["cupPool"]>
+
+  export type CupPoolSelectScalar = {
+    id?: boolean
+    cupId?: boolean
+    name?: boolean
+    order?: boolean
+    color?: boolean
+    qualifiesForPlayoffs?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CupPoolOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cupId" | "name" | "order" | "color" | "qualifiesForPlayoffs" | "createdAt" | "updatedAt", ExtArgs["result"]["cupPool"]>
+  export type CupPoolInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+    participants?: boolean | CupPool$participantsArgs<ExtArgs>
+    _count?: boolean | CupPoolCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CupPoolIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+  }
+  export type CupPoolIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    cup?: boolean | CupDefaultArgs<ExtArgs>
+  }
+
+  export type $CupPoolPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CupPool"
+    objects: {
+      cup: Prisma.$CupPayload<ExtArgs>
+      participants: Prisma.$CupParticipantPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      cupId: string
+      name: string
+      order: number
+      color: string | null
+      qualifiesForPlayoffs: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["cupPool"]>
+    composites: {}
+  }
+
+  type CupPoolGetPayload<S extends boolean | null | undefined | CupPoolDefaultArgs> = $Result.GetResult<Prisma.$CupPoolPayload, S>
+
+  type CupPoolCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CupPoolFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CupPoolCountAggregateInputType | true
+    }
+
+  export interface CupPoolDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CupPool'], meta: { name: 'CupPool' } }
+    /**
+     * Find zero or one CupPool that matches the filter.
+     * @param {CupPoolFindUniqueArgs} args - Arguments to find a CupPool
+     * @example
+     * // Get one CupPool
+     * const cupPool = await prisma.cupPool.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CupPoolFindUniqueArgs>(args: SelectSubset<T, CupPoolFindUniqueArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CupPool that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CupPoolFindUniqueOrThrowArgs} args - Arguments to find a CupPool
+     * @example
+     * // Get one CupPool
+     * const cupPool = await prisma.cupPool.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CupPoolFindUniqueOrThrowArgs>(args: SelectSubset<T, CupPoolFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CupPool that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolFindFirstArgs} args - Arguments to find a CupPool
+     * @example
+     * // Get one CupPool
+     * const cupPool = await prisma.cupPool.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CupPoolFindFirstArgs>(args?: SelectSubset<T, CupPoolFindFirstArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CupPool that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolFindFirstOrThrowArgs} args - Arguments to find a CupPool
+     * @example
+     * // Get one CupPool
+     * const cupPool = await prisma.cupPool.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CupPoolFindFirstOrThrowArgs>(args?: SelectSubset<T, CupPoolFindFirstOrThrowArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CupPools that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CupPools
+     * const cupPools = await prisma.cupPool.findMany()
+     * 
+     * // Get first 10 CupPools
+     * const cupPools = await prisma.cupPool.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const cupPoolWithIdOnly = await prisma.cupPool.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CupPoolFindManyArgs>(args?: SelectSubset<T, CupPoolFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CupPool.
+     * @param {CupPoolCreateArgs} args - Arguments to create a CupPool.
+     * @example
+     * // Create one CupPool
+     * const CupPool = await prisma.cupPool.create({
+     *   data: {
+     *     // ... data to create a CupPool
+     *   }
+     * })
+     * 
+     */
+    create<T extends CupPoolCreateArgs>(args: SelectSubset<T, CupPoolCreateArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CupPools.
+     * @param {CupPoolCreateManyArgs} args - Arguments to create many CupPools.
+     * @example
+     * // Create many CupPools
+     * const cupPool = await prisma.cupPool.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CupPoolCreateManyArgs>(args?: SelectSubset<T, CupPoolCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CupPools and returns the data saved in the database.
+     * @param {CupPoolCreateManyAndReturnArgs} args - Arguments to create many CupPools.
+     * @example
+     * // Create many CupPools
+     * const cupPool = await prisma.cupPool.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CupPools and only return the `id`
+     * const cupPoolWithIdOnly = await prisma.cupPool.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CupPoolCreateManyAndReturnArgs>(args?: SelectSubset<T, CupPoolCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CupPool.
+     * @param {CupPoolDeleteArgs} args - Arguments to delete one CupPool.
+     * @example
+     * // Delete one CupPool
+     * const CupPool = await prisma.cupPool.delete({
+     *   where: {
+     *     // ... filter to delete one CupPool
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CupPoolDeleteArgs>(args: SelectSubset<T, CupPoolDeleteArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CupPool.
+     * @param {CupPoolUpdateArgs} args - Arguments to update one CupPool.
+     * @example
+     * // Update one CupPool
+     * const cupPool = await prisma.cupPool.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CupPoolUpdateArgs>(args: SelectSubset<T, CupPoolUpdateArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CupPools.
+     * @param {CupPoolDeleteManyArgs} args - Arguments to filter CupPools to delete.
+     * @example
+     * // Delete a few CupPools
+     * const { count } = await prisma.cupPool.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CupPoolDeleteManyArgs>(args?: SelectSubset<T, CupPoolDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CupPools.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CupPools
+     * const cupPool = await prisma.cupPool.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CupPoolUpdateManyArgs>(args: SelectSubset<T, CupPoolUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CupPools and returns the data updated in the database.
+     * @param {CupPoolUpdateManyAndReturnArgs} args - Arguments to update many CupPools.
+     * @example
+     * // Update many CupPools
+     * const cupPool = await prisma.cupPool.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CupPools and only return the `id`
+     * const cupPoolWithIdOnly = await prisma.cupPool.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CupPoolUpdateManyAndReturnArgs>(args: SelectSubset<T, CupPoolUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CupPool.
+     * @param {CupPoolUpsertArgs} args - Arguments to update or create a CupPool.
+     * @example
+     * // Update or create a CupPool
+     * const cupPool = await prisma.cupPool.upsert({
+     *   create: {
+     *     // ... data to create a CupPool
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CupPool we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CupPoolUpsertArgs>(args: SelectSubset<T, CupPoolUpsertArgs<ExtArgs>>): Prisma__CupPoolClient<$Result.GetResult<Prisma.$CupPoolPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CupPools.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolCountArgs} args - Arguments to filter CupPools to count.
+     * @example
+     * // Count the number of CupPools
+     * const count = await prisma.cupPool.count({
+     *   where: {
+     *     // ... the filter for the CupPools we want to count
+     *   }
+     * })
+    **/
+    count<T extends CupPoolCountArgs>(
+      args?: Subset<T, CupPoolCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CupPoolCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CupPool.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CupPoolAggregateArgs>(args: Subset<T, CupPoolAggregateArgs>): Prisma.PrismaPromise<GetCupPoolAggregateType<T>>
+
+    /**
+     * Group by CupPool.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CupPoolGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CupPoolGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CupPoolGroupByArgs['orderBy'] }
+        : { orderBy?: CupPoolGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CupPoolGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCupPoolGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CupPool model
+   */
+  readonly fields: CupPoolFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CupPool.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CupPoolClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    cup<T extends CupDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CupDefaultArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    participants<T extends CupPool$participantsArgs<ExtArgs> = {}>(args?: Subset<T, CupPool$participantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CupPool model
+   */
+  interface CupPoolFieldRefs {
+    readonly id: FieldRef<"CupPool", 'String'>
+    readonly cupId: FieldRef<"CupPool", 'String'>
+    readonly name: FieldRef<"CupPool", 'String'>
+    readonly order: FieldRef<"CupPool", 'Int'>
+    readonly color: FieldRef<"CupPool", 'String'>
+    readonly qualifiesForPlayoffs: FieldRef<"CupPool", 'Int'>
+    readonly createdAt: FieldRef<"CupPool", 'DateTime'>
+    readonly updatedAt: FieldRef<"CupPool", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CupPool findUnique
+   */
+  export type CupPoolFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * Filter, which CupPool to fetch.
+     */
+    where: CupPoolWhereUniqueInput
+  }
+
+  /**
+   * CupPool findUniqueOrThrow
+   */
+  export type CupPoolFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * Filter, which CupPool to fetch.
+     */
+    where: CupPoolWhereUniqueInput
+  }
+
+  /**
+   * CupPool findFirst
+   */
+  export type CupPoolFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * Filter, which CupPool to fetch.
+     */
+    where?: CupPoolWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupPools to fetch.
+     */
+    orderBy?: CupPoolOrderByWithRelationInput | CupPoolOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CupPools.
+     */
+    cursor?: CupPoolWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupPools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupPools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CupPools.
+     */
+    distinct?: CupPoolScalarFieldEnum | CupPoolScalarFieldEnum[]
+  }
+
+  /**
+   * CupPool findFirstOrThrow
+   */
+  export type CupPoolFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * Filter, which CupPool to fetch.
+     */
+    where?: CupPoolWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupPools to fetch.
+     */
+    orderBy?: CupPoolOrderByWithRelationInput | CupPoolOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CupPools.
+     */
+    cursor?: CupPoolWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupPools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupPools.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CupPools.
+     */
+    distinct?: CupPoolScalarFieldEnum | CupPoolScalarFieldEnum[]
+  }
+
+  /**
+   * CupPool findMany
+   */
+  export type CupPoolFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * Filter, which CupPools to fetch.
+     */
+    where?: CupPoolWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CupPools to fetch.
+     */
+    orderBy?: CupPoolOrderByWithRelationInput | CupPoolOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CupPools.
+     */
+    cursor?: CupPoolWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CupPools from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CupPools.
+     */
+    skip?: number
+    distinct?: CupPoolScalarFieldEnum | CupPoolScalarFieldEnum[]
+  }
+
+  /**
+   * CupPool create
+   */
+  export type CupPoolCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CupPool.
+     */
+    data: XOR<CupPoolCreateInput, CupPoolUncheckedCreateInput>
+  }
+
+  /**
+   * CupPool createMany
+   */
+  export type CupPoolCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CupPools.
+     */
+    data: CupPoolCreateManyInput | CupPoolCreateManyInput[]
+  }
+
+  /**
+   * CupPool createManyAndReturn
+   */
+  export type CupPoolCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * The data used to create many CupPools.
+     */
+    data: CupPoolCreateManyInput | CupPoolCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CupPool update
+   */
+  export type CupPoolUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CupPool.
+     */
+    data: XOR<CupPoolUpdateInput, CupPoolUncheckedUpdateInput>
+    /**
+     * Choose, which CupPool to update.
+     */
+    where: CupPoolWhereUniqueInput
+  }
+
+  /**
+   * CupPool updateMany
+   */
+  export type CupPoolUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CupPools.
+     */
+    data: XOR<CupPoolUpdateManyMutationInput, CupPoolUncheckedUpdateManyInput>
+    /**
+     * Filter which CupPools to update
+     */
+    where?: CupPoolWhereInput
+    /**
+     * Limit how many CupPools to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CupPool updateManyAndReturn
+   */
+  export type CupPoolUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * The data used to update CupPools.
+     */
+    data: XOR<CupPoolUpdateManyMutationInput, CupPoolUncheckedUpdateManyInput>
+    /**
+     * Filter which CupPools to update
+     */
+    where?: CupPoolWhereInput
+    /**
+     * Limit how many CupPools to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CupPool upsert
+   */
+  export type CupPoolUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CupPool to update in case it exists.
+     */
+    where: CupPoolWhereUniqueInput
+    /**
+     * In case the CupPool found by the `where` argument doesn't exist, create a new CupPool with this data.
+     */
+    create: XOR<CupPoolCreateInput, CupPoolUncheckedCreateInput>
+    /**
+     * In case the CupPool was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CupPoolUpdateInput, CupPoolUncheckedUpdateInput>
+  }
+
+  /**
+   * CupPool delete
+   */
+  export type CupPoolDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
+    /**
+     * Filter which CupPool to delete.
+     */
+    where: CupPoolWhereUniqueInput
+  }
+
+  /**
+   * CupPool deleteMany
+   */
+  export type CupPoolDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CupPools to delete
+     */
+    where?: CupPoolWhereInput
+    /**
+     * Limit how many CupPools to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CupPool.participants
+   */
+  export type CupPool$participantsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupParticipant
+     */
+    select?: CupParticipantSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupParticipant
+     */
+    omit?: CupParticipantOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupParticipantInclude<ExtArgs> | null
+    where?: CupParticipantWhereInput
+    orderBy?: CupParticipantOrderByWithRelationInput | CupParticipantOrderByWithRelationInput[]
+    cursor?: CupParticipantWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CupParticipantScalarFieldEnum | CupParticipantScalarFieldEnum[]
+  }
+
+  /**
+   * CupPool without action
+   */
+  export type CupPoolDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CupPool
+     */
+    select?: CupPoolSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CupPool
+     */
+    omit?: CupPoolOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupPoolInclude<ExtArgs> | null
   }
 
 
@@ -48611,6 +50003,8 @@ export namespace Prisma {
     roundNumber: number | null
     name: string | null
     system: string | null
+    kind: string | null
+    bracketSlot: string | null
     status: string | null
     scheduledAt: Date | null
     createdAt: Date | null
@@ -48623,6 +50017,8 @@ export namespace Prisma {
     roundNumber: number | null
     name: string | null
     system: string | null
+    kind: string | null
+    bracketSlot: string | null
     status: string | null
     scheduledAt: Date | null
     createdAt: Date | null
@@ -48635,6 +50031,8 @@ export namespace Prisma {
     roundNumber: number
     name: number
     system: number
+    kind: number
+    bracketSlot: number
     status: number
     scheduledAt: number
     createdAt: number
@@ -48657,6 +50055,8 @@ export namespace Prisma {
     roundNumber?: true
     name?: true
     system?: true
+    kind?: true
+    bracketSlot?: true
     status?: true
     scheduledAt?: true
     createdAt?: true
@@ -48669,6 +50069,8 @@ export namespace Prisma {
     roundNumber?: true
     name?: true
     system?: true
+    kind?: true
+    bracketSlot?: true
     status?: true
     scheduledAt?: true
     createdAt?: true
@@ -48681,6 +50083,8 @@ export namespace Prisma {
     roundNumber?: true
     name?: true
     system?: true
+    kind?: true
+    bracketSlot?: true
     status?: true
     scheduledAt?: true
     createdAt?: true
@@ -48780,6 +50184,8 @@ export namespace Prisma {
     roundNumber: number
     name: string | null
     system: string
+    kind: string
+    bracketSlot: string | null
     status: string
     scheduledAt: Date | null
     createdAt: Date
@@ -48811,6 +50217,8 @@ export namespace Prisma {
     roundNumber?: boolean
     name?: boolean
     system?: boolean
+    kind?: boolean
+    bracketSlot?: boolean
     status?: boolean
     scheduledAt?: boolean
     createdAt?: boolean
@@ -48826,6 +50234,8 @@ export namespace Prisma {
     roundNumber?: boolean
     name?: boolean
     system?: boolean
+    kind?: boolean
+    bracketSlot?: boolean
     status?: boolean
     scheduledAt?: boolean
     createdAt?: boolean
@@ -48839,6 +50249,8 @@ export namespace Prisma {
     roundNumber?: boolean
     name?: boolean
     system?: boolean
+    kind?: boolean
+    bracketSlot?: boolean
     status?: boolean
     scheduledAt?: boolean
     createdAt?: boolean
@@ -48852,13 +50264,15 @@ export namespace Prisma {
     roundNumber?: boolean
     name?: boolean
     system?: boolean
+    kind?: boolean
+    bracketSlot?: boolean
     status?: boolean
     scheduledAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type CupRoundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cupId" | "roundNumber" | "name" | "system" | "status" | "scheduledAt" | "createdAt" | "updatedAt", ExtArgs["result"]["cupRound"]>
+  export type CupRoundOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "cupId" | "roundNumber" | "name" | "system" | "kind" | "bracketSlot" | "status" | "scheduledAt" | "createdAt" | "updatedAt", ExtArgs["result"]["cupRound"]>
   export type CupRoundInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     cup?: boolean | CupDefaultArgs<ExtArgs>
     pairings?: boolean | CupRound$pairingsArgs<ExtArgs>
@@ -48891,6 +50305,11 @@ export namespace Prisma {
        * aucun backfill n'est nécessaire.
        */
       system: string
+      /**
+       * Bracket de play-off (miroir SQLite de schema.prisma).
+       */
+      kind: string
+      bracketSlot: string | null
       /**
        * "pending" | "in_progress" | "completed"
        */
@@ -49328,6 +50747,8 @@ export namespace Prisma {
     readonly roundNumber: FieldRef<"CupRound", 'Int'>
     readonly name: FieldRef<"CupRound", 'String'>
     readonly system: FieldRef<"CupRound", 'String'>
+    readonly kind: FieldRef<"CupRound", 'String'>
+    readonly bracketSlot: FieldRef<"CupRound", 'String'>
     readonly status: FieldRef<"CupRound", 'String'>
     readonly scheduledAt: FieldRef<"CupRound", 'DateTime'>
     readonly createdAt: FieldRef<"CupRound", 'DateTime'>
@@ -116101,6 +117522,8 @@ export namespace Prisma {
     foulCasualtyPoints: 'foulCasualtyPoints',
     passPoints: 'passPoints',
     tieBreakRules: 'tieBreakRules',
+    playoffSize: 'playoffSize',
+    playoffsPublished: 'playoffsPublished',
     resurrectionMode: 'resurrectionMode',
     tierBudgets: 'tierBudgets',
     rosterBudgetOverrides: 'rosterBudgetOverrides',
@@ -116117,10 +117540,25 @@ export namespace Prisma {
     teamId: 'teamId',
     createdAt: 'createdAt',
     rosterSnapshot: 'rosterSnapshot',
-    pspPoolGranted: 'pspPoolGranted'
+    pspPoolGranted: 'pspPoolGranted',
+    poolId: 'poolId'
   };
 
   export type CupParticipantScalarFieldEnum = (typeof CupParticipantScalarFieldEnum)[keyof typeof CupParticipantScalarFieldEnum]
+
+
+  export const CupPoolScalarFieldEnum: {
+    id: 'id',
+    cupId: 'cupId',
+    name: 'name',
+    order: 'order',
+    color: 'color',
+    qualifiesForPlayoffs: 'qualifiesForPlayoffs',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CupPoolScalarFieldEnum = (typeof CupPoolScalarFieldEnum)[keyof typeof CupPoolScalarFieldEnum]
 
 
   export const CupRoundScalarFieldEnum: {
@@ -116129,6 +117567,8 @@ export namespace Prisma {
     roundNumber: 'roundNumber',
     name: 'name',
     system: 'system',
+    kind: 'kind',
+    bracketSlot: 'bracketSlot',
     status: 'status',
     scheduledAt: 'scheduledAt',
     createdAt: 'createdAt',
@@ -120093,6 +121533,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
+    playoffSize?: IntFilter<"Cup"> | number
+    playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
     tierBudgets?: StringNullableFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
@@ -120100,6 +121542,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: StringNullableFilter<"Cup"> | string | null
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     participants?: CupParticipantListRelationFilter
+    pools?: CupPoolListRelationFilter
     invitations?: CupInvitationListRelationFilter
     localMatches?: LocalMatchListRelationFilter
     rounds?: CupRoundListRelationFilter
@@ -120128,6 +121571,8 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrderInput | SortOrder
+    playoffSize?: SortOrder
+    playoffsPublished?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrderInput | SortOrder
     rosterBudgetOverrides?: SortOrderInput | SortOrder
@@ -120135,6 +121580,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: SortOrderInput | SortOrder
     creator?: UserOrderByWithRelationInput
     participants?: CupParticipantOrderByRelationAggregateInput
+    pools?: CupPoolOrderByRelationAggregateInput
     invitations?: CupInvitationOrderByRelationAggregateInput
     localMatches?: LocalMatchOrderByRelationAggregateInput
     rounds?: CupRoundOrderByRelationAggregateInput
@@ -120166,6 +121612,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
+    playoffSize?: IntFilter<"Cup"> | number
+    playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
     tierBudgets?: StringNullableFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
@@ -120173,6 +121621,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: StringNullableFilter<"Cup"> | string | null
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     participants?: CupParticipantListRelationFilter
+    pools?: CupPoolListRelationFilter
     invitations?: CupInvitationListRelationFilter
     localMatches?: LocalMatchListRelationFilter
     rounds?: CupRoundListRelationFilter
@@ -120201,6 +121650,8 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrderInput | SortOrder
+    playoffSize?: SortOrder
+    playoffsPublished?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrderInput | SortOrder
     rosterBudgetOverrides?: SortOrderInput | SortOrder
@@ -120238,6 +121689,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntWithAggregatesFilter<"Cup"> | number
     passPoints?: IntWithAggregatesFilter<"Cup"> | number
     tieBreakRules?: StringNullableWithAggregatesFilter<"Cup"> | string | null
+    playoffSize?: IntWithAggregatesFilter<"Cup"> | number
+    playoffsPublished?: BoolNullableWithAggregatesFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolWithAggregatesFilter<"Cup"> | boolean
     tierBudgets?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableWithAggregatesFilter<"Cup"> | string | null
@@ -120255,8 +121708,10 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CupParticipant"> | Date | string
     rosterSnapshot?: StringNullableFilter<"CupParticipant"> | string | null
     pspPoolGranted?: IntFilter<"CupParticipant"> | number
+    poolId?: StringNullableFilter<"CupParticipant"> | string | null
     cup?: XOR<CupScalarRelationFilter, CupWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    pool?: XOR<CupPoolNullableScalarRelationFilter, CupPoolWhereInput> | null
   }
 
   export type CupParticipantOrderByWithRelationInput = {
@@ -120266,8 +121721,10 @@ export namespace Prisma {
     createdAt?: SortOrder
     rosterSnapshot?: SortOrderInput | SortOrder
     pspPoolGranted?: SortOrder
+    poolId?: SortOrderInput | SortOrder
     cup?: CupOrderByWithRelationInput
     team?: TeamOrderByWithRelationInput
+    pool?: CupPoolOrderByWithRelationInput
   }
 
   export type CupParticipantWhereUniqueInput = Prisma.AtLeast<{
@@ -120281,8 +121738,10 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CupParticipant"> | Date | string
     rosterSnapshot?: StringNullableFilter<"CupParticipant"> | string | null
     pspPoolGranted?: IntFilter<"CupParticipant"> | number
+    poolId?: StringNullableFilter<"CupParticipant"> | string | null
     cup?: XOR<CupScalarRelationFilter, CupWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+    pool?: XOR<CupPoolNullableScalarRelationFilter, CupPoolWhereInput> | null
   }, "id" | "cupId_teamId">
 
   export type CupParticipantOrderByWithAggregationInput = {
@@ -120292,6 +121751,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     rosterSnapshot?: SortOrderInput | SortOrder
     pspPoolGranted?: SortOrder
+    poolId?: SortOrderInput | SortOrder
     _count?: CupParticipantCountOrderByAggregateInput
     _avg?: CupParticipantAvgOrderByAggregateInput
     _max?: CupParticipantMaxOrderByAggregateInput
@@ -120309,6 +121769,83 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"CupParticipant"> | Date | string
     rosterSnapshot?: StringNullableWithAggregatesFilter<"CupParticipant"> | string | null
     pspPoolGranted?: IntWithAggregatesFilter<"CupParticipant"> | number
+    poolId?: StringNullableWithAggregatesFilter<"CupParticipant"> | string | null
+  }
+
+  export type CupPoolWhereInput = {
+    AND?: CupPoolWhereInput | CupPoolWhereInput[]
+    OR?: CupPoolWhereInput[]
+    NOT?: CupPoolWhereInput | CupPoolWhereInput[]
+    id?: StringFilter<"CupPool"> | string
+    cupId?: StringFilter<"CupPool"> | string
+    name?: StringFilter<"CupPool"> | string
+    order?: IntFilter<"CupPool"> | number
+    color?: StringNullableFilter<"CupPool"> | string | null
+    qualifiesForPlayoffs?: IntFilter<"CupPool"> | number
+    createdAt?: DateTimeFilter<"CupPool"> | Date | string
+    updatedAt?: DateTimeFilter<"CupPool"> | Date | string
+    cup?: XOR<CupScalarRelationFilter, CupWhereInput>
+    participants?: CupParticipantListRelationFilter
+  }
+
+  export type CupPoolOrderByWithRelationInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    name?: SortOrder
+    order?: SortOrder
+    color?: SortOrderInput | SortOrder
+    qualifiesForPlayoffs?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    cup?: CupOrderByWithRelationInput
+    participants?: CupParticipantOrderByRelationAggregateInput
+  }
+
+  export type CupPoolWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    cupId_name?: CupPoolCupIdNameCompoundUniqueInput
+    AND?: CupPoolWhereInput | CupPoolWhereInput[]
+    OR?: CupPoolWhereInput[]
+    NOT?: CupPoolWhereInput | CupPoolWhereInput[]
+    cupId?: StringFilter<"CupPool"> | string
+    name?: StringFilter<"CupPool"> | string
+    order?: IntFilter<"CupPool"> | number
+    color?: StringNullableFilter<"CupPool"> | string | null
+    qualifiesForPlayoffs?: IntFilter<"CupPool"> | number
+    createdAt?: DateTimeFilter<"CupPool"> | Date | string
+    updatedAt?: DateTimeFilter<"CupPool"> | Date | string
+    cup?: XOR<CupScalarRelationFilter, CupWhereInput>
+    participants?: CupParticipantListRelationFilter
+  }, "id" | "cupId_name">
+
+  export type CupPoolOrderByWithAggregationInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    name?: SortOrder
+    order?: SortOrder
+    color?: SortOrderInput | SortOrder
+    qualifiesForPlayoffs?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CupPoolCountOrderByAggregateInput
+    _avg?: CupPoolAvgOrderByAggregateInput
+    _max?: CupPoolMaxOrderByAggregateInput
+    _min?: CupPoolMinOrderByAggregateInput
+    _sum?: CupPoolSumOrderByAggregateInput
+  }
+
+  export type CupPoolScalarWhereWithAggregatesInput = {
+    AND?: CupPoolScalarWhereWithAggregatesInput | CupPoolScalarWhereWithAggregatesInput[]
+    OR?: CupPoolScalarWhereWithAggregatesInput[]
+    NOT?: CupPoolScalarWhereWithAggregatesInput | CupPoolScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CupPool"> | string
+    cupId?: StringWithAggregatesFilter<"CupPool"> | string
+    name?: StringWithAggregatesFilter<"CupPool"> | string
+    order?: IntWithAggregatesFilter<"CupPool"> | number
+    color?: StringNullableWithAggregatesFilter<"CupPool"> | string | null
+    qualifiesForPlayoffs?: IntWithAggregatesFilter<"CupPool"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"CupPool"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CupPool"> | Date | string
   }
 
   export type CupRoundWhereInput = {
@@ -120320,6 +121857,8 @@ export namespace Prisma {
     roundNumber?: IntFilter<"CupRound"> | number
     name?: StringNullableFilter<"CupRound"> | string | null
     system?: StringFilter<"CupRound"> | string
+    kind?: StringFilter<"CupRound"> | string
+    bracketSlot?: StringNullableFilter<"CupRound"> | string | null
     status?: StringFilter<"CupRound"> | string
     scheduledAt?: DateTimeNullableFilter<"CupRound"> | Date | string | null
     createdAt?: DateTimeFilter<"CupRound"> | Date | string
@@ -120334,6 +121873,8 @@ export namespace Prisma {
     roundNumber?: SortOrder
     name?: SortOrderInput | SortOrder
     system?: SortOrder
+    kind?: SortOrder
+    bracketSlot?: SortOrderInput | SortOrder
     status?: SortOrder
     scheduledAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -120352,6 +121893,8 @@ export namespace Prisma {
     roundNumber?: IntFilter<"CupRound"> | number
     name?: StringNullableFilter<"CupRound"> | string | null
     system?: StringFilter<"CupRound"> | string
+    kind?: StringFilter<"CupRound"> | string
+    bracketSlot?: StringNullableFilter<"CupRound"> | string | null
     status?: StringFilter<"CupRound"> | string
     scheduledAt?: DateTimeNullableFilter<"CupRound"> | Date | string | null
     createdAt?: DateTimeFilter<"CupRound"> | Date | string
@@ -120366,6 +121909,8 @@ export namespace Prisma {
     roundNumber?: SortOrder
     name?: SortOrderInput | SortOrder
     system?: SortOrder
+    kind?: SortOrder
+    bracketSlot?: SortOrderInput | SortOrder
     status?: SortOrder
     scheduledAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -120386,6 +121931,8 @@ export namespace Prisma {
     roundNumber?: IntWithAggregatesFilter<"CupRound"> | number
     name?: StringNullableWithAggregatesFilter<"CupRound"> | string | null
     system?: StringWithAggregatesFilter<"CupRound"> | string
+    kind?: StringWithAggregatesFilter<"CupRound"> | string
+    bracketSlot?: StringNullableWithAggregatesFilter<"CupRound"> | string | null
     status?: StringWithAggregatesFilter<"CupRound"> | string
     scheduledAt?: DateTimeNullableWithAggregatesFilter<"CupRound"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"CupRound"> | Date | string
@@ -128861,6 +130408,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -128868,6 +130417,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
@@ -128896,12 +130446,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
@@ -128929,6 +130482,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -128936,6 +130491,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
@@ -128964,12 +130520,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
@@ -128998,6 +130557,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -129026,6 +130587,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -129055,6 +130618,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -129069,6 +130634,7 @@ export namespace Prisma {
     pspPoolGranted?: number
     cup: CupCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutCupParticipantsInput
+    pool?: CupPoolCreateNestedOneWithoutParticipantsInput
   }
 
   export type CupParticipantUncheckedCreateInput = {
@@ -129078,6 +130644,7 @@ export namespace Prisma {
     createdAt?: Date | string
     rosterSnapshot?: string | null
     pspPoolGranted?: number
+    poolId?: string | null
   }
 
   export type CupParticipantUpdateInput = {
@@ -129087,6 +130654,7 @@ export namespace Prisma {
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
     cup?: CupUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutCupParticipantsNestedInput
+    pool?: CupPoolUpdateOneWithoutParticipantsNestedInput
   }
 
   export type CupParticipantUncheckedUpdateInput = {
@@ -129096,6 +130664,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CupParticipantCreateManyInput = {
@@ -129105,6 +130674,7 @@ export namespace Prisma {
     createdAt?: Date | string
     rosterSnapshot?: string | null
     pspPoolGranted?: number
+    poolId?: string | null
   }
 
   export type CupParticipantUpdateManyMutationInput = {
@@ -129121,6 +130691,87 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    poolId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type CupPoolCreateInput = {
+    id?: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    cup: CupCreateNestedOneWithoutPoolsInput
+    participants?: CupParticipantCreateNestedManyWithoutPoolInput
+  }
+
+  export type CupPoolUncheckedCreateInput = {
+    id?: string
+    cupId: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutPoolInput
+  }
+
+  export type CupPoolUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cup?: CupUpdateOneRequiredWithoutPoolsNestedInput
+    participants?: CupParticipantUpdateManyWithoutPoolNestedInput
+  }
+
+  export type CupPoolUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUncheckedUpdateManyWithoutPoolNestedInput
+  }
+
+  export type CupPoolCreateManyInput = {
+    id?: string
+    cupId: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CupPoolUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupPoolUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CupRoundCreateInput = {
@@ -129128,6 +130779,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -129142,6 +130795,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -129154,6 +130809,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -129168,6 +130825,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -129181,6 +130840,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -129192,6 +130853,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -129204,6 +130867,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -137529,10 +139194,25 @@ export namespace Prisma {
     eliteSkillSurcharge?: SortOrder
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
+  export type CupPoolListRelationFilter = {
+    every?: CupPoolWhereInput
+    some?: CupPoolWhereInput
+    none?: CupPoolWhereInput
+  }
+
   export type CupRoundListRelationFilter = {
     every?: CupRoundWhereInput
     some?: CupRoundWhereInput
     none?: CupRoundWhereInput
+  }
+
+  export type CupPoolOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type CupRoundOrderByRelationAggregateInput = {
@@ -137561,6 +139241,8 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrder
+    playoffSize?: SortOrder
+    playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrder
     rosterBudgetOverrides?: SortOrder
@@ -137577,6 +139259,7 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    playoffSize?: SortOrder
   }
 
   export type CupMaxOrderByAggregateInput = {
@@ -137601,6 +139284,8 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrder
+    playoffSize?: SortOrder
+    playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrder
     rosterBudgetOverrides?: SortOrder
@@ -137630,6 +139315,8 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrder
+    playoffSize?: SortOrder
+    playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
     tierBudgets?: SortOrder
     rosterBudgetOverrides?: SortOrder
@@ -137646,11 +139333,25 @@ export namespace Prisma {
     blockCasualtyPoints?: SortOrder
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
+    playoffSize?: SortOrder
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type CupScalarRelationFilter = {
     is?: CupWhereInput
     isNot?: CupWhereInput
+  }
+
+  export type CupPoolNullableScalarRelationFilter = {
+    is?: CupPoolWhereInput | null
+    isNot?: CupPoolWhereInput | null
   }
 
   export type CupParticipantCupIdTeamIdCompoundUniqueInput = {
@@ -137665,6 +139366,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     rosterSnapshot?: SortOrder
     pspPoolGranted?: SortOrder
+    poolId?: SortOrder
   }
 
   export type CupParticipantAvgOrderByAggregateInput = {
@@ -137678,6 +139380,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     rosterSnapshot?: SortOrder
     pspPoolGranted?: SortOrder
+    poolId?: SortOrder
   }
 
   export type CupParticipantMinOrderByAggregateInput = {
@@ -137687,10 +139390,59 @@ export namespace Prisma {
     createdAt?: SortOrder
     rosterSnapshot?: SortOrder
     pspPoolGranted?: SortOrder
+    poolId?: SortOrder
   }
 
   export type CupParticipantSumOrderByAggregateInput = {
     pspPoolGranted?: SortOrder
+  }
+
+  export type CupPoolCupIdNameCompoundUniqueInput = {
+    cupId: string
+    name: string
+  }
+
+  export type CupPoolCountOrderByAggregateInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    name?: SortOrder
+    order?: SortOrder
+    color?: SortOrder
+    qualifiesForPlayoffs?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CupPoolAvgOrderByAggregateInput = {
+    order?: SortOrder
+    qualifiesForPlayoffs?: SortOrder
+  }
+
+  export type CupPoolMaxOrderByAggregateInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    name?: SortOrder
+    order?: SortOrder
+    color?: SortOrder
+    qualifiesForPlayoffs?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CupPoolMinOrderByAggregateInput = {
+    id?: SortOrder
+    cupId?: SortOrder
+    name?: SortOrder
+    order?: SortOrder
+    color?: SortOrder
+    qualifiesForPlayoffs?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CupPoolSumOrderByAggregateInput = {
+    order?: SortOrder
+    qualifiesForPlayoffs?: SortOrder
   }
 
   export type CupRoundCupIdRoundNumberCompoundUniqueInput = {
@@ -137704,6 +139456,8 @@ export namespace Prisma {
     roundNumber?: SortOrder
     name?: SortOrder
     system?: SortOrder
+    kind?: SortOrder
+    bracketSlot?: SortOrder
     status?: SortOrder
     scheduledAt?: SortOrder
     createdAt?: SortOrder
@@ -137720,6 +139474,8 @@ export namespace Prisma {
     roundNumber?: SortOrder
     name?: SortOrder
     system?: SortOrder
+    kind?: SortOrder
+    bracketSlot?: SortOrder
     status?: SortOrder
     scheduledAt?: SortOrder
     createdAt?: SortOrder
@@ -137732,6 +139488,8 @@ export namespace Prisma {
     roundNumber?: SortOrder
     name?: SortOrder
     system?: SortOrder
+    kind?: SortOrder
+    bracketSlot?: SortOrder
     status?: SortOrder
     scheduledAt?: SortOrder
     createdAt?: SortOrder
@@ -138205,11 +139963,6 @@ export namespace Prisma {
     forfeitPoints?: SortOrder
   }
 
-  export type BoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
   export type LeagueScalarRelationFilter = {
     is?: LeagueWhereInput
     isNot?: LeagueWhereInput
@@ -138306,14 +140059,6 @@ export namespace Prisma {
     seasonNumber?: SortOrder
     themeYear?: SortOrder
     playoffSize?: SortOrder
-  }
-
-  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type LeagueSeasonScalarRelationFilter = {
@@ -144128,6 +145873,13 @@ export namespace Prisma {
     connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
   }
 
+  export type CupPoolCreateNestedManyWithoutCupInput = {
+    create?: XOR<CupPoolCreateWithoutCupInput, CupPoolUncheckedCreateWithoutCupInput> | CupPoolCreateWithoutCupInput[] | CupPoolUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupPoolCreateOrConnectWithoutCupInput | CupPoolCreateOrConnectWithoutCupInput[]
+    createMany?: CupPoolCreateManyCupInputEnvelope
+    connect?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+  }
+
   export type CupInvitationCreateNestedManyWithoutCupInput = {
     create?: XOR<CupInvitationCreateWithoutCupInput, CupInvitationUncheckedCreateWithoutCupInput> | CupInvitationCreateWithoutCupInput[] | CupInvitationUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupInvitationCreateOrConnectWithoutCupInput | CupInvitationCreateOrConnectWithoutCupInput[]
@@ -144163,6 +145915,13 @@ export namespace Prisma {
     connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
   }
 
+  export type CupPoolUncheckedCreateNestedManyWithoutCupInput = {
+    create?: XOR<CupPoolCreateWithoutCupInput, CupPoolUncheckedCreateWithoutCupInput> | CupPoolCreateWithoutCupInput[] | CupPoolUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupPoolCreateOrConnectWithoutCupInput | CupPoolCreateOrConnectWithoutCupInput[]
+    createMany?: CupPoolCreateManyCupInputEnvelope
+    connect?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+  }
+
   export type CupInvitationUncheckedCreateNestedManyWithoutCupInput = {
     create?: XOR<CupInvitationCreateWithoutCupInput, CupInvitationUncheckedCreateWithoutCupInput> | CupInvitationCreateWithoutCupInput[] | CupInvitationUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupInvitationCreateOrConnectWithoutCupInput | CupInvitationCreateOrConnectWithoutCupInput[]
@@ -144191,6 +145950,10 @@ export namespace Prisma {
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type UserUpdateOneRequiredWithoutCreatedCupsNestedInput = {
     create?: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
     connectOrCreate?: UserCreateOrConnectWithoutCreatedCupsInput
@@ -144211,6 +145974,20 @@ export namespace Prisma {
     update?: CupParticipantUpdateWithWhereUniqueWithoutCupInput | CupParticipantUpdateWithWhereUniqueWithoutCupInput[]
     updateMany?: CupParticipantUpdateManyWithWhereWithoutCupInput | CupParticipantUpdateManyWithWhereWithoutCupInput[]
     deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+  }
+
+  export type CupPoolUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CupPoolCreateWithoutCupInput, CupPoolUncheckedCreateWithoutCupInput> | CupPoolCreateWithoutCupInput[] | CupPoolUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupPoolCreateOrConnectWithoutCupInput | CupPoolCreateOrConnectWithoutCupInput[]
+    upsert?: CupPoolUpsertWithWhereUniqueWithoutCupInput | CupPoolUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CupPoolCreateManyCupInputEnvelope
+    set?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    disconnect?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    delete?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    connect?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    update?: CupPoolUpdateWithWhereUniqueWithoutCupInput | CupPoolUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CupPoolUpdateManyWithWhereWithoutCupInput | CupPoolUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CupPoolScalarWhereInput | CupPoolScalarWhereInput[]
   }
 
   export type CupInvitationUpdateManyWithoutCupNestedInput = {
@@ -144283,6 +146060,20 @@ export namespace Prisma {
     deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
   }
 
+  export type CupPoolUncheckedUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CupPoolCreateWithoutCupInput, CupPoolUncheckedCreateWithoutCupInput> | CupPoolCreateWithoutCupInput[] | CupPoolUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CupPoolCreateOrConnectWithoutCupInput | CupPoolCreateOrConnectWithoutCupInput[]
+    upsert?: CupPoolUpsertWithWhereUniqueWithoutCupInput | CupPoolUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CupPoolCreateManyCupInputEnvelope
+    set?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    disconnect?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    delete?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    connect?: CupPoolWhereUniqueInput | CupPoolWhereUniqueInput[]
+    update?: CupPoolUpdateWithWhereUniqueWithoutCupInput | CupPoolUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CupPoolUpdateManyWithWhereWithoutCupInput | CupPoolUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CupPoolScalarWhereInput | CupPoolScalarWhereInput[]
+  }
+
   export type CupInvitationUncheckedUpdateManyWithoutCupNestedInput = {
     create?: XOR<CupInvitationCreateWithoutCupInput, CupInvitationUncheckedCreateWithoutCupInput> | CupInvitationCreateWithoutCupInput[] | CupInvitationUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupInvitationCreateOrConnectWithoutCupInput | CupInvitationCreateOrConnectWithoutCupInput[]
@@ -144351,6 +146142,12 @@ export namespace Prisma {
     connect?: TeamWhereUniqueInput
   }
 
+  export type CupPoolCreateNestedOneWithoutParticipantsInput = {
+    create?: XOR<CupPoolCreateWithoutParticipantsInput, CupPoolUncheckedCreateWithoutParticipantsInput>
+    connectOrCreate?: CupPoolCreateOrConnectWithoutParticipantsInput
+    connect?: CupPoolWhereUniqueInput
+  }
+
   export type CupUpdateOneRequiredWithoutParticipantsNestedInput = {
     create?: XOR<CupCreateWithoutParticipantsInput, CupUncheckedCreateWithoutParticipantsInput>
     connectOrCreate?: CupCreateOrConnectWithoutParticipantsInput
@@ -144365,6 +146162,72 @@ export namespace Prisma {
     upsert?: TeamUpsertWithoutCupParticipantsInput
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutCupParticipantsInput, TeamUpdateWithoutCupParticipantsInput>, TeamUncheckedUpdateWithoutCupParticipantsInput>
+  }
+
+  export type CupPoolUpdateOneWithoutParticipantsNestedInput = {
+    create?: XOR<CupPoolCreateWithoutParticipantsInput, CupPoolUncheckedCreateWithoutParticipantsInput>
+    connectOrCreate?: CupPoolCreateOrConnectWithoutParticipantsInput
+    upsert?: CupPoolUpsertWithoutParticipantsInput
+    disconnect?: CupPoolWhereInput | boolean
+    delete?: CupPoolWhereInput | boolean
+    connect?: CupPoolWhereUniqueInput
+    update?: XOR<XOR<CupPoolUpdateToOneWithWhereWithoutParticipantsInput, CupPoolUpdateWithoutParticipantsInput>, CupPoolUncheckedUpdateWithoutParticipantsInput>
+  }
+
+  export type CupCreateNestedOneWithoutPoolsInput = {
+    create?: XOR<CupCreateWithoutPoolsInput, CupUncheckedCreateWithoutPoolsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutPoolsInput
+    connect?: CupWhereUniqueInput
+  }
+
+  export type CupParticipantCreateNestedManyWithoutPoolInput = {
+    create?: XOR<CupParticipantCreateWithoutPoolInput, CupParticipantUncheckedCreateWithoutPoolInput> | CupParticipantCreateWithoutPoolInput[] | CupParticipantUncheckedCreateWithoutPoolInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutPoolInput | CupParticipantCreateOrConnectWithoutPoolInput[]
+    createMany?: CupParticipantCreateManyPoolInputEnvelope
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+  }
+
+  export type CupParticipantUncheckedCreateNestedManyWithoutPoolInput = {
+    create?: XOR<CupParticipantCreateWithoutPoolInput, CupParticipantUncheckedCreateWithoutPoolInput> | CupParticipantCreateWithoutPoolInput[] | CupParticipantUncheckedCreateWithoutPoolInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutPoolInput | CupParticipantCreateOrConnectWithoutPoolInput[]
+    createMany?: CupParticipantCreateManyPoolInputEnvelope
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+  }
+
+  export type CupUpdateOneRequiredWithoutPoolsNestedInput = {
+    create?: XOR<CupCreateWithoutPoolsInput, CupUncheckedCreateWithoutPoolsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutPoolsInput
+    upsert?: CupUpsertWithoutPoolsInput
+    connect?: CupWhereUniqueInput
+    update?: XOR<XOR<CupUpdateToOneWithWhereWithoutPoolsInput, CupUpdateWithoutPoolsInput>, CupUncheckedUpdateWithoutPoolsInput>
+  }
+
+  export type CupParticipantUpdateManyWithoutPoolNestedInput = {
+    create?: XOR<CupParticipantCreateWithoutPoolInput, CupParticipantUncheckedCreateWithoutPoolInput> | CupParticipantCreateWithoutPoolInput[] | CupParticipantUncheckedCreateWithoutPoolInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutPoolInput | CupParticipantCreateOrConnectWithoutPoolInput[]
+    upsert?: CupParticipantUpsertWithWhereUniqueWithoutPoolInput | CupParticipantUpsertWithWhereUniqueWithoutPoolInput[]
+    createMany?: CupParticipantCreateManyPoolInputEnvelope
+    set?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    disconnect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    delete?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    update?: CupParticipantUpdateWithWhereUniqueWithoutPoolInput | CupParticipantUpdateWithWhereUniqueWithoutPoolInput[]
+    updateMany?: CupParticipantUpdateManyWithWhereWithoutPoolInput | CupParticipantUpdateManyWithWhereWithoutPoolInput[]
+    deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
+  }
+
+  export type CupParticipantUncheckedUpdateManyWithoutPoolNestedInput = {
+    create?: XOR<CupParticipantCreateWithoutPoolInput, CupParticipantUncheckedCreateWithoutPoolInput> | CupParticipantCreateWithoutPoolInput[] | CupParticipantUncheckedCreateWithoutPoolInput[]
+    connectOrCreate?: CupParticipantCreateOrConnectWithoutPoolInput | CupParticipantCreateOrConnectWithoutPoolInput[]
+    upsert?: CupParticipantUpsertWithWhereUniqueWithoutPoolInput | CupParticipantUpsertWithWhereUniqueWithoutPoolInput[]
+    createMany?: CupParticipantCreateManyPoolInputEnvelope
+    set?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    disconnect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    delete?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    connect?: CupParticipantWhereUniqueInput | CupParticipantWhereUniqueInput[]
+    update?: CupParticipantUpdateWithWhereUniqueWithoutPoolInput | CupParticipantUpdateWithWhereUniqueWithoutPoolInput[]
+    updateMany?: CupParticipantUpdateManyWithWhereWithoutPoolInput | CupParticipantUpdateManyWithWhereWithoutPoolInput[]
+    deleteMany?: CupParticipantScalarWhereInput | CupParticipantScalarWhereInput[]
   }
 
   export type CupCreateNestedOneWithoutRoundsInput = {
@@ -144917,10 +146780,6 @@ export namespace Prisma {
     connectOrCreate?: LeagueInvitationCreateOrConnectWithoutSeasonInput | LeagueInvitationCreateOrConnectWithoutSeasonInput[]
     createMany?: LeagueInvitationCreateManySeasonInputEnvelope
     connect?: LeagueInvitationWhereUniqueInput | LeagueInvitationWhereUniqueInput[]
-  }
-
-  export type NullableBoolFieldUpdateOperationsInput = {
-    set?: boolean | null
   }
 
   export type LeagueUpdateOneRequiredWithoutSeasonsNestedInput = {
@@ -148213,12 +150072,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
@@ -148246,12 +150108,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
@@ -149394,6 +151259,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
+    playoffSize?: IntFilter<"Cup"> | number
+    playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
     tierBudgets?: StringNullableFilter<"Cup"> | string | null
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
@@ -154984,6 +156851,7 @@ export namespace Prisma {
     rosterSnapshot?: string | null
     pspPoolGranted?: number
     cup: CupCreateNestedOneWithoutParticipantsInput
+    pool?: CupPoolCreateNestedOneWithoutParticipantsInput
   }
 
   export type CupParticipantUncheckedCreateWithoutTeamInput = {
@@ -154992,6 +156860,7 @@ export namespace Prisma {
     createdAt?: Date | string
     rosterSnapshot?: string | null
     pspPoolGranted?: number
+    poolId?: string | null
   }
 
   export type CupParticipantCreateOrConnectWithoutTeamInput = {
@@ -155638,6 +157507,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"CupParticipant"> | Date | string
     rosterSnapshot?: StringNullableFilter<"CupParticipant"> | string | null
     pspPoolGranted?: IntFilter<"CupParticipant"> | number
+    poolId?: StringNullableFilter<"CupParticipant"> | string | null
   }
 
   export type CupInvitationUpsertWithWhereUniqueWithoutInviteeTeamInput = {
@@ -157754,6 +159624,7 @@ export namespace Prisma {
     rosterSnapshot?: string | null
     pspPoolGranted?: number
     team: TeamCreateNestedOneWithoutCupParticipantsInput
+    pool?: CupPoolCreateNestedOneWithoutParticipantsInput
   }
 
   export type CupParticipantUncheckedCreateWithoutCupInput = {
@@ -157762,6 +159633,7 @@ export namespace Prisma {
     createdAt?: Date | string
     rosterSnapshot?: string | null
     pspPoolGranted?: number
+    poolId?: string | null
   }
 
   export type CupParticipantCreateOrConnectWithoutCupInput = {
@@ -157771,6 +159643,37 @@ export namespace Prisma {
 
   export type CupParticipantCreateManyCupInputEnvelope = {
     data: CupParticipantCreateManyCupInput | CupParticipantCreateManyCupInput[]
+  }
+
+  export type CupPoolCreateWithoutCupInput = {
+    id?: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantCreateNestedManyWithoutPoolInput
+  }
+
+  export type CupPoolUncheckedCreateWithoutCupInput = {
+    id?: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutPoolInput
+  }
+
+  export type CupPoolCreateOrConnectWithoutCupInput = {
+    where: CupPoolWhereUniqueInput
+    create: XOR<CupPoolCreateWithoutCupInput, CupPoolUncheckedCreateWithoutCupInput>
+  }
+
+  export type CupPoolCreateManyCupInputEnvelope = {
+    data: CupPoolCreateManyCupInput | CupPoolCreateManyCupInput[]
   }
 
   export type CupInvitationCreateWithoutCupInput = {
@@ -157882,6 +159785,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -157894,6 +159799,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -158116,6 +160023,36 @@ export namespace Prisma {
     data: XOR<CupParticipantUpdateManyMutationInput, CupParticipantUncheckedUpdateManyWithoutCupInput>
   }
 
+  export type CupPoolUpsertWithWhereUniqueWithoutCupInput = {
+    where: CupPoolWhereUniqueInput
+    update: XOR<CupPoolUpdateWithoutCupInput, CupPoolUncheckedUpdateWithoutCupInput>
+    create: XOR<CupPoolCreateWithoutCupInput, CupPoolUncheckedCreateWithoutCupInput>
+  }
+
+  export type CupPoolUpdateWithWhereUniqueWithoutCupInput = {
+    where: CupPoolWhereUniqueInput
+    data: XOR<CupPoolUpdateWithoutCupInput, CupPoolUncheckedUpdateWithoutCupInput>
+  }
+
+  export type CupPoolUpdateManyWithWhereWithoutCupInput = {
+    where: CupPoolScalarWhereInput
+    data: XOR<CupPoolUpdateManyMutationInput, CupPoolUncheckedUpdateManyWithoutCupInput>
+  }
+
+  export type CupPoolScalarWhereInput = {
+    AND?: CupPoolScalarWhereInput | CupPoolScalarWhereInput[]
+    OR?: CupPoolScalarWhereInput[]
+    NOT?: CupPoolScalarWhereInput | CupPoolScalarWhereInput[]
+    id?: StringFilter<"CupPool"> | string
+    cupId?: StringFilter<"CupPool"> | string
+    name?: StringFilter<"CupPool"> | string
+    order?: IntFilter<"CupPool"> | number
+    color?: StringNullableFilter<"CupPool"> | string | null
+    qualifiesForPlayoffs?: IntFilter<"CupPool"> | number
+    createdAt?: DateTimeFilter<"CupPool"> | Date | string
+    updatedAt?: DateTimeFilter<"CupPool"> | Date | string
+  }
+
   export type CupInvitationUpsertWithWhereUniqueWithoutCupInput = {
     where: CupInvitationWhereUniqueInput
     update: XOR<CupInvitationUpdateWithoutCupInput, CupInvitationUncheckedUpdateWithoutCupInput>
@@ -158173,6 +160110,8 @@ export namespace Prisma {
     roundNumber?: IntFilter<"CupRound"> | number
     name?: StringNullableFilter<"CupRound"> | string | null
     system?: StringFilter<"CupRound"> | string
+    kind?: StringFilter<"CupRound"> | string
+    bracketSlot?: StringNullableFilter<"CupRound"> | string | null
     status?: StringFilter<"CupRound"> | string
     scheduledAt?: DateTimeNullableFilter<"CupRound"> | Date | string | null
     createdAt?: DateTimeFilter<"CupRound"> | Date | string
@@ -158216,12 +160155,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
@@ -158250,11 +160192,14 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
@@ -158347,6 +160292,33 @@ export namespace Prisma {
     create: XOR<TeamCreateWithoutCupParticipantsInput, TeamUncheckedCreateWithoutCupParticipantsInput>
   }
 
+  export type CupPoolCreateWithoutParticipantsInput = {
+    id?: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    cup: CupCreateNestedOneWithoutPoolsInput
+  }
+
+  export type CupPoolUncheckedCreateWithoutParticipantsInput = {
+    id?: string
+    cupId: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CupPoolCreateOrConnectWithoutParticipantsInput = {
+    where: CupPoolWhereUniqueInput
+    create: XOR<CupPoolCreateWithoutParticipantsInput, CupPoolUncheckedCreateWithoutParticipantsInput>
+  }
+
   export type CupUpsertWithoutParticipantsInput = {
     update: XOR<CupUpdateWithoutParticipantsInput, CupUncheckedUpdateWithoutParticipantsInput>
     create: XOR<CupCreateWithoutParticipantsInput, CupUncheckedCreateWithoutParticipantsInput>
@@ -158379,12 +160351,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
@@ -158413,11 +160388,14 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
@@ -158511,6 +160489,242 @@ export namespace Prisma {
     leagueInvitations?: LeagueInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
   }
 
+  export type CupPoolUpsertWithoutParticipantsInput = {
+    update: XOR<CupPoolUpdateWithoutParticipantsInput, CupPoolUncheckedUpdateWithoutParticipantsInput>
+    create: XOR<CupPoolCreateWithoutParticipantsInput, CupPoolUncheckedCreateWithoutParticipantsInput>
+    where?: CupPoolWhereInput
+  }
+
+  export type CupPoolUpdateToOneWithWhereWithoutParticipantsInput = {
+    where?: CupPoolWhereInput
+    data: XOR<CupPoolUpdateWithoutParticipantsInput, CupPoolUncheckedUpdateWithoutParticipantsInput>
+  }
+
+  export type CupPoolUpdateWithoutParticipantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cup?: CupUpdateOneRequiredWithoutPoolsNestedInput
+  }
+
+  export type CupPoolUncheckedUpdateWithoutParticipantsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupCreateWithoutPoolsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
+    tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
+    resurrectionMode?: boolean
+    tierBudgets?: string | null
+    rosterBudgetOverrides?: string | null
+    tierStartingPsp?: string | null
+    rosterStartingPspOverrides?: string | null
+    creator: UserCreateNestedOneWithoutCreatedCupsInput
+    participants?: CupParticipantCreateNestedManyWithoutCupInput
+    invitations?: CupInvitationCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+    rounds?: CupRoundCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateWithoutPoolsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    creatorId: string
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
+    tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
+    resurrectionMode?: boolean
+    tierBudgets?: string | null
+    rosterBudgetOverrides?: string | null
+    tierStartingPsp?: string | null
+    rosterStartingPspOverrides?: string | null
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+    rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupCreateOrConnectWithoutPoolsInput = {
+    where: CupWhereUniqueInput
+    create: XOR<CupCreateWithoutPoolsInput, CupUncheckedCreateWithoutPoolsInput>
+  }
+
+  export type CupParticipantCreateWithoutPoolInput = {
+    id?: string
+    createdAt?: Date | string
+    rosterSnapshot?: string | null
+    pspPoolGranted?: number
+    cup: CupCreateNestedOneWithoutParticipantsInput
+    team: TeamCreateNestedOneWithoutCupParticipantsInput
+  }
+
+  export type CupParticipantUncheckedCreateWithoutPoolInput = {
+    id?: string
+    cupId: string
+    teamId: string
+    createdAt?: Date | string
+    rosterSnapshot?: string | null
+    pspPoolGranted?: number
+  }
+
+  export type CupParticipantCreateOrConnectWithoutPoolInput = {
+    where: CupParticipantWhereUniqueInput
+    create: XOR<CupParticipantCreateWithoutPoolInput, CupParticipantUncheckedCreateWithoutPoolInput>
+  }
+
+  export type CupParticipantCreateManyPoolInputEnvelope = {
+    data: CupParticipantCreateManyPoolInput | CupParticipantCreateManyPoolInput[]
+  }
+
+  export type CupUpsertWithoutPoolsInput = {
+    update: XOR<CupUpdateWithoutPoolsInput, CupUncheckedUpdateWithoutPoolsInput>
+    create: XOR<CupCreateWithoutPoolsInput, CupUncheckedCreateWithoutPoolsInput>
+    where?: CupWhereInput
+  }
+
+  export type CupUpdateToOneWithWhereWithoutPoolsInput = {
+    where?: CupWhereInput
+    data: XOR<CupUpdateWithoutPoolsInput, CupUncheckedUpdateWithoutPoolsInput>
+  }
+
+  export type CupUpdateWithoutPoolsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
+    tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    invitations?: CupInvitationUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+    rounds?: CupRoundUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateWithoutPoolsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
+    tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+    rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupParticipantUpsertWithWhereUniqueWithoutPoolInput = {
+    where: CupParticipantWhereUniqueInput
+    update: XOR<CupParticipantUpdateWithoutPoolInput, CupParticipantUncheckedUpdateWithoutPoolInput>
+    create: XOR<CupParticipantCreateWithoutPoolInput, CupParticipantUncheckedCreateWithoutPoolInput>
+  }
+
+  export type CupParticipantUpdateWithWhereUniqueWithoutPoolInput = {
+    where: CupParticipantWhereUniqueInput
+    data: XOR<CupParticipantUpdateWithoutPoolInput, CupParticipantUncheckedUpdateWithoutPoolInput>
+  }
+
+  export type CupParticipantUpdateManyWithWhereWithoutPoolInput = {
+    where: CupParticipantScalarWhereInput
+    data: XOR<CupParticipantUpdateManyMutationInput, CupParticipantUncheckedUpdateManyWithoutPoolInput>
+  }
+
   export type CupCreateWithoutRoundsInput = {
     id?: string
     name: string
@@ -158532,6 +160746,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -158539,6 +160755,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
@@ -158566,12 +160783,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
@@ -158649,6 +160869,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -158656,6 +160878,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
@@ -158683,12 +160906,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
@@ -158715,6 +160941,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -158728,6 +160956,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -159075,6 +161305,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -159088,6 +161320,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -160230,6 +162464,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -160237,6 +162473,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
@@ -160264,12 +162501,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
@@ -160717,6 +162957,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -160724,6 +162966,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
@@ -160751,12 +162994,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
@@ -163196,6 +165442,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -163203,6 +165451,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
@@ -163230,12 +165479,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
@@ -163649,6 +165901,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -163656,6 +165910,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
@@ -163683,12 +165938,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
@@ -164157,6 +166415,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -164164,6 +166424,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
@@ -164191,12 +166452,15 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
@@ -164443,6 +166707,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -164450,6 +166716,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
@@ -164477,12 +166744,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
@@ -175042,6 +177312,8 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
     resurrectionMode?: boolean
     tierBudgets?: string | null
     rosterBudgetOverrides?: string | null
@@ -175691,12 +177963,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
@@ -175724,12 +177999,15 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
@@ -175757,6 +178035,8 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
     tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
@@ -177060,6 +179340,7 @@ export namespace Prisma {
     createdAt?: Date | string
     rosterSnapshot?: string | null
     pspPoolGranted?: number
+    poolId?: string | null
   }
 
   export type CupInvitationCreateManyInviteeTeamInput = {
@@ -177361,6 +179642,7 @@ export namespace Prisma {
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
     cup?: CupUpdateOneRequiredWithoutParticipantsNestedInput
+    pool?: CupPoolUpdateOneWithoutParticipantsNestedInput
   }
 
   export type CupParticipantUncheckedUpdateWithoutTeamInput = {
@@ -177369,6 +179651,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CupParticipantUncheckedUpdateManyWithoutTeamInput = {
@@ -177377,6 +179660,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CupInvitationUpdateWithoutInviteeTeamInput = {
@@ -178156,6 +180440,17 @@ export namespace Prisma {
     createdAt?: Date | string
     rosterSnapshot?: string | null
     pspPoolGranted?: number
+    poolId?: string | null
+  }
+
+  export type CupPoolCreateManyCupInput = {
+    id?: string
+    name: string
+    order?: number
+    color?: string | null
+    qualifiesForPlayoffs?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type CupInvitationCreateManyCupInput = {
@@ -178205,6 +180500,8 @@ export namespace Prisma {
     roundNumber: number
     name?: string | null
     system?: string
+    kind?: string
+    bracketSlot?: string | null
     status?: string
     scheduledAt?: Date | string | null
     createdAt?: Date | string
@@ -178232,6 +180529,7 @@ export namespace Prisma {
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
     team?: TeamUpdateOneRequiredWithoutCupParticipantsNestedInput
+    pool?: CupPoolUpdateOneWithoutParticipantsNestedInput
   }
 
   export type CupParticipantUncheckedUpdateWithoutCupInput = {
@@ -178240,6 +180538,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CupParticipantUncheckedUpdateManyWithoutCupInput = {
@@ -178248,6 +180547,39 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
     pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    poolId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type CupPoolUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUpdateManyWithoutPoolNestedInput
+  }
+
+  export type CupPoolUncheckedUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: CupParticipantUncheckedUpdateManyWithoutPoolNestedInput
+  }
+
+  export type CupPoolUncheckedUpdateManyWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+    color?: NullableStringFieldUpdateOperationsInput | string | null
+    qualifiesForPlayoffs?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CupInvitationUpdateWithoutCupInput = {
@@ -178383,6 +180715,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -178395,6 +180729,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -178407,6 +180743,8 @@ export namespace Prisma {
     roundNumber?: IntFieldUpdateOperationsInput | number
     name?: NullableStringFieldUpdateOperationsInput | string | null
     system?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    bracketSlot?: NullableStringFieldUpdateOperationsInput | string | null
     status?: StringFieldUpdateOperationsInput | string
     scheduledAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -178456,6 +180794,42 @@ export namespace Prisma {
     sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CupParticipantCreateManyPoolInput = {
+    id?: string
+    cupId: string
+    teamId: string
+    createdAt?: Date | string
+    rosterSnapshot?: string | null
+    pspPoolGranted?: number
+  }
+
+  export type CupParticipantUpdateWithoutPoolInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    pspPoolGranted?: IntFieldUpdateOperationsInput | number
+    cup?: CupUpdateOneRequiredWithoutParticipantsNestedInput
+    team?: TeamUpdateOneRequiredWithoutCupParticipantsNestedInput
+  }
+
+  export type CupParticipantUncheckedUpdateWithoutPoolInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    pspPoolGranted?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type CupParticipantUncheckedUpdateManyWithoutPoolInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rosterSnapshot?: NullableStringFieldUpdateOperationsInput | string | null
+    pspPoolGranted?: IntFieldUpdateOperationsInput | number
   }
 
   export type CupPairingCreateManyRoundInput = {

@@ -983,6 +983,17 @@ model Cup {
   foulCasualtyPoints  Int @default(2) // Points par sortie sur agression
   passPoints          Int @default(2) // Points par passe réussie
 
+  /// Nombre d'équipes qualifiées pour les playoffs de la coupe : 0 (aucun
+  /// play-off, la coupe se joue au classement), 2 (finale), 4 (demi-finales)
+  /// ou 8 (quarts). Miroir de `LeagueSeason.playoffSize`.
+  playoffSize Int @default(0)
+
+  /// null = coupe antérieure à la colonne (bracket VISIBLE), false = bracket
+  /// généré mais pas encore publié, true = publié. Booléen NULLABLE à trois
+  /// états : `db push` pose `null` sur l'existant, donc aucun bracket déjà
+  /// consulté ne disparaît (cf. `LeagueSeason.playoffsPublished`).
+  playoffsPublished Boolean?
+
   /// Critères de départage du classement, dans l'ordre de priorité :
   /// chaîne JSON de slugs (`["points","cas_for","td_diff"]`, cf.
   /// `services/cup-standings-order`). Miroir de `League.tieBreakRules`.
@@ -1033,6 +1044,8 @@ model Cup {
   localMatches LocalMatch[]
   /// Rondes d'appariement (ronde suisse).
   rounds       CupRound[]
+  /// Poules optionnelles. Vide = coupe à poule unique.
+  pools        CupPool[]
   /// Documents officiels (reglement, feuille de route, affiche...).
   documents    CompetitionDocument[]
 
@@ -1061,9 +1074,44 @@ model CupParticipant {
   /// Pool de PSP accordé à cette équipe pour cette coupe (trace / affichage).
   pspPoolGranted Int @default(0)
 
+  /// Poule d'appartenance. `SetNull` : supprimer une poule désaffecte ses
+  /// équipes sans les retirer de la coupe. null = coupe sans poules, ou
+  /// équipe pas encore affectée.
+  pool   CupPool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId String?
+
   @@unique([cupId, teamId])
   @@index([cupId])
   @@index([teamId])
+  @@index([cupId, poolId])
+}
+
+/// Poule d'une coupe : un groupe d'inscrits qui s'affrontent entre eux.
+///
+/// Les rondes restent COMMUNES à toute la coupe (une ronde N pour tout le
+/// monde, cf. `@@unique([cupId, roundNumber])`) ; c'est l'APPARIEMENT qui se
+/// fait poule par poule. La poule d'une rencontre se relit donc par ses
+/// équipes, sans colonne dédiée — côté ligue, `LeagueRound.poolId` existe
+/// mais n'a jamais été écrit par une ligne de code.
+///
+/// `qualifiesForPlayoffs` dit combien d'équipes de la poule vont au bracket
+/// (top-N de la poule). La somme des quotas doit valoir `Cup.playoffSize`.
+model CupPool {
+  id                   String   @id @default(cuid())
+  cup                  Cup      @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId                String
+  name                 String
+  order                Int      @default(0)
+  /// Couleur de présentation UI (hex `#RRGGBB`), optionnelle.
+  color                String?
+  qualifiesForPlayoffs Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  participants CupParticipant[]
+
+  @@unique([cupId, name])
+  @@index([cupId, order])
 }
 
 /// Ronde d'une coupe (appariement « ronde suisse »). Une coupe enchaîne des
@@ -1083,6 +1131,14 @@ model CupRound {
   /// Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
   /// aucun backfill n'est nécessaire.
   system      String    @default("swiss")
+  /// "regular" (phase de classement) ou "playoff" (bracket d'élimination).
+  /// Défaut "regular" : une ronde antérieure reste une ronde de classement.
+  kind        String    @default("regular")
+  /// Slot du bracket pour une ronde de play-off : "qf1".."qf4", "sf1",
+  /// "sf2", "final". Null pour une ronde de classement. UN slot = UNE ronde
+  /// = UNE rencontre, comme côté ligue : le slot se retrouve par la ronde,
+  /// sans propager le mapping jusqu'à la rencontre.
+  bracketSlot String?
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
   scheduledAt DateTime?
@@ -1093,6 +1149,7 @@ model CupRound {
 
   @@unique([cupId, roundNumber])
   @@index([cupId])
+  @@index([cupId, kind])
 }
 
 /// Rencontre d'une ronde de coupe. `awayTeamId` null = équipe EXEMPTÉE

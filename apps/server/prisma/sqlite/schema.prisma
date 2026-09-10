@@ -777,6 +777,10 @@ model Cup {
   // chaîne JSON de slugs, null = ordre historique.
   tieBreakRules String?
 
+  // Playoffs de coupe (miroir SQLite de schema.prisma).
+  playoffSize       Int      @default(0)
+  playoffsPublished Boolean?
+
   // Règles avancées de composition (miroir SQLite de schema.prisma). Les
   // colonnes JSON du schéma Postgres sont stockées en String? sérialisée
   // ici (SQLite n'a pas de JSONB) → parser tolérant côté cup-rules.ts.
@@ -788,6 +792,7 @@ model Cup {
 
   // Relations
   participants CupParticipant[]
+  pools        CupPool[]
   invitations  CupInvitation[]
   localMatches LocalMatch[]
   /// Rondes d'appariement (ronde suisse).
@@ -814,7 +819,12 @@ model CupParticipant {
   rosterSnapshot String?
   pspPoolGranted Int     @default(0)
 
+  // Poule d'appartenance (miroir SQLite de schema.prisma).
+  pool   CupPool? @relation(fields: [poolId], references: [id], onDelete: SetNull)
+  poolId String?
+
   @@unique([cupId, teamId])
+  @@index([cupId, poolId])
   @@index([cupId])
   @@index([teamId])
 }
@@ -823,6 +833,24 @@ model CupParticipant {
 /// rondes numérotées ; chaque ronde apparie les équipes inscrites selon le
 /// classement courant : un adversaire au score proche, jamais le même deux
 /// fois. Générée par `services/cup-rounds` (moteur pur `swiss-pairing`).
+// Poule d'une coupe (miroir SQLite de schema.prisma).
+model CupPool {
+  id                   String   @id @default(cuid())
+  cup                  Cup      @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId                String
+  name                 String
+  order                Int      @default(0)
+  color                String?
+  qualifiesForPlayoffs Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  participants CupParticipant[]
+
+  @@unique([cupId, name])
+  @@index([cupId, order])
+}
+
 model CupRound {
   id          String    @id @default(cuid())
   cup         Cup       @relation(fields: [cupId], references: [id], onDelete: Cascade)
@@ -836,6 +864,9 @@ model CupRound {
   /// Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
   /// aucun backfill n'est nécessaire.
   system      String    @default("swiss")
+  /// Bracket de play-off (miroir SQLite de schema.prisma).
+  kind        String    @default("regular")
+  bracketSlot String?
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
   scheduledAt DateTime?
@@ -846,6 +877,7 @@ model CupRound {
 
   @@unique([cupId, roundNumber])
   @@index([cupId])
+  @@index([cupId, kind])
 }
 
 /// Rencontre d'une ronde de coupe. `awayTeamId` null = équipe EXEMPTÉE
