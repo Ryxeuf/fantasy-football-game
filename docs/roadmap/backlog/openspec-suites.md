@@ -83,20 +83,24 @@ Source : `add-position-pages` (archivé 2026-09-02).
 
 ## Coupes gérées comme les ligues
 
-Source : `cups-managed-like-leagues` (archivé 2026-09-10).
+Sources : `cups-managed-like-leagues` et `cup-pools-and-playoffs`
+(tous deux archivés 2026-09-10).
 La feuille de match, les trois systèmes d'appariement, les critères de
-classement et l'édition d'une coupe sont livrés. La parité UI, elle, n'est
-pas complète — 26 000 lignes d'écrans de ligue contre 4 700 de coupe au
-départ. Restent :
+classement, l'édition d'une coupe, les poules et les play-offs sont livrés.
+La parité UI, elle, n'est pas complète — 26 000 lignes d'écrans de ligue
+contre 4 700 de coupe au départ. Restent :
 
 - ~~**Poules de coupe**~~ — livré par `cup-pools-and-playoffs` (2026-09-10) :
   `CupPool`, appariement par groupe, classement par poule,
   `CupPoolsManagerPanel`.
 - ~~**Playoffs de coupe**~~ — livré par `cup-pools-and-playoffs` (2026-09-10) :
   bracket seedé (moteur partagé avec la ligue), publication différée, seeds
-  éditables, `CupPlayoffBracketView`. Reste ouvert côté coupe : le
-  **calendrier groupé par poule** et la **poule du coach en premier**, que la
-  ligue a et que `cups/[id]` n'a pas encore.
+  éditables, `CupPlayoffBracketView`.
+- **Calendrier de coupe groupé par poule, poule du coach en premier**
+  (`cup-pools-and-playoffs`) : les poules existent désormais, mais
+  `CupRoundsView` liste encore les rencontres à plat. La ligue groupe les
+  siennes par poule et remonte celle du coach (`SeasonCalendar`,
+  `pool-order.ts`) — la logique d'ordre est déjà un module pur réutilisable.
 - **Export PDF d'une ronde** (`MatchdayExport` côté ligue).
 - **Relance des coachs d'une ronde** (`league-round-followup` côté ligue).
 - **Page de récapitulatif et palmarès d'une coupe** : les championnats de
