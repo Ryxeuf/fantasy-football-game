@@ -10,6 +10,7 @@ import {
   notificationIcon,
   safeInternalUrl,
 } from "./format";
+import { dynamicRoute } from "../../lib/typed-route";
 
 /**
  * Page « Mes notifications ».
@@ -207,7 +208,7 @@ export default function NotificationsPage() {
                   <p className="text-sm text-gray-700 mt-1 break-words">{n.body}</p>
                   {href ? (
                     <Link
-                      href={href}
+                      href={dynamicRoute(href)}
                       data-testid={`notification-link-${n.id}`}
                       className="inline-flex items-center gap-1 mt-2 text-sm font-medium text-nuffle-bronze hover:text-nuffle-gold hover:underline"
                     >

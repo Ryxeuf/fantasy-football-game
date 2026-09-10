@@ -57,6 +57,7 @@ import {
   competitionHref,
   isCupCompetition,
 } from "../../../../lib/competition-links";
+import { dynamicRoute } from "../../../../lib/typed-route";
 
 // Feuille de match v2 (ligue physique) — saisie mobile-first.
 // Sections RÉSUMÉ / AVANT-MATCH / AU COURS DU MATCH / FIN DU MATCH.
@@ -760,7 +761,7 @@ export default function MatchSheetPage() {
       {/* Retour vers la page de la ligue */}
       {data.leagueId && (
         <Link
-          href={competitionHref(data.competitionKind, data.leagueId)}
+          href={dynamicRoute(competitionHref(data.competitionKind, data.leagueId))}
           className="inline-block text-sm text-nuffle-bronze hover:underline"
           data-testid="back-to-league"
         >

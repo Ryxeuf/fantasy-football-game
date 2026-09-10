@@ -565,6 +565,8 @@ exports.Prisma.CupScalarFieldEnum = {
   foulCasualtyPoints: 'foulCasualtyPoints',
   passPoints: 'passPoints',
   tieBreakRules: 'tieBreakRules',
+  playoffSize: 'playoffSize',
+  playoffsPublished: 'playoffsPublished',
   resurrectionMode: 'resurrectionMode',
   tierBudgets: 'tierBudgets',
   rosterBudgetOverrides: 'rosterBudgetOverrides',
@@ -578,7 +580,19 @@ exports.Prisma.CupParticipantScalarFieldEnum = {
   teamId: 'teamId',
   createdAt: 'createdAt',
   rosterSnapshot: 'rosterSnapshot',
-  pspPoolGranted: 'pspPoolGranted'
+  pspPoolGranted: 'pspPoolGranted',
+  poolId: 'poolId'
+};
+
+exports.Prisma.CupPoolScalarFieldEnum = {
+  id: 'id',
+  cupId: 'cupId',
+  name: 'name',
+  order: 'order',
+  color: 'color',
+  qualifiesForPlayoffs: 'qualifiesForPlayoffs',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.CupRoundScalarFieldEnum = {
@@ -587,6 +601,8 @@ exports.Prisma.CupRoundScalarFieldEnum = {
   roundNumber: 'roundNumber',
   name: 'name',
   system: 'system',
+  kind: 'kind',
+  bracketSlot: 'bracketSlot',
   status: 'status',
   scheduledAt: 'scheduledAt',
   createdAt: 'createdAt',
@@ -1496,6 +1512,7 @@ exports.Prisma.ModelName = {
   RulesetConfig: 'RulesetConfig',
   Cup: 'Cup',
   CupParticipant: 'CupParticipant',
+  CupPool: 'CupPool',
   CupRound: 'CupRound',
   CupPairing: 'CupPairing',
   MatchQueue: 'MatchQueue',

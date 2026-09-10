@@ -46,10 +46,20 @@ import {
   type CupRegistrationErrorCode,
 } from "../services/cup-registration";
 import { cupByesByTeamId, listCupRounds } from "../services/cup-rounds";
+import { visibleCupRounds } from "../services/cup-playoffs";
 import {
   normalizeCupTieBreakRules,
   parseCupTieBreakRules,
 } from "../services/cup-standings-order";
+import { groupCupStandingsByPool } from "../services/cup-pool";
+
+/** Poule telle que `GET /cup/:id` la charge (ordre + quota). */
+interface CupPoolRow {
+  id: string;
+  name: string;
+  order: number;
+  qualifiesForPlayoffs: number;
+}
 
 /** Mappe un code d'erreur d'inscription coupe vers un status HTTP. */
 function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
@@ -492,6 +502,16 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
             },
           },
         },
+        pools: {
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            name: true,
+            order: true,
+            color: true,
+            qualifiesForPlayoffs: true,
+          },
+        },
         localMatches: {
           where: { status: "completed" },
           include: {
@@ -595,13 +615,23 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
     // Rondes suisses (vide pour une coupe sans ronde) : les exempts valent
     // les points d'une victoire au classement.
-    const rounds = await listCupRounds(cup.id);
+    const allRounds = await listCupRounds(cup.id);
+
+    // Le bracket non publié ne doit fuiter par AUCUNE lecture — le classement,
+    // lui, reste calculé sur TOUTES les rondes (cf. `visibleCupRounds`).
+    const rounds = visibleCupRounds(allRounds, {
+      isCommissioner:
+        cup.creatorId === req.user!.id || hasRole(req.user!.roles, "admin"),
+      playoffsPublished:
+        (cup as unknown as { playoffsPublished?: boolean | null })
+          .playoffsPublished ?? null,
+    });
 
     // Calculer le classement de la coupe à partir des matchs terminés
     const standingsResult = computeCupStandings(
       cup as unknown as CupWithParticipantsAndScoring,
       (cup.localMatches || []) as unknown as LocalMatchWithRelations[],
-      { byesByTeamId: cupByesByTeamId(rounds) },
+      { byesByTeamId: cupByesByTeamId(allRounds) },
     );
 
     // Classements individuels (par joueur) — équivalent leaderboards de ligue,
@@ -630,6 +660,13 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         roster: p.team.roster,
         ruleset: p.team.ruleset,
         owner: p.team.owner,
+        /**
+         * Identifiant de l'INSCRIPTION (et non de l'équipe) : c'est lui que
+         * prend l'affectation en poule. Champ ajouté — un client antérieur
+         * l'ignore.
+         */
+        participantId: p.id,
+        poolId: p.poolId ?? null,
       })),
       createdAt: cup.createdAt,
       updatedAt: cup.updatedAt,
@@ -643,6 +680,29 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       ),
       rulesConfig: formatCupRules(cup as unknown as CupRulesConfig),
       standings: standingsResult.teamStats,
+      /**
+       * Classements par poule. Vide quand la coupe n'a pas de poules —
+       * l'écran retombe alors sur le seul classement général.
+       */
+      poolStandings: groupCupStandingsByPool(
+        standingsResult.teamStats,
+        (cup as unknown as { pools?: CupPoolRow[] }).pools ?? [],
+        new Map(
+          (
+            (cup as unknown as {
+              participants: Array<{ poolId?: string | null; team: { id: string } }>;
+            }).participants ?? []
+          ).map((p) => [p.team.id, p.poolId ?? null]),
+        ),
+      ),
+      playoffSize: (cup as unknown as { playoffSize?: number }).playoffSize ?? 0,
+      /**
+       * Bracket publié. `null` = coupe antérieure à la colonne (donc
+       * VISIBLE) ; `false` = généré mais gardé pour le commissaire.
+       */
+      playoffsPublished:
+        (cup as unknown as { playoffsPublished?: boolean | null })
+          .playoffsPublished ?? null,
       actionAwards: standingsResult.awards,
       playerLeaderboards,
       playerLeaderboardCategories: CUP_LEADERBOARD_CATEGORIES,
@@ -987,6 +1047,20 @@ router.patch(
       if (body.tieBreakRules !== undefined) {
         data.tieBreakRules = serializeTieBreakRules(body.tieBreakRules);
       }
+      if (body.playoffSize !== undefined) {
+        // Le bracket est SEEDÉ à sa génération : en changer la taille après
+        // coup laisserait des rondes dont le nombre ne correspond plus.
+        const bracketRounds = await prisma.cupRound.count({
+          where: { cupId, kind: "playoff" },
+        });
+        if (bracketRounds > 0) {
+          return res.status(409).json({
+            error:
+              "Bracket déjà généré : sa taille n'est plus modifiable",
+          });
+        }
+        data.playoffSize = body.playoffSize;
+      }
       if (Object.keys(data).length === 0) {
         return res.status(400).json({ error: "Aucune modification fournie" });
       }
@@ -1009,6 +1083,7 @@ router.patch(
           foulCasualtyPoints: true,
           passPoints: true,
           tieBreakRules: true,
+          playoffSize: true,
         },
       });
 

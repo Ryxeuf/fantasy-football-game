@@ -5,6 +5,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { formatPlannedDate } from "./pairing-status";
 import { selectUpcomingMatches, NEXT_MATCHES_COUNT } from "./next-matches";
 import type { LeagueRoundDetail } from "./types";
+import { dynamicRoute } from "../../lib/typed-route";
 
 /**
  * « Vos prochains matchs » — les 3 prochaines rencontres non jouées du
@@ -92,7 +93,7 @@ export function NextMatchesPanel({
                   {planned ?? t.leagues.nextMatchesNoDate}
                 </span>
                 <Link
-                  href={`/leagues/pairings/${pairing.id}/sheet`}
+                  href={dynamicRoute(`/leagues/pairings/${pairing.id}/sheet`)}
                   data-testid={`next-match-sheet-${pairing.id}`}
                   className="rounded border border-nuffle-gold px-2 py-1 text-xs font-medium text-nuffle-anthracite hover:bg-nuffle-gold/10"
                 >

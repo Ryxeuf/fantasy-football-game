@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiRequest } from "../../../lib/api-client";
+import { dynamicRoute } from "../../../lib/typed-route";
 
 // Lot H — Page "Matchs a valider" du commissaire (cible du deep-link
 // de la notification push). Liste les feuilles `both_submitted`.
@@ -109,7 +110,7 @@ export default function PendingValidationsPage() {
                 </p>
               </div>
               <Link
-                href={`/leagues/pairings/${m.pairingId}/sheet`}
+                href={dynamicRoute(`/leagues/pairings/${m.pairingId}/sheet`)}
                 className="rounded bg-amber-600 px-3 py-1 text-sm font-medium text-white"
                 data-testid={`validate-link-${m.pairingId}`}
               >

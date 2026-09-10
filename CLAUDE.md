@@ -781,6 +781,58 @@ Piège de nommage : `LeagueMatchSheet` GARDE son nom malgré son rôle élargi.
 `db push` traite un renommage de modèle comme DROP + CREATE — le renommer
 perdrait toutes les feuilles de prod.
 
+### Le placeholder d'un bracket, c'est `home === away`
+
+`CupPairing.homeTeamId` / `LeaguePairing.homeParticipantId` sont NOT NULL : une
+finale créée avant que la seconde demie soit jouée n'a AUCUN moyen d'écrire
+« inconnu ». La convention (ligue puis coupe) est donc que le premier qualifié
+occupe les DEUX côtés, le second l'écrasant à son arrivée — `placeholder` est
+DÉRIVÉ à la lecture, sans colonne dédiée. `awayTeamId: null` n'était pas
+disponible : il veut déjà dire EXEMPT (`status: "bye"`).
+
+Corollaire côté écran : toute relecture des têtes de série courantes doit
+compter un placeholder UNE fois (`currentSeeds`), sinon l'éditeur propose un
+bracket où deux têtes sont la même équipe.
+
+Le moteur de bracket lui-même est UNIQUE pour les deux compétitions
+(`services/bracket-seeding` — croisement des têtes, carte d'avancement,
+sélection depuis les quotas de poule). Il ne manipule que des identifiants
+opaques : la coupe lui passe des `teamId` là où la ligue passe des
+`participantId`. `league-playoffs` l'importe ET le ré-exporte, donc l'extraction
+n'a touché aucun appelant.
+
+### Gater un contenu, c'est gater TOUTES ses lectures
+
+Le bracket non publié était masqué par `getCupBracket`… et annoncé par le
+CALENDRIER (`GET /cup/:id`), qui sert lui aussi les rondes. Un flag de
+publication ne vaut que si chaque lecture qui expose l'entité le consulte —
+c'est la même règle que pour les rounds `kind=playoff` d'une ligue.
+
+L'exception qui va avec : un CALCUL n'est jamais gaté. `computeCupStandings`
+reste assis sur TOUTES les rondes (`cupByesByTeamId(allRounds)`) — masquer une
+ronde ne doit pas changer les points d'un exempt. D'où deux listes distinctes
+dans le même handler, et un helper PUR (`visibleCupRounds`) pour que la règle
+soit testable sans Prisma.
+
+### Poules : rondes COMMUNES, appariement par groupe
+
+Une ronde reste une ronde de la compétition (contrainte unique
+`(cupId, roundNumber)`) ; c'est l'APPARIEMENT qui se fait poule par poule,
+chaque groupe passant par le moteur avec son classement et son historique. Une
+ronde par poule aurait dupliqué les numéros et obligé chaque lecture
+(calendrier, suppression de la dernière ronde, garde-fou « ronde précédente
+close ») à raisonner par poule.
+
+Conséquence : une ronde porte PLUSIEURS exempts (un par groupe impair) — d'où
+`CupRoundPlan.byes` en LISTE. Et le classement par poule est une PROJECTION du
+classement général (`groupCupStandingsByPool`), jamais un second tri : deux
+tris auraient divergé au premier critère de départage oublié.
+
+La fenêtre d'édition se ferme sur la PREMIÈRE RONDE, pas sur le statut (une
+coupe passe `en_cours` à la validation, bien avant) — sauf le QUOTA de
+qualifiés, qui ne gouverne que le seeding et reste corrigeable. Doc :
+[`docs/cup-pools-and-playoffs.md`](./docs/cup-pools-and-playoffs.md).
+
 ### Un tirage au sort, c'est un appariement suisse sur un ordre mélangé
 
 `generateSwissRound` apparie DANS L'ORDRE qu'on lui donne, en évitant les
@@ -1257,6 +1309,16 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `ALLOWED_TEAMS` → `Roster`, budget par defaut `Roster.budget`. Voir
   [`docs/audit-statique-vs-bdd-2026-08-27.md`](./docs/audit-statique-vs-bdd-2026-08-27.md)
   et [`docs/lot6-modele-de-donnees-2026-08-27.md`](./docs/lot6-modele-de-donnees-2026-08-27.md).
+- **2026-09-10** : **Poules et play-offs de coupe** — suite directe du change
+  ci-dessous. `CupPool` + appariement par groupe (rondes communes, plusieurs
+  exempts) et classement par poule projeté ; bracket d'élimination directe sur
+  un moteur PARTAGÉ avec la ligue (`services/bracket-seeding`, extrait de
+  `league-playoffs`), création paresseuse à placeholder `home === away`,
+  publication différée gatant les DEUX lectures (bracket + calendrier). Au
+  passage, `typecheck` gate enfin la CI (le `|| echo` avalait 8 erreurs). Change
+  OpenSpec `cup-pools-and-playoffs`, doc
+  [`docs/cup-pools-and-playoffs.md`](./docs/cup-pools-and-playoffs.md), récit
+  [`docs/roadmap/sessions/2026-09-10-cup-pools-and-playoffs.md`](./docs/roadmap/sessions/2026-09-10-cup-pools-and-playoffs.md).
 - **2026-09-10** : **Les coupes se gèrent comme les ligues** — feuille de
   match commune (`LeagueMatchSheet` polymorphe ligue XOR coupe, jeu de règles
   par compétition : une coupe n'écrit ni PSP, ni blessure, ni or, ni

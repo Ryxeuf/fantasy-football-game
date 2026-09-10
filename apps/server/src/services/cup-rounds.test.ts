@@ -106,7 +106,13 @@ function cupFull(teamIds: string[], rounds: unknown[] = [], localMatches: unknow
     blockCasualtyPoints: 3,
     foulCasualtyPoints: 2,
     passPoints: 2,
-    participants: teamIds.map((id) => ({ team: { id, name: `Team ${id}`, roster: "orc", logoUrl: null } })),
+    // `poolId: null` = coupe sans poules : l'appariement porte sur toute la
+    // coupe, comportement historique.
+    participants: teamIds.map((id) => ({
+      poolId: null,
+      team: { id, name: `Team ${id}`, roster: "orc", logoUrl: null },
+    })),
+    pools: [],
     localMatches,
     rounds,
   };

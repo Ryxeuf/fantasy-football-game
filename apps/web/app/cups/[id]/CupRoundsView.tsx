@@ -19,6 +19,7 @@ import {
   type CupRoundSystem,
   type ManualPairingDraft,
 } from "./manual-round";
+import { dynamicRoute } from "../../lib/typed-route";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -58,6 +59,10 @@ export interface CupRoundView {
   roundNumber: number;
   name: string | null;
   system: string;
+  /** `regular` | `playoff`. Optionnel : API antérieure au bracket. */
+  kind?: string;
+  /** Slot de bracket (`qf1`, `sf2`, `final`). `null` hors play-off. */
+  bracketSlot?: string | null;
   status: string;
   scheduledAt: string | null;
   createdAt: string;
@@ -225,12 +230,17 @@ export default function CupRoundsView({
       : value === "manual"
         ? t.cups.roundSystemManualHint
         : t.cups.roundSystemSwissHint;
+  // `bracket` n'est pas un mode d'appariement PROPOSÉ : il est posé par le
+  // lancement des play-offs. Sans son libellé, une ronde de bracket
+  // s'annonçait « Suisse » (le repli du ternaire).
   const systemBadge = (value: string): string =>
     value === "random"
       ? t.cups.roundSystemBadgeRandom
       : value === "manual"
         ? t.cups.roundSystemBadgeManual
-        : t.cups.roundSystemBadgeSwiss;
+        : value === "bracket"
+          ? t.cups.roundSystemBadgeBracket
+          : t.cups.roundSystemBadgeSwiss;
 
   const roundStatusLabels: Record<string, string> = {
     pending: t.cups.swissRoundStatusPending,
@@ -520,7 +530,7 @@ function CupPairingCard({
         <>
           {canOpenSheet ? (
             <Link
-              href={matchSheetHref("cup", pairing.id)}
+              href={dynamicRoute(matchSheetHref("cup", pairing.id))}
               data-testid={`cup-pairing-sheet-${pairing.id}`}
               title={t.cups.sheetOpenHint}
               className="text-xs px-2 py-1 rounded bg-nuffle-anthracite text-white font-medium hover:bg-nuffle-anthracite/90"

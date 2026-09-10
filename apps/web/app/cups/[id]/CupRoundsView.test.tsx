@@ -238,6 +238,22 @@ describe("CupRoundsView", () => {
     expect(screen.getByTestId("cup-pairing-cancel-p2")).toBeTruthy();
   });
 
+  it("annonce une ronde de bracket comme un play-off, pas comme une suisse", () => {
+    renderView({
+      rounds: [
+        round([PLAYED], {
+          id: "r-final",
+          system: "bracket",
+          kind: "playoff",
+          bracketSlot: "final",
+        }),
+      ],
+    });
+    expect(
+      screen.getByTestId("cup-round-system-badge-r-final").textContent,
+    ).toBe("Play-off");
+  });
+
   it("invite le commissaire à valider la coupe avant la première ronde", () => {
     renderView({ rounds: [], isCommissioner: true, cupStatus: "ouverte" });
     expect(screen.getByTestId("cup-rounds-empty").textContent).toContain("Validez la coupe");

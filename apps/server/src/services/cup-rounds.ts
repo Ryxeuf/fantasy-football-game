@@ -122,6 +122,14 @@ export interface CupRoundView {
   readonly roundNumber: number;
   readonly name: string | null;
   readonly system: string;
+  /**
+   * `regular` (phase de classement) ou `playoff` (bracket). Défaut de
+   * colonne : une ronde antérieure remonte donc `regular`, ce qui est
+   * exact — le bracket n'existait pas.
+   */
+  readonly kind: string;
+  /** Slot du bracket (`qf1`, `sf2`, `final`…). `null` hors play-off. */
+  readonly bracketSlot: string | null;
   readonly status: string;
   readonly scheduledAt: string | null;
   readonly createdAt: string;
@@ -181,6 +189,9 @@ interface RoundRow {
   roundNumber: number;
   name: string | null;
   system: string;
+  /** Colonnes à défaut/nullables : absentes d'une base non encore poussée. */
+  kind?: string | null;
+  bracketSlot?: string | null;
   status: string;
   scheduledAt: Date | null;
   createdAt: Date;
@@ -204,6 +215,8 @@ function toRoundView(round: RoundRow): CupRoundView {
     roundNumber: round.roundNumber,
     name: round.name,
     system: round.system,
+    kind: round.kind ?? "regular",
+    bracketSlot: round.bracketSlot ?? null,
     status: round.status,
     scheduledAt: round.scheduledAt ? round.scheduledAt.toISOString() : null,
     createdAt: round.createdAt.toISOString(),
@@ -292,6 +305,98 @@ function ensureCommissioner(
 }
 
 /**
+ * Une ronde prête à persister. Étend le résultat du moteur d'appariement sur
+ * UN point : avec des poules, il peut y avoir PLUSIEURS exempts — un par
+ * groupe à effectif impair — là où le moteur n'en connaît qu'un.
+ */
+export interface CupRoundPlan {
+  readonly pairings: ReadonlyArray<{
+    readonly home: string;
+    readonly away: string;
+    readonly table: number;
+  }>;
+  readonly byes: readonly string[];
+  readonly rematchForced: boolean;
+}
+
+/** Groupe d'appariement : une poule, ou toute la coupe si elle n'en a pas. */
+export interface CupPoolGroup {
+  readonly poolId: string | null;
+  /** Équipes du groupe, DANS L'ORDRE du classement courant. */
+  readonly teamIds: readonly string[];
+}
+
+/**
+ * PUR — découpe le classement en groupes d'appariement.
+ *
+ * Sans poule (ou tant qu'aucune équipe n'y est affectée), un seul groupe :
+ * toute la coupe, exactement comme avant. Sinon un groupe par poule, dans
+ * l'ordre des poules, chacun conservant l'ordre du classement — c'est lui que
+ * l'appariement suisse consomme.
+ *
+ * Les équipes SANS poule forment un dernier groupe : elles doivent jouer, et
+ * les laisser de côté serait les exclure en silence. Même parti pris que le
+ * calendrier de ligue, qui range les non-affectés dans une poule fictive.
+ */
+export function poolGroups(
+  pools: ReadonlyArray<{ id: string }>,
+  participants: ReadonlyArray<{ poolId: string | null; team: { id: string } }>,
+  ranked: readonly string[],
+): CupPoolGroup[] {
+  const poolByTeam = new Map<string, string | null>();
+  for (const p of participants) poolByTeam.set(p.team.id, p.poolId ?? null);
+  const anyAssigned = [...poolByTeam.values()].some((id) => id !== null);
+  if (pools.length === 0 || !anyAssigned) {
+    return [{ poolId: null, teamIds: ranked }];
+  }
+
+  const groups: CupPoolGroup[] = [];
+  for (const pool of pools) {
+    const teamIds = ranked.filter((id) => poolByTeam.get(id) === pool.id);
+    if (teamIds.length > 0) groups.push({ poolId: pool.id, teamIds });
+  }
+  const orphans = ranked.filter((id) => {
+    const poolId = poolByTeam.get(id) ?? null;
+    return poolId === null || !pools.some((p) => p.id === poolId);
+  });
+  if (orphans.length > 0) groups.push({ poolId: null, teamIds: orphans });
+  return groups;
+}
+
+/**
+ * PUR — fusionne les rondes des groupes en une seule. Les tables sont
+ * renumérotées en continu : un trou dans la numérotation ferait croire à une
+ * rencontre manquante.
+ */
+export function mergeGroupRounds(
+  results: ReadonlyArray<SwissRoundResult>,
+): CupRoundPlan {
+  const pairings = results
+    .flatMap((r) => r.pairings)
+    .map((p, index) => ({ home: p.home, away: p.away, table: index + 1 }));
+  return {
+    pairings,
+    byes: results
+      .map((r) => r.bye)
+      .filter((id): id is string => Boolean(id)),
+    rematchForced: results.some((r) => r.rematchForced),
+  };
+}
+
+/** Adapte un résultat de moteur (un seul exempt) au plan de ronde. */
+export function toCupRoundPlan(result: SwissRoundResult): CupRoundPlan {
+  return {
+    pairings: result.pairings.map((p) => ({
+      home: p.home,
+      away: p.away,
+      table: p.table,
+    })),
+    byes: result.bye ? [result.bye] : [],
+    rematchForced: result.rematchForced,
+  };
+}
+
+/**
  * Génère la ronde suivante d'une coupe. Trois systèmes (cf.
  * `CUP_ROUND_SYSTEMS`) : tirage au sort, ronde suisse, ou saisie manuelle.
  * Les trois partagent les MÊMES garde-fous — coupe en cours, deux inscrits
@@ -328,6 +433,7 @@ export async function generateCupRound(input: {
           team: { select: { id: true, name: true, roster: true, logoUrl: true } },
         },
       },
+      pools: { orderBy: { order: "asc" }, select: { id: true, name: true } },
       localMatches: {
         where: { status: "completed" },
         include: {
@@ -352,6 +458,8 @@ export async function generateCupRound(input: {
     | (CupWithParticipantsAndScoring & {
         localMatches: LocalMatchWithRelations[];
         rounds: RoundRow[];
+        pools: Array<{ id: string; name: string }>;
+        participants: Array<{ poolId: string | null; team: { id: string } }>;
       })
     | null;
   if (!cup) throw new CupRoundError("cup_not_found", "Coupe introuvable");
@@ -403,18 +511,33 @@ export async function generateCupRound(input: {
 
   const roundNumber = (lastRound?.roundNumber ?? 0) + 1;
   const history = { playedPairs, byes, homeCounts };
-  const result: SwissRoundResult =
+
+  // Poules : chaque groupe s'apparie SÉPARÉMENT — c'est toute la définition
+  // d'une poule. La ronde, elle, reste commune (`@@unique([cupId,
+  // roundNumber])`), ce qui garde un calendrier synchronisé et un seul
+  // numéro de ronde à afficher. Une saisie MANUELLE ne passe pas par là : le
+  // commissaire pose ce qu'il veut, y compris une rencontre inter-poules.
+  const groups = poolGroups(cup.pools ?? [], cup.participants, ranked);
+  const result: CupRoundPlan =
     system === "manual"
-      ? buildManualRound(input.pairings, teamIds)
-      : system === "random"
-        ? // Graine = coupe + numéro de ronde : le tirage est REJOUABLE (deux
-          // appels rendent la même ronde) et deux rondes de la même coupe ne
-          // partagent pas leur ordre.
-          generateRandomRound(ranked, history, `${cup.id}:${roundNumber}`)
-        : generateSwissRound(
-            ranked.map((teamId) => ({ teamId })),
-            history,
-          );
+      ? toCupRoundPlan(buildManualRound(input.pairings, teamIds))
+      : mergeGroupRounds(
+          groups.map((group) =>
+            system === "random"
+              ? // Graine = coupe + numéro de ronde (+ poule) : le tirage est
+                // REJOUABLE (deux appels rendent la même ronde) et deux
+                // rondes de la même coupe ne partagent pas leur ordre.
+                generateRandomRound(
+                  group.teamIds,
+                  history,
+                  `${cup.id}:${roundNumber}:${group.poolId ?? "all"}`,
+                )
+              : generateSwissRound(
+                  group.teamIds.map((teamId) => ({ teamId })),
+                  history,
+                ),
+          ),
+        );
 
   const created = (await prisma.$transaction(async (tx: typeof prisma) => {
     const round = (await tx.cupRound.create({
@@ -436,17 +559,15 @@ export async function generateCupRound(input: {
           awayTeamId: p.away,
           status: "scheduled",
         })),
-        ...(result.bye
-          ? [
-              {
-                roundId: round.id,
-                tableNumber: result.pairings.length + 1,
-                homeTeamId: result.bye,
-                awayTeamId: null,
-                status: "bye",
-              },
-            ]
-          : []),
+        // Un exempt PAR GROUPE : avec des poules, chaque groupe à effectif
+        // impair a le sien.
+        ...result.byes.map((teamId, index) => ({
+          roundId: round.id,
+          tableNumber: result.pairings.length + index + 1,
+          homeTeamId: teamId,
+          awayTeamId: null,
+          status: "bye",
+        })),
       ],
     });
     return round;
@@ -845,7 +966,49 @@ export async function settleCupPairingForLocalMatch(
     });
   }
   const roundCompleted = await maybeCompleteCupRound(pairing.roundId);
+  // Bracket : le vainqueur monte d'un tour. Jamais bloquant — un échec ici
+  // ne doit pas faire échouer la clôture d'une rencontre déjà jouée ; le
+  // commissaire peut relancer l'avancement en re-validant le résultat.
+  await advanceCupBracketAfterMatch(localMatchId, pairing.id).catch(
+    (e: unknown) => {
+      const msg = e instanceof Error ? e.message : "unknown";
+      serverLog.error(
+        `[cup-rounds] avancement du bracket échoué (match=${localMatchId}): ${msg}`,
+      );
+    },
+  );
   return { settled: true, roundCompleted };
+}
+
+/**
+ * Fait monter le vainqueur d'une rencontre de bracket. Un MATCH NUL ne fait
+ * avancer personne : la rencontre doit être rejouée ou son résultat corrigé.
+ * Inventer un qualifié serait pire que de laisser le slot vide.
+ *
+ * Import paresseux : `cup-playoffs` importe `cup-rounds` (pour `CupActor` et
+ * la lecture des rondes) — le charger au sommet créerait un cycle.
+ */
+async function advanceCupBracketAfterMatch(
+  localMatchId: string,
+  pairingId: string,
+): Promise<void> {
+  const match = (await prisma.localMatch.findUnique({
+    where: { id: localMatchId },
+    select: { teamAId: true, teamBId: true, scoreTeamA: true, scoreTeamB: true },
+  })) as {
+    teamAId: string;
+    teamBId: string | null;
+    scoreTeamA: number | null;
+    scoreTeamB: number | null;
+  } | null;
+  if (!match || !match.teamBId) return;
+  const a = match.scoreTeamA ?? 0;
+  const b = match.scoreTeamB ?? 0;
+  if (a === b) return;
+  const winnerTeamId = a > b ? match.teamAId : match.teamBId;
+
+  const { advanceCupPlayoffs } = await import("./cup-playoffs");
+  await advanceCupPlayoffs({ pairingId, winnerTeamId });
 }
 
 /** Match local annulé ou supprimé -> la rencontre redevient à jouer. */
