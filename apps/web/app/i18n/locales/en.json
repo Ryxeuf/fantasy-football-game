@@ -982,7 +982,8 @@
     "playoffsStageFinal": "Final",
     "playoffsLoading": "Loading the bracket…",
     "playoffsViewMatch": "View match",
-    "playoffsResumeMatch": "Resume match"
+    "playoffsResumeMatch": "Resume match",
+    "myPoolBadge": "My pool"
   },
   "inducements": {
     "title": "Inducements",

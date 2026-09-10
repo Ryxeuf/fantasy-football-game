@@ -695,6 +695,19 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           ).map((p) => [p.team.id, p.poolId ?? null]),
         ),
       ),
+      /**
+       * Poules de la coupe, ordonnées. Vide quand elle n'en a pas — c'est
+       * ce que lit le calendrier pour nommer ses groupes ; `poolStandings`
+       * ne parle, lui, que du classement.
+       */
+      pools: ((cup as unknown as { pools?: CupPoolRow[] }).pools ?? []).map(
+        (pool) => ({
+          id: pool.id,
+          name: pool.name,
+          order: pool.order,
+          qualifiesForPlayoffs: pool.qualifiesForPlayoffs,
+        }),
+      ),
       playoffSize: (cup as unknown as { playoffSize?: number }).playoffSize ?? 0,
       /**
        * Bracket publié. `null` = coupe antérieure à la colonne (donc

@@ -54,6 +54,12 @@ interface CupDTO {
   playoffsPublished: boolean | null;
   rounds: RoundDTO[];
   participants: Array<{ id: string; participantId: string; poolId: string | null }>;
+  pools: Array<{
+    id: string;
+    name: string;
+    order: number;
+    qualifiesForPlayoffs: number;
+  }>;
   poolStandings: Array<{
     poolId: string;
     poolName: string;
@@ -264,6 +270,24 @@ describe("E2E API — poules de coupe", () => {
       "Poule A",
       "Poule B",
     ]);
+
+    /*
+     * Le CALENDRIER a besoin d'autre chose que du classement pour nommer ses
+     * groupes : la liste des poules, et l'affectation de chaque inscrit. Les
+     * deux sont servies dès la lecture de la coupe — sinon l'écran devrait
+     * un second aller-retour pour grouper une ronde.
+     */
+    expect(withPools.pools.map((p) => p.name).sort()).toEqual([
+      "Poule A",
+      "Poule B",
+    ]);
+    expect(withPools.pools.map((p) => p.order)).toEqual([0, 1]);
+    const assigned = new Map(
+      withPools.participants.map((p) => [p.id, p.poolId]),
+    );
+    for (const pairing of round.pairings) {
+      expect(assigned.get(pairing.homeTeam.id)).toBeTruthy();
+    }
   });
 });
 

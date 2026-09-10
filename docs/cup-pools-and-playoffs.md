@@ -67,6 +67,32 @@ chaque poule ; il ne le retrie pas. Deux tris séparés auraient fini par
 diverger le jour où l'un oublierait un critère de départage. Les équipes non
 affectées sont regroupées en queue sous `UNASSIGNED_POOL_ID`.
 
+### Calendrier
+
+Les rencontres d'une ronde s'affichent groupées par poule, celle du coach
+connecté en tête. La RÈGLE est commune à la ligue et à la coupe
+(`lib/competition-pools.groupByPool`, pur) : seuil de découpage, tri par nom,
+poule préférée en tête, groupe sentinelle pour les non-affectés. Chaque
+compétition ne garde que sa façon de lire la poule d'une rencontre — la ligue
+par son PARTICIPANT (`SeasonCalendar`), la coupe par son ÉQUIPE
+(`cups/[id]/round-pools`).
+
+Deux points à ne pas perdre de vue :
+
+- **`null` veut dire « à plat ».** `groupByPool` ne rend pas un tableau à un
+  élément quand une seule poule est représentée : il rend `null`, et
+  l'appelant affiche la liste telle quelle. C'est ce qui rend le groupement
+  invisible sur une coupe sans poule.
+- **Une ronde de BRACKET ne se groupe jamais** (`kind === "playoff"`). Une
+  finale oppose les qualifiés de deux poules : la coiffer de « Poule A »
+  parce que son équipe à domicile en vient serait faux. C'est la seule règle
+  que la coupe ajoute au moteur commun.
+
+Le calendrier nomme ses groupes depuis `pools`, servi par `GET /cup/:id` — et
+non depuis `poolStandings`, qui porte la même information mais est une donnée
+de CLASSEMENT : s'y adosser reviendrait à promettre qu'elle ne bougera pas
+pour des raisons de classement.
+
 ## Play-offs
 
 ### Un moteur partagé avec la ligue
@@ -166,3 +192,7 @@ avalerait `/pools` et `/playoffs`.
   tours, têtes courantes, fenêtre d'édition), testées sans DOM.
 - `apps/web/app/cups/[id]/CupStandings.tsx` — rendu une fois par poule, la
   barre de qualification marquée par le quota.
+- `apps/web/app/cups/[id]/round-pools.ts` — groupement d'une ronde par poule
+  (PUR) : poule lue par l'équipe à domicile, bracket exclu, poule du coach.
+- `apps/web/app/lib/competition-pools.ts` — le moteur de groupement PARTAGÉ
+  avec la ligue.

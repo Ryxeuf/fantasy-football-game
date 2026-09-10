@@ -81,6 +81,9 @@ function renderView(props: {
   cupStatus?: string;
   participantCount?: number;
   participants?: Array<{ id: string; name: string }>;
+  poolNamesById?: Record<string, string>;
+  poolIdByTeamId?: Record<string, string | null>;
+  preferredPoolId?: string | null;
 }) {
   const onChanged = vi.fn();
   render(
@@ -93,6 +96,9 @@ function renderView(props: {
         myTeamIds={props.myTeamIds ?? []}
         participantCount={props.participantCount ?? 5}
         participants={props.participants ?? []}
+        poolNamesById={props.poolNamesById}
+        poolIdByTeamId={props.poolIdByTeamId}
+        preferredPoolId={props.preferredPoolId}
         onChanged={onChanged}
       />
     </LanguageProvider>,
@@ -252,6 +258,70 @@ describe("CupRoundsView", () => {
     expect(
       screen.getByTestId("cup-round-system-badge-r-final").textContent,
     ).toBe("Play-off");
+  });
+
+  it("groupe les rencontres d'une ronde par poule, la poule du coach en tête", () => {
+    renderView({
+      rounds: [round([OPEN, PLAYED], { id: "r1" })],
+      poolNamesById: { pa: "Poule A", pb: "Poule B" },
+      // OPEN reçoit avec `c`, PLAYED avec `a`.
+      poolIdByTeamId: { a: "pa", c: "pb" },
+      preferredPoolId: "pb",
+    });
+    const headings = screen
+      .getAllByTestId(/^cup-round-pool-r1-/)
+      .map((el) => el.getAttribute("data-testid"));
+    expect(headings).toEqual(["cup-round-pool-r1-pb", "cup-round-pool-r1-pa"]);
+    expect(screen.getByTestId("cup-round-my-pool-r1").textContent).toBe("Ma poule");
+  });
+
+  it("reste à plat sans poule — le comportement d'avant les poules", () => {
+    renderView({ rounds: [round([OPEN, PLAYED], { id: "r1" })] });
+    expect(screen.queryAllByTestId(/^cup-round-pool-r1-/)).toHaveLength(0);
+    // Les rencontres restent rendues, elles : à plat n'est pas vide.
+    // (`getAllBy` : le logo d'équipe répète le nom dans son <title>.)
+    expect(screen.getAllByText("Team c").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Team a").length).toBeGreaterThan(0);
+  });
+
+  it("reste à plat quand toutes les rencontres tombent dans la même poule", () => {
+    renderView({
+      rounds: [round([OPEN, PLAYED], { id: "r1" })],
+      poolNamesById: { pa: "Poule A", pb: "Poule B" },
+      poolIdByTeamId: { a: "pa", c: "pa" },
+    });
+    expect(screen.queryAllByTestId(/^cup-round-pool-r1-/)).toHaveLength(0);
+  });
+
+  it("ne groupe pas une ronde de bracket : elle oppose deux poules", () => {
+    renderView({
+      rounds: [
+        round([OPEN], {
+          id: "r-final",
+          kind: "playoff",
+          system: "bracket",
+          bracketSlot: "final",
+        }),
+      ],
+      poolNamesById: { pa: "Poule A", pb: "Poule B" },
+      poolIdByTeamId: { c: "pa", d: "pb" },
+    });
+    expect(screen.queryAllByTestId(/^cup-round-pool-r-final-/)).toHaveLength(0);
+  });
+
+  it("montre une équipe non affectée sous un groupe sans nom, en queue", () => {
+    renderView({
+      rounds: [round([OPEN, PLAYED], { id: "r1" })],
+      poolNamesById: { pa: "Poule A" },
+      poolIdByTeamId: { a: "pa" },
+    });
+    const headings = screen
+      .getAllByTestId(/^cup-round-pool-r1-/)
+      .map((el) => el.getAttribute("data-testid"));
+    expect(headings).toEqual(["cup-round-pool-r1-pa", "cup-round-pool-r1-none"]);
+    expect(
+      screen.getByTestId("cup-round-pool-r1-none").textContent,
+    ).toContain("Non affectée");
   });
 
   it("invite le commissaire à valider la coupe avant la première ronde", () => {

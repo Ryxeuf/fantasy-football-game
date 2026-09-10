@@ -20,6 +20,7 @@ import {
   type ManualPairingDraft,
 } from "./manual-round";
 import { dynamicRoute } from "../../lib/typed-route";
+import { groupCupRoundByPool } from "./round-pools";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -87,6 +88,15 @@ interface CupRoundsViewProps {
   participantCount: number;
   /** Inscrits, requis pour la saisie manuelle. Absent = mode indisponible. */
   participants?: readonly CupRoundParticipant[];
+  /**
+   * `{ poolId → nom }`. Vide (défaut) = coupe sans poule : les rencontres
+   * s'affichent à plat, comme avant.
+   */
+  poolNamesById?: Readonly<Record<string, string>>;
+  /** `{ teamId → poolId }` des inscrits. */
+  poolIdByTeamId?: Readonly<Record<string, string | null>>;
+  /** Poule du coach connecté : remontée en tête de chaque ronde. */
+  preferredPoolId?: string | null;
   /** Rappelé après toute mutation (rechargement de la coupe). */
   onChanged: () => void;
 }
@@ -127,6 +137,9 @@ export default function CupRoundsView({
   myTeamIds,
   participantCount,
   participants = [],
+  poolNamesById = {},
+  poolIdByTeamId = {},
+  preferredPoolId = null,
   onChanged,
 }: CupRoundsViewProps) {
   const { t, language } = useLanguage();
@@ -372,6 +385,26 @@ export default function CupRoundsView({
                 : played > 0 || round.pairings.some((p) => p.status === "in_progress")
                   ? "in_progress"
                   : round.status;
+            const groups = groupCupRoundByPool(
+              round,
+              poolNamesById,
+              poolIdByTeamId,
+              preferredPoolId,
+            );
+            const renderPairing = (pairing: CupPairingView) => (
+              <CupPairingCard
+                key={pairing.id}
+                cupId={cupId}
+                pairing={pairing}
+                mine={mine}
+                isCommissioner={isCommissioner}
+                busy={busy}
+                language={language}
+                onCreateMatch={() => createMatch(pairing)}
+                onCancel={() => cancelPairing(pairing.id)}
+                onChanged={onChanged}
+              />
+            );
             return (
               <li
                 key={round.id}
@@ -419,22 +452,37 @@ export default function CupRoundsView({
                     </div>
                   </div>
                 </header>
-                <ul className="space-y-3 p-3 sm:p-4">
-                  {round.pairings.map((pairing) => (
-                    <CupPairingCard
-                      key={pairing.id}
-                      cupId={cupId}
-                      pairing={pairing}
-                      mine={mine}
-                      isCommissioner={isCommissioner}
-                      busy={busy}
-                      language={language}
-                      onCreateMatch={() => createMatch(pairing)}
-                      onCancel={() => cancelPairing(pairing.id)}
-                      onChanged={onChanged}
-                    />
-                  ))}
-                </ul>
+                <div className="space-y-3 p-3 sm:p-4">
+                  {groups === null ? (
+                    <ul className="space-y-3">
+                      {round.pairings.map(renderPairing)}
+                    </ul>
+                  ) : (
+                    groups.map((group) => (
+                      <div
+                        key={group.poolId ?? "__unassigned__"}
+                        data-testid={`cup-round-pool-${round.id}-${group.poolId ?? "none"}`}
+                      >
+                        <div className="mb-1.5 flex items-center gap-2">
+                          <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-700">
+                            {group.poolName ?? t.cups.poolsUnassigned}
+                          </span>
+                          {group.poolId && group.poolId === preferredPoolId ? (
+                            <span
+                              data-testid={`cup-round-my-pool-${round.id}`}
+                              className="text-[11px] font-medium text-nuffle-bronze"
+                            >
+                              {t.cups.myPoolBadge}
+                            </span>
+                          ) : null}
+                        </div>
+                        <ul className="space-y-3">
+                          {group.items.map(renderPairing)}
+                        </ul>
+                      </div>
+                    ))
+                  )}
+                </div>
               </li>
             );
           })}

@@ -96,11 +96,10 @@ contre 4 700 de coupe au départ. Restent :
 - ~~**Playoffs de coupe**~~ — livré par `cup-pools-and-playoffs` (2026-09-10) :
   bracket seedé (moteur partagé avec la ligue), publication différée, seeds
   éditables, `CupPlayoffBracketView`.
-- **Calendrier de coupe groupé par poule, poule du coach en premier**
-  (`cup-pools-and-playoffs`) : les poules existent désormais, mais
-  `CupRoundsView` liste encore les rencontres à plat. La ligue groupe les
-  siennes par poule et remonte celle du coach (`SeasonCalendar`,
-  `pool-order.ts`) — la logique d'ordre est déjà un module pur réutilisable.
+- ~~**Calendrier de coupe groupé par poule, poule du coach en premier**~~ —
+  livré par `cup-calendar-by-pool` (2026-09-10) : la règle de groupement est
+  désormais COMMUNE aux deux compétitions (`lib/competition-pools`), la coupe
+  n'ajoutant que « une ronde de bracket ne se groupe pas ».
 - **Export PDF d'une ronde** (`MatchdayExport` côté ligue).
 - **Relance des coachs d'une ronde** (`league-round-followup` côté ligue).
 - **Page de récapitulatif et palmarès d'une coupe** : les championnats de

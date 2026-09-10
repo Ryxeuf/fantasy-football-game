@@ -11,7 +11,7 @@ import MatchCard, {
 } from "../../components/competition/MatchCard";
 import TeamRosterLink from "./TeamRosterLink";
 import { PairingScheduleEditor } from "./PairingScheduleEditor";
-import { putPoolFirst } from "./pool-order";
+import { groupByPool } from "../../lib/competition-pools";
 import { CollapseToggle } from "../../components/CollapseToggle";
 import {
   canSchedulePairing,
@@ -71,8 +71,9 @@ interface PoolGroup {
  * participant à domicile). Retourne `null` si aucun groupement n'est
  * pertinent (pas de poules, ou une seule poule effective).
  *
- * Les poules sont triées par nom, sauf `preferredPoolId` (la poule du
- * coach connecté) qui passe en tête.
+ * La RÈGLE (tri, poule préférée en tête, groupe des non-affectés, seuil de
+ * découpage) vit dans `lib/competition-pools` et est partagée avec la coupe :
+ * ici on ne dit que comment lire la poule d'un pairing de ligue.
  */
 export function groupPairingsByPool(
   pairings: LeaguePairingDetail[],
@@ -80,27 +81,18 @@ export function groupPairingsByPool(
   poolIdByParticipantId: Record<string, string | null>,
   preferredPoolId: string | null = null,
 ): PoolGroup[] | null {
-  if (Object.keys(poolNamesById).length === 0) return null;
-  const groups = new Map<string | null, PoolGroup>();
-  for (const pairing of pairings) {
-    const poolId = poolIdByParticipantId[pairing.homeParticipant.id] ?? null;
-    const existing = groups.get(poolId);
-    if (existing) {
-      existing.pairings.push(pairing);
-    } else {
-      groups.set(poolId, {
-        poolId,
-        poolName: poolId ? poolNamesById[poolId] ?? null : null,
-        pairings: [pairing],
-      });
-    }
-  }
-  // Pas de découpage utile si tous les pairings tombent dans une seule poule.
-  if (groups.size <= 1) return null;
-  const sorted = Array.from(groups.values()).sort((a, b) =>
-    (a.poolName ?? "￿").localeCompare(b.poolName ?? "￿"),
+  const groups = groupByPool(
+    pairings,
+    (p) => poolIdByParticipantId[p.homeParticipant.id] ?? null,
+    poolNamesById,
+    preferredPoolId,
   );
-  return putPoolFirst(sorted, (g) => g.poolId, preferredPoolId);
+  if (!groups) return null;
+  return groups.map((g) => ({
+    poolId: g.poolId,
+    poolName: g.poolName,
+    pairings: [...g.items],
+  }));
 }
 
 /**

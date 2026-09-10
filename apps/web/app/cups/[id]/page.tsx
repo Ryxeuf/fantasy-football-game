@@ -14,6 +14,11 @@ import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
 import CupStandings from "./CupStandings";
 import CupPoolsManagerPanel from "./CupPoolsManagerPanel";
 import CupPlayoffBracketView from "./CupPlayoffBracketView";
+import {
+  poolIdByTeamId,
+  poolNamesById,
+  preferredPoolIdFor,
+} from "./round-pools";
 import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
@@ -158,6 +163,16 @@ type Cup = {
     poolOrder: number;
     qualifiesForPlayoffs: number;
     standings: CupTeamStats[];
+  }>;
+  /**
+   * Poules de la coupe, ordonnées. Absent/vide = coupe sans poule : le
+   * calendrier affiche ses rencontres à plat. Optionnel : API antérieure.
+   */
+  pools?: Array<{
+    id: string;
+    name: string;
+    order: number;
+    qualifiesForPlayoffs: number;
   }>;
   /** Taille du bracket de play-offs (0 = aucun). Optionnel : API antérieure. */
   playoffSize?: number;
@@ -862,6 +877,12 @@ export default function CupDetailPage() {
                   id: p.id,
                   name: p.name,
                 }))}
+                poolNamesById={poolNamesById(cup.pools ?? [])}
+                poolIdByTeamId={poolIdByTeamId(cup.participants ?? [])}
+                preferredPoolId={preferredPoolIdFor(
+                  cup.participants ?? [],
+                  cup.userParticipatingTeamIds ?? [],
+                )}
                 onChanged={() => {
                   void loadCup();
                 }}
