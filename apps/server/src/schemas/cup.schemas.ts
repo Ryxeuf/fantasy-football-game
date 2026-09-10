@@ -51,6 +51,19 @@ export const updateCupRulesSchema = cupRulesConfigSchema;
 
 export type CupRulesConfigInput = z.infer<typeof cupRulesConfigSchema>;
 
+/**
+ * Critères de départage du classement, dans l'ordre de priorité. Les slugs
+ * sont ceux de `services/cup-standings-order` — la validation de forme reste
+ * ici (liste de chaînes courtes, sans doublon exigé), la validation de FOND
+ * (slug connu) est faite par `normalizeCupTieBreakRules` au moment d'écrire :
+ * un slug inconnu est ignoré plutôt que de faire échouer toute la requête.
+ * `null` remet la coupe sur l'ordre par défaut.
+ */
+export const tieBreakRulesSchema = z
+  .array(z.string().min(1).max(32))
+  .max(16)
+  .nullable();
+
 const scoringConfigSchema = z.object({
   winPoints: z.number().optional(),
   drawPoints: z.number().optional(),
@@ -96,6 +109,7 @@ export const createCupSchema = z
     rosterBudgetOverrides: rosterBudgetOverridesSchema.optional(),
     tierStartingPsp: tierStartingPspSchema.optional(),
     rosterStartingPspOverrides: rosterStartingPspOverridesSchema.optional(),
+    tieBreakRules: tieBreakRulesSchema.optional(),
   })
   .refine(
     (data) =>
@@ -106,6 +120,32 @@ export const createCupSchema = z
       path: ["monthlyMonth"],
     },
   );
+
+export type CreateCupInput = z.infer<typeof createCupSchema>;
+
+/**
+ * Body d'édition d'une coupe par son commissaire (`PATCH /cup/:id`) —
+ * pendant de `PATCH /leagues/:id`. Tous les champs sont optionnels : ce qui
+ * n'est pas envoyé n'est pas touché. Le règlement de tournoi, l'édition et
+ * le format n'y figurent PAS : ils sont gelés dès qu'une équipe est inscrite
+ * (une équipe est construite POUR eux).
+ */
+export const updateCupSchema = z.object({
+  name: z.string().trim().min(1).max(100).optional(),
+  description: z.string().max(1000).optional().nullable(),
+  isPublic: z.boolean().optional(),
+  winPoints: z.number().int().min(-1000).max(10000).optional(),
+  drawPoints: z.number().int().min(-1000).max(10000).optional(),
+  lossPoints: z.number().int().min(-1000).max(10000).optional(),
+  forfeitPoints: z.number().int().min(-10000).max(10000).optional(),
+  touchdownPoints: z.number().int().min(-1000).max(1000).optional(),
+  blockCasualtyPoints: z.number().int().min(-1000).max(1000).optional(),
+  foulCasualtyPoints: z.number().int().min(-1000).max(1000).optional(),
+  passPoints: z.number().int().min(-1000).max(1000).optional(),
+  tieBreakRules: tieBreakRulesSchema.optional(),
+});
+
+export type UpdateCupInput = z.infer<typeof updateCupSchema>;
 
 export const registerCupSchema = z.object({
   teamId: z.string().min(1, "teamId requis"),

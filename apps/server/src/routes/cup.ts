@@ -19,11 +19,14 @@ import {
   unregisterCupSchema,
   updateCupStatusSchema,
   updateCupRulesSchema,
+  updateCupSchema,
   listMonthlyCupsQuerySchema,
   setMatchOfTheWeekSchema,
   type ListMonthlyCupsQuery,
   type SetMatchOfTheWeekBody,
   type CupRulesConfigInput,
+  type CreateCupInput,
+  type UpdateCupInput,
 } from "../schemas/cup.schemas";
 import { listMonthlyCups } from "../services/cup-monthly-listing";
 import {
@@ -43,6 +46,10 @@ import {
   type CupRegistrationErrorCode,
 } from "../services/cup-registration";
 import { cupByesByTeamId, listCupRounds } from "../services/cup-rounds";
+import {
+  normalizeCupTieBreakRules,
+  parseCupTieBreakRules,
+} from "../services/cup-standings-order";
 
 /** Mappe un code d'erreur d'inscription coupe vers un status HTTP. */
 function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
@@ -146,6 +153,20 @@ export function isCupAdjusted(
     Object.keys(rc.tierStartingPsp).length > 0 ||
     Object.keys(rc.rosterStartingPspOverrides).length > 0
   );
+}
+
+/**
+ * Sérialise les critères de départage pour la colonne `String?`. Les slugs
+ * inconnus sont écartés (`normalizeCupTieBreakRules`) plutôt que stockés :
+ * une colonne ne doit jamais porter un critère que le classement ne saurait
+ * pas appliquer. Une liste vide (ou sans aucun slug connu) remet `null`,
+ * c'est-à-dire l'ordre par défaut.
+ */
+function serializeTieBreakRules(
+  input: readonly string[] | null | undefined,
+): string | null {
+  const normalized = normalizeCupTieBreakRules(input ?? null);
+  return normalized ? JSON.stringify(normalized) : null;
 }
 
 // GET /cup - Liste les coupes visibles par l'utilisateur
@@ -616,6 +637,10 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       hasTeamParticipating: cup.participants.some((p: any) => userTeamIds.has(p.team.id)),
       userParticipatingTeamIds, // Liste des IDs des équipes de l'utilisateur qui participent
       scoringConfig: standingsResult.scoringConfig,
+      /** Critères de départage EFFECTIFS (défaut compris) — cf. classement. */
+      tieBreakRules: parseCupTieBreakRules(
+        (cup as unknown as { tieBreakRules?: unknown }).tieBreakRules,
+      ),
       rulesConfig: formatCupRules(cup as unknown as CupRulesConfig),
       standings: standingsResult.teamStats,
       actionAwards: standingsResult.awards,
@@ -656,38 +681,10 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
 
 // POST /cup - Créer une nouvelle coupe
 router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedRequest, res) => {
-  const body: {
-    name: string;
-    description?: string | null;
-    isPublic?: boolean;
-    ruleset?: string;
-    format?: "bb11" | "sevens";
-    scoringConfig?: Partial<{
-      winPoints: number;
-      drawPoints: number;
-      lossPoints: number;
-      forfeitPoints: number;
-      touchdownPoints: number;
-      blockCasualtyPoints: number;
-      foulCasualtyPoints: number;
-      passPoints: number;
-    }>;
-    winPoints?: number;
-    drawPoints?: number;
-    lossPoints?: number;
-    forfeitPoints?: number;
-    touchdownPoints?: number;
-    blockCasualtyPoints?: number;
-    foulCasualtyPoints?: number;
-    passPoints?: number;
-    monthlyYear?: number;
-    monthlyMonth?: number;
-    resurrectionMode?: boolean;
-    tierBudgets?: Record<string, number>;
-    rosterBudgetOverrides?: Record<string, number>;
-    tierStartingPsp?: Record<string, number>;
-    tournamentRuleset?: string | null;
-  } = req.body;
+  // Typé PAR LE SCHÉMA (cf. CLAUDE.md) : un champ ajouté à `createCupSchema`
+  // et oublié ici fait désormais échouer `tsc` au lieu d'être silencieusement
+  // ignoré — c'est exactement ce qui était arrivé aux critères de départage.
+  const body: CreateCupInput = req.body;
 
   // S27.1i — La creation d'une cup mensuelle (avec slot canonique) est
   // reservee aux admins. Les coachs reguliers peuvent creer des cups
@@ -815,6 +812,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         ...serializeCupRulesData(body),
         // Mode résurrection : seul mode disponible actuellement en coupe.
         resurrectionMode: true,
+        ...(body.tieBreakRules !== undefined
+          ? { tieBreakRules: serializeTieBreakRules(body.tieBreakRules) }
+          : {}),
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
         ...(wantsMonthly
@@ -921,6 +921,105 @@ router.patch(
       res.json({ rulesConfig: formatCupRules(updated as unknown as CupRulesConfig) });
     } catch (e: any) {
       serverLog.error("Erreur lors de la mise à jour des règles de coupe:", e);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+  },
+);
+
+/**
+ * PATCH /cup/:id — édition d'une coupe par son commissaire (ou un admin),
+ * pendant de `PATCH /leagues/:id`. Une coupe n'avait AUCUN chemin d'édition :
+ * une faute de frappe dans le nom, un barème à corriger ou un critère de
+ * départage à poser imposaient de la recréer (et donc de réinscrire tout le
+ * monde).
+ *
+ * Le barème et les départages restent modifiables même en cours de coupe :
+ * le classement est entièrement DÉRIVÉ des matchs, il se recalcule donc au
+ * prochain affichage sans rien à reprendre. L'édition (`ruleset`), le
+ * `format` et le règlement de tournoi n'y figurent pas : les équipes ont été
+ * construites POUR eux (cf. `updateCupSchema`).
+ */
+router.patch(
+  "/:id",
+  authUser,
+  validate(updateCupSchema),
+  async (req: AuthenticatedRequest, res) => {
+    const cupId = req.params.id;
+    const body: UpdateCupInput = req.body;
+    try {
+      const cup = await prisma.cup.findUnique({
+        where: { id: cupId },
+        select: { id: true, creatorId: true, status: true },
+      });
+      if (!cup) {
+        return res.status(404).json({ error: "Coupe introuvable" });
+      }
+      const isAdmin = hasRole(req.user!.roles, "admin");
+      if (cup.creatorId !== req.user!.id && !isAdmin) {
+        return res
+          .status(403)
+          .json({ error: "Seul le commissaire de la coupe peut la modifier" });
+      }
+      if (cup.status === "archivee" && !isAdmin) {
+        return res
+          .status(409)
+          .json({ error: "Coupe archivée : elle n'est plus modifiable" });
+      }
+
+      const data: Record<string, unknown> = {};
+      if (body.name !== undefined) data.name = body.name;
+      if (body.description !== undefined) {
+        data.description = body.description?.trim() || null;
+      }
+      if (body.isPublic !== undefined) data.isPublic = body.isPublic;
+      for (const key of [
+        "winPoints",
+        "drawPoints",
+        "lossPoints",
+        "forfeitPoints",
+        "touchdownPoints",
+        "blockCasualtyPoints",
+        "foulCasualtyPoints",
+        "passPoints",
+      ] as const) {
+        if (body[key] !== undefined) data[key] = body[key];
+      }
+      if (body.tieBreakRules !== undefined) {
+        data.tieBreakRules = serializeTieBreakRules(body.tieBreakRules);
+      }
+      if (Object.keys(data).length === 0) {
+        return res.status(400).json({ error: "Aucune modification fournie" });
+      }
+
+      const updated = await prisma.cup.update({
+        where: { id: cupId },
+        data,
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          isPublic: true,
+          status: true,
+          winPoints: true,
+          drawPoints: true,
+          lossPoints: true,
+          forfeitPoints: true,
+          touchdownPoints: true,
+          blockCasualtyPoints: true,
+          foulCasualtyPoints: true,
+          passPoints: true,
+          tieBreakRules: true,
+        },
+      });
+
+      res.json({
+        cup: {
+          ...updated,
+          tieBreakRules: parseCupTieBreakRules(updated.tieBreakRules),
+        },
+      });
+    } catch (e: unknown) {
+      serverLog.error("Erreur lors de la mise à jour de la coupe:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }
   },
