@@ -83,12 +83,12 @@ Source : `add-position-pages` (archivé 2026-09-02).
 
 ## Coupes gérées comme les ligues
 
-Sources : `cups-managed-like-leagues` et `cup-pools-and-playoffs`
-(tous deux archivés 2026-09-10).
+Sources : `cups-managed-like-leagues`, `cup-pools-and-playoffs` et
+`cup-calendar-by-pool` (tous archivés 2026-09-10).
 La feuille de match, les trois systèmes d'appariement, les critères de
-classement, l'édition d'une coupe, les poules et les play-offs sont livrés.
-La parité UI, elle, n'est pas complète — 26 000 lignes d'écrans de ligue
-contre 4 700 de coupe au départ. Restent :
+classement, l'édition d'une coupe, les poules, les play-offs et le calendrier
+groupé par poule sont livrés. La parité UI, elle, n'est pas complète —
+26 000 lignes d'écrans de ligue contre 4 700 de coupe au départ. Restent :
 
 - ~~**Poules de coupe**~~ — livré par `cup-pools-and-playoffs` (2026-09-10) :
   `CupPool`, appariement par groupe, classement par poule,
