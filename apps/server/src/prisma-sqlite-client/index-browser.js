@@ -564,6 +564,7 @@ exports.Prisma.CupScalarFieldEnum = {
   blockCasualtyPoints: 'blockCasualtyPoints',
   foulCasualtyPoints: 'foulCasualtyPoints',
   passPoints: 'passPoints',
+  tieBreakRules: 'tieBreakRules',
   resurrectionMode: 'resurrectionMode',
   tierBudgets: 'tierBudgets',
   rosterBudgetOverrides: 'rosterBudgetOverrides',
@@ -849,6 +850,7 @@ exports.Prisma.LeaguePairingScalarFieldEnum = {
 exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   id: 'id',
   pairingId: 'pairingId',
+  cupPairingId: 'cupPairingId',
   status: 'status',
   submittedByHomeAt: 'submittedByHomeAt',
   submittedByAwayAt: 'submittedByAwayAt',

@@ -983,6 +983,15 @@ model Cup {
   foulCasualtyPoints  Int @default(2) // Points par sortie sur agression
   passPoints          Int @default(2) // Points par passe réussie
 
+  /// Critères de départage du classement, dans l'ordre de priorité :
+  /// chaîne JSON de slugs (`["points","cas_for","td_diff"]`, cf.
+  /// `services/cup-standings-order`). Miroir de `League.tieBreakRules`.
+  /// null = coupe antérieure à la colonne OU aucun réglage → ordre
+  /// historique (points → diff TD → TD pour → victoires → nom). Aucun
+  /// backfill n'étant possible (`db push` en prod), l'absence DOIT rester
+  /// lisible telle quelle.
+  tieBreakRules String?
+
   /// S27.1 — Mensualisation : edition canonique "Nuffle Cup {Mois} {YYYY}".
   /// Les deux champs sont nullable pour rester retro-compatibles avec les
   /// cups existantes (privees / non programmees). Quand fournis, ils
@@ -1067,8 +1076,12 @@ model CupRound {
   cupId       String
   roundNumber Int
   name        String?
-  /// Système d'appariement ayant produit la ronde : "swiss". Réservé pour
-  /// d'autres systèmes (saisie manuelle…).
+  /// Système d'appariement ayant produit la ronde :
+  ///   "swiss"  — appariement suisse sur le classement courant ;
+  ///   "random" — tirage au sort (typiquement la 1re ronde) ;
+  ///   "manual" — rencontres posées à la main par le commissaire.
+  /// Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
+  /// aucun backfill n'est nécessaire.
   system      String    @default("swiss")
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
@@ -1101,6 +1114,9 @@ model CupPairing {
   /// Date prévisionnelle convenue par les coachs (ou le commissaire).
   scheduledAt DateTime?
   localMatch  LocalMatch?
+  /// Feuille de match de coupe (1-1, optionnelle) : MÊME modèle que la
+  /// ligue, rattaché par l'autre FK (cf. `LeagueMatchSheet`).
+  matchSheet  LeagueMatchSheet?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -1786,7 +1802,21 @@ model LeaguePairing {
 }
 
 /// Lot G — Feuille de match collaborative (saisie joueurs + validation
-/// commissaire). 1-1 avec un LeaguePairing.
+/// commissaire). 1-1 avec une rencontre de COMPÉTITION.
+///
+/// Rattachement POLYMORPHE par deux FK nullables (`pairingId` XOR
+/// `cupPairingId`), même patron que `CompetitionDocument` : une seule table
+/// à administrer, les cascades Prisma natives conservées, et surtout UNE
+/// seule implémentation de la feuille — deux tables auraient dupliqué une
+/// mécanique de ~4 000 lignes qui aurait dérivé. L'invariant « exactement
+/// une des deux FK renseignée » n'est pas exprimable en Prisma : il est tenu
+/// par le service (`services/competition-match-sheet-context`, seul chemin
+/// de résolution). `pairingId` est passée NULLABLE : `db push` conserve les
+/// valeurs existantes, aucune feuille de ligue n'est touchée.
+///
+/// Ce que la compétition change (et rien d'autre) : une feuille de COUPE ne
+/// gagne ni PSP, ni or, ni fans, n'applique ni blessure ni mort ni évolution
+/// (résurrection), et repart du roster d'inscription à chaque match.
 ///
 /// Workflow `status` :
 ///   draft            -> en cours de saisie (avant soumission)
@@ -1800,10 +1830,12 @@ model LeaguePairing {
 /// (`LeagueMatchEvent`) par le summarizer pur ; ils sont aussi
 /// snapshotes ici a la validation pour audit + lecture rapide.
 model LeagueMatchSheet {
-  id        String        @id @default(cuid())
-  pairing   LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId String        @unique
-  status    String        @default("draft")
+  id           String         @id @default(cuid())
+  pairing      LeaguePairing? @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId    String?        @unique
+  cupPairing   CupPairing?    @relation(fields: [cupPairingId], references: [id], onDelete: Cascade)
+  cupPairingId String?        @unique
+  status       String         @default("draft")
 
   submittedByHomeAt  DateTime?
   submittedByAwayAt  DateTime?

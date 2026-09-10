@@ -773,6 +773,10 @@ model Cup {
   foulCasualtyPoints  Int @default(2)
   passPoints          Int @default(2)
 
+  // Critères de départage du classement (miroir SQLite de schema.prisma) :
+  // chaîne JSON de slugs, null = ordre historique.
+  tieBreakRules String?
+
   // Règles avancées de composition (miroir SQLite de schema.prisma). Les
   // colonnes JSON du schéma Postgres sont stockées en String? sérialisée
   // ici (SQLite n'a pas de JSONB) → parser tolérant côté cup-rules.ts.
@@ -825,8 +829,12 @@ model CupRound {
   cupId       String
   roundNumber Int
   name        String?
-  /// Système d'appariement ayant produit la ronde : "swiss". Réservé pour
-  /// d'autres systèmes (saisie manuelle…).
+  /// Système d'appariement ayant produit la ronde :
+  ///   "swiss"  — appariement suisse sur le classement courant ;
+  ///   "random" — tirage au sort (typiquement la 1re ronde) ;
+  ///   "manual" — rencontres posées à la main par le commissaire.
+  /// Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
+  /// aucun backfill n'est nécessaire.
   system      String    @default("swiss")
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
@@ -859,6 +867,8 @@ model CupPairing {
   /// Date prévisionnelle convenue par les coachs (ou le commissaire).
   scheduledAt DateTime?
   localMatch  LocalMatch?
+  /// Feuille de match de coupe (miroir SQLite de schema.prisma).
+  matchSheet  LeagueMatchSheet?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -1324,11 +1334,15 @@ model LeaguePairing {
 /// (comme en PG) pour que l'ecriture de valeurs natives (arrays/objets)
 /// fonctionne aussi sur le miroir sqlite. Les parsers de lecture restent
 /// tolerants (array natif OU string serialisee, cf. CLAUDE.md).
+// Feuille de match de COMPÉTITION : rattachement polymorphe ligue XOR coupe
+// (miroir SQLite de schema.prisma).
 model LeagueMatchSheet {
-  id                     String        @id @default(cuid())
-  pairing                LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId              String        @unique
-  status                 String        @default("draft")
+  id                     String         @id @default(cuid())
+  pairing                LeaguePairing? @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId              String?        @unique
+  cupPairing             CupPairing?    @relation(fields: [cupPairingId], references: [id], onDelete: Cascade)
+  cupPairingId           String?        @unique
+  status                 String         @default("draft")
   submittedByHomeAt      DateTime?
   submittedByAwayAt      DateTime?
   validatedAt            DateTime?

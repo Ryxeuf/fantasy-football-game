@@ -773,6 +773,10 @@ model Cup {
   foulCasualtyPoints  Int @default(2)
   passPoints          Int @default(2)
 
+  // Critères de départage du classement (miroir SQLite de schema.prisma) :
+  // chaîne JSON de slugs, null = ordre historique.
+  tieBreakRules String?
+
   // Règles avancées de composition (miroir SQLite de schema.prisma). Les
   // colonnes JSON du schéma Postgres sont stockées en String? sérialisée
   // ici (SQLite n'a pas de JSONB) → parser tolérant côté cup-rules.ts.
@@ -825,8 +829,12 @@ model CupRound {
   cupId       String
   roundNumber Int
   name        String?
-  /// Système d'appariement ayant produit la ronde : "swiss". Réservé pour
-  /// d'autres systèmes (saisie manuelle…).
+  /// Système d'appariement ayant produit la ronde :
+  ///   "swiss"  — appariement suisse sur le classement courant ;
+  ///   "random" — tirage au sort (typiquement la 1re ronde) ;
+  ///   "manual" — rencontres posées à la main par le commissaire.
+  /// Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
+  /// aucun backfill n'est nécessaire.
   system      String    @default("swiss")
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
@@ -845,22 +853,24 @@ model CupRound {
 /// (cf. `cupScoring`, `byes`). Le match local qui matérialise la rencontre
 /// est rattaché par `LocalMatch.cupPairingId` à sa création.
 model CupPairing {
-  id          String      @id @default(cuid())
-  round       CupRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  id          String            @id @default(cuid())
+  round       CupRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
   roundId     String
   /// Ordre d'affichage (table 1 = tête de classement).
-  tableNumber Int         @default(1)
-  homeTeam    Team        @relation("CupPairingHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  tableNumber Int               @default(1)
+  homeTeam    Team              @relation("CupPairingHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
   homeTeamId  String
-  awayTeam    Team?       @relation("CupPairingAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeam    Team?             @relation("CupPairingAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
   awayTeamId  String?
   /// "scheduled" | "in_progress" | "played" | "bye" | "cancelled"
-  status      String      @default("scheduled")
+  status      String            @default("scheduled")
   /// Date prévisionnelle convenue par les coachs (ou le commissaire).
   scheduledAt DateTime?
   localMatch  LocalMatch?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  /// Feuille de match de coupe (miroir SQLite de schema.prisma).
+  matchSheet  LeagueMatchSheet?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
   @@index([roundId])
   @@index([homeTeamId])
@@ -1324,11 +1334,15 @@ model LeaguePairing {
 /// (comme en PG) pour que l'ecriture de valeurs natives (arrays/objets)
 /// fonctionne aussi sur le miroir sqlite. Les parsers de lecture restent
 /// tolerants (array natif OU string serialisee, cf. CLAUDE.md).
+// Feuille de match de COMPÉTITION : rattachement polymorphe ligue XOR coupe
+// (miroir SQLite de schema.prisma).
 model LeagueMatchSheet {
-  id                     String        @id @default(cuid())
-  pairing                LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId              String        @unique
-  status                 String        @default("draft")
+  id                     String         @id @default(cuid())
+  pairing                LeaguePairing? @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId              String?        @unique
+  cupPairing             CupPairing?    @relation(fields: [cupPairingId], references: [id], onDelete: Cascade)
+  cupPairingId           String?        @unique
+  status                 String         @default("draft")
   submittedByHomeAt      DateTime?
   submittedByAwayAt      DateTime?
   validatedAt            DateTime?
@@ -1346,10 +1360,10 @@ model LeagueMatchSheet {
   inducementsAway        Json?
   prayersHome            Json?
   prayersAway            Json?
-  scoreHome              Int           @default(0)
-  scoreAway              Int           @default(0)
-  winningsHome           Int           @default(0)
-  winningsAway           Int           @default(0)
+  scoreHome              Int            @default(0)
+  scoreAway              Int            @default(0)
+  winningsHome           Int            @default(0)
+  winningsAway           Int            @default(0)
   winningsHomeManual     Int?
   winningsAwayManual     Int?
   dedicatedFansDeltaHome Int?
@@ -1359,7 +1373,7 @@ model LeagueMatchSheet {
   sppBonus               Json?
   costlyErrorsHome       Json?
   costlyErrorsAway       Json?
-  motmPlayerIds          Json          @default("[]")
+  motmPlayerIds          Json           @default("[]")
   purchasesHome          Json?
   purchasesAway          Json?
   firedPlayerIds         Json?
@@ -1372,8 +1386,8 @@ model LeagueMatchSheet {
   /// Journaliers — choix du poste de lineman par coach ({ position }).
   journeymenHome         Json?
   journeymenAway         Json?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 
   events LeagueMatchEvent[]
 
