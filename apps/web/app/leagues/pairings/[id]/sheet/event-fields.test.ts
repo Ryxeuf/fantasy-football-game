@@ -152,3 +152,29 @@ describe("eventKindHint — rappels de règle sur les PSP (E30)", () => {
     }
   });
 });
+
+// Une sortie est une élimination qui rapporte des PSP. Le coach qui saisit
+// une agression qui blesse doit lire, sous le sélecteur, qu'elle ne comptera
+// ni dans les sorties ni dans les PSP — sauf Frénésie d'Agression.
+describe("event-fields — rappel de règle des sorties", () => {
+  it("l'agression annonce qu'elle compte en agressions, pas en sorties", () => {
+    const hint = eventKindHint("aggression") ?? "";
+    expect(hint).toMatch(/agressions/);
+    expect(hint).toMatch(/pas dans les sorties/);
+    expect(hint).toMatch(/Frénésie d’Agression/);
+  });
+
+  it("le blocage, seule sortie sans condition, n'a rien à expliquer", () => {
+    expect(eventKindHint("casualty")).toBeNull();
+  });
+
+  it("la sortie par le public renvoie à sa propre colonne", () => {
+    expect(eventKindHint("crowd_surge")).toMatch(/colonne SP/);
+  });
+
+  it("les évènements sans élimination n'ont pas de rappel", () => {
+    for (const kind of ["kickoff", "touchdown", "pass_complete", "interception", "expulsion", "team_throw"] as const) {
+      expect(eventKindHint(kind), kind).toBeNull();
+    }
+  });
+});

@@ -78,6 +78,12 @@ export function hasTargetField(kind: EventKind): boolean {
  * le summarizer fait RÉELLEMENT (`league-match-summary.ts`).
  */
 export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
+  // Une sortie est une élimination qui rapporte des PSP : seul le blocage
+  // (blitz compris) en est une sans condition — il n'a donc rien à dire.
+  // Une agression est une agression : colonne Agr, jamais Sorties — sauf la
+  // Prière à Nuffle 13 « Frénésie d’Agression », qui la qualifie en sortie.
+  aggression:
+    "Comptée dans les agressions, pas dans les sorties : une blessure sur agression ne rapporte aucun PSP — sauf sous la Prière « Frénésie d’Agression » (saisie en avant-match), qui en fait une sortie.",
   // E30 — règle BB S3 : une Élimination sur Action Spéciale (tronçonneuse,
   // bombe, botte…) ne rapporte rien à son auteur, sauf « Innovateur
   // Violent » qui lui rend les PSP d'Élimination.
@@ -88,7 +94,7 @@ export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
   stalling:
     "La blessure éventuelle frappe le joueur qui temporise : personne ne l’inflige, aucun PSP.",
   crowd_surge:
-    "Sortie infligée par le public : aucun joueur ne la revendique, donc aucun PSP.",
+    "Sortie infligée par le public : aucun joueur ne la revendique, donc aucun PSP — elle compte dans la colonne SP, pas dans les sorties.",
   // Règle BB S3 : atterrir sur un adversaire et le plaquer ne rapporte
   // rien… sauf au porteur de « Vol Fatal », qui touche les PSP
   // d’Élimination. L’atterrissage lui-même vaut toujours 1 PSP.
