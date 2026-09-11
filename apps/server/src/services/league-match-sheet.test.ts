@@ -812,6 +812,93 @@ describe("Lot G — league-match-sheet", () => {
       });
     });
 
+    // Une agression qui blesse n'est une sortie — persistée au classement
+    // (casualtiesAway) et au joueur (casualties -> PSP) — que sous la Prière
+    // « Frénésie d'Agression » de SON côté.
+    it.each([
+      {
+        label: "sans prière : agression comptée en agression, pas en sortie",
+        prayersAway: null,
+        casualtiesAway: 0,
+        casualties: 0,
+      },
+      {
+        label: "sous Frénésie d'Agression : l'agression devient une sortie",
+        prayersAway: [{ roll: 13, prayerId: "fouling-frenzy" }],
+        casualtiesAway: 1,
+        casualties: 1,
+      },
+      {
+        label: "la prière du domicile ne qualifie pas l'agression de l'extérieur",
+        prayersHome: [{ roll: 13, prayerId: "fouling-frenzy" }],
+        prayersAway: null,
+        casualtiesAway: 0,
+        casualties: 0,
+      },
+    ])("$label", async ({ prayersHome, prayersAway, casualtiesAway, casualties }) => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "both_submitted",
+        motmPlayerIds: [],
+        prayersHome: prayersHome ?? null,
+        prayersAway,
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        {
+          kind: "casualty",
+          team: "home",
+          actorPlayerId: "h1",
+          targetPlayerId: "a9",
+          causeDetail: "block",
+          // Une Commotion (badly_hurt) n'a pas de suite : seule une blessure
+          // durable est persistée — d'où une BP ici, pour l'assertion.
+          injurySeverity: "niggling",
+        },
+        {
+          kind: "aggression",
+          team: "away",
+          actorPlayerId: "a3",
+          targetPlayerId: "h2",
+          injurySeverity: "mng",
+        },
+      ]);
+      mockRecordOffline.mockResolvedValue({
+        recorded: true,
+        pairingId: "pair-1",
+        matchId: "m1",
+        winner: "draw",
+        sppPlayersUpdated: 2,
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+      const out = await validateByCommissioner({
+        pairingId: "pair-1",
+        userId: COMMISH,
+      });
+      // Le blocage est une sortie dans tous les cas.
+      expect(out.summary.casualtiesHome).toBe(1);
+      expect(out.summary.casualtiesAway).toBe(casualtiesAway);
+      const offlineArgs = mockRecordOffline.mock.calls[0][0];
+      expect(offlineArgs).toMatchObject({
+        casualtiesHome: 1,
+        casualtiesAway,
+      });
+      expect(offlineArgs.playerStats).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ teamPlayerId: "h1", casualties: 1 }),
+          expect.objectContaining({ teamPlayerId: "a3", casualties }),
+        ]),
+      );
+      // Les deux blessures sont appliquées quoi qu'il arrive.
+      expect(offlineArgs.injuries).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ teamPlayerId: "a9" }),
+          expect.objectContaining({ teamPlayerId: "h2" }),
+        ]),
+      );
+    });
+
     it("remonte les jets de Haine dans la reponse de validation", async () => {
       // Le D6 est lance serveur : sans ce retour, le commissaire ne saurait
       // jamais qu'un jet a eu lieu.
@@ -1631,6 +1718,70 @@ describe("Lot G — league-match-sheet", () => {
       // l'Action Spéciale sans Innovateur Violent blesse, mais ne compte pas.
       expect(out.summary.casualtiesHome).toBe(1);
       expect(out.summary.injuries).toHaveLength(2);
+    });
+
+    it("agression : aucun PSP ni sortie sans « Frénésie d'Agression », 2 PSP et une sortie avec", async () => {
+      const foul = {
+        kind: "aggression",
+        team: "home",
+        actorPlayerId: "h-fouler",
+        targetPlayerId: "a-v1",
+        injurySeverity: "mng",
+      };
+      const human = (id: string, name: string) => ({
+        id,
+        number: 1,
+        name,
+        position: "human_lineman",
+        dead: false,
+        missNextMatch: false,
+        spp: 0,
+        skills: "",
+        advancements: "[]",
+        ma: 6,
+        st: 3,
+        ag: 3,
+        pa: 4,
+        av: 9,
+      });
+      const load = async (prayersHome: unknown) => {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+          prayersHome,
+          events: [foul],
+        });
+        mockPrisma.team.findMany.mockResolvedValue([
+          {
+            id: "team-home",
+            name: "Reikland",
+            roster: "human",
+            players: [human("h-fouler", "Brutus")],
+          },
+          { id: "team-away", name: "Gouged Eye", roster: "orc", players: [] },
+        ]);
+        return getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+      };
+
+      const plain = await load(null);
+      expect(plain.computedSpp["h-fouler"] ?? 0).toBe(0);
+      expect(plain.summary.casualtiesHome).toBe(0);
+      expect(plain.summary.playerStats[0]).toMatchObject({
+        aggressions: 1,
+        casualtiesInflicted: 0,
+      });
+      // La victime est blessée quand même.
+      expect(plain.summary.injuries.map((i) => i.playerId)).toEqual(["a-v1"]);
+
+      const blessed = await load([{ roll: 13, prayerId: "fouling-frenzy" }]);
+      expect(blessed.computedSpp["h-fouler"]).toBe(2);
+      expect(blessed.summary.casualtiesHome).toBe(1);
     });
 
     it("E30 — Bagarreurs Brutaux : l'Action Spéciale ne rapporte rien sans Innovateur Violent, 3 PSP avec", async () => {

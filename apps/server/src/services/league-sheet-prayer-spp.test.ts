@@ -11,8 +11,10 @@ import { describe, it, expect } from "vitest";
 import {
   applyPrayerSppBonuses,
   computePrayerSppBonuses,
+  foulingFrenzySides,
   parseSheetPrayers,
   prayerSppEffects,
+  FOULING_FRENZY_ROLL,
   PERFECT_PASSING_ROLL,
   STUNNING_CATCH_ROLL,
 } from "./league-sheet-prayer-spp";
@@ -72,10 +74,17 @@ describe("prayerSppEffects", () => {
     expect(prayerSppEffects([{ roll: STUNNING_CATCH_ROLL }])).toEqual({
       perfectPassing: false,
       stunningCatch: true,
+      foulingFrenzy: false,
     });
     expect(prayerSppEffects([{ roll: PERFECT_PASSING_ROLL }])).toEqual({
       perfectPassing: true,
       stunningCatch: false,
+      foulingFrenzy: false,
+    });
+    expect(prayerSppEffects([{ roll: FOULING_FRENZY_ROLL }])).toEqual({
+      perfectPassing: false,
+      stunningCatch: false,
+      foulingFrenzy: true,
     });
   });
 
@@ -88,7 +97,47 @@ describe("prayerSppEffects", () => {
   it("une prière sans effet sur les PSP ne change rien", () => {
     expect(
       prayerSppEffects([{ roll: 9, prayerId: "moles-under-the-pitch" }]),
-    ).toEqual({ perfectPassing: false, stunningCatch: false });
+    ).toEqual({ perfectPassing: false, stunningCatch: false, foulingFrenzy: false });
+  });
+
+  it("reconnaît « Frénésie d'Agression » par son identifiant seul", () => {
+    expect(prayerSppEffects([{ prayerId: "fouling-frenzy" }]).foulingFrenzy).toBe(
+      true,
+    );
+  });
+});
+
+// 13 « Frénésie d'Agression » n'ajoute pas de PSP après coup : elle dit au
+// summarizer qu'une agression qui blesse est une sortie, côté par côté.
+describe("foulingFrenzySides", () => {
+  it("chaque côté n'est béni que par SES prières", () => {
+    expect(foulingFrenzySides([{ roll: FOULING_FRENZY_ROLL }], null)).toEqual({
+      home: true,
+      away: false,
+    });
+    expect(
+      foulingFrenzySides(null, JSON.stringify([{ prayerId: "fouling-frenzy" }])),
+    ).toEqual({ home: false, away: true });
+  });
+
+  it("aucune prière : aucun côté", () => {
+    expect(foulingFrenzySides(null, undefined)).toEqual({
+      home: false,
+      away: false,
+    });
+    expect(foulingFrenzySides([{ roll: PERFECT_PASSING_ROLL }], [])).toEqual({
+      home: false,
+      away: false,
+    });
+  });
+
+  it("ne produit aucun bonus additif (la prière vit dans le summarizer)", () => {
+    const out = computePrayerSppBonuses({
+      summary: summary([stat({ playerId: "h1", aggressions: 2, casualtiesInflicted: 1 })]),
+      prayersHome: [{ roll: FOULING_FRENZY_ROLL }],
+      prayersAway: null,
+    });
+    expect(out).toEqual([]);
   });
 });
 

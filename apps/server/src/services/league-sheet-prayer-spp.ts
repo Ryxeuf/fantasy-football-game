@@ -1,33 +1,43 @@
 /**
  * PSP accordés par les Prières à Nuffle d'une feuille de match.
  *
- * Deux prières de la table (D16) modifient le barème de PSP d'un côté et
- * sont entièrement dérivables de la feuille — leurs deux ingrédients, le
- * lanceur et le réceptionneur, sont saisis sur l'évènement « Passe
- * réussie » :
+ * Trois prières de la table (D16) modifient le barème de PSP d'un côté et
+ * sont entièrement dérivables de la feuille :
  *
  *  - 10 « Passe Parfaite » : une Réussite rapporte 2 PSP au lieu de 1
  *    ⇒ +1 PSP par Réussite du LANCEUR ;
  *  - 11 « Réception Étourdissante » : réceptionner le ballon à la suite
  *    d'une Action de Passe rapporte 1 PSP ⇒ +1 PSP par réception du
- *    RÉCEPTIONNEUR (qui n'en gagnait aucun sans cette prière).
+ *    RÉCEPTIONNEUR (qui n'en gagnait aucun sans cette prière) ;
+ *  - 13 « Frénésie d'Agression » : une Élimination infligée lors d'une
+ *    Action d'Agression rapporte les PSP d'Élimination. Celle-ci n'est pas
+ *    un bonus additif : elle change la QUALIFICATION de l'agression, qui
+ *    devient une sortie (compteur d'équipe, PSP, classement des cogneurs).
+ *    Elle est donc servie au summarizer (`foulingFrenzySides`), pas
+ *    ajoutée après coup.
  *
- * Les autres prières qui touchent aux PSP (12 « Interaction avec les
- * Fans », 13 « Frénésie d'Agression ») demandent de relier une sortie à
- * la manière dont elle a été provoquée ; elles ne sont PAS câblées ici.
+ * La prière 12 « Interaction avec les Fans » (2 PSP à qui pousse un
+ * adversaire dans le Public) n'est PAS câblée : la feuille ne saisit pas
+ * l'auteur d'une sortie par le public.
  *
  * 100 % PUR (aucun Prisma) : la feuille fournit les prières saisies et les
  * stat-lines du summarizer. Le même calcul sert donc à l'affichage et à la
  * validation, qui ne peuvent pas diverger.
  */
 
-import type { MatchSummary, MatchEventTeam } from "./league-match-summary";
+import type {
+  MatchSummary,
+  MatchEventTeam,
+  SummarySides,
+} from "./league-match-summary";
 
 /** Identifiants de la table des Prières (cf. `PRAYERS_TABLE` du moteur). */
 export const PERFECT_PASSING_ROLL = 10;
 export const STUNNING_CATCH_ROLL = 11;
+export const FOULING_FRENZY_ROLL = 13;
 const PERFECT_PASSING_ID = "perfect-passing";
 const STUNNING_CATCH_ID = "stunning-catch";
+const FOULING_FRENZY_ID = "fouling-frenzy";
 
 /** PSP supplémentaires par Réussite sous « Passe Parfaite » (2 au lieu de 1). */
 const PERFECT_PASSING_EXTRA_SPP = 1;
@@ -85,6 +95,8 @@ function hasPrayer(
 export interface PrayerSppEffects {
   readonly perfectPassing: boolean;
   readonly stunningCatch: boolean;
+  /** 13 — une Élimination sur Agression rapporte les PSP d'Élimination. */
+  readonly foulingFrenzy: boolean;
 }
 
 export function prayerSppEffects(raw: unknown): PrayerSppEffects {
@@ -96,6 +108,23 @@ export function prayerSppEffects(raw: unknown): PrayerSppEffects {
       PERFECT_PASSING_ID,
     ),
     stunningCatch: hasPrayer(prayers, STUNNING_CATCH_ROLL, STUNNING_CATCH_ID),
+    foulingFrenzy: hasPrayer(prayers, FOULING_FRENZY_ROLL, FOULING_FRENZY_ID),
+  };
+}
+
+/**
+ * Côtés sous « Frénésie d'Agression », dans la forme attendue par le
+ * summarizer (`MatchSummaryOptions.foulingFrenzy`). Chaque côté n'est béni
+ * que par SES prières : celle du domicile ne qualifie pas les agressions de
+ * l'extérieur.
+ */
+export function foulingFrenzySides(
+  prayersHome: unknown,
+  prayersAway: unknown,
+): SummarySides {
+  return {
+    home: prayerSppEffects(prayersHome).foulingFrenzy,
+    away: prayerSppEffects(prayersAway).foulingFrenzy,
   };
 }
 

@@ -26,6 +26,7 @@ import {
   computeStalledTeams,
   type MatchEventInput,
   type MatchSummary,
+  type MatchSummaryOptions,
   type InjurySeverity,
 } from "./league-match-summary";
 import {
@@ -76,6 +77,7 @@ import { parseAccessCsv } from "./skill-access";
 import {
   applyPrayerSppBonuses,
   computePrayerSppBonuses,
+  foulingFrenzySides,
 } from "./league-sheet-prayer-spp";
 import {
   buildPurchaseOptions,
@@ -1861,26 +1863,15 @@ export async function validateByCommissioner(input: {
     where: { matchSheetId: sheet.id },
     orderBy: { occurredAt: "asc" },
   })) as Array<MatchEventInput & { meta?: unknown }>;
-  // Les PSP d'une Élimination sur Action Spéciale ne vont qu'aux joueurs
-  // ayant Innovateur Violent : le summarizer a besoin de leurs ids.
+  // Ce qui compte comme sortie (et rapporte des PSP) dépend des
+  // compétences du COUP D'ENVOI et des Prières de la feuille : la
+  // validation et la lecture doivent créditer exactement les mêmes joueurs
+  // (cf. `sheetSummaryOptions`).
   const teamsForBudgetLive = await loadSheetTeams(ctx);
-  // … lues dans le gel de la feuille : la validation et la lecture doivent
-  // créditer exactement les mêmes joueurs (cf. `collectViolentInnovators`).
-  const sheetSnapForSpp = sheet as {
-    rosterSnapshotHome?: unknown;
-    rosterSnapshotAway?: unknown;
-  };
-  const frozenForSpp = {
-    home: sheetSnapForSpp.rosterSnapshotHome,
-    away: sheetSnapForSpp.rosterSnapshotAway,
-  };
-  const summary = summarizeMatchSheet(events, {
-    violentInnovators: collectViolentInnovators(
-      teamsForBudgetLive,
-      frozenForSpp,
-    ),
-    fatalFlighters: collectFatalFlighters(teamsForBudgetLive, frozenForSpp),
-  });
+  const summary = summarizeMatchSheet(
+    events,
+    sheetSummaryOptions(teamsForBudgetLive, sheet as SheetSummarySource),
+  );
 
   const forfeitSide = (sheet as { forfeitSide?: string | null }).forfeitSide;
 
@@ -2860,8 +2851,8 @@ function positionNamesForRoster(roster: string): Map<string, string> {
  * pickers de l'UI : joueur du match, acteur/cible d'un event…). Les joueurs
  * morts sont inclus mais flagges (`dead`) pour l'affichage.
  */
-async function loadSheetTeams(
-  ctx: PairingContext,
+export async function loadSheetTeams(
+  ctx: Pick<PairingContext, "homeTeamId" | "awayTeamId">,
 ): Promise<{ home: MatchSheetTeam | null; away: MatchSheetTeam | null }> {
   const teamIds = [ctx.homeTeamId, ctx.awayTeamId].filter((id): id is string =>
     Boolean(id),
@@ -3088,9 +3079,40 @@ export function collectFatalFlighters(
   return collectSkillHolders(teams, "fatal-flight", frozen);
 }
 
-interface MatchSheetTeamsBySide {
+export interface MatchSheetTeamsBySide {
   home: MatchSheetTeam | null;
   away: MatchSheetTeam | null;
+}
+
+/** Colonnes de la feuille dont dépend la qualification des sorties. */
+export interface SheetSummarySource {
+  rosterSnapshotHome?: unknown;
+  rosterSnapshotAway?: unknown;
+  prayersHome?: unknown;
+  prayersAway?: unknown;
+}
+
+/**
+ * Options du summarizer pour UNE feuille : compétences du COUP D'ENVOI
+ * (Innovateur Violent, Vol Fatal — relues dans le gel, cf.
+ * `collectViolentInnovators`) et Prières à Nuffle de chaque côté (Frénésie
+ * d'Agression). La validation, la lecture et la resynchronisation d'une
+ * feuille validée passent toutes par ici : ce qui est compté comme sortie
+ * ne peut pas diverger d'un chemin à l'autre.
+ */
+export function sheetSummaryOptions(
+  teams: MatchSheetTeamsBySide,
+  sheet: SheetSummarySource,
+): MatchSummaryOptions {
+  const frozen: MatchSheetFrozenBySide = {
+    home: sheet.rosterSnapshotHome,
+    away: sheet.rosterSnapshotAway,
+  };
+  return {
+    violentInnovators: collectViolentInnovators(teams, frozen),
+    fatalFlighters: collectFatalFlighters(teams, frozen),
+    foulingFrenzy: foulingFrenzySides(sheet.prayersHome, sheet.prayersAway),
+  };
 }
 
 /** Snapshots gelés de la feuille (« version du match »). */
@@ -3928,14 +3950,10 @@ export async function getMatchSheet(input: {
       journeymanPositions.away,
     ),
   };
-  const frozenForRead = {
-    home: sheetSnapRaw.rosterSnapshotHome,
-    away: sheetSnapRaw.rosterSnapshotAway,
-  };
-  const summary = summarizeMatchSheet(events, {
-    violentInnovators: collectViolentInnovators(teamsLive, frozenForRead),
-    fatalFlighters: collectFatalFlighters(teamsLive, frozenForRead),
-  });
+  const summary = summarizeMatchSheet(
+    events,
+    sheetSummaryOptions(teamsLive, sheet as SheetSummarySource),
+  );
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).
