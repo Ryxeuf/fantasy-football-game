@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
+  frozenSkillHolders,
   frozenSkillsByPlayerId,
   parseFrozenPlayers,
+  VIOLENT_INNOVATOR_SLUG,
 } from "./league-sheet-frozen-skills";
 
 const live = (
@@ -120,5 +122,40 @@ describe("frozenSkillsByPlayerId", () => {
   it("normalise les compétences absentes du live en chaîne vide", () => {
     const map = frozenSkillsByPlayerId([live("p1", 1, "Griff", null)], null);
     expect(map.get("p1")).toBe("");
+  });
+});
+
+describe("frozenSkillHolders", () => {
+  it("retient les porteurs de la compétence AU COUP D'ENVOI", () => {
+    const players = [
+      live("h1", 1, "Griff", "block"),
+      live("h2", 2, "Zug", ""),
+    ];
+    const frozen = snapshot([
+      // h1 a gagné Innovateur Violent APRÈS le match : le gel ne l'a pas.
+      { number: 1, name: "Griff", skills: "block" },
+      // h2 l'avait au coup d'envoi et l'a perdu depuis (correction admin).
+      { number: 2, name: "Zug", skills: "violent-innovator" },
+    ]);
+    expect([...frozenSkillHolders(players, frozen, VIOLENT_INNOVATOR_SLUG)]).toEqual([
+      "h2",
+    ]);
+  });
+
+  it("retombe sur les compétences live sans gel exploitable", () => {
+    const players = [
+      live("h1", 1, "Griff", "block,Violent_Innovator"),
+      live("h2", 2, "Zug", " VIOLENT-INNOVATOR "),
+      live("h3", 3, "Bob", "violent-innovator-plus"),
+      live("h4", 4, "Nul", null),
+    ];
+    const holders = frozenSkillHolders(players, null, VIOLENT_INNOVATOR_SLUG);
+    // Variante à underscore et casse acceptées ; un slug qui CONTIENT le
+    // nom ne compte pas ; compétences absentes tolérées.
+    expect([...holders].sort()).toEqual(["h1", "h2"]);
+  });
+
+  it("aucun joueur : ensemble vide", () => {
+    expect(frozenSkillHolders([], null, VIOLENT_INNOVATOR_SLUG).size).toBe(0);
   });
 });
