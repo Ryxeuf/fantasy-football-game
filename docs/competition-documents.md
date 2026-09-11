@@ -47,8 +47,13 @@ d'écriture**.
   la compétition démarrée**. Aucun verrou de statut — contrairement aux
   paramètres de scoring, figés dès le premier match joué.
 - **Quoi** : PDF, PNG, JPEG, GIF, WEBP, **10 Mo maximum par fichier**.
-- **Lecture** : compétition publique → tout le monde, même non connecté ;
-  compétition privée → commissaire, admins et coachs inscrits.
+- **Lecture** : compétition publique → tout le monde, même non connecté.
+  Ligue privée → la règle de toute lecture d'une ligue par id
+  (`services/league-access`) : commissaire, admins, coachs inscrits et coachs
+  invités en attente ; pour les autres la ligue est **introuvable** (`404`,
+  jamais `403`, qui en révélerait l'existence). Coupe privée → commissaire,
+  admins et coachs inscrits, les autres reçoivent `403` (la visibilité des
+  coupes n'a pas été tranchée, `GET /cup/:id` les sert).
 
 ## Sécurité
 

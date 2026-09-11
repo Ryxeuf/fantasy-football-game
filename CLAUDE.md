@@ -852,6 +852,46 @@ ronde ne doit pas changer les points d'un exempt. D'où deux listes distinctes
 dans le même handler, et un helper PUR (`visibleCupRounds`) pour que la règle
 soit testable sans Prisma.
 
+### Une ligue PRIVÉE est INVISIBLE (404), pas interdite (403)
+
+`League.isPublic = false` n'était qu'un filtre de listing : toute lecture par
+id (détail, saison, classement, poules, classements individuels, récap,
+bracket, feuille de match, rosters, documents) servait la ligue à n'importe
+quel compte connaissant l'id — et plusieurs sans compte du tout. Règle
+(2026-09-11, change `private-league-visibility`) : une ligue privée n'existe
+que pour son commissaire, les admins, les coachs inscrits (toute saison, tout
+statut) et les coachs invités (`LeagueInvitation.status = pending`). Pour les
+autres, elle est INTROUVABLE.
+
+- **Une seule résolution**, `services/league-access` : `isLeagueVisibleTo`
+  (pur), `canViewLeagueRow` (ligne déjà chargée — pas de seconde requête),
+  `findVisibleLeague` / `findVisibleSeasonLeague` / `isLeaguePairingHiddenFrom`
+  (par id de ligue, de saison, de rencontre). Côté route, les gardes
+  `ensureVisibleLeague` / `ensureVisibleSeason` / `ensureVisiblePairingLeague`
+  répondent le 404 elles-mêmes. Toute NOUVELLE lecture d'une ligue par id
+  commence par l'une d'elles.
+- **404, jamais 403, avec le MÊME message qu'une ressource inexistante** :
+  un « réservé aux membres » confirme que l'id existe. Le 403 reste pour ce
+  qui est visible mais interdit (rosters d'une ligue publique à un non-inscrit).
+- **Une lecture ouverte passe par `optionalAuthUser`, jamais par rien** :
+  sans middleware, une ligue privée ne peut être servie à PERSONNE (pas
+  d'identité) — c'est ce qui a rendu poules, classements et récap
+  « publics » au sens fort. `optionalAuthUser` garde l'accès sans compte
+  pour une ligue publique.
+- **Les listings appliquent la même règle en `where`** (`listLeagues`,
+  `listThemedSeasons`) : un listing qui ne filtre pas expose les noms.
+- **La feuille de match est polymorphe** (ligue XOR coupe) : la garde ne
+  cache que les rencontres de LIGUE ; une rencontre de coupe ou un id inconnu
+  passent au service. Les coupes privées gardent leur 403 (visibilité non
+  tranchée, `GET /cup/:id` les sert).
+
+Pièges de test : une fixture de ligue SANS `isPublic` est vue PRIVÉE
+(`undefined` est faux) — les fixtures de route portent `creatorId` +
+`isPublic` ; et un `describe` en `clearAllMocks` garde un `mockResolvedValue`
+d'un test à l'autre (préférer `mockResolvedValueOnce`). Le test de référence
+est `routes/league-access.test.ts` : chaîne Express réelle, JWT réels signés
+avec `JWT_SECRET`, Prisma mocké, en table sur dix lectures.
+
 ### Poules : rondes COMMUNES, appariement par groupe
 
 Une ronde reste une ronde de la compétition (contrainte unique
@@ -1383,6 +1423,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   [`docs/cup-match-sheet.md`](./docs/cup-match-sheet.md) et
   [`docs/cup-swiss-rounds.md`](./docs/cup-swiss-rounds.md), récit
   [`docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md`](./docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md).
+- **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
+  au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
+  toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures
+  ouvertes, calendrier thématique et documents officiels alignés, indice sur
+  le formulaire. Change OpenSpec `private-league-visibility`.
 - **2026-09-08** : Ronde suisse des coupes, clôture manuelle de saison,
   date prévisionnelle des rencontres, journées repensées (`MatchCard`
   partagé), poule du coach en premier. Change OpenSpec

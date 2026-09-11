@@ -764,6 +764,7 @@
     "formPublicLabel": "Visibility",
     "formPublicYes": "Public",
     "formPublicNo": "Private",
+    "formPublicHint": "A private league is not listed and can only be read by its commissioner, registered coaches and invited coaches.",
     "formMaxParticipantsLabel": "Max participants",
     "formAllowedRostersLabel": "Allowed rosters (empty = all)",
     "formScoringTitle": "Scoring system",

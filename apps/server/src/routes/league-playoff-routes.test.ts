@@ -41,6 +41,9 @@ vi.mock("../prisma", () => ({
     leagueSeason: { findUnique: vi.fn(), update: vi.fn() },
     leagueRound: { count: vi.fn(), findMany: vi.fn() },
     leaguePool: { findMany: vi.fn() },
+    // Visibilité d'une ligue privée (`services/league-access`).
+    leagueParticipant: { count: vi.fn() },
+    leagueInvitation: { count: vi.fn() },
   },
 }));
 
@@ -257,7 +260,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       playoffSize: 4,
       status: "in_progress",
       playoffsPublished: false,
-      league: { creatorId: "user-1" },
+      league: { id: "league-1", creatorId: "user-1", isPublic: true },
     });
     mocked.roundFindMany.mockResolvedValue([]);
     mocked.roundCount.mockResolvedValue(0);
@@ -290,7 +293,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       playoffSize: 4,
       status: "in_progress",
       playoffsPublished: true,
-      league: { creatorId: "user-1" },
+      league: { id: "league-1", creatorId: "user-1", isPublic: true },
     });
     mocked.roundFindMany.mockResolvedValue([]);
     mocked.roundCount.mockResolvedValue(3);
@@ -317,7 +320,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       playoffSize: 4,
       status: "in_progress",
       playoffsPublished: false,
-      league: { creatorId: "commish" },
+      league: { id: "league-1", creatorId: "commish", isPublic: true },
     });
 
     const req = createReq({
@@ -340,7 +343,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       playoffSize: 4,
       status: "in_progress",
       playoffsPublished: true,
-      league: { creatorId: "commish" },
+      league: { id: "league-1", creatorId: "commish", isPublic: true },
     });
     mocked.roundFindMany.mockResolvedValue([
       { id: "r1", roundNumber: 1, bracketSlot: "final", pairings: [] },
@@ -368,7 +371,7 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
       playoffSize: 4,
       status: "in_progress",
       playoffsPublished: null,
-      league: { creatorId: "commish" },
+      league: { id: "league-1", creatorId: "commish", isPublic: true },
     });
     mocked.roundFindMany.mockResolvedValue([
       { id: "r1", roundNumber: 1, bracketSlot: "final", pairings: [] },
@@ -388,13 +391,62 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
     });
   });
 
+  it("ligue privée : bracket introuvable (404) pour un coach qui n'en fait pas partie", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      playoffSize: 4,
+      status: "in_progress",
+      playoffsPublished: true,
+      league: { id: "league-1", creatorId: "commish", isPublic: false },
+    });
+    (prisma.leagueParticipant.count as unknown as MockFn).mockResolvedValue(0);
+    (prisma.leagueInvitation.count as unknown as MockFn).mockResolvedValue(0);
+
+    const req = createReq({
+      params: { seasonId: "s1" } as never,
+      user: { id: "coach-1", roles: ["user"] } as never,
+    });
+    const res = createRes();
+    await handleGetPlayoffBracket(req, res);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toEqual({
+      success: false,
+      error: "Saison introuvable",
+    });
+    expect(mocked.roundFindMany).not.toHaveBeenCalled();
+  });
+
+  it("ligue privée : bracket servi à un coach inscrit", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      playoffSize: 4,
+      status: "in_progress",
+      playoffsPublished: true,
+      league: { id: "league-1", creatorId: "commish", isPublic: false },
+    });
+    (prisma.leagueParticipant.count as unknown as MockFn).mockResolvedValue(1);
+    mocked.roundFindMany.mockResolvedValue([]);
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.poolFindMany.mockResolvedValue([]);
+
+    const req = createReq({
+      params: { seasonId: "s1" } as never,
+      user: { id: "coach-1", roles: ["user"] } as never,
+    });
+    const res = createRes();
+    await handleGetPlayoffBracket(req, res);
+
+    expect(res.payload).toMatchObject({ data: { playoffsPublished: true } });
+  });
+
   it("sert le bracket NON publie au commissaire", async () => {
     mocked.seasonFind.mockResolvedValue({
       id: "s1",
       playoffSize: 4,
       status: "in_progress",
       playoffsPublished: false,
-      league: { creatorId: "user-1" },
+      league: { id: "league-1", creatorId: "user-1", isPublic: true },
     });
     mocked.roundFindMany.mockResolvedValue([
       { id: "r1", roundNumber: 1, bracketSlot: "final", pairings: [] },

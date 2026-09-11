@@ -17,6 +17,7 @@ vi.mock("../prisma", () => ({
     league: { findUnique: vi.fn() },
     cup: { findUnique: vi.fn() },
     leagueParticipant: { count: vi.fn() },
+    leagueInvitation: { count: vi.fn() },
     cupParticipant: { count: vi.fn() },
     competitionDocument: {
       findMany: vi.fn(),
@@ -46,6 +47,7 @@ const db = prisma as unknown as {
   league: { findUnique: ReturnType<typeof vi.fn> };
   cup: { findUnique: ReturnType<typeof vi.fn> };
   leagueParticipant: { count: ReturnType<typeof vi.fn> };
+  leagueInvitation: { count: ReturnType<typeof vi.fn> };
   cupParticipant: { count: ReturnType<typeof vi.fn> };
   competitionDocument: {
     findMany: ReturnType<typeof vi.fn>;
@@ -342,7 +344,9 @@ describe("listCompetitionDocuments", () => {
     );
   });
 
-  it("refuse un anonyme sur une competition privee", async () => {
+  // Ligue PRIVEE : introuvable (404) pour qui n'en fait pas partie — jamais
+  // « interdit », qui confirmerait l'existence de la ligue.
+  it("ligue privee : introuvable pour un anonyme", async () => {
     db.league.findUnique.mockResolvedValue(leagueRow({ isPublic: false }));
     await expect(
       listCompetitionDocuments({
@@ -350,7 +354,45 @@ describe("listCompetitionDocuments", () => {
         competitionId: "league-1",
         actor: ANONYMOUS,
       }),
-    ).rejects.toMatchObject({ code: "forbidden" });
+    ).rejects.toMatchObject({
+      code: "competition-not-found",
+      message: "Ligue introuvable",
+    });
+    expect(db.competitionDocument.findMany).not.toHaveBeenCalled();
+  });
+
+  it("ligue privee : introuvable pour un coach ni inscrit ni invite", async () => {
+    db.league.findUnique.mockResolvedValue(leagueRow({ isPublic: false }));
+    db.leagueParticipant.count.mockResolvedValue(0);
+    db.leagueInvitation.count.mockResolvedValue(0);
+    await expect(
+      listCompetitionDocuments({
+        kind: "league",
+        competitionId: "league-1",
+        actor: OTHER_COACH,
+      }),
+    ).rejects.toMatchObject({ code: "competition-not-found" });
+  });
+
+  it("ligue privee : un coach invite en attente voit les documents", async () => {
+    db.league.findUnique.mockResolvedValue(leagueRow({ isPublic: false }));
+    db.leagueParticipant.count.mockResolvedValue(0);
+    db.leagueInvitation.count.mockResolvedValue(1);
+    db.competitionDocument.findMany.mockResolvedValue([]);
+    await expect(
+      listCompetitionDocuments({
+        kind: "league",
+        competitionId: "league-1",
+        actor: OTHER_COACH,
+      }),
+    ).resolves.toEqual([]);
+    expect(db.leagueInvitation.count).toHaveBeenCalledWith({
+      where: {
+        leagueId: "league-1",
+        inviteeUserId: "coach-2",
+        status: "pending",
+      },
+    });
   });
 
   it("autorise un coach inscrit sur une competition privee", async () => {
