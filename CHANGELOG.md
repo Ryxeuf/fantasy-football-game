@@ -1,3 +1,10 @@
+## [1.241.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.2...v1.241.3) (2026-09-11)
+
+
+### 🐛 Bug Fixes
+
+* **league:** une ligue privée est invisible (404) pour qui n'en fait pas partie ([#1023](https://github.com/Ryxeuf/fantasy-football-game/issues/1023)) ([c3452f7](https://github.com/Ryxeuf/fantasy-football-game/commit/c3452f7c03c2ed487e508300fdae81aa52fce59c))
+
 ## [1.241.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.1...v1.241.2) (2026-09-08)
 
 
