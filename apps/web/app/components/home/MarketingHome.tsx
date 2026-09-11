@@ -5,7 +5,10 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import HomeStructuredData from "../HomeStructuredData";
 import LatestBlogPosts from "../LatestBlogPosts";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import { ONLINE_PLAY_FLAG } from "../../lib/featureFlagKeys";
+import {
+  OFFLINE_MATCH_FLAG,
+  ONLINE_PLAY_FLAG,
+} from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
 import {
   NuffleMedallion,
@@ -127,6 +130,7 @@ interface MarketingHomeProps {
 export default function MarketingHome({ coachName = null }: MarketingHomeProps) {
   const { t, language } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
+  const offlineMatchEnabled = useFeatureFlag(OFFLINE_MATCH_FLAG);
 
   // Stats live (compteurs reels) via /api/public/stats — endpoint leger
   // (6 COUNT), fetch cote client avec repli sur les valeurs catalogue.
@@ -160,7 +164,10 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
     { href: "/star-players", icon: <EmblemStar />, title: t.home.starPlayers.title, description: t.home.starPlayers.description, cta: explore },
     { href: "/skills", icon: <EmblemSkills />, title: t.home.skillsReference.title, description: t.home.skillsReference.description, cta: explore },
     { href: "/tutoriel", icon: <EmblemTutorial />, title: t.home.tutorial.title, description: t.home.tutorial.description, cta: explore },
-    { href: "/local-matches", icon: <EmblemTabletop />, title: t.home.localMatches.title, description: t.home.localMatches.description, cta: explore },
+    // Carte « parties offline » : seulement quand la brique est active.
+    ...(offlineMatchEnabled
+      ? [{ href: "/local-matches", icon: <EmblemTabletop />, title: t.home.localMatches.title, description: t.home.localMatches.description, cta: explore }]
+      : []),
     { icon: <EmblemPdf />, title: t.home.exportPdf.title, description: t.home.exportPdf.description },
   ];
 

@@ -29,6 +29,7 @@ import {
   NUFFLE_COACH_TEST_FLAG,
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
   MAINTENANCE_MODE_FLAG,
+  OFFLINE_MATCH_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1170,6 +1171,28 @@ async function main() {
       `   ✅ Override '${LEAGUE_FLAG}' ajouté pour user@example.com`,
     );
   }
+
+  // Partie offline (« Match Local ») — DESACTIVEE : la brique n'est pas mure
+  // et fait doublon avec la feuille de match, qui est le chemin de saisie
+  // d'un resultat de ligue comme de coupe. Pas d'override user@example.com :
+  // le but est justement de la retirer du site. Les admins gardent leur
+  // bypass de role pour administrer les parties deja enregistrees.
+  const offlineMatchFlag = await prisma.featureFlag.upsert({
+    where: { key: OFFLINE_MATCH_FLAG },
+    update: {
+      description:
+        "Partie offline (Match Local) — hub /local-matches, creation, saisie des actions, partage. OFF : la feuille de match est le chemin de saisie d'un resultat.",
+    },
+    create: {
+      key: OFFLINE_MATCH_FLAG,
+      description:
+        "Partie offline (Match Local) — hub /local-matches, creation, saisie des actions, partage. OFF : la feuille de match est le chemin de saisie d'un resultat.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${OFFLINE_MATCH_FLAG}' ${offlineMatchFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
+  );
 
   // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav
   // + pages user). Les routes API restent ouvertes ; tant que le flag

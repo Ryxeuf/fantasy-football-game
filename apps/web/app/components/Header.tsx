@@ -10,6 +10,7 @@ import {
   ONLINE_PLAY_FLAG,
   NUFFLE_COACH_FLAG,
   LEAGUE_FLAG,
+  OFFLINE_MATCH_FLAG,
 } from "../lib/featureFlagKeys";
 
 type DropdownId =
@@ -40,6 +41,8 @@ export default function Header() {
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
   const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const nuffleCoachEnabled = useFeatureFlag(NUFFLE_COACH_FLAG);
+  // Partie offline : OFF par défaut, la saisie passe par la feuille de match.
+  const offlineMatchEnabled = useFeatureFlag(OFFLINE_MATCH_FLAG);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<DropdownId>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -124,8 +127,10 @@ export default function Header() {
         {/* Navigation desktop */}
         <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
 
-          {/* Jouer — dropdown si online activé, lien direct sinon */}
-          {onlinePlayEnabled ? (
+          {/* Jouer — dropdown quand les deux modes sont actifs ; sinon le
+              seul mode actif devient un lien direct, et rien du tout si les
+              deux sont coupés. */}
+          {onlinePlayEnabled && offlineMatchEnabled ? (
             <div
               className="relative"
               ref={(el) => { dropdownRefs.current["play"] = el; }}
@@ -151,11 +156,15 @@ export default function Header() {
                 </div>
               )}
             </div>
-          ) : (
+          ) : onlinePlayEnabled ? (
+            <a href="/play" className={navLinkClass} data-testid="nav-play-online">
+              ⚔️ {t.nav.playOnline}
+            </a>
+          ) : offlineMatchEnabled ? (
             <a href="/local-matches" className={navLinkClass}>
               🎮 {t.nav.offlineMatches}
             </a>
-          )}
+          ) : null}
 
           {/* Accès rapide à la gestion de mes rosters */}
           <a href="/me/teams" className={navLinkClass} data-testid="nav-my-teams">
@@ -345,13 +354,15 @@ export default function Header() {
                   ⚔️ {t.nav.playOnline}
                 </a>
               )}
-              <a
-                href="/local-matches"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
-              >
-                🎮 {t.nav.offlineMatches}
-              </a>
+              {offlineMatchEnabled && (
+                <a
+                  href="/local-matches"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                >
+                  🎮 {t.nav.offlineMatches}
+                </a>
+              )}
               {/* Accès rapide à la gestion de mes rosters */}
               <a
                 href="/me/teams"
