@@ -1627,8 +1627,10 @@ describe("Lot G — league-match-sheet", () => {
       // l'autre acteur (Action Spéciale sans Innovateur Violent).
       expect(out.computedSpp["h-violent"]).toBe(2);
       expect(out.computedSpp["h-normal"] ?? 0).toBe(0);
-      // Les 2 éliminations comptent au score de sorties de l'équipe.
-      expect(out.summary.casualtiesHome).toBe(2);
+      // Seule l'élimination qui rapporte des PSP est une sortie de l'équipe :
+      // l'Action Spéciale sans Innovateur Violent blesse, mais ne compte pas.
+      expect(out.summary.casualtiesHome).toBe(1);
+      expect(out.summary.injuries).toHaveLength(2);
     });
 
     it("E30 — Bagarreurs Brutaux : l'Action Spéciale ne rapporte rien sans Innovateur Violent, 3 PSP avec", async () => {
@@ -1710,8 +1712,10 @@ describe("Lot G — league-match-sheet", () => {
       // Sans Innovateur Violent : l'Action Spéciale ne rapporte RIEN, même
       // en Bagarreurs Brutaux — seule l'élimination sur Blocage compte (3).
       expect(out.computedSpp["h-normal"]).toBe(3);
-      // Les 3 sorties comptent au score d'éliminations de l'équipe.
-      expect(out.summary.casualtiesHome).toBe(3);
+      // Sorties de l'équipe = éliminations qui rapportent des PSP : celle
+      // d'Innovateur Violent et celle sur Blocage, pas l'Action Spéciale nue.
+      expect(out.summary.casualtiesHome).toBe(2);
+      expect(out.summary.injuries).toHaveLength(3);
     });
 
     it("credite les PSP du JDM sans stat-line (palier propose AVANT validation)", async () => {
