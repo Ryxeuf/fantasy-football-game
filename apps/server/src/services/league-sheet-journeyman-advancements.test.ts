@@ -320,6 +320,67 @@ describe("reviewJourneymanAdvancements", () => {
   });
 });
 
+describe("reviewJourneymanAdvancements — mort relevé (Maîtres de la Non-vie)", () => {
+  /** Trois-quart Zombie relevé : même forme qu'un journalier, sans Solitaire. */
+  const RAISED: SheetJourneyman = {
+    id: "raised-home-1",
+    number: 13,
+    name: "Grommit",
+    position: "undead_trois_quart_zombie",
+    positionName: "Mort relevé (Trois-quart Zombie)",
+    stats: { ma: 4, st: 3, ag: 4, pa: 6, av: 9 },
+    skills: "fork,instable,regeneration",
+    cost: 40_000,
+  };
+
+  it("vérifie l'évolution du relevé comme celle d'un journalier, et trace un relevé absent", async () => {
+    mockSkillInfo.mockResolvedValue({
+      categoryCode: "G",
+      excludedFromSelection: false,
+    });
+    const ok = entry({ playerId: RAISED.id, skillSlug: "block" });
+    const owned = entry({ playerId: RAISED.id, skillSlug: "regeneration" });
+    const ghost = entry({ playerId: "raised-away-1", skillSlug: "block" });
+    const review = await reviewJourneymanAdvancements({
+      sheetId: "ms1",
+      ruleset: "season_3",
+      journeymen: [ORC, RAISED],
+      staged: [ok],
+    });
+    expect(review.staged).toEqual([ok]);
+    const refusedReview = await reviewJourneymanAdvancements({
+      sheetId: "ms1",
+      ruleset: "season_3",
+      journeymen: [RAISED],
+      staged: [owned, ghost],
+    });
+    expect(refusedReview.staged).toEqual([]);
+    expect([...refusedReview.refused.entries()]).toEqual([
+      [RAISED.id, "skill-already-owned"],
+      ["raised-away-1", "journeyman-not-found"],
+    ]);
+  });
+
+  it("trace le relevé non recruté et le relevé recruté avec son évolution", () => {
+    const stagedRaised = entry({ playerId: RAISED.id, skillSlug: "block" });
+    const notHired = traceJourneymanAdvancements({
+      staged: [stagedRaised],
+      review: { staged: [stagedRaised], refused: new Map() },
+      hires: new Map(),
+    });
+    expect(notHired.get(RAISED.id)).toMatchObject({
+      applied: false,
+      skipReason: "journeyman-not-hired",
+    });
+    const hired = traceJourneymanAdvancements({
+      staged: [stagedRaised],
+      review: { staged: [stagedRaised], refused: new Map() },
+      hires: new Map([[RAISED.id, { advancementTaken: true, pspCost: 6 }]]),
+    });
+    expect(hired.get(RAISED.id)).toMatchObject({ applied: true, cost: 6 });
+  });
+});
+
 describe("traceJourneymanAdvancements / mergeAdvancementTraces", () => {
   const refusedEntry = entry({ playerId: GOBLIN.id, skillSlug: "dodge" });
   const hiredEntry = entry({ type: "random-primary", category: "G", skillSlug: "block" });
