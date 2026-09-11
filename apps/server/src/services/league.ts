@@ -1036,7 +1036,14 @@ export async function listThemedSeasons(input: ListThemedSeasonsInput) {
   const limit = Math.min(Math.max(input.limit ?? 50, 1), 100);
   const offset = Math.max(input.offset ?? 0, 0);
 
-  const where: Record<string, unknown> = { theme: input.theme };
+  // Calendrier PUBLIC (page `/leagues/seasons`, sans compte) : seules les
+  // saisons d'une ligue publique y figurent. Une ligue privée n'est ni listée
+  // ni lisible par lien (cf. `services/league-access`) ; ses membres la
+  // trouvent depuis leur hub.
+  const where: Record<string, unknown> = {
+    theme: input.theme,
+    league: { isPublic: true },
+  };
   if (input.themeYear !== undefined) {
     where.themeYear = input.themeYear;
   }

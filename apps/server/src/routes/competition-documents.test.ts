@@ -26,6 +26,7 @@ vi.mock("../prisma", () => ({
     league: { findUnique: vi.fn() },
     cup: { findUnique: vi.fn() },
     leagueParticipant: { count: vi.fn() },
+    leagueInvitation: { count: vi.fn() },
     cupParticipant: { count: vi.fn() },
     competitionDocument: {
       findMany: vi.fn(),
@@ -207,6 +208,39 @@ describe("GET /:kind/:competitionId/documents", () => {
     db.cup.findUnique.mockResolvedValue(null);
     const res = await request("GET", "/cups/nope/documents");
     expect(res.status).toBe(404);
+  });
+
+  it("ligue privee : 404 (pas 403) pour un coach qui n'en fait pas partie", async () => {
+    currentUser = { id: "coach-2", roles: ["user"] };
+    db.league.findUnique.mockResolvedValue(leagueRow({ isPublic: false }));
+    db.leagueParticipant.count.mockResolvedValue(0);
+    db.leagueInvitation.count.mockResolvedValue(0);
+    const res = await request("GET", "/leagues/league-1/documents");
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ success: false, error: "Ligue introuvable" });
+  });
+
+  it("ligue privee : servie a un coach inscrit", async () => {
+    currentUser = { id: "coach-2", roles: ["user"] };
+    db.league.findUnique.mockResolvedValue(leagueRow({ isPublic: false }));
+    db.leagueParticipant.count.mockResolvedValue(1);
+    db.competitionDocument.findMany.mockResolvedValue([docRow()]);
+    const res = await request("GET", "/leagues/league-1/documents");
+    expect(res.status).toBe(200);
+    expect(res.body.data.documents).toHaveLength(1);
+  });
+
+  it("coupe privee : 403 pour un coach non inscrit (regle propre aux coupes)", async () => {
+    currentUser = { id: "coach-2", roles: ["user"] };
+    db.cup.findUnique.mockResolvedValue({
+      id: "cup-1",
+      name: "Coupe",
+      creatorId: "coach-1",
+      isPublic: false,
+    });
+    db.cupParticipant.count.mockResolvedValue(0);
+    const res = await request("GET", "/cups/cup-1/documents");
+    expect(res.status).toBe(403);
   });
 
   it("400 sur une famille de competition inconnue", async () => {

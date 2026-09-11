@@ -987,7 +987,7 @@ describe("Rule: League service", () => {
 
       expect(mockPrisma.leagueSeason.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { theme: "skaven_cup" },
+          where: { theme: "skaven_cup", league: { isPublic: true } },
           orderBy: [
             { themeYear: "desc" },
             { seasonNumber: "desc" },
@@ -1006,7 +1006,11 @@ describe("Rule: League service", () => {
 
       expect(mockPrisma.leagueSeason.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { theme: "nordic_challenge", themeYear: 2026 },
+          where: {
+            theme: "nordic_challenge",
+            themeYear: 2026,
+            league: { isPublic: true },
+          },
         }),
       );
     });

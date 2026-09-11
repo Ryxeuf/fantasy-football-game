@@ -80,18 +80,27 @@ d'upload.
 `GET /api/competitions/:kind/:competitionId/documents` DOIT lister les
 documents triés par ordre d'affichage puis par date de création. Une
 compétition **publique** DOIT être lisible par tous, y compris sans
-authentification. Une compétition **privée** NE DOIT être lisible que par son
-commissaire, un administrateur ou un coach inscrit.
+authentification. Une coupe **privée** NE DOIT être lisible que par son
+commissaire, un administrateur ou un coach inscrit. Une ligue **privée** suit
+la règle de visibilité des ligues (capability `league-visibility`) : lisible
+par son commissaire, un administrateur, un coach inscrit ou un coach invité en
+attente, et **introuvable** (`404`) pour tout autre lecteur.
 
 #### Scenario: Visiteur anonyme sur une ligue publique
 
 - WHEN un visiteur non connecté demande les documents d'une ligue publique
 - THEN la liste DOIT être servie avec l'URL publique de chaque fichier
 
-#### Scenario: Visiteur anonyme sur une compétition privée
+#### Scenario: Visiteur anonyme sur une coupe privée
 
-- WHEN un visiteur non connecté demande les documents d'une compétition privée
+- WHEN un visiteur non connecté demande les documents d'une coupe privée
 - THEN le serveur DOIT répondre `403`
+
+#### Scenario: Coach tiers sur une ligue privée
+
+- WHEN un coach ni inscrit ni invité demande les documents d'une ligue privée
+- THEN le serveur DOIT répondre `404` avec le même message qu'une ligue
+  inexistante
 
 ### Requirement: Modification et retrait
 
