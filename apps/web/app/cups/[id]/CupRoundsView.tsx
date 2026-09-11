@@ -19,6 +19,10 @@ import {
   type CupRoundSystem,
   type ManualPairingDraft,
 } from "./manual-round";
+import {
+  CUP_ROUND_SYSTEM_LABEL_KEYS,
+  cupRoundsHeadingKeys,
+} from "./round-system-copy";
 import { dynamicRoute } from "../../lib/typed-route";
 import { groupCupRoundByPool } from "./round-pools";
 
@@ -156,6 +160,7 @@ export default function CupRoundsView({
   const lastOpen = lastRound ? isRoundOpen(lastRound) : false;
   const cupRunning = cupStatus === "en_cours";
   const canGenerate = isCommissioner && cupRunning && participantCount >= 2 && !lastOpen;
+  const systemSelectorVisible = isCommissioner && canGenerate;
   const canDeleteLast =
     isCommissioner &&
     !!lastRound &&
@@ -232,17 +237,15 @@ export default function CupRoundsView({
   };
 
   const systemLabel = (value: CupRoundSystem): string =>
-    value === "random"
-      ? t.cups.roundSystemRandom
-      : value === "manual"
-        ? t.cups.roundSystemManual
-        : t.cups.roundSystemSwiss;
-  const systemHint = (value: CupRoundSystem): string =>
-    value === "random"
-      ? t.cups.roundSystemRandomHint
-      : value === "manual"
-        ? t.cups.roundSystemManualHint
-        : t.cups.roundSystemSwissHint;
+    t.cups[CUP_ROUND_SYSTEM_LABEL_KEYS[value]];
+  // Le bandeau décrit l'appariement QUI VA ÊTRE APPLIQUÉ : il suit donc la
+  // pastille choisie, et reste neutre quand le sélecteur n'est pas affiché.
+  const heading = cupRoundsHeadingKeys({ system, systemSelectorVisible });
+  const headingTitle = heading.systemLabelKey
+    ? fill(t.cups[heading.titleKey], {
+        system: t.cups[heading.systemLabelKey],
+      })
+    : t.cups[heading.titleKey];
   // `bracket` n'est pas un mode d'appariement PROPOSÉ : il est posé par le
   // lancement des play-offs. Sans son libellé, une ronde de bracket
   // s'annonçait « Suisse » (le repli du ternaire).
@@ -275,8 +278,18 @@ export default function CupRoundsView({
     <section data-testid="cup-rounds" className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">{t.cups.swissTitle}</h2>
-          <p className="mt-1 max-w-2xl text-sm text-gray-600">{t.cups.swissDescription}</p>
+          <h2
+            data-testid="cup-rounds-title"
+            className="text-lg font-semibold text-gray-900"
+          >
+            {headingTitle}
+          </h2>
+          <p
+            data-testid="cup-rounds-description"
+            className="mt-1 max-w-2xl text-sm text-gray-600"
+          >
+            {t.cups[heading.descriptionKey]}
+          </p>
         </div>
         {isCommissioner ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -309,7 +322,7 @@ export default function CupRoundsView({
         ) : null}
       </div>
 
-      {isCommissioner && canGenerate ? (
+      {systemSelectorVisible ? (
         <div
           data-testid="cup-round-system"
           className="rounded-lg border border-gray-200 bg-gray-50/70 p-3"
@@ -340,7 +353,6 @@ export default function CupRoundsView({
               </label>
             ))}
           </div>
-          <p className="mt-2 text-xs text-gray-500">{systemHint(system)}</p>
           {system === "manual" ? (
             <ManualRoundEditor
               participants={participants}

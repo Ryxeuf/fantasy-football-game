@@ -187,6 +187,55 @@ describe("CupRoundsView", () => {
     }
   });
 
+  it("le bandeau suit le système d'appariement sélectionné", () => {
+    renderView({
+      rounds: [round([PLAYED, BYE], { status: "completed" })],
+      isCommissioner: true,
+      participants: [
+        { id: "t1", name: "Alpha" },
+        { id: "t2", name: "Bravo" },
+      ],
+    });
+    // Défaut : tirage au sort — et surtout PAS le texte de la suisse.
+    expect(screen.getByTestId("cup-rounds-title").textContent).toContain(
+      "Tirage au sort",
+    );
+    const random = screen.getByTestId("cup-rounds-description").textContent;
+    expect(random).toContain("tiré au sort");
+    expect(random).not.toContain("selon le classement");
+
+    fireEvent.click(screen.getByTestId("cup-round-system-swiss"));
+    expect(screen.getByTestId("cup-rounds-title").textContent).toContain(
+      "Ronde suisse",
+    );
+    expect(screen.getByTestId("cup-rounds-description").textContent).toContain(
+      "selon le classement",
+    );
+
+    fireEvent.click(screen.getByTestId("cup-round-system-manual"));
+    expect(screen.getByTestId("cup-rounds-title").textContent).toContain(
+      "Saisie manuelle",
+    );
+    expect(screen.getByTestId("cup-rounds-description").textContent).toContain(
+      "vous-même",
+    );
+  });
+
+  it("reste neutre pour un coach : aucun système n'est annoncé", () => {
+    renderView({ rounds: [round([OPEN])], myTeamIds: ["d"] });
+    expect(screen.queryByTestId("cup-round-system")).toBeNull();
+    expect(screen.getByTestId("cup-rounds-title").textContent).toBe("Rondes");
+    const description = screen.getByTestId("cup-rounds-description").textContent;
+    expect(description).not.toContain("suisse");
+    expect(description).not.toContain("classement");
+  });
+
+  it("reste neutre pour le commissaire tant qu'une ronde est ouverte", () => {
+    renderView({ rounds: [round([OPEN])], isCommissioner: true });
+    expect(screen.queryByTestId("cup-round-system")).toBeNull();
+    expect(screen.getByTestId("cup-rounds-title").textContent).toBe("Rondes");
+  });
+
   it("bloque la génération manuelle tant qu'aucune rencontre n'est saisie", () => {
     renderView({
       rounds: [round([PLAYED, BYE], { status: "completed" })],
