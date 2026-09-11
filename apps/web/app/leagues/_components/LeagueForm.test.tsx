@@ -49,6 +49,15 @@ beforeEach(() => {
   });
 });
 
+describe("LeagueForm — visibilité de la ligue", () => {
+  it("explique ce qu'implique une ligue privée (ni listée, ni lisible par un tiers)", async () => {
+    await renderForm();
+    const hint = screen.getByTestId("league-form-visibility-hint");
+    expect(hint.textContent).toMatch(/priv(ée|ate)/i);
+    expect(hint.textContent).toMatch(/commissaire|commissioner/i);
+  });
+});
+
 describe("LeagueForm — editeur de points bonus (E1)", () => {
   it("affiche la section bonus vide par defaut", async () => {
     await renderForm();

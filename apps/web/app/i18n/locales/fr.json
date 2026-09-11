@@ -769,6 +769,7 @@
     "formPublicLabel": "Visibilité",
     "formPublicYes": "Publique",
     "formPublicNo": "Privée",
+    "formPublicHint": "Une ligue privée n'apparaît pas dans la liste et n'est lisible que par son commissaire, les coachs inscrits et les coachs invités.",
     "formMaxParticipantsLabel": "Nombre max de participants",
     "formAllowedRostersLabel": "Rosters autorisés (vide = tous)",
     "formScoringTitle": "Système de points",

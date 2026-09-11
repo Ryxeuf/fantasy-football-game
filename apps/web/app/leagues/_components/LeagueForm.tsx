@@ -331,6 +331,12 @@ export function LeagueForm({
                 {t.leagues.formPublicNo}
               </label>
             </div>
+            <p
+              className="text-xs text-gray-500 mt-0.5"
+              data-testid="league-form-visibility-hint"
+            >
+              {t.leagues.formPublicHint}
+            </p>
           </fieldset>
         </div>
 
