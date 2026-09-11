@@ -17,6 +17,7 @@ import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { dynamicRoute } from "../../lib/typed-route";
+import { matchSheetHref } from "../../lib/competition-links";
 import TeamLogo from "../../components/TeamLogo";
 import {
   canEditSeeds,
@@ -224,15 +225,13 @@ function RoundCard({ round }: { readonly round: CupBracketRound }) {
         tbd={tbd}
         placeholder={round.placeholder}
       />
-      {round.localMatch ? (
+      {round.pairingId && !round.placeholder ? (
         <Link
-          href={dynamicRoute(`/local-matches/${round.localMatch.id}`)}
-          data-testid={`cup-playoff-match-${round.slot}`}
+          href={dynamicRoute(matchSheetHref("cup", round.pairingId))}
+          data-testid={`cup-playoff-sheet-${round.slot}`}
           className="mt-1 block text-center text-xs text-blue-600 hover:underline"
         >
-          {round.localMatch.status === "completed"
-            ? t.cups.playoffsViewMatch
-            : t.cups.playoffsResumeMatch}
+          📝 {t.cups.sheetOpen}
         </Link>
       ) : null}
     </div>

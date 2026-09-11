@@ -946,15 +946,19 @@ export default function CupDetailPage() {
           )}
           {cup.matches && cup.matches.length > 0 && (
             <div className="pt-6 border-t border-gray-200">
+              {/* Résultats matérialisés par la validation des feuilles de
+                  match : la ligne est un RÉCAPITULATIF, pas une partie à
+                  ouvrir — la saisie et la relecture passent par la feuille
+                  de la rencontre (section « Rondes » ci-dessus). */}
               <h2 className="text-lg font-semibold text-gray-900 mb-3">
                 Matchs de la coupe
               </h2>
               <div className="space-y-3">
                 {cup.matches.map((match) => (
-                  <button
+                  <div
                     key={match.id}
-                    onClick={() => router.push(`/local-matches/${match.id}`)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                    data-testid={`cup-match-row-${match.id}`}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-left"
                   >
                     <div>
                       <div className="flex items-center gap-2">
@@ -1009,7 +1013,7 @@ export default function CupDetailPage() {
                         {match.isPublic ? "🌍 Public" : "🔒 Privé"}
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -1443,14 +1447,6 @@ export default function CupDetailPage() {
               </a>
             </div>
           )}
-        {cup.status === "en_cours" && cup.participants.length >= 2 && (
-          <button
-            onClick={() => router.push(`/local-matches/new?cupId=${cup.id}`)}
-            className="w-full px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all"
-          >
-            Créer un match local pour cette coupe
-          </button>
-        )}
       </div>
     </div>
   );

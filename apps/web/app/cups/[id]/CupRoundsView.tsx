@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import MatchCard, {
@@ -147,7 +146,6 @@ export default function CupRoundsView({
   onChanged,
 }: CupRoundsViewProps) {
   const { t, language } = useLanguage();
-  const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Défaut : tirage au sort tant qu'aucune ronde n'existe (le classement est
@@ -209,33 +207,6 @@ export default function CupRoundsView({
       apiRequest(`/cup/pairings/${pairingId}/cancel`, { method: "POST", body: "{}" }),
     );
   };
-  const createMatch = (pairing: CupPairingView) => {
-    const myTeam = mine.has(pairing.homeTeam.id)
-      ? pairing.homeTeam
-      : pairing.awayTeam && mine.has(pairing.awayTeam.id)
-        ? pairing.awayTeam
-        : null;
-    const opponent = myTeam?.id === pairing.homeTeam.id ? pairing.awayTeam : pairing.homeTeam;
-    if (!myTeam || !opponent) return;
-    setBusy(`create-${pairing.id}`);
-    setError(null);
-    apiRequest<{ localMatch: { id: string } }>("/local-match", {
-      method: "POST",
-      body: JSON.stringify({
-        teamAId: myTeam.id,
-        teamBId: opponent.id,
-        cupId,
-        cupPairingId: pairing.id,
-      }),
-    })
-      .then(({ localMatch }) => router.push(`/local-matches/${localMatch.id}`))
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : t.cups.swissActionError);
-        onChanged();
-      })
-      .finally(() => setBusy(null));
-  };
-
   const systemLabel = (value: CupRoundSystem): string =>
     t.cups[CUP_ROUND_SYSTEM_LABEL_KEYS[value]];
   // Le bandeau décrit l'appariement QUI VA ÊTRE APPLIQUÉ : il suit donc la
@@ -412,7 +383,6 @@ export default function CupRoundsView({
                 isCommissioner={isCommissioner}
                 busy={busy}
                 language={language}
-                onCreateMatch={() => createMatch(pairing)}
                 onCancel={() => cancelPairing(pairing.id)}
                 onChanged={onChanged}
               />
@@ -511,7 +481,6 @@ interface CupPairingCardProps {
   isCommissioner: boolean;
   busy: string | null;
   language: string;
-  onCreateMatch: () => void;
   onCancel: () => void;
   onChanged: () => void;
 }
@@ -534,7 +503,6 @@ function CupPairingCard({
   isCommissioner,
   busy,
   language,
-  onCreateMatch,
   onCancel,
   onChanged,
 }: CupPairingCardProps) {
@@ -563,11 +531,12 @@ function CupPairingCard({
               }
             : { label: t.cups.swissStatusScheduled, tone: "neutral", testId: `cup-pairing-status-${pairing.id}` };
 
-  const canCreate = involved && pairing.status === "scheduled" && !pairing.localMatch;
   const canSchedule = (involved || isCommissioner) && open && !isBye;
   const canCancel = isCommissioner && open && !isBye && !pairing.localMatch;
-  // La feuille est le chemin NORMAL de saisie d'un résultat de coupe : elle
-  // est la même qu'en ligue, et reste consultable une fois validée.
+  // La feuille est le SEUL chemin de saisie d'un résultat de coupe : elle est
+  // la même qu'en ligue, et reste consultable une fois validée. La partie
+  // offline (`LocalMatch`) n'est plus qu'un support de matérialisation du
+  // résultat, jamais une saisie proposée au coach.
   const canOpenSheet = (involved || isCommissioner) && !isBye;
 
   return (
@@ -596,26 +565,6 @@ function CupPairingCard({
               className="text-xs px-2 py-1 rounded bg-nuffle-anthracite text-white font-medium hover:bg-nuffle-anthracite/90"
             >
               📝 {t.cups.sheetOpen}
-            </Link>
-          ) : null}
-          {canCreate ? (
-            <button
-              type="button"
-              data-testid={`cup-pairing-create-${pairing.id}`}
-              disabled={busy !== null}
-              onClick={onCreateMatch}
-              className="text-xs px-2 py-1 rounded bg-nuffle-gold text-white font-medium hover:bg-nuffle-gold/90 disabled:opacity-50"
-            >
-              {t.cups.swissCreateMatch}
-            </button>
-          ) : null}
-          {pairing.localMatch ? (
-            <Link
-              href={`/local-matches/${pairing.localMatch.id}`}
-              data-testid={`cup-pairing-match-${pairing.id}`}
-              className="text-xs px-2 py-1 rounded border border-nuffle-gold text-nuffle-anthracite font-medium hover:bg-nuffle-gold/10"
-            >
-              {t.cups.swissViewMatch}
             </Link>
           ) : null}
           {canSchedule ? (

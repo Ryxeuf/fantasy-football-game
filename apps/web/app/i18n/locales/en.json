@@ -894,8 +894,6 @@
     "swissRoundStatusPending": "Upcoming",
     "swissRoundStatusInProgress": "In progress",
     "swissRoundStatusCompleted": "Completed",
-    "swissCreateMatch": "Create the match",
-    "swissViewMatch": "View match",
     "swissCancelPairing": "Cancel the match",
     "swissConfirmCancel": "Cancel this match? It will award no points.",
     "swissActionError": "Action failed.",
@@ -982,8 +980,6 @@
     "playoffsStageSemi": "Semi-finals",
     "playoffsStageFinal": "Final",
     "playoffsLoading": "Loading the bracket…",
-    "playoffsViewMatch": "View match",
-    "playoffsResumeMatch": "Resume match",
     "myPoolBadge": "My pool"
   },
   "inducements": {

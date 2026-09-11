@@ -189,7 +189,7 @@ describe("CupPlayoffBracketView", () => {
     expect(sides[0].textContent).toContain("À déterminer");
   });
 
-  it("affiche le score d'une rencontre jouée et le lien vers son match", async () => {
+  it("affiche le score d'une rencontre jouée et le lien vers sa FEUILLE", async () => {
     apiRequest.mockResolvedValue(
       response({
         playoffSize: 2,
@@ -207,9 +207,25 @@ describe("CupPlayoffBracketView", () => {
     expect(screen.getByTestId("cup-playoff-score-final").textContent).toBe(
       "2 - 1",
     );
+    // La partie offline n'est plus un écran proposé : on ouvre la feuille.
     expect(
-      screen.getByTestId("cup-playoff-match-final").getAttribute("href"),
-    ).toBe("/local-matches/lm1");
+      screen.getByTestId("cup-playoff-sheet-final").getAttribute("href"),
+    ).toBe("/cups/pairings/p-final/sheet");
+    expect(screen.queryByTestId("cup-playoff-match-final")).toBeNull();
+  });
+
+  it("n'offre aucune feuille sur un tour encore en attente d'un qualifié", async () => {
+    apiRequest.mockResolvedValue(
+      response({
+        playoffSize: 2,
+        rounds: [
+          bracketRound("final", 8, { placeholder: true, awayTeam: team("a") }),
+        ],
+      }),
+    );
+    renderView();
+    await screen.findByTestId("cup-playoffs");
+    expect(screen.queryByTestId("cup-playoff-sheet-final")).toBeNull();
   });
 
   it("le commissaire publie un bracket qui ne l'est pas encore", async () => {
