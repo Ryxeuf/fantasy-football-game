@@ -16,8 +16,22 @@ import {
   livePlayersToView,
   parseRosterSnapshot,
   positionNameResolver,
+  raisedDeadToView,
 } from "./RosterSection";
-import type { SheetPlayer } from "./MatchSheetPanels";
+import type { SheetPlayer, SheetRaisedDead } from "./MatchSheetPanels";
+
+/** Trois-quart Zombie relevé d'entre les morts (Maîtres de la Non-vie). */
+const RAISED: SheetRaisedDead = {
+  id: "raised-home-1",
+  number: 13,
+  name: "Grommit",
+  position: "undead_trois_quart_zombie",
+  positionName: "Mort relevé (Trois-quart Zombie)",
+  stats: { ma: 4, st: 3, ag: 4, pa: 6, av: 9 },
+  skills: "regeneration",
+  cost: 40_000,
+  victimId: "a1",
+};
 
 // SkillTooltip (chips de compétences traduites) requiert le contexte langue.
 function renderWithLang(ui: ReactElement) {
@@ -154,6 +168,33 @@ describe("RosterSection", () => {
     );
     fireEvent.click(screen.getByTestId("snapshot-roster-toggle-Reikland"));
     expect(screen.getByText("Aucune")).toBeTruthy();
+  });
+});
+
+describe("RosterSection — mort relevé (Maîtres de la Non-vie)", () => {
+  it("ajoute le relevé à la version du match figée (il arrive après le gel)", () => {
+    renderWithLang(
+      <RosterSection label="Reikland" raw={SNAPSHOT} raisedDead={RAISED} />,
+    );
+    fireEvent.click(screen.getByTestId("snapshot-roster-toggle-Reikland"));
+    const rows = screen.getAllByRole("row").map((r) => r.textContent ?? "");
+    expect(rows.some((r) => r.includes("Griff"))).toBe(true);
+    expect(
+      rows.some(
+        (r) => r.includes("Grommit") && r.includes("Mort relevé (Trois-quart Zombie)"),
+      ),
+    ).toBe(true);
+  });
+
+  it("l'ajoute aussi à l'état actuel", () => {
+    const view = livePlayersToView([livePlayer()], [], RAISED);
+    expect(view?.map((p) => p.name)).toEqual(["Boris", "Grommit"]);
+    expect(raisedDeadToView(RAISED)).toMatchObject({
+      number: 13,
+      position: "Mort relevé (Trois-quart Zombie)",
+      st: 3,
+      spp: 0,
+    });
   });
 });
 

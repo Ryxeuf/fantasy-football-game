@@ -132,6 +132,12 @@ describe("sheetStarPlayerSide / syntheticSheetPlayerSide", () => {
     expect(syntheticSheetPlayerSide("journeyman-home-2")).toBe("home");
   });
 
+  it("lit aussi le côté d'un mort relevé (Maîtres de la Non-vie)", () => {
+    expect(syntheticSheetPlayerSide("raised-home-1")).toBe("home");
+    expect(syntheticSheetPlayerSide("raised-away-1")).toBe("away");
+    expect(sheetStarPlayerSide("raised-home-1")).toBeNull();
+  });
+
   it("null pour un joueur réel ou un id mal formé", () => {
     expect(sheetStarPlayerSide("cku123abc")).toBeNull();
     expect(sheetStarPlayerSide("journeyman-home-1")).toBeNull();
@@ -148,6 +154,8 @@ describe("isSheetStarPlayerId / isSyntheticSheetPlayerId", () => {
     expect(isSheetStarPlayerId("clx123")).toBe(false);
     expect(isSyntheticSheetPlayerId("journeyman-away-2")).toBe(true);
     expect(isSyntheticSheetPlayerId("star-away-x")).toBe(true);
+    // Troisième famille : le mort relevé par Maîtres de la Non-vie.
+    expect(isSyntheticSheetPlayerId("raised-home-1")).toBe(true);
     expect(isSyntheticSheetPlayerId("clx123")).toBe(false);
     expect(isSyntheticSheetPlayerId(null)).toBe(false);
   });

@@ -1425,6 +1425,9 @@ model LeagueMatchSheet {
   /// Journaliers — choix du poste de lineman par coach ({ position }).
   journeymenHome         Json?
   journeymenAway         Json?
+  /// Maitres de la Non-vie — mort releve ({ victimId, position } | null).
+  raisedDeadHome         Json?
+  raisedDeadAway         Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 

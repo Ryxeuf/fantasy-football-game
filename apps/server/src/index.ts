@@ -751,17 +751,22 @@ if (process.env.TEST_SQLITE === "1") {
       const { ownerId, name, roster } = req.body as {
         ownerId?: string;
         name?: string;
-        roster?: "skaven" | "lizardmen" | "orc";
+        roster?: "skaven" | "lizardmen" | "orc" | "undead";
       };
       if (!ownerId || !name || !roster) {
         return res
           .status(400)
           .json({ error: "ownerId, name et roster requis" });
       }
-      if (roster !== "skaven" && roster !== "lizardmen" && roster !== "orc") {
+      if (
+        roster !== "skaven" &&
+        roster !== "lizardmen" &&
+        roster !== "orc" &&
+        roster !== "undead"
+      ) {
         return res
           .status(400)
-          .json({ error: "roster doit être skaven, lizardmen ou orc" });
+          .json({ error: "roster doit être skaven, lizardmen, orc ou undead" });
       }
 
       const team = await prisma.team.create({
@@ -779,21 +784,27 @@ if (process.env.TEST_SQLITE === "1") {
         },
       });
 
-      // 11 linemen génériques, stats de base. Les Orques portent le slug
-      // réel de leur Trois-quart (poste seedé par /__test/seed-rosters) :
-      // c'est lui que lisent la valeur d'équipe et les journaliers.
+      // 11 linemen génériques, stats de base. Les Orques et les Morts-Vivants
+      // portent le slug réel de leur Trois-quart (poste seedé par
+      // /__test/seed-rosters) : c'est lui que lisent la valeur d'équipe, les
+      // journaliers et le mort relevé (Maîtres de la Non-vie).
       const isOrc = roster === "orc";
+      const isUndead = roster === "undead";
       const players = Array.from({ length: 11 }, (_, i) => ({
         teamId: team.id,
         name: `${name} ${i + 1}`,
-        position: isOrc ? "orc_trois_quart_orque" : "Lineman",
+        position: isOrc
+          ? "orc_trois_quart_orque"
+          : isUndead
+            ? "undead_trois_quart_zombie"
+            : "Lineman",
         number: i + 1,
-        ma: isOrc ? 5 : 6,
+        ma: isOrc ? 5 : isUndead ? 4 : 6,
         st: 3,
-        ag: 3,
-        pa: 4,
+        ag: isUndead ? 4 : 3,
+        pa: isUndead ? 6 : 4,
         av: isOrc ? 10 : 9,
-        skills: "",
+        skills: isUndead ? "regeneration" : "",
       }));
       await prisma.teamPlayer.createMany({ data: players });
 
@@ -1000,6 +1011,46 @@ if (process.env.TEST_SQLITE === "1") {
         // Traits de base du Trois-quart Gobelin.
         { slug: "right-stuff", nameFr: "Poids Plume", nameEn: "Right Stuff", category: "Trait" },
         { slug: "stunty", nameFr: "Minus", nameEn: "Stunty", category: "Trait" },
+        // Traits de base des Trois-quarts morts-vivants (Squelette, Zombie).
+        { slug: "regeneration", nameFr: "Régénération", nameEn: "Regeneration", category: "Trait" },
+        { slug: "thick-skull", nameFr: "Crâne Épais", nameEn: "Thick Skull", category: "General" },
+      ];
+      // Morts-Vivants : roster porteur de « Maîtres de la Non-vie », avec ses
+      // DEUX Trois-quarts (Squelette, Zombie) — le cas « Relever le Mort » des
+      // feuilles de match de ligue. La règle spéciale est lue EN BASE
+      // (`Roster.specialRules`, catalogue compilé en repli) : la fixture doit
+      // donc la porter pour que la feuille la voie comme la prod.
+      const UNDEAD_LINEMEN = [
+        {
+          slug: "undead_trois_quart_squelette",
+          displayName: "Trois-quart Squelette",
+          cost: 40,
+          max: 16,
+          ma: 5,
+          st: 3,
+          ag: 4,
+          pa: 6,
+          av: 8,
+          keywords: "Mort-Vivant, Squelette, Trois-quart",
+          primarySkills: "G",
+          secondarySkills: "A,S,K",
+          skills: ["regeneration", "thick-skull"],
+        },
+        {
+          slug: "undead_trois_quart_zombie",
+          displayName: "Trois-quart Zombie",
+          cost: 40,
+          max: 16,
+          ma: 4,
+          st: 3,
+          ag: 4,
+          pa: 6,
+          av: 9,
+          keywords: "Mort-Vivant, Zombie, Trois-quart",
+          primarySkills: "G,K",
+          secondarySkills: "A,S",
+          skills: ["regeneration"],
+        },
       ];
       for (const ruleset of rulesets) {
         const skillIdBySlug = new Map<string, string>();
@@ -1019,6 +1070,30 @@ if (process.env.TEST_SQLITE === "1") {
           });
           skillIdBySlug.set(sk.slug, skill.id);
         }
+        const seedLinemen = async (
+          rosterId: string,
+          linemen: typeof ORC_LINEMEN,
+        ): Promise<void> => {
+          for (const lineman of linemen) {
+            const { skills, ...columns } = lineman;
+            const position = await prisma.position.upsert({
+              where: { rosterId_slug: { rosterId, slug: lineman.slug } },
+              update: { ...columns },
+              create: { rosterId, min: 0, ...columns },
+            });
+            for (const skillSlug of skills) {
+              const skillId = skillIdBySlug.get(skillSlug);
+              if (!skillId) continue;
+              await prisma.positionSkill.upsert({
+                where: {
+                  positionId_skillId: { positionId: position.id, skillId },
+                },
+                update: {},
+                create: { positionId: position.id, skillId },
+              });
+            }
+          }
+        };
         const orc = await prisma.roster.upsert({
           where: { slug_ruleset: { slug: "orc", ruleset } },
           update: { budget: 1000 },
@@ -1031,25 +1106,21 @@ if (process.env.TEST_SQLITE === "1") {
             tier: "II",
           },
         });
-        for (const lineman of ORC_LINEMEN) {
-          const { skills, ...columns } = lineman;
-          const position = await prisma.position.upsert({
-            where: { rosterId_slug: { rosterId: orc.id, slug: lineman.slug } },
-            update: { ...columns },
-            create: { rosterId: orc.id, min: 0, ...columns },
-          });
-          for (const skillSlug of skills) {
-            const skillId = skillIdBySlug.get(skillSlug);
-            if (!skillId) continue;
-            await prisma.positionSkill.upsert({
-              where: {
-                positionId_skillId: { positionId: position.id, skillId },
-              },
-              update: {},
-              create: { positionId: position.id, skillId },
-            });
-          }
-        }
+        await seedLinemen(orc.id, ORC_LINEMEN);
+        const undead = await prisma.roster.upsert({
+          where: { slug_ruleset: { slug: "undead", ruleset } },
+          update: { budget: 1000, specialRules: "maitres_de_la_non_vie" },
+          create: {
+            slug: "undead",
+            ruleset,
+            name: "Morts-Vivants",
+            nameEn: "Shambling Undead",
+            budget: 1000,
+            tier: "I",
+            specialRules: "maitres_de_la_non_vie",
+          },
+        });
+        await seedLinemen(undead.id, UNDEAD_LINEMEN);
       }
 
       // Seed les feature flags de base. Les pages /play, /lobby, /waiting,
@@ -1131,7 +1202,7 @@ if (process.env.TEST_SQLITE === "1") {
       return res.json({
         ok: true,
         rulesets,
-        rosters: [...rosters.map((r) => r.slug), "orc"],
+        rosters: [...rosters.map((r) => r.slug), "orc", "undead"],
         flags: flagSeeds.map((f) => f.key),
       });
     } catch (e: unknown) {

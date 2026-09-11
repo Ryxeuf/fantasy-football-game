@@ -5,7 +5,12 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { addEventSchema, preMatchSchema } from "./league-match-sheet.schemas";
+import {
+  addEventSchema,
+  postMatchSchema,
+  preMatchSchema,
+  raiseDeadSchema,
+} from "./league-match-sheet.schemas";
 
 describe("A67/A68 — addEventSchema stat_loss", () => {
   const base = {
@@ -151,5 +156,51 @@ describe("Toss — preMatchSchema.tossWinner/tossChoice", () => {
     expect(
       preMatchSchema.safeParse({ tossWinner: null, tossChoice: null }).success,
     ).toBe(true);
+  });
+});
+
+describe("Maîtres de la Non-vie — raiseDeadSchema", () => {
+  it("accepte un relevé avec ou sans poste, et l'annulation (victimId null)", () => {
+    expect(
+      raiseDeadSchema.safeParse({
+        side: "home",
+        victimId: "a1",
+        position: "undead_trois_quart_zombie",
+      }).success,
+    ).toBe(true);
+    expect(raiseDeadSchema.safeParse({ side: "away", victimId: "a1" }).success).toBe(
+      true,
+    );
+    expect(
+      raiseDeadSchema.safeParse({ side: "home", victimId: null }).success,
+    ).toBe(true);
+  });
+
+  it("refuse un côté inconnu, une victime vide ou absente", () => {
+    expect(
+      raiseDeadSchema.safeParse({ side: "north", victimId: "a1" }).success,
+    ).toBe(false);
+    expect(raiseDeadSchema.safeParse({ side: "home", victimId: "" }).success).toBe(
+      false,
+    );
+    expect(raiseDeadSchema.safeParse({ side: "home" }).success).toBe(false);
+  });
+});
+
+describe("Maîtres de la Non-vie — achat `raised_dead`", () => {
+  it("est un type d'achat d'après-match accepté", () => {
+    expect(
+      postMatchSchema.safeParse({
+        purchasesHome: [{ kind: "raised_dead", name: "Grommit", cost: 0 }],
+      }).success,
+    ).toBe(true);
+  });
+
+  it("un type d'achat inconnu reste refusé", () => {
+    expect(
+      postMatchSchema.safeParse({
+        purchasesHome: [{ kind: "necromancer", name: "x", cost: 0 }],
+      }).success,
+    ).toBe(false);
   });
 });

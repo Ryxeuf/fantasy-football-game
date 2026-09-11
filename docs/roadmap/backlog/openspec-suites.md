@@ -152,6 +152,20 @@ câblées. Restent :
 - **Saisons clôturées** : `db:resync-sheet-casualties` les ignore (palmarès
   persisté). À reprendre au cas par cas si une ligue close veut ses colonnes
   Sor+/Sor- exactes.
+## Relever le Mort (Maîtres de la Non-vie)
+
+Source : `raise-the-dead-masters-of-undeath` (2026-09-11).
+
+- **Trait Contagieux (Nurgle)** : même recrutement d'un Trois-quart relevé,
+  mais déclenché sur un BLOCAGE du porteur du Trait, une fois par match, et
+  seulement si la victime n'a ni Décomposition, ni Régénération, ni Minus
+  (ni Gros Bras). La dérivation `league-sheet-raised-dead` est prête à
+  recevoir une seconde source d'éligibilité ; il manque la lecture de
+  `causedByPlayerId` + cause « block » et les Traits du causeur / de la
+  victime.
+- **Blessures durables du relevé pendant le match** : s'il est recruté, ses
+  blessures de la rencontre ne sont pas reportées sur le `TeamPlayer` créé
+  (même limite que le journalier recruté).
 
 ## Opérations à faire au déploiement
 
@@ -166,3 +180,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `add-site-search`, `improve-league-match-sheet-ux` | Vérification visuelle sur staging |
 | `disable-offline-matches` | « Synchroniser depuis le code » dans `/admin/feature-flags` (ou passage de seed) pour créer la ligne `offline_match`. Sans elle la brique est déjà vue comme désactivée — la ligne sert à pouvoir la RALLUMER. |
 | `casualties-are-spp-eliminations` | `pnpm --filter @bb/server db:resync-sheet-casualties` (simulation : relire le rapport, une ligne par feuille dont les sorties bougent), puis `pnpm --filter @bb/server db:resync-sheet-casualties -- --apply`. Idempotent ; `-- --pairing <id>` pour une seule rencontre. |
+| `raise-the-dead-masters-of-undeath` | `prisma db push` (colonnes `LeagueMatchSheet.raisedDeadHome/Away`, nullables, aucun backfill). |

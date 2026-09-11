@@ -19,6 +19,7 @@
 import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 import { DEFAULT_RULESET, type Ruleset } from "@bb/game-engine";
 import { isJourneymanId, journeymanSide } from "./league-sheet-journeymen";
+import { isRaisedDeadId, raisedDeadSide } from "./league-sheet-raised-dead";
 
 export const STAR_PLAYER_ID_PREFIX = "star-";
 
@@ -42,13 +43,14 @@ export function sheetStarPlayerSide(
 }
 
 /**
- * Un id de joueur SYNTHÉTIQUE de la feuille (journalier ou Star Player) :
- * visible sur la feuille, jamais persisté sur le roster.
+ * Un id de joueur SYNTHÉTIQUE de la feuille (journalier, Star Player ou mort
+ * relevé par Maîtres de la Non-vie) : visible sur la feuille, jamais persisté
+ * sur le roster — sauf recrutement explicite à l'étape EMBAUCHES.
  */
 export function isSyntheticSheetPlayerId(
   id: string | null | undefined,
 ): boolean {
-  return isJourneymanId(id) || isSheetStarPlayerId(id);
+  return isJourneymanId(id) || isSheetStarPlayerId(id) || isRaisedDeadId(id);
 }
 
 /**
@@ -60,7 +62,7 @@ export function isSyntheticSheetPlayerId(
 export function syntheticSheetPlayerSide(
   id: string | null | undefined,
 ): "home" | "away" | null {
-  return journeymanSide(id) ?? sheetStarPlayerSide(id);
+  return journeymanSide(id) ?? sheetStarPlayerSide(id) ?? raisedDeadSide(id);
 }
 
 /** Star Player aligné, exposé à l'UI comme un joueur de la feuille. */

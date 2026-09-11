@@ -23,6 +23,7 @@ import {
   PreMatchPanel,
   PostMatchPanel,
   JourneymenPanel,
+  RaiseDeadPanel,
   PlayerSelect,
   InvalidateControl,
   TeamIdentityBadges,
@@ -30,14 +31,15 @@ import {
   type PreMatchValues,
   type PostMatchValues,
   type SheetTeam,
+  type SheetJourneyman,
   type Inducement,
   type PrayerEntry,
   type CostlyError,
-  type Purchase,
   type SppBonusEntry,
   type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
+import { parsePurchases } from "./purchases";
 import {
   eventKindHint,
   hasTargetField,
@@ -307,25 +309,6 @@ function parseCostlyErrors(raw: unknown): CostlyError[] {
   }));
 }
 
-function parsePurchases(raw: unknown): Purchase[] {
-  return parseArray<Record<string, unknown>>(raw).map((i) => ({
-    kind:
-      i.kind === "reroll" || i.kind === "staff" || i.kind === "other"
-        ? i.kind
-        : "player",
-    name: typeof i.name === "string" ? i.name : "",
-    cost: typeof i.cost === "number" ? i.cost : 0,
-    position: typeof i.position === "string" ? i.position : undefined,
-    staff:
-      i.staff === "assistant" ||
-      i.staff === "cheerleader" ||
-      i.staff === "apothecary" ||
-      i.staff === "dedicated_fan"
-        ? i.staff
-        : undefined,
-  }));
-}
-
 function parseSppBonus(raw: unknown): SppBonusEntry[] {
   return parseArray<Record<string, unknown>>(raw)
     .map((i) => ({
@@ -367,7 +350,24 @@ function playerName(team: SheetTeam | null, id: string | null): string {
   if (j) return `N°${j.number} ${j.name}`;
   const sp = team?.starPlayersHired?.find((st) => st.id === id);
   if (sp) return `⭐ ${sp.name}`;
+  // Mort relevé par Maîtres de la Non-vie : en réserve, il joue le match.
+  if (team?.raisedDead && team.raisedDead.id === id) {
+    return `🧟 N°${team.raisedDead.number} ${team.raisedDead.name}`;
+  }
   return id;
+}
+
+/**
+ * Joueurs qui n'existent QUE sur la feuille et peuvent pourtant évoluer et
+ * être recrutés en fin de match : journaliers + mort relevé. L'éditeur
+ * d'évolutions les traite à l'identique (PSP du match, tirage servi par la
+ * feuille).
+ */
+function sheetHirables(team: SheetTeam | null): SheetJourneyman[] {
+  return [
+    ...(team?.journeymen ?? []),
+    ...(team?.raisedDead ? [team.raisedDead] : []),
+  ];
 }
 
 export default function MatchSheetPage() {
@@ -528,6 +528,21 @@ export default function MatchSheetPage() {
         ),
       });
     });
+
+  // Maîtres de la Non-vie : relever un adversaire tué (ou y renoncer).
+  // Le serveur vérifie la règle de l'équipe, l'éligibilité du mort et le
+  // poste ; le Trois-quart relevé est dérivé à la relecture.
+  const saveRaiseDead = (
+    side: "home" | "away",
+    victimId: string | null,
+    position: string | null,
+  ) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/raise-dead`, {
+        method: "PATCH",
+        body: JSON.stringify({ side, victimId, position }),
+      }),
+    );
 
   const savePreMatch = (v: PreMatchValues) =>
     run(() =>
@@ -859,6 +874,25 @@ export default function MatchSheetPage() {
               saveJourneymanPosition("away", index, slug)
             }
           />
+          {/* Maîtres de la Non-vie : « Relever le Mort ». Visible dès
+              qu'un adversaire tué est relevable ; le relevé rejoint les
+              pickers d'évènements et s'embauche gratuitement à l'étape 4. */}
+          <RaiseDeadPanel
+            team={home}
+            side="home"
+            editable={editable && (mySide === "home" || isCommissioner)}
+            onChoose={(victimId, position) =>
+              saveRaiseDead("home", victimId, position)
+            }
+          />
+          <RaiseDeadPanel
+            team={away}
+            side="away"
+            editable={editable && (mySide === "away" || isCommissioner)}
+            onChoose={(victimId, position) =>
+              saveRaiseDead("away", victimId, position)
+            }
+          />
         </div>
 
         {/* E11 — rosters consultables par chaque coach, y compris celui de
@@ -870,6 +904,7 @@ export default function MatchSheetPage() {
             raw={data.sheet.rosterSnapshotHome}
             livePlayers={home?.players}
             journeymen={home?.journeymen}
+            raisedDead={home?.raisedDead}
             roster={home?.roster}
             ruleset={home?.ruleset}
           />
@@ -878,6 +913,7 @@ export default function MatchSheetPage() {
             raw={data.sheet.rosterSnapshotAway}
             livePlayers={away?.players}
             journeymen={away?.journeymen}
+            raisedDead={away?.raisedDead}
             roster={away?.roster}
             ruleset={away?.ruleset}
           />
@@ -1464,7 +1500,7 @@ export default function MatchSheetPage() {
                   ruleset={home?.ruleset ?? "season_3"}
                   roster={home?.roster}
                   players={home?.players ?? []}
-                  journeymen={home?.journeymen ?? []}
+                  journeymen={sheetHirables(home)}
                   computedSpp={computedSpp}
                   sppBonus={sppBonusEntries}
                   staged={stagedHome}
@@ -1482,7 +1518,7 @@ export default function MatchSheetPage() {
                   ruleset={away?.ruleset ?? "season_3"}
                   roster={away?.roster}
                   players={away?.players ?? []}
-                  journeymen={away?.journeymen ?? []}
+                  journeymen={sheetHirables(away)}
                   computedSpp={computedSpp}
                   sppBonus={sppBonusEntries}
                   staged={stagedAway}
@@ -1511,10 +1547,7 @@ export default function MatchSheetPage() {
                 players={
                   (mySide === "home" ? home?.players : away?.players) ?? []
                 }
-                journeymen={
-                  (mySide === "home" ? home?.journeymen : away?.journeymen) ??
-                  []
-                }
+                journeymen={sheetHirables(mySide === "home" ? home : away)}
                 computedSpp={computedSpp}
                 sppBonus={sppBonusEntries}
                 staged={myStaged}

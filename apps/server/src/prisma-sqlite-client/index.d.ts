@@ -71142,6 +71142,8 @@ export namespace Prisma {
     rosterSnapshotAway: number
     journeymenHome: number
     journeymenAway: number
+    raisedDeadHome: number
+    raisedDeadAway: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -71287,6 +71289,8 @@ export namespace Prisma {
     rosterSnapshotAway?: true
     journeymenHome?: true
     journeymenAway?: true
+    raisedDeadHome?: true
+    raisedDeadAway?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -71423,6 +71427,8 @@ export namespace Prisma {
     rosterSnapshotAway: JsonValue | null
     journeymenHome: JsonValue | null
     journeymenAway: JsonValue | null
+    raisedDeadHome: JsonValue | null
+    raisedDeadAway: JsonValue | null
     createdAt: Date
     updatedAt: Date
     _count: LeagueMatchSheetCountAggregateOutputType | null
@@ -71491,6 +71497,8 @@ export namespace Prisma {
     rosterSnapshotAway?: boolean
     journeymenHome?: boolean
     journeymenAway?: boolean
+    raisedDeadHome?: boolean
+    raisedDeadAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
@@ -71544,6 +71552,8 @@ export namespace Prisma {
     rosterSnapshotAway?: boolean
     journeymenHome?: boolean
     journeymenAway?: boolean
+    raisedDeadHome?: boolean
+    raisedDeadAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
@@ -71595,6 +71605,8 @@ export namespace Prisma {
     rosterSnapshotAway?: boolean
     journeymenHome?: boolean
     journeymenAway?: boolean
+    raisedDeadHome?: boolean
+    raisedDeadAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
@@ -71646,11 +71658,13 @@ export namespace Prisma {
     rosterSnapshotAway?: boolean
     journeymenHome?: boolean
     journeymenAway?: boolean
+    raisedDeadHome?: boolean
+    raisedDeadAway?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
+  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
   export type LeagueMatchSheetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
     cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
@@ -71727,6 +71741,11 @@ export namespace Prisma {
        */
       journeymenHome: Prisma.JsonValue | null
       journeymenAway: Prisma.JsonValue | null
+      /**
+       * Maitres de la Non-vie — mort releve ({ victimId, position } | null).
+       */
+      raisedDeadHome: Prisma.JsonValue | null
+      raisedDeadAway: Prisma.JsonValue | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["leagueMatchSheet"]>
@@ -72199,6 +72218,8 @@ export namespace Prisma {
     readonly rosterSnapshotAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly journeymenHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly journeymenAway: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly raisedDeadHome: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly raisedDeadAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly createdAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
     readonly updatedAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
   }
@@ -117925,6 +117946,8 @@ export namespace Prisma {
     rosterSnapshotAway: 'rosterSnapshotAway',
     journeymenHome: 'journeymenHome',
     journeymenAway: 'journeymenAway',
+    raisedDeadHome: 'raisedDeadHome',
+    raisedDeadAway: 'raisedDeadAway',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -123637,6 +123660,8 @@ export namespace Prisma {
     rosterSnapshotAway?: JsonNullableFilter<"LeagueMatchSheet">
     journeymenHome?: JsonNullableFilter<"LeagueMatchSheet">
     journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
+    raisedDeadHome?: JsonNullableFilter<"LeagueMatchSheet">
+    raisedDeadAway?: JsonNullableFilter<"LeagueMatchSheet">
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     pairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
@@ -123689,6 +123714,8 @@ export namespace Prisma {
     rosterSnapshotAway?: SortOrderInput | SortOrder
     journeymenHome?: SortOrderInput | SortOrder
     journeymenAway?: SortOrderInput | SortOrder
+    raisedDeadHome?: SortOrderInput | SortOrder
+    raisedDeadAway?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     pairing?: LeaguePairingOrderByWithRelationInput
@@ -123744,6 +123771,8 @@ export namespace Prisma {
     rosterSnapshotAway?: JsonNullableFilter<"LeagueMatchSheet">
     journeymenHome?: JsonNullableFilter<"LeagueMatchSheet">
     journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
+    raisedDeadHome?: JsonNullableFilter<"LeagueMatchSheet">
+    raisedDeadAway?: JsonNullableFilter<"LeagueMatchSheet">
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     pairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
@@ -123796,6 +123825,8 @@ export namespace Prisma {
     rosterSnapshotAway?: SortOrderInput | SortOrder
     journeymenHome?: SortOrderInput | SortOrder
     journeymenAway?: SortOrderInput | SortOrder
+    raisedDeadHome?: SortOrderInput | SortOrder
+    raisedDeadAway?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeagueMatchSheetCountOrderByAggregateInput
@@ -123853,6 +123884,8 @@ export namespace Prisma {
     rosterSnapshotAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     journeymenHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     journeymenAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    raisedDeadHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    raisedDeadAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     createdAt?: DateTimeWithAggregatesFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueMatchSheet"> | Date | string
   }
@@ -132742,6 +132775,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -132794,6 +132829,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -132842,6 +132879,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
@@ -132894,6 +132933,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -132944,6 +132985,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -132991,6 +133034,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -133040,6 +133085,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -140581,6 +140628,8 @@ export namespace Prisma {
     rosterSnapshotAway?: SortOrder
     journeymenHome?: SortOrder
     journeymenAway?: SortOrder
+    raisedDeadHome?: SortOrder
+    raisedDeadAway?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -161229,6 +161278,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -161279,6 +161330,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -161617,6 +161670,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
@@ -161667,6 +161722,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -167926,6 +167983,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     cupPairing?: CupPairingCreateNestedOneWithoutMatchSheetInput
@@ -167976,6 +168035,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -168260,6 +168321,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     cupPairing?: CupPairingUpdateOneWithoutMatchSheetNestedInput
@@ -168310,6 +168373,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -168571,6 +168636,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -168622,6 +168689,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -168685,6 +168754,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
@@ -168736,6 +168807,8 @@ export namespace Prisma {
     rosterSnapshotAway?: NullableJsonNullValueInput | InputJsonValue
     journeymenHome?: NullableJsonNullValueInput | InputJsonValue
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
+    raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

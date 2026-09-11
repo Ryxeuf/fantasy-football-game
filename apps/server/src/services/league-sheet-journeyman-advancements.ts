@@ -37,6 +37,7 @@ import {
   type JourneymanSourcePosition,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
+import { isRaisedDeadId } from "./league-sheet-raised-dead";
 import type { StagedAdvancement } from "./league-sheet-advancements";
 import { resolveRandomPrimaryPool } from "./random-primary-pool";
 import {
@@ -46,6 +47,18 @@ import {
   type SkillCategoryCode,
 } from "./skill-access";
 import { serverLog } from "../utils/server-log";
+
+/**
+ * Joueur qui n'existe QUE sur la feuille et peut pourtant staguer une
+ * évolution : journalier, ou mort relevé par Maîtres de la Non-vie. Les deux
+ * passent par le même contrôle et le même recrutement — un Star Player,
+ * lui, n'évolue jamais.
+ */
+export function isSheetOnlyAdvancingPlayerId(
+  id: string | null | undefined,
+): boolean {
+  return isJourneymanId(id) || isRaisedDeadId(id);
+}
 
 /** Raisons de refus d'une évolution de journalier (mêmes codes que le roster). */
 export type JourneymanAdvancementSkipReason =
@@ -184,6 +197,7 @@ export interface JourneymanAdvancementReview {
 export async function reviewJourneymanAdvancements(input: {
   readonly sheetId: string;
   readonly ruleset: string;
+  /** Journaliers du côté, plus le mort relevé s'il y en a un (même forme). */
   readonly journeymen: readonly SheetJourneyman[];
   readonly positions?: readonly JourneymanSourcePosition[] | null;
   readonly staged: readonly StagedAdvancement[];
@@ -192,7 +206,7 @@ export async function reviewJourneymanAdvancements(input: {
   const refused = new Map<string, JourneymanAdvancementSkipReason>();
   const staged: StagedAdvancement[] = [];
   for (const entry of input.staged) {
-    if (!isJourneymanId(entry.playerId)) {
+    if (!isSheetOnlyAdvancingPlayerId(entry.playerId)) {
       staged.push(entry);
       continue;
     }
@@ -251,7 +265,7 @@ export function traceJourneymanAdvancements(input: {
   });
   const out = new Map<string, StagedAdvancement>();
   for (const entry of input.staged) {
-    if (!isJourneymanId(entry.playerId)) continue;
+    if (!isSheetOnlyAdvancingPlayerId(entry.playerId)) continue;
     const refusal = input.review.refused.get(entry.playerId);
     if (refusal) {
       out.set(entry.playerId, refused(entry, refusal));

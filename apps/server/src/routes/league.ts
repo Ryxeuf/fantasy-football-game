@@ -172,6 +172,7 @@ import {
   addEvent as addMatchSheetEvent,
   removeEvent as removeMatchSheetEvent,
   updatePreMatch,
+  updateRaisedDead,
   updatePostMatch,
   submitByCoach,
   unsubmitByCoach,
@@ -186,6 +187,8 @@ import {
 import {
   addEventSchema,
   preMatchSchema,
+  raiseDeadSchema,
+  type RaiseDeadBody,
   postMatchSchema,
   invalidateSheetSchema,
   type AddEventBody,
@@ -376,13 +379,16 @@ function domainError(res: Response, e: unknown): void {
       e.code === "event_not_found" ||
       e.code === "journeyman_not_found"
         ? 404
-        : e.code === "forbidden" || e.code === "not_a_participant"
+        : e.code === "forbidden" ||
+            e.code === "not_a_participant" ||
+            e.code === "raise_dead_wrong_side"
           ? 403
           : e.code === "already_validated" ||
               e.code === "not_validated" ||
               e.code === "invalid_status" ||
               e.code === "invalidation_window_closed" ||
-              e.code === "invalidation_failed"
+              e.code === "invalidation_failed" ||
+              e.code === "raise_dead_not_allowed"
             ? 409
             : 400;
     sendError(res, e.message, status);
@@ -2289,6 +2295,35 @@ export async function handleUpdatePostMatch(
 }
 
 /**
+ * PATCH /leagues/pairings/:pairingId/sheet/raise-dead
+ *
+ * Maîtres de la Non-vie — le coach relève un adversaire tué (ou y renonce
+ * avec `victimId: null`). Réservé au coach du côté et au commissaire, tant
+ * que la feuille n'est pas validée ; le service vérifie la règle spéciale de
+ * l'équipe, l'éligibilité du mort et le poste choisi.
+ */
+export async function handleUpdateRaiseDead(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body: RaiseDeadBody = req.body;
+  try {
+    const sheet = await updateRaisedDead({
+      pairingId: req.params.pairingId,
+      userId,
+      side: body.side,
+      victimId: body.victimId,
+      position: body.position ?? null,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * POST /leagues/pairings/:pairingId/sheet/journeymen/:journeymanId/roll-random-primary
  *
  * Tirage « Compétence Principale au hasard » d'un journalier de la feuille
@@ -3234,6 +3269,13 @@ router.patch(
   authUser,
   validate(postMatchSchema),
   handleUpdatePostMatch,
+);
+// Maîtres de la Non-vie — « Relever le Mort » (une fois par match).
+router.patch(
+  "/pairings/:pairingId/sheet/raise-dead",
+  authUser,
+  validate(raiseDeadSchema),
+  handleUpdateRaiseDead,
 );
 router.post(
   "/pairings/:pairingId/sheet/events",

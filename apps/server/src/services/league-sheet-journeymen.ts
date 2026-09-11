@@ -211,9 +211,11 @@ export function journeymanRandomPrimarySeed(
 
 /**
  * Postes du roster : ceux fournis par l'appelant (lus en base) quand il y en
- * a, sinon le catalogue compilé.
+ * a, sinon le catalogue compilé. Partagé avec la relève des morts
+ * (`league-sheet-raised-dead`), qui matérialise elle aussi un Trois-quart de
+ * la fiche d'équipe.
  */
-function rosterPositions(
+export function rosterPositions(
   roster: string,
   ruleset?: string,
   provided?: readonly JourneymanSourcePosition[] | null,

@@ -5,6 +5,7 @@ import {
   PostMatchPanel,
   PlayerSelect,
   JourneymenPanel,
+  RaiseDeadPanel,
   TeamIdentityBadges,
   TeamValueStrip,
   InvalidateControl,
@@ -12,8 +13,22 @@ import {
   type PreMatchValues,
   type PostMatchValues,
   type SheetPlayer,
+  type SheetRaisedDead,
   type SheetTeam,
 } from "./MatchSheetPanels";
+
+/** Trois-quart Zombie relevé d'entre les morts (Maîtres de la Non-vie). */
+const RAISED: SheetRaisedDead = {
+  id: "raised-home-1",
+  number: 13,
+  name: "Grommit",
+  position: "undead_trois_quart_zombie",
+  positionName: "Mort relevé (Trois-quart Zombie)",
+  stats: { ma: 4, st: 3, ag: 4, pa: 6, av: 9 },
+  skills: "fork,instable,regeneration",
+  cost: 40_000,
+  victimId: "a1",
+};
 
 const TEAM: SheetTeam = {
   teamId: "team-home",
@@ -255,6 +270,230 @@ describe("PlayerSelect — Star Players engagés", () => {
       .getAllByRole("option")
       .map((o) => o.textContent);
     expect(texts).toEqual(["— joueur —", "N°1 Boris — Trois-quarts"]);
+  });
+});
+
+describe("PlayerSelect — mort relevé (Maîtres de la Non-vie)", () => {
+  it("propose le Trois-quart relevé comme acteur / cible d'évènement", () => {
+    render(
+      <PlayerSelect
+        team={{ ...TEAM, players: [sheetPlayer()], raisedDead: RAISED }}
+        value=""
+        onChange={() => {}}
+        testId="ps"
+      />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts).toContain("🧟 N°13 Grommit — Mort relevé (Trois-quart Zombie)");
+  });
+
+  it("le retire des usages « roster réel » (includeJourneymen=false)", () => {
+    render(
+      <PlayerSelect
+        team={{ ...TEAM, players: [sheetPlayer()], raisedDead: RAISED }}
+        value=""
+        onChange={() => {}}
+        includeJourneymen={false}
+        testId="ps"
+      />,
+    );
+    const texts = within(screen.getByTestId("ps"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(texts.some((t) => t?.includes("Grommit"))).toBe(false);
+  });
+});
+
+describe("RaiseDeadPanel", () => {
+  const undead: SheetTeam = {
+    ...TEAM,
+    name: "Champs Funestes",
+    roster: "undead",
+    players: [sheetPlayer()],
+    raiseDead: {
+      victims: [
+        { id: "a1", number: 1, name: "Grommit", positionName: "Trois-quart" },
+        { id: "a3", number: 3, name: "Zog", positionName: "Trois-quart" },
+      ],
+      positions: [
+        { slug: "undead_trois_quart_squelette", name: "Trois-quart Squelette" },
+        { slug: "undead_trois_quart_zombie", name: "Trois-quart Zombie" },
+      ],
+      choice: null,
+      canHire: true,
+    },
+    raisedDead: null,
+  };
+
+  it("ne rend rien pour une équipe sans la règle, ni sans mort relevable", () => {
+    const { container } = render(
+      <RaiseDeadPanel team={TEAM} side="home" editable onChoose={() => {}} />,
+    );
+    expect(container.firstChild).toBeNull();
+    const empty = render(
+      <RaiseDeadPanel
+        team={{
+          ...undead,
+          raiseDead: { ...undead.raiseDead!, victims: [] },
+        }}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(empty.container.firstChild).toBeNull();
+  });
+
+  it("liste les adversaires tués relevables et les Trois-quarts au choix", () => {
+    render(
+      <RaiseDeadPanel team={undead} side="home" editable onChoose={() => {}} />,
+    );
+    expect(screen.getByTestId("raise-dead-home").textContent).toContain(
+      "Relever le Mort",
+    );
+    const victims = within(screen.getByTestId("raise-dead-victim-home"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(victims).toEqual([
+      "— aucun —",
+      "N°1 Grommit — Trois-quart",
+      "N°3 Zog — Trois-quart",
+    ]);
+    const positions = within(screen.getByTestId("raise-dead-position-home"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(positions).toEqual(["Trois-quart Squelette", "Trois-quart Zombie"]);
+    // Pas de relevé : le poste n'est pas encore choisissable.
+    expect(
+      (screen.getByTestId("raise-dead-position-home") as HTMLSelectElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("remonte le mort choisi avec le poste courant, puis le changement de poste", () => {
+    const onChoose = vi.fn();
+    render(
+      <RaiseDeadPanel team={undead} side="home" editable onChoose={onChoose} />,
+    );
+    fireEvent.change(screen.getByTestId("raise-dead-victim-home"), {
+      target: { value: "a1" },
+    });
+    expect(onChoose).toHaveBeenCalledWith("a1", "undead_trois_quart_squelette");
+
+    onChoose.mockClear();
+    render(
+      <RaiseDeadPanel
+        team={{
+          ...undead,
+          raiseDead: {
+            ...undead.raiseDead!,
+            choice: { victimId: "a1", position: null },
+          },
+          raisedDead: { ...RAISED, position: "undead_trois_quart_squelette" },
+        }}
+        side="away"
+        editable
+        onChoose={onChoose}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("raise-dead-position-away"), {
+      target: { value: "undead_trois_quart_zombie" },
+    });
+    expect(onChoose).toHaveBeenCalledWith("a1", "undead_trois_quart_zombie");
+  });
+
+  it("annule le relevé avec « — aucun — »", () => {
+    const onChoose = vi.fn();
+    render(
+      <RaiseDeadPanel
+        team={{
+          ...undead,
+          raiseDead: {
+            ...undead.raiseDead!,
+            choice: { victimId: "a1", position: "undead_trois_quart_zombie" },
+          },
+          raisedDead: RAISED,
+        }}
+        side="home"
+        editable
+        onChoose={onChoose}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("raise-dead-victim-home"), {
+      target: { value: "" },
+    });
+    expect(onChoose).toHaveBeenCalledWith(null, null);
+  });
+
+  it("annonce le relevé en réserve, et prévient quand la liste est pleine", () => {
+    const withRaised: SheetTeam = {
+      ...undead,
+      raiseDead: {
+        ...undead.raiseDead!,
+        choice: { victimId: "a1", position: "undead_trois_quart_zombie" },
+      },
+      raisedDead: RAISED,
+    };
+    render(
+      <RaiseDeadPanel team={withRaised} side="home" editable onChoose={() => {}} />,
+    );
+    const note = screen.getByTestId("raise-dead-raised-home").textContent ?? "";
+    expect(note).toContain("N°13 Grommit");
+    expect(note).toContain("Mort relevé (Trois-quart Zombie)");
+    expect(note).not.toContain("16 joueurs");
+    expect(
+      (screen.getByTestId("raise-dead-position-home") as HTMLSelectElement)
+        .value,
+    ).toBe("undead_trois_quart_zombie");
+
+    render(
+      <RaiseDeadPanel
+        team={{
+          ...withRaised,
+          raiseDead: { ...withRaised.raiseDead!, canHire: false },
+        }}
+        side="away"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("raise-dead-raised-away").textContent).toContain(
+      "16 joueurs",
+    );
+  });
+
+  it("garde visible un choix dont la sortie a été retirée (pour l'annuler)", () => {
+    render(
+      <RaiseDeadPanel
+        team={{
+          ...undead,
+          raiseDead: {
+            ...undead.raiseDead!,
+            victims: [],
+            choice: { victimId: "a9", position: null },
+          },
+          raisedDead: null,
+        }}
+        side="home"
+        editable
+        onChoose={() => {}}
+      />,
+    );
+    const select = screen.getByTestId("raise-dead-victim-home") as HTMLSelectElement;
+    expect(select.value).toBe("a9");
+    expect(select.textContent).toContain("sortie retirée");
+  });
+
+  it("feuille verrouillée : sélecteurs désactivés", () => {
+    render(
+      <RaiseDeadPanel team={undead} side="home" editable={false} onChoose={() => {}} />,
+    );
+    expect(
+      (screen.getByTestId("raise-dead-victim-home") as HTMLSelectElement)
+        .disabled,
+    ).toBe(true);
   });
 });
 
@@ -652,6 +891,132 @@ describe("PostMatchPanel — recrutement d'un journalier", () => {
     fireEvent.change(picker, { target: { value: "journeyman-home-1" } });
     // Prix pré-rempli = poste + surcoût de l'évolution de l'étape 3.
     expect(screen.getByDisplayValue("70000")).toBeTruthy();
+  });
+});
+
+describe("PostMatchPanel — recrutement GRATUIT du mort relevé", () => {
+  const undeadWithRaised: SheetTeam = {
+    ...TEAM,
+    name: "Champs Funestes",
+    roster: "undead",
+    players: [sheetPlayer()],
+    raiseDead: {
+      victims: [],
+      positions: [],
+      choice: { victimId: "a1", position: "undead_trois_quart_zombie" },
+      canHire: true,
+    },
+    raisedDead: RAISED,
+  };
+
+  it("ne propose « Mort relevé » qu'à une équipe qui en a un", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "player", name: "", cost: 0 }],
+          purchasesAway: [{ kind: "player", name: "", cost: 0 }],
+        }}
+        home={undeadWithRaised}
+        away={{ ...TEAM, players: [sheetPlayer()] }}
+        onSave={vi.fn()}
+      />,
+    );
+    const homeKinds = within(screen.getByTestId("purchases-home-kind-0"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(homeKinds).toContain("Mort relevé (gratuit)");
+    const awayKinds = within(screen.getByTestId("purchases-away-kind-0"))
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(awayKinds).not.toContain("Mort relevé (gratuit)");
+  });
+
+  it("choisir « Mort relevé » pré-remplit le nom, rappelle le relevé et force le coût à 0", () => {
+    render(
+      <PostMatchPanel
+        initial={{
+          ...EMPTY_POST,
+          purchasesHome: [{ kind: "player", name: "Bob", cost: 90_000 }],
+        }}
+        home={undeadWithRaised}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("purchases-home-kind-0"), {
+      target: { value: "raised_dead" },
+    });
+    expect(screen.getByTestId("purchases-home-raised-0").textContent).toContain(
+      "N°13 Grommit",
+    );
+    expect(
+      (screen.getByTestId("purchases-home-cost-0") as HTMLInputElement).value,
+    ).toBe("0");
+    expect(screen.getByDisplayValue("Grommit")).toBeTruthy();
+    // Un montant saisi malgré tout est signalé : le prix catalogue est 0.
+    fireEvent.change(screen.getByTestId("purchases-home-cost-0"), {
+      target: { value: "40000" },
+    });
+    expect(screen.getByTestId("purchases-home-cost-hint-0").textContent).toContain(
+      "Prix catalogue",
+    );
+  });
+
+  it("rappelle l'embauche gratuite à l'étape 4 et l'ajoute en un clic", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={undeadWithRaised}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("raise-dead-hire-hint-home").textContent).toContain(
+      "gratuitement",
+    );
+    fireEvent.click(screen.getByTestId("raise-dead-hire-add-home"));
+    expect(
+      (screen.getByTestId("purchases-home-kind-0") as HTMLSelectElement).value,
+    ).toBe("raised_dead");
+    expect(
+      (screen.getByTestId("purchases-home-cost-0") as HTMLInputElement).value,
+    ).toBe("0");
+    // Une fois l'achat présent, le rappel disparaît.
+    expect(screen.queryByTestId("raise-dead-hire-hint-home")).toBeNull();
+  });
+
+  it("liste pleine : le rappel prévient que le relevé est perdu, sans bouton", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={{
+          ...undeadWithRaised,
+          raiseDead: { ...undeadWithRaised.raiseDead!, canHire: false },
+        }}
+        away={null}
+        onSave={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("raise-dead-hire-hint-home").textContent).toContain(
+      "16 joueurs",
+    );
+    expect(screen.queryByTestId("raise-dead-hire-add-home")).toBeNull();
+  });
+
+  it("compte les PSP du relevé dans l'estimation de l'étape 3", () => {
+    render(
+      <PostMatchPanel
+        initial={EMPTY_POST}
+        home={undeadWithRaised}
+        away={null}
+        onSave={vi.fn()}
+        computedSpp={{ "raised-home-1": 3 }}
+      />,
+    );
+    expect(screen.getByTestId("auto-spp-home").textContent).toContain(
+      "N°13 Grommit",
+    );
   });
 });
 

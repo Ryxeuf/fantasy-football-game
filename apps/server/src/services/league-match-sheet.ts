@@ -90,6 +90,21 @@ import {
   syntheticSheetPlayerSide,
   type SheetStarPlayer,
 } from "./league-sheet-star-players";
+import {
+  buildRaisedDeadHire,
+  canHireRaisedDead,
+  deriveRaisedDead,
+  eligibleRaiseVictims,
+  hasMastersOfUndeath,
+  isRaisedDeadId,
+  parseRaisedDeadChoice,
+  raisedDeadPositionOptions,
+  raisedDeadSide,
+  type RaisedDeadChoice,
+  type RaiseVictimCandidate,
+  type RaiseVictimSource,
+  type SheetRaisedDead,
+} from "./league-sheet-raised-dead";
 import { recordForfeit } from "./league-forfeit";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
 import {
@@ -259,6 +274,193 @@ function deriveSideJourneymen(
   });
 }
 
+/** Colonnes de la feuille dont depend le mort releve de chaque cote. */
+interface SheetRaisedDeadColumns {
+  raisedDeadHome?: unknown;
+  raisedDeadAway?: unknown;
+}
+
+/** Colonnes d'avant-match qui portent les Star Players engages. */
+interface SheetInducementColumns {
+  inducementsHome?: unknown;
+  inducementsAway?: unknown;
+}
+
+/** Tout ce dont dependent les trois familles de joueurs synthetiques. */
+type SheetSyntheticColumns = SheetJourneymenColumns &
+  SheetRaisedDeadColumns &
+  SheetInducementColumns;
+
+function otherSide(side: "home" | "away"): "home" | "away" {
+  return side === "home" ? "away" : "home";
+}
+
+/**
+ * Joueurs d'un cote tels que la regle « Relever le Mort » doit les lire chez
+ * l'ADVERSAIRE : roster reel, journaliers alignes et Star Players engages —
+ * les trois familles qui peuvent mourir sur la feuille. Les journaliers et
+ * Star Players deja derives sur l'equipe (getMatchSheet) sont reutilises.
+ */
+async function sideSheetPlayers(
+  team: MatchSheetTeam,
+  side: "home" | "away",
+  sheet: SheetSyntheticColumns,
+  positions: readonly JourneymanSourcePosition[] | null | undefined,
+): Promise<RaiseVictimSource[]> {
+  const journeymen =
+    team.journeymen ?? deriveSideJourneymen(team, side, sheet, positions);
+  const stars =
+    team.starPlayersHired ??
+    (await deriveSheetStarPlayers({
+      side,
+      inducements:
+        side === "home" ? sheet.inducementsHome : sheet.inducementsAway,
+      ruleset: team.ruleset,
+    }));
+  return [
+    ...team.players.map((p) => ({
+      id: p.id,
+      number: p.number,
+      name: p.name,
+      positionName: p.positionName,
+      stats: p.stats,
+      skills: p.skills,
+    })),
+    ...journeymen,
+    ...stars,
+  ];
+}
+
+/** Ce que la feuille sait du mort releve d'un cote. */
+interface RaiseDeadSideView {
+  readonly victims: RaiseVictimCandidate[];
+  readonly positions: JourneymanPositionOption[];
+  readonly choice: RaisedDeadChoice | null;
+  readonly raised: SheetRaisedDead | null;
+}
+
+/**
+ * Maitres de la Non-vie — mort releve d'un cote : adversaires relevables
+ * (tues ce match, Force <= 4, sans Minus), postes de Trois-quart offerts,
+ * choix stocke et Trois-quart DERIVE. UNE seule derivation pour tous les
+ * chemins (affichage, choix, appartenance d'une evolution, tirage,
+ * recrutement) : deux derivations divergentes feraient refuser cote serveur
+ * un releve que la feuille affiche.
+ */
+async function raiseDeadSideView(input: {
+  side: "home" | "away";
+  team: MatchSheetTeam;
+  opponent: MatchSheetTeam | null;
+  sheet: SheetSyntheticColumns;
+  summary: MatchSummary;
+  positions: {
+    home: readonly JourneymanSourcePosition[] | null;
+    away: readonly JourneymanSourcePosition[] | null;
+  };
+}): Promise<RaiseDeadSideView> {
+  const { side, team, opponent, sheet, summary } = input;
+  const opponentSide = otherSide(side);
+  const opponents = opponent
+    ? await sideSheetPlayers(
+        opponent,
+        opponentSide,
+        sheet,
+        opponentSide === "home" ? input.positions.home : input.positions.away,
+      )
+    : [];
+  const victims = eligibleRaiseVictims({
+    side,
+    injuries: summary.injuries,
+    opponents,
+  });
+  const ownPositions =
+    side === "home" ? input.positions.home : input.positions.away;
+  const journeymen =
+    team.journeymen ?? deriveSideJourneymen(team, side, sheet, ownPositions);
+  const choice = parseRaisedDeadChoice(
+    side === "home" ? sheet.raisedDeadHome : sheet.raisedDeadAway,
+  );
+  return {
+    victims,
+    positions: raisedDeadPositionOptions(
+      team.roster,
+      team.ruleset,
+      ownPositions,
+    ),
+    choice,
+    raised: deriveRaisedDead({
+      side,
+      roster: team.roster,
+      ruleset: team.ruleset,
+      positions: ownPositions,
+      choice,
+      victims,
+      // Le releve prend le numero suivant ceux du roster ET des journaliers.
+      takenNumbers: [
+        ...team.players.map((p) => p.number),
+        ...journeymen.map((j) => j.number),
+      ],
+    }),
+  };
+}
+
+/**
+ * L'equipe porte la regle speciale Maitres de la Non-vie — lue EN BASE
+ * (`Roster.specialRules`), catalogue compile en repli. Tolerant : une base
+ * injoignable vaut « pas de regle », la feuille reste servie.
+ */
+async function teamHasMastersOfUndeath(
+  team: MatchSheetTeam | null,
+): Promise<boolean> {
+  if (!team) return false;
+  try {
+    const rules = await resolveSpecialRulesForTeam(
+      prisma,
+      team.roster,
+      (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
+    );
+    return hasMastersOfUndeath(rules);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Trois-quart releve d'un cote quand l'equipe porte la regle, `null` sinon.
+ * Charge les evenements de la feuille si le resume n'est pas deja connu :
+ * le releve n'existe que tant que la sortie du mort est consignee.
+ */
+async function loadSideRaisedDead(input: {
+  side: "home" | "away";
+  teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
+  sheet: SheetSyntheticColumns & { id: string };
+  positions: {
+    home: readonly JourneymanSourcePosition[] | null;
+    away: readonly JourneymanSourcePosition[] | null;
+  };
+  summary?: MatchSummary;
+}): Promise<SheetRaisedDead | null> {
+  const team = input.side === "home" ? input.teams.home : input.teams.away;
+  if (!team || !(await teamHasMastersOfUndeath(team))) return null;
+  const summary =
+    input.summary ??
+    summarizeMatchSheet(
+      ((await prisma.leagueMatchEvent.findMany({
+        where: { matchSheetId: input.sheet.id },
+        orderBy: { occurredAt: "asc" },
+      })) ?? []) as MatchEventInput[],
+    );
+  const view = await raiseDeadSideView({
+    side: input.side,
+    team,
+    opponent: input.side === "home" ? input.teams.away : input.teams.home,
+    sheet: input.sheet,
+    summary,
+    positions: input.positions,
+  });
+  return view.raised;
+}
+
 export type MatchSheetStatus =
   | "draft"
   | "submitted_home"
@@ -288,7 +490,11 @@ export class MatchSheetError extends Error {
       | "journeyman_not_found"
       | "invalid_category"
       | "category_not_primary"
-      | "no_candidates",
+      | "no_candidates"
+      | "raise_dead_not_allowed"
+      | "raise_dead_wrong_side"
+      | "raise_dead_invalid_victim"
+      | "raise_dead_invalid_position",
     message: string,
   ) {
     super(message);
@@ -980,6 +1186,92 @@ export async function updatePreMatch(input: {
   });
 }
 
+/**
+ * Maitres de la Non-vie — le coach RELEVE un mort (ou y renonce).
+ *
+ * `victimId` designe l'adversaire tue a relever (`null` = annuler le
+ * releve) ; `position` le Trois-quart choisi quand la fiche en offre
+ * plusieurs (Morts-Vivants : Zombie ou Squelette), defaut = Trois-quart de
+ * base. Le serveur verifie : la regle speciale de l'equipe (base d'abord),
+ * le cote du coach, l'eligibilite du mort (adversaire, resultat Mort
+ * consigne, Force <= 4, sans Minus) et le poste. Une fois par match :
+ * la feuille ne stocke qu'UN choix par cote — un second releve le remplace.
+ *
+ * Le Trois-quart releve n'est pas persiste ici : il est DERIVE a chaque
+ * lecture (`raiseDeadSideView`), et embauche gratuitement a la validation
+ * si le coach le recrute (achat `raised_dead`).
+ */
+export async function updateRaisedDead(input: {
+  pairingId: string;
+  userId: string;
+  side: "home" | "away";
+  victimId: string | null;
+  position?: string | null;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  const side = coachSide(ctx, input.userId);
+  const commissioner = isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  if (!commissioner && side !== input.side) {
+    throw new MatchSheetError(
+      "raise_dead_wrong_side",
+      "Chaque coach ne releve un mort que pour sa propre equipe",
+    );
+  }
+  const sheet = await loadSheetOrThrow(ctx);
+  ensureEditable(sheet.status);
+
+  const teams = await loadSheetTeams(ctx);
+  const team = input.side === "home" ? teams.home : teams.away;
+  if (!team || !(await teamHasMastersOfUndeath(team))) {
+    throw new MatchSheetError(
+      "raise_dead_not_allowed",
+      `${team?.name ?? "Cette equipe"} n'a pas la regle speciale Maitres de la Non-vie`,
+    );
+  }
+  const column = input.side === "home" ? "raisedDeadHome" : "raisedDeadAway";
+  if (input.victimId === null) {
+    return prisma.leagueMatchSheet.update({
+      where: { id: sheet.id },
+      data: { [column]: null },
+    });
+  }
+
+  const events = ((await prisma.leagueMatchEvent.findMany({
+    where: { matchSheetId: sheet.id },
+    orderBy: { occurredAt: "asc" },
+  })) ?? []) as MatchEventInput[];
+  const view = await raiseDeadSideView({
+    side: input.side,
+    team,
+    opponent: input.side === "home" ? teams.away : teams.home,
+    sheet: sheet as SheetSyntheticColumns,
+    summary: summarizeMatchSheet(events),
+    positions: await loadJourneymanPositions(teams),
+  });
+  const victim = view.victims.find((v) => v.id === input.victimId);
+  if (!victim) {
+    throw new MatchSheetError(
+      "raise_dead_invalid_victim",
+      `Le joueur ${input.victimId} n'est pas un adversaire tue relevable (resultat Mort consigne, Force 4 ou moins, sans Minus)`,
+    );
+  }
+  const position = input.position ?? null;
+  if (position && !view.positions.some((o) => o.slug === position)) {
+    throw new MatchSheetError(
+      "raise_dead_invalid_position",
+      `${position} n'est pas un Trois-quart de la fiche ${team.raceName}`,
+    );
+  }
+  const choice: RaisedDeadChoice = { victimId: victim.id, position };
+  return prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    data: { [column]: choice },
+  });
+}
+
 export interface PostMatchPayload {
   /** Override manuel du gain de tresorerie (prioritaire sur l'auto). */
   winningsHomeManual?: number | null;
@@ -1053,23 +1345,26 @@ export async function updatePostMatch(input: {
     // sans avoir de ligne TeamPlayer. On le reconnaît par la même
     // dérivation que celle qui l'affiche sur la feuille — sinon l'API
     // refusait « Joueur journeyman-away-1 hors de l'équipe extérieur ».
-    const stagesJourneyman = [
+    // Meme regle pour le mort RELEVE (Maitres de la Non-vie) : il joue le
+    // match, peut evoluer a l'etape 3 (materialise s'il est recrute), et
+    // n'existe que sur la feuille — sa derivation fait foi.
+    const stagesSynthetic = [
       ...(p.advancementsHome ?? []),
       ...(p.advancementsAway ?? []),
-    ].some((e) => isJourneymanId(e.playerId));
-    const journeymanPositions = stagesJourneyman
+    ].some((e) => isJourneymanId(e.playerId) || isRaisedDeadId(e.playerId));
+    const journeymanPositions = stagesSynthetic
       ? await loadJourneymanPositions(teams)
       : { home: null, away: null };
-    const sheetColumns = sheet as SheetJourneymenColumns;
-    const assertOwnership = (
+    const sheetColumns = sheet as SheetSyntheticColumns & { id: string };
+    const assertOwnership = async (
       entries: readonly StagedAdvancement[] | null | undefined,
       team: MatchSheetTeam | null,
       side: "home" | "away",
       label: string,
-    ): void => {
+    ): Promise<void> => {
       if (!entries || entries.length === 0) return;
       const ids = new Set((team?.players ?? []).map((pl) => pl.id));
-      if (team && stagesJourneyman) {
+      if (team && stagesSynthetic) {
         for (const j of deriveSideJourneymen(
           team,
           side,
@@ -1077,6 +1372,15 @@ export async function updatePostMatch(input: {
           side === "home" ? journeymanPositions.home : journeymanPositions.away,
         )) {
           ids.add(j.id);
+        }
+        if (entries.some((e) => isRaisedDeadId(e.playerId))) {
+          const raised = await loadSideRaisedDead({
+            side,
+            teams,
+            sheet: sheetColumns,
+            positions: journeymanPositions,
+          });
+          if (raised) ids.add(raised.id);
         }
       }
       for (const e of entries) {
@@ -1088,8 +1392,8 @@ export async function updatePostMatch(input: {
         }
       }
     };
-    assertOwnership(p.advancementsHome, teams.home, "home", "domicile");
-    assertOwnership(p.advancementsAway, teams.away, "away", "extérieur");
+    await assertOwnership(p.advancementsHome, teams.home, "home", "domicile");
+    await assertOwnership(p.advancementsAway, teams.away, "away", "extérieur");
   }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
@@ -1159,7 +1463,10 @@ export async function rollJourneymanRandomPrimary(input: {
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
-  const journeymanSideOf = journeymanSide(input.journeymanId);
+  // Le mort RELEVE (Maitres de la Non-vie) tire par le meme chemin : lui
+  // non plus n'a pas de ligne TeamPlayer.
+  const journeymanSideOf =
+    journeymanSide(input.journeymanId) ?? raisedDeadSide(input.journeymanId);
   if (!journeymanSideOf) {
     throw new MatchSheetError(
       "journeyman_not_found",
@@ -1187,14 +1494,24 @@ export async function rollJourneymanRandomPrimary(input: {
   const positions = team
     ? await journeymanPositionsFor(team.roster, team.ruleset)
     : null;
-  const journeyman = team
-    ? deriveSideJourneymen(
-        team,
-        journeymanSideOf,
-        sheet as SheetJourneymenColumns,
-        positions,
-      ).find((j) => j.id === input.journeymanId)
-    : undefined;
+  const journeyman: SheetJourneyman | null | undefined = !team
+    ? undefined
+    : isRaisedDeadId(input.journeymanId)
+      ? await loadSideRaisedDead({
+          side: journeymanSideOf,
+          teams,
+          sheet: sheet as SheetSyntheticColumns & { id: string },
+          positions: {
+            home: journeymanSideOf === "home" ? positions : null,
+            away: journeymanSideOf === "away" ? positions : null,
+          },
+        })
+      : deriveSideJourneymen(
+          team,
+          journeymanSideOf,
+          sheet as SheetJourneymenColumns,
+          positions,
+        ).find((j) => j.id === input.journeymanId);
   if (!team || !journeyman) {
     throw new MatchSheetError(
       "journeyman_not_found",
@@ -1738,6 +2055,18 @@ function enrichJourneymanPurchases(input: {
   schedule?: AdvancementSchedule;
   /** Roster figé de ce côté : les journaliers RECRUTABLES sont ceux du match. */
   frozenRosterSnapshot?: unknown;
+  /**
+   * Maîtres de la Non-vie — Trois-quart relevé pendant ce match, s'il y en a
+   * un. Recrutable GRATUITEMENT (achat `raised_dead`) : le serveur force le
+   * coût à 0 et redérive PSP et évolution comme pour un journalier.
+   */
+  raisedDead?: SheetRaisedDead | null;
+  /**
+   * Le relevé peut encore être embauché : il n'est pas mort à son tour, et
+   * la liste d'équipe ne compte pas déjà 16 joueurs — « sinon, il est
+   * perdu ». Défaut : oui.
+   */
+  raisedDeadHireable?: boolean;
 }): {
   purchases: OfflinePurchaseInput[];
   /** Journaliers recrutés qui avaient une évolution stagée : ce qu'elle est devenue. */
@@ -1745,9 +2074,33 @@ function enrichJourneymanPurchases(input: {
 } {
   const { purchases, side, team, staged, computedSpp } = input;
   const hires = new Map<string, JourneymanHireTrace>();
-  if (!purchases.some((p) => p.kind === "journeyman")) {
+  if (
+    !purchases.some((p) => p.kind === "journeyman" || p.kind === "raised_dead")
+  ) {
     return { purchases: [...purchases], hires };
   }
+  /** Coût PSP et surcoût de valeur d'une évolution stagée (1er palier). */
+  const advancementFor = (entry: StagedAdvancement | undefined) =>
+    entry
+      ? {
+          type: entry.type,
+          skillSlug: entry.skillSlug,
+          stat: entry.stat,
+          d8: entry.d8,
+          pspCost: getNextAdvancementPspCost(0, entry.type, input.schedule),
+          valueSurcharge: surchargeForAdvancement(
+            {
+              type: entry.type,
+              stat: entry.stat ?? undefined,
+              isElite:
+                !!entry.skillSlug &&
+                (input.eliteSlugs?.has(entry.skillSlug) ?? false),
+            },
+            input.schedule,
+          ),
+        }
+      : null;
+  let raisedHired = false;
   const journeymen = team
     ? deriveMatchJourneymen({
         side,
@@ -1763,6 +2116,44 @@ function enrichJourneymanPurchases(input: {
   const hired = new Set<string>();
 
   const out = purchases.map((p) => {
+    if (p.kind === "raised_dead") {
+      // Mort relevé : GRATUIT, une seule fois, et seulement s'il existe
+      // encore (sortie du mort consignée) et peut être embauché. Sinon la
+      // ligne retombe en « dépense diverse » à 0 : rien n'est créé, rien
+      // n'est débité — même si le coach avait saisi un montant.
+      const raised = input.raisedDead ?? null;
+      if (!raised || raisedHired || input.raisedDeadHireable === false) {
+        serverLog.warn(
+          `[league-match-sheet] recrutement du mort relevé ignoré (${side}) : ${
+            !raised ? "aucun relevé" : raisedHired ? "doublon" : "liste pleine ou relevé mort"
+          }`,
+        );
+        return { ...p, kind: "other" as const, cost: 0 };
+      }
+      raisedHired = true;
+      const entry = staged.find((e) => e.playerId === raised.id);
+      const hire = buildRaisedDeadHire({
+        raised,
+        earnedSpp: computedSpp[raised.id] ?? 0,
+        advancement: advancementFor(entry),
+      });
+      if (entry) {
+        hires.set(raised.id, {
+          advancementTaken: hire.advancementTaken,
+          pspCost: getNextAdvancementPspCost(0, entry.type, input.schedule),
+        });
+      }
+      return {
+        ...p,
+        cost: hire.cost,
+        position: raised.position,
+        name: p.name || raised.name,
+        spp: hire.spp,
+        skills: hire.skills,
+        advancements: hire.advancements,
+        stats: hire.stats,
+      };
+    }
     if (p.kind !== "journeyman") return p;
     const journeyman = p.journeymanId ? byId.get(p.journeymanId) : undefined;
     if (!journeyman || hired.has(journeyman.id)) {
@@ -1776,29 +2167,11 @@ function enrichJourneymanPurchases(input: {
     const hire = buildJourneymanHire({
       journeyman,
       earnedSpp: computedSpp[journeyman.id] ?? 0,
-      advancement: entry
-        ? {
-            type: entry.type,
-            skillSlug: entry.skillSlug,
-            stat: entry.stat,
-            d8: entry.d8,
-            // Un journalier n'a jamais d'avancement : 1er palier.
-            pspCost: getNextAdvancementPspCost(0, entry.type, input.schedule),
-            // `isElite` etait omis : les 10 000 po de surcout d'une
-            // competence Elite manquaient au prix de recrutement du
-            // journalier (donc a la VE de l'equipe et au debit).
-            valueSurcharge: surchargeForAdvancement(
-              {
-                type: entry.type,
-                stat: entry.stat ?? undefined,
-                isElite:
-                  !!entry.skillSlug &&
-                  (input.eliteSlugs?.has(entry.skillSlug) ?? false),
-              },
-              input.schedule,
-            ),
-          }
-        : null,
+      // Un journalier n'a jamais d'avancement : 1er palier. `isElite` etait
+      // omis : les 10 000 po de surcout d'une competence Elite manquaient au
+      // prix de recrutement du journalier (donc a la VE de l'equipe et au
+      // debit).
+      advancement: advancementFor(entry),
     });
     if (entry) {
       hires.set(journeyman.id, {
@@ -1826,16 +2199,25 @@ function enrichJourneymanPurchases(input: {
  * classement individuel d'une coupe affiche un NOM, et un id synthetique
  * (journalier, star) n'a aucune ligne `TeamPlayer` a interroger.
  */
-function cupPlayerNameResolver(teams: {
-  home: MatchSheetTeam | null;
-  away: MatchSheetTeam | null;
-}): (playerId: string) => string | null {
+function cupPlayerNameResolver(
+  teams: {
+    home: MatchSheetTeam | null;
+    away: MatchSheetTeam | null;
+  },
+  raisedDead: {
+    home: SheetRaisedDead | null;
+    away: SheetRaisedDead | null;
+  } = { home: null, away: null },
+): (playerId: string) => string | null {
   const names = new Map<string, string>();
   for (const team of [teams.home, teams.away]) {
     if (!team) continue;
     for (const p of team.players ?? []) names.set(p.id, p.name);
     for (const j of team.journeymen ?? []) names.set(j.id, j.name);
     for (const sp of team.starPlayersHired ?? []) names.set(sp.id, sp.name);
+  }
+  for (const raised of [raisedDead.home, raisedDead.away]) {
+    if (raised) names.set(raised.id, raised.name);
   }
   return (playerId: string) => names.get(playerId) ?? null;
 }
@@ -1882,6 +2264,31 @@ export async function validateByCommissioner(input: {
 
   const forfeitSide = (sheet as { forfeitSide?: string | null }).forfeitSide;
 
+  // Postes du roster lus en base : ils arbitrent journaliers ET mort releve.
+  const journeymanPositions = await loadJourneymanPositions(teamsForBudgetLive);
+  // Maitres de la Non-vie — le Trois-quart RELEVE de chaque cote, s'il y en a
+  // un : il a joue le match (nom dans les actions d'une coupe, Mots-cles de
+  // Haine) et peut etre recrute GRATUITEMENT a l'etape 4.
+  const sheetSyntheticForValidation = sheet as SheetSyntheticColumns & {
+    id: string;
+  };
+  const raisedBySide = {
+    home: await loadSideRaisedDead({
+      side: "home",
+      teams: teamsForBudgetLive,
+      sheet: sheetSyntheticForValidation,
+      positions: journeymanPositions,
+      summary,
+    }),
+    away: await loadSideRaisedDead({
+      side: "away",
+      teams: teamsForBudgetLive,
+      sheet: sheetSyntheticForValidation,
+      positions: journeymanPositions,
+      summary,
+    }),
+  };
+
   // Coupe : aucun effet d'apres-match. Le resultat est materialise en match
   // local (le classement d'une coupe en derive), et RIEN n'est ecrit sur les
   // equipes — ni PSP, ni blessure, ni or, ni evolution (cf. CUP_SHEET_RULES).
@@ -1890,7 +2297,7 @@ export async function validateByCommissioner(input: {
       forfeitSide === "home" ? 0 : forfeitSide === "away" ? 2 : summary.scoreHome;
     const scoreAway =
       forfeitSide === "away" ? 0 : forfeitSide === "home" ? 2 : summary.scoreAway;
-    const nameOf = cupPlayerNameResolver(teamsForBudgetLive);
+    const nameOf = cupPlayerNameResolver(teamsForBudgetLive, raisedBySide);
     const settled = await settleCupMatchSheet({
       cupId: ctx.leagueId,
       cupPairingId: ctx.pairingId,
@@ -1967,7 +2374,6 @@ export async function validateByCommissioner(input: {
     journeymenHome?: unknown;
     journeymenAway?: unknown;
   };
-  const journeymanPositions = await loadJourneymanPositions(teamsForBudgetLive);
   const teamsForBudget = {
     home: withJourneymenValue(
       withFrozenTeamValues(
@@ -2036,6 +2442,11 @@ export async function validateByCommissioner(input: {
           journeymanPositions.away,
           sheetSnapForBudget.rosterSnapshotAway,
         ),
+        // Un mort releve porte un poste de la fiche : il peut lui aussi
+        // infliger une sortie qui donne un ennemi (Haine).
+        ...[raisedBySide.home, raisedBySide.away]
+          .filter((r): r is SheetRaisedDead => r !== null)
+          .map((r) => ({ id: r.id, position: r.position })),
       ],
       starPlayerIds: [
         ...(await deriveSheetStarPlayers({
@@ -2182,18 +2593,38 @@ export async function validateByCommissioner(input: {
       side === "home" ? journeymanPositions.home : journeymanPositions.away,
     );
   };
+  // Le mort releve evolue et se recrute par le meme chemin qu'un journalier.
+  const sheetPlayersOf = (side: "home" | "away"): SheetJourneyman[] => {
+    const raised = raisedBySide[side];
+    return raised ? [...journeymenOf(side), raised] : journeymenOf(side);
+  };
+  // « Tant que votre Liste d'Equipe ne compte pas deja 16 joueurs, sinon il
+  // est perdu » — et un releve tue a son tour n'a plus rien a rejoindre.
+  const deadNow = deadThisMatch(summary);
+  const raisedHireable = (side: "home" | "away"): boolean => {
+    const team = side === "home" ? teamsForBudget.home : teamsForBudget.away;
+    const raised = raisedBySide[side];
+    if (!team || !raised || deadNow.has(raised.id)) return false;
+    const format: GameFormat = isGameFormat(team.format) ? team.format : "bb11";
+    return canHireRaisedDead({
+      activePlayerCount: team.players.filter(
+        (p) => !p.dead && !deadNow.has(p.id),
+      ).length,
+      maxPlayers: getFormatConstraints(format).maxPlayers,
+    });
+  };
   const [reviewHome, reviewAway] = await Promise.all([
     reviewJourneymanAdvancements({
       sheetId: sheet.id,
       ruleset: teamsForBudget.home?.ruleset ?? DEFAULT_RULESET,
-      journeymen: journeymenOf("home"),
+      journeymen: sheetPlayersOf("home"),
       positions: journeymanPositions.home,
       staged: stagedHome,
     }),
     reviewJourneymanAdvancements({
       sheetId: sheet.id,
       ruleset: teamsForBudget.away?.ruleset ?? DEFAULT_RULESET,
-      journeymen: journeymenOf("away"),
+      journeymen: sheetPlayersOf("away"),
       positions: journeymanPositions.away,
       staged: stagedAway,
     }),
@@ -2210,6 +2641,8 @@ export async function validateByCommissioner(input: {
       eliteSlugs: eliteSlugsForHire,
       schedule: scheduleHome,
       frozenRosterSnapshot: sheetSnapForBudget.rosterSnapshotHome,
+      raisedDead: raisedBySide.home,
+      raisedDeadHireable: raisedHireable("home"),
     }),
     away: enrichJourneymanPurchases({
       purchases: offlineInput.purchasesAway,
@@ -2222,6 +2655,8 @@ export async function validateByCommissioner(input: {
       eliteSlugs: eliteSlugsForHire,
       schedule: scheduleAway,
       frozenRosterSnapshot: sheetSnapForBudget.rosterSnapshotAway,
+      raisedDead: raisedBySide.away,
+      raisedDeadHireable: raisedHireable("away"),
     }),
   };
 
@@ -2825,6 +3260,27 @@ export interface MatchSheetTeam {
    * persistance post-match. Renseignés par getMatchSheet.
    */
   readonly starPlayersHired?: readonly SheetStarPlayer[];
+  /**
+   * Maitres de la Non-vie — « Relever le Mort ». Renseigne par getMatchSheet
+   * pour une equipe qui porte la regle speciale : les adversaires tues ce
+   * match qu'elle peut relever (Force <= 4, sans Minus), les postes de
+   * Trois-quart au choix, le choix stocke sur la feuille, et si l'embauche
+   * GRATUITE de fin de match est encore possible (liste d'equipe < 16 une
+   * fois les morts de ce match retires).
+   */
+  readonly raiseDead?: {
+    readonly victims: readonly RaiseVictimCandidate[];
+    readonly positions: readonly JourneymanPositionOption[];
+    readonly choice: RaisedDeadChoice | null;
+    readonly canHire: boolean;
+  };
+  /**
+   * Trois-quart RELEVE d'entre les morts pendant ce match (en reserve). Il
+   * joue le match comme un journalier : acteur / cible d'evenement, Joueur
+   * du Match, PSP, evolution de l'etape 3 — et peut etre recrute
+   * gratuitement a l'etape 4. Renseigne par getMatchSheet.
+   */
+  readonly raisedDead?: SheetRaisedDead | null;
 }
 
 /** Libelle de race depuis un roster slug (fallback : le slug brut). */
@@ -4039,6 +4495,49 @@ export async function getMatchSheet(input: {
     home: await withStarPlayers(withJourneymen(teams.home, "home"), "home"),
     away: await withStarPlayers(withJourneymen(teams.away, "away"), "away"),
   };
+  // Maitres de la Non-vie — « Relever le Mort » : pour une equipe qui porte
+  // la regle, la feuille expose les adversaires tues relevables, les postes
+  // de Trois-quart au choix et le Trois-quart RELEVE (derive du choix
+  // stocke), qui rejoint les pickers d'evenements comme un journalier.
+  const sheetSynthetic = sheet as SheetSyntheticColumns;
+  const deadForHire = deadThisMatch(summary);
+  const withRaisedDead = async (
+    team: MatchSheetTeam | null,
+    side: "home" | "away",
+  ): Promise<MatchSheetTeam | null> => {
+    if (!team || !(await teamHasMastersOfUndeath(team))) return team;
+    const view = await raiseDeadSideView({
+      side,
+      team,
+      opponent:
+        side === "home" ? teamsWithJourneymen.away : teamsWithJourneymen.home,
+      sheet: sheetSynthetic,
+      summary,
+      positions: journeymanPositions,
+    });
+    const format: GameFormat = isGameFormat(team.format) ? team.format : "bb11";
+    return {
+      ...team,
+      raiseDead: {
+        victims: view.victims,
+        positions: view.positions,
+        choice: view.choice,
+        // Le livre retire les morts AVANT les embauches : la place d'un
+        // joueur tue ce match est libre pour le releve.
+        canHire: canHireRaisedDead({
+          activePlayerCount: team.players.filter(
+            (p) => !p.dead && !deadForHire.has(p.id),
+          ).length,
+          maxPlayers: getFormatConstraints(format).maxPlayers,
+        }),
+      },
+      raisedDead: view.raised,
+    };
+  };
+  const teamsWithRaisedDead = {
+    home: await withRaisedDead(teamsWithJourneymen.home, "home"),
+    away: await withRaisedDead(teamsWithJourneymen.away, "away"),
+  };
 
   // A63 — expose des gains auto toujours frais : la partie TD et le bonus
   // « sans temporisation » dependent des events, qui peuvent changer apres
@@ -4074,7 +4573,7 @@ export async function getMatchSheet(input: {
     competitionRules: ctx.rules,
     leagueId: ctx.leagueId,
     leagueName: ctx.leagueName,
-    teams: teamsWithJourneymen,
+    teams: teamsWithRaisedDead,
     reference: await buildMatchSheetReference(
       teams,
       allowedInducements,

@@ -107,6 +107,47 @@ export interface SheetStarPlayer {
   cost?: number;
 }
 
+/**
+ * Trois-quart RELEVÉ d'entre les morts (règle spéciale Maîtres de la
+ * Non-vie). Joueur synthétique comme le journalier (id `raised-<side>-1`) :
+ * il joue le match en réserve — sélectionnable comme acteur ou cible
+ * d'évènement, Joueur du Match, évolution à l'étape 3 — et rejoint le roster
+ * GRATUITEMENT s'il est recruté à l'étape 4 (achat « Mort relevé »).
+ */
+export interface SheetRaisedDead {
+  id: string;
+  number: number;
+  /** Le mort garde son nom : il a juste changé de maillot. */
+  name: string;
+  position: string;
+  positionName: string;
+  stats?: {
+    ma: number;
+    st: number;
+    ag: number;
+    pa: number | null;
+    av: number;
+  };
+  skills?: string;
+  /** Valeur du poste (po) — recrutement gratuit, valeur pleine en VE. */
+  cost?: number;
+  /** Adversaire relevé (id de feuille). */
+  victimId: string;
+}
+
+/**
+ * Ce que la feuille sait de « Relever le Mort » pour une équipe qui PORTE la
+ * règle : adversaires tués relevables (Force ≤ 4, sans Minus), postes de
+ * Trois-quart au choix, choix stocké, et si l'embauche gratuite est encore
+ * possible (liste d'équipe < 16 une fois les morts de ce match retirés).
+ */
+export interface RaiseDeadInfo {
+  victims: { id: string; number: number; name: string; positionName: string }[];
+  positions: { slug: string; name: string }[];
+  choice: { victimId: string; position: string | null } | null;
+  canHire: boolean;
+}
+
 export interface SheetTeam {
   teamId: string;
   name: string;
@@ -146,6 +187,13 @@ export interface SheetTeam {
   journeymenChoices?: string[];
   /** Star Players engagés en coup de pouce (optionnel : rétro-compat API). */
   starPlayersHired?: SheetStarPlayer[];
+  /**
+   * Maîtres de la Non-vie — présent seulement pour une équipe qui porte la
+   * règle (optionnel : rétro-compat API).
+   */
+  raiseDead?: RaiseDeadInfo;
+  /** Trois-quart relevé pendant ce match, s'il y en a un. */
+  raisedDead?: SheetRaisedDead | null;
 }
 
 // ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
@@ -347,6 +395,10 @@ export function PlayerSelect({
   // Un Star Player engagé joue le match : il peut marquer, blesser, être
   // blessé ou être JDM. Même traitement que les journaliers (synthétiques).
   const starPlayers = includeJourneymen ? (team?.starPlayersHired ?? []) : [];
+  // Le mort RELEVÉ (Maîtres de la Non-vie) joue lui aussi le match, en
+  // réserve : sans lui dans le picker, impossible de lui attribuer un TD.
+  const raisedDead =
+    includeJourneymen && team?.raisedDead ? [team.raisedDead] : [];
   return (
     <select
       value={value}
@@ -369,6 +421,11 @@ export function PlayerSelect({
       {starPlayers.map((sp) => (
         <option key={sp.id} value={sp.id}>
           {`⭐ ${sp.name} — ${sp.positionName}`}
+        </option>
+      ))}
+      {raisedDead.map((r) => (
+        <option key={r.id} value={r.id}>
+          {`🧟 N°${r.number} ${r.name} — ${r.positionName}`}
         </option>
       ))}
     </select>
@@ -462,6 +519,123 @@ export function JourneymenPanel({
           trois-quarts de ce roster.
         </p>
       )}
+    </div>
+  );
+}
+
+/**
+ * Bandeau « Maîtres de la Non-vie — Relever le Mort » d'une équipe qui porte
+ * la règle : visible dès qu'un adversaire tué est relevable (ou qu'un relevé
+ * est déjà posé). Le coach désigne le mort à relever et, sur une fiche à
+ * plusieurs Trois-quarts (Morts-Vivants : Zombie ou Squelette), le poste.
+ * Une fois par match : un seul relevé par équipe.
+ */
+export function RaiseDeadPanel({
+  team,
+  side,
+  editable,
+  onChoose,
+}: {
+  team: SheetTeam | null;
+  side: "home" | "away";
+  editable: boolean;
+  /** `victimId` null = annuler le relevé ; `position` null = Trois-quart de base. */
+  onChoose: (victimId: string | null, position: string | null) => void;
+}) {
+  const info = team?.raiseDead;
+  if (!team || !info) return null;
+  if (info.victims.length === 0 && !info.choice) return null;
+  const raised = team.raisedDead ?? null;
+  const currentVictim = info.choice?.victimId ?? "";
+  const currentPosition =
+    raised?.position ?? info.choice?.position ?? info.positions[0]?.slug ?? "";
+  const victimKnown = info.victims.some((v) => v.id === currentVictim);
+  return (
+    <div
+      data-testid={`raise-dead-${side}`}
+      className="space-y-2 rounded border border-violet-300 bg-violet-50 px-3 py-2 text-xs text-violet-950"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <span aria-hidden>🧟</span>
+        <span>
+          <strong>{team.name}</strong> — Maîtres de la Non-vie :{" "}
+          <strong>Relever le Mort</strong> (une fois par match). Un adversaire
+          de Force 4 ou moins, sans Minus, tué pendant ce match peut rejoindre
+          la réserve comme Trois-quart, puis être embauché gratuitement en fin
+          de match.
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="flex items-center gap-1.5">
+          <span className="font-medium">Mort relevé :</span>
+          <select
+            value={currentVictim}
+            onChange={(e) =>
+              onChoose(
+                e.target.value || null,
+                e.target.value ? currentPosition || null : null,
+              )
+            }
+            disabled={!editable}
+            aria-label="Adversaire à relever"
+            data-testid={`raise-dead-victim-${side}`}
+            className="rounded border px-1.5 py-1 text-xs"
+          >
+            <option value="">— aucun —</option>
+            {info.victims.map((v) => (
+              <option key={v.id} value={v.id}>
+                {`N°${v.number} ${v.name} — ${v.positionName}`}
+              </option>
+            ))}
+            {/* Choix posé sur un mort dont la sortie a été retirée : le
+                relevé n'existe plus, mais le choix reste visible pour être
+                annulé ou remplacé. */}
+            {currentVictim && !victimKnown ? (
+              <option value={currentVictim}>
+                {`${currentVictim} (sortie retirée)`}
+              </option>
+            ) : null}
+          </select>
+        </label>
+        {info.positions.length > 1 ? (
+          <label className="flex items-center gap-1.5">
+            <span className="font-medium">Poste :</span>
+            <select
+              value={currentPosition}
+              onChange={(e) =>
+                onChoose(currentVictim || null, e.target.value || null)
+              }
+              disabled={!editable || !currentVictim}
+              aria-label="Poste du mort relevé"
+              data-testid={`raise-dead-position-${side}`}
+              className="rounded border px-1.5 py-1 text-xs"
+            >
+              {info.positions.map((o) => (
+                <option key={o.slug} value={o.slug}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+      </div>
+      {raised ? (
+        <p
+          data-testid={`raise-dead-raised-${side}`}
+          className="text-violet-900/80"
+        >
+          En réserve :{" "}
+          <strong>
+            N°{raised.number} {raised.name}
+          </strong>{" "}
+          — {raised.positionName}. Sélectionnable dans les évènements ; à
+          l&apos;étape 4 (Embauches), un achat « Mort relevé (gratuit) »
+          l&apos;ajoute au roster
+          {info.canHire
+            ? "."
+            : " — impossible tant que la liste compte déjà 16 joueurs (sinon, il est perdu)."}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -1171,7 +1345,18 @@ export type StaffKind =
   | "dedicated_fan";
 
 export interface Purchase {
-  kind: "player" | "reroll" | "staff" | "other" | "journeyman";
+  kind:
+    | "player"
+    | "reroll"
+    | "staff"
+    | "other"
+    | "journeyman"
+    /**
+     * Maîtres de la Non-vie — recrutement GRATUIT du Trois-quart relevé
+     * pendant ce match. Le serveur force le coût à 0 et redérive poste,
+     * PSP et évolution depuis la feuille.
+     */
+    | "raised_dead";
   name: string;
   cost: number;
   /** Pour `kind:'player'` : slug de position (sinon resolu par cout serveur). */
@@ -1343,6 +1528,7 @@ const PURCHASE_KINDS: ReadonlyArray<{
 }> = [
   { value: "player", label: "Joueur" },
   { value: "journeyman", label: "Journalier du match" },
+  { value: "raised_dead", label: "Mort relevé (gratuit)" },
   { value: "reroll", label: "Relance" },
   { value: "staff", label: "Staff" },
   { value: "other", label: "Dépense diverse" },
@@ -1354,7 +1540,7 @@ const PURCHASE_KINDS: ReadonlyArray<{
  * serveur, et pour le staff le sous-type vient déjà du select « type… ».
  */
 function purchaseHasNameField(kind: Purchase["kind"]): boolean {
-  return kind === "player" || kind === "other";
+  return kind === "player" || kind === "other" || kind === "raised_dead";
 }
 
 /** Placeholder du champ « Nom » selon le type d'achat. */
@@ -1662,10 +1848,18 @@ function PurchaseEditor({
       return it.staff ? (staffOption(it.staff)?.cost ?? null) : null;
     if (it.kind === "journeyman")
       return it.journeymanId ? journeymanHireCost(it.journeymanId) : null;
+    // Mort relevé : toujours gratuit (sa valeur entre quand même en VE).
+    if (it.kind === "raised_dead") return 0;
     return null;
   };
   // Journaliers ayant joué CE match : recrutables à l'étape EMBAUCHES.
   const journeymen = team?.journeymen ?? [];
+  // Mort relevé (Maîtres de la Non-vie) : le type d'achat n'est proposé
+  // qu'à une équipe qui en a un.
+  const raisedDead = team?.raisedDead ?? null;
+  const kinds = PURCHASE_KINDS.filter(
+    (k) => k.value !== "raised_dead" || raisedDead !== null,
+  );
   const spent = list.reduce((sum, p) => sum + (p.cost || 0), 0);
   const remaining = treasuryBefore - spent;
   return (
@@ -1697,9 +1891,13 @@ function PurchaseEditor({
               const kind = e.target.value as Purchase["kind"];
               update(i, {
                 kind,
-                position: undefined,
+                // Mort relevé : poste et nom du relevé pré-remplis, coût 0.
+                position:
+                  kind === "raised_dead" ? raisedDead?.position : undefined,
                 staff: undefined,
                 journeymanId: undefined,
+                name:
+                  kind === "raised_dead" ? (raisedDead?.name ?? "") : it.name,
                 cost: kind === "reroll" ? (rerollOption?.cost ?? 0) : 0,
               });
             }}
@@ -1708,12 +1906,23 @@ function PurchaseEditor({
             data-testid={testId ? `${testId}-kind-${i}` : undefined}
             className="rounded border px-1.5 py-1 text-sm"
           >
-            {PURCHASE_KINDS.map((k) => (
+            {kinds.map((k) => (
               <option key={k.value} value={k.value}>
                 {k.label}
               </option>
             ))}
           </select>
+          {/* Mort relevé : un seul candidat possible, rappelé tel quel. */}
+          {it.kind === "raised_dead" && (
+            <span
+              data-testid={testId ? `${testId}-raised-${i}` : undefined}
+              className="rounded border border-violet-200 bg-violet-50 px-1.5 py-1 text-xs text-violet-900"
+            >
+              {raisedDead
+                ? `🧟 N°${raisedDead.number} ${raisedDead.name} — ${raisedDead.positionName}`
+                : "aucun mort relevé sur cette feuille"}
+            </span>
+          )}
           {/* Joueur : poste à recruter. Le catalogue du roster donne le
               QUOTA (0-2 Blitzers…) et le PRIX : un poste complet est
               proposé grisé, et le prix se remplit tout seul au choix. */}
@@ -2217,6 +2426,7 @@ export function PostMatchPanel({
                 const players = [
                   ...(c.team?.players ?? []),
                   ...(c.team?.journeymen ?? []),
+                  ...(c.team?.raisedDead ? [c.team.raisedDead] : []),
                 ].filter((p) => (computedSpp[p.id] ?? 0) > 0);
                 if (players.length === 0) return null;
                 const total = players.reduce(
@@ -2310,6 +2520,46 @@ export function PostMatchPanel({
                   « Dépense diverse » débite seulement la trésorerie (aucun
                   joueur/relance/staff créé).
                 </p>
+                {/* Maîtres de la Non-vie : le Trois-quart relevé pendant le
+                    match s'embauche GRATUITEMENT ici — tant que la liste ne
+                    compte pas déjà 16 joueurs, sinon il est perdu. */}
+                {c.team?.raisedDead &&
+                !c.buy.some((p) => p.kind === "raised_dead") ? (
+                  <p
+                    data-testid={`raise-dead-hire-hint-${c.side}`}
+                    className="mt-1 rounded border border-violet-200 bg-violet-50 px-2 py-1.5 text-[11px] text-violet-900"
+                  >
+                    🧟 <strong>{c.team.raisedDead.name}</strong>, relevé
+                    d&apos;entre les morts, peut rejoindre le roster{" "}
+                    <strong>gratuitement</strong>
+                    {c.team.raiseDead?.canHire === false
+                      ? " — mais la liste compte déjà 16 joueurs : sinon, il est perdu."
+                      : "."}
+                    {!disabled && c.team.raiseDead?.canHire !== false ? (
+                      <>
+                        {" "}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            c.setBuy([
+                              ...c.buy,
+                              {
+                                kind: "raised_dead",
+                                name: c.team?.raisedDead?.name ?? "",
+                                cost: 0,
+                                position: c.team?.raisedDead?.position,
+                              },
+                            ])
+                          }
+                          data-testid={`raise-dead-hire-add-${c.side}`}
+                          className="font-semibold underline"
+                        >
+                          L&apos;embaucher
+                        </button>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
               </div>
 
               <div className="text-xs">

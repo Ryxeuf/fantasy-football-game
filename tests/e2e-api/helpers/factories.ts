@@ -14,9 +14,11 @@ import { post, get, unwrap } from "./api";
 /**
  * Rosters seedés par `/__test/seed-rosters`. `orc` porte DEUX postes de
  * Trois-quart (Orque 0-16, Gobelin 0-4) : c'est le cas « journaliers
- * panachables » des feuilles de match de ligue (E37 / A161-A163).
+ * panachables » des feuilles de match de ligue (E37 / A161-A163). `undead`
+ * porte la règle spéciale Maîtres de la Non-vie (Squelette OU Zombie) : le
+ * cas « Relever le Mort ».
  */
-export type RosterKey = "skaven" | "lizardmen" | "orc";
+export type RosterKey = "skaven" | "lizardmen" | "orc" | "undead";
 
 export interface Coach {
   email: string;

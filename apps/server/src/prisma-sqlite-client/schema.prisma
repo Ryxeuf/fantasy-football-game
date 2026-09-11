@@ -1090,6 +1090,13 @@ model League {
   // Règlement de tournoi imposé aux équipes (miroir SQLite de schema.prisma)
   tournamentRuleset  String?
   status             String   @default("draft") // "draft" | "open" | "in_progress" | "completed" | "archived"
+  // Visibilite. `true` (defaut) = ligue PUBLIQUE : listee et lisible de tous,
+  // meme sans compte. `false` = ligue PRIVEE : ni listee ni lisible par lien.
+  // Elle n'existe que pour son commissaire (`creatorId`), les admins, les
+  // coachs inscrits (une equipe dans une de ses saisons) et les coachs invites
+  // (`LeagueInvitation.status = pending`). Pour tout autre lecteur, chaque
+  // lecture par id repond 404 — jamais 403, qui en revelerait l'existence.
+  // Resolution unique cote serveur : `services/league-access.ts`.
   isPublic           Boolean  @default(true)
   maxParticipants    Int      @default(16)
   allowedRosters     String? // JSON array des rosters autorises (null = tous)
@@ -1418,6 +1425,9 @@ model LeagueMatchSheet {
   /// Journaliers — choix du poste de lineman par coach ({ position }).
   journeymenHome         Json?
   journeymenAway         Json?
+  /// Maitres de la Non-vie — mort releve ({ victimId, position } | null).
+  raisedDeadHome         Json?
+  raisedDeadAway         Json?
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
