@@ -1,8 +1,8 @@
 /**
- * Rondes suisses d'une coupe : rendu des rencontres (score orienté,
- * exempt, « mon match »), actions selon le rôle (générer / supprimer pour
- * le commissaire, créer le match pour un coach impliqué) et blocage tant
- * que la ronde courante est ouverte.
+ * Rondes d'une coupe : rendu des rencontres (score orienté, exempt, « mon
+ * match »), actions selon le rôle (générer / supprimer pour le commissaire,
+ * feuille de match pour un coach impliqué) et blocage tant que la ronde
+ * courante est ouverte.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -135,20 +135,23 @@ describe("CupRoundsView", () => {
     expect(screen.queryByTestId("cup-swiss-generate")).toBeNull();
   });
 
-  it("le coach impliqué crée le match local de SA rencontre puis y est envoyé", async () => {
-    apiRequest.mockResolvedValue({ localMatch: { id: "lm-new" } });
+  it("n'offre au coach impliqué QUE la feuille de match, jamais une partie offline", () => {
     renderView({ rounds: [round([OPEN])], myTeamIds: ["d"] });
     expect(screen.getByTestId("cup-pairing-p2-mine").textContent).toBe("Mon match");
-    fireEvent.click(screen.getByTestId("cup-pairing-create-p2"));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/local-matches/lm-new"));
-    const [path, init] = apiRequest.mock.calls[0] as [string, RequestInit];
-    expect(path).toBe("/local-match");
-    expect(JSON.parse(String(init.body))).toEqual({
-      teamAId: "d",
-      teamBId: "c",
-      cupId: "cup-1",
-      cupPairingId: "p2",
-    });
+    expect(screen.getByTestId("cup-pairing-sheet-p2").getAttribute("href")).toBe(
+      "/cups/pairings/p2/sheet",
+    );
+    expect(screen.queryByTestId("cup-pairing-create-p2")).toBeNull();
+    expect(apiRequest).not.toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("ne renvoie jamais vers la partie offline d'une rencontre jouée", () => {
+    renderView({ rounds: [round([PLAYED])], myTeamIds: ["a"] });
+    // Le résultat est matérialisé en `LocalMatch`, mais il se relit sur la
+    // feuille : aucun lien vers /local-matches.
+    expect(screen.queryByTestId("cup-pairing-match-p1")).toBeNull();
+    expect(screen.getByTestId("cup-pairing-sheet-p1")).toBeTruthy();
   });
 
   it("le commissaire génère la ronde suivante seulement quand la ronde courante est terminée", async () => {
@@ -185,6 +188,55 @@ describe("CupRoundsView", () => {
     for (const system of ["random", "swiss", "manual"]) {
       expect(screen.getByTestId(`cup-round-system-${system}`)).toBeTruthy();
     }
+  });
+
+  it("le bandeau suit le système d'appariement sélectionné", () => {
+    renderView({
+      rounds: [round([PLAYED, BYE], { status: "completed" })],
+      isCommissioner: true,
+      participants: [
+        { id: "t1", name: "Alpha" },
+        { id: "t2", name: "Bravo" },
+      ],
+    });
+    // Défaut : tirage au sort — et surtout PAS le texte de la suisse.
+    expect(screen.getByTestId("cup-rounds-title").textContent).toContain(
+      "Tirage au sort",
+    );
+    const random = screen.getByTestId("cup-rounds-description").textContent;
+    expect(random).toContain("tiré au sort");
+    expect(random).not.toContain("selon le classement");
+
+    fireEvent.click(screen.getByTestId("cup-round-system-swiss"));
+    expect(screen.getByTestId("cup-rounds-title").textContent).toContain(
+      "Ronde suisse",
+    );
+    expect(screen.getByTestId("cup-rounds-description").textContent).toContain(
+      "selon le classement",
+    );
+
+    fireEvent.click(screen.getByTestId("cup-round-system-manual"));
+    expect(screen.getByTestId("cup-rounds-title").textContent).toContain(
+      "Saisie manuelle",
+    );
+    expect(screen.getByTestId("cup-rounds-description").textContent).toContain(
+      "vous-même",
+    );
+  });
+
+  it("reste neutre pour un coach : aucun système n'est annoncé", () => {
+    renderView({ rounds: [round([OPEN])], myTeamIds: ["d"] });
+    expect(screen.queryByTestId("cup-round-system")).toBeNull();
+    expect(screen.getByTestId("cup-rounds-title").textContent).toBe("Rondes");
+    const description = screen.getByTestId("cup-rounds-description").textContent;
+    expect(description).not.toContain("suisse");
+    expect(description).not.toContain("classement");
+  });
+
+  it("reste neutre pour le commissaire tant qu'une ronde est ouverte", () => {
+    renderView({ rounds: [round([OPEN])], isCommissioner: true });
+    expect(screen.queryByTestId("cup-round-system")).toBeNull();
+    expect(screen.getByTestId("cup-rounds-title").textContent).toBe("Rondes");
   });
 
   it("bloque la génération manuelle tant qu'aucune rencontre n'est saisie", () => {

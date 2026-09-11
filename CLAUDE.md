@@ -781,6 +781,44 @@ Piège de nommage : `LeagueMatchSheet` GARDE son nom malgré son rôle élargi.
 `db push` traite un renommage de modèle comme DROP + CREATE — le renommer
 perdrait toutes les feuilles de prod.
 
+### Un résultat se saisit à UN seul endroit — le reste se coupe, pas se range
+
+Une rencontre de coupe offrait DEUX chemins vers le même résultat : la
+feuille de match (le chemin conforme, partagé avec la ligue) et la création
+d'une « partie offline » (`LocalMatch`, journal d'actions saisi à la main).
+Les deux écrivaient, aucun des deux ne disait lequel faisait foi — d'où la
+confusion côté coachs, et des correctifs de feuille qui ne profitaient qu'à
+la moitié des saisies.
+
+Règle : dès qu'un second chemin de saisie apparaît, il se **ferme**, il ne se
+déplace pas dans un sous-menu. Concrètement (2026-09-11) : plus aucun bouton
+ni lien de coupe vers `/local-matches`, et la brique entière passe derrière
+`OFFLINE_MATCH_FLAG` (`offline_match`), OFF par défaut.
+
+Trois précautions qui vont avec un gate de ce genre :
+
+- **Gate NORMAL, pas kill-switch.** `KILL_SWITCH_FLAGS` est réservé aux flags
+  dont « ON » BLOQUE. Laisser celui-ci dehors fait que
+  `FEATURE_FLAGS_FORCE_ENABLED` (e2e-api, e2e-ui, intégration) continue
+  d'ouvrir les routes : les suites existantes gardent leur valeur au lieu de
+  virer au 403 en masse.
+- **Le client ne voit que les clés PRÉSENTES EN BASE.**
+  `listEnabledKeysForUser` renvoie `flags.map(...)` sur les lignes de la
+  table, force-enabled ou pas : un flag absent de la table est vu « OFF » par
+  l'UI même en CI. D'où la clé ajoutée au seed de `/__test/seed-rosters` (ON,
+  pour les suites) **et** à `seed.ts` (OFF, pour la prod).
+- **Gater la ROUTE, pas le service.** `LocalMatch` reste écrit par la
+  validation d'une feuille de coupe (matérialisation dont le classement
+  dérive) : le gate est posé au montage de `/local-match`, ce qui ferme la
+  saisie manuelle sans toucher ce chemin.
+
+Corollaire d'affichage, même famille : un bandeau qui décrit une RÈGLE
+(l'appariement d'une ronde) doit suivre la règle sélectionnée — le bandeau
+des rondes annonçait « système suisse » en permanence, y compris après un
+choix « Tirage au sort ». Et hors sélection il reste NEUTRE : une coupe
+panache les systèmes d'une ronde à l'autre, c'est le badge de chaque ronde
+qui tranche.
+
 ### Le placeholder d'un bracket, c'est `home === away`
 
 `CupPairing.homeTeamId` / `LeaguePairing.homeParticipantId` sont NOT NULL : une

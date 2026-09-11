@@ -110,6 +110,7 @@ import {
   AI_TRAINING_FLAG,
   ONLINE_PLAY_FLAG,
   LEAGUE_FLAG,
+  OFFLINE_MATCH_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -379,7 +380,16 @@ app.use("/cup", cupPoolRoutes);
 // Play-offs : `/cup/:id/playoffs...`, montés avant `cupRoutes`.
 app.use("/cup", cupPlayoffRoutes);
 app.use("/cup", cupRoutes);
-app.use("/local-match", localMatchRoutes);
+// Partie offline : gatee comme la partie en ligne. Le flag est OFF par
+// defaut (cf. services/featureFlags.OFFLINE_MATCH_FLAG) — la saisie d'un
+// resultat passe par la feuille de match. Le MODELE `LocalMatch` continue
+// d'etre ecrit par le serveur (materialisation d'une feuille de coupe) :
+// c'est l'API de saisie manuelle qui ferme, pas le stockage.
+app.use(
+  "/local-match",
+  requireFeatureFlag(OFFLINE_MATCH_FLAG),
+  localMatchRoutes,
+);
 app.use(
   "/matchmaking",
   requireFeatureFlag(ONLINE_PLAY_FLAG),
@@ -1063,6 +1073,14 @@ if (process.env.TEST_SQLITE === "1") {
           key: LEAGUE_FLAG,
           description:
             "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
+        },
+        {
+          // OFF en prod, ON pour les suites : les specs e2e-api exercent
+          // encore /local-match, et l'API /feature-flags/me ne renvoie que
+          // les cles PRESENTES en base (meme en force-enabled).
+          key: OFFLINE_MATCH_FLAG,
+          description:
+            "Partie offline (Match Local) — hub /local-matches, creation, saisie des actions, partage.",
         },
       ];
       for (const flag of flagSeeds) {

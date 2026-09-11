@@ -33,3 +33,18 @@ export const NUFFLE_COACH_FLAG = "nuffle_coach" as const;
  * Synchronise avec `apps/server/src/services/featureFlags.ts.NUFFLE_COACH_TEST_FLAG`.
  */
 export const NUFFLE_COACH_TEST_FLAG = "nuffle_coach_test" as const;
+
+/**
+ * Partie offline (« Match Local ») — gate le hub `/local-matches`, la
+ * création d'une partie, la saisie des actions et le lien de partage, ainsi
+ * que les entrées de menu et les cartes d'accueil qui y mènent.
+ *
+ * OFF par défaut (2026-09-11) : la brique n'est pas mûre et fait doublon
+ * avec la FEUILLE DE MATCH, qui est le chemin de saisie d'un résultat de
+ * ligue comme de coupe. Les admins gardent leur bypass de rôle pour
+ * administrer les parties déjà enregistrées.
+ *
+ * À garder synchronisé avec
+ * `apps/server/src/services/featureFlags.ts.OFFLINE_MATCH_FLAG`.
+ */
+export const OFFLINE_MATCH_FLAG = "offline_match" as const;

@@ -2,7 +2,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import { ONLINE_PLAY_FLAG } from "../../lib/featureFlagKeys";
+import {
+  OFFLINE_MATCH_FLAG,
+  ONLINE_PLAY_FLAG,
+} from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
 import { coachDisplayName, type CoachUser } from "./coach";
 import RosterBadge from "../RosterBadge";
@@ -89,6 +92,7 @@ function TeamsSkeleton() {
 export default function CoachDashboard({ user }: CoachDashboardProps) {
   const { t, language } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
+  const offlineMatchEnabled = useFeatureFlag(OFFLINE_MATCH_FLAG);
   const d = t.home.dashboard;
 
   const displayName = coachDisplayName(user);
@@ -141,12 +145,18 @@ export default function CoachDashboard({ user }: CoachDashboardProps) {
       title: d.actionCreateTeam,
       description: d.actionCreateTeamDesc,
     },
-    {
-      href: "/local-matches",
-      icon: <EmblemTabletop />,
-      title: d.actionLocalMatches,
-      description: d.actionLocalMatchesDesc,
-    },
+    // La partie offline n'est proposée que si son flag est actif : sans lui
+    // la carte mènerait à un écran « fonctionnalité désactivée ».
+    ...(offlineMatchEnabled
+      ? [
+          {
+            href: "/local-matches",
+            icon: <EmblemTabletop />,
+            title: d.actionLocalMatches,
+            description: d.actionLocalMatchesDesc,
+          },
+        ]
+      : []),
     {
       href: "/teams",
       icon: <EmblemStar />,

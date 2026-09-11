@@ -66,6 +66,25 @@ export const NUFFLE_COACH_FLAG = "nuffle_coach" as const;
 export const NUFFLE_COACH_TEST_FLAG = "nuffle_coach_test" as const;
 
 /**
+ * Partie offline (« Match Local ») — journal d'actions saisi a la main
+ * pendant une partie sur table : hub /local-matches, creation, saisie des
+ * actions, lien de partage.
+ *
+ * DESACTIVE par defaut (2026-09-11) : la brique n'est pas mure et fait
+ * doublon avec la FEUILLE DE MATCH, qui est le chemin de saisie d'un
+ * resultat de ligue comme de coupe — deux chemins concurrents pour la meme
+ * chose, d'ou la confusion cote coachs.
+ *
+ * C'est un feature gate NORMAL (pas un kill-switch) : `admin` et
+ * `FEATURE_FLAGS_FORCE_ENABLED` (CI) le court-circuitent, ce qui laisse les
+ * suites e2e continuer d'exercer les routes. Le MODELE `LocalMatch`, lui,
+ * reste ecrit par le serveur : c'est lui qui materialise le resultat d'une
+ * feuille de coupe (cf. docs/cup-match-sheet.md) — seule la SAISIE manuelle
+ * par le coach est fermee.
+ */
+export const OFFLINE_MATCH_FLAG = "offline_match" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,
@@ -142,6 +161,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: NUFFLE_COACH_TEST_FLAG,
     description:
       "Nuffle Coach (test) — bypass snap-to-next-window. STRICTEMENT OFF en prod.",
+  },
+  {
+    key: OFFLINE_MATCH_FLAG,
+    description:
+      "Partie offline (Match Local) — hub /local-matches, creation, saisie des actions, partage. OFF : la feuille de match est le chemin de saisie d'un resultat.",
   },
   {
     key: MAINTENANCE_MODE_FLAG,
