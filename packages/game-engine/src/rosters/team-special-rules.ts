@@ -78,7 +78,7 @@ export const TEAM_SPECIAL_RULES: TeamSpecialRuleDefinition[] = [
     description:
       "Une fois par match, si un joueur adverse ayant une Force de 4 ou moins et n'ayant pas le Trait Minus subit un résultat Mort lors du jet sur le Tableau d'Élimination, une équipe avec cette règle spéciale peut Relever le Mort : elle ajoute immédiatement un joueur Trois-quart depuis sa Fiche d'Équipe à son Box des Réserves (ce qui peut amener temporairement plus de 16 joueurs). À la Séquence d'Après Match, ce nouveau joueur peut être embauché gratuitement à condition que la Liste d'Équipe ne compte pas déjà 16 joueurs.",
     descriptionEn:
-      "Once per match, if an opposition player with Strength 4 or less and without the Titchy trait suffers a Dead result on the Casualty table, a team with this special rule may Raise the Dead: they immediately add a Lineman player from their roster to their Reserves Box (this can temporarily exceed 16 players). During the Post-Game Sequence, this new player can be hired for free, provided the team roster doesn't already contain 16 players.",
+      "Once per match, if an opposition player with Strength 4 or less and without the Stunty trait suffers a Dead result on the Casualty table, a team with this special rule may Raise the Dead: they immediately add a Lineman player from their roster to their Reserves Box (this can temporarily exceed 16 players). During the Post-Game Sequence, this new player can be hired for free, provided the team roster doesn't already contain 16 players.",
   },
   {
     slug: "deferlement",
