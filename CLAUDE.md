@@ -598,11 +598,13 @@ s'allouer `max(roundNumber) + 1`.
 
 ### Les Prières à Nuffle qui changent le barème de PSP
 
-Deux prières de la table D16 modifient les PSP et sont dérivables de la
-feuille : 10 « Passe Parfaite » (Réussite à 2 PSP) et 11 « Réception
-Étourdissante » (1 PSP au réceptionneur). Le réceptionneur d'une passe est
-saisi dans `targetPlayerId` et compté (`PlayerStatLine.receptions`), mais ne
-gagne RIEN par défaut : la Réussite revient au lanceur.
+Trois prières de la table D16 modifient les PSP et sont dérivables de la
+feuille : 10 « Passe Parfaite » (Réussite à 2 PSP), 11 « Réception
+Étourdissante » (1 PSP au réceptionneur) et 13 « Frénésie d'Agression » (une
+Élimination sur Agression rapporte les PSP d'Élimination). Le réceptionneur
+d'une passe est saisi dans `targetPlayerId` et compté
+(`PlayerStatLine.receptions`), mais ne gagne RIEN par défaut : la Réussite
+revient au lanceur.
 
 `league-sheet-prayer-spp` (pur) alimente les deux chemins, qui ne peuvent
 donc pas diverger : `computeSheetSpp` (PSP affichés, et prix de recrutement
@@ -610,6 +612,56 @@ d'un journalier) et `buildOfflineInputFromSummary` (PSP persistés, via le
 canal `sppBonus` déjà couvert par la reversion). Chaque côté n'applique que
 SES prières. La reconnaissance se fait sur le JET, `prayerId` étant absent
 des feuilles anciennes.
+
+Les prières 10 et 11 sont des bonus ADDITIFS (appliqués après le barème).
+La 13 ne l'est pas : elle change la QUALIFICATION de l'agression, qui devient
+une sortie — elle est donc servie au summarizer par côté
+(`foulingFrenzySides` → `MatchSummaryOptions.foulingFrenzy`), cf. le patron
+suivant. La 12 « Interaction avec les Fans » n'est PAS câblée : la feuille
+ne saisit pas l'auteur d'une sortie par le public.
+
+### Une « sortie » est une élimination qui RAPPORTE DES PSP
+
+Bug observé (sept. 2026) : la feuille annonçait 5 sorties pour 4 blocages +
+1 agression. Le summarizer comptait toute élimination blessante comme sortie
+— l'agression créditait 2 PSP à son auteur, le compteur d'équipe (colonnes
+Sor+/Sor-, bonus « sorties infligées ») additionnait aussi public, Actions
+Spéciales et atterrissages — et le classement des cogneurs réécrivait une
+troisième règle. Règle du livre : seule une Élimination sur Blocage rapporte
+des PSP, sauf exception nommée.
+
+`eliminationEarnsSpp(event, options)` (`league-match-summary`, pur) est LA
+définition. Blocage : toujours. `special_elim` : « Innovateur Violent ».
+`ttm_landing` : « Vol Fatal ». `aggression` : Prière 13 du côté. Public,
+esquive ratée, temporisation : jamais. Compteur d'équipe ET stat-line en
+dérivent (invariant testé : sorties d'équipe = Σ sorties créditées). Une
+agression reste une agression (colonne Agr) et sa blessure est consignée.
+
+Les exceptions sont des OPTIONS (compétences du COUP D'ENVOI relues dans le
+gel, prières de la feuille), construites en UN endroit :
+`league-sheet-summary-options.buildSheetSummaryOptions` (pur). Trois
+consommateurs, qui ne peuvent pas diverger : la feuille
+(`sheetSummaryOptions`, lecture ET validation), les classements individuels
+de saison (`league-player-stats`, feuille par feuille) et la
+resynchronisation d'une feuille validée. Tout nouveau lecteur de sorties en
+part — ne JAMAIS re-tester `kind === "casualty"` ailleurs.
+
+```ts
+const summary = summarizeMatchSheet(
+  events,
+  sheetSummaryOptions(teams, sheet), // gel + prières
+);
+// classement de saison : la même chose, évènement par évènement
+if (eliminationEarnsSpp(toSummaryEvent(e), optionsBySheetId.get(e.matchSheetId) ?? {})) …
+```
+
+Reprise du passé : `prisma/migrations/` est gitignoré, donc pas de backfill.
+`league-sheet-casualty-resync` rejoue les seuls DELTAS qui dépendent des
+sorties (participants, `totalCasualties` + PSP au barème du côté, bonus du
+pairing avec bonus commissaire conservé, snapshot `offlineResultInput`
+réécrit pour que l'invalidation reprenne le bon montant), idempotent et
+journalisé. Script `db:resync-sheet-casualties` (simulation par défaut,
+`-- --apply`). Même posture que `db:repair-build-psp`.
 
 ### Reglements de tournoi : base d'abord, moteur en repli
 
@@ -1423,6 +1475,14 @@ edition du `.json`, `pnpm --filter web typecheck` +
   [`docs/cup-match-sheet.md`](./docs/cup-match-sheet.md) et
   [`docs/cup-swiss-rounds.md`](./docs/cup-swiss-rounds.md), récit
   [`docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md`](./docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md).
+- **2026-09-11** : **Une sortie est une élimination qui rapporte des PSP** —
+  définition unique `eliminationEarnsSpp` (blocage ; Innovateur Violent ; Vol
+  Fatal ; Prière 13 « Frénésie d'Agression », désormais câblée), compteurs
+  d'équipe et cogneurs de saison alignés, options de summarizer construites
+  en un seul module, resynchronisation des feuilles déjà validées
+  (`db:resync-sheet-casualties`). Change OpenSpec
+  `casualties-are-spp-eliminations`, récit
+  [`docs/roadmap/sessions/2026-09-11-casualties-are-spp-eliminations.md`](./docs/roadmap/sessions/2026-09-11-casualties-are-spp-eliminations.md).
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures

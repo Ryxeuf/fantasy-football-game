@@ -137,6 +137,22 @@ ni supprimée ni maintenue. Ce qui reste à trancher :
   gate : un lien envoyé à un adversaire avant la coupure n'ouvre plus rien.
   Acceptable au moment de la bascule, à revoir si la brique revient.
 
+## Sorties = éliminations qui rapportent des PSP
+
+Source : `casualties-are-spp-eliminations` (2026-09-11). La définition d'une
+sortie est unique (`eliminationEarnsSpp`), les Prières 10, 11 et 13 sont
+câblées. Restent :
+
+- **Prière 12 « Interaction avec les Fans »** (2 PSP à qui pousse un
+  adversaire dans le Public) : la feuille ne saisit pas l'auteur d'une
+  sortie par le public (« la foule n'a pas d'acteur »). Câbler la prière
+  demande un picker « poussé par » sur `crowd_surge`, puis une entrée dans
+  `eliminationEarnsSpp` — la sortie deviendrait alors une sortie (Sor+,
+  cogneurs) pour le côté béni.
+- **Saisons clôturées** : `db:resync-sheet-casualties` les ignore (palmarès
+  persisté). À reprendre au cas par cas si une ligue close veut ses colonnes
+  Sor+/Sor- exactes.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -149,3 +165,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `fix-qa-log-2026-07` | `db-migrate.sh --seed` manuel + restart serveur + re-validation testeur |
 | `add-site-search`, `improve-league-match-sheet-ux` | Vérification visuelle sur staging |
 | `disable-offline-matches` | « Synchroniser depuis le code » dans `/admin/feature-flags` (ou passage de seed) pour créer la ligne `offline_match`. Sans elle la brique est déjà vue comme désactivée — la ligne sert à pouvoir la RALLUMER. |
+| `casualties-are-spp-eliminations` | `pnpm --filter @bb/server db:resync-sheet-casualties` (simulation : relire le rapport, une ligne par feuille dont les sorties bougent), puis `pnpm --filter @bb/server db:resync-sheet-casualties -- --apply`. Idempotent ; `-- --pairing <id>` pour une seule rencontre. |
