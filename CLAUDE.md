@@ -416,6 +416,39 @@ depuis la section Ligue, passait par `GET /leagues/:id/teams/:teamId/roster`
 qui servait toutes les Ligues du roster. `displayedRegionalLeagues` existe
 désormais aussi côté serveur (`services/roster-regional-rules`).
 
+### Maîtres de la Non-vie : le mort relevé, TROISIÈME famille synthétique
+
+« Relever le Mort » (une fois par match, adversaire tué de Force ≤ 4 sans
+Minus ⇒ un Trois-quart de la fiche en réserve, embauche GRATUITE en fin de
+match tant que la liste < 16) est portée par `services/league-sheet-raised-dead`
+(pur) et suit le patron des journaliers, id `raised-<side>-1` :
+
+- **Le choix est stocké, le joueur est dérivé.** `raisedDeadHome/Away` porte
+  `{ victimId, position }` ; le Trois-quart n'existe que tant que la sortie du
+  mort est consignée dans les évènements (`raiseDeadSideView`, UNE dérivation
+  pour affichage, choix, appartenance d'évolution, tirage et recrutement).
+  `null` = pas relevé — Prisma 6 accepte `null` en écriture sur une `Json?`
+  (vérifié sur le client SQLite), pas besoin de `Prisma.DbNull`.
+- **Minus = `stunty`**, pas `titchy` (Microbe). La description anglaise du
+  catalogue disait « Titchy » à tort.
+- **Gratuit ≠ sans valeur** : achat `raised_dead`, coût forcé à 0 côté
+  serveur (`purchasesGoldDelta` corrige le débit d'un montant saisi), valeur
+  pleine en VE par la matérialisation habituelle (`applyOfflinePurchasesForTeam`
+  traite `raised_dead` comme `journeyman` : PSP, évolution, `matchesPlayed`).
+  Relevé absent / doublé / tué à son tour / liste à 16 ⇒ « dépense diverse »
+  à 0 et évolution tracée « non recruté ».
+- **Tout nouveau chemin « joueur de feuille » doit le connaître** : pickers,
+  `computeSheetSpp` (côté dans l'id), `assertOwnership`,
+  `rollJourneymanRandomPrimary`, `reviewJourneymanAdvancements`
+  (`isSheetOnlyAdvancingPlayerId`), Mots-clés de Haine, noms d'actions de
+  coupe. La chaîne complète est rejouée par
+  `tests/e2e-api/specs/leagues-sheet-raise-dead-undead.spec.ts` (fixture
+  roster `undead` avec `specialRules` EN BASE — la règle se lit base d'abord).
+- Piège corrigé au passage : `parsePurchases` côté web ramenait tout type
+  inconnu à « Joueur » et perdait `journeymanId` — un recrutement de
+  journalier relu après rechargement redevenait un achat de joueur sans poste.
+  Extrait en module pur (`sheet/purchases.ts`), il conserve chaque type.
+
 ### Gel « version du match » : tout, dès l'OUVERTURE de la feuille
 
 Un gel partiel (en-tête seul) ou tardif (1re soumission) laisse une fenêtre
@@ -1423,6 +1456,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   [`docs/cup-match-sheet.md`](./docs/cup-match-sheet.md) et
   [`docs/cup-swiss-rounds.md`](./docs/cup-swiss-rounds.md), récit
   [`docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md`](./docs/roadmap/sessions/2026-09-10-cups-managed-like-leagues.md).
+- **2026-09-11** : **Maîtres de la Non-vie — Relever le Mort** (retour
+  testeur Discord) : troisième famille de joueurs synthétiques de la feuille
+  (`raised-<side>-1`), choix stocké / joueur dérivé, achat `raised_dead`
+  gratuit à valeur pleine, bandeau web + pickers + évolutions, fixtures e2e
+  `undead`. Change OpenSpec `raise-the-dead-masters-of-undeath`.
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures
