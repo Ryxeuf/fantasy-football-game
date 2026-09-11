@@ -8,7 +8,11 @@ import {
 } from "@bb/game-engine";
 import { apiRequest } from "../../../../../lib/api-client";
 import SkillTooltip from "../../../../../me/teams/components/SkillTooltip";
-import type { SheetJourneyman, SheetPlayer } from "./MatchSheetPanels";
+import type {
+  SheetJourneyman,
+  SheetPlayer,
+  SheetRaisedDead,
+} from "./MatchSheetPanels";
 
 // ---------------------------------------------------------------------------
 // Roster « version du match » : snapshot figé au DÉMARRAGE de la feuille
@@ -96,8 +100,13 @@ export function positionNameResolver(
 export function livePlayersToView(
   players: readonly SheetPlayer[] | undefined,
   journeymen: readonly SheetJourneyman[] = [],
+  raisedDead: SheetRaisedDead | null = null,
 ): SnapshotPlayerView[] | null {
-  if ((!players || players.length === 0) && journeymen.length === 0) {
+  if (
+    (!players || players.length === 0) &&
+    journeymen.length === 0 &&
+    !raisedDead
+  ) {
     return null;
   }
   return [
@@ -128,7 +137,27 @@ export function livePlayersToView(
       skills: j.skills ?? "",
       spp: 0,
     })),
+    ...(raisedDead ? [raisedDeadToView(raisedDead)] : []),
   ];
+}
+
+/**
+ * Mort relevé (Maîtres de la Non-vie) : il rejoint la réserve PENDANT le
+ * match, donc après le gel — il s'ajoute à la vue, figée ou live.
+ */
+export function raisedDeadToView(r: SheetRaisedDead): SnapshotPlayerView {
+  return {
+    name: r.name,
+    position: r.positionName,
+    number: r.number,
+    ma: r.stats?.ma ?? 0,
+    st: r.stats?.st ?? 0,
+    ag: r.stats?.ag ?? 0,
+    pa: r.stats?.pa ?? null,
+    av: r.stats?.av ?? 0,
+    skills: r.skills ?? "",
+    spp: 0,
+  };
 }
 
 /**
@@ -161,7 +190,10 @@ function usePositionNames(
     let cancelled = false;
     apiRequest<{
       roster?: {
-        positions?: Array<{ slug?: string | null; displayName?: string | null }>;
+        positions?: Array<{
+          slug?: string | null;
+          displayName?: string | null;
+        }>;
       };
     }>(
       `/api/rosters/${encodeURIComponent(roster)}?ruleset=${encodeURIComponent(
@@ -191,6 +223,7 @@ export function RosterSection({
   raw,
   livePlayers,
   journeymen,
+  raisedDead,
   roster,
   ruleset,
 }: {
@@ -199,6 +232,11 @@ export function RosterSection({
   livePlayers?: readonly SheetPlayer[];
   /** Journaliers dérivés — inclus dans la vue « état actuel ». */
   journeymen?: readonly SheetJourneyman[];
+  /**
+   * Mort relevé pendant CE match (Maîtres de la Non-vie) : ajouté à la vue,
+   * version du match ou état actuel — il est arrivé après le gel.
+   */
+  raisedDead?: SheetRaisedDead | null;
   /** Roster/édition de l'équipe : sert à lire les libellés de poste en base. */
   roster?: string;
   ruleset?: string;
@@ -218,7 +256,11 @@ export function RosterSection({
   );
   const positionName = (position: string): string =>
     dbNames.get(position) ?? fallbackName(position);
-  const players = snapshot?.players ?? live;
+  const basePlayers = snapshot?.players ?? live;
+  const players =
+    basePlayers && raisedDead
+      ? [...basePlayers, raisedDeadToView(raisedDead)]
+      : basePlayers;
   if (!players || players.length === 0) return null;
 
   const heading = snapshot
