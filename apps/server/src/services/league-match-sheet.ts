@@ -77,7 +77,6 @@ import { parseAccessCsv } from "./skill-access";
 import {
   applyPrayerSppBonuses,
   computePrayerSppBonuses,
-  foulingFrenzySides,
 } from "./league-sheet-prayer-spp";
 import {
   buildPurchaseOptions,
@@ -112,7 +111,15 @@ import {
   type CompetitionPairingContext,
   type CompetitionSheetRules,
 } from "./competition-match-sheet-context";
-import { frozenSkillsByPlayerId } from "./league-sheet-frozen-skills";
+import {
+  FATAL_FLIGHT_SLUG,
+  VIOLENT_INNOVATOR_SLUG,
+  frozenSkillHolders,
+} from "./league-sheet-frozen-skills";
+import {
+  buildSheetSummaryOptions,
+  type SheetSummarySource,
+} from "./league-sheet-summary-options";
 import {
   resolveSpecialRulesForTeam,
   updateTeamValues,
@@ -3060,7 +3067,7 @@ export function collectViolentInnovators(
   teams: MatchSheetTeamsBySide,
   frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
-  return collectSkillHolders(teams, "violent-innovator", frozen);
+  return collectSkillHolders(teams, VIOLENT_INNOVATOR_SLUG, frozen);
 }
 
 /**
@@ -3076,7 +3083,7 @@ export function collectFatalFlighters(
   teams: MatchSheetTeamsBySide,
   frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
-  return collectSkillHolders(teams, "fatal-flight", frozen);
+  return collectSkillHolders(teams, FATAL_FLIGHT_SLUG, frozen);
 }
 
 export interface MatchSheetTeamsBySide {
@@ -3084,35 +3091,24 @@ export interface MatchSheetTeamsBySide {
   away: MatchSheetTeam | null;
 }
 
-/** Colonnes de la feuille dont dépend la qualification des sorties. */
-export interface SheetSummarySource {
-  rosterSnapshotHome?: unknown;
-  rosterSnapshotAway?: unknown;
-  prayersHome?: unknown;
-  prayersAway?: unknown;
-}
+export type { SheetSummarySource };
 
 /**
  * Options du summarizer pour UNE feuille : compétences du COUP D'ENVOI
- * (Innovateur Violent, Vol Fatal — relues dans le gel, cf.
- * `collectViolentInnovators`) et Prières à Nuffle de chaque côté (Frénésie
- * d'Agression). La validation, la lecture et la resynchronisation d'une
- * feuille validée passent toutes par ici : ce qui est compté comme sortie
- * ne peut pas diverger d'un chemin à l'autre.
+ * (Innovateur Violent, Vol Fatal — relues dans le gel) et Prières à Nuffle
+ * de chaque côté (Frénésie d'Agression). La validation, la lecture, les
+ * classements de saison et la resynchronisation d'une feuille validée
+ * passent tous par `buildSheetSummaryOptions` : ce qui est compté comme
+ * sortie ne peut pas diverger d'un chemin à l'autre.
  */
 export function sheetSummaryOptions(
   teams: MatchSheetTeamsBySide,
   sheet: SheetSummarySource,
 ): MatchSummaryOptions {
-  const frozen: MatchSheetFrozenBySide = {
-    home: sheet.rosterSnapshotHome,
-    away: sheet.rosterSnapshotAway,
-  };
-  return {
-    violentInnovators: collectViolentInnovators(teams, frozen),
-    fatalFlighters: collectFatalFlighters(teams, frozen),
-    foulingFrenzy: foulingFrenzySides(sheet.prayersHome, sheet.prayersAway),
-  };
+  return buildSheetSummaryOptions(
+    { home: teams.home?.players ?? [], away: teams.away?.players ?? [] },
+    sheet,
+  );
 }
 
 /** Snapshots gelés de la feuille (« version du match »). */
@@ -3123,26 +3119,20 @@ interface MatchSheetFrozenBySide {
 
 /**
  * Ids des joueurs des 2 équipes portant un slug de compétence, lu dans les
- * compétences du COUP D'ENVOI. Les CSV de compétences viennent de sources
- * multiples (seed, admin, évolution) : la variante à underscore et la
- * casse sont acceptées.
+ * compétences du COUP D'ENVOI (cf. `frozenSkillHolders`, qui porte la
+ * tolérance d'orthographe des CSV).
  */
 function collectSkillHolders(
   teams: MatchSheetTeamsBySide,
   slug: string,
   frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
-  const wanted = new Set([slug, slug.replace(/-/g, "_")]);
   const out = new Set<string>();
   for (const side of ["home", "away"] as const) {
     const team = teams[side];
     if (!team) continue;
-    const skillsById = frozenSkillsByPlayerId(team.players, frozen?.[side]);
-    for (const p of team.players) {
-      const slugs = (skillsById.get(p.id) ?? "")
-        .split(",")
-        .map((sk) => sk.trim().toLowerCase());
-      if (slugs.some((sk) => wanted.has(sk))) out.add(p.id);
+    for (const id of frozenSkillHolders(team.players, frozen?.[side], slug)) {
+      out.add(id);
     }
   }
   return out;

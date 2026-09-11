@@ -18,7 +18,7 @@
  */
 
 /** Joueur live, tel que la feuille le charge (`MatchSheetPlayer`). */
-interface LivePlayer {
+export interface LivePlayer {
   readonly id: string;
   readonly number: number;
   readonly name: string;
@@ -127,6 +127,35 @@ export function frozenSkillsByPlayerId(
       byNumber.get(p.number) ??
       byName.get(normalizeName(p.name));
     out.set(p.id, match?.skills ?? "");
+  }
+  return out;
+}
+
+/** Compétence « Innovateur Violent » : PSP d'une Élimination sur Action Spéciale. */
+export const VIOLENT_INNOVATOR_SLUG = "violent-innovator";
+/** Compétence « Vol Fatal » : PSP d'une Élimination en atterrissant sur un adversaire. */
+export const FATAL_FLIGHT_SLUG = "fatal-flight";
+
+/**
+ * Ids des joueurs portant `slug` AU COUP D'ENVOI (cf. `frozenSkillsByPlayerId`).
+ * Les CSV de compétences viennent de sources multiples (seed, admin,
+ * évolution) : la variante à underscore et la casse sont acceptées, mais
+ * une compétence dont le nom CONTIENT le slug (« violent-innovator-plus »)
+ * n'est pas retenue.
+ */
+export function frozenSkillHolders(
+  players: readonly LivePlayer[],
+  frozenSnapshot: unknown,
+  slug: string,
+): Set<string> {
+  const wanted = new Set([slug, slug.replace(/-/g, "_")]);
+  const skillsById = frozenSkillsByPlayerId(players, frozenSnapshot);
+  const out = new Set<string>();
+  for (const p of players) {
+    const slugs = (skillsById.get(p.id) ?? "")
+      .split(",")
+      .map((sk) => sk.trim().toLowerCase());
+    if (slugs.some((sk) => wanted.has(sk))) out.add(p.id);
   }
   return out;
 }

@@ -348,6 +348,132 @@ describe("Lot J — league-player-stats", () => {
     });
   });
 
+  // Une sortie est une élimination qui RAPPORTE DES PSP : la même règle que
+  // la feuille de match, options par feuille comprises.
+  describe("cogneurs et tueurs de saison = éliminations qui rapportent des PSP", () => {
+    it("seule l'élimination sur blocage classe son auteur sans exception", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", name: "Bloqueur", teamId: "T1" }),
+        player({ id: "p2", name: "Agresseur", teamId: "T1" }),
+        player({ id: "p3", name: "Tronçonneuse", teamId: "T1" }),
+        player({ id: "p4", name: "Lancé", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { matchSheetId: "s1", kind: "casualty", team: "home", actorPlayerId: "p1", targetPlayerId: "x1", injurySeverity: "dead" },
+        // Agression qui blesse (et tue) : comptée en agression, pas en sortie.
+        { matchSheetId: "s1", kind: "aggression", team: "home", actorPlayerId: "p2", targetPlayerId: "x2", injurySeverity: "dead" },
+        // Action Spéciale sans Innovateur Violent, atterrissage sans Vol Fatal.
+        { matchSheetId: "s1", kind: "special_elim", team: "home", actorPlayerId: "p3", targetPlayerId: "x3", injurySeverity: "mng" },
+        { matchSheetId: "s1", kind: "ttm_landing", team: "home", actorPlayerId: "p4", targetPlayerId: "x4", injurySeverity: "mng" },
+        { matchSheetId: "s1", kind: "crowd_surge", team: "home", actorPlayerId: null, targetPlayerId: "x5", injurySeverity: "mng" },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+        {
+          id: "s1",
+          motmPlayerIds: [],
+          prayersHome: null,
+          prayersAway: null,
+          pairing: { homeParticipant: { teamId: "T1" }, awayParticipant: { teamId: "T2" } },
+        },
+      ]);
+      mockPrisma.roster.findMany.mockResolvedValue([]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topBashers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
+      ]);
+      expect(cat.topKillers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
+      ]);
+      expect(cat.topAggressors.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 1],
+      ]);
+      // Les PSP de saison suivent : p2 n'en gagne aucun pour son agression.
+      expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 2],
+      ]);
+      // Les victimes restent des victimes (sac de frappe), sortie ou pas.
+      expect(cat.topPunchingBags).toHaveLength(0); // x* ne sont pas de la saison
+    });
+
+    it("les exceptions de la feuille classent : Frénésie d'Agression, Innovateur Violent lu dans le gel", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+        { teamId: "T2" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        // Innovateur Violent AU COUP D'ENVOI (gel), perdu depuis (live vide).
+        { ...player({ id: "p3", name: "Grishnak", teamId: "T1" }), number: 3, skills: "" },
+        // Compétence gagnée APRÈS le match : le gel ne l'a pas.
+        { ...player({ id: "p5", name: "Ugrok", teamId: "T1" }), number: 5, skills: "violent-innovator" },
+        // Agresseur de l'extérieur, béni par Frénésie d'Agression.
+        { ...player({ id: "a2", name: "Botte", teamId: "T2" }), number: 2, skills: "" },
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { matchSheetId: "s1", kind: "special_elim", team: "home", actorPlayerId: "p3", targetPlayerId: "a9", injurySeverity: "mng" },
+        { matchSheetId: "s1", kind: "special_elim", team: "home", actorPlayerId: "p5", targetPlayerId: "a8", injurySeverity: "mng" },
+        { matchSheetId: "s1", kind: "aggression", team: "away", actorPlayerId: "a2", targetPlayerId: "p9", injurySeverity: "dead" },
+        // Même agression sur une AUTRE feuille, sans prière : rien.
+        { matchSheetId: "s2", kind: "aggression", team: "away", actorPlayerId: "a2", targetPlayerId: "p8", injurySeverity: "mng" },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+        {
+          id: "s1",
+          motmPlayerIds: [],
+          prayersHome: null,
+          prayersAway: [{ roll: 13, prayerId: "fouling-frenzy" }],
+          rosterSnapshotHome: {
+            players: [
+              { number: 3, name: "Grishnak", skills: "chainsaw,violent-innovator" },
+              { number: 5, name: "Ugrok", skills: "chainsaw" },
+            ],
+          },
+          pairing: { homeParticipant: { teamId: "T1" }, awayParticipant: { teamId: "T2" } },
+        },
+        {
+          id: "s2",
+          motmPlayerIds: [],
+          pairing: { homeParticipant: { teamId: "T1" }, awayParticipant: { teamId: "T2" } },
+        },
+      ]);
+      mockPrisma.roster.findMany.mockResolvedValue([]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topBashers.map((r) => [r.playerId, r.value]).sort()).toEqual([
+        ["a2", 1],
+        ["p3", 1],
+      ]);
+      // La mort par agression bénie compte comme un kill de cogneur.
+      expect(cat.topKillers.map((r) => [r.playerId, r.value])).toEqual([
+        ["a2", 1],
+      ]);
+      // Les deux agressions restent des agressions.
+      expect(cat.topAggressors.map((r) => [r.playerId, r.value])).toEqual([
+        ["a2", 2],
+      ]);
+    });
+
+    it("feuilles indisponibles : aucune exception, le blocage classe quand même", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+        player({ id: "p2", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "casualty", actorPlayerId: "p1", targetPlayerId: "x", injurySeverity: "mng" },
+        { kind: "aggression", actorPlayerId: "p2", targetPlayerId: "y", injurySeverity: "mng" },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockRejectedValue(new Error("no model"));
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topBashers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
+      ]);
+    });
+  });
+
   describe("FR18 — MVP & Future Star par saison", () => {
     it("MVP de saison = agrégation des motmPlayerIds (vs compteur career)", async () => {
       mockPrisma.leagueParticipant.findMany.mockResolvedValue([
