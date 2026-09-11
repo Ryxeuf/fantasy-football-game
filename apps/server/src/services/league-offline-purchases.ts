@@ -41,7 +41,13 @@ export type OfflinePurchaseKind =
   | "reroll"
   | "staff"
   | "other"
-  | "journeyman";
+  | "journeyman"
+  /**
+   * Maitres de la Non-vie — recrutement GRATUIT du Trois-quart releve
+   * pendant le match. Materialise comme un journalier recrute (PSP,
+   * evolution, competences fournis par la feuille), a cout nul.
+   */
+  | "raised_dead";
 export type OfflineStaffKind =
   | "assistant"
   | "cheerleader"
@@ -144,7 +150,14 @@ export function parsePurchases(raw: unknown): OfflinePurchaseInput[] {
     }
   }
   if (!Array.isArray(arr)) return [];
-  const KINDS = new Set(["player", "reroll", "staff", "other", "journeyman"]);
+  const KINDS = new Set([
+    "player",
+    "reroll",
+    "staff",
+    "other",
+    "journeyman",
+    "raised_dead",
+  ]);
   const STAFF = new Set([
     "assistant",
     "cheerleader",
@@ -353,7 +366,8 @@ export async function applyOfflinePurchasesForTeam(
         break;
       }
       case "player":
-      case "journeyman": {
+      case "journeyman":
+      case "raised_dead": {
         if (!rosterData) {
           serverLog.warn(
             `[league-offline-purchases] roster introuvable (${team.roster}) — joueur non cree`,
@@ -378,8 +392,12 @@ export async function applyOfflinePurchasesForTeam(
         // Un journalier recrute garde ce qu'il a gagne pendant le match
         // (PSP, evolution de l'etape 3) et PERD Solitaire : il n'est plus
         // journalier. Les competences fournies par la feuille font foi ;
-        // a defaut on retombe sur celles du poste.
-        const isJourneymanHire = p.kind === "journeyman";
+        // a defaut on retombe sur celles du poste. Un mort releve (Maitres
+        // de la Non-vie) suit le meme chemin : il a joue le match, la
+        // feuille porte ses PSP et son evolution — il n'a jamais eu
+        // Solitaire, le retrait est sans effet.
+        const isJourneymanHire =
+          p.kind === "journeyman" || p.kind === "raised_dead";
         const skills = isJourneymanHire
           ? stripLoner(p.skills ?? position.skills)
           : position.skills;

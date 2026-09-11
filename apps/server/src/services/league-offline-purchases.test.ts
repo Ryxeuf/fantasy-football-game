@@ -167,6 +167,27 @@ describe("parsePurchases", () => {
     });
   });
 
+  it("parse le recrutement GRATUIT d'un mort releve (Maitres de la Non-vie)", () => {
+    const parsed = parsePurchases([
+      {
+        kind: "raised_dead",
+        name: "Grommit",
+        cost: 0,
+        position: "undead_trois_quart_zombie",
+        spp: 3,
+        skills: "fork,instable,regeneration",
+        advancements: "[]",
+      },
+    ]);
+    expect(parsed[0]).toMatchObject({
+      kind: "raised_dead",
+      cost: 0,
+      position: "undead_trois_quart_zombie",
+      spp: 3,
+      skills: "fork,instable,regeneration",
+    });
+  });
+
   it("ignore les entrees illisibles / kinds inconnus / JSON casse", () => {
     expect(parsePurchases("{bad json")).toEqual([]);
     expect(parsePurchases(null)).toEqual([]);
@@ -213,6 +234,52 @@ describe("applyOfflinePurchasesForTeam", () => {
     });
     expect(out.createdPlayerIds).toEqual(["new-1"]);
     expect(m.tv).toHaveBeenCalledWith(prisma, "t1");
+  });
+
+  it("materialise un mort releve (raised_dead) comme un journalier recrute : PSP, competences, evolution, 1 match joue", async () => {
+    m.teamFind.mockResolvedValue(teamRow());
+    const out = await applyOfflinePurchasesForTeam("t1", [
+      {
+        kind: "raised_dead",
+        name: "Grommit",
+        cost: 0,
+        position: "lineman",
+        spp: 1,
+        skills: "regeneration,block",
+        advancements: JSON.stringify([
+          { skillSlug: "block", type: "primary", isRandom: false, at: 0 },
+        ]),
+        stats: { ma: 6, st: 3, ag: 3, pa: 4, av: 9 },
+      },
+    ]);
+    const data = (m.tpCreate.mock.calls[0][0] as { data: Record<string, unknown> })
+      .data;
+    expect(data).toMatchObject({
+      teamId: "t1",
+      name: "Grommit",
+      position: "lineman",
+      number: 2,
+      skills: "regeneration,block",
+      spp: 1,
+      matchesPlayed: 1,
+    });
+    expect(JSON.parse(data.advancements as string)).toHaveLength(1);
+    expect(out.createdPlayerIds).toEqual(["new-1"]);
+    // Gratuit : aucun debit ici non plus (la tresorerie est portee en amont).
+    expect(m.teamUpdate).not.toHaveBeenCalled();
+  });
+
+  it("liste deja a 16 : le mort releve est perdu (aucun joueur cree)", async () => {
+    m.teamFind.mockResolvedValue(
+      teamRow({
+        players: Array.from({ length: 16 }, (_, i) => ({ number: i + 1 })),
+      }),
+    );
+    const out = await applyOfflinePurchasesForTeam("t1", [
+      { kind: "raised_dead", name: "Grommit", cost: 0, position: "lineman" },
+    ]);
+    expect(m.tpCreate).not.toHaveBeenCalled();
+    expect(out.createdPlayerIds).toEqual([]);
   });
 
   it("resout la position par cout quand le slug est absent (match unique)", async () => {

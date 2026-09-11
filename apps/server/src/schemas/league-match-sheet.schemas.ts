@@ -158,7 +158,17 @@ const MAX_GOLD = 10_000_000;
 const purchaseSchema = z.object({
   // `journeyman` = recrutement d'un journalier ayant joué CE match (règle
   // BB : il perd Solitaire, garde ses PSP et l'évolution prise à l'étape 3).
-  kind: z.enum(["player", "reroll", "staff", "other", "journeyman"]),
+  // `raised_dead` = recrutement GRATUIT du Trois-quart relevé d'entre les
+  // morts (Maîtres de la Non-vie) : le serveur force le coût à 0 et
+  // redérive tout le reste depuis la feuille.
+  kind: z.enum([
+    "player",
+    "reroll",
+    "staff",
+    "other",
+    "journeyman",
+    "raised_dead",
+  ]),
   name: z.string().max(120),
   cost: z.number().int().min(0).max(MAX_GOLD),
   position: z.string().max(64).optional().nullable(),
@@ -305,6 +315,21 @@ export const postMatchSchema = z
     "Au moins un champ d'apres-match requis",
   );
 export type PostMatchBody = z.infer<typeof postMatchSchema>;
+
+/**
+ * Maîtres de la Non-vie — « Relever le Mort ». Le coach du côté (ou le
+ * commissaire) désigne l'adversaire tué à relever ; `victimId: null` annule
+ * le relevé. `position` est le slug du Trois-quart choisi sur une fiche qui
+ * en offre plusieurs (Morts-Vivants : Zombie ou Squelette) ; absent ou null
+ * = Trois-quart de base. Le serveur vérifie la règle spéciale de l'équipe,
+ * l'éligibilité du mort (adversaire, Force ≤ 4, sans Minus) et le poste.
+ */
+export const raiseDeadSchema = z.object({
+  side: z.enum(["home", "away"]),
+  victimId: z.string().min(1).max(64).nullable(),
+  position: z.string().max(64).optional().nullable(),
+});
+export type RaiseDeadBody = z.infer<typeof raiseDeadSchema>;
 
 export const invalidateSheetSchema = z.object({
   reason: z.string().max(500).optional(),
