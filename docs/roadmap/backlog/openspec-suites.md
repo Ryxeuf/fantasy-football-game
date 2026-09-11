@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-09-10
+> Dernière mise à jour : 2026-09-11
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -119,6 +119,24 @@ groupé par poule sont livrés. La parité UI, elle, n'est pas complète —
   PostgreSQL accepte un objet — la mi-temps et le tour d'un évènement ne sont
   donc pas testables en e2e-api.
 
+## Partie offline désactivée
+
+Source : `disable-offline-matches` (archivé 2026-09-11). La brique
+`/local-matches` est gatée par `offline_match`, OFF par défaut : elle n'est
+ni supprimée ni maintenue. Ce qui reste à trancher :
+
+- **La mûrir ou la retirer.** Tant que le flag dort, le code (≈ 1 800 lignes
+  de route, quatre écrans, `LocalMatchAction`) vit sans utilisateur. Soit on
+  la réaligne sur la feuille de match (séquence de fin de match, VE, PSP),
+  soit on la retire — en gardant le modèle `LocalMatch`, qui porte la
+  matérialisation du résultat d'une feuille de coupe.
+- **`/admin/local-matches` reste ouvert** (bypass de rôle admin, page hors
+  du gate) : c'est voulu tant que des parties d'historique existent, à
+  reconsidérer le jour où la brique est retirée.
+- **Le partage par jeton** (`/local-matches/share/<token>`) tombe avec le
+  gate : un lien envoyé à un adversaire avant la coupure n'ouvre plus rien.
+  Acceptable au moment de la bascule, à revoir si la brique revient.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -130,3 +148,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `fix-league-status-lifecycle` | `tsx src/scripts/backfill-league-status.ts --dry-run` puis exécution |
 | `fix-qa-log-2026-07` | `db-migrate.sh --seed` manuel + restart serveur + re-validation testeur |
 | `add-site-search`, `improve-league-match-sheet-ux` | Vérification visuelle sur staging |
+| `disable-offline-matches` | « Synchroniser depuis le code » dans `/admin/feature-flags` (ou passage de seed) pour créer la ligne `offline_match`. Sans elle la brique est déjà vue comme désactivée — la ligne sert à pouvoir la RALLUMER. |
