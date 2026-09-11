@@ -33,11 +33,11 @@ import {
   type Inducement,
   type PrayerEntry,
   type CostlyError,
-  type Purchase,
   type SppBonusEntry,
   type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
+import { parsePurchases } from "./purchases";
 import {
   eventKindHint,
   hasTargetField,
@@ -304,25 +304,6 @@ function parseCostlyErrors(raw: unknown): CostlyError[] {
   return parseArray<Record<string, unknown>>(raw).map((i) => ({
     cost: typeof i.cost === "number" ? i.cost : 0,
     reason: typeof i.reason === "string" ? i.reason : "",
-  }));
-}
-
-function parsePurchases(raw: unknown): Purchase[] {
-  return parseArray<Record<string, unknown>>(raw).map((i) => ({
-    kind:
-      i.kind === "reroll" || i.kind === "staff" || i.kind === "other"
-        ? i.kind
-        : "player",
-    name: typeof i.name === "string" ? i.name : "",
-    cost: typeof i.cost === "number" ? i.cost : 0,
-    position: typeof i.position === "string" ? i.position : undefined,
-    staff:
-      i.staff === "assistant" ||
-      i.staff === "cheerleader" ||
-      i.staff === "apothecary" ||
-      i.staff === "dedicated_fan"
-        ? i.staff
-        : undefined,
   }));
 }
 
