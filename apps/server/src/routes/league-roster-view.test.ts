@@ -13,8 +13,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     league: { findUnique: vi.fn() },
-    // isLeagueParticipant (viewer non-commissaire) compte les inscriptions.
+    // isLeagueParticipant (viewer non-commissaire) compte les inscriptions ;
+    // l'invitation en attente complète la visibilité d'une ligue privée.
     leagueParticipant: { count: vi.fn() },
+    leagueInvitation: { count: vi.fn() },
     team: { findUnique: vi.fn() },
     roster: { findFirst: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
@@ -64,6 +66,7 @@ import type { AuthenticatedRequest } from "../middleware/authUser";
 const mockPrisma = prisma as unknown as {
   league: { findUnique: ReturnType<typeof vi.fn> };
   leagueParticipant: { count: ReturnType<typeof vi.fn> };
+  leagueInvitation: { count: ReturnType<typeof vi.fn> };
   team: { findUnique: ReturnType<typeof vi.fn> };
   roster: { findFirst: ReturnType<typeof vi.fn> };
   teamPlayer: { findMany: ReturnType<typeof vi.fn> };
@@ -110,7 +113,11 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
       currentValue: 950_000,
     });
     // Viewer = créateur de la ligue.
-    mockPrisma.league.findUnique.mockResolvedValue({ creatorId: "creator-1" });
+    mockPrisma.league.findUnique.mockResolvedValue({
+      id: "L1",
+      creatorId: "creator-1",
+      isPublic: true,
+    });
     // Méta d'équipe (2e findUnique du handler).
     mockPrisma.team.findUnique.mockResolvedValue({
       teamValue: 1_000_000,
@@ -200,6 +207,36 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
       { actorPlayerId: "pl1" },
       { actorPlayerId: "pl2" },
     ]);
+  });
+
+  it("ligue privée : introuvable (404) pour un coach qui n'en fait pas partie", async () => {
+    mockPrisma.league.findUnique.mockResolvedValue({
+      id: "L1",
+      creatorId: "creator-1",
+      isPublic: false,
+    });
+    mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+    mockPrisma.leagueInvitation.count.mockResolvedValue(0);
+    const req = {
+      user: { id: "stranger" },
+      params: { leagueId: "L1", teamId: "T1" },
+    } as unknown as AuthenticatedRequest;
+    const res = createRes();
+    await handleGetLeagueTeamRoster(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(mockGetTeamForEdit).not.toHaveBeenCalled();
+  });
+
+  it("ligue publique : un coach non inscrit est refusé (403), la ligue existe bien", async () => {
+    mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+    const req = {
+      user: { id: "stranger" },
+      params: { leagueId: "L1", teamId: "T1" },
+    } as unknown as AuthenticatedRequest;
+    const res = createRes();
+    await handleGetLeagueTeamRoster(req, res);
+    expect(res.statusCode).toBe(403);
+    expect(mockGetTeamForEdit).not.toHaveBeenCalled();
   });
 
   it("enrichit chaque joueur des compteurs, agressions, blessures et dispo", async () => {

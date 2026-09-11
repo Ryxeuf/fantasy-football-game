@@ -239,6 +239,15 @@ import {
   type RecordOfflineResultBody,
 } from "../schemas/league.schemas";
 import { sendError, sendSuccess } from "../utils/api-response";
+import { hasRole } from "../utils/roles";
+import {
+  canViewLeagueRow,
+  findVisibleLeague,
+  findVisibleSeasonLeague,
+  isLeaguePairingHiddenFrom,
+  type LeagueViewer,
+  type LeagueVisibilityRow,
+} from "../services/league-access";
 
 function requireUserId(
   req: AuthenticatedRequest,
@@ -250,6 +259,69 @@ function requireUserId(
     return null;
   }
   return id;
+}
+
+const LEAGUE_NOT_FOUND = "Ligue introuvable";
+const SEASON_NOT_FOUND = "Saison introuvable";
+const PAIRING_NOT_FOUND = "Pairing introuvable";
+
+/** Lecteur courant ; `req.user` est absent derrière `optionalAuthUser`. */
+function leagueViewerOf(req: AuthenticatedRequest): LeagueViewer {
+  return {
+    userId: req.user?.id ?? null,
+    isAdmin: hasRole(req.user?.roles ?? [], "admin"),
+  };
+}
+
+/**
+ * Garde de LECTURE d'une ligue : 404 « Ligue introuvable » si elle n'existe
+ * pas OU si elle est privée et que le lecteur n'en fait pas partie
+ * (commissaire, admin, coach inscrit, coach invité — cf.
+ * `services/league-access`). Même message dans les deux cas : un 403
+ * révélerait l'existence de la ligue à qui devine un id.
+ */
+async function ensureVisibleLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+  leagueId: string,
+): Promise<LeagueVisibilityRow | null> {
+  const league = await findVisibleLeague(leagueId, leagueViewerOf(req));
+  if (!league) {
+    sendError(res, LEAGUE_NOT_FOUND, 404);
+    return null;
+  }
+  return league;
+}
+
+/** Même garde, adressée par la saison (calendrier, classement, poules…). */
+async function ensureVisibleSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+  seasonId: string,
+): Promise<LeagueVisibilityRow | null> {
+  const found = await findVisibleSeasonLeague(seasonId, leagueViewerOf(req));
+  if (!found) {
+    sendError(res, SEASON_NOT_FOUND, 404);
+    return null;
+  }
+  return found.league;
+}
+
+/**
+ * Feuille de match : 404 quand la rencontre appartient à une ligue cachée au
+ * lecteur. Une rencontre de coupe ou un id inconnu passent (le service
+ * tranche avec ses propres erreurs typées).
+ */
+async function ensureVisiblePairingLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+  pairingId: string,
+): Promise<boolean> {
+  if (await isLeaguePairingHiddenFrom(pairingId, leagueViewerOf(req))) {
+    sendError(res, PAIRING_NOT_FOUND, 404);
+    return false;
+  }
+  return true;
 }
 
 function serializeLeague(
@@ -547,8 +619,10 @@ export async function handleGetLeague(
 ): Promise<void> {
   const leagueId = req.params.id;
   const league = await getLeagueById(leagueId);
-  if (!league) {
-    sendError(res, "Ligue introuvable", 404);
+  // Ligue privée : introuvable pour qui n'en fait pas partie — même 404
+  // qu'une ligue inexistante (cf. `services/league-access`).
+  if (!league || !(await canViewLeagueRow(league, leagueViewerOf(req)))) {
+    sendError(res, LEAGUE_NOT_FOUND, 404);
     return;
   }
   // L2.D — `hasScoredMatch` : verrou d'edition expose au frontend pour
@@ -569,8 +643,12 @@ export async function handleGetSeason(
 ): Promise<void> {
   const seasonId = req.params.seasonId;
   const season = await getSeasonById(seasonId);
-  if (!season) {
-    sendError(res, "Saison introuvable", 404);
+  // Saison d'une ligue privée : introuvable pour qui n'en fait pas partie.
+  if (
+    !season ||
+    !(await canViewLeagueRow(season.league, leagueViewerOf(req)))
+  ) {
+    sendError(res, SEASON_NOT_FOUND, 404);
     return;
   }
   const raw = season as unknown as Record<string, unknown> & {
@@ -656,8 +734,13 @@ export async function handleJoinSeason(
   const body: JoinSeasonBody = req.body;
 
   const season = await getSeasonById(seasonId);
-  if (!season) {
-    sendError(res, "Saison introuvable", 404);
+  // Une ligue privée ne se rejoint pas par son id : elle est introuvable
+  // pour qui n'en fait pas partie (un coach invité, lui, la voit).
+  if (
+    !season ||
+    !(await canViewLeagueRow(season.league, leagueViewerOf(req)))
+  ) {
+    sendError(res, SEASON_NOT_FOUND, 404);
     return;
   }
 
@@ -804,6 +887,7 @@ export async function handleGetSeasonAwards(
   res: Response,
 ): Promise<void> {
   const seasonId = req.params.seasonId;
+  if (!(await ensureVisibleSeason(req, res, seasonId))) return;
   try {
     const persisted = await getPersistedSeasonAward(seasonId);
     const recap = await computeSeasonRecap(seasonId);
@@ -844,6 +928,7 @@ export async function handleGetStandings(
   res: Response,
 ): Promise<void> {
   const seasonId = req.params.seasonId;
+  if (!(await ensureVisibleSeason(req, res, seasonId))) return;
   try {
     const standings = await computeSeasonStandings(seasonId);
     // L'ELO n'est affiche que s'il est un critere de classement effectif
@@ -899,17 +984,22 @@ export async function handleGetPlayoffBracket(
         playoffSize: true,
         status: true,
         playoffsPublished: true,
-        league: { select: { creatorId: true } },
+        league: { select: { id: true, creatorId: true, isPublic: true } },
       },
     })) as {
       id: string;
       playoffSize: number;
       status: string;
       playoffsPublished: boolean | null;
-      league?: { creatorId: string } | null;
+      league?: { id: string; creatorId: string; isPublic: boolean } | null;
     } | null;
-    if (!seasonRow) {
-      sendError(res, "Saison introuvable", 404);
+    // Saison inconnue OU ligue privée cachée au lecteur : même 404.
+    if (
+      !seasonRow ||
+      !seasonRow.league ||
+      !(await canViewLeagueRow(seasonRow.league, leagueViewerOf(req)))
+    ) {
+      sendError(res, SEASON_NOT_FOUND, 404);
       return;
     }
     const playoffsPublished = isPlayoffBracketVisible(
@@ -1333,12 +1423,16 @@ export async function handleCreatePool(
   }
 }
 
-/** GET /leagues/seasons/:seasonId/pools (public). */
+/**
+ * GET /leagues/seasons/:seasonId/pools — sans compte pour une ligue publique,
+ * réservé aux membres d'une ligue privée (404 sinon).
+ */
 export async function handleListPools(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> {
   const seasonId = req.params.seasonId;
+  if (!(await ensureVisibleSeason(req, res, seasonId))) return;
   try {
     const pools = await listPoolsForSeason(seasonId);
     sendSuccess(res, { pools });
@@ -1479,20 +1573,19 @@ export async function handleGetTeamForEdit(
  * inscrit (participant d'au moins une saison). Renvoie la ligue (son
  * `creatorId`, pour distinguer le commissaire cote reponse) quand la
  * lecture est autorisee, `null` sinon (reponse d'erreur deja envoyee).
+ *
+ * Une ligue privée est d'abord INTROUVABLE (404) pour qui n'en fait pas
+ * partie ; le 403 ne concerne que ceux qui la voient sans y être inscrits
+ * (ligue publique, ou coach seulement invité).
  */
 async function ensureLeagueViewer(
+  req: AuthenticatedRequest,
+  res: Response,
   userId: string,
   leagueId: string,
-  res: Response,
 ): Promise<{ creatorId: string } | null> {
-  const league = (await prisma.league.findUnique({
-    where: { id: leagueId },
-    select: { creatorId: true },
-  })) as { creatorId: string } | null;
-  if (!league) {
-    sendError(res, "Ligue introuvable", 404);
-    return null;
-  }
+  const league = await ensureVisibleLeague(req, res, leagueId);
+  if (!league) return null;
   if (league.creatorId === userId) return league;
   if (await isLeagueParticipant(userId, leagueId)) return league;
   sendError(
@@ -1515,7 +1608,7 @@ export async function handleGetLeagueTeamRoster(
   const userId = requireUserId(req, res);
   if (!userId) return;
   const { leagueId, teamId } = req.params;
-  const league = await ensureLeagueViewer(userId, leagueId, res);
+  const league = await ensureLeagueViewer(req, res, userId, leagueId);
   if (!league) return;
   try {
     // getTeamForEdit garde la verification "equipe ∈ ligue" + charge les
@@ -2123,6 +2216,9 @@ export async function handleGetMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  if (!(await ensureVisiblePairingLeague(req, res, req.params.pairingId))) {
+    return;
+  }
   try {
     const out = await getMatchSheet({
       pairingId: req.params.pairingId,
@@ -2247,6 +2343,9 @@ export async function handleCanInvalidate(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  if (!(await ensureVisiblePairingLeague(req, res, req.params.pairingId))) {
+    return;
+  }
   try {
     const out = await canInvalidateMatchSheet({
       pairingId: req.params.pairingId,
@@ -2383,6 +2482,7 @@ export async function handleGetLeaderboards(
   res: Response,
 ): Promise<void> {
   const seasonId = req.params.seasonId;
+  if (!(await ensureVisibleSeason(req, res, seasonId))) return;
   const topNRaw = req.query.topN;
   const topN = typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
   const teamId =
@@ -2411,6 +2511,7 @@ export async function handleGetLeaderboardsByTeam(
   res: Response,
 ): Promise<void> {
   const seasonId = req.params.seasonId;
+  if (!(await ensureVisibleSeason(req, res, seasonId))) return;
   const topNRaw = req.query.topN;
   const topN = typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
   try {
@@ -2443,6 +2544,7 @@ export async function handleGetTeamLeaderboards(
   res: Response,
 ): Promise<void> {
   const seasonId = req.params.seasonId;
+  if (!(await ensureVisibleSeason(req, res, seasonId))) return;
   const topNRaw = req.query.topN;
   const topN = typeof topNRaw === "string" ? parseInt(topNRaw, 10) : undefined;
   try {
@@ -3072,9 +3174,10 @@ router.patch(
 router.post("/rounds/:roundId/remind", authUser, handleRemindRound);
 
 // Lot C — gestion des poules (groups). Mutation reservee au
-// commissaire ; lecture publique pour permettre l'affichage des
-// poules dans le calendrier / standings.
-router.get("/seasons/:seasonId/pools", handleListPools);
+// commissaire ; lecture sans compte pour une ligue publique (affichage des
+// poules dans le calendrier / standings). `optionalAuthUser` : une ligue
+// privée n'est servie qu'à ses membres, et reste introuvable pour les autres.
+router.get("/seasons/:seasonId/pools", optionalAuthUser, handleListPools);
 router.post(
   "/seasons/:seasonId/pools",
   authUser,
@@ -3182,17 +3285,24 @@ router.post(
 // Lot H — liste des matchs a valider pour le commissaire (cloche).
 router.get("/me/pending-validations", authUser, handleListPendingValidations);
 
-// Lot J — classements top-N joueurs (public). Decline aussi par
-// equipe via /by-team pour le mode "top 3 par equipe".
-router.get("/seasons/:seasonId/leaderboards", handleGetLeaderboards);
+// Lot J — classements top-N joueurs (sans compte pour une ligue publique,
+// membres seulement pour une ligue privée). Decline aussi par equipe via
+// /by-team pour le mode "top 3 par equipe".
+router.get(
+  "/seasons/:seasonId/leaderboards",
+  optionalAuthUser,
+  handleGetLeaderboards,
+);
 router.get(
   "/seasons/:seasonId/leaderboards/by-team",
+  optionalAuthUser,
   handleGetLeaderboardsByTeam,
 );
 // Tops PAR EQUIPE (totaux de saison) — mode « Par equipe » de la page
 // classements (top 5 equipes marqueuses de TD, etc.).
 router.get(
   "/seasons/:seasonId/leaderboards/teams",
+  optionalAuthUser,
   handleGetTeamLeaderboards,
 );
 
@@ -3338,9 +3448,14 @@ router.get("/pairings/:pairingId/rosters", authUser, handleGetPairingRosters);
 // pre-remplir la modale d'edition.
 router.get("/pairings/:pairingId/result", authUser, handleGetOfflineResult);
 router.get("/seasons/:seasonId/standings", authUser, handleGetStandings);
-// L2.C.1 — recap public de fin de saison : champion + awards.
-// Pas d'auth : la page recap doit etre indexable / partageable.
-router.get("/seasons/:seasonId/awards", handleGetSeasonAwards);
+// L2.C.1 — recap de fin de saison : champion + awards. Sans compte pour une
+// ligue publique (page recap indexable / partageable) ; une ligue privée n'est
+// servie qu'à ses membres — d'où `optionalAuthUser` plutôt que rien.
+router.get(
+  "/seasons/:seasonId/awards",
+  optionalAuthUser,
+  handleGetSeasonAwards,
+);
 // L2.C.3 — bracket playoffs (public, indexable).
 router.get(
   "/seasons/:seasonId/playoff-bracket",

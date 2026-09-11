@@ -18,6 +18,8 @@ vi.mock("../services/league", () => ({
   listLeagues: vi.fn(),
   getLeagueById: vi.fn(),
   getSeasonById: vi.fn(),
+  // Visibilité d'une ligue privée (`services/league-access` s'appuie dessus).
+  isLeagueParticipant: vi.fn(async () => false),
   computeSeasonStandings: vi.fn(),
   isSeasonEloRanked: vi.fn(() => false),
   withdrawParticipant: vi.fn(),
@@ -43,6 +45,7 @@ vi.mock("../prisma", () => ({
     team: { findUnique: vi.fn() },
     league: { findUnique: vi.fn() },
     leagueSeason: { findUnique: vi.fn() },
+    leagueInvitation: { count: vi.fn(async () => 0) },
   },
 }));
 
@@ -57,6 +60,7 @@ import {
   listLeagues,
   getLeagueById,
   getSeasonById,
+  isLeagueParticipant,
   computeSeasonStandings,
   withdrawParticipant,
   listThemedSeasons,
@@ -88,6 +92,7 @@ const mockService = {
   listLeagues: listLeagues as ReturnType<typeof vi.fn>,
   getLeagueById: getLeagueById as ReturnType<typeof vi.fn>,
   getSeasonById: getSeasonById as ReturnType<typeof vi.fn>,
+  isLeagueParticipant: isLeagueParticipant as ReturnType<typeof vi.fn>,
   computeSeasonStandings: computeSeasonStandings as ReturnType<typeof vi.fn>,
   withdrawParticipant: withdrawParticipant as ReturnType<typeof vi.fn>,
   listThemedSeasons: listThemedSeasons as ReturnType<typeof vi.fn>,
@@ -95,6 +100,7 @@ const mockService = {
 const mockPrisma = prisma as unknown as {
   team: { findUnique: ReturnType<typeof vi.fn> };
   league: { findUnique: ReturnType<typeof vi.fn> };
+  leagueSeason: { findUnique: ReturnType<typeof vi.fn> };
 };
 
 function createRes() {
@@ -305,6 +311,8 @@ describe("Route: GET /leagues/:id", () => {
     mockService.getLeagueById.mockResolvedValue({
       id: "league-1",
       name: "Open",
+      creatorId: "commish",
+      isPublic: true,
       allowedRosters: JSON.stringify(["skaven", "dwarf"]),
       seasons: [],
     });
@@ -320,6 +328,55 @@ describe("Route: GET /leagues/:id", () => {
         }),
       }),
     });
+  });
+
+  // Ligue PRIVÉE : introuvable pour qui n'en fait pas partie — même 404
+  // qu'une ligue inexistante, et sans charger quoi que ce soit d'autre.
+  const privateLeague = {
+    id: "league-1",
+    name: "Cercle fermé",
+    creatorId: "commish",
+    isPublic: false,
+    allowedRosters: null,
+    seasons: [],
+  };
+
+  it("ligue privée : 404 pour un coach qui n'en fait pas partie", async () => {
+    mockService.getLeagueById.mockResolvedValue(privateLeague);
+    const req = createReq({ params: { id: "league-1" } });
+    const res = createRes();
+    await handleGetLeague(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toEqual({
+      success: false,
+      error: "Ligue introuvable",
+    });
+    expect(mockService.hasLeagueScoredMatch).not.toHaveBeenCalled();
+  });
+
+  it("ligue privée : 200 pour un coach inscrit", async () => {
+    mockService.getLeagueById.mockResolvedValue(privateLeague);
+    mockService.isLeagueParticipant.mockResolvedValueOnce(true);
+    const req = createReq({ params: { id: "league-1" } });
+    const res = createRes();
+    await handleGetLeague(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(mockService.isLeagueParticipant).toHaveBeenCalledWith(
+      "user-1",
+      "league-1",
+    );
+  });
+
+  it("ligue privée : 200 pour son commissaire", async () => {
+    mockService.getLeagueById.mockResolvedValue(privateLeague);
+    const req = createReq({
+      params: { id: "league-1" },
+      user: { id: "commish", roles: ["user"] },
+    });
+    const res = createRes();
+    await handleGetLeague(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(mockService.isLeagueParticipant).not.toHaveBeenCalled();
   });
 });
 
@@ -399,6 +456,38 @@ describe("Route: GET /leagues/seasons/:seasonId (season detail)", () => {
         }),
       }),
     });
+  });
+
+  it("saison d'une ligue privée : 404 pour un tiers, 200 pour un inscrit", async () => {
+    mockService.getSeasonById.mockResolvedValue({
+      id: "season-1",
+      leagueId: "league-1",
+      league: {
+        id: "league-1",
+        name: "Cercle fermé",
+        creatorId: "commish",
+        isPublic: false,
+        allowedRosters: null,
+      },
+      rounds: [],
+      participants: [],
+    });
+    const req = createReq({ params: { seasonId: "season-1" } });
+    const res = createRes();
+    await handleGetSeason(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toEqual({
+      success: false,
+      error: "Saison introuvable",
+    });
+
+    mockService.isLeagueParticipant.mockResolvedValueOnce(true);
+    const res2 = createRes();
+    await handleGetSeason(
+      createReq({ params: { seasonId: "season-1" } }),
+      res2,
+    );
+    expect(res2.statusCode).toBe(200);
   });
 });
 
@@ -500,7 +589,12 @@ describe("Route: POST /leagues/seasons/:seasonId/join", () => {
     });
     mockService.getSeasonById.mockResolvedValue({
       id: "season-1",
-      league: { allowedRosters: null },
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: true,
+        allowedRosters: null,
+      },
     });
     const req = createReq({
       params: { seasonId: "season-1" },
@@ -523,7 +617,12 @@ describe("Route: POST /leagues/seasons/:seasonId/join", () => {
     });
     mockService.getSeasonById.mockResolvedValue({
       id: "season-1",
-      league: { allowedRosters: JSON.stringify(["skaven", "dwarf"]) },
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: true,
+        allowedRosters: JSON.stringify(["skaven", "dwarf"]),
+      },
     });
     mockService.addParticipant.mockRejectedValue(
       new Error("Roster chaos non autorise sur cette saison (autorises: skaven, dwarf)"),
@@ -548,7 +647,12 @@ describe("Route: POST /leagues/seasons/:seasonId/join", () => {
     });
     mockService.getSeasonById.mockResolvedValue({
       id: "season-1",
-      league: { allowedRosters: null },
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: true,
+        allowedRosters: null,
+      },
     });
     mockService.addParticipant.mockResolvedValue({
       id: "participant-1",
@@ -578,6 +682,27 @@ describe("Route: POST /leagues/seasons/:seasonId/join", () => {
     const res = createRes();
     await handleJoinSeason(req, res);
     expect(res.statusCode).toBe(404);
+  });
+
+  it("ligue privée : un tiers ne peut pas la rejoindre par son id (404, addParticipant non appelé)", async () => {
+    mockService.getSeasonById.mockResolvedValue({
+      id: "season-1",
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: false,
+        allowedRosters: null,
+      },
+    });
+    const req = createReq({
+      params: { seasonId: "season-1" },
+      body: { teamId: "team-1" },
+    });
+    const res = createRes();
+    await handleJoinSeason(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(mockPrisma.team.findUnique).not.toHaveBeenCalled();
+    expect(mockService.addParticipant).not.toHaveBeenCalled();
   });
 });
 
@@ -625,6 +750,15 @@ describe("Route: GET /leagues/seasons/:seasonId/standings", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns the sorted standings", async () => {
+    mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+      id: "season-1",
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: true,
+        tieBreakRules: null,
+      },
+    });
     mockService.computeSeasonStandings.mockResolvedValue([
       { teamId: "t1", points: 9, touchdownDifference: 5 },
       { teamId: "t2", points: 3, touchdownDifference: -2 },
@@ -647,13 +781,33 @@ describe("Route: GET /leagues/seasons/:seasonId/standings", () => {
   });
 
   it("returns 404 when the season does not exist", async () => {
-    mockService.computeSeasonStandings.mockRejectedValue(
-      new Error("Saison introuvable: X"),
-    );
+    mockPrisma.leagueSeason.findUnique.mockResolvedValue(null);
     const req = createReq({ params: { seasonId: "nope" } });
     const res = createRes();
     await handleGetStandings(req, res);
     expect(res.statusCode).toBe(404);
+    expect(mockService.computeSeasonStandings).not.toHaveBeenCalled();
+  });
+
+  it("classement d'une ligue privée : 404 pour un tiers, rien n'est calculé", async () => {
+    mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+      id: "season-1",
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: false,
+        tieBreakRules: null,
+      },
+    });
+    const req = createReq({ params: { seasonId: "season-1" } });
+    const res = createRes();
+    await handleGetStandings(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toEqual({
+      success: false,
+      error: "Saison introuvable",
+    });
+    expect(mockService.computeSeasonStandings).not.toHaveBeenCalled();
   });
 });
 

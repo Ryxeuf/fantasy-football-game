@@ -9,7 +9,9 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-vi.mock("../prisma", () => ({ prisma: {} }));
+vi.mock("../prisma", () => ({
+  prisma: { leagueSeason: { findUnique: vi.fn() } },
+}));
 
 vi.mock("../services/league-player-stats", async (importOriginal) => {
   const actual =
@@ -21,12 +23,14 @@ vi.mock("../services/league-player-stats", async (importOriginal) => {
 });
 
 import { handleGetLeaderboardsByTeam } from "./league";
+import { prisma } from "../prisma";
 import {
   computeLeaderboardsByTeam,
   LEADERBOARD_CATEGORIES,
 } from "../services/league-player-stats";
 
 const mockedCompute = vi.mocked(computeLeaderboardsByTeam);
+const mockedSeasonFind = vi.mocked(prisma.leagueSeason.findUnique);
 
 function mockRes() {
   const res = {
@@ -41,6 +45,25 @@ function mockRes() {
 describe("A66 — handleGetLeaderboardsByTeam", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    // Saison d'une ligue publique : lisible sans compte.
+    mockedSeasonFind.mockResolvedValue({
+      id: "s1",
+      league: { id: "league-1", creatorId: "commish", isPublic: true },
+    } as never);
+  });
+
+  it("ligue privée : 404 pour un visiteur anonyme, rien n'est calculé", async () => {
+    mockedSeasonFind.mockResolvedValue({
+      id: "s1",
+      league: { id: "league-1", creatorId: "commish", isPublic: false },
+    } as never);
+    const req = { params: { seasonId: "s1" }, query: {} };
+    const res = mockRes();
+
+    await handleGetLeaderboardsByTeam(req as never, res as never);
+
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(mockedCompute).not.toHaveBeenCalled();
   });
 
   it("attache `categories` au catalogue de chaque équipe", async () => {
