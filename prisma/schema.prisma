@@ -1978,6 +1978,14 @@ model LeagueMatchSheet {
   journeymenHome         Json?
   journeymenAway         Json?
 
+  /// Maitres de la Non-vie — « Relever le Mort » : { victimId, position } |
+  /// null (pas releve). Le Trois-quart releve est DERIVE a la lecture depuis
+  /// ce choix et les morts consignes dans les evenements (cf.
+  /// services/league-sheet-raised-dead.ts) ; il n'est persiste en TeamPlayer
+  /// que s'il est recrute (achat `raised_dead`, gratuit).
+  raisedDeadHome         Json?
+  raisedDeadAway         Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
