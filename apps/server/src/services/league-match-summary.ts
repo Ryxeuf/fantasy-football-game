@@ -3,8 +3,10 @@
  *
  * A partir d'un journal d'evenements (`LeagueMatchEvent`), derive :
  *   - le score (count des touchdowns par equipe) ;
- *   - les casualties infligees par equipe (events `casualty` +
- *     `other_elim`/`crowd_surge`/`aggression` ayant une `injurySeverity`) ;
+ *   - les sorties infligees par equipe : les seules eliminations qui
+ *     RAPPORTENT DES PSP (`eliminationEarnsSpp` — blocage, plus les
+ *     exceptions nommees : Innovateur Violent, Vol Fatal, Frenesie
+ *     d'Agression) ;
  *   - la liste des joueurs blesses (cible + severite) ;
  *   - les stats par joueur (TD, casualties infligees, passes, receptions,
  *     interceptions, aggressions) utiles pour les SPP / classements.
@@ -91,7 +93,11 @@ export interface PlayerStatLine {
 export interface MatchSummary {
   readonly scoreHome: number;
   readonly scoreAway: number;
-  /** Casualties infligees (toutes causes avec injury) par equipe. */
+  /**
+   * Sorties infligees par equipe : eliminations qui rapportent des PSP
+   * (cf. `eliminationEarnsSpp`). Une agression qui blesse, une sortie par
+   * le public ou une Action Speciale sans exception n'y comptent pas.
+   */
   readonly casualtiesHome: number;
   readonly casualtiesAway: number;
   readonly injuries: ReadonlyArray<InjuredPlayer>;
@@ -118,21 +124,6 @@ function normalizeSeverity(raw: unknown): InjurySeverity | null {
 }
 
 /**
- * Evenements qui peuvent porter une casualty/blessure quand
- * `injurySeverity` est present. Une `aggression` reussie qui blesse
- * compte aussi comme casualty infligee.
- */
-const CASUALTY_BEARING = new Set<MatchEventKind>([
-  "casualty",
-  "aggression",
-  "other_elim",
-  "crowd_surge",
-  "special_elim",
-  "stalling",
-  "ttm_landing",
-]);
-
-/**
  * Auto-eliminations saisies SANS cible : la victime est l'acteur, dans sa
  * propre equipe, et personne n'« inflige » la sortie (pas de compteur
  * equipe ni de casualtiesInflicted, donc pas de SPP). `other_elim`
@@ -140,6 +131,12 @@ const CASUALTY_BEARING = new Set<MatchEventKind>([
  * saisie « si necessaire », comme pour autre elimination).
  */
 const SELF_ELIM_KINDS = new Set<MatchEventKind>(["other_elim", "stalling"]);
+
+/** Côtés d'une feuille bénéficiant d'un effet (Prière à Nuffle). */
+export interface SummarySides {
+  readonly home?: boolean;
+  readonly away?: boolean;
+}
 
 export interface MatchSummaryOptions {
   /**
@@ -161,12 +158,74 @@ export interface MatchSummaryOptions {
    * rapporte rien à son auteur.
    */
   readonly fatalFlighters?: ReadonlySet<string>;
+  /**
+   * Côtés bénéficiant de la Prière à Nuffle 13 « Frénésie d'Agression » :
+   * une Élimination infligée lors d'une Action d'Agression rapporte alors
+   * les PSP d'Élimination à son auteur — et compte donc comme une sortie.
+   * Sans la prière, une agression qui blesse reste une agression
+   * (`aggressions`) : la blessure est consignée, rien n'est crédité.
+   */
+  readonly foulingFrenzy?: SummarySides;
+}
+
+/**
+ * Une élimination rapporte-t-elle les PSP d'Élimination à son auteur ?
+ *
+ * C'est LA définition d'une « sortie » pour tout ce qui se compte : le
+ * compteur d'équipe de la feuille (`casualtiesHome/Away`, donc les colonnes
+ * Sor+/Sor- du classement et les points bonus « sorties infligées »), la
+ * stat-line du joueur (`casualtiesInflicted`, donc ses PSP et le classement
+ * des cogneurs). Règle du livre : seule une Élimination infligée par une
+ * Action de Blocage (blitz compris) rapporte des PSP ; une élimination
+ * causée autrement — Agression, Action Spéciale, Poussée dans le Public,
+ * atterrissage sur un adversaire, auto-élimination — n'en rapporte aucun,
+ * sauf exception nommée (compétence ou Prière) portée par `options` :
+ *
+ *   - `special_elim`  ⇒ « Innovateur Violent » (compétence de l'auteur) ;
+ *   - `ttm_landing`   ⇒ « Vol Fatal » (compétence du joueur lancé) ;
+ *   - `aggression`    ⇒ « Frénésie d'Agression » (Prière du côté).
+ *
+ * Une agression sans exception est comptée dans les AGRESSIONS, jamais dans
+ * les sorties. Pur : ne lit que l'évènement et les options.
+ */
+export function eliminationEarnsSpp(
+  ev: MatchEventInput,
+  options: MatchSummaryOptions = {},
+): boolean {
+  if (!normalizeSeverity(ev.injurySeverity)) return false;
+  const team = ev.team === "home" || ev.team === "away" ? ev.team : null;
+  const actor = ev.actorPlayerId ?? null;
+  switch (ev.kind) {
+    case "casualty":
+      // Élimination sur Blocage. Un `causeDetail: "self"` (forme
+      // historique d'une auto-élimination) n'a pas d'auteur.
+      return ev.causeDetail !== "self";
+    case "aggression":
+      return team !== null && options.foulingFrenzy?.[team] === true;
+    case "special_elim":
+      return actor !== null && options.violentInnovators?.has(actor) === true;
+    case "ttm_landing":
+      return actor !== null && options.fatalFlighters?.has(actor) === true;
+    // Poussée dans le Public (« la foule n'a pas d'acteur »), esquive
+    // ratée, chute, temporisation : personne n'inflige la sortie.
+    case "crowd_surge":
+    case "other_elim":
+    case "stalling":
+    default:
+      return false;
+  }
 }
 
 /**
  * Resume un journal d'evenements. Determinisme total : meme entree ->
  * meme sortie. Les events `kind` inconnus sont ignores silencieusement
  * (defensif vis-a-vis d'un futur kind non gere).
+ *
+ * Invariant : `casualtiesHome/Away` ne compte que les éliminations qui
+ * rapportent des PSP (`eliminationEarnsSpp`), c'est-à-dire exactement
+ * celles créditées en `casualtiesInflicted` — à une exception près, une
+ * Élimination sur Blocage saisie SANS acteur, qui compte pour l'équipe
+ * sans pouvoir être attribuée à un joueur.
  */
 export function summarizeMatchSheet(
   events: ReadonlyArray<MatchEventInput>,
@@ -199,6 +258,53 @@ export function summarizeMatchSheet(
       statsByPlayer.set(playerId, line);
     }
     return line;
+  };
+
+  /**
+   * Consigne une élimination : compteurs de sortie si elle rapporte des
+   * PSP, blessure de la victime dans tous les cas (une agression qui
+   * blesse ne rapporte rien, mais le joueur est bien blessé).
+   */
+  const recordElimination = (
+    ev: MatchEventInput,
+    team: MatchEventTeam | null,
+  ): void => {
+    const severity = normalizeSeverity(ev.injurySeverity);
+    if (!severity) return;
+
+    if (eliminationEarnsSpp(ev, options)) {
+      if (team === "home") casualtiesHome += 1;
+      else if (team === "away") casualtiesAway += 1;
+      if (ev.actorPlayerId && team) {
+        ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
+      }
+    }
+
+    // A62 — other_elim (esquive ratee, chute…) et stalling
+    // (temporisation) sont des auto-eliminations saisies SANS cible : la
+    // victime est l'acteur, dans sa propre equipe. Retro-compat : les
+    // anciens events other_elim portaient la victime en targetPlayerId.
+    const isSelfKind = SELF_ELIM_KINDS.has(ev.kind);
+    const victimId = isSelfKind
+      ? (ev.actorPlayerId ?? ev.targetPlayerId)
+      : ev.targetPlayerId;
+    if (!victimId) return;
+    // Le joueur blesse est dans l'equipe opposee a `team` (l'auteur),
+    // sauf auto-elimination (victime dans `team`).
+    const isSelfCause = isSelfKind || ev.causeDetail === "self";
+    const side = team ? (isSelfCause ? team : opposite(team)) : "home";
+    injuries.push({
+      playerId: victimId,
+      severity,
+      side,
+      cause: ev.causeDetail ?? ev.kind,
+      // Auto-elimination ou foule : personne n'a inflige la sortie, il
+      // n'y a donc personne a hair.
+      causedByPlayerId:
+        isSelfCause || ev.kind === "crowd_surge"
+          ? null
+          : (ev.actorPlayerId ?? null),
+    });
   };
 
   for (const ev of events) {
@@ -245,113 +351,34 @@ export function summarizeMatchSheet(
         }
         // « Vol Fatal » : le joueur lancé atterrit sur une case occupée et
         // plaque l'adversaire. L'Élimination est consignée quoi qu'il
-        // arrive (la victime sort), mais elle ne rapporte les PSP
-        // d'Élimination qu'au porteur de la compétence.
-        const ttmSeverity = normalizeSeverity(ev.injurySeverity);
-        if (!ttmSeverity) break;
-        if (team === "home") casualtiesHome += 1;
-        else if (team === "away") casualtiesAway += 1;
-        if (
-          ev.actorPlayerId &&
-          team &&
-          options.fatalFlighters?.has(ev.actorPlayerId)
-        ) {
-          ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
-        }
-        if (ev.targetPlayerId) {
-          injuries.push({
-            playerId: ev.targetPlayerId,
-            severity: ttmSeverity,
-            side: team ? opposite(team) : "home",
-            cause: ev.causeDetail ?? ev.kind,
-            causedByPlayerId: ev.actorPlayerId ?? null,
-          });
-        }
+        // arrive (la victime sort), mais elle ne compte — et ne rapporte
+        // les PSP d'Élimination — qu'au porteur de la compétence.
+        recordElimination(ev, team);
         break;
       }
-      case "special_elim": {
-        // Élimination infligée par une Action Spéciale (tronçonneuse,
-        // bombe, botte…). BB : aucune PSP pour l'attaquant — SAUF s'il a
-        // la compétence Innovateur Violent : il gagne alors les PSP
-        // d'Élimination de son équipe (2, ou 3 en Bagarreurs Brutaux via
-        // le modificateur appliqué par calculatePlayerSPP).
-        const severity = normalizeSeverity(ev.injurySeverity);
-        if (!severity) break;
-        if (team === "home") casualtiesHome += 1;
-        else if (team === "away") casualtiesAway += 1;
-        if (
-          ev.actorPlayerId &&
-          team &&
-          options.violentInnovators?.has(ev.actorPlayerId)
-        ) {
-          ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
+      case "aggression": {
+        // Une agression est une agression : elle compte dans `aggressions`
+        // (colonne Agr), et sa blessure éventuelle est consignée. Elle ne
+        // devient une sortie que sous « Frénésie d'Agression ».
+        if (ev.actorPlayerId && team) {
+          ensureStat(ev.actorPlayerId, team).aggressions += 1;
         }
-        if (ev.targetPlayerId) {
-          injuries.push({
-            playerId: ev.targetPlayerId,
-            severity,
-            side: team ? opposite(team) : "home",
-            cause: ev.causeDetail ?? ev.kind,
-            causedByPlayerId: ev.actorPlayerId ?? null,
-          });
-        }
+        recordElimination(ev, team);
         break;
       }
-      case "aggression":
+      // Élimination sur Blocage (casualty) : la seule qui rapporte des PSP
+      // par défaut. special_elim (tronçonneuse, bombe, botte…) : rien sans
+      // Innovateur Violent. crowd_surge : la foule n'a pas d'acteur.
+      // other_elim / stalling : auto-éliminations.
       case "casualty":
+      case "special_elim":
       case "other_elim":
       case "stalling":
       case "crowd_surge": {
-        const severity = normalizeSeverity(ev.injurySeverity);
-        if (ev.kind === "aggression" && ev.actorPlayerId && team) {
-          ensureStat(ev.actorPlayerId, team).aggressions += 1;
-        }
-        if (CASUALTY_BEARING.has(ev.kind) && severity) {
-          // A62 — other_elim (esquive ratee, chute…) et stalling
-          // (temporisation) sont des auto-eliminations saisies SANS
-          // cible : la victime est l'acteur, dans sa propre equipe.
-          // Personne n'« inflige » cette sortie : pas de compteur equipe
-          // ni de casualtiesInflicted (donc pas de SPP).
-          if (!SELF_ELIM_KINDS.has(ev.kind)) {
-            // L'acteur inflige une casualty (sauf crowd_surge : la foule
-            // n'a pas d'acteur ; on credite l'equipe via `team` = celle
-            // qui beneficie, mais pas de stat joueur).
-            if (team === "home") casualtiesHome += 1;
-            else if (team === "away") casualtiesAway += 1;
-            if (ev.actorPlayerId && team && ev.kind !== "crowd_surge") {
-              ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
-            }
-          }
-          // Le joueur blesse est dans l'equipe opposee a `team`
-          // (l'auteur), sauf auto-elimination (victime dans `team`).
-          // Retro-compat : les anciens events other_elim portaient la
-          // victime en targetPlayerId.
-          const victimId = SELF_ELIM_KINDS.has(ev.kind)
-            ? (ev.actorPlayerId ?? ev.targetPlayerId)
-            : ev.targetPlayerId;
-          if (victimId) {
-            const isSelfCause =
-              SELF_ELIM_KINDS.has(ev.kind) || ev.causeDetail === "self";
-            const side = team
-              ? isSelfCause
-                ? team
-                : opposite(team)
-              : "home";
-            injuries.push({
-              playerId: victimId,
-              severity,
-              side,
-              cause: ev.causeDetail ?? ev.kind,
-              // Auto-elimination ou foule : personne n'a inflige la
-              // sortie, il n'y a donc personne a hair.
-              causedByPlayerId: isSelfCause ? null : (ev.actorPlayerId ?? null),
-            });
-          }
-        }
+        recordElimination(ev, team);
         break;
       }
-      // kickoff / expulsion : pas d'impact sur score/casualty.
-      // (stalling sans blessure : gere ci-dessus, sans effet.)
+      // kickoff / expulsion / team_throw : pas d'impact sur score/casualty.
       case "kickoff":
       case "expulsion":
       default:

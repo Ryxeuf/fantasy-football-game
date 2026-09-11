@@ -26,6 +26,7 @@ import {
   computeStalledTeams,
   type MatchEventInput,
   type MatchSummary,
+  type MatchSummaryOptions,
   type InjurySeverity,
 } from "./league-match-summary";
 import {
@@ -110,7 +111,15 @@ import {
   type CompetitionPairingContext,
   type CompetitionSheetRules,
 } from "./competition-match-sheet-context";
-import { frozenSkillsByPlayerId } from "./league-sheet-frozen-skills";
+import {
+  FATAL_FLIGHT_SLUG,
+  VIOLENT_INNOVATOR_SLUG,
+  frozenSkillHolders,
+} from "./league-sheet-frozen-skills";
+import {
+  buildSheetSummaryOptions,
+  type SheetSummarySource,
+} from "./league-sheet-summary-options";
 import {
   resolveSpecialRulesForTeam,
   updateTeamValues,
@@ -1861,26 +1870,15 @@ export async function validateByCommissioner(input: {
     where: { matchSheetId: sheet.id },
     orderBy: { occurredAt: "asc" },
   })) as Array<MatchEventInput & { meta?: unknown }>;
-  // Les PSP d'une Élimination sur Action Spéciale ne vont qu'aux joueurs
-  // ayant Innovateur Violent : le summarizer a besoin de leurs ids.
+  // Ce qui compte comme sortie (et rapporte des PSP) dépend des
+  // compétences du COUP D'ENVOI et des Prières de la feuille : la
+  // validation et la lecture doivent créditer exactement les mêmes joueurs
+  // (cf. `sheetSummaryOptions`).
   const teamsForBudgetLive = await loadSheetTeams(ctx);
-  // … lues dans le gel de la feuille : la validation et la lecture doivent
-  // créditer exactement les mêmes joueurs (cf. `collectViolentInnovators`).
-  const sheetSnapForSpp = sheet as {
-    rosterSnapshotHome?: unknown;
-    rosterSnapshotAway?: unknown;
-  };
-  const frozenForSpp = {
-    home: sheetSnapForSpp.rosterSnapshotHome,
-    away: sheetSnapForSpp.rosterSnapshotAway,
-  };
-  const summary = summarizeMatchSheet(events, {
-    violentInnovators: collectViolentInnovators(
-      teamsForBudgetLive,
-      frozenForSpp,
-    ),
-    fatalFlighters: collectFatalFlighters(teamsForBudgetLive, frozenForSpp),
-  });
+  const summary = summarizeMatchSheet(
+    events,
+    sheetSummaryOptions(teamsForBudgetLive, sheet as SheetSummarySource),
+  );
 
   const forfeitSide = (sheet as { forfeitSide?: string | null }).forfeitSide;
 
@@ -2860,8 +2858,8 @@ function positionNamesForRoster(roster: string): Map<string, string> {
  * pickers de l'UI : joueur du match, acteur/cible d'un event…). Les joueurs
  * morts sont inclus mais flagges (`dead`) pour l'affichage.
  */
-async function loadSheetTeams(
-  ctx: PairingContext,
+export async function loadSheetTeams(
+  ctx: Pick<PairingContext, "homeTeamId" | "awayTeamId">,
 ): Promise<{ home: MatchSheetTeam | null; away: MatchSheetTeam | null }> {
   const teamIds = [ctx.homeTeamId, ctx.awayTeamId].filter((id): id is string =>
     Boolean(id),
@@ -3069,7 +3067,7 @@ export function collectViolentInnovators(
   teams: MatchSheetTeamsBySide,
   frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
-  return collectSkillHolders(teams, "violent-innovator", frozen);
+  return collectSkillHolders(teams, VIOLENT_INNOVATOR_SLUG, frozen);
 }
 
 /**
@@ -3085,12 +3083,32 @@ export function collectFatalFlighters(
   teams: MatchSheetTeamsBySide,
   frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
-  return collectSkillHolders(teams, "fatal-flight", frozen);
+  return collectSkillHolders(teams, FATAL_FLIGHT_SLUG, frozen);
 }
 
-interface MatchSheetTeamsBySide {
+export interface MatchSheetTeamsBySide {
   home: MatchSheetTeam | null;
   away: MatchSheetTeam | null;
+}
+
+export type { SheetSummarySource };
+
+/**
+ * Options du summarizer pour UNE feuille : compétences du COUP D'ENVOI
+ * (Innovateur Violent, Vol Fatal — relues dans le gel) et Prières à Nuffle
+ * de chaque côté (Frénésie d'Agression). La validation, la lecture, les
+ * classements de saison et la resynchronisation d'une feuille validée
+ * passent tous par `buildSheetSummaryOptions` : ce qui est compté comme
+ * sortie ne peut pas diverger d'un chemin à l'autre.
+ */
+export function sheetSummaryOptions(
+  teams: MatchSheetTeamsBySide,
+  sheet: SheetSummarySource,
+): MatchSummaryOptions {
+  return buildSheetSummaryOptions(
+    { home: teams.home?.players ?? [], away: teams.away?.players ?? [] },
+    sheet,
+  );
 }
 
 /** Snapshots gelés de la feuille (« version du match »). */
@@ -3101,26 +3119,20 @@ interface MatchSheetFrozenBySide {
 
 /**
  * Ids des joueurs des 2 équipes portant un slug de compétence, lu dans les
- * compétences du COUP D'ENVOI. Les CSV de compétences viennent de sources
- * multiples (seed, admin, évolution) : la variante à underscore et la
- * casse sont acceptées.
+ * compétences du COUP D'ENVOI (cf. `frozenSkillHolders`, qui porte la
+ * tolérance d'orthographe des CSV).
  */
 function collectSkillHolders(
   teams: MatchSheetTeamsBySide,
   slug: string,
   frozen?: MatchSheetFrozenBySide,
 ): Set<string> {
-  const wanted = new Set([slug, slug.replace(/-/g, "_")]);
   const out = new Set<string>();
   for (const side of ["home", "away"] as const) {
     const team = teams[side];
     if (!team) continue;
-    const skillsById = frozenSkillsByPlayerId(team.players, frozen?.[side]);
-    for (const p of team.players) {
-      const slugs = (skillsById.get(p.id) ?? "")
-        .split(",")
-        .map((sk) => sk.trim().toLowerCase());
-      if (slugs.some((sk) => wanted.has(sk))) out.add(p.id);
+    for (const id of frozenSkillHolders(team.players, frozen?.[side], slug)) {
+      out.add(id);
     }
   }
   return out;
@@ -3928,14 +3940,10 @@ export async function getMatchSheet(input: {
       journeymanPositions.away,
     ),
   };
-  const frozenForRead = {
-    home: sheetSnapRaw.rosterSnapshotHome,
-    away: sheetSnapRaw.rosterSnapshotAway,
-  };
-  const summary = summarizeMatchSheet(events, {
-    violentInnovators: collectViolentInnovators(teamsLive, frozenForRead),
-    fatalFlighters: collectFatalFlighters(teamsLive, frozenForRead),
-  });
+  const summary = summarizeMatchSheet(
+    events,
+    sheetSummaryOptions(teamsLive, sheet as SheetSummarySource),
+  );
 
   // SPP autoritaire par joueur : meme calcul que celui applique a la
   // validation (calculatePlayerSPP + modificateur d'equipe selon le roster).

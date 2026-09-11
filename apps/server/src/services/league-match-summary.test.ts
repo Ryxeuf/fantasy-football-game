@@ -5,6 +5,7 @@
 import { describe, it, expect } from "vitest";
 import {
   summarizeMatchSheet,
+  eliminationEarnsSpp,
   isMatchEventKind,
   computeMatchWinnings,
   computeStalledTeams,
@@ -212,7 +213,11 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.scoreHome).toBe(0);
   });
 
-  it("aggression increments aggressions and casualty when injured", () => {
+  // Une agression est une agression : elle compte dans la colonne Agr, sa
+  // blessure est consignée, mais elle ne rapporte aucun PSP — donc elle
+  // n'est PAS une sortie (ni pour l'équipe, ni pour le joueur). Bug
+  // observé : un match à 4 sorties + 1 agression affichait 5 sorties.
+  it("agression qui blesse : comptée en agressions, jamais en sorties", () => {
     const events: MatchEventInput[] = [
       { kind: "aggression", team: "away", actorPlayerId: "a3" },
       {
@@ -227,12 +232,99 @@ describe("Lot G — summarizeMatchSheet", () => {
     const out = summarizeMatchSheet(events);
     const a3 = out.playerStats.find((p) => p.playerId === "a3");
     expect(a3?.aggressions).toBe(2);
-    expect(a3?.casualtiesInflicted).toBe(1);
-    expect(out.casualtiesAway).toBe(1);
-    expect(out.injuries[0]).toMatchObject({
-      playerId: "h2",
-      severity: "mng",
-      side: "home",
+    expect(a3?.casualtiesInflicted).toBe(0);
+    expect(out.casualtiesAway).toBe(0);
+    expect(out.casualtiesHome).toBe(0);
+    // La victime est bien blessée, et sait qui l'a agressée (Haine).
+    expect(out.injuries).toEqual([
+      {
+        playerId: "h2",
+        severity: "mng",
+        side: "home",
+        cause: "foul",
+        causedByPlayerId: "a3",
+      },
+    ]);
+  });
+
+  it("4 éliminations sur blocage + 1 agression = 4 sorties", () => {
+    const block = (n: number): MatchEventInput => ({
+      kind: "casualty",
+      team: "home",
+      actorPlayerId: `h${n}`,
+      targetPlayerId: `a${n}`,
+      causeDetail: "block",
+      injurySeverity: "badly_hurt",
+    });
+    const out = summarizeMatchSheet([
+      block(1),
+      block(2),
+      block(3),
+      block(4),
+      {
+        kind: "aggression",
+        team: "home",
+        actorPlayerId: "h5",
+        targetPlayerId: "a5",
+        injurySeverity: "mng",
+      },
+    ]);
+    expect(out.casualtiesHome).toBe(4);
+    // Les 5 joueurs adverses sont bien blessés.
+    expect(out.injuries).toHaveLength(5);
+    expect(out.playerStats.find((p) => p.playerId === "h5")).toMatchObject({
+      aggressions: 1,
+      casualtiesInflicted: 0,
+    });
+  });
+
+  // Prière à Nuffle 13 « Frénésie d'Agression » : une Élimination infligée
+  // lors d'une Action d'Agression rapporte les PSP d'Élimination — elle
+  // devient donc une sortie, pour l'équipe bénie seulement.
+  describe("agression sous « Frénésie d'Agression »", () => {
+    const foulHome: MatchEventInput = {
+      kind: "aggression",
+      team: "home",
+      actorPlayerId: "h5",
+      targetPlayerId: "a5",
+      injurySeverity: "mng",
+    };
+    const foulAway: MatchEventInput = {
+      kind: "aggression",
+      team: "away",
+      actorPlayerId: "a3",
+      targetPlayerId: "h2",
+      injurySeverity: "badly_hurt",
+    };
+
+    it("le côté béni crédite la sortie et les PSP, l'autre non", () => {
+      const out = summarizeMatchSheet([foulHome, foulAway], {
+        foulingFrenzy: { home: true },
+      });
+      expect(out.casualtiesHome).toBe(1);
+      expect(out.casualtiesAway).toBe(0);
+      expect(out.playerStats.find((p) => p.playerId === "h5")).toMatchObject({
+        aggressions: 1,
+        casualtiesInflicted: 1,
+      });
+      expect(out.playerStats.find((p) => p.playerId === "a3")).toMatchObject({
+        aggressions: 1,
+        casualtiesInflicted: 0,
+      });
+      // Les deux victimes sont blessées dans tous les cas.
+      expect(out.injuries.map((i) => i.playerId)).toEqual(["a5", "h2"]);
+    });
+
+    it("une agression SANS blessure ne devient pas une sortie", () => {
+      const out = summarizeMatchSheet(
+        [{ kind: "aggression", team: "home", actorPlayerId: "h5" }],
+        { foulingFrenzy: { home: true } },
+      );
+      expect(out.casualtiesHome).toBe(0);
+      expect(out.playerStats.find((p) => p.playerId === "h5")).toMatchObject({
+        aggressions: 1,
+        casualtiesInflicted: 0,
+      });
     });
   });
 
@@ -247,7 +339,9 @@ describe("Lot G — summarizeMatchSheet", () => {
       },
     ];
     const out = summarizeMatchSheet(events);
-    expect(out.casualtiesHome).toBe(1);
+    // Une sortie par le public ne rapporte aucun PSP : elle ne compte pas
+    // comme sortie de l'équipe (elle a sa propre colonne, SP).
+    expect(out.casualtiesHome).toBe(0);
     // no actor -> no playerStats entry
     expect(out.playerStats).toHaveLength(0);
     expect(out.injuries[0]).toMatchObject({
@@ -422,8 +516,9 @@ describe("Lot G — summarizeMatchSheet", () => {
     const out = summarizeMatchSheet(events, {
       fatalFlighters: new Set(["h9"]),
     });
-    // Les 2 éliminations comptent pour l'équipe et blessent la cible…
-    expect(out.casualtiesHome).toBe(2);
+    // Les 2 éliminations blessent la cible, mais seule celle qui rapporte
+    // des PSP (Vol Fatal) compte comme sortie de l'équipe…
+    expect(out.casualtiesHome).toBe(1);
     expect(out.injuries.map((i) => i.playerId)).toEqual(["a5", "a6"]);
     expect(out.injuries[0]?.side).toBe("away");
     expect(out.injuries[0]?.causedByPlayerId).toBe("h9");
@@ -447,7 +542,7 @@ describe("Lot G — summarizeMatchSheet", () => {
         injurySeverity: "mng",
       },
     ]);
-    expect(out.casualtiesAway).toBe(1);
+    expect(out.casualtiesAway).toBe(0);
     expect(out.injuries.map((i) => i.playerId)).toEqual(["h1"]);
     const a1 = out.playerStats.find((p) => p.playerId === "a1");
     expect(a1?.casualtiesInflicted).toBe(0);
@@ -494,8 +589,9 @@ describe("Lot G — summarizeMatchSheet", () => {
     const out = summarizeMatchSheet(events, {
       violentInnovators: new Set(["h3"]),
     });
-    // Les 2 éliminations comptent pour l'équipe et blessent la cible…
-    expect(out.casualtiesHome).toBe(2);
+    // Les 2 éliminations blessent la cible, mais seule celle d'Innovateur
+    // Violent (la seule à rapporter des PSP) compte comme sortie…
+    expect(out.casualtiesHome).toBe(1);
     expect(out.injuries.map((i) => i.playerId)).toEqual(["a5", "a6"]);
     expect(out.injuries[0]?.side).toBe("away");
     // …mais seule celle d'Innovateur Violent crédite des PSP.
@@ -517,7 +613,8 @@ describe("Lot G — summarizeMatchSheet", () => {
         injurySeverity: "dead",
       },
     ]);
-    expect(out.casualtiesAway).toBe(1);
+    expect(out.casualtiesAway).toBe(0);
+    expect(out.injuries.map((i) => i.playerId)).toEqual(["h1"]);
     expect(out.playerStats.find((p) => p.playerId === "a1")).toBeUndefined();
   });
 
@@ -611,6 +708,137 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.injuries).toHaveLength(2);
     const runner = out.playerStats.find((p) => p.playerId === "a_runner");
     expect(runner?.touchdowns).toBe(2);
+  });
+});
+
+// LA définition d'une sortie : une élimination qui rapporte des PSP. Tout ce
+// qui compte des sorties (feuille, classement, bonus, cogneurs) en dérive.
+describe("eliminationEarnsSpp", () => {
+  const elim = (
+    kind: MatchEventInput["kind"],
+    extra: Partial<MatchEventInput> = {},
+  ): MatchEventInput => ({
+    kind,
+    team: "home",
+    actorPlayerId: "h1",
+    targetPlayerId: "a1",
+    injurySeverity: "mng",
+    ...extra,
+  });
+
+  it("blocage : oui, sans option", () => {
+    expect(eliminationEarnsSpp(elim("casualty"))).toBe(true);
+    expect(eliminationEarnsSpp(elim("casualty", { causeDetail: "blitz" }))).toBe(
+      true,
+    );
+    // Sans acteur, la sortie reste une sortie de l'équipe.
+    expect(
+      eliminationEarnsSpp(elim("casualty", { actorPlayerId: null })),
+    ).toBe(true);
+  });
+
+  it("sans blessure : jamais", () => {
+    expect(
+      eliminationEarnsSpp(elim("casualty", { injurySeverity: null })),
+    ).toBe(false);
+    expect(
+      eliminationEarnsSpp(elim("casualty", { injurySeverity: "scratch" })),
+    ).toBe(false);
+  });
+
+  it("auto-éliminations et public : jamais", () => {
+    expect(eliminationEarnsSpp(elim("other_elim"))).toBe(false);
+    expect(eliminationEarnsSpp(elim("stalling"))).toBe(false);
+    expect(eliminationEarnsSpp(elim("crowd_surge"))).toBe(false);
+    expect(eliminationEarnsSpp(elim("casualty", { causeDetail: "self" }))).toBe(
+      false,
+    );
+  });
+
+  it("agression : seulement sous Frénésie d'Agression, pour SON côté", () => {
+    expect(eliminationEarnsSpp(elim("aggression"))).toBe(false);
+    expect(
+      eliminationEarnsSpp(elim("aggression"), { foulingFrenzy: { home: true } }),
+    ).toBe(true);
+    expect(
+      eliminationEarnsSpp(elim("aggression"), { foulingFrenzy: { away: true } }),
+    ).toBe(false);
+    expect(
+      eliminationEarnsSpp(elim("aggression", { team: null }), {
+        foulingFrenzy: { home: true, away: true },
+      }),
+    ).toBe(false);
+  });
+
+  it("action spéciale : seulement pour un Innovateur Violent", () => {
+    expect(eliminationEarnsSpp(elim("special_elim"))).toBe(false);
+    expect(
+      eliminationEarnsSpp(elim("special_elim"), {
+        violentInnovators: new Set(["h1"]),
+      }),
+    ).toBe(true);
+    expect(
+      eliminationEarnsSpp(elim("special_elim", { actorPlayerId: null }), {
+        violentInnovators: new Set(["h1"]),
+      }),
+    ).toBe(false);
+  });
+
+  it("atterrissage sur un adversaire : seulement avec Vol Fatal", () => {
+    expect(eliminationEarnsSpp(elim("ttm_landing"))).toBe(false);
+    expect(
+      eliminationEarnsSpp(elim("ttm_landing"), {
+        fatalFlighters: new Set(["h1"]),
+      }),
+    ).toBe(true);
+  });
+
+  it("les évènements sans élimination ne rapportent rien", () => {
+    for (const kind of [
+      "kickoff",
+      "touchdown",
+      "pass_complete",
+      "interception",
+      "expulsion",
+      "team_throw",
+    ] as const) {
+      expect(eliminationEarnsSpp(elim(kind)), kind).toBe(false);
+    }
+  });
+
+  it("invariant : les sorties d'équipe sont la somme des sorties créditées", () => {
+    const events: MatchEventInput[] = [
+      elim("casualty"),
+      elim("casualty", { team: "away", actorPlayerId: "a2", targetPlayerId: "h2" }),
+      elim("aggression"),
+      elim("aggression", { team: "away", actorPlayerId: "a3", targetPlayerId: "h3" }),
+      elim("special_elim", { actorPlayerId: "h4" }),
+      elim("special_elim", { actorPlayerId: "h5" }),
+      elim("ttm_landing", { actorPlayerId: "h6" }),
+      elim("crowd_surge", { actorPlayerId: null }),
+      elim("other_elim", { actorPlayerId: "h7", targetPlayerId: null }),
+    ];
+    const options = {
+      violentInnovators: new Set(["h4"]),
+      fatalFlighters: new Set(["h6"]),
+      foulingFrenzy: { away: true },
+    };
+    const out = summarizeMatchSheet(events, options);
+    const sum = (side: "home" | "away") =>
+      out.playerStats
+        .filter((p) => p.side === side)
+        .reduce((acc, p) => acc + p.casualtiesInflicted, 0);
+    // home : blocage h1 + Innovateur Violent h4 + Vol Fatal h6 = 3.
+    expect(out.casualtiesHome).toBe(3);
+    expect(sum("home")).toBe(3);
+    // away : blocage a2 + agression a3 sous Frénésie = 2.
+    expect(out.casualtiesAway).toBe(2);
+    expect(sum("away")).toBe(2);
+    expect(
+      events.filter((e) => eliminationEarnsSpp(e, options)).length,
+    ).toBe(5);
+    // Toutes les victimes sont blessées, sortie ou pas.
+    expect(out.injuries).toHaveLength(9);
   });
 });
 

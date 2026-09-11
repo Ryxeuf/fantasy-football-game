@@ -16,6 +16,10 @@
  * existent pour la saison (`scope: 'season'`), sinon repli sur les compteurs
  * career (`scope: 'career'`, ex: saison sans feuille saisie / tests SQLite) :
  *   * topScorers/Bashers/Passers/Interceptors : agreges des events de saison.
+ *     Les cogneurs (et les tueurs) ne comptent que les eliminations qui
+ *     RAPPORTENT DES PSP — la definition d'une sortie, partagee avec la
+ *     feuille (`eliminationEarnsSpp` + options par feuille : competences du
+ *     coup d'envoi et Prieres). Une agression reste une agression.
  *   * topKillers/Aggressors/TeamThrowers      : events de saison uniquement.
  *   * topMvps        : agregation des `motmPlayerIds` des feuilles de saison.
  *   * topFutureStars : PSP gagnes sur la saison (recalcul depuis les agregats
@@ -35,6 +39,13 @@ import {
   type TeamSPPModifier,
 } from "./spp-tracking";
 import { parseStringArrayJson } from "./pro-player-career-stats";
+import {
+  eliminationEarnsSpp,
+  type MatchEventInput,
+  type MatchEventKind,
+  type MatchSummaryOptions,
+} from "./league-match-summary";
+import { buildSheetSummaryOptions } from "./league-sheet-summary-options";
 
 // E16 — les classements affichent des noms lisibles, jamais les slugs
 // techniques (ex: "gnome_belluaire_gnome"). Fallback : slug sans underscores.
@@ -113,6 +124,9 @@ export interface PlayerStatsCatalogue {
 interface PlayerSelected {
   id: string;
   name: string;
+  /** Numéro et compétences live : rapprochement avec le gel des feuilles. */
+  number: number;
+  skills: string | null;
   position: string;
   spp: number;
   totalTouchdowns: number;
@@ -132,6 +146,48 @@ interface PlayerSelected {
 
 const DEFAULT_TOP_N = 5;
 const MAX_TOP_N = 50;
+
+/** Feuille de la saison : MVP + ce qui qualifie une sortie. */
+interface SeasonSheetRow {
+  id?: string;
+  motmPlayerIds: unknown;
+  prayersHome?: unknown;
+  prayersAway?: unknown;
+  rosterSnapshotHome?: unknown;
+  rosterSnapshotAway?: unknown;
+  pairing?: {
+    homeParticipant?: { teamId: string } | null;
+    awayParticipant?: { teamId: string } | null;
+  } | null;
+}
+
+/** Évènement de feuille, tel que lu pour les classements. */
+interface SeasonEventRow {
+  matchSheetId?: string | null;
+  kind: string;
+  team?: string | null;
+  actorPlayerId: string | null;
+  targetPlayerId: string | null;
+  causeDetail?: string | null;
+  injurySeverity: string | null;
+}
+
+/**
+ * Feuille inconnue (event orphelin, feuilles indisponibles) : aucune
+ * exception — seule une Élimination sur Blocage est une sortie.
+ */
+const NO_SHEET_OPTIONS: MatchSummaryOptions = {};
+
+function toSummaryEvent(e: SeasonEventRow): MatchEventInput {
+  return {
+    kind: e.kind as MatchEventKind,
+    team: e.team === "home" || e.team === "away" ? e.team : null,
+    actorPlayerId: e.actorPlayerId,
+    targetPlayerId: e.targetPlayerId,
+    causeDetail: e.causeDetail ?? null,
+    injurySeverity: e.injurySeverity,
+  };
+}
 
 function clampTopN(raw: number | undefined): number {
   if (typeof raw !== "number" || !Number.isFinite(raw)) return DEFAULT_TOP_N;
@@ -206,6 +262,8 @@ export async function computeLeaderboards(input: {
     select: {
       id: true,
       name: true,
+      number: true,
+      skills: true,
       position: true,
       spp: true,
       totalTouchdowns: true,
@@ -225,6 +283,68 @@ export async function computeLeaderboards(input: {
       },
     },
   })) as PlayerSelected[];
+
+  // FR18 — MVP par SAISON : agrégation des `motmPlayerIds` des feuilles de
+  // match de la saison (le commissaire désigne le/les MVP après validation).
+  // Source par-saison fiable, vs le compteur career `totalMvpAwards`.
+  //
+  // Les feuilles portent aussi ce qui QUALIFIE une sortie : le gel du coup
+  // d'envoi (Innovateur Violent, Vol Fatal) et les Prières (Frénésie
+  // d'Agression). Les options du summarizer sont construites par feuille,
+  // exactement comme la feuille elle-même (`buildSheetSummaryOptions`).
+  const mvpCounts = new Map<string, number>();
+  const optionsBySheetId = new Map<string, MatchSummaryOptions>();
+  const playersByTeamId = new Map<string, PlayerSelected[]>();
+  for (const p of players) {
+    const list = playersByTeamId.get(p.team.id) ?? [];
+    list.push(p);
+    playersByTeamId.set(p.team.id, list);
+  }
+  try {
+    const sheets = (await (
+      prisma as unknown as {
+        leagueMatchSheet: {
+          findMany: (args: unknown) => Promise<Array<SeasonSheetRow>>;
+        };
+      }
+    ).leagueMatchSheet.findMany({
+      where: { pairing: { round: { seasonId: input.seasonId } } },
+      select: {
+        id: true,
+        motmPlayerIds: true,
+        prayersHome: true,
+        prayersAway: true,
+        rosterSnapshotHome: true,
+        rosterSnapshotAway: true,
+        pairing: {
+          select: {
+            homeParticipant: { select: { teamId: true } },
+            awayParticipant: { select: { teamId: true } },
+          },
+        },
+      },
+    })) as Array<SeasonSheetRow>;
+    for (const s of sheets) {
+      for (const playerId of parseStringArrayJson(s.motmPlayerIds)) {
+        mvpCounts.set(playerId, (mvpCounts.get(playerId) ?? 0) + 1);
+      }
+      if (typeof s.id !== "string") continue;
+      const homeTeamId = s.pairing?.homeParticipant?.teamId ?? null;
+      const awayTeamId = s.pairing?.awayParticipant?.teamId ?? null;
+      optionsBySheetId.set(
+        s.id,
+        buildSheetSummaryOptions(
+          {
+            home: homeTeamId ? (playersByTeamId.get(homeTeamId) ?? []) : [],
+            away: awayTeamId ? (playersByTeamId.get(awayTeamId) ?? []) : [],
+          },
+          s,
+        ),
+      );
+    }
+  } catch {
+    // Feuilles de match indisponibles (tests SQLite) -> repli career.
+  }
 
   // FR18 — agrégation des events de feuille de match de la SAISON (kills,
   // agressions). Source précise par-saison (vs compteurs career). Tolérant :
@@ -251,14 +371,7 @@ export async function computeLeaderboards(input: {
     const events = (await (
       prisma as unknown as {
         leagueMatchEvent: {
-          findMany: (args: unknown) => Promise<
-            Array<{
-              kind: string;
-              actorPlayerId: string | null;
-              targetPlayerId: string | null;
-              injurySeverity: string | null;
-            }>
-          >;
+          findMany: (args: unknown) => Promise<Array<SeasonEventRow>>;
         };
       }
     ).leagueMatchEvent.findMany({
@@ -268,17 +381,15 @@ export async function computeLeaderboards(input: {
         matchSheet: { pairing: { round: { seasonId: input.seasonId } } },
       },
       select: {
+        matchSheetId: true,
         kind: true,
+        team: true,
         actorPlayerId: true,
         targetPlayerId: true,
+        causeDetail: true,
         injurySeverity: true,
       },
-    })) as Array<{
-      kind: string;
-      actorPlayerId: string | null;
-      targetPlayerId: string | null;
-      injurySeverity: string | null;
-    }>;
+    })) as Array<SeasonEventRow>;
     hasEvents = events.length > 0;
     const bump = (m: Map<string, number>, id: string) =>
       m.set(id, (m.get(id) ?? 0) + 1);
@@ -287,10 +398,11 @@ export async function computeLeaderboards(input: {
         if (e.kind === "touchdown") bump(tdCounts, e.actorPlayerId);
         if (e.kind === "pass_complete") bump(compCounts, e.actorPlayerId);
         if (e.kind === "interception") bump(intCounts, e.actorPlayerId);
-        // `special_elim` (Action Spéciale) compte comme sortie infligée
-        // dans les classements de saison, quel que soit le porteur
-        // d'Innovateur Violent (le gating ne concerne que les PSP).
-        if (e.kind === "casualty" || e.kind === "special_elim") {
+        // Une sortie est une élimination qui rapporte des PSP — même règle
+        // que la feuille. Une Action Spéciale sans Innovateur Violent, un
+        // atterrissage sans Vol Fatal ou une agression sans Frénésie
+        // d'Agression blessent, mais ne classent pas leur auteur.
+        if (eliminationEarnsSpp(toSummaryEvent(e), sheetOptions(e))) {
           bump(casCounts, e.actorPlayerId);
           if (e.injurySeverity === "dead") bump(killCounts, e.actorPlayerId);
         }
@@ -305,30 +417,12 @@ export async function computeLeaderboards(input: {
     // Events indisponibles (tests SQLite) -> classements events vides.
   }
 
-  // FR18 — MVP par SAISON : agrégation des `motmPlayerIds` des feuilles de
-  // match de la saison (le commissaire désigne le/les MVP après validation).
-  // Source par-saison fiable, vs le compteur career `totalMvpAwards`.
-  const mvpCounts = new Map<string, number>();
-  try {
-    const sheets = (await (
-      prisma as unknown as {
-        leagueMatchSheet: {
-          findMany: (args: unknown) => Promise<
-            Array<{ motmPlayerIds: unknown }>
-          >;
-        };
-      }
-    ).leagueMatchSheet.findMany({
-      where: { pairing: { round: { seasonId: input.seasonId } } },
-      select: { motmPlayerIds: true },
-    })) as Array<{ motmPlayerIds: unknown }>;
-    for (const s of sheets) {
-      for (const playerId of parseStringArrayJson(s.motmPlayerIds)) {
-        mvpCounts.set(playerId, (mvpCounts.get(playerId) ?? 0) + 1);
-      }
-    }
-  } catch {
-    // Feuilles de match indisponibles (tests SQLite) -> repli career.
+  function sheetOptions(e: SeasonEventRow): MatchSummaryOptions {
+    return (
+      (typeof e.matchSheetId === "string"
+        ? optionsBySheetId.get(e.matchSheetId)
+        : undefined) ?? NO_SHEET_OPTIONS
+    );
   }
 
   // FR18 — Future Star par SAISON : PSP gagnés sur la saison, recalculés
