@@ -24,6 +24,7 @@ import {
   PostMatchPanel,
   JourneymenPanel,
   RaiseDeadPanel,
+  raisedDeadWording,
   PlayerSelect,
   InvalidateControl,
   TeamIdentityBadges,
@@ -350,9 +351,10 @@ function playerName(team: SheetTeam | null, id: string | null): string {
   if (j) return `N°${j.number} ${j.name}`;
   const sp = team?.starPlayersHired?.find((st) => st.id === id);
   if (sp) return `⭐ ${sp.name}`;
-  // Mort relevé par Maîtres de la Non-vie : en réserve, il joue le match.
+  // Joueur relevé (mort relevé ou Contaminé) : en réserve, il joue le match.
   if (team?.raisedDead && team.raisedDead.id === id) {
-    return `🧟 N°${team.raisedDead.number} ${team.raisedDead.name}`;
+    const { emoji } = raisedDeadWording(team.raisedDead.source);
+    return `${emoji} N°${team.raisedDead.number} ${team.raisedDead.name}`;
   }
   return id;
 }
@@ -529,7 +531,7 @@ export default function MatchSheetPage() {
       });
     });
 
-  // Maîtres de la Non-vie : relever un adversaire tué (ou y renoncer).
+  // Relever le Mort / Contagieux : relever un adversaire tué (ou y renoncer).
   // Le serveur vérifie la règle de l'équipe, l'éligibilité du mort et le
   // poste ; le Trois-quart relevé est dérivé à la relecture.
   const saveRaiseDead = (
@@ -776,7 +778,9 @@ export default function MatchSheetPage() {
       {/* Retour vers la page de la ligue */}
       {data.leagueId && (
         <Link
-          href={dynamicRoute(competitionHref(data.competitionKind, data.leagueId))}
+          href={dynamicRoute(
+            competitionHref(data.competitionKind, data.leagueId),
+          )}
           className="inline-block text-sm text-nuffle-bronze hover:underline"
           data-testid="back-to-league"
         >
@@ -789,10 +793,10 @@ export default function MatchSheetPage() {
           className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
         >
           <strong>Coupe — mode résurrection.</strong> La saisie est celle
-          d&apos;une ligue, mais la validation n&apos;écrit rien sur les
-          équipes : aucun PSP, aucune blessure ni mort conservée, aucun gain
-          d&apos;or, de fans, d&apos;évolution ou d&apos;achat. Chaque
-          rencontre se joue avec le roster d&apos;inscription, tel quel.
+          d&apos;une ligue, mais la validation n&apos;écrit rien sur les équipes
+          : aucun PSP, aucune blessure ni mort conservée, aucun gain d&apos;or,
+          de fans, d&apos;évolution ou d&apos;achat. Chaque rencontre se joue
+          avec le roster d&apos;inscription, tel quel.
         </p>
       )}
       {/* RÉSUMÉ */}
@@ -874,9 +878,10 @@ export default function MatchSheetPage() {
               saveJourneymanPosition("away", index, slug)
             }
           />
-          {/* Maîtres de la Non-vie : « Relever le Mort ». Visible dès
-              qu'un adversaire tué est relevable ; le relevé rejoint les
-              pickers d'évènements et s'embauche gratuitement à l'étape 4. */}
+          {/* « Relever le Mort » (Maîtres de la Non-vie) et Contagieux.
+              Visible dès qu'un adversaire tué est relevable ; le relevé
+              rejoint les pickers d'évènements et s'embauche à l'étape 4
+              (gratuitement, ou au prix du poste pour un Contaminé). */}
           <RaiseDeadPanel
             team={home}
             side="home"

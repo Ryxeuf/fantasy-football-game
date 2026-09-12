@@ -234,6 +234,7 @@ describe("getMatchSheet — Maîtres de la Non-vie", () => {
     mockMatch();
     const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
     expect(out.teams.home?.raiseDead).toEqual({
+      sources: ["masters_of_undeath"],
       victims: [
         {
           id: "a1",
@@ -241,6 +242,7 @@ describe("getMatchSheet — Maîtres de la Non-vie", () => {
           name: "Humain 1",
           // Libellé du poste résolu par le catalogue (repli sans base).
           positionName: expect.any(String),
+          source: "masters_of_undeath",
         },
       ],
       positions: [
@@ -757,5 +759,205 @@ describe("validateByCommissioner — recrutement GRATUIT du mort relevé", () =>
       ),
     ).toBe(false);
     expect(offline.sppBonus).toEqual([]);
+  });
+});
+
+// ─────────────────────── Trait Contagieux (Nurgle) ───────────────────────
+//
+// Seconde source de joueur relevé : les Nurgle n'ont PAS Maîtres de la
+// Non-vie (règles spéciales : Bagarreurs Brutaux, Favori de), mais chacun de
+// leurs joueurs porte le Trait Contagieux. Un adversaire tué sur un BLOCAGE
+// d'un porteur du Trait rejoint la réserve en Trois-Quart Putrescent, et
+// s'embauche AU PRIX du poste, comme un journalier.
+
+const ROTTER = "nurgle_trois_quart_putrescent";
+
+function nurglePlayers(
+  count: number,
+  overrides: Record<string, Partial<PlayerRow>> = {},
+): PlayerRow[] {
+  return Array.from({ length: count }, (_, i) => {
+    const id = `h${i + 1}`;
+    return {
+      id,
+      number: i + 1,
+      name: `Pourri ${i + 1}`,
+      position: ROTTER,
+      dead: false,
+      missNextMatch: false,
+      spp: 0,
+      skills: "contagieux,decay",
+      advancements: "[]",
+      ma: 5,
+      st: 3,
+      ag: 4,
+      pa: 6,
+      av: 9,
+      ...overrides[id],
+    };
+  });
+}
+
+function mockNurgle(input: Parameters<typeof mockMatch>[0] = {}) {
+  mockMatch({ homeRoster: "nurgle", homePlayers: nurglePlayers(12), ...input });
+}
+
+const INFECT_A1 = { victimId: "a1", position: null };
+
+describe("getMatchSheet — Trait Contagieux (Nurgle)", () => {
+  it("expose la source `plague_ridden` et l'adversaire tué sur un blocage d'un porteur du Trait", async () => {
+    mockNurgle();
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+    expect(out.teams.home?.raiseDead).toEqual({
+      sources: ["plague_ridden"],
+      victims: [
+        {
+          id: "a1",
+          number: 1,
+          name: "Humain 1",
+          positionName: expect.any(String),
+          source: "plague_ridden",
+        },
+      ],
+      positions: [{ slug: ROTTER, name: "Trois-Quart Putrescent" }],
+      choice: null,
+      canHire: true,
+    });
+    expect(out.teams.home?.raisedDead).toBeNull();
+    expect(out.teams.away?.raiseDead).toBeUndefined();
+  });
+
+  it("une agression qui tue ne contamine pas (seule une Élimination sur Blocage compte)", async () => {
+    mockNurgle({ events: [{ ...KILL_A1, kind: "aggression" }] });
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+    expect(out.teams.home?.raiseDead?.sources).toEqual(["plague_ridden"]);
+    expect(out.teams.home?.raiseDead?.victims).toEqual([]);
+  });
+
+  it("un blocage d'un joueur SANS le Trait ne contamine pas", async () => {
+    // Le Pourri n°1 a perdu son Trait (fiche éditée) ; les autres le gardent.
+    mockNurgle({ homePlayers: nurglePlayers(12, { h1: { skills: "decay" } }) });
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+    expect(out.teams.home?.raiseDead?.sources).toEqual(["plague_ridden"]);
+    expect(out.teams.home?.raiseDead?.victims).toEqual([]);
+  });
+
+  it("écarte une victime ayant Décomposition, Régénération ou Minus — mais pas une Force 5", async () => {
+    mockNurgle({
+      events: [
+        KILL_A1,
+        { ...KILL_A1, id: "ev-2", targetPlayerId: "a2" },
+        { ...KILL_A1, id: "ev-3", targetPlayerId: "a3" },
+        { ...KILL_A1, id: "ev-4", targetPlayerId: "a4" },
+      ],
+      awayPlayers: humanPlayers(11, {
+        a1: { skills: "regeneration" },
+        a2: { skills: "decay" },
+        a3: { skills: "dodge,stunty" },
+        a4: { st: 5 },
+      }),
+    });
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+    expect(out.teams.home?.raiseDead?.victims.map((v) => v.id)).toEqual(["a4"]);
+  });
+
+  it("dérive le Contaminé : Trois-Quart Putrescent au numéro suivant, nom du mort, embauche au prix du poste", async () => {
+    mockNurgle({ sheet: { raisedDeadHome: INFECT_A1 } });
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+    expect(out.teams.home?.raisedDead).toMatchObject({
+      id: RAISED,
+      number: 13,
+      name: "Humain 1",
+      position: ROTTER,
+      positionName: "Contaminé (Trois-Quart Putrescent)",
+      cost: 40_000,
+      victimId: "a1",
+      source: "plague_ridden",
+      hireCost: 40_000,
+    });
+    const skills = out.teams.home!.raisedDead!.skills.split(",");
+    expect(skills).toContain("contagieux");
+    expect(skills).toContain("decay");
+    expect(skills.some((sk) => sk.startsWith("loner"))).toBe(false);
+  });
+});
+
+describe("updateRaisedDead — Trait Contagieux", () => {
+  it("le coach nurgle contamine un adversaire tué sur un blocage", async () => {
+    mockNurgle();
+    await updateRaisedDead({
+      pairingId: "pair-1",
+      userId: HOME,
+      side: "home",
+      victimId: "a1",
+    });
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalledWith({
+      where: { id: "ms1" },
+      data: { raisedDeadHome: INFECT_A1 },
+    });
+  });
+
+  it("refuse une victime tuée par agression (raise_dead_invalid_victim)", async () => {
+    mockNurgle({ events: [{ ...KILL_A1, kind: "aggression" }] });
+    await expect(
+      updateRaisedDead({
+        pairingId: "pair-1",
+        userId: HOME,
+        side: "home",
+        victimId: "a1",
+      }),
+    ).rejects.toMatchObject({ code: "raise_dead_invalid_victim" });
+  });
+});
+
+describe("validateByCommissioner — recrutement AU PRIX DU POSTE du Contaminé", () => {
+  it("matérialise le Contaminé au prix du poste (débité même si le coach a saisi 0), avec ses PSP", async () => {
+    mockNurgle({
+      sheet: {
+        status: "both_submitted",
+        raisedDeadHome: INFECT_A1,
+        purchasesHome: [{ kind: "raised_dead", name: "", cost: 0 }],
+      },
+      events: [
+        KILL_A1,
+        { id: "ev-td", kind: "touchdown", team: "home", actorPlayerId: RAISED },
+      ],
+    });
+    mockRecordOffline.mockResolvedValue({ recorded: true, hateRolls: [] });
+
+    await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+    const offline = mockRecordOffline.mock.calls[0][0];
+    expect(offline.purchasesHome[0]).toMatchObject({
+      kind: "raised_dead",
+      cost: 40_000,
+      position: ROTTER,
+      name: "Humain 1",
+      spp: 3,
+      advancements: "[]",
+    });
+    expect(offline.purchasesHome[0].skills.split(",")).toContain("contagieux");
+    expect(offline.purchasesHome[0].skills).not.toMatch(/loner/);
+    // « De la même manière que les Joueurs Journaliers » : le poste se paie.
+    expect(offline.treasuryDebitHome).toBe(40_000);
+    expect(offline.injuries).toEqual([{ teamPlayerId: "a1", type: "dead" }]);
+  });
+
+  it("liste déjà à 16 : le Contaminé est perdu, rien n'est débité", async () => {
+    mockNurgle({
+      sheet: {
+        status: "both_submitted",
+        raisedDeadHome: INFECT_A1,
+        purchasesHome: [{ kind: "raised_dead", name: "", cost: 40_000 }],
+      },
+      homePlayers: nurglePlayers(16),
+    });
+    mockRecordOffline.mockResolvedValue({ recorded: true, hateRolls: [] });
+
+    await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+    const offline = mockRecordOffline.mock.calls[0][0];
+    expect(offline.purchasesHome[0]).toMatchObject({ kind: "other", cost: 0 });
+    expect(offline.treasuryDebitHome).toBe(0);
   });
 });

@@ -95,12 +95,13 @@ import {
   canHireRaisedDead,
   deriveRaisedDead,
   eligibleRaiseVictims,
-  hasMastersOfUndeath,
   isRaisedDeadId,
   parseRaisedDeadChoice,
+  raiseSourcesFor,
   raisedDeadPositionOptions,
   raisedDeadSide,
   type RaisedDeadChoice,
+  type RaiseSource,
   type RaiseVictimCandidate,
   type RaiseVictimSource,
   type SheetRaisedDead,
@@ -183,6 +184,8 @@ import {
   type RandomSkillCategoryCode,
   type Ruleset,
   type TournamentRulesetDefinition,
+  KEYWORDS_SEASON3,
+  getStarPlayerKeywords,
 } from "@bb/game-engine";
 import {
   applyPackInducementRules,
@@ -296,10 +299,14 @@ function otherSide(side: "home" | "away"): "home" | "away" {
 }
 
 /**
- * Joueurs d'un cote tels que la regle « Relever le Mort » doit les lire chez
- * l'ADVERSAIRE : roster reel, journaliers alignes et Star Players engages —
- * les trois familles qui peuvent mourir sur la feuille. Les journaliers et
- * Star Players deja derives sur l'equipe (getMatchSheet) sont reutilises.
+ * Joueurs d'un cote tels que les regles de releve doivent les lire : roster
+ * reel, journaliers alignes et Star Players engages — les trois familles qui
+ * peuvent mourir sur la feuille (victimes chez l'ADVERSAIRE) ou infliger un
+ * blocage contagieux (auteurs chez SOI). Les journaliers et Star Players deja
+ * derives sur l'equipe (getMatchSheet) sont reutilises. Les mots-cles du
+ * poste (« Rejeton, Gros Bras ») viennent de la base, du catalogue Saison 3
+ * en repli, de la table des Star Players pour les engages — `null` quand
+ * inconnus, la regle retombant alors sur l'heuristique du moteur.
  */
 async function sideSheetPlayers(
   team: MatchSheetTeam,
@@ -317,6 +324,10 @@ async function sideSheetPlayers(
         side === "home" ? sheet.inducementsHome : sheet.inducementsAway,
       ruleset: team.ruleset,
     }));
+  const keywordsOf = (slug: string): string | null =>
+    positions?.find((p) => p.slug === slug)?.keywords ??
+    KEYWORDS_SEASON3[slug] ??
+    null;
   return [
     ...team.players.map((p) => ({
       id: p.id,
@@ -325,14 +336,17 @@ async function sideSheetPlayers(
       positionName: p.positionName,
       stats: p.stats,
       skills: p.skills,
+      keywords: keywordsOf(p.position),
     })),
-    ...journeymen,
-    ...stars,
+    ...journeymen.map((j) => ({ ...j, keywords: keywordsOf(j.position) })),
+    ...stars.map((s) => ({ ...s, keywords: getStarPlayerKeywords(s.slug) })),
   ];
 }
 
-/** Ce que la feuille sait du mort releve d'un cote. */
+/** Ce que la feuille sait du joueur releve d'un cote. */
 interface RaiseDeadSideView {
+  /** Regles dont dispose le cote (Maitres de la Non-vie, Contagieux). */
+  readonly sources: RaiseSource[];
   readonly victims: RaiseVictimCandidate[];
   readonly positions: JourneymanPositionOption[];
   readonly choice: RaisedDeadChoice | null;
@@ -340,12 +354,14 @@ interface RaiseDeadSideView {
 }
 
 /**
- * Maitres de la Non-vie — mort releve d'un cote : adversaires relevables
- * (tues ce match, Force <= 4, sans Minus), postes de Trois-quart offerts,
- * choix stocke et Trois-quart DERIVE. UNE seule derivation pour tous les
- * chemins (affichage, choix, appartenance d'une evolution, tirage,
- * recrutement) : deux derivations divergentes feraient refuser cote serveur
- * un releve que la feuille affiche.
+ * Joueur releve d'un cote : adversaires relevables (tues ce match et acceptes
+ * par l'une des regles du cote — Maitres de la Non-vie : Force <= 4 sans
+ * Minus, quelle que soit la cause ; Contagieux : blocage d'un porteur du
+ * Trait, victime ni Gros Bras, ni Decomposition, ni Regeneration, ni Minus),
+ * postes de Trois-quart offerts, choix stocke et Trois-quart DERIVE. UNE
+ * seule derivation pour tous les chemins (affichage, choix, appartenance
+ * d'une evolution, tirage, recrutement) : deux derivations divergentes
+ * feraient refuser cote serveur un releve que la feuille affiche.
  */
 async function raiseDeadSideView(input: {
   side: "home" | "away";
@@ -357,6 +373,8 @@ async function raiseDeadSideView(input: {
     home: readonly JourneymanSourcePosition[] | null;
     away: readonly JourneymanSourcePosition[] | null;
   };
+  /** Regles du cote et ses joueurs (cf. `sideRaiseSources`). */
+  raise: SideRaiseSources;
 }): Promise<RaiseDeadSideView> {
   const { side, team, opponent, sheet, summary } = input;
   const opponentSide = otherSide(side);
@@ -372,6 +390,8 @@ async function raiseDeadSideView(input: {
     side,
     injuries: summary.injuries,
     opponents,
+    sources: input.raise.sources,
+    own: input.raise.own,
   });
   const ownPositions =
     side === "home" ? input.positions.home : input.positions.away;
@@ -381,6 +401,7 @@ async function raiseDeadSideView(input: {
     side === "home" ? sheet.raisedDeadHome : sheet.raisedDeadAway,
   );
   return {
+    sources: input.raise.sources,
     victims,
     positions: raisedDeadPositionOptions(
       team.roster,
@@ -404,31 +425,56 @@ async function raiseDeadSideView(input: {
   };
 }
 
+/** Regles dont dispose un cote pour relever un joueur, et ses joueurs. */
+interface SideRaiseSources {
+  readonly sources: RaiseSource[];
+  /** Roster, journaliers et Star Players du cote : auteurs possibles d'un blocage contagieux. */
+  readonly own: RaiseVictimSource[];
+}
+
 /**
- * L'equipe porte la regle speciale Maitres de la Non-vie — lue EN BASE
- * (`Roster.specialRules`), catalogue compile en repli. Tolerant : une base
- * injoignable vaut « pas de regle », la feuille reste servie.
+ * Regles speciales de l'equipe — lues EN BASE (`Roster.specialRules`),
+ * catalogue compile en repli. Tolerant : une base injoignable vaut « aucune
+ * regle », la feuille reste servie.
  */
-async function teamHasMastersOfUndeath(
-  team: MatchSheetTeam | null,
-): Promise<boolean> {
-  if (!team) return false;
+async function teamSpecialRules(team: MatchSheetTeam): Promise<string[]> {
   try {
     const rules = await resolveSpecialRulesForTeam(
       prisma,
       team.roster,
       (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
     );
-    return hasMastersOfUndeath(rules);
+    return [...rules];
   } catch {
-    return false;
+    return [];
   }
 }
 
 /**
- * Trois-quart releve d'un cote quand l'equipe porte la regle, `null` sinon.
- * Charge les evenements de la feuille si le resume n'est pas deja connu :
- * le releve n'existe que tant que la sortie du mort est consignee.
+ * Ce qui permet a un cote de relever un joueur : la regle speciale Maitres
+ * de la Non-vie de son roster et/ou un joueur porteur du Trait Contagieux
+ * (roster, journalier aligne, Star Player engage). Vide = rien a proposer —
+ * et aucun evenement a charger.
+ */
+async function sideRaiseSources(
+  team: MatchSheetTeam,
+  side: "home" | "away",
+  sheet: SheetSyntheticColumns,
+  positions: readonly JourneymanSourcePosition[] | null | undefined,
+): Promise<SideRaiseSources> {
+  const own = await sideSheetPlayers(team, side, sheet, positions);
+  const sources = raiseSourcesFor({
+    specialRules: await teamSpecialRules(team),
+    players: own,
+  });
+  return { sources, own };
+}
+
+/**
+ * Trois-quart releve d'un cote quand l'equipe dispose d'une regle de releve,
+ * `null` sinon. Charge les evenements de la feuille si le resume n'est pas
+ * deja connu : le releve n'existe que tant que la sortie du mort est
+ * consignee.
  */
 async function loadSideRaisedDead(input: {
   side: "home" | "away";
@@ -441,7 +487,14 @@ async function loadSideRaisedDead(input: {
   summary?: MatchSummary;
 }): Promise<SheetRaisedDead | null> {
   const team = input.side === "home" ? input.teams.home : input.teams.away;
-  if (!team || !(await teamHasMastersOfUndeath(team))) return null;
+  if (!team) return null;
+  const raise = await sideRaiseSources(
+    team,
+    input.side,
+    input.sheet,
+    input.side === "home" ? input.positions.home : input.positions.away,
+  );
+  if (raise.sources.length === 0) return null;
   const summary =
     input.summary ??
     summarizeMatchSheet(
@@ -457,6 +510,7 @@ async function loadSideRaisedDead(input: {
     sheet: input.sheet,
     summary,
     positions: input.positions,
+    raise,
   });
   return view.raised;
 }
@@ -1192,14 +1246,16 @@ export async function updatePreMatch(input: {
  * `victimId` designe l'adversaire tue a relever (`null` = annuler le
  * releve) ; `position` le Trois-quart choisi quand la fiche en offre
  * plusieurs (Morts-Vivants : Zombie ou Squelette), defaut = Trois-quart de
- * base. Le serveur verifie : la regle speciale de l'equipe (base d'abord),
- * le cote du coach, l'eligibilite du mort (adversaire, resultat Mort
- * consigne, Force <= 4, sans Minus) et le poste. Une fois par match :
- * la feuille ne stocke qu'UN choix par cote — un second releve le remplace.
+ * base. Le serveur verifie : une regle de releve du cote (Maitres de la
+ * Non-vie lue base d'abord, ou un porteur du Trait Contagieux), le cote du
+ * coach, l'eligibilite du mort selon la regle et le poste. Une fois par
+ * match : la feuille ne stocke qu'UN choix par cote — un second releve le
+ * remplace.
  *
  * Le Trois-quart releve n'est pas persiste ici : il est DERIVE a chaque
- * lecture (`raiseDeadSideView`), et embauche gratuitement a la validation
- * si le coach le recrute (achat `raised_dead`).
+ * lecture (`raiseDeadSideView`), et embauche a la validation si le coach le
+ * recrute (achat `raised_dead`) — gratuitement ou au prix du poste selon la
+ * regle qui l'a fait naitre.
  */
 export async function updateRaisedDead(input: {
   pairingId: string;
@@ -1225,10 +1281,19 @@ export async function updateRaisedDead(input: {
 
   const teams = await loadSheetTeams(ctx);
   const team = input.side === "home" ? teams.home : teams.away;
-  if (!team || !(await teamHasMastersOfUndeath(team))) {
+  const positions = await loadJourneymanPositions(teams);
+  const raise = team
+    ? await sideRaiseSources(
+        team,
+        input.side,
+        sheet as SheetSyntheticColumns,
+        input.side === "home" ? positions.home : positions.away,
+      )
+    : null;
+  if (!team || !raise || raise.sources.length === 0) {
     throw new MatchSheetError(
       "raise_dead_not_allowed",
-      `${team?.name ?? "Cette equipe"} n'a pas la regle speciale Maitres de la Non-vie`,
+      `${team?.name ?? "Cette equipe"} n'a ni la regle speciale Maitres de la Non-vie ni de joueur Contagieux`,
     );
   }
   const column = input.side === "home" ? "raisedDeadHome" : "raisedDeadAway";
@@ -1249,13 +1314,14 @@ export async function updateRaisedDead(input: {
     opponent: input.side === "home" ? teams.away : teams.home,
     sheet: sheet as SheetSyntheticColumns,
     summary: summarizeMatchSheet(events),
-    positions: await loadJourneymanPositions(teams),
+    positions,
+    raise,
   });
   const victim = view.victims.find((v) => v.id === input.victimId);
   if (!victim) {
     throw new MatchSheetError(
       "raise_dead_invalid_victim",
-      `Le joueur ${input.victimId} n'est pas un adversaire tue relevable (resultat Mort consigne, Force 4 ou moins, sans Minus)`,
+      `Le joueur ${input.victimId} n'est pas un adversaire tue relevable (resultat Mort consigne ; Maitres de la Non-vie : Force 4 ou moins, sans Minus ; Contagieux : tue sur un blocage d'un porteur du Trait, ni Gros Bras, ni Decomposition, ni Regeneration, ni Minus)`,
     );
   }
   const position = input.position ?? null;
@@ -2056,9 +2122,11 @@ function enrichJourneymanPurchases(input: {
   /** Roster figé de ce côté : les journaliers RECRUTABLES sont ceux du match. */
   frozenRosterSnapshot?: unknown;
   /**
-   * Maîtres de la Non-vie — Trois-quart relevé pendant ce match, s'il y en a
-   * un. Recrutable GRATUITEMENT (achat `raised_dead`) : le serveur force le
-   * coût à 0 et redérive PSP et évolution comme pour un journalier.
+   * Trois-quart relevé pendant ce match, s'il y en a un (mort relevé par
+   * Maîtres de la Non-vie, ou Contaminé). Recrutable par un achat
+   * `raised_dead` : le serveur fixe le coût d'après sa source — 0 pour un
+   * mort relevé, prix du poste plus surcoût d'évolution pour un Contaminé —
+   * et redérive PSP et évolution comme pour un journalier.
    */
   raisedDead?: SheetRaisedDead | null;
   /**
@@ -2117,10 +2185,12 @@ function enrichJourneymanPurchases(input: {
 
   const out = purchases.map((p) => {
     if (p.kind === "raised_dead") {
-      // Mort relevé : GRATUIT, une seule fois, et seulement s'il existe
-      // encore (sortie du mort consignée) et peut être embauché. Sinon la
-      // ligne retombe en « dépense diverse » à 0 : rien n'est créé, rien
-      // n'est débité — même si le coach avait saisi un montant.
+      // Joueur relevé : une seule fois, au prix fixé par sa source (0 pour
+      // un mort relevé, prix du poste pour un Contaminé — le montant saisi
+      // est ignoré dans les deux cas), et seulement s'il existe encore
+      // (sortie du mort consignée) et peut être embauché. Sinon la ligne
+      // retombe en « dépense diverse » à 0 : rien n'est créé, rien n'est
+      // débité.
       const raised = input.raisedDead ?? null;
       if (!raised || raisedHired || input.raisedDeadHireable === false) {
         serverLog.warn(
@@ -3261,24 +3331,27 @@ export interface MatchSheetTeam {
    */
   readonly starPlayersHired?: readonly SheetStarPlayer[];
   /**
-   * Maitres de la Non-vie — « Relever le Mort ». Renseigne par getMatchSheet
-   * pour une equipe qui porte la regle speciale : les adversaires tues ce
-   * match qu'elle peut relever (Force <= 4, sans Minus), les postes de
-   * Trois-quart au choix, le choix stocke sur la feuille, et si l'embauche
-   * GRATUITE de fin de match est encore possible (liste d'equipe < 16 une
-   * fois les morts de ce match retires).
+   * « Relever le Mort » (Maitres de la Non-vie) et Trait Contagieux.
+   * Renseigne par getMatchSheet pour une equipe qui dispose d'au moins une
+   * des deux regles : les regles (`sources`), les adversaires tues ce match
+   * qu'elle peut relever (chacun avec la regle qui l'y autorise), les postes
+   * de Trois-quart au choix, le choix stocke sur la feuille, et si l'embauche
+   * de fin de match est encore possible (liste d'equipe < 16 une fois les
+   * morts de ce match retires).
    */
   readonly raiseDead?: {
+    readonly sources: readonly RaiseSource[];
     readonly victims: readonly RaiseVictimCandidate[];
     readonly positions: readonly JourneymanPositionOption[];
     readonly choice: RaisedDeadChoice | null;
     readonly canHire: boolean;
   };
   /**
-   * Trois-quart RELEVE d'entre les morts pendant ce match (en reserve). Il
-   * joue le match comme un journalier : acteur / cible d'evenement, Joueur
-   * du Match, PSP, evolution de l'etape 3 — et peut etre recrute
-   * gratuitement a l'etape 4. Renseigne par getMatchSheet.
+   * Trois-quart RELEVE pendant ce match (en reserve) : mort releve ou
+   * Contamine. Il joue le match comme un journalier : acteur / cible
+   * d'evenement, Joueur du Match, PSP, evolution de l'etape 3 — et peut etre
+   * recrute a l'etape 4, gratuitement (Maitres) ou au prix du poste
+   * (Contagieux, `hireCost`). Renseigne par getMatchSheet.
    */
   readonly raisedDead?: SheetRaisedDead | null;
 }
@@ -4495,17 +4568,25 @@ export async function getMatchSheet(input: {
     home: await withStarPlayers(withJourneymen(teams.home, "home"), "home"),
     away: await withStarPlayers(withJourneymen(teams.away, "away"), "away"),
   };
-  // Maitres de la Non-vie — « Relever le Mort » : pour une equipe qui porte
-  // la regle, la feuille expose les adversaires tues relevables, les postes
-  // de Trois-quart au choix et le Trois-quart RELEVE (derive du choix
-  // stocke), qui rejoint les pickers d'evenements comme un journalier.
+  // Joueur releve — « Relever le Mort » (Maitres de la Non-vie) ou Trait
+  // Contagieux : pour une equipe qui dispose d'une de ces regles, la feuille
+  // expose les adversaires tues relevables, les postes de Trois-quart au
+  // choix et le Trois-quart RELEVE (derive du choix stocke), qui rejoint les
+  // pickers d'evenements comme un journalier.
   const sheetSynthetic = sheet as SheetSyntheticColumns;
   const deadForHire = deadThisMatch(summary);
   const withRaisedDead = async (
     team: MatchSheetTeam | null,
     side: "home" | "away",
   ): Promise<MatchSheetTeam | null> => {
-    if (!team || !(await teamHasMastersOfUndeath(team))) return team;
+    if (!team) return team;
+    const raise = await sideRaiseSources(
+      team,
+      side,
+      sheetSynthetic,
+      side === "home" ? journeymanPositions.home : journeymanPositions.away,
+    );
+    if (raise.sources.length === 0) return team;
     const view = await raiseDeadSideView({
       side,
       team,
@@ -4514,11 +4595,13 @@ export async function getMatchSheet(input: {
       sheet: sheetSynthetic,
       summary,
       positions: journeymanPositions,
+      raise,
     });
     const format: GameFormat = isGameFormat(team.format) ? team.format : "bb11";
     return {
       ...team,
       raiseDead: {
+        sources: view.sources,
         victims: view.victims,
         positions: view.positions,
         choice: view.choice,
