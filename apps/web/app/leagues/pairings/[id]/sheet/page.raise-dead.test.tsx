@@ -241,4 +241,76 @@ describe("feuille de match — Relever le Mort", () => {
       "🧟 N°2 Grommit",
     );
   });
+
+  it("un Contaminé (Trait Contagieux) est nommé sous ☣️ dans la timeline et les pickers", async () => {
+    const ROTTER = "nurgle_trois_quart_putrescent";
+    const infected = {
+      id: "raised-home-1",
+      number: 2,
+      name: "Grommit",
+      position: ROTTER,
+      positionName: "Contaminé (Trois-Quart Putrescent)",
+      stats: { ma: 5, st: 3, ag: 4, pa: 6, av: 9 },
+      skills: "contagieux,decay",
+      cost: 40_000,
+      victimId: "a1",
+      source: "plague_ridden",
+      hireCost: 40_000,
+    };
+    const base = sheetResponse();
+    apiRequest.mockResolvedValue(
+      sheetResponse({
+        sheet: {
+          ...base.sheet,
+          events: [
+            ...base.sheet.events,
+            {
+              id: "ev-2",
+              kind: "touchdown",
+              team: "home",
+              actorPlayerId: "raised-home-1",
+            },
+          ],
+        },
+        teams: {
+          home: {
+            ...UNDEAD,
+            roster: "nurgle",
+            raiseDead: {
+              sources: ["plague_ridden"],
+              victims: [
+                {
+                  id: "a1",
+                  number: 1,
+                  name: "Grommit",
+                  positionName: "Trois-quart",
+                  source: "plague_ridden",
+                },
+              ],
+              positions: [{ slug: ROTTER, name: "Trois-Quart Putrescent" }],
+              choice: { victimId: "a1", position: null },
+              canHire: true,
+            },
+            raisedDead: infected,
+          },
+          away: HUMANS,
+        },
+      }),
+    );
+    render(<MatchSheetPage />);
+
+    const panel = await screen.findByTestId("raise-dead-home");
+    expect(panel.textContent).toContain("Contagieux");
+    fireEvent.click(screen.getByTestId("tab-during"));
+    const actor = await screen.findByTestId("event-actor");
+    const options = within(actor)
+      .getAllByRole("option")
+      .map((o) => o.textContent);
+    expect(options).toContain(
+      "☣️ N°2 Grommit — Contaminé (Trois-Quart Putrescent)",
+    );
+    expect(screen.getByTestId("events-list").textContent).toContain(
+      "☣️ N°2 Grommit",
+    );
+  });
 });

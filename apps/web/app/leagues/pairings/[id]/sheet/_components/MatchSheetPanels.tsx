@@ -107,12 +107,17 @@ export interface SheetStarPlayer {
   cost?: number;
 }
 
+/** Règle qui fait naître un joueur relevé pendant le match. */
+export type RaiseSource = "masters_of_undeath" | "plague_ridden";
+
 /**
- * Trois-quart RELEVÉ d'entre les morts (règle spéciale Maîtres de la
- * Non-vie). Joueur synthétique comme le journalier (id `raised-<side>-1`) :
- * il joue le match en réserve — sélectionnable comme acteur ou cible
- * d'évènement, Joueur du Match, évolution à l'étape 3 — et rejoint le roster
- * GRATUITEMENT s'il est recruté à l'étape 4 (achat « Mort relevé »).
+ * Trois-quart RELEVÉ pendant le match — mort relevé (règle spéciale Maîtres
+ * de la Non-vie) ou Contaminé (Trait Contagieux). Joueur synthétique comme le
+ * journalier (id `raised-<side>-1`) : il joue le match en réserve —
+ * sélectionnable comme acteur ou cible d'évènement, Joueur du Match,
+ * évolution à l'étape 3 — et rejoint le roster s'il est recruté à l'étape 4
+ * (achat `raised_dead`) : gratuitement pour un mort relevé, au prix du poste
+ * pour un Contaminé.
  */
 export interface SheetRaisedDead {
   id: string;
@@ -133,19 +138,71 @@ export interface SheetRaisedDead {
   cost?: number;
   /** Adversaire relevé (id de feuille). */
   victimId: string;
+  /** Règle qui l'a fait naître (optionnel : rétro-compat API = mort relevé). */
+  source?: RaiseSource;
+  /** Prix de l'embauche d'après-match, hors évolution (0 = gratuit). */
+  hireCost?: number;
 }
 
 /**
- * Ce que la feuille sait de « Relever le Mort » pour une équipe qui PORTE la
- * règle : adversaires tués relevables (Force ≤ 4, sans Minus), postes de
- * Trois-quart au choix, choix stocké, et si l'embauche gratuite est encore
- * possible (liste d'équipe < 16 une fois les morts de ce match retirés).
+ * Ce que la feuille sait du relevé pour une équipe qui dispose d'une règle
+ * (Maîtres de la Non-vie et/ou Contagieux) : ses règles, les adversaires tués
+ * relevables (chacun avec la règle qui l'y autorise), les postes de
+ * Trois-quart au choix, le choix stocké, et si l'embauche est encore possible
+ * (liste d'équipe < 16 une fois les morts de ce match retirés).
  */
 export interface RaiseDeadInfo {
-  victims: { id: string; number: number; name: string; positionName: string }[];
+  /** Optionnel : rétro-compat avec un serveur antérieur (= Maîtres). */
+  sources?: RaiseSource[];
+  victims: {
+    id: string;
+    number: number;
+    name: string;
+    positionName: string;
+    source?: RaiseSource;
+  }[];
   positions: { slug: string; name: string }[];
   choice: { victimId: string; position: string | null } | null;
   canHire: boolean;
+}
+
+/** Vocabulaire d'un relevé selon la règle qui l'a fait naître. */
+export interface RaisedDeadWording {
+  /** Emoji du relevé dans les pickers, la timeline et les rappels. */
+  emoji: string;
+  /** Nom de la règle. */
+  rule: string;
+  /** Le relevé lui-même (« Mort relevé », « Contaminé »). */
+  noun: string;
+  /** Libellé du type d'achat d'après-match. */
+  purchaseLabel: string;
+  /** Embauche gratuite (Maîtres) ou au prix du poste (Contagieux). */
+  free: boolean;
+}
+
+/**
+ * Sans source (serveur antérieur), le relevé est un mort relevé par Maîtres
+ * de la Non-vie : c'est la seule règle que ce serveur connaissait.
+ */
+export function raisedDeadWording(
+  source: RaiseSource | null | undefined,
+): RaisedDeadWording {
+  if (source === "plague_ridden") {
+    return {
+      emoji: "☣️",
+      rule: "Contagieux",
+      noun: "Contaminé",
+      purchaseLabel: "Contaminé (prix du poste)",
+      free: false,
+    };
+  }
+  return {
+    emoji: "🧟",
+    rule: "Maîtres de la Non-vie",
+    noun: "Mort relevé",
+    purchaseLabel: "Mort relevé (gratuit)",
+    free: true,
+  };
 }
 
 export interface SheetTeam {
@@ -188,8 +245,8 @@ export interface SheetTeam {
   /** Star Players engagés en coup de pouce (optionnel : rétro-compat API). */
   starPlayersHired?: SheetStarPlayer[];
   /**
-   * Maîtres de la Non-vie — présent seulement pour une équipe qui porte la
-   * règle (optionnel : rétro-compat API).
+   * « Relever le Mort » / Contagieux — présent seulement pour une équipe qui
+   * dispose d'une règle de relevé (optionnel : rétro-compat API).
    */
   raiseDead?: RaiseDeadInfo;
   /** Trois-quart relevé pendant ce match, s'il y en a un. */
@@ -395,7 +452,7 @@ export function PlayerSelect({
   // Un Star Player engagé joue le match : il peut marquer, blesser, être
   // blessé ou être JDM. Même traitement que les journaliers (synthétiques).
   const starPlayers = includeJourneymen ? (team?.starPlayersHired ?? []) : [];
-  // Le mort RELEVÉ (Maîtres de la Non-vie) joue lui aussi le match, en
+  // Le joueur RELEVÉ (mort relevé ou Contaminé) joue lui aussi le match, en
   // réserve : sans lui dans le picker, impossible de lui attribuer un TD.
   const raisedDead =
     includeJourneymen && team?.raisedDead ? [team.raisedDead] : [];
@@ -425,7 +482,7 @@ export function PlayerSelect({
       ))}
       {raisedDead.map((r) => (
         <option key={r.id} value={r.id}>
-          {`🧟 N°${r.number} ${r.name} — ${r.positionName}`}
+          {`${raisedDeadWording(r.source).emoji} N°${r.number} ${r.name} — ${r.positionName}`}
         </option>
       ))}
     </select>
@@ -524,11 +581,12 @@ export function JourneymenPanel({
 }
 
 /**
- * Bandeau « Maîtres de la Non-vie — Relever le Mort » d'une équipe qui porte
- * la règle : visible dès qu'un adversaire tué est relevable (ou qu'un relevé
- * est déjà posé). Le coach désigne le mort à relever et, sur une fiche à
- * plusieurs Trois-quarts (Morts-Vivants : Zombie ou Squelette), le poste.
- * Une fois par match : un seul relevé par équipe.
+ * Bandeau « Relever le Mort » (Maîtres de la Non-vie) / « Contagieux » d'une
+ * équipe qui dispose d'une de ces règles : visible dès qu'un adversaire tué
+ * est relevable (ou qu'un relevé est déjà posé). Le coach désigne le mort à
+ * relever et, sur une fiche à plusieurs Trois-quarts (Morts-Vivants : Zombie
+ * ou Squelette), le poste. Une fois par match : un seul relevé par équipe,
+ * quelle que soit la règle.
  */
 export function RaiseDeadPanel({
   team,
@@ -546,6 +604,17 @@ export function RaiseDeadPanel({
   if (!team || !info) return null;
   if (info.victims.length === 0 && !info.choice) return null;
   const raised = team.raisedDead ?? null;
+  // Sans `sources` (serveur antérieur), seule Maîtres de la Non-vie existait.
+  const sources: RaiseSource[] =
+    info.sources && info.sources.length > 0
+      ? info.sources
+      : ["masters_of_undeath"];
+  // Le relevé posé parle de SA règle ; sans relevé, de la première du côté.
+  const wording = raisedDeadWording(raised ? raised.source : sources[0]);
+  const rules = sources.map((s) => raisedDeadWording(s).rule).join(" et ");
+  const hireCost = raised
+    ? (raised.hireCost ?? (wording.free ? 0 : (raised.cost ?? 0)))
+    : 0;
   const currentVictim = info.choice?.victimId ?? "";
   const currentPosition =
     raised?.position ?? info.choice?.position ?? info.positions[0]?.slug ?? "";
@@ -556,18 +625,31 @@ export function RaiseDeadPanel({
       className="space-y-2 rounded border border-violet-300 bg-violet-50 px-3 py-2 text-xs text-violet-950"
     >
       <div className="flex flex-wrap items-center gap-2">
-        <span aria-hidden>🧟</span>
+        <span aria-hidden>{wording.emoji}</span>
         <span>
-          <strong>{team.name}</strong> — Maîtres de la Non-vie :{" "}
-          <strong>Relever le Mort</strong> (une fois par match). Un adversaire
-          de Force 4 ou moins, sans Minus, tué pendant ce match peut rejoindre
-          la réserve comme Trois-quart, puis être embauché gratuitement en fin
-          de match.
+          <strong>{team.name}</strong> — {rules} (une fois par match).{" "}
+          {sources.includes("masters_of_undeath") ? (
+            <>
+              <strong>Relever le Mort</strong> : un adversaire de Force 4 ou
+              moins, sans Minus, tué pendant ce match peut rejoindre la réserve
+              comme Trois-quart, puis être embauché gratuitement en fin de
+              match.{" "}
+            </>
+          ) : null}
+          {sources.includes("plague_ridden") ? (
+            <>
+              <strong>Contagieux</strong> : un adversaire tué sur un blocage
+              d&apos;un porteur du Trait (ni Gros Bras, ni Décomposition, ni
+              Régénération, ni Minus) rejoint la réserve comme Trois-quart, puis
+              s&apos;embauche en fin de match comme un journalier, au prix du
+              poste.
+            </>
+          ) : null}
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-1.5">
-          <span className="font-medium">Mort relevé :</span>
+          <span className="font-medium">{wording.noun} :</span>
           <select
             value={currentVictim}
             onChange={(e) =>
@@ -584,7 +666,14 @@ export function RaiseDeadPanel({
             <option value="">— aucun —</option>
             {info.victims.map((v) => (
               <option key={v.id} value={v.id}>
-                {`N°${v.number} ${v.name} — ${v.positionName}`}
+                {`N°${v.number} ${v.name} — ${v.positionName}${
+                  // Deux règles sur le même côté : dire laquelle joue.
+                  sources.length > 1
+                    ? raisedDeadWording(v.source).free
+                      ? " (gratuit)"
+                      : " (prix du poste)"
+                    : ""
+                }`}
               </option>
             ))}
             {/* Choix posé sur un mort dont la sortie a été retirée : le
@@ -606,7 +695,7 @@ export function RaiseDeadPanel({
                 onChoose(currentVictim || null, e.target.value || null)
               }
               disabled={!editable || !currentVictim}
-              aria-label="Poste du mort relevé"
+              aria-label="Poste du joueur relevé"
               data-testid={`raise-dead-position-${side}`}
               className="rounded border px-1.5 py-1 text-xs"
             >
@@ -629,8 +718,11 @@ export function RaiseDeadPanel({
             N°{raised.number} {raised.name}
           </strong>{" "}
           — {raised.positionName}. Sélectionnable dans les évènements ; à
-          l&apos;étape 4 (Embauches), un achat « Mort relevé (gratuit) »
+          l&apos;étape 4 (Embauches), un achat « {wording.purchaseLabel} »
           l&apos;ajoute au roster
+          {wording.free
+            ? ""
+            : ` pour ${formatGold(hireCost)} (plus le surcoût d'une évolution)`}
           {info.canHire
             ? "."
             : " — impossible tant que la liste compte déjà 16 joueurs (sinon, il est perdu)."}
@@ -1352,9 +1444,10 @@ export interface Purchase {
     | "other"
     | "journeyman"
     /**
-     * Maîtres de la Non-vie — recrutement GRATUIT du Trois-quart relevé
-     * pendant ce match. Le serveur force le coût à 0 et redérive poste,
-     * PSP et évolution depuis la feuille.
+     * Recrutement du Trois-quart relevé pendant ce match — mort relevé
+     * (Maîtres de la Non-vie) : gratuit ; Contaminé (Contagieux) : prix du
+     * poste. Le serveur fixe le coût d'après la règle et redérive poste, PSP
+     * et évolution depuis la feuille.
      */
     | "raised_dead";
   name: string;
@@ -1848,17 +1941,23 @@ function PurchaseEditor({
       return it.staff ? (staffOption(it.staff)?.cost ?? null) : null;
     if (it.kind === "journeyman")
       return it.journeymanId ? journeymanHireCost(it.journeymanId) : null;
-    // Mort relevé : toujours gratuit (sa valeur entre quand même en VE).
-    if (it.kind === "raised_dead") return 0;
+    // Joueur relevé : gratuit (mort relevé) ou prix du poste (Contaminé) —
+    // sa valeur pleine entre en VE dans les deux cas.
+    if (it.kind === "raised_dead") return team?.raisedDead?.hireCost ?? 0;
     return null;
   };
   // Journaliers ayant joué CE match : recrutables à l'étape EMBAUCHES.
   const journeymen = team?.journeymen ?? [];
-  // Mort relevé (Maîtres de la Non-vie) : le type d'achat n'est proposé
-  // qu'à une équipe qui en a un.
+  // Joueur relevé (mort relevé ou Contaminé) : le type d'achat n'est proposé
+  // qu'à une équipe qui en a un, sous le libellé de SA règle.
   const raisedDead = team?.raisedDead ?? null;
+  const raisedWording = raisedDeadWording(raisedDead?.source);
   const kinds = PURCHASE_KINDS.filter(
     (k) => k.value !== "raised_dead" || raisedDead !== null,
+  ).map((k) =>
+    k.value === "raised_dead"
+      ? { ...k, label: raisedWording.purchaseLabel }
+      : k,
   );
   const spent = list.reduce((sum, p) => sum + (p.cost || 0), 0);
   const remaining = treasuryBefore - spent;
@@ -1891,14 +1990,20 @@ function PurchaseEditor({
               const kind = e.target.value as Purchase["kind"];
               update(i, {
                 kind,
-                // Mort relevé : poste et nom du relevé pré-remplis, coût 0.
+                // Joueur relevé : poste et nom pré-remplis, coût de SA règle
+                // (0 pour un mort relevé, prix du poste pour un Contaminé).
                 position:
                   kind === "raised_dead" ? raisedDead?.position : undefined,
                 staff: undefined,
                 journeymanId: undefined,
                 name:
                   kind === "raised_dead" ? (raisedDead?.name ?? "") : it.name,
-                cost: kind === "reroll" ? (rerollOption?.cost ?? 0) : 0,
+                cost:
+                  kind === "reroll"
+                    ? (rerollOption?.cost ?? 0)
+                    : kind === "raised_dead"
+                      ? (raisedDead?.hireCost ?? 0)
+                      : 0,
               });
             }}
             disabled={disabled}
@@ -1912,15 +2017,15 @@ function PurchaseEditor({
               </option>
             ))}
           </select>
-          {/* Mort relevé : un seul candidat possible, rappelé tel quel. */}
+          {/* Joueur relevé : un seul candidat possible, rappelé tel quel. */}
           {it.kind === "raised_dead" && (
             <span
               data-testid={testId ? `${testId}-raised-${i}` : undefined}
               className="rounded border border-violet-200 bg-violet-50 px-1.5 py-1 text-xs text-violet-900"
             >
               {raisedDead
-                ? `🧟 N°${raisedDead.number} ${raisedDead.name} — ${raisedDead.positionName}`
-                : "aucun mort relevé sur cette feuille"}
+                ? `${raisedWording.emoji} N°${raisedDead.number} ${raisedDead.name} — ${raisedDead.positionName}`
+                : "aucun joueur relevé sur cette feuille"}
             </span>
           )}
           {/* Joueur : poste à recruter. Le catalogue du roster donne le
@@ -2520,18 +2625,26 @@ export function PostMatchPanel({
                   « Dépense diverse » débite seulement la trésorerie (aucun
                   joueur/relance/staff créé).
                 </p>
-                {/* Maîtres de la Non-vie : le Trois-quart relevé pendant le
-                    match s'embauche GRATUITEMENT ici — tant que la liste ne
-                    compte pas déjà 16 joueurs, sinon il est perdu. */}
+                {/* Le Trois-quart relevé pendant le match s'embauche ici —
+                    gratuitement (mort relevé) ou au prix du poste (Contaminé,
+                    comme un journalier) — tant que la liste ne compte pas
+                    déjà 16 joueurs, sinon il est perdu. */}
                 {c.team?.raisedDead &&
                 !c.buy.some((p) => p.kind === "raised_dead") ? (
                   <p
                     data-testid={`raise-dead-hire-hint-${c.side}`}
                     className="mt-1 rounded border border-violet-200 bg-violet-50 px-2 py-1.5 text-[11px] text-violet-900"
                   >
-                    🧟 <strong>{c.team.raisedDead.name}</strong>, relevé
-                    d&apos;entre les morts, peut rejoindre le roster{" "}
-                    <strong>gratuitement</strong>
+                    {raisedDeadWording(c.team.raisedDead.source).emoji}{" "}
+                    <strong>{c.team.raisedDead.name}</strong>
+                    {raisedDeadWording(c.team.raisedDead.source).free
+                      ? ", relevé d'entre les morts, peut rejoindre le roster "
+                      : ", contaminé, peut rejoindre le roster comme un journalier "}
+                    <strong>
+                      {raisedDeadWording(c.team.raisedDead.source).free
+                        ? "gratuitement"
+                        : `pour ${formatGold(c.team.raisedDead.hireCost ?? 0)}`}
+                    </strong>
                     {c.team.raiseDead?.canHire === false
                       ? " — mais la liste compte déjà 16 joueurs : sinon, il est perdu."
                       : "."}
@@ -2546,7 +2659,7 @@ export function PostMatchPanel({
                               {
                                 kind: "raised_dead",
                                 name: c.team?.raisedDead?.name ?? "",
-                                cost: 0,
+                                cost: c.team?.raisedDead?.hireCost ?? 0,
                                 position: c.team?.raisedDead?.position,
                               },
                             ])
