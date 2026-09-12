@@ -16,9 +16,11 @@ import { post, get, unwrap } from "./api";
  * Trois-quart (Orque 0-16, Gobelin 0-4) : c'est le cas « journaliers
  * panachables » des feuilles de match de ligue (E37 / A161-A163). `undead`
  * porte la règle spéciale Maîtres de la Non-vie (Squelette OU Zombie) : le
- * cas « Relever le Mort ».
+ * cas « Relever le Mort ». `nurgle` porte le Trait Contagieux sur chacun de
+ * ses Trois-Quarts Putrescents : le cas « Contagieux » (blocage, embauche au
+ * prix du poste).
  */
-export type RosterKey = "skaven" | "lizardmen" | "orc" | "undead";
+export type RosterKey = "skaven" | "lizardmen" | "orc" | "undead" | "nurgle";
 
 export interface Coach {
   email: string;
@@ -211,9 +213,7 @@ export async function acceptAndStart(
     accA.status !== "waiting_other_player" &&
     accA.status !== "waiting_other_accept"
   ) {
-    throw new Error(
-      `Premier accept inattendu: ${JSON.stringify(accA)}`,
-    );
+    throw new Error(`Premier accept inattendu: ${JSON.stringify(accA)}`);
   }
   const accB = unwrap(
     await post<{
@@ -229,9 +229,7 @@ export async function acceptAndStart(
   // séquence pré-match démarre automatiquement (voir services/match-start.ts).
   // On accepte aussi "started" pour rester tolérant si ce nom change.
   if (accB.status !== "prematch-setup" && accB.status !== "started") {
-    throw new Error(
-      `Deuxième accept inattendu: ${JSON.stringify(accB)}`,
-    );
+    throw new Error(`Deuxième accept inattendu: ${JSON.stringify(accB)}`);
   }
   return {
     ...match,

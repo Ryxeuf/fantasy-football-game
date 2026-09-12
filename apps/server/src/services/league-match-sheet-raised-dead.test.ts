@@ -858,9 +858,7 @@ describe("getMatchSheet — Trait Contagieux (Nurgle)", () => {
       }),
     });
     const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
-    expect(out.teams.home?.raiseDead?.victims.map((v) => v.id)).toEqual([
-      "a4",
-    ]);
+    expect(out.teams.home?.raiseDead?.victims.map((v) => v.id)).toEqual(["a4"]);
   });
 
   it("dérive le Contaminé : Trois-Quart Putrescent au numéro suivant, nom du mort, embauche au prix du poste", async () => {

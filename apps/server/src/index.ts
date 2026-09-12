@@ -751,7 +751,7 @@ if (process.env.TEST_SQLITE === "1") {
       const { ownerId, name, roster } = req.body as {
         ownerId?: string;
         name?: string;
-        roster?: "skaven" | "lizardmen" | "orc" | "undead";
+        roster?: "skaven" | "lizardmen" | "orc" | "undead" | "nurgle";
       };
       if (!ownerId || !name || !roster) {
         return res
@@ -762,11 +762,12 @@ if (process.env.TEST_SQLITE === "1") {
         roster !== "skaven" &&
         roster !== "lizardmen" &&
         roster !== "orc" &&
-        roster !== "undead"
+        roster !== "undead" &&
+        roster !== "nurgle"
       ) {
-        return res
-          .status(400)
-          .json({ error: "roster doit être skaven, lizardmen, orc ou undead" });
+        return res.status(400).json({
+          error: "roster doit être skaven, lizardmen, orc, undead ou nurgle",
+        });
       }
 
       const team = await prisma.team.create({
@@ -784,27 +785,66 @@ if (process.env.TEST_SQLITE === "1") {
         },
       });
 
-      // 11 linemen génériques, stats de base. Les Orques et les Morts-Vivants
-      // portent le slug réel de leur Trois-quart (poste seedé par
-      // /__test/seed-rosters) : c'est lui que lisent la valeur d'équipe, les
-      // journaliers et le mort relevé (Maîtres de la Non-vie).
-      const isOrc = roster === "orc";
-      const isUndead = roster === "undead";
+      // 11 linemen génériques, stats de base. Les Orques, les Morts-Vivants
+      // et les Nurgle portent le slug réel de leur Trois-quart (poste seedé
+      // par /__test/seed-rosters) : c'est lui que lisent la valeur d'équipe,
+      // les journaliers et le joueur relevé (Maîtres de la Non-vie,
+      // Contagieux — les Pourris portent le Trait).
+      const LINEMAN_BY_ROSTER: Record<
+        string,
+        {
+          position: string;
+          ma: number;
+          ag: number;
+          pa: number;
+          av: number;
+          skills: string;
+        }
+      > = {
+        orc: {
+          position: "orc_trois_quart_orque",
+          ma: 5,
+          ag: 3,
+          pa: 4,
+          av: 10,
+          skills: "",
+        },
+        undead: {
+          position: "undead_trois_quart_zombie",
+          ma: 4,
+          ag: 4,
+          pa: 6,
+          av: 9,
+          skills: "regeneration",
+        },
+        nurgle: {
+          position: "nurgle_trois_quart_putrescent",
+          ma: 5,
+          ag: 4,
+          pa: 6,
+          av: 9,
+          skills: "contagieux,decay",
+        },
+      };
+      const lineman = LINEMAN_BY_ROSTER[roster] ?? {
+        position: "Lineman",
+        ma: 6,
+        ag: 3,
+        pa: 4,
+        av: 9,
+        skills: "",
+      };
       const players = Array.from({ length: 11 }, (_, i) => ({
         teamId: team.id,
         name: `${name} ${i + 1}`,
-        position: isOrc
-          ? "orc_trois_quart_orque"
-          : isUndead
-            ? "undead_trois_quart_zombie"
-            : "Lineman",
+        position: lineman.position,
         number: i + 1,
-        ma: isOrc ? 5 : isUndead ? 4 : 6,
+        ma: lineman.ma,
         st: 3,
-        ag: isUndead ? 4 : 3,
-        pa: isUndead ? 6 : 4,
-        av: isOrc ? 10 : 9,
-        skills: isUndead ? "regeneration" : "",
+        ag: lineman.ag,
+        pa: lineman.pa,
+        av: lineman.av,
+        skills: lineman.skills,
       }));
       await prisma.teamPlayer.createMany({ data: players });
 
@@ -996,24 +1036,112 @@ if (process.env.TEST_SQLITE === "1") {
         category: string;
       }> = [
         // Table « Compétence Principale au hasard » — Agilité (p.121).
-        { slug: "catch", nameFr: "Réception", nameEn: "Catch", category: "Agility" },
-        { slug: "diving-catch", nameFr: "Réception Plongeante", nameEn: "Diving Catch", category: "Agility" },
-        { slug: "diving-tackle", nameFr: "Tacle Plongeant", nameEn: "Diving Tackle", category: "Agility" },
-        { slug: "dodge", nameFr: "Esquive", nameEn: "Dodge", category: "Agility" },
-        { slug: "defensive", nameFr: "Défenseur", nameEn: "Defensive", category: "Agility" },
-        { slug: "hit-and-run", nameFr: "Frappe-et-court", nameEn: "Hit and Run", category: "Agility" },
-        { slug: "jump-up", nameFr: "Rétablissement", nameEn: "Jump Up", category: "Agility" },
+        {
+          slug: "catch",
+          nameFr: "Réception",
+          nameEn: "Catch",
+          category: "Agility",
+        },
+        {
+          slug: "diving-catch",
+          nameFr: "Réception Plongeante",
+          nameEn: "Diving Catch",
+          category: "Agility",
+        },
+        {
+          slug: "diving-tackle",
+          nameFr: "Tacle Plongeant",
+          nameEn: "Diving Tackle",
+          category: "Agility",
+        },
+        {
+          slug: "dodge",
+          nameFr: "Esquive",
+          nameEn: "Dodge",
+          category: "Agility",
+        },
+        {
+          slug: "defensive",
+          nameFr: "Défenseur",
+          nameEn: "Defensive",
+          category: "Agility",
+        },
+        {
+          slug: "hit-and-run",
+          nameFr: "Frappe-et-court",
+          nameEn: "Hit and Run",
+          category: "Agility",
+        },
+        {
+          slug: "jump-up",
+          nameFr: "Rétablissement",
+          nameEn: "Jump Up",
+          category: "Agility",
+        },
         { slug: "leap", nameFr: "Saut", nameEn: "Leap", category: "Agility" },
-        { slug: "safe-pair-of-hands", nameFr: "Libération", nameEn: "Safe Pair of Hands", category: "Agility" },
-        { slug: "sidestep", nameFr: "Glissade Contrôlée", nameEn: "Sidestep", category: "Agility" },
-        { slug: "sprint", nameFr: "Sprint", nameEn: "Sprint", category: "Agility" },
-        { slug: "sure-feet", nameFr: "Équilibre", nameEn: "Sure Feet", category: "Agility" },
+        {
+          slug: "safe-pair-of-hands",
+          nameFr: "Libération",
+          nameEn: "Safe Pair of Hands",
+          category: "Agility",
+        },
+        {
+          slug: "sidestep",
+          nameFr: "Glissade Contrôlée",
+          nameEn: "Sidestep",
+          category: "Agility",
+        },
+        {
+          slug: "sprint",
+          nameFr: "Sprint",
+          nameEn: "Sprint",
+          category: "Agility",
+        },
+        {
+          slug: "sure-feet",
+          nameFr: "Équilibre",
+          nameEn: "Sure Feet",
+          category: "Agility",
+        },
         // Traits de base du Trois-quart Gobelin.
-        { slug: "right-stuff", nameFr: "Poids Plume", nameEn: "Right Stuff", category: "Trait" },
-        { slug: "stunty", nameFr: "Minus", nameEn: "Stunty", category: "Trait" },
+        {
+          slug: "right-stuff",
+          nameFr: "Poids Plume",
+          nameEn: "Right Stuff",
+          category: "Trait",
+        },
+        {
+          slug: "stunty",
+          nameFr: "Minus",
+          nameEn: "Stunty",
+          category: "Trait",
+        },
         // Traits de base des Trois-quarts morts-vivants (Squelette, Zombie).
-        { slug: "regeneration", nameFr: "Régénération", nameEn: "Regeneration", category: "Trait" },
-        { slug: "thick-skull", nameFr: "Crâne Épais", nameEn: "Thick Skull", category: "General" },
+        {
+          slug: "regeneration",
+          nameFr: "Régénération",
+          nameEn: "Regeneration",
+          category: "Trait",
+        },
+        {
+          slug: "thick-skull",
+          nameFr: "Crâne Épais",
+          nameEn: "Thick Skull",
+          category: "General",
+        },
+        // Traits du Trois-Quart Putrescent (Nurgle) : Contagieux, Décomposition.
+        {
+          slug: "contagieux",
+          nameFr: "Contagieux",
+          nameEn: "Plague Ridden",
+          category: "Trait",
+        },
+        {
+          slug: "decay",
+          nameFr: "Décomposition",
+          nameEn: "Decay",
+          category: "Trait",
+        },
       ];
       // Morts-Vivants : roster porteur de « Maîtres de la Non-vie », avec ses
       // DEUX Trois-quarts (Squelette, Zombie) — le cas « Relever le Mort » des
@@ -1050,6 +1178,26 @@ if (process.env.TEST_SQLITE === "1") {
           primarySkills: "G,K",
           secondarySkills: "A,S",
           skills: ["regeneration"],
+        },
+      ];
+      // Nurgle : PAS Maîtres de la Non-vie, mais chaque joueur porte le Trait
+      // Contagieux — la seconde source de joueur relevé, déclenchée sur un
+      // blocage et embauchée au prix du poste. Un seul Trois-quart.
+      const NURGLE_LINEMEN = [
+        {
+          slug: "nurgle_trois_quart_putrescent",
+          displayName: "Trois-Quart Putrescent",
+          cost: 40,
+          max: 16,
+          ma: 5,
+          st: 3,
+          ag: 4,
+          pa: 6,
+          av: 9,
+          keywords: "Humain, Trois-quart",
+          primarySkills: "G,M",
+          secondarySkills: "A,S,P",
+          skills: ["contagieux", "decay"],
         },
       ];
       for (const ruleset of rulesets) {
@@ -1121,6 +1269,23 @@ if (process.env.TEST_SQLITE === "1") {
           },
         });
         await seedLinemen(undead.id, UNDEAD_LINEMEN);
+        const nurgle = await prisma.roster.upsert({
+          where: { slug_ruleset: { slug: "nurgle", ruleset } },
+          update: {
+            budget: 1000,
+            specialRules: "bagarreurs_brutaux,favori_de",
+          },
+          create: {
+            slug: "nurgle",
+            ruleset,
+            name: "Nurgle",
+            nameEn: "Nurgle",
+            budget: 1000,
+            tier: "III",
+            specialRules: "bagarreurs_brutaux,favori_de",
+          },
+        });
+        await seedLinemen(nurgle.id, NURGLE_LINEMEN);
       }
 
       // Seed les feature flags de base. Les pages /play, /lobby, /waiting,
@@ -1202,7 +1367,7 @@ if (process.env.TEST_SQLITE === "1") {
       return res.json({
         ok: true,
         rulesets,
-        rosters: [...rosters.map((r) => r.slug), "orc", "undead"],
+        rosters: [...rosters.map((r) => r.slug), "orc", "undead", "nurgle"],
         flags: flagSeeds.map((f) => f.key),
       });
     } catch (e: unknown) {

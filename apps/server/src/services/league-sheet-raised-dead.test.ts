@@ -152,9 +152,9 @@ describe("isBigGuyVictim", () => {
   });
 
   it("sans mots-clés, l'heuristique du moteur (Solitaire) tranche", () => {
-    expect(isBigGuyVictim({ keywords: null, skills: "loner-4,bone-head" })).toBe(
-      true,
-    );
+    expect(
+      isBigGuyVictim({ keywords: null, skills: "loner-4,bone-head" }),
+    ).toBe(true);
     expect(isBigGuyVictim({ skills: "block,dodge" })).toBe(false);
     expect(isBigGuyVictim({ keywords: undefined, skills: null })).toBe(false);
   });
@@ -330,11 +330,31 @@ describe("eligibleRaiseVictims — Trait Contagieux", () => {
     const out = eligibleRaiseVictims({
       side: "home",
       injuries: [
-        { ...DEAD_A1, playerId: "foul", cause: "aggression", causedByPlayerId: "h1" },
-        { ...DEAD_A1, playerId: "crowd", cause: "crowd_surge", causedByPlayerId: null },
-        { ...DEAD_A1, playerId: "fall", cause: "other_elim", causedByPlayerId: null },
+        {
+          ...DEAD_A1,
+          playerId: "foul",
+          cause: "aggression",
+          causedByPlayerId: "h1",
+        },
+        {
+          ...DEAD_A1,
+          playerId: "crowd",
+          cause: "crowd_surge",
+          causedByPlayerId: null,
+        },
+        {
+          ...DEAD_A1,
+          playerId: "fall",
+          cause: "other_elim",
+          causedByPlayerId: null,
+        },
         { ...DEAD_A1, playerId: "self", cause: "self", causedByPlayerId: null },
-        { ...DEAD_A1, playerId: "blitz", cause: "blitz", causedByPlayerId: "h1" },
+        {
+          ...DEAD_A1,
+          playerId: "blitz",
+          cause: "blitz",
+          causedByPlayerId: "h1",
+        },
       ],
       opponents: [
         opponent({ id: "foul" }),
@@ -353,7 +373,11 @@ describe("eligibleRaiseVictims — Trait Contagieux", () => {
     const out = eligibleRaiseVictims({
       side: "home",
       injuries: [
-        { ...BLOCKED_A1, playerId: "byStar", causedByPlayerId: "star-home-guffle" },
+        {
+          ...BLOCKED_A1,
+          playerId: "byStar",
+          causedByPlayerId: "star-home-guffle",
+        },
         { ...BLOCKED_A1, playerId: "byClean", causedByPlayerId: "h2" },
         { ...BLOCKED_A1, playerId: "noActor", causedByPlayerId: null },
         { ...BLOCKED_A1, playerId: "byStranger", causedByPlayerId: "a9" },
@@ -389,7 +413,11 @@ describe("eligibleRaiseVictims — Trait Contagieux", () => {
         { ...BLOCKED_A1, playerId: "ok" },
       ],
       opponents: [
-        opponent({ id: "troll", keywords: "Troll, Gros Bras", stats: { st: 5 } }),
+        opponent({
+          id: "troll",
+          keywords: "Troll, Gros Bras",
+          stats: { st: 5 },
+        }),
         // Sans mots-clés : Solitaire vaut Gros Bras (heuristique du moteur).
         opponent({ id: "loner", skills: "loner-4,bone-head" }),
         opponent({ id: "rotter", skills: "contagieux,decay" }),
@@ -412,14 +440,15 @@ describe("eligibleRaiseVictims — Trait Contagieux", () => {
   it("avec les deux règles, la gratuite (Maîtres) l'emporte quand elle s'applique", () => {
     const out = eligibleRaiseVictims({
       side: "home",
-      injuries: [
-        BLOCKED_A1,
-        { ...BLOCKED_A1, playerId: "strong" },
-      ],
+      injuries: [BLOCKED_A1, { ...BLOCKED_A1, playerId: "strong" }],
       opponents: [
         opponent({ id: "a1" }),
         // Force 5 : hors Maîtres, mais contaminable.
-        opponent({ id: "strong", stats: { st: 5 }, keywords: "Humain, Bloqueur" }),
+        opponent({
+          id: "strong",
+          stats: { st: 5 },
+          keywords: "Humain, Bloqueur",
+        }),
       ],
       sources: ["masters_of_undeath", "plague_ridden"],
       own: [own({ id: "h1", skills: "plague-ridden,loner-4" })],
