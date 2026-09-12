@@ -449,6 +449,33 @@ match tant que la liste < 16) est portée par `services/league-sheet-raised-dead
   journalier relu après rechargement redevenait un achat de joueur sans poste.
   Extrait en module pur (`sheet/purchases.ts`), il conserve chaque type.
 
+**Contagieux (Nurgle) est la SECONDE SOURCE du même joueur**, pas une
+quatrième famille. `RaiseSource = masters_of_undeath | plague_ridden` : la
+source n'est PAS stockée, elle se redérive de l'éligibilité de la victime
+(la gratuite l'emporte si les deux s'appliquent — Morts-Vivants avec Guffle
+Pussmaw). Ce qui diffère, et rien d'autre :
+
+- **Déclencheur** : un résultat Mort sur un BLOCAGE (`InjuredPlayer.cause` =
+  `casualty` / `block` / `blitz`) dont `causedByPlayerId` est un joueur du
+  côté porteur du Trait — `eligibleRaiseVictims` reçoit donc `own` en plus
+  de `opponents`, et `sideSheetPlayers` sert les deux côtés. Une agression
+  mortelle ne contamine pas.
+- **Exclusions** : ni Gros Bras, ni Décomposition (`decay`), ni Régénération,
+  ni Minus — pas de plafond de Force. Gros Bras est un MOT-CLÉ de poste
+  (`Position.keywords` base d'abord, `KEYWORDS_SEASON3`, table des Star
+  Players) ; l'heuristique Solitaire du moteur ne sert que sans mots-clés,
+  jamais pour un Star Player (Solitaire sans être Gros Bras).
+- **Deux slugs pour un Trait** : `contagieux` (roster Nurgle Saison 3) et
+  `plague-ridden` (catalogue antérieur, Star Players) — `hasPlagueRiddenTrait`
+  connaît les deux.
+- **Prix** : « de la même manière que les Joueurs Journaliers » = AU PRIX du
+  poste plus le surcoût d'évolution (`hireCost`), jamais gratuit ; le montant
+  saisi est ignoré dans les deux sens (`purchasesGoldDelta`).
+- **Barème du CÔTÉ** : Nurgle porte Bagarreurs Brutaux, donc en Ligue un TD
+  du Contaminé vaut 2 PSP et une sortie 3 — piège rencontré en écrivant la
+  spec e2e (`leagues-sheet-contagious-nurgle.spec.ts`, fixture roster
+  `nurgle` sans Maîtres de la Non-vie).
+
 ### Gel « version du match » : tout, dès l'OUVERTURE de la feuille
 
 Un gel partiel (en-tête seul) ou tardif (1re soumission) laisse une fenêtre
@@ -1521,6 +1548,12 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (`raised-<side>-1`), choix stocké / joueur dérivé, achat `raised_dead`
   gratuit à valeur pleine, bandeau web + pickers + évolutions, fixtures e2e
   `undead`. Change OpenSpec `raise-the-dead-masters-of-undeath`.
+- **2026-09-12** : **Contagieux (Nurgle) — seconde source de joueur relevé** :
+  même joueur synthétique, autre déclencheur (blocage mortel d'un porteur du
+  Trait, exclusions Gros Bras / Décomposition / Régénération / Minus), autre
+  prix (embauche au prix du poste, comme un journalier) ; source redérivée,
+  aucune colonne nouvelle ; vocabulaire ☣️ Contaminé côté web ; fixtures e2e
+  `nurgle`. Change OpenSpec `contagious-plague-ridden`.
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures

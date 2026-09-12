@@ -156,13 +156,11 @@ câblées. Restent :
 
 Source : `raise-the-dead-masters-of-undeath` (2026-09-11).
 
-- **Trait Contagieux (Nurgle)** : même recrutement d'un Trois-quart relevé,
-  mais déclenché sur un BLOCAGE du porteur du Trait, une fois par match, et
-  seulement si la victime n'a ni Décomposition, ni Régénération, ni Minus
-  (ni Gros Bras). La dérivation `league-sheet-raised-dead` est prête à
-  recevoir une seconde source d'éligibilité ; il manque la lecture de
-  `causedByPlayerId` + cause « block » et les Traits du causeur / de la
-  victime.
+- ~~**Trait Contagieux (Nurgle)**~~ — livré par `contagious-plague-ridden`
+  (2026-09-12) : seconde source `plague_ridden` du même joueur relevé.
+- **Deux relevés sur le même côté** quand les deux règles jouent dans le même
+  match (Morts-Vivants qui engagent Guffle Pussmaw) : un seul choix par côté,
+  la victime gratuite étant préférée. Source `contagious-plague-ridden`.
 - **Blessures durables du relevé pendant le match** : s'il est recruté, ses
   blessures de la rencontre ne sont pas reportées sur le `TeamPlayer` créé
   (même limite que le journalier recruté).
