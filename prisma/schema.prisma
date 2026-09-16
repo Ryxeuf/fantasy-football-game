@@ -1986,6 +1986,14 @@ model LeagueMatchSheet {
   raisedDeadHome         Json?
   raisedDeadAway         Json?
 
+  /// Haine (X) — Mot-cle retenu par joueur blesse :
+  /// [{ victimPlayerId, keyword }]. Les CANDIDATS au jet (victime, auteur,
+  /// mots-cles eligibles) sont DERIVES a la lecture des evenements et des
+  /// mots-cles de l'auteur ; seul le choix est stocke. Un choix devenu
+  /// ineligible est ignore (repli sur le premier mot-cle), cf.
+  /// services/league-sheet-hate-choices.ts.
+  hateChoices            Json?
+
   /// Version de la regle « une sortie est une elimination qui rapporte des
   /// PSP » sous laquelle cette feuille a ete VALIDEE. null = feuille validee
   /// avant la regle (ou jamais validee) : ses compteurs persistes sont

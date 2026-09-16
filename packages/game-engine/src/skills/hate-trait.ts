@@ -88,14 +88,45 @@ export function eligibleHateKeywords(
 }
 
 /**
- * Mot-clé retenu pour X : le premier éligible (la lignée). La règle n'en
- * accorde qu'un ; prendre le premier garde le résultat déterministe et
- * reproductible d'une validation à l'autre.
+ * Mot-clé retenu pour X à DÉFAUT de choix : le premier éligible (la lignée).
+ * La règle n'en accorde qu'un ; prendre le premier garde le résultat
+ * déterministe et reproductible d'une validation à l'autre.
  */
 export function pickHateKeyword(
   keywordsCsv: string | null | undefined,
 ): string | null {
   return eligibleHateKeywords(keywordsCsv)[0] ?? null;
+}
+
+/**
+ * Mot-clé retenu pour X, en tenant compte du CHOIX du coach.
+ *
+ * Un joueur porte souvent plusieurs lignées — un Zombie est *Humain* ET
+ * *Morts-Vivants* — et haïr l'une ou l'autre ne recouvre pas les mêmes
+ * adversaires au reste de la saison : c'est un choix, pas un défaut de
+ * catalogue. `preferred` l'emporte s'il figure parmi les éligibles de
+ * l'auteur ; sinon on retombe sur `pickHateKeyword`.
+ *
+ * La comparaison est NORMALISÉE (`normalizeKeyword`) : « morts-vivants »,
+ * « Morts Vivants » et « MORTS_VIVANTS » désignent le même mot-clé, et c'est
+ * la graphie du CATALOGUE qui est retournée — c'est elle qui compose le slug
+ * et le libellé du trait.
+ *
+ * Un choix devenu ineligible (l'auteur de la sortie a été corrigé depuis) est
+ * ignoré silencieusement plutôt que de faire échouer une validation : une
+ * feuille sans choix se comporte exactement comme avant.
+ */
+export function resolveHateKeyword(
+  keywordsCsv: string | null | undefined,
+  preferred?: string | null,
+): string | null {
+  const eligible = eligibleHateKeywords(keywordsCsv);
+  if (preferred) {
+    const wanted = normalizeKeyword(preferred);
+    const match = eligible.find((k) => normalizeKeyword(k) === wanted);
+    if (match) return match;
+  }
+  return eligible[0] ?? null;
 }
 
 /**

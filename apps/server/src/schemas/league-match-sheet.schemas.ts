@@ -331,6 +331,29 @@ export const raiseDeadSchema = z.object({
 });
 export type RaiseDeadBody = z.infer<typeof raiseDeadSchema>;
 
+/**
+ * Haine (X) — Mot-clé retenu pour un joueur blessé. `keyword: null` retire le
+ * choix (retour au premier Mot-clé éligible de celui qui l'a blessé). Le
+ * serveur revalide l'entrée contre les candidats DÉRIVÉS de la feuille : ni
+ * le joueur ni le Mot-clé ne sont pris sur parole.
+ */
+export const hateChoicesSchema = z.object({
+  choices: z
+    .array(
+      z.object({
+        victimPlayerId: z.string().min(1).max(64),
+        keyword: z.string().max(64).nullable(),
+      }),
+    )
+    .min(1, "Au moins un choix requis")
+    .max(32)
+    .refine(
+      (l) => new Set(l.map((e) => e.victimPlayerId)).size === l.length,
+      "Un seul Mot-clé haï par joueur",
+    ),
+});
+export type HateChoicesBody = z.infer<typeof hateChoicesSchema>;
+
 export const invalidateSheetSchema = z.object({
   reason: z.string().max(500).optional(),
   // Deblocage « advancement-consumed » : retire aussi les evolutions

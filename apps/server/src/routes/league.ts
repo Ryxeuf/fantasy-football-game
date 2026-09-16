@@ -173,6 +173,7 @@ import {
   removeEvent as removeMatchSheetEvent,
   updatePreMatch,
   updateRaisedDead,
+  updateHateChoices,
   updatePostMatch,
   submitByCoach,
   unsubmitByCoach,
@@ -188,7 +189,9 @@ import {
   addEventSchema,
   preMatchSchema,
   raiseDeadSchema,
+  hateChoicesSchema,
   type RaiseDeadBody,
+  type HateChoicesBody,
   postMatchSchema,
   invalidateSheetSchema,
   type AddEventBody,
@@ -381,7 +384,8 @@ function domainError(res: Response, e: unknown): void {
         ? 404
         : e.code === "forbidden" ||
             e.code === "not_a_participant" ||
-            e.code === "raise_dead_wrong_side"
+            e.code === "raise_dead_wrong_side" ||
+            e.code === "hate_wrong_side"
           ? 403
           : e.code === "already_validated" ||
               e.code === "not_validated" ||
@@ -2324,6 +2328,34 @@ export async function handleUpdateRaiseDead(
 }
 
 /**
+ * PATCH /leagues/pairings/:pairingId/sheet/hate-choices
+ *
+ * Haine (X) — le coach retient le Mot-clé haï par un de ses joueurs blessés,
+ * parmi ceux de l'adversaire qui l'a mis sur la touche (`keyword: null`
+ * revient au premier Mot-clé). Réservé au coach du côté du BLESSÉ et au
+ * commissaire, tant que la feuille n'est pas validée ; le service revalide
+ * chaque entrée contre les candidats dérivés de la feuille.
+ */
+export async function handleUpdateHateChoices(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body: HateChoicesBody = req.body;
+  try {
+    const sheet = await updateHateChoices({
+      pairingId: req.params.pairingId,
+      userId,
+      choices: body.choices,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
  * POST /leagues/pairings/:pairingId/sheet/journeymen/:journeymanId/roll-random-primary
  *
  * Tirage « Compétence Principale au hasard » d'un journalier de la feuille
@@ -3276,6 +3308,13 @@ router.patch(
   authUser,
   validate(raiseDeadSchema),
   handleUpdateRaiseDead,
+);
+// Haine (X) — Mot-clé haï choisi parmi ceux de l'adversaire qui a blessé.
+router.patch(
+  "/pairings/:pairingId/sheet/hate-choices",
+  authUser,
+  validate(hateChoicesSchema),
+  handleUpdateHateChoices,
 );
 router.post(
   "/pairings/:pairingId/sheet/events",

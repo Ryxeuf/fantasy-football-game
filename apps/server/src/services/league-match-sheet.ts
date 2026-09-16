@@ -26,6 +26,7 @@ import {
   computeMatchWinnings,
   computeStalledTeams,
   type MatchEventInput,
+  type MatchEventTeam,
   type MatchSummary,
   type MatchSummaryOptions,
   type InjurySeverity,
@@ -48,6 +49,7 @@ import {
 } from "./league-offline-edit";
 import {
   buildHateCandidates,
+  hateInjuryTriggersRoll,
   buildSheetKeywordMap,
   parseHateRolls,
   type HateInjuryInput,
@@ -160,6 +162,12 @@ import {
 } from "./league-sheet-journeyman-advancements";
 import { serverLog } from "../utils/server-log";
 import {
+  buildHateCandidateViews,
+  mergeHateChoices,
+  parseHateChoices,
+  type HateCandidateView,
+} from "./league-sheet-hate-choices";
+import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
   canPurchaseInducement,
@@ -187,6 +195,7 @@ import {
   type TournamentRulesetDefinition,
   KEYWORDS_SEASON3,
   getStarPlayerKeywords,
+  normalizeKeyword,
 } from "@bb/game-engine";
 import {
   applyPackInducementRules,
@@ -549,7 +558,10 @@ export class MatchSheetError extends Error {
       | "raise_dead_not_allowed"
       | "raise_dead_wrong_side"
       | "raise_dead_invalid_victim"
-      | "raise_dead_invalid_position",
+      | "raise_dead_invalid_position"
+      | "hate_wrong_side"
+      | "hate_invalid_candidate"
+      | "hate_invalid_keyword",
     message: string,
   ) {
     super(message);
@@ -1242,6 +1254,75 @@ export async function updatePreMatch(input: {
 }
 
 /**
+ * Haine (X) — retient le Mot-clé haï pour un joueur blessé de la feuille.
+ *
+ * Le CHOIX est stocké, le candidat reste DÉRIVÉ : on revalide donc l'entrée
+ * contre les candidats du moment (l'auteur de la sortie a pu être corrigé
+ * depuis). `keyword: null` retire le choix — retour au premier mot-clé.
+ *
+ * Chaque coach ne choisit que pour SON équipe : le trait est un acquis de son
+ * joueur. Le commissaire corrige les deux côtés. Le PATCH FUSIONNE avec les
+ * choix déjà posés — écraser la colonne effacerait celui de l'adversaire.
+ */
+export async function updateHateChoices(input: {
+  pairingId: string;
+  userId: string;
+  choices: ReadonlyArray<{ victimPlayerId: string; keyword: string | null }>;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  const side = coachSide(ctx, input.userId);
+  const commissioner = isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  const sheet = await loadSheetOrThrow(ctx);
+  ensureEditable(sheet.status);
+
+  const { hateCandidates } = await getMatchSheet({
+    pairingId: input.pairingId,
+    userId: input.userId,
+  });
+  const byVictim = new Map(hateCandidates.map((c) => [c.victimPlayerId, c]));
+
+  for (const entry of input.choices) {
+    const candidate = byVictim.get(entry.victimPlayerId);
+    if (!candidate) {
+      throw new MatchSheetError(
+        "hate_invalid_candidate",
+        `Le joueur ${entry.victimPlayerId} n'est pas candidat au jet de Haine sur cette feuille`,
+      );
+    }
+    if (!commissioner && side !== candidate.side) {
+      throw new MatchSheetError(
+        "hate_wrong_side",
+        "Chaque coach ne choisit le Mot-cle hai que pour ses propres joueurs",
+      );
+    }
+    if (entry.keyword === null) continue;
+    const known = candidate.keywords.some(
+      (k) => normalizeKeyword(k) === normalizeKeyword(entry.keyword as string),
+    );
+    if (!known) {
+      throw new MatchSheetError(
+        "hate_invalid_keyword",
+        `« ${entry.keyword} » n'est pas un Mot-cle de l'adversaire qui a blesse ce joueur`,
+      );
+    }
+  }
+
+  const merged = mergeHateChoices({
+    current: parseHateChoices((sheet as { hateChoices?: unknown }).hateChoices),
+    incoming: input.choices,
+    allowedVictimIds: new Set(byVictim.keys()),
+  });
+  return prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    // Chaine JSON : compatible colonne Json (PG) et miroir SQLite.
+    data: { hateChoices: merged.length > 0 ? JSON.stringify(merged) : null },
+  });
+}
+
+/**
  * Maitres de la Non-vie — le coach RELEVE un mort (ou y renonce).
  *
  * `victimId` designe l'adversaire tue a relever (`null` = annuler le
@@ -1866,6 +1947,103 @@ function collectPositionedSheetPlayers(
   return out;
 }
 
+/**
+ * Mots-clés par id de joueur de la feuille, à partir des équipes DÉJÀ
+ * dérivées (roster, journaliers alignés, Star Players engagés, joueur
+ * relevé). C'est la variante « lecture » de la construction faite à la
+ * validation : celle-ci repart des colonnes brutes parce qu'elle n'a pas
+ * encore dérivé les équipes, celle-là réutilise ce que `getMatchSheet` a
+ * déjà en main. Même source de mots-clés dans les deux cas
+ * (`buildSheetKeywordMap` : base d'abord, moteur en repli).
+ *
+ * Best-effort : une résolution en échec ne fait perdre que la PROPOSITION
+ * des mots-clés, jamais l'affichage de la feuille.
+ */
+async function keywordMapFromDerivedTeams(
+  teams: MatchSheetTeamsBySide,
+): Promise<ReadonlyMap<string, string>> {
+  const positionedPlayers: Array<{ id: string; position: string }> = [];
+  const starPlayerIds: string[] = [];
+  for (const team of [teams.home, teams.away]) {
+    if (!team) continue;
+    for (const p of team.players) {
+      positionedPlayers.push({ id: p.id, position: p.position });
+    }
+    for (const j of team.journeymen ?? []) {
+      positionedPlayers.push({ id: j.id, position: j.position });
+    }
+    if (team.raisedDead) {
+      positionedPlayers.push({
+        id: team.raisedDead.id,
+        position: team.raisedDead.position,
+      });
+    }
+    for (const sp of team.starPlayersHired ?? []) starPlayerIds.push(sp.id);
+  }
+  try {
+    return await buildSheetKeywordMap({ positionedPlayers, starPlayerIds });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.warn(
+      `[league-match-sheet] mots-cles (Haine) indisponibles a la lecture: ${msg}`,
+    );
+    return new Map();
+  }
+}
+
+/**
+ * Blessures persistables de la feuille, et candidats au jet de Haine.
+ *
+ * UNE seule dérivation, partagée par la VALIDATION (qui les applique) et par
+ * la LECTURE (qui propose les mots-clés de Haine au choix) : deux dérivations
+ * finiraient par diverger, et un coach verrait un candidat que la validation
+ * ignore — ou l'inverse.
+ *
+ * La sévérité de la feuille (`badly_hurt` / `mng` / `niggling` / `stat_loss`
+ * / `dead`) devient un type de blessure officiel via le `meta.stat` de
+ * l'évènement source ; les victimes SYNTHÉTIQUES (journaliers, Star Players,
+ * relevé) en sont exclues — elles n'ont pas de ligne `TeamPlayer`. L'AUTEUR,
+ * lui, peut être synthétique : se faire sortir par un Star Player donne un
+ * ennemi comme un autre.
+ */
+export function buildSheetInjuryInputs(
+  summary: MatchSummary,
+  eventsForMeta: ReadonlyArray<MatchEventInput & { meta?: unknown }>,
+): {
+  injuries: OfflineInjuryInput[];
+  /** Victime + auteur + côté, avant filtrage du type (fait par `buildHateCandidates`). */
+  hateInjuries: Array<HateInjuryInput & { side: MatchEventTeam }>;
+} {
+  const injuries: OfflineInjuryInput[] = [];
+  const hateInjuries: Array<HateInjuryInput & { side: MatchEventTeam }> = [];
+  for (const inj of summary.injuries) {
+    if (isSyntheticSheetPlayerId(inj.playerId)) continue;
+    // A62 — la victime d'un other_elim est portee par actorPlayerId
+    // (auto-elimination sans cible) : on matche acteur OU cible.
+    const src = eventsForMeta.find(
+      (e) =>
+        (e.targetPlayerId === inj.playerId ||
+          e.actorPlayerId === inj.playerId) &&
+        (e.injurySeverity as string | null) === inj.severity,
+    );
+    const metaStat =
+      src && src.meta && typeof src.meta === "object"
+        ? (((src.meta as Record<string, unknown>).stat as string | undefined) ??
+          null)
+        : null;
+    const type = mapInjurySeverity(inj.severity, metaStat);
+    if (!type) continue;
+    injuries.push({ teamPlayerId: inj.playerId, type });
+    hateInjuries.push({
+      victimPlayerId: inj.playerId,
+      causerPlayerId: inj.causedByPlayerId ?? null,
+      injuryType: type,
+      side: inj.side,
+    });
+  }
+  return { injuries, hateInjuries };
+}
+
 export function buildOfflineInputFromSummary(
   pairingId: string,
   summary: MatchSummary,
@@ -1896,6 +2074,8 @@ export function buildOfflineInputFromSummary(
     purchasesAway?: unknown;
     /** Licenciements de fin de match : [teamPlayerId]. */
     firedPlayerIds?: unknown;
+    /** Haine (X) — mot-cle retenu par joueur blesse. */
+    hateChoices?: unknown;
   },
   eventsForMeta: ReadonlyArray<MatchEventInput & { meta?: unknown }>,
   /**
@@ -1943,37 +2123,10 @@ export function buildOfflineInputFromSummary(
 
   // Map stat de blessure via meta de l'event source (best-effort : on
   // associe par targetPlayerId+severity au 1er event matchant).
-  const injuries: OfflineInjuryInput[] = [];
-  // Haine (X) : victime + auteur de la sortie, avant filtrage du type de
-  // blessure (fait par `buildHateCandidates`).
-  const hateInjuries: HateInjuryInput[] = [];
-  for (const inj of summary.injuries) {
-    if (isSyntheticSheetPlayerId(inj.playerId)) continue;
-    // A62 — la victime d'un other_elim est portee par actorPlayerId
-    // (auto-elimination sans cible) : on matche acteur OU cible.
-    const src = eventsForMeta.find(
-      (e) =>
-        (e.targetPlayerId === inj.playerId ||
-          e.actorPlayerId === inj.playerId) &&
-        (e.injurySeverity as string | null) === inj.severity,
-    );
-    const metaStat =
-      src && src.meta && typeof src.meta === "object"
-        ? (((src.meta as Record<string, unknown>).stat as string | undefined) ??
-          null)
-        : null;
-    const type = mapInjurySeverity(inj.severity, metaStat);
-    if (type) {
-      injuries.push({ teamPlayerId: inj.playerId, type });
-      // L'auteur PEUT etre synthetique (journalier, Star Player) : se
-      // faire sortir par un Star Player donne un ennemi comme un autre.
-      hateInjuries.push({
-        victimPlayerId: inj.playerId,
-        causerPlayerId: inj.causedByPlayerId ?? null,
-        injuryType: type,
-      });
-    }
-  }
+  const { injuries, hateInjuries } = buildSheetInjuryInputs(
+    summary,
+    eventsForMeta,
+  );
 
   return {
     pairingId,
@@ -2023,10 +2176,13 @@ export function buildOfflineInputFromSummary(
     firedPlayerIds: parseStringArray(sheet.firedPlayerIds).filter(
       (id) => !isSyntheticSheetPlayerId(id),
     ),
-    // Haine (X) : le D6 est jete a l'application (cf. league-hate-trait).
+    // Haine (X) : le D6 est jete a l'application (cf. league-hate-trait). Le
+    // mot-cle hai est celui CHOISI sur la feuille quand il est encore
+    // eligible ; sinon le premier mot-cle de l'auteur, comme avant.
     hateCandidates: buildHateCandidates({
       injuries: hateInjuries,
       keywordsByPlayerId,
+      choices: parseHateChoices(sheet.hateChoices),
     }),
   };
 }
@@ -2570,6 +2726,7 @@ export async function validateByCommissioner(input: {
       purchasesHome?: unknown;
       purchasesAway?: unknown;
       firedPlayerIds?: unknown;
+      hateChoices?: unknown;
     },
     events,
     { home: budget.home.pettyCash, away: budget.away.pettyCash },
@@ -4383,6 +4540,14 @@ export async function getMatchSheet(input: {
    * tant que la feuille n'est pas validée : le D6 est lancé à la validation.
    */
   hateRolls: readonly HateRoll[];
+  /**
+   * Haine (X) — joueurs candidats au jet, avec les mots-clés de celui qui les
+   * a blessés et le mot-clé retenu (choix stocké, sinon premier éligible).
+   * DÉRIVÉ des évènements à chaque lecture : une correction de l'auteur d'une
+   * sortie change les mots-clés proposés. Vide sur une feuille validée — le
+   * jet a déjà eu lieu, c'est `hateRolls` qui en rend compte.
+   */
+  hateCandidates: readonly HateCandidateView[];
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -4690,5 +4855,23 @@ export async function getMatchSheet(input: {
       sheet.status === "validated"
         ? await loadHateRollsForPairing(input.pairingId)
         : [],
+    // ... et rien a CHOISIR apres : le mot-cle est fige par le jet.
+    hateCandidates:
+      sheet.status === "validated"
+        ? []
+        : buildHateCandidateViews({
+            // Seules les blessures qui coutent le match suivant jettent :
+            // un mort n'a plus personne a hair, un Amoche revient des le
+            // prochain match. Meme predicat qu'a la validation.
+            injuries: buildSheetInjuryInputs(
+              summary,
+              events,
+            ).hateInjuries.filter((i) => hateInjuryTriggersRoll(i.injuryType)),
+            keywordsByPlayerId:
+              await keywordMapFromDerivedTeams(teamsWithRaisedDead),
+            choices: parseHateChoices(
+              (sheet as { hateChoices?: unknown }).hateChoices,
+            ),
+          }),
   };
 }
