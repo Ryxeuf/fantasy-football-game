@@ -25,8 +25,12 @@
  *   * topFutureStars : PSP gagnes sur la saison (recalcul depuis les agregats
  *                      d'events + MVP, barème `SPP_VALUES` partage, override
  *                      "Bagarreurs Brutaux" par roster).
- *   * topPunchingBags: eliminations subies (events de saison) ; repli proxy
- *                      "blessures durables" career hors saison.
+ *   * topPunchingBags: eliminations subies PORTANT UNE BLESSURE (events de
+ *                      saison) ; repli proxy "blessures durables" career hors
+ *                      saison. Volontairement plus large que les sorties
+ *                      infligees : un joueur sorti par une agression ou par le
+ *                      public l'est bel et bien, meme si personne n'en touche
+ *                      les PSP.
  *
  * Les joueurs sont filtres sur les teams inscrites a la saison.
  */
@@ -41,6 +45,7 @@ import {
 import { parseStringArrayJson } from "./pro-player-career-stats";
 import {
   eliminationEarnsSpp,
+  isInjurySeverity,
   type MatchEventInput,
   type MatchEventKind,
   type MatchSummaryOptions,
@@ -359,13 +364,18 @@ export async function computeLeaderboards(input: {
   const intCounts = new Map<string, number>();
   const casCounts = new Map<string, number>();
   let hasEvents = false;
-  // Types d'élimination subie comptés pour le "sac de frappe".
+  // Types d'élimination SUBIE comptés pour le « sac de frappe ». Plus large
+  // que les sorties infligées (`eliminationEarnsSpp`) : un joueur sorti par
+  // une agression ou par le public l'est bel et bien, même si personne n'en
+  // touche les PSP. L'atterrissage d'un coéquipier adverse sur sa case en est
+  // une aussi (« Vol Fatal » ne change que les PSP de son auteur).
   const SUFFERED_KINDS = new Set([
     "casualty",
     "crowd_surge",
     "aggression",
     "other_elim",
     "special_elim",
+    "ttm_landing",
   ]);
   try {
     const events = (await (
@@ -409,7 +419,15 @@ export async function computeLeaderboards(input: {
         if (e.kind === "aggression") bump(aggrCounts, e.actorPlayerId);
         if (e.kind === "team_throw") bump(throwCounts, e.actorPlayerId);
       }
-      if (e.targetPlayerId && SUFFERED_KINDS.has(e.kind)) {
+      // Une élimination SUBIE suppose une blessure consignée : une agression
+      // qui rate son effet, comme un blocage sans résultat, ne sort personne.
+      // Sans ce filtre, la victime d'une agression sans conséquence montait
+      // au classement du sac de frappe.
+      if (
+        e.targetPlayerId &&
+        SUFFERED_KINDS.has(e.kind) &&
+        isInjurySeverity(e.injurySeverity)
+      ) {
         bump(sufferedCounts, e.targetPlayerId);
       }
     }
@@ -584,7 +602,9 @@ export const LEADERBOARD_CATEGORIES: ReadonlyArray<{
   {
     key: "topBashers",
     label: "Meilleur castagneur",
-    description: "Plus de sorties infligees (sur blocage et autres).",
+    description:
+      "Plus de sorties infligées : les éliminations qui rapportent des PSP " +
+      "(blocage, et les exceptions nommées). Une agression compte ailleurs.",
   },
   {
     key: "topKillers",

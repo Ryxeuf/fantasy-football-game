@@ -291,7 +291,7 @@ describe("Lot J — league-player-stats", () => {
       mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
         { kind: "team_throw", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
         { kind: "casualty", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: "mng" },
-        { kind: "crowd_surge", actorPlayerId: null, targetPlayerId: "p2", injurySeverity: null },
+        { kind: "crowd_surge", actorPlayerId: null, targetPlayerId: "p2", injurySeverity: "badly_hurt" },
       ]);
       const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
       expect(cat.topTeamThrowers.map((r) => [r.playerId, r.value])).toEqual([
@@ -301,6 +301,59 @@ describe("Lot J — league-player-stats", () => {
       expect(cat.topPunchingBags.map((r) => [r.playerId, r.value])).toEqual([
         ["p2", 2],
       ]);
+    });
+
+    // Une élimination SUBIE suppose une blessure : une agression sans effet
+    // ne sort personne. Sans ce filtre, toute cible d'agression montait au
+    // classement du sac de frappe.
+    it("sac de frappe : une agression sans blessure ne compte pas", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+        player({ id: "p2", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "aggression", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
+        { kind: "casualty", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
+        { kind: "aggression", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: "mng" },
+      ]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topPunchingBags.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 1],
+      ]);
+    });
+
+    // « Vol Fatal » ne change que les PSP de l'auteur : l'adversaire plaqué
+    // par un atterrissage est sorti dans tous les cas.
+    it("sac de frappe : un atterrissage blessant compte comme élimination subie", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+        player({ id: "p2", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "ttm_landing", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: "badly_hurt" },
+      ]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topPunchingBags.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 1],
+      ]);
+      // Sans « Vol Fatal », l'auteur ne marque aucune sortie infligée.
+      expect(cat.topBashers).toEqual([]);
+    });
+
+    // Le libellé de la catégorie est lu par les coachs : il doit décrire la
+    // règle en vigueur, pas l'ancienne (« sur blocage et autres »).
+    it("le castagneur annonce la règle des PSP, pas « et autres »", () => {
+      const basher = LEADERBOARD_CATEGORIES.find(
+        (c) => c.key === "topBashers",
+      );
+      expect(basher?.description).toMatch(/rapportent des PSP/);
+      expect(basher?.description).not.toMatch(/et autres/);
     });
 
     it("classements events vides si le modèle est indisponible (tolérant)", async () => {

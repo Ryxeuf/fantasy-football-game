@@ -124,6 +124,18 @@ function normalizeSeverity(raw: unknown): InjurySeverity | null {
 }
 
 /**
+ * Une blessure est-elle consignée sur cet évènement ?
+ *
+ * PUR. C'est le préalable de TOUTE élimination : sans blessure, rien n'est
+ * sorti — ni infligé (`eliminationEarnsSpp`), ni subi (classement « sac de
+ * frappe »). Un seul vocabulaire de sévérités pour les deux lectures, sinon
+ * elles divergent au premier `stat_loss` oublié.
+ */
+export function isInjurySeverity(raw: unknown): raw is InjurySeverity {
+  return normalizeSeverity(raw) !== null;
+}
+
+/**
  * Auto-eliminations saisies SANS cible : la victime est l'acteur, dans sa
  * propre equipe, et personne n'« inflige » la sortie (pas de compteur
  * equipe ni de casualtiesInflicted, donc pas de SPP). `other_elim`
