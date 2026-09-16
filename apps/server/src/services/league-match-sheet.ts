@@ -20,6 +20,7 @@
 
 import { prisma } from "../prisma";
 import {
+  CASUALTY_RULE_VERSION,
   summarizeMatchSheet,
   isMatchEventKind,
   computeMatchWinnings,
@@ -2419,6 +2420,7 @@ export async function validateByCommissioner(input: {
         validatedById: input.userId,
         scoreHome: forfeitSide === "home" ? 0 : 2,
         scoreAway: forfeitSide === "away" ? 0 : 2,
+        casualtyRuleVersion: CASUALTY_RULE_VERSION,
       },
     });
     return {
@@ -2804,6 +2806,9 @@ export async function validateByCommissioner(input: {
       validatedById: input.userId,
       scoreHome: summary.scoreHome,
       scoreAway: summary.scoreAway,
+      // Sorties ecrites sous la regle COURANTE : cette feuille n'a pas a
+      // etre rattrapee (cf. league-season-casualty-heal).
+      casualtyRuleVersion: CASUALTY_RULE_VERSION,
       ...advData,
     },
   });

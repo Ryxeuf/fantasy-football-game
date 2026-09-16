@@ -181,6 +181,20 @@ export interface MatchSummaryOptions {
 }
 
 /**
+ * Version de la règle « une sortie est une élimination qui rapporte des PSP ».
+ *
+ * Elle vit ICI, à côté de la règle elle-même. Une feuille validée SOUS cette
+ * version porte le numéro dans `LeagueMatchSheet.casualtyRuleVersion` ; une
+ * feuille antérieure a `null` et doit être rattrapée (cf.
+ * `league-season-casualty-heal`). Le jour où la qualification d'une sortie
+ * change encore — une nouvelle compétence, une nouvelle Prière — on
+ * incrémente : les feuilles écrites sous l'ancienne version repassent au
+ * rattrapage, sans backfill de migration (`prisma/migrations/` est gitignoré
+ * ici, prod = `db push`).
+ */
+export const CASUALTY_RULE_VERSION = 1;
+
+/**
  * Une élimination rapporte-t-elle les PSP d'Élimination à son auteur ?
  *
  * C'est LA définition d'une « sortie » pour tout ce qui se compte : le

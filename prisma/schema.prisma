@@ -1986,6 +1986,15 @@ model LeagueMatchSheet {
   raisedDeadHome         Json?
   raisedDeadAway         Json?
 
+  /// Version de la regle « une sortie est une elimination qui rapporte des
+  /// PSP » sous laquelle cette feuille a ete VALIDEE. null = feuille validee
+  /// avant la regle (ou jamais validee) : ses compteurs persistes sont
+  /// rattrapes a la premiere lecture du classement de sa saison, puis la
+  /// colonne est ecrite (cf. services/league-season-casualty-heal.ts).
+  /// Nullable et lue avec repli : `prisma/migrations/` est gitignore ici
+  /// (prod = `db push`), aucun backfill n'est possible.
+  casualtyRuleVersion    Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

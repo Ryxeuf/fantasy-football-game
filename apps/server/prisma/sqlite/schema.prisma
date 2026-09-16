@@ -1428,6 +1428,8 @@ model LeagueMatchSheet {
   /// Maitres de la Non-vie — mort releve ({ victimId, position } | null).
   raisedDeadHome         Json?
   raisedDeadAway         Json?
+  /// Version de la regle des sorties sous laquelle la feuille a ete validee.
+  casualtyRuleVersion    Int?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
