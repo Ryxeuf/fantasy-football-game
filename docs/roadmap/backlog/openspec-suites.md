@@ -149,9 +149,29 @@ câblées. Restent :
   demande un picker « poussé par » sur `crowd_surge`, puis une entrée dans
   `eliminationEarnsSpp` — la sortie deviendrait alors une sortie (Sor+,
   cogneurs) pour le côté béni.
-- **Saisons clôturées** : `db:resync-sheet-casualties` les ignore (palmarès
-  persisté). À reprendre au cas par cas si une ligue close veut ses colonnes
-  Sor+/Sor- exactes.
+- **Saisons clôturées** : le rattrapage les ignore (palmarès persisté), que
+  ce soit par le script ou par le balayage automatique — la feuille est même
+  MARQUÉE comme traitée pour ne pas être retentée à chaque consultation. À
+  reprendre au cas par cas si une ligue close veut ses colonnes Sor+/Sor-
+  exactes : il faudrait rouvrir la saison, lire son classement, la reclôturer.
+
+## Rattrapage automatique des compteurs persistés
+
+Source : `casualty-count-and-hate-keyword-choice` (2026-09-16). Le rattrapage
+des sorties se déclenche seul à la lecture du classement, avec un marqueur
+versionné (`LeagueMatchSheet.casualtyRuleVersion`). Restent :
+
+- **Première lecture coûteuse** : sur une ligue ancienne, la première
+  consultation du classement resynchronise toutes ses feuilles d'un coup
+  (quelques requêtes par feuille). Acceptable une fois ; à surveiller si une
+  saison dépasse la cinquantaine de rencontres.
+- **`coach-championships` balaie saison par saison** : le palmarès d'un coach
+  appelle `computeSeasonStandings` pour chacune de ses saisons, donc une
+  requête de balayage par saison même une fois tout marqué. À regrouper si le
+  coût se voit.
+- **Le script d'opérateur reste** (`db:resync-sheet-casualties`) : seul chemin
+  pour une saison clôturée ou pour forcer une rencontre précise.
+
 ## Relever le Mort (Maîtres de la Non-vie)
 
 Source : `raise-the-dead-masters-of-undeath` (2026-09-11).
@@ -177,5 +197,6 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `fix-qa-log-2026-07` | `db-migrate.sh --seed` manuel + restart serveur + re-validation testeur |
 | `add-site-search`, `improve-league-match-sheet-ux` | Vérification visuelle sur staging |
 | `disable-offline-matches` | « Synchroniser depuis le code » dans `/admin/feature-flags` (ou passage de seed) pour créer la ligne `offline_match`. Sans elle la brique est déjà vue comme désactivée — la ligne sert à pouvoir la RALLUMER. |
-| `casualties-are-spp-eliminations` | `pnpm --filter @bb/server db:resync-sheet-casualties` (simulation : relire le rapport, une ligne par feuille dont les sorties bougent), puis `pnpm --filter @bb/server db:resync-sheet-casualties -- --apply`. Idempotent ; `-- --pairing <id>` pour une seule rencontre. |
+| ~~`casualties-are-spp-eliminations`~~ | **Plus rien à faire** depuis `casualty-count-and-hate-keyword-choice` : le rattrapage se déclenche à la première lecture du classement de chaque saison. Le script `db:resync-sheet-casualties` reste disponible pour une saison clôturée (que le balayage ignore) ou pour forcer une rencontre (`-- --pairing <id>`). |
 | `raise-the-dead-masters-of-undeath` | `prisma db push` (colonnes `LeagueMatchSheet.raisedDeadHome/Away`, nullables, aucun backfill). |
+| `casualty-count-and-hate-keyword-choice` | `prisma db push` (colonnes `LeagueMatchSheet.casualtyRuleVersion` et `hateChoices`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh` (étape 3/5). Puis ouvrir une fois le classement de chaque ligue active pour déclencher le rattrapage. |
