@@ -1616,6 +1616,16 @@ edition du `.json`, `pnpm --filter web typecheck` +
   prix (embauche au prix du poste, comme un journalier) ; source redérivée,
   aucune colonne nouvelle ; vocabulaire ☣️ Contaminé côté web ; fixtures e2e
   `nurgle`. Change OpenSpec `contagious-plague-ridden`.
+- **2026-09-16** : **Le rattrapage rejoint les compteurs persistés, Haine (X)
+  se choisit** — la règle des sorties était bonne depuis #1024, mais les
+  compteurs écrits à la validation (Sor+/Sor-, bonus, `totalCasualties`, PSP)
+  ne bougeaient pas : le rattrapage existait sans déclencheur autre qu'un
+  script jamais lancé. Il est désormais joué à la lecture du classement, sur
+  une fenêtre VERSIONNÉE (`casualtyRuleVersion`). Plus : le « sac de frappe »
+  exige une blessure consignée, et le mot-clé de Haine (X) se choisit parmi
+  ceux de l'adversaire (choix stocké, candidat dérivé). Change OpenSpec
+  `casualty-count-and-hate-keyword-choice`, récit
+  [`docs/roadmap/sessions/2026-09-16-casualty-heal-and-hate-keyword-choice.md`](./docs/roadmap/sessions/2026-09-16-casualty-heal-and-hate-keyword-choice.md).
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures

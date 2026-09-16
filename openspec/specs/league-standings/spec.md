@@ -7,6 +7,10 @@ l'API et rendu du tableau côté web. Les sorties du classement (Sor+/Sor-,
 bonus « sorties infligées ») et des classements individuels partagent la
 définition de la feuille de match : une élimination qui rapporte des PSP.
 
+Ces compteurs étant PERSISTÉS à la validation d'une feuille, la lecture du
+classement porte aussi leur rattrapage : une définition de la sortie qui
+change ne vaut que si les valeurs déjà écrites la rejoignent.
+
 ## Requirements
 
 ### Requirement: Colonnes étendues dérivées de la feuille de match
@@ -125,6 +129,9 @@ de la feuille de match (`eliminationEarnsSpp`, options par feuille :
 compétences du coup d'envoi et Prières). Les agressions restent comptées
 dans la colonne `Agr`, les sorties par le public dans `SP`.
 
+Le libellé de la catégorie « Meilleur castagneur » DOIT décrire cette règle,
+et non une définition antérieure plus large.
+
 #### Scenario: Validation d'une feuille avec agression
 - WHEN une feuille validée porte 4 Éliminations sur Blocage et 1 agression avec blessure pour le domicile
 - THEN le participant domicile DOIT recevoir `casualtiesFor + 4` (et non 5) et l'extérieur `casualtiesAgainst + 4`
@@ -139,3 +146,64 @@ dans la colonne `Agr`, les sorties par le public dans `SP`.
 - WHEN une feuille porte la Prière « Frénésie d'Agression » pour l'extérieur et un gel où le n°3 domicile a « Innovateur Violent »
 - THEN l'agression avec blessure de l'extérieur et l'Action Spéciale du n°3 domicile DOIVENT compter comme sorties dans les cogneurs de la saison
 - AND la même agression sur une autre feuille sans la prière NE DOIT PAS compter
+
+#### Scenario: Libellé du castagneur
+- WHEN le catalogue des classements individuels est servi
+- THEN la description du « Meilleur castagneur » DOIT dire que seules comptent les éliminations qui rapportent des PSP
+
+
+### Requirement: Éliminations SUBIES — plus large que les sorties, mais une blessure reste requise
+
+Le classement « Sac de frappe » compte les éliminations SUBIES par un joueur.
+Il est volontairement PLUS LARGE que les sorties infligées — un joueur sorti
+par une agression ou par le public l'est bel et bien, même si personne n'en
+touche les PSP — mais il NE DOIT compter qu'un évènement portant une blessure
+effectivement consignée. Un atterrissage de coéquipier sur un adversaire
+(Lancer de Coéquipier) qui le blesse DOIT y compter.
+
+#### Scenario: Agression sans blessure
+- WHEN une agression est consignée sans blessure
+- THEN sa cible NE DOIT PAS gagner une élimination subie
+
+#### Scenario: Agression avec blessure
+- WHEN une agression blesse sa cible sans Frénésie d'Agression
+- THEN la cible DOIT gagner une élimination subie, alors que son auteur NE DOIT PAS gagner de sortie infligée
+
+#### Scenario: Atterrissage blessant
+- WHEN un joueur lancé atterrit sur un adversaire et le blesse
+- THEN l'adversaire DOIT gagner une élimination subie
+
+### Requirement: Les sorties persistées se rattrapent d'elles-mêmes
+
+Une feuille de match de LIGUE validée avant la règle « une sortie est une
+élimination qui rapporte des PSP » a persisté des compteurs faux. La lecture
+du classement d'une saison DOIT rattraper ces feuilles, sans intervention
+d'opérateur, par la resynchronisation dédiée (compteurs des deux
+participants, `TeamPlayer.totalCasualties` et PSP, points bonus du pairing,
+snapshot du match) — idempotente et journalisée.
+
+Chaque feuille rattrapée, ou dont la resynchronisation est refusée par
+conception (saison clôturée, snapshot absent, rencontre de coupe), DOIT être
+marquée pour ne plus être revisitée. Une feuille validée sous la règle
+courante DOIT porter le marqueur dès sa validation. Le marqueur porte la
+VERSION de la règle, afin qu'un changement ultérieur de la définition d'une
+sortie remette les feuilles concernées au rattrapage sans backfill.
+
+Le rattrapage est BEST-EFFORT : son échec NE DOIT PAS empêcher de servir le
+classement.
+
+#### Scenario: Classement d'une saison portant une feuille antérieure
+- WHEN le classement d'une saison est lu et qu'une de ses feuilles validées ne porte pas le marqueur
+- THEN ses sorties DOIVENT être resynchronisées avant le calcul du classement, et la feuille marquée
+
+#### Scenario: Deuxième lecture
+- WHEN le même classement est lu à nouveau
+- THEN aucune resynchronisation NE DOIT être tentée
+
+#### Scenario: Feuille non validée
+- WHEN une feuille de la saison a été invalidée
+- THEN elle NE DOIT PAS être marquée : c'est sa revalidation qui posera le marqueur
+
+#### Scenario: Rattrapage en échec
+- WHEN la resynchronisation lève
+- THEN le classement DOIT être servi malgré tout

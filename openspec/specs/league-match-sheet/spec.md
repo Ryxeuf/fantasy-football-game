@@ -19,6 +19,12 @@ la Non-vie : le mort relevé) sont portées par la feuille comme des joueurs
 SYNTHÉTIQUES dérivés du choix stocké et des évènements — jamais persistés
 avant leur recrutement d'après-match, gratuit mais à valeur pleine.
 
+Ce qui se CHOISIT sur la feuille — le poste d'un journalier, le mort à
+relever, le Mot-clé haï d'un joueur mis sur la touche — est STOCKÉ seul : le
+reste (contingent, joueur relevé, candidats au jet de Haine et mots-clés
+proposés) se redérive des évènements à chaque lecture, et un choix devenu
+ineligible retombe silencieusement sur le défaut.
+
 ## Requirements
 
 ### Requirement: Coups de pouce accessibles par équipe
@@ -330,3 +336,45 @@ l'identifiant du journalier recruté.
 #### Scenario: Journalier relu après rechargement
 - WHEN la feuille est rechargée avec un achat `journeyman` portant `journeymanId`
 - THEN l'achat DOIT rester un recrutement de journalier avec le même identifiant
+
+### Requirement: Haine (X) — le mot-clé haï se choisit
+
+Un joueur qui gagne Haine (X) hait un Mot-clé de celui qui l'a blessé, et un
+joueur en porte souvent plusieurs (un Zombie est *Humain*, *Mort-Vivant* ET
+*Zombie*). La feuille DOIT exposer, pour chaque joueur candidat au jet de
+Haine — sorti pour au moins le match suivant par un adversaire identifié —
+l'auteur de sa blessure et TOUS ses mots-clés éligibles (les mots-clés de
+POSTE restent exclus), ainsi que le mot-clé qui sera retenu et si le choix
+stocké a été honoré.
+
+Le coach du côté de la VICTIME, ou le commissaire, DOIT pouvoir retenir l'un
+de ces mots-clés tant que la feuille est éditable ; un coach qui choisit pour
+un joueur adverse DOIT être refusé (403). Le choix est STOCKÉ
+(`LeagueMatchSheet.hateChoices`) ; les candidats restent DÉRIVÉS des
+évènements et des mots-clés de l'auteur, et la mise à jour FUSIONNE avec les
+choix déjà posés.
+
+À la validation, le mot-clé retenu DOIT être celui choisi s'il figure encore
+parmi les éligibles de l'auteur, sinon le premier éligible — une feuille sans
+choix DOIT se valider exactement comme avant ce champ. Une feuille validée NE
+DOIT plus proposer de choix : le jet a tranché.
+
+#### Scenario: Deux lignées possibles
+- WHEN un Zombie (Humain, Mort-Vivant, Zombie) met un adversaire sur la touche
+- THEN la feuille DOIT proposer ces trois mots-clés pour ce blessé, « Humain » étant retenu par défaut
+
+#### Scenario: Choix retenu
+- WHEN le coach du blessé retient « Mort-Vivant » et que la feuille est validée sur un 4+
+- THEN le joueur DOIT gagner « Haine (Mort-Vivant) »
+
+#### Scenario: Choix devenu ineligible
+- WHEN l'auteur de la blessure est corrigé et que le mot-clé retenu n'est plus le sien
+- THEN la validation DOIT retomber sur le premier mot-clé éligible du nouvel auteur
+
+#### Scenario: Blessure qui ne déclenche aucun jet
+- WHEN la sortie est une mort, ou n'a aucun auteur (public, esquive ratée)
+- THEN aucun choix NE DOIT être proposé pour ce joueur
+
+#### Scenario: Côté adverse
+- WHEN un coach tente de choisir le mot-clé d'un blessé de l'équipe adverse
+- THEN le serveur DOIT refuser (403)
