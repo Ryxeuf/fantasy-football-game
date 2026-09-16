@@ -15,6 +15,10 @@ import {
   type HateRollView,
 } from "./_components/HateRollsRecap";
 import {
+  HateKeywordChoices,
+  type HateCandidateView,
+} from "./_components/HateKeywordChoices";
+import {
   KICKOFF_EVENTS,
   LEGACY_KICKOFF_EVENT_IDS,
   surchargeForAdvancement,
@@ -254,6 +258,12 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur antérieur au récapitulatif.
    */
   hateRolls?: readonly HateRollView[];
+  /**
+   * Haine (X) — joueurs candidats au jet et mots-clés de celui qui les a
+   * blessés. Dérivés des évènements, vides sur une feuille validée.
+   * Optionnel : rétro-compat avec un serveur antérieur au choix.
+   */
+  hateCandidates?: readonly HateCandidateView[];
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -543,6 +553,17 @@ export default function MatchSheetPage() {
       apiRequest(`/leagues/pairings/${pairingId}/sheet/raise-dead`, {
         method: "PATCH",
         body: JSON.stringify({ side, victimId, position }),
+      }),
+    );
+
+  // Haine (X) : mot-clé haï retenu pour un joueur blessé. Le serveur revalide
+  // le candidat ET le mot-clé contre les évènements de la feuille — l'UI ne
+  // fait que proposer ce qu'il a servi.
+  const saveHateChoice = (victimPlayerId: string, keyword: string) =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/hate-choices`, {
+        method: "PATCH",
+        body: JSON.stringify({ choices: [{ victimPlayerId, keyword }] }),
       }),
     );
 
@@ -1349,6 +1370,25 @@ export default function MatchSheetPage() {
             explication — et un jet raté ne laisserait aucune trace. Il vit
             ici (conséquences d'après-match) et non sous « Évolutions » : le
             trait ne coûte pas de PSP et ne se choisit pas. */}
+            {/* Avant le jet : quel mot-clé sera haï. Un adversaire en porte
+            souvent plusieurs (un Zombie est Humain, Mort-Vivant ET Zombie) et
+            le défaut — le premier — n'est pas forcément celui que le coach
+            veut. Disparaît une fois la feuille validée : le jet a tranché. */}
+            <HateKeywordChoices
+              candidates={data.hateCandidates ?? []}
+              playerLabel={(id) =>
+                playerName(home, id) !== id
+                  ? playerName(home, id)
+                  : playerName(away, id)
+              }
+              teamLabel={(side) =>
+                side === "home"
+                  ? (home?.name ?? "Domicile")
+                  : (away?.name ?? "Extérieur")
+              }
+              canEdit={(side) => isCommissioner || mySide === side}
+              onChoose={saveHateChoice}
+            />
             <HateRollsRecap
               rolls={data.hateRolls ?? []}
               teamNames={hateTeamNames}

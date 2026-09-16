@@ -6,6 +6,7 @@ import {
   parseKeywordsCsv,
   eligibleHateKeywords,
   pickHateKeyword,
+  resolveHateKeyword,
   hateSlugForKeyword,
   isHateSkillSlug,
   buildHateSkillDefinition,
@@ -93,6 +94,43 @@ describe("pickHateKeyword", () => {
   it("retourne null quand le joueur n'a que des mots-cles de poste", () => {
     expect(pickHateKeyword("Blitzer, Coureur")).toBeNull();
     expect(pickHateKeyword(null)).toBeNull();
+  });
+});
+
+describe("resolveHateKeyword", () => {
+  // Un Zombie porte trois lignees : « Humain, Mort-Vivant, Zombie ». Haïr
+  // l'une ou l'autre ne recouvre pas les memes adversaires — c'est un choix.
+  const zombie = KEYWORDS_SEASON3["undead_trois_quart_zombie"];
+
+  it("retient le mot-cle choisi quand il est eligible", () => {
+    expect(eligibleHateKeywords(zombie)).toEqual([
+      "Humain",
+      "Mort-Vivant",
+      "Zombie",
+    ]);
+    expect(resolveHateKeyword(zombie, "Mort-Vivant")).toBe("Mort-Vivant");
+    expect(resolveHateKeyword(zombie, "Zombie")).toBe("Zombie");
+  });
+
+  it("compare sur la forme normalisee et rend la graphie du catalogue", () => {
+    // C'est la graphie du catalogue qui compose le slug et le libelle.
+    expect(resolveHateKeyword(zombie, "mort vivant")).toBe("Mort-Vivant");
+    expect(resolveHateKeyword(zombie, "MORT_VIVANT")).toBe("Mort-Vivant");
+  });
+
+  it("retombe sur la lignee quand le choix n'est plus eligible", () => {
+    // Auteur corrige depuis la saisie du choix : on ne fait pas echouer la
+    // validation, on reprend le premier eligible.
+    expect(resolveHateKeyword(zombie, "Orque")).toBe("Humain");
+    // Un mot-cle de POSTE ne peut jamais etre retenu.
+    expect(resolveHateKeyword(zombie, "Trois-quart")).toBe("Humain");
+  });
+
+  it("se comporte comme pickHateKeyword sans choix", () => {
+    expect(resolveHateKeyword(zombie)).toBe(pickHateKeyword(zombie));
+    expect(resolveHateKeyword(zombie, null)).toBe("Humain");
+    expect(resolveHateKeyword("Blitzer, Coureur", "Blitzer")).toBeNull();
+    expect(resolveHateKeyword(null, "Humain")).toBeNull();
   });
 });
 

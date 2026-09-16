@@ -32,6 +32,7 @@ import {
 } from "./league-standings-stats";
 import { serverLog } from "../utils/server-log";
 import { LEAGUE_ARCHIVED_STATUS } from "./competition-lifecycle";
+import { healSeasonCasualties } from "./league-season-casualty-heal";
 
 export type LeagueStatus =
   | "draft"
@@ -637,6 +638,23 @@ export interface PoolStandings {
 export async function computeSeasonStandings(
   seasonId: string,
 ): Promise<StandingRow[]> {
+  // Les compteurs de sorties lus plus bas ont ete PERSISTES a la validation
+  // de chaque feuille. Ceux d'une feuille validee avant la regle « une sortie
+  // est une elimination qui rapporte des PSP » sont faux (une agression y
+  // comptait pour une sortie). On les rattrape ICI, a la premiere lecture du
+  // classement — pas de cron, le lecteur paie le recompute. Best-effort et
+  // idempotent : une saison deja passee ne coute qu'une requete sans
+  // resultat, et un rattrapage en echec n'empeche pas de servir le classement.
+  try {
+    await healSeasonCasualties(seasonId);
+  } catch (e: unknown) {
+    // Le rattrapage ne leve pas, mais la garantie « un classement se sert
+    // toujours » doit tenir ICI, pas dependre de la discipline de l'appele.
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league] rattrapage des sorties impossible season=${seasonId}: ${msg}`,
+    );
+  }
   const season = await prisma.leagueSeason.findUnique({
     where: { id: seasonId },
     select: {

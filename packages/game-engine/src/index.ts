@@ -414,6 +414,7 @@ export {
   parseKeywordsCsv,
   eligibleHateKeywords,
   pickHateKeyword,
+  resolveHateKeyword,
   hateSlugForKeyword,
   isHateSkillSlug,
   buildHateSkillDefinition,

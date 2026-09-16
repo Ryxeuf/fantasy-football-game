@@ -910,6 +910,8 @@ exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   journeymenAway: 'journeymenAway',
   raisedDeadHome: 'raisedDeadHome',
   raisedDeadAway: 'raisedDeadAway',
+  hateChoices: 'hateChoices',
+  casualtyRuleVersion: 'casualtyRuleVersion',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

@@ -71016,6 +71016,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway: number | null
     rankingBonusHome: number | null
     rankingBonusAway: number | null
+    casualtyRuleVersion: number | null
   }
 
   export type LeagueMatchSheetSumAggregateOutputType = {
@@ -71031,6 +71032,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway: number | null
     rankingBonusHome: number | null
     rankingBonusAway: number | null
+    casualtyRuleVersion: number | null
   }
 
   export type LeagueMatchSheetMinAggregateOutputType = {
@@ -71061,6 +71063,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway: number | null
     rankingBonusHome: number | null
     rankingBonusAway: number | null
+    casualtyRuleVersion: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -71093,6 +71096,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway: number | null
     rankingBonusHome: number | null
     rankingBonusAway: number | null
+    casualtyRuleVersion: number | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -71144,6 +71148,8 @@ export namespace Prisma {
     journeymenAway: number
     raisedDeadHome: number
     raisedDeadAway: number
+    hateChoices: number
+    casualtyRuleVersion: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -71163,6 +71169,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: true
     rankingBonusHome?: true
     rankingBonusAway?: true
+    casualtyRuleVersion?: true
   }
 
   export type LeagueMatchSheetSumAggregateInputType = {
@@ -71178,6 +71185,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: true
     rankingBonusHome?: true
     rankingBonusAway?: true
+    casualtyRuleVersion?: true
   }
 
   export type LeagueMatchSheetMinAggregateInputType = {
@@ -71208,6 +71216,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: true
     rankingBonusHome?: true
     rankingBonusAway?: true
+    casualtyRuleVersion?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -71240,6 +71249,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: true
     rankingBonusHome?: true
     rankingBonusAway?: true
+    casualtyRuleVersion?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -71291,6 +71301,8 @@ export namespace Prisma {
     journeymenAway?: true
     raisedDeadHome?: true
     raisedDeadAway?: true
+    hateChoices?: true
+    casualtyRuleVersion?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -71429,6 +71441,8 @@ export namespace Prisma {
     journeymenAway: JsonValue | null
     raisedDeadHome: JsonValue | null
     raisedDeadAway: JsonValue | null
+    hateChoices: JsonValue | null
+    casualtyRuleVersion: number | null
     createdAt: Date
     updatedAt: Date
     _count: LeagueMatchSheetCountAggregateOutputType | null
@@ -71499,6 +71513,8 @@ export namespace Prisma {
     journeymenAway?: boolean
     raisedDeadHome?: boolean
     raisedDeadAway?: boolean
+    hateChoices?: boolean
+    casualtyRuleVersion?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
@@ -71554,6 +71570,8 @@ export namespace Prisma {
     journeymenAway?: boolean
     raisedDeadHome?: boolean
     raisedDeadAway?: boolean
+    hateChoices?: boolean
+    casualtyRuleVersion?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
@@ -71607,6 +71625,8 @@ export namespace Prisma {
     journeymenAway?: boolean
     raisedDeadHome?: boolean
     raisedDeadAway?: boolean
+    hateChoices?: boolean
+    casualtyRuleVersion?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
@@ -71660,11 +71680,13 @@ export namespace Prisma {
     journeymenAway?: boolean
     raisedDeadHome?: boolean
     raisedDeadAway?: boolean
+    hateChoices?: boolean
+    casualtyRuleVersion?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
+  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "hateChoices" | "casualtyRuleVersion" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
   export type LeagueMatchSheetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
     cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
@@ -71746,6 +71768,14 @@ export namespace Prisma {
        */
       raisedDeadHome: Prisma.JsonValue | null
       raisedDeadAway: Prisma.JsonValue | null
+      /**
+       * Haine (X) — mot-cle retenu par joueur blesse ([{ victimPlayerId, keyword }]).
+       */
+      hateChoices: Prisma.JsonValue | null
+      /**
+       * Version de la regle des sorties sous laquelle la feuille a ete validee.
+       */
+      casualtyRuleVersion: number | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["leagueMatchSheet"]>
@@ -72220,6 +72250,8 @@ export namespace Prisma {
     readonly journeymenAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly raisedDeadHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly raisedDeadAway: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly hateChoices: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly casualtyRuleVersion: FieldRef<"LeagueMatchSheet", 'Int'>
     readonly createdAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
     readonly updatedAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
   }
@@ -117948,6 +117980,8 @@ export namespace Prisma {
     journeymenAway: 'journeymenAway',
     raisedDeadHome: 'raisedDeadHome',
     raisedDeadAway: 'raisedDeadAway',
+    hateChoices: 'hateChoices',
+    casualtyRuleVersion: 'casualtyRuleVersion',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -123662,6 +123696,8 @@ export namespace Prisma {
     journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
     raisedDeadHome?: JsonNullableFilter<"LeagueMatchSheet">
     raisedDeadAway?: JsonNullableFilter<"LeagueMatchSheet">
+    hateChoices?: JsonNullableFilter<"LeagueMatchSheet">
+    casualtyRuleVersion?: IntNullableFilter<"LeagueMatchSheet"> | number | null
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     pairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
@@ -123716,6 +123752,8 @@ export namespace Prisma {
     journeymenAway?: SortOrderInput | SortOrder
     raisedDeadHome?: SortOrderInput | SortOrder
     raisedDeadAway?: SortOrderInput | SortOrder
+    hateChoices?: SortOrderInput | SortOrder
+    casualtyRuleVersion?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     pairing?: LeaguePairingOrderByWithRelationInput
@@ -123773,6 +123811,8 @@ export namespace Prisma {
     journeymenAway?: JsonNullableFilter<"LeagueMatchSheet">
     raisedDeadHome?: JsonNullableFilter<"LeagueMatchSheet">
     raisedDeadAway?: JsonNullableFilter<"LeagueMatchSheet">
+    hateChoices?: JsonNullableFilter<"LeagueMatchSheet">
+    casualtyRuleVersion?: IntNullableFilter<"LeagueMatchSheet"> | number | null
     createdAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeFilter<"LeagueMatchSheet"> | Date | string
     pairing?: XOR<LeaguePairingNullableScalarRelationFilter, LeaguePairingWhereInput> | null
@@ -123827,6 +123867,8 @@ export namespace Prisma {
     journeymenAway?: SortOrderInput | SortOrder
     raisedDeadHome?: SortOrderInput | SortOrder
     raisedDeadAway?: SortOrderInput | SortOrder
+    hateChoices?: SortOrderInput | SortOrder
+    casualtyRuleVersion?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: LeagueMatchSheetCountOrderByAggregateInput
@@ -123886,6 +123928,8 @@ export namespace Prisma {
     journeymenAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     raisedDeadHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     raisedDeadAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    hateChoices?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    casualtyRuleVersion?: IntNullableWithAggregatesFilter<"LeagueMatchSheet"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"LeagueMatchSheet"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"LeagueMatchSheet"> | Date | string
   }
@@ -132777,6 +132821,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -132831,6 +132877,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -132881,6 +132929,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
@@ -132935,6 +132985,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -132987,6 +133039,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -133036,6 +133090,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -133087,6 +133143,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -140630,6 +140688,8 @@ export namespace Prisma {
     journeymenAway?: SortOrder
     raisedDeadHome?: SortOrder
     raisedDeadAway?: SortOrder
+    hateChoices?: SortOrder
+    casualtyRuleVersion?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -140647,6 +140707,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: SortOrder
     rankingBonusHome?: SortOrder
     rankingBonusAway?: SortOrder
+    casualtyRuleVersion?: SortOrder
   }
 
   export type LeagueMatchSheetMaxOrderByAggregateInput = {
@@ -140677,6 +140738,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: SortOrder
     rankingBonusHome?: SortOrder
     rankingBonusAway?: SortOrder
+    casualtyRuleVersion?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -140709,6 +140771,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: SortOrder
     rankingBonusHome?: SortOrder
     rankingBonusAway?: SortOrder
+    casualtyRuleVersion?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -140726,6 +140789,7 @@ export namespace Prisma {
     dedicatedFansDeltaAway?: SortOrder
     rankingBonusHome?: SortOrder
     rankingBonusAway?: SortOrder
+    casualtyRuleVersion?: SortOrder
   }
 
   export type LeagueMatchSheetScalarRelationFilter = {
@@ -161280,6 +161344,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -161332,6 +161398,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -161672,6 +161740,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
@@ -161724,6 +161794,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -167985,6 +168057,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     cupPairing?: CupPairingCreateNestedOneWithoutMatchSheetInput
@@ -168037,6 +168111,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     events?: LeagueMatchEventUncheckedCreateNestedManyWithoutMatchSheetInput
@@ -168323,6 +168399,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     cupPairing?: CupPairingUpdateOneWithoutMatchSheetNestedInput
@@ -168375,6 +168453,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     events?: LeagueMatchEventUncheckedUpdateManyWithoutMatchSheetNestedInput
@@ -168638,6 +168718,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
     pairing?: LeaguePairingCreateNestedOneWithoutMatchSheetInput
@@ -168691,6 +168773,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: number | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -168756,6 +168840,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     pairing?: LeaguePairingUpdateOneWithoutMatchSheetNestedInput
@@ -168809,6 +168895,8 @@ export namespace Prisma {
     journeymenAway?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadHome?: NullableJsonNullValueInput | InputJsonValue
     raisedDeadAway?: NullableJsonNullValueInput | InputJsonValue
+    hateChoices?: NullableJsonNullValueInput | InputJsonValue
+    casualtyRuleVersion?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

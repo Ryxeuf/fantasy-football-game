@@ -723,6 +723,68 @@ réécrit pour que l'invalidation reprenne le bon montant), idempotent et
 journalisé. Script `db:resync-sheet-casualties` (simulation par défaut,
 `-- --apply`). Même posture que `db:repair-build-psp`.
 
+Compteur limitrophe à NE PAS aligner : le « sac de frappe » compte les
+éliminations SUBIES, volontairement plus large (un joueur sorti par une
+agression ou par le public l'est bel et bien). Il lui manquait en revanche la
+condition de base — une blessure effectivement consignée
+(`isInjurySeverity`) : une agression sans effet classait sa cible.
+
+### Un correctif de CALCUL ne corrige pas un compteur PERSISTÉ
+
+Suite directe, et la vraie raison pour laquelle le bug des « 5 sorties » est
+resté visible après son correctif : la ligue PERSISTE ses compteurs à la
+validation (Sor+/Sor-, points bonus du pairing, `totalCasualties`, PSP). La
+feuille, elle, se RELIT avec la règle courante. Les deux ont donc divergé sur
+tout ce qui était déjà validé, et le rattrapage n'était branché que sur un
+script d'opérateur — qui n'a jamais tourné en prod.
+
+Règle : un changement de règle qui touche une valeur persistée se livre avec
+son DÉCLENCHEUR, pas seulement avec son correctif. Patron retenu, celui des
+recomputes paresseux du repo (pas de cron, le lecteur paie) mais à fenêtre
+VERSIONNÉE plutôt que temporelle — la règle ne change qu'une fois :
+
+```prisma
+/// null = feuille validée avant la règle (à rattraper).
+casualtyRuleVersion Int?
+```
+
+`CASUALTY_RULE_VERSION` vit dans `league-match-summary`, à côté de la règle
+elle-même. La validation l'écrit ; `healSeasonCasualties` (appelé par
+`computeSeasonStandings`, seul entonnoir des classements) balaie les feuilles
+périmées de la saison, les rattrape et les marque. Trois précautions :
+
+- **marquer aussi les refus DÉFINITIFS** (saison clôturée, snapshot absent,
+  rencontre de coupe), sinon ils sont retentés à chaque consultation sans
+  jamais bouger — mais PAS `sheet-not-validated`, qu'une revalidation résout ;
+- **best-effort de bout en bout**, y compris un `try/catch` au point d'appel :
+  la garantie « un classement se sert toujours » vit là, pas dans la
+  discipline de l'appelé ;
+- après le passage, la lecture ne coûte qu'une requête sans résultat.
+
+### Haine (X) : le mot-clé se CHOISIT parmi ceux de l'adversaire
+
+Un joueur porte souvent plusieurs lignées (un Zombie est *Humain*,
+*Mort-Vivant* ET *Zombie*) et haïr l'une ou l'autre ne recouvre pas les mêmes
+adversaires au reste de la saison. `pickHateKeyword` (premier éligible) reste
+le DÉFAUT ; `resolveHateKeyword(csv, preferred)` (moteur, pur) est la
+résolution, avec comparaison NORMALISÉE et repli silencieux si le choix n'est
+plus éligible.
+
+Même patron que les journaliers et le mort relevé : **le choix est stocké
+(`LeagueMatchSheet.hateChoices`), le candidat est dérivé**
+(`league-sheet-hate-choices`, pur). Corriger l'auteur d'une sortie change donc
+les mots-clés proposés, sans backfill, et une feuille sans choix se valide
+exactement comme avant.
+
+Deux pièges du câblage :
+
+- **une seule dérivation des blessures** (`buildSheetInjuryInputs`) et un seul
+  prédicat de déclenchement (`hateInjuryTriggersRoll`), partagés par la
+  LECTURE (qui propose) et la VALIDATION (qui jette) — sinon la feuille
+  propose un choix à un joueur qui ne jettera jamais ;
+- **le PATCH fusionne** (`mergeHateChoices`) : chaque coach ne choisit que
+  pour SON côté (403 sinon), écraser la colonne effacerait le choix d'en face.
+
 ### Reglements de tournoi : base d'abord, moteur en repli
 
 Les « rules packs » (NAF World Cup 2027…) sont EDITABLES en base

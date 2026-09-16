@@ -6,6 +6,7 @@ import { describe, it, expect } from "vitest";
 import {
   summarizeMatchSheet,
   eliminationEarnsSpp,
+  isInjurySeverity,
   isMatchEventKind,
   computeMatchWinnings,
   computeStalledTeams,
@@ -713,6 +714,19 @@ describe("Lot G — summarizeMatchSheet", () => {
 
 // LA définition d'une sortie : une élimination qui rapporte des PSP. Tout ce
 // qui compte des sorties (feuille, classement, bonus, cogneurs) en dérive.
+describe("isInjurySeverity", () => {
+  it("reconnait les severites du vocabulaire, et rien d'autre", () => {
+    for (const s of ["badly_hurt", "mng", "niggling", "stat_loss", "dead"]) {
+      expect(isInjurySeverity(s)).toBe(true);
+    }
+    expect(isInjurySeverity(null)).toBe(false);
+    expect(isInjurySeverity(undefined)).toBe(false);
+    expect(isInjurySeverity("")).toBe(false);
+    expect(isInjurySeverity("scratch")).toBe(false);
+    expect(isInjurySeverity(1)).toBe(false);
+  });
+});
+
 describe("eliminationEarnsSpp", () => {
   const elim = (
     kind: MatchEventInput["kind"],

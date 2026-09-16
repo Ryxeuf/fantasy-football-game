@@ -27,7 +27,7 @@ import {
   hateRollSucceeds,
   hateSlugForKeyword,
   parseSkillSlugs,
-  pickHateKeyword,
+  resolveHateKeyword,
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
 import { invalidatePublicSkillsCache } from "../utils/skills-cache";
@@ -36,6 +36,7 @@ import {
   type TeamAuditPrismaLike,
 } from "./team-audit";
 import type { OfflineInjuryType } from "./league-offline-result";
+import { hateChoiceMap, type HateChoice } from "./league-sheet-hate-choices";
 
 /**
  * Blessures qui déclenchent le jet : celles qui rendent le joueur absent
@@ -45,6 +46,16 @@ import type { OfflineInjuryType } from "./league-offline-result";
 export const HATE_TRIGGERING_INJURIES: ReadonlySet<OfflineInjuryType> = new Set(
   ["mng", "niggling", "ma", "st", "ag", "pa", "av"],
 );
+
+/**
+ * Cette blessure déclenche-t-elle le jet ? Une seule définition pour les DEUX
+ * chemins : la validation (qui jette) et la lecture de la feuille (qui
+ * propose les mots-clés au choix) — sinon la feuille proposerait un choix à un
+ * joueur qui ne jettera jamais, ou l'inverse.
+ */
+export function hateInjuryTriggersRoll(type: OfflineInjuryType): boolean {
+  return HATE_TRIGGERING_INJURIES.has(type);
+}
 
 /** Une blessure candidate, avant résolution du mot-clé. */
 export interface HateInjuryInput {
@@ -103,6 +114,12 @@ export interface HateRoll {
  * sans auteur (auto-élimination, foule), les auteurs dont on ne connaît pas
  * les mots-clés, et ceux qui n'ont que des mots-clés de poste.
  *
+ * X est le mot-clé CHOISI sur la feuille pour ce blessé (`choices`) quand il
+ * figure encore parmi les mots-clés éligibles de l'auteur, sinon le premier
+ * éligible — une feuille sans choix se valide donc exactement comme avant
+ * (cf. `league-sheet-hate-choices`, qui dérive les mêmes candidats pour les
+ * PROPOSER).
+ *
  * Un même joueur blessé deux fois par le même adversaire ne jette qu'une
  * fois pour ce mot-clé : on dédoublonne sur (victime, X).
  */
@@ -110,14 +127,18 @@ export function buildHateCandidates(input: {
   readonly injuries: readonly HateInjuryInput[];
   /** CSV de mots-clés par id de joueur (roster réel, journaliers, Stars). */
   readonly keywordsByPlayerId: ReadonlyMap<string, string>;
+  /** Mot-clé retenu par le coach, par joueur blessé. Vide = comportement historique. */
+  readonly choices?: readonly HateChoice[];
 }): HateCandidate[] {
+  const chosenBy = hateChoiceMap(input.choices ?? []);
   const seen = new Set<string>();
   const out: HateCandidate[] = [];
   for (const inj of input.injuries) {
-    if (!HATE_TRIGGERING_INJURIES.has(inj.injuryType)) continue;
+    if (!hateInjuryTriggersRoll(inj.injuryType)) continue;
     if (!inj.causerPlayerId) continue;
-    const keyword = pickHateKeyword(
+    const keyword = resolveHateKeyword(
       input.keywordsByPlayerId.get(inj.causerPlayerId),
+      chosenBy.get(inj.victimPlayerId) ?? null,
     );
     if (!keyword) continue;
     const dedupe = `${inj.victimPlayerId}::${keyword}`;

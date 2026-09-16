@@ -68,7 +68,63 @@ describe("buildHateCandidates", () => {
   const keywords = new Map([
     ["orc-1", "Orque, Blitzer"],
     ["poste-only", "Blitzer, Coureur"],
+    // Un Zombie porte trois lignees : c'est le cas qui motive le choix.
+    ["zombie-1", "Humain, Mort-Vivant, Zombie, Trois-quart"],
   ]);
+
+  it("retient le Mot-cle CHOISI sur la feuille quand il est eligible", () => {
+    expect(
+      buildHateCandidates({
+        injuries: [
+          {
+            victimPlayerId: "v1",
+            causerPlayerId: "zombie-1",
+            injuryType: "mng",
+          },
+        ],
+        keywordsByPlayerId: keywords,
+        choices: [{ victimPlayerId: "v1", keyword: "Mort-Vivant" }],
+      }),
+    ).toEqual([{ victimPlayerId: "v1", keyword: "Mort-Vivant" }]);
+  });
+
+  it("retombe sur la lignee quand le choix ne vise pas cet auteur", () => {
+    // Auteur corrige depuis la saisie du choix : la validation ne doit pas
+    // echouer, elle reprend le premier Mot-cle eligible.
+    expect(
+      buildHateCandidates({
+        injuries: [
+          { victimPlayerId: "v1", causerPlayerId: "orc-1", injuryType: "mng" },
+        ],
+        keywordsByPlayerId: keywords,
+        choices: [{ victimPlayerId: "v1", keyword: "Zombie" }],
+      }),
+    ).toEqual([{ victimPlayerId: "v1", keyword: "Orque" }]);
+  });
+
+  it("n'applique le choix qu'a SA victime", () => {
+    expect(
+      buildHateCandidates({
+        injuries: [
+          {
+            victimPlayerId: "v1",
+            causerPlayerId: "zombie-1",
+            injuryType: "mng",
+          },
+          {
+            victimPlayerId: "v2",
+            causerPlayerId: "zombie-1",
+            injuryType: "niggling",
+          },
+        ],
+        keywordsByPlayerId: keywords,
+        choices: [{ victimPlayerId: "v2", keyword: "Zombie" }],
+      }),
+    ).toEqual([
+      { victimPlayerId: "v1", keyword: "Humain" },
+      { victimPlayerId: "v2", keyword: "Zombie" },
+    ]);
+  });
 
   it("retient la lignee de l'auteur de la sortie", () => {
     expect(
