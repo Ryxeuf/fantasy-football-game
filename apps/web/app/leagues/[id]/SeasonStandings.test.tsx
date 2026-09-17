@@ -37,6 +37,7 @@ function renderStandings(
     defaultExpanded?: boolean;
     leagueId?: string | null;
     canViewRosters?: boolean;
+    tieBreakRules?: readonly string[];
   } = {},
 ) {
   render(
@@ -275,5 +276,32 @@ describe("SeasonStandings — acces au roster depuis le nom d'equipe", () => {
       canViewRosters: true,
     });
     expect(screen.queryByTestId("team-roster-link-standings-p1")).toBeNull();
+  });
+});
+
+describe("SeasonStandings — départages appliqués", () => {
+  it("annonce l'ordre servi par l'API, du premier au dernier", () => {
+    renderStandings([row({ participantId: "p1" })], {
+      tieBreakRules: ["points", "bonus_points", "forfeit_points", "name"],
+    });
+    const note = screen.getByTestId("standings-tiebreak-rules");
+    expect(note.textContent).toContain("Points (Pts)");
+    expect(note.textContent).toContain("Points bonus (Bo)");
+    expect(note.textContent).toContain("Forfaits (For)");
+    expect(note.textContent).toContain("Nom de l'équipe");
+  });
+
+  it("affiche un slug inconnu tel quel (serveur en avance sur le client)", () => {
+    renderStandings([row({ participantId: "p1" })], {
+      tieBreakRules: ["points", "critere_futur"],
+    });
+    expect(
+      screen.getByTestId("standings-tiebreak-rules").textContent,
+    ).toContain("critere_futur");
+  });
+
+  it("reste muet quand l'API ne sert pas les critères (serveur antérieur)", () => {
+    renderStandings([row({ participantId: "p1" })]);
+    expect(screen.queryByTestId("standings-tiebreak-rules")).toBeNull();
   });
 });

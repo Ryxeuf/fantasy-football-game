@@ -53,6 +53,16 @@ export interface LeagueDetail {
    * `parseBonusRulesFromApi`. Optionnel pour retro-compat pre-E1.
    */
   bonusPointsConfig?: unknown;
+  /**
+   * Critères de départage CONFIGURÉS (null = rien, donc ordre par défaut).
+   * C'est cette valeur que le formulaire d'édition re-poste.
+   */
+  tieBreakRules?: string[] | null;
+  /**
+   * Ordre RÉELLEMENT appliqué, défaut compris — pour l'affichage. Optionnel
+   * pour rétro-compat avec un serveur antérieur.
+   */
+  effectiveTieBreakRules?: string[];
   createdAt: string;
   updatedAt: string;
   seasons: LeagueSeasonSummary[];

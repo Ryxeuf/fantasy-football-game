@@ -5,6 +5,7 @@ import type { StandingRow } from "./types";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import TeamRosterLink from "./TeamRosterLink";
+import { LEAGUE_TIE_BREAK_LABELS } from "../_components/standings-order";
 
 /**
  * F1 — Classement de saison.
@@ -28,6 +29,13 @@ interface SeasonStandingsProps {
   leagueId?: string | null;
   /** Consultation des rosters autorisee (commissaire ou coach inscrit). */
   canViewRosters?: boolean;
+  /**
+   * Critères de départage EFFECTIFS (défaut compris), servis par l'API.
+   * Affichés sous le tableau : sans eux, un coach ne peut pas savoir
+   * pourquoi telle équipe passe devant telle autre à points égaux.
+   * Optionnel pour rétro-compat avec un serveur antérieur.
+   */
+  tieBreakRules?: readonly string[];
 }
 
 interface StandingsColumn {
@@ -182,6 +190,7 @@ export function SeasonStandings({
   defaultExpanded = false,
   leagueId = null,
   canViewRosters = false,
+  tieBreakRules = [],
 }: SeasonStandingsProps) {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -296,6 +305,18 @@ export function SeasonStandings({
           </tbody>
         </table>
       </div>
+      {tieBreakRules.length > 0 ? (
+        <p
+          data-testid="standings-tiebreak-rules"
+          className="mt-2 text-[11px] text-gray-500"
+        >
+          Départages appliqués, du premier au dernier :{" "}
+          {tieBreakRules
+            .map((slug) => LEAGUE_TIE_BREAK_LABELS[slug] ?? slug)
+            .join(" → ")}
+          .
+        </p>
+      ) : null}
     </div>
   );
 }

@@ -11,6 +11,8 @@
  *   - POST /admin/leagues/:id/archive : raccourci status=archived
  *   - PATCH /admin/leagues/:id/creator : transferer le creator a un
  *     autre user (ex: coach disparu)
+ *   - PATCH /admin/leagues/:id/standings-order : reordonner les criteres
+ *     de departage du classement, meme apres le verrou d'edition
  *
  * Ne deplace pas les actions saison (start / regenerate / close) :
  * elles existent deja sous /league/seasons/:id/* gates par
@@ -27,9 +29,11 @@ import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
   adminLeaguesQuerySchema,
+  adminLeagueStandingsOrderSchema,
   adminLeagueStatusSchema,
   adminLeagueTransferSchema,
   type AdminLeaguesQuery,
+  type AdminLeagueStandingsOrderBody,
   type AdminLeagueStatusBody,
   type AdminLeagueTransferBody,
 } from "../schemas/admin-leagues.schemas";
@@ -37,6 +41,12 @@ import {
   withdrawParticipant,
   LeagueWithdrawError,
 } from "../services/league";
+import {
+  normalizeLeagueTieBreakRules,
+  parseLeagueTieBreakRules,
+  readStoredLeagueTieBreakRules,
+  serializeLeagueTieBreakRules,
+} from "../services/league-standings-order";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
 
@@ -53,6 +63,7 @@ interface AdminLeagueRow {
   isPublic: boolean;
   maxParticipants: number;
   creatorId: string;
+  tieBreakRules: string | null;
   createdAt: Date;
   updatedAt: Date;
   creator: {
@@ -122,6 +133,12 @@ export async function handleListAdminLeagues(
           maxParticipants: l.maxParticipants,
           creatorId: l.creatorId,
           creator: l.creator,
+          // Critères de classement : la valeur BRUTE (ce que la console
+          // re-poste) ET l'ordre EFFECTIF (ce qui s'applique réellement).
+          tieBreakRules: normalizeLeagueTieBreakRules(
+            readStoredLeagueTieBreakRules(l.tieBreakRules),
+          ),
+          effectiveTieBreakRules: parseLeagueTieBreakRules(l.tieBreakRules),
           seasonsCount: l._count.seasons,
           createdAt: l.createdAt,
           updatedAt: l.updatedAt,
@@ -269,6 +286,54 @@ export async function handleTransferLeagueCreator(
 }
 
 /**
+ * PATCH /admin/leagues/:id/standings-order
+ *
+ * Réordonne les critères de départage du classement d'une ligue. C'est le
+ * SEUL chemin qui reste ouvert une fois qu'un match a été joué :
+ * `PATCH /leagues/:id` (commissaire) se verrouille à ce moment-là, parce
+ * qu'y toucher au barème réécrirait des points déjà attribués. L'ordre de
+ * classement, lui, ne touche à RIEN de persisté — le classement est trié à
+ * la lecture — donc un administrateur peut le corriger à tout moment, y
+ * compris en cours de saison ou sur une ligue archivée.
+ *
+ * `tieBreakRules: null` (ou une liste vide) remet la ligue sur l'ordre par
+ * défaut. La réponse porte l'ordre EFFECTIF pour que la console affiche ce
+ * qui s'applique réellement.
+ */
+export async function handleSetLeagueStandingsOrder(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  const body: AdminLeagueStandingsOrderBody = req.body;
+
+  const league = await prisma.league.findUnique({
+    where: { id },
+    select: { id: true, tieBreakRules: true },
+  });
+  if (!league) {
+    sendError(res, "Ligue introuvable", 404);
+    return;
+  }
+
+  const previous = parseLeagueTieBreakRules(league.tieBreakRules);
+  const stored = serializeLeagueTieBreakRules(body.tieBreakRules);
+  await prisma.league.update({
+    where: { id },
+    data: { tieBreakRules: stored },
+  });
+  const effective = parseLeagueTieBreakRules(stored);
+  serverLog.info(
+    `[admin-leagues] standings order changed: id=${id} ${previous.join(">")} -> ${effective.join(">")} by admin=${req.user?.id}`,
+  );
+  sendSuccess(res, {
+    leagueId: id,
+    tieBreakRules: normalizeLeagueTieBreakRules(body.tieBreakRules),
+    effectiveTieBreakRules: effective,
+  });
+}
+
+/**
  * Lot B — POST /admin/leagues/seasons/:seasonId/participants/:teamId/force-withdraw
  *
  * Permet a un admin de retirer une equipe d'une saison meme apres
@@ -320,6 +385,11 @@ router.patch(
   handleForceLeagueStatus,
 );
 router.post("/:id/archive", handleArchiveLeague);
+router.patch(
+  "/:id/standings-order",
+  validate(adminLeagueStandingsOrderSchema),
+  handleSetLeagueStandingsOrder,
+);
 router.patch(
   "/:id/creator",
   validate(adminLeagueTransferSchema),

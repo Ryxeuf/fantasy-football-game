@@ -7,6 +7,7 @@
 
 import { z } from "zod";
 import { isLeagueThemeSlug } from "../services/league-themes";
+import { LEAGUE_TIE_BREAK_SLUGS } from "../services/league-standings-order";
 
 const rosterSlug = z
   .string()
@@ -32,21 +33,13 @@ const leagueThemeYear = z
   .positive("themeYear doit etre strictement positif");
 
 /**
- * L2.C.5 — Slugs autorises pour `tieBreakRules`. Doit rester aligne
- * avec `services/league.ts.TIE_BREAK_SLUGS`. Mirror manuel pour
- * eviter une dependance circulaire entre schemas/ et services/.
+ * Slugs autorisés pour `tieBreakRules`. Lus DIRECTEMENT dans
+ * `services/league-standings-order` — module PUR qui n'importe rien, donc
+ * pas de dépendance circulaire entre schemas/ et services/, et plus de
+ * miroir manuel à tenir : ajouter un critère au comparateur l'ouvre du
+ * même geste à l'API.
  */
-const tieBreakSlug = z.enum([
-  "points",
-  "td_diff",
-  "td_for",
-  "td_against",
-  "cas_diff",
-  "cas_for",
-  "season_elo",
-  "wins",
-  "name",
-]);
+const tieBreakSlug = z.enum(LEAGUE_TIE_BREAK_SLUGS);
 
 export const createLeagueSchema = z.object({
   name: z
@@ -73,9 +66,14 @@ export const createLeagueSchema = z.object({
   drawPoints: z.number().int().min(0).max(10).optional(),
   lossPoints: z.number().int().min(-10).max(10).optional(),
   forfeitPoints: z.number().int().min(-10).max(10).optional(),
-  // L2.C.5 — ordre de departage personnalise. null/undefined =
-  // ordre par defaut historique. Filtre les doublons cote service.
-  tieBreakRules: z.array(tieBreakSlug).max(9).optional().nullable(),
+  // Critères de départage du classement, dans l'ordre de priorité.
+  // null/undefined = ordre par défaut. Doublons et sentinelle « name »
+  // normalisés côté service.
+  tieBreakRules: z
+    .array(tieBreakSlug)
+    .max(LEAGUE_TIE_BREAK_SLUGS.length)
+    .optional()
+    .nullable(),
   // Lot E — points bonus configurables. JSON array de regles.
   // Validation defensive : chaque element doit avoir les champs
   // requis (le service les re-valide via parseBonusConfig au runtime).

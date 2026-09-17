@@ -102,6 +102,10 @@ export default function EditLeaguePage() {
             lossPoints: values.lossPoints,
             forfeitPoints: values.forfeitPoints,
             bonusPointsConfig: serializeBonusRules(values.bonusPointsConfig),
+            // `null` = « aucun critère retenu » : la ligue repart sur
+            // l'ordre par défaut.
+            tieBreakRules:
+              values.tieBreakRules.length > 0 ? values.tieBreakRules : null,
           }),
         });
         router.push(`/leagues/${leagueId}`);
@@ -179,6 +183,10 @@ export default function EditLeaguePage() {
           lossPoints: league.lossPoints,
           forfeitPoints: league.forfeitPoints,
           bonusPointsConfig: parseBonusRulesFromApi(league.bonusPointsConfig),
+          // Valeur BRUTE : `null` (rien de configuré) doit se relire comme
+          // une liste vide, pas comme l'ordre par défaut matérialisé —
+          // sinon le commissaire fige le défaut sans l'avoir demandé.
+          tieBreakRules: league.tieBreakRules ?? [],
         }}
         onSubmit={handleSubmit}
       />

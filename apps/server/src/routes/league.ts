@@ -28,7 +28,6 @@ import {
   getSeasonById,
   computeSeasonStandings,
   computeSeasonStandingsByPool,
-  isSeasonEloRanked,
   withdrawParticipant,
   listThemedSeasons,
   parseAllowedRosters,
@@ -244,6 +243,11 @@ import {
   type ForfeitPairingBody,
   type RecordOfflineResultBody,
 } from "../schemas/league.schemas";
+import {
+  normalizeLeagueTieBreakRules,
+  parseLeagueTieBreakRules,
+  readStoredLeagueTieBreakRules,
+} from "../services/league-standings-order";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { hasRole } from "../utils/roles";
 import {
@@ -337,18 +341,14 @@ function serializeLeague(
     tieBreakRules?: string | null;
   },
 ) {
-  // L2.C.5 — parse `tieBreakRules` JSON pour le frontend.
-  let tieBreakRules: string[] | null = null;
-  if (league.tieBreakRules) {
-    try {
-      const parsed: unknown = JSON.parse(league.tieBreakRules);
-      if (Array.isArray(parsed) && parsed.every((v) => typeof v === "string")) {
-        tieBreakRules = parsed as string[];
-      }
-    } catch {
-      tieBreakRules = null;
-    }
-  }
+  // `tieBreakRules` reste la valeur BRUTE (null = « rien de configuré »),
+  // c'est elle que le formulaire d'édition re-poste. `effectiveTieBreakRules`
+  // porte l'ordre RÉELLEMENT appliqué, défaut compris, pour que l'écran
+  // puisse l'afficher sans redériver la règle.
+  const raw = (league.tieBreakRules as string | null) ?? null;
+  const normalized = normalizeLeagueTieBreakRules(
+    readStoredLeagueTieBreakRules(raw),
+  );
   return {
     ...league,
     allowedRosters: parseAllowedRosters(
@@ -358,7 +358,8 @@ function serializeLeague(
     allowedInducements: parseAllowedRosters(
       (league.allowedInducements as string | null) ?? null,
     ),
-    tieBreakRules,
+    tieBreakRules: normalized,
+    effectiveTieBreakRules: parseLeagueTieBreakRules(raw),
   };
 }
 
@@ -947,9 +948,10 @@ export async function handleGetStandings(
       where: { id: seasonId },
       select: { league: { select: { tieBreakRules: true } } },
     });
-    const showSeasonElo = isSeasonEloRanked(
+    const tieBreakRules = parseLeagueTieBreakRules(
       seasonRow?.league?.tieBreakRules ?? null,
     );
+    const showSeasonElo = tieBreakRules.includes("season_elo");
     // Lot C — si query `byPool=true`, retourne aussi le groupement
     // par poule (vide si la saison n'a pas de poules).
     const wantsByPool =
@@ -962,6 +964,9 @@ export async function handleGetStandings(
       seasonId,
       standings,
       showSeasonElo,
+      // Ordre EFFECTIF (défaut compris) : le tableau l'affiche plutôt que
+      // de laisser deviner pourquoi telle équipe passe devant telle autre.
+      tieBreakRules,
       ...(pools !== undefined ? { pools } : {}),
     });
   } catch (e: unknown) {

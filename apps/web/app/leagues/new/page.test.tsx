@@ -18,8 +18,9 @@ const push = vi.fn();
 
 /**
  * Valeurs completes du formulaire : la page lit `allowedRosters`,
- * `allowedInducements` et `bonusPointsConfig` — un objet partiel ferait
- * echouer la soumission sur un TypeError, pas sur la logique testee.
+ * `allowedInducements`, `bonusPointsConfig` et `tieBreakRules` — un objet
+ * partiel ferait echouer la soumission sur un TypeError, pas sur la logique
+ * testee.
  */
 const FORM_VALUES = {
   name: "Ligue des Documents",
@@ -35,6 +36,7 @@ const FORM_VALUES = {
   lossPoints: 0,
   forfeitPoints: -1,
   bonusPointsConfig: [],
+  tieBreakRules: [] as string[],
 };
 
 vi.mock("../../hooks/useFeatureFlag", () => ({
