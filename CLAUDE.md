@@ -761,6 +761,63 @@ périmées de la saison, les rattrape et les marque. Trois précautions :
   discipline de l'appelé ;
 - après le passage, la lecture ne coûte qu'une requête sans résultat.
 
+### L'ordre de tri d'un classement se lit dans les colonnes AFFICHÉES
+
+Le classement de ligue montre `Pts | Bo | MJ | For | TD+ | TD- | Diff TD |
+Sor+ | Sor- | Diff Sor` mais n'en triait que trois : les points bonus (`Bo`,
+comptés À PART de `points` — c'est leur seule matérialisation) et les
+forfaits (`For`) n'entraient jamais dans le départage. Défaut corrigé :
+points → bonus → forfaits → diff TD → diff sorties → nom.
+
+Règle à retenir : une colonne visible que le tri ignore est un bug de
+lecture, pas un raffinement — le coach voit les deux et en déduit un ordre
+qui n'est pas celui appliqué.
+
+`services/league-standings-order` (PUR, calqué sur `cup-standings-order`)
+porte la règle ; `services/league.ts` n'en garde que des ALIAS, et un test
+l'assert avec `toBe` pour qu'une seconde implémentation ne réapparaisse pas
+à côté. Conséquence heureuse : `schemas/league.schemas.ts` tenait un miroir
+manuel des slugs « pour éviter une dépendance circulaire » — un module pur
+n'important rien, le miroir disparaît.
+
+Trois lectures VOLONTAIREMENT distinctes de la colonne, à ne pas confondre :
+
+| Fonction | Rend | Pour |
+|---|---|---|
+| `readStoredLeagueTieBreakRules` | la liste TELLE QUE stockée, `null` si rien | les formulaires |
+| `parseLeagueTieBreakRules` | l'ordre EFFECTIF, défaut compris | le tri, l'affichage |
+| `normalizeLeagueTieBreakRules` | la liste assainie, `null` si vide | l'écriture |
+
+Si un formulaire rechargeait l'ordre EFFECTIF, il figerait le défaut dans la
+colonne sans que personne l'ait demandé — et une évolution ultérieure du
+défaut ne l'atteindrait plus. Même famille que le `null` à trois états de
+`playoffsPublished` : l'absence doit rester lisible COMME absence.
+
+Piège de sens : « forfait décroissant » trie `forfeitPoints` (la colonne
+`For`, des points RETIRÉS donc négatifs), pas le COMPTE de forfaits —
+`0 > -100 > -200`, le forfaitaire derrière. Trier le compte en décroissant
+l'aurait classé devant.
+
+### Une règle de LECTURE échappe au verrou d'édition
+
+`PATCH /leagues/:id` se verrouille dès qu'un match est joué, et c'est juste :
+le barème, les rosters autorisés, les règles de bonus réécriraient des points
+déjà attribués. L'ordre de CLASSEMENT n'en est pas : il est appliqué au tri,
+à la lecture, et rien de persisté n'en dépend. D'où
+`PATCH /api/admin/leagues/:id/standings-order` (admin), ouvert à tout moment,
+ligue en cours ou archivée comprises.
+
+Route DÉDIÉE plutôt qu'exception dans le handler existant (« si admin ET que
+le body ne contient que ce champ ») : chaque route garde un modèle
+d'autorisation lisible, et le handler du commissaire n'acquiert pas une
+branche conditionnelle sur le CONTENU du body — celle qu'on oublie de
+maintenir en ajoutant un champ.
+
+Corollaire d'écran : l'ordre appliqué s'AFFICHE (sous le tableau côté coach,
+par ligne dans la console admin avec la mention « (defaut) »). Un départage
+invisible est indistinguable d'un bug de tri — c'est exactement comme ça que
+celui-ci a été signalé.
+
 ### Haine (X) : le mot-clé se CHOISIT parmi ceux de l'adversaire
 
 Un joueur porte souvent plusieurs lignées (un Zombie est *Humain*,
@@ -1626,6 +1683,15 @@ edition du `.json`, `pnpm --filter web typecheck` +
   ceux de l'adversaire (choix stocké, candidat dérivé). Change OpenSpec
   `casualty-count-and-hate-keyword-choice`, récit
   [`docs/roadmap/sessions/2026-09-16-casualty-heal-and-hate-keyword-choice.md`](./docs/roadmap/sessions/2026-09-16-casualty-heal-and-hate-keyword-choice.md).
+- **2026-09-17** : **L'ordre de classement d'une ligue se corrige et se
+  choisit** — le tri ignorait deux colonnes pourtant affichées (points bonus,
+  forfaits) ; nouveau défaut « points → bonus → forfaits → diff TD → diff
+  sorties », comparateur extrait dans un module PUR
+  (`services/league-standings-order`), éditeur ordonné à la création et à
+  l'édition d'une ligue, route admin `PATCH /admin/leagues/:id/standings-order`
+  ouverte même après le verrou d'édition, et ordre appliqué affiché sous le
+  classement. Éditeur de départages mutualisé avec les coupes. Change OpenSpec
+  `league-standings-order`.
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures
