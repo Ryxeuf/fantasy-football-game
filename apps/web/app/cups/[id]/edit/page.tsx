@@ -7,7 +7,7 @@ import {
   CUP_TIE_BREAK_LABELS,
   CUP_TIE_BREAK_ORDER,
 } from "../tie-break-labels";
-import { moveRule, toggleRule } from "./tie-break-editor";
+import { TieBreakOrderEditor } from "../../../components/TieBreakOrderEditor";
 
 /**
  * Édition d'une coupe par son commissaire — pendant de `/leagues/[id]/edit`.
@@ -266,64 +266,13 @@ export default function CupEditPage() {
             s&apos;applique (points, différence de TD, TD marqués, victoires,
             nom).
           </p>
-          <ul className="space-y-1" data-testid="cup-tiebreak-editor">
-            {tieBreak.map((slug, index) => (
-              <li
-                key={slug}
-                className="flex items-center gap-2 rounded border border-gray-200 bg-gray-50 px-2 py-1 text-sm"
-              >
-                <span className="w-5 tabular-nums text-gray-400">
-                  {index + 1}.
-                </span>
-                <span className="flex-1">
-                  {CUP_TIE_BREAK_LABELS[slug] ?? slug}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Monter"
-                  data-testid={`cup-tiebreak-up-${slug}`}
-                  disabled={index === 0}
-                  onClick={() => setTieBreak(moveRule(tieBreak, slug, -1))}
-                  className="px-1 text-gray-500 disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  aria-label="Descendre"
-                  data-testid={`cup-tiebreak-down-${slug}`}
-                  disabled={index === tieBreak.length - 1}
-                  onClick={() => setTieBreak(moveRule(tieBreak, slug, 1))}
-                  className="px-1 text-gray-500 disabled:opacity-30"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  data-testid={`cup-tiebreak-remove-${slug}`}
-                  onClick={() => setTieBreak(toggleRule(tieBreak, slug))}
-                  className="px-1 text-xs text-red-600 hover:underline"
-                >
-                  Retirer
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {CUP_TIE_BREAK_ORDER.filter((slug) => !tieBreak.includes(slug)).map(
-              (slug) => (
-                <button
-                  key={slug}
-                  type="button"
-                  data-testid={`cup-tiebreak-add-${slug}`}
-                  onClick={() => setTieBreak(toggleRule(tieBreak, slug))}
-                  className="rounded-full border border-gray-300 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-50"
-                >
-                  + {CUP_TIE_BREAK_LABELS[slug] ?? slug}
-                </button>
-              ),
-            )}
-          </div>
+          <TieBreakOrderEditor
+            value={tieBreak}
+            onChange={setTieBreak}
+            catalogue={CUP_TIE_BREAK_ORDER}
+            labels={CUP_TIE_BREAK_LABELS}
+            testIdPrefix="cup-tiebreak"
+          />
         </section>
 
         <button

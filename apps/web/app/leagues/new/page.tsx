@@ -92,6 +92,10 @@ export default function NewLeaguePage() {
             lossPoints: values.lossPoints,
             forfeitPoints: values.forfeitPoints,
             bonusPointsConfig: serializeBonusRules(values.bonusPointsConfig),
+            // `null` = « aucun critère retenu » : la ligue repart sur
+            // l'ordre par défaut.
+            tieBreakRules:
+              values.tieBreakRules.length > 0 ? values.tieBreakRules : null,
           }),
         });
         // Depot des documents officiels choisis avant la creation. Un echec

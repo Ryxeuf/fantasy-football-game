@@ -9,6 +9,12 @@ import {
   INDUCEMENT_CATALOGUE,
 } from "@bb/game-engine";
 import { BonusRulesEditor } from "./BonusRulesEditor";
+import { TieBreakOrderEditor } from "../../components/TieBreakOrderEditor";
+import {
+  LEAGUE_TIE_BREAK_CATALOGUE,
+  LEAGUE_TIE_BREAK_LABELS,
+  describeDefaultLeagueTieBreak,
+} from "./standings-order";
 import PendingCompetitionDocuments from "../../components/PendingCompetitionDocuments";
 import type { BonusRuleValue } from "./bonus-rules";
 
@@ -45,6 +51,12 @@ export interface LeagueFormValues {
   // E1 — Regles de points bonus configurables (optionnel). Vide = aucun
   // bonus. Serialise vers `bonusPointsConfig` par les pages parentes.
   bonusPointsConfig: BonusRuleValue[];
+  /**
+   * Critères de départage du classement, dans l'ordre d'application. Vide =
+   * ordre par défaut (points, bonus, forfaits, diff TD, diff sorties). Le
+   * tri reste SERVEUR : cette liste n'est qu'une consigne.
+   */
+  tieBreakRules: string[];
 }
 
 export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
@@ -61,6 +73,7 @@ export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
   lossPoints: 0,
   forfeitPoints: -1,
   bonusPointsConfig: [],
+  tieBreakRules: [],
 };
 
 interface RosterListItem {
@@ -445,6 +458,31 @@ export function LeagueForm({
           rules={form.bonusPointsConfig}
           onChange={(next) => updateField("bonusPointsConfig", next)}
         />
+
+        {/* Ordre de classement : les départages appliqués du premier au
+            dernier. Modifiable ensuite par un administrateur, même une fois
+            la ligue verrouillée (le classement est trié à la lecture). */}
+        <fieldset className="block" data-testid="league-form-tiebreak">
+          <legend className="text-sm font-medium text-gray-700">
+            Critères de classement
+          </legend>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Ajoutez les départages et ordonnez-les : ils sont appliqués du
+            premier au dernier. Sans sélection, l&apos;ordre par défaut
+            s&apos;applique ({describeDefaultLeagueTieBreak()}). Le nom de
+            l&apos;équipe tranche toujours en dernier recours.
+          </p>
+          <div className="mt-2">
+            <TieBreakOrderEditor
+              value={form.tieBreakRules}
+              onChange={(next) => updateField("tieBreakRules", next)}
+              catalogue={LEAGUE_TIE_BREAK_CATALOGUE}
+              labels={LEAGUE_TIE_BREAK_LABELS}
+              testIdPrefix="league-tiebreak"
+              disabled={submitting}
+            />
+          </div>
+        </fieldset>
 
         {mode === "create" && onPendingDocumentsChange ? (
           <PendingCompetitionDocuments

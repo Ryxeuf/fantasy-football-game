@@ -135,3 +135,59 @@ describe("LeagueForm — editeur de points bonus (E1)", () => {
     expect(screen.queryByTestId("bonus-empty")).toBeNull();
   });
 });
+
+describe("LeagueForm — critères de classement", () => {
+  it("part vide et annonce l'ordre par défaut en toutes lettres", async () => {
+    await renderForm();
+    const fieldset = screen.getByTestId("league-form-tiebreak");
+    expect(fieldset.textContent).toContain("Points (Pts)");
+    expect(fieldset.textContent).toContain("Points bonus (Bo)");
+    expect(fieldset.textContent).toContain("Forfaits (For)");
+    expect(fieldset.textContent).toContain("Différence de TD");
+    expect(fieldset.textContent).toContain("Différence de sorties");
+    // Rien de retenu : la liste ordonnée est vide, tout est « à ajouter ».
+    expect(screen.getByTestId("league-tiebreak-editor").children).toHaveLength(
+      0,
+    );
+  });
+
+  it("transmet l'ordre composé, dans l'ordre des clics", async () => {
+    const { onSubmit } = await renderForm();
+    fireEvent.click(screen.getByTestId("league-tiebreak-add-points"));
+    fireEvent.click(screen.getByTestId("league-tiebreak-add-cas_for"));
+    fireEvent.click(screen.getByTestId("league-form-submit"));
+    expect(onSubmit.mock.calls[0][0].tieBreakRules).toEqual([
+      "points",
+      "cas_for",
+    ]);
+  });
+
+  it("monter un critère change sa priorité", async () => {
+    const { onSubmit } = await renderForm({
+      tieBreakRules: ["points", "cas_for"],
+    });
+    fireEvent.click(screen.getByTestId("league-tiebreak-up-cas_for"));
+    fireEvent.click(screen.getByTestId("league-form-submit"));
+    expect(onSubmit.mock.calls[0][0].tieBreakRules).toEqual([
+      "cas_for",
+      "points",
+    ]);
+  });
+
+  it("retirer le dernier critère renvoie une liste vide (= ordre par défaut)", async () => {
+    const { onSubmit } = await renderForm({ tieBreakRules: ["cas_for"] });
+    fireEvent.click(screen.getByTestId("league-tiebreak-remove-cas_for"));
+    fireEvent.click(screen.getByTestId("league-form-submit"));
+    expect(onSubmit.mock.calls[0][0].tieBreakRules).toEqual([]);
+  });
+
+  it("hydrate l'ordre depuis initialValues (round-trip édition)", async () => {
+    await renderForm({ tieBreakRules: ["points", "bonus_points"] });
+    const list = screen.getByTestId("league-tiebreak-editor");
+    expect(list.children).toHaveLength(2);
+    expect(list.textContent).toContain("1.");
+    expect(list.textContent).toContain("2.");
+    // Un critère retenu ne reste pas proposé à l'ajout.
+    expect(screen.queryByTestId("league-tiebreak-add-points")).toBeNull();
+  });
+});
