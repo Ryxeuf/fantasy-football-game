@@ -21,7 +21,6 @@ vi.mock("../services/league", () => ({
   // Visibilité d'une ligue privée (`services/league-access` s'appuie dessus).
   isLeagueParticipant: vi.fn(async () => false),
   computeSeasonStandings: vi.fn(),
-  isSeasonEloRanked: vi.fn(() => false),
   withdrawParticipant: vi.fn(),
   listThemedSeasons: vi.fn(),
   parseAllowedRosters: vi.fn((raw: string | null) =>
@@ -808,6 +807,114 @@ describe("Route: GET /leagues/seasons/:seasonId/standings", () => {
       error: "Saison introuvable",
     });
     expect(mockService.computeSeasonStandings).not.toHaveBeenCalled();
+  });
+});
+
+describe("Critères de classement exposés par l'API", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("GET /leagues/:id sert l'ordre EFFECTIF en plus de la valeur brute", async () => {
+    mockService.getLeagueById.mockResolvedValue({
+      id: "league-1",
+      name: "Open",
+      creatorId: "commish",
+      isPublic: true,
+      allowedRosters: null,
+      tieBreakRules: null,
+      seasons: [],
+    });
+    const req = createReq({ params: { id: "league-1" } });
+    const res = createRes();
+    await handleGetLeague(req, res);
+    const league = (
+      res.payload as { data: { league: Record<string, unknown> } }
+    ).data.league;
+    // Rien de configuré : le formulaire d'édition doit relire `null`…
+    expect(league.tieBreakRules).toBeNull();
+    // …mais l'écran doit pouvoir afficher ce qui s'applique réellement.
+    expect(league.effectiveTieBreakRules).toEqual([
+      "points",
+      "bonus_points",
+      "forfeit_points",
+      "td_diff",
+      "cas_diff",
+      "name",
+    ]);
+  });
+
+  it("GET /leagues/:id normalise la valeur brute stockée", async () => {
+    mockService.getLeagueById.mockResolvedValue({
+      id: "league-1",
+      name: "Open",
+      creatorId: "commish",
+      isPublic: true,
+      allowedRosters: null,
+      tieBreakRules: JSON.stringify(["points", "inconnu", "cas_for"]),
+      seasons: [],
+    });
+    const req = createReq({ params: { id: "league-1" } });
+    const res = createRes();
+    await handleGetLeague(req, res);
+    const league = (
+      res.payload as { data: { league: Record<string, unknown> } }
+    ).data.league;
+    expect(league.tieBreakRules).toEqual(["points", "cas_for", "name"]);
+    expect(league.effectiveTieBreakRules).toEqual([
+      "points",
+      "cas_for",
+      "name",
+    ]);
+  });
+
+  it("le classement sert l'ordre appliqué (défaut compris)", async () => {
+    mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+      id: "season-1",
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: true,
+        tieBreakRules: null,
+      },
+    });
+    mockService.computeSeasonStandings.mockResolvedValue([]);
+    const req = createReq({ params: { seasonId: "season-1" } });
+    const res = createRes();
+    await handleGetStandings(req, res);
+    expect(res.payload).toMatchObject({
+      data: expect.objectContaining({
+        tieBreakRules: [
+          "points",
+          "bonus_points",
+          "forfeit_points",
+          "td_diff",
+          "cas_diff",
+          "name",
+        ],
+        showSeasonElo: false,
+      }),
+    });
+  });
+
+  it("la colonne ELO se rallume quand season_elo est un critère", async () => {
+    mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+      id: "season-1",
+      league: {
+        id: "league-1",
+        creatorId: "commish",
+        isPublic: true,
+        tieBreakRules: JSON.stringify(["points", "season_elo"]),
+      },
+    });
+    mockService.computeSeasonStandings.mockResolvedValue([]);
+    const req = createReq({ params: { seasonId: "season-1" } });
+    const res = createRes();
+    await handleGetStandings(req, res);
+    expect(res.payload).toMatchObject({
+      data: expect.objectContaining({
+        tieBreakRules: ["points", "season_elo", "name"],
+        showSeasonElo: true,
+      }),
+    });
   });
 });
 
