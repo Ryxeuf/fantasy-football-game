@@ -31,6 +31,14 @@ import {
   type SeasonExtraStats,
 } from "./league-standings-stats";
 import { serverLog } from "../utils/server-log";
+import {
+  LEAGUE_TIE_BREAK_SLUGS,
+  type LeagueTieBreakSlug,
+  parseLeagueTieBreakRules,
+  makeLeagueStandingsComparator,
+  serializeLeagueTieBreakRules,
+  isSeasonEloRanked,
+} from "./league-standings-order";
 import { LEAGUE_ARCHIVED_STATUS } from "./competition-lifecycle";
 import { healSeasonCasualties } from "./league-season-casualty-heal";
 
@@ -211,14 +219,10 @@ export async function createLeague(input: CreateLeagueInput) {
       ? JSON.stringify(input.allowedInducements)
       : null;
 
-  // L2.C.5 — valide les slugs cote serveur. Les slugs inconnus sont
-  // filtres ; si plus rien ne reste, on stocke null (= ordre defaut).
-  let tieBreakRules: string | null = null;
-  if (input.tieBreakRules && input.tieBreakRules.length > 0) {
-    const allowed = TIE_BREAK_SLUGS as readonly string[];
-    const filtered = input.tieBreakRules.filter((s) => allowed.includes(s));
-    tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
-  }
+  // Critères de départage : normalisés côté serveur (slugs inconnus
+  // filtrés, doublons retirés, `name` en sentinelle de queue). Si plus rien
+  // ne reste, on stocke null (= ordre par défaut).
+  const tieBreakRules = serializeLeagueTieBreakRules(input.tieBreakRules);
 
   // Lot E — config bonus optionnelle a la creation.
   const bonusPointsConfig =
@@ -903,123 +907,15 @@ export async function computeSeasonStandingsByPool(
 }
 
 /**
- * L2.C.5 — Slugs supportes pour `League.tieBreakRules`.
- * "name" est toujours ASC ; les autres sont DESC. L'ordre dans le
- * tableau dicte la priorite de tri.
+ * Critères de départage : la règle, les slugs et le comparateur vivent
+ * dans `services/league-standings-order` (PUR, sans Prisma). Ces alias
+ * gardent les noms historiques pour les appelants existants.
  */
-export const TIE_BREAK_SLUGS = [
-  "points",
-  "td_diff",
-  "td_for",
-  "td_against",
-  "cas_diff",
-  "cas_for",
-  "season_elo",
-  "wins",
-  "name",
-] as const;
-
-export type TieBreakSlug = (typeof TIE_BREAK_SLUGS)[number];
-
-// L'ELO n'est plus un critere de classement par defaut : non pertinent pour
-// une ligue fermee (cf. saisie offline). On le remplace par un departage
-// sportif (diff CAS). Une ligue peut le reactiver via `tieBreakRules`.
-const DEFAULT_TIE_BREAK_RULES: readonly TieBreakSlug[] = [
-  "points",
-  "td_diff",
-  "td_for",
-  "cas_diff",
-  "name",
-];
-
-/**
- * Vrai si l'ELO saisonnier est un critere de classement effectif pour cette
- * ligue (present dans `tieBreakRules`). Pilote l'affichage de la colonne ELO :
- * masquee par defaut, "reactivable via reglages" en ajoutant `season_elo`.
- */
-export function isSeasonEloRanked(raw: string | null): boolean {
-  return parseTieBreakRules(raw).includes("season_elo");
-}
-
-/**
- * Parse le JSON `tieBreakRules`. Si null / corrompu / contient des
- * slugs inconnus, retombe sur l'ordre par defaut historique.
- * Le slug "name" est toujours pousse en derniere position si absent
- * (sentinel pour eviter les ties strictes).
- */
-export function parseTieBreakRules(
-  raw: string | null,
-): readonly TieBreakSlug[] {
-  if (!raw) return DEFAULT_TIE_BREAK_RULES;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    return DEFAULT_TIE_BREAK_RULES;
-  }
-  if (!Array.isArray(parsed)) return DEFAULT_TIE_BREAK_RULES;
-  const valid: TieBreakSlug[] = [];
-  for (const item of parsed) {
-    if (
-      typeof item === "string" &&
-      (TIE_BREAK_SLUGS as readonly string[]).includes(item) &&
-      !valid.includes(item as TieBreakSlug)
-    ) {
-      valid.push(item as TieBreakSlug);
-    }
-  }
-  if (valid.length === 0) return DEFAULT_TIE_BREAK_RULES;
-  // Garantit que "name" est present en sentinelle de queue.
-  if (!valid.includes("name")) {
-    valid.push("name");
-  }
-  return valid;
-}
-
-/**
- * Construit un comparator pour `Array.prototype.sort` a partir d'une
- * liste de slugs de tri. Pure : facilement testable sans Prisma.
- */
-export function makeStandingsComparator(
-  rules: readonly TieBreakSlug[],
-): (a: StandingRow, b: StandingRow) => number {
-  return (a, b) => {
-    for (const slug of rules) {
-      const cmp = compareBySlug(a, b, slug);
-      if (cmp !== 0) return cmp;
-    }
-    return 0;
-  };
-}
-
-function compareBySlug(
-  a: StandingRow,
-  b: StandingRow,
-  slug: TieBreakSlug,
-): number {
-  switch (slug) {
-    case "points":
-      return b.points - a.points;
-    case "td_diff":
-      return b.touchdownDifference - a.touchdownDifference;
-    case "td_for":
-      return b.touchdownsFor - a.touchdownsFor;
-    case "td_against":
-      // Inverse : moins de TD encaisses = mieux.
-      return a.touchdownsAgainst - b.touchdownsAgainst;
-    case "cas_diff":
-      return b.casualtiesFor - b.casualtiesAgainst -
-        (a.casualtiesFor - a.casualtiesAgainst);
-    case "cas_for":
-      return b.casualtiesFor - a.casualtiesFor;
-    case "season_elo":
-      return b.seasonElo - a.seasonElo;
-    case "wins":
-      return b.wins - a.wins;
-    case "name":
-      return a.teamName.localeCompare(b.teamName);
-  }
-}
+export const TIE_BREAK_SLUGS = LEAGUE_TIE_BREAK_SLUGS;
+export type TieBreakSlug = LeagueTieBreakSlug;
+export const parseTieBreakRules = parseLeagueTieBreakRules;
+export const makeStandingsComparator = makeLeagueStandingsComparator;
+export { isSeasonEloRanked };
 
 /**
  * S26.6b — Liste paginee des saisons d'un theme donne.
@@ -1187,13 +1083,7 @@ export async function updateLeague(
   if (input.forfeitPoints !== undefined)
     data.forfeitPoints = input.forfeitPoints;
   if (input.tieBreakRules !== undefined) {
-    let tieBreakRules: string | null = null;
-    if (input.tieBreakRules && input.tieBreakRules.length > 0) {
-      const allowed = TIE_BREAK_SLUGS as readonly string[];
-      const filtered = input.tieBreakRules.filter((s) => allowed.includes(s));
-      tieBreakRules = filtered.length > 0 ? JSON.stringify(filtered) : null;
-    }
-    data.tieBreakRules = tieBreakRules;
+    data.tieBreakRules = serializeLeagueTieBreakRules(input.tieBreakRules);
   }
   // Lot E — accepte la nouvelle config bonus. La validation des
   // regles individuelles est deleguee au service `league-bonus-points`
