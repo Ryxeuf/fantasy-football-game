@@ -76,6 +76,9 @@ export default function LeagueDetailPage() {
   // FR2 — poules de la saison (liste éditable, avec compteur de participants).
   const [pools, setPools] = useState<LeaguePool[]>([]);
   const [showSeasonElo, setShowSeasonElo] = useState(false);
+  // Ordre de départage EFFECTIF servi par l'API (défaut compris) : affiché
+  // sous le classement plutôt que laissé à deviner.
+  const [tieBreakRules, setTieBreakRules] = useState<string[]>([]);
   const [seasonLoading, setSeasonLoading] = useState(false);
   const [seasonError, setSeasonError] = useState<string | null>(null);
 
@@ -160,6 +163,7 @@ export default function LeagueDetailPage() {
             seasonId: string;
             standings: StandingRow[];
             showSeasonElo?: boolean;
+            tieBreakRules?: string[];
             pools?: PoolStandings[];
           }>(`/leagues/seasons/${seasonId}/standings?byPool=true`),
           // FR2 — poules de la saison (lecture publique). Tolérant à l'échec.
@@ -172,12 +176,14 @@ export default function LeagueDetailPage() {
         setPoolStandings(standingsRes.pools ?? []);
         setPools(poolsRes.pools ?? []);
         setShowSeasonElo(standingsRes.showSeasonElo === true);
+        setTieBreakRules(standingsRes.tieBreakRules ?? []);
       } catch (e: unknown) {
         setSeason(null);
         setStandings([]);
         setPoolStandings([]);
         setPools([]);
         setShowSeasonElo(false);
+        setTieBreakRules([]);
         setSeasonError(
           e instanceof Error ? e.message : t.leagues.seasonError,
         );
@@ -715,6 +721,7 @@ export default function LeagueDetailPage() {
                           showSeasonElo={showSeasonElo}
                           leagueId={leagueId}
                           canViewRosters={canViewRosters}
+                          tieBreakRules={tieBreakRules}
                         />
                       </CollapsibleSection>
                     ))}
@@ -725,6 +732,7 @@ export default function LeagueDetailPage() {
                     showSeasonElo={showSeasonElo}
                     leagueId={leagueId}
                     canViewRosters={canViewRosters}
+                    tieBreakRules={tieBreakRules}
                   />
                 )}
               </CollapsibleSection>

@@ -14,6 +14,7 @@ import {
   makeLeagueStandingsComparator,
   normalizeLeagueTieBreakRules,
   parseLeagueTieBreakRules,
+  readStoredLeagueTieBreakRules,
   serializeLeagueTieBreakRules,
   type LeagueStandingRowForOrder,
 } from "./league-standings-order";
@@ -308,5 +309,24 @@ describe("isSeasonEloRanked", () => {
 
   it("faux quand season_elo est absent des critères configurés", () => {
     expect(isSeasonEloRanked(JSON.stringify(["points", "wins"]))).toBe(false);
+  });
+});
+
+describe("readStoredLeagueTieBreakRules", () => {
+  it("null quand rien n'est stocké (et non le défaut matérialisé)", () => {
+    expect(readStoredLeagueTieBreakRules(null)).toBeNull();
+    expect(readStoredLeagueTieBreakRules("")).toBeNull();
+  });
+
+  it("null sur un contenu illisible", () => {
+    expect(readStoredLeagueTieBreakRules("{not-json")).toBeNull();
+    expect(readStoredLeagueTieBreakRules('{"a":1}')).toBeNull();
+    expect(readStoredLeagueTieBreakRules(JSON.stringify([1, 2]))).toBeNull();
+  });
+
+  it("rend la liste TELLE QUE stockée, sans y appliquer le défaut", () => {
+    expect(
+      readStoredLeagueTieBreakRules(JSON.stringify(["points", "cas_for"])),
+    ).toEqual(["points", "cas_for"]);
   });
 });

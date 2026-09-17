@@ -10,6 +10,10 @@
  *   - liste paginee + filtre par status + recherche par nom
  *   - badge `Vide` quand seasonsCount=0 (eligible a l'archivage)
  *   - actions par-ligue : changer status, archive, voir detail
+ *   - criteres de classement : reordonnables MEME une fois la ligue
+ *     verrouillee par un match joue (le classement est trie a la lecture,
+ *     rien de persiste ne bouge) — c'est le seul chemin qui reste ouvert,
+ *     `PATCH /leagues/:id` (commissaire) repondant alors 409
  *
  * UX volontairement minimale : scrollable list, modale legere pour
  * choisir le nouveau status. Le transfer-creator necessite de
@@ -21,6 +25,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
+import { TieBreakOrderEditor } from "../../components/TieBreakOrderEditor";
+import {
+  LEAGUE_TIE_BREAK_CATALOGUE,
+  LEAGUE_TIE_BREAK_LABELS,
+  describeDefaultLeagueTieBreak,
+} from "../../leagues/_components/standings-order";
 
 type LeagueStatus =
   | "draft"
@@ -46,6 +56,10 @@ interface AdminLeague {
   seasonsCount: number;
   createdAt: string;
   updatedAt: string;
+  /** Critères CONFIGURÉS (null = rien, donc ordre par défaut). */
+  tieBreakRules?: string[] | null;
+  /** Ordre RÉELLEMENT appliqué, défaut compris. */
+  effectiveTieBreakRules?: string[];
 }
 
 interface ListResponse {
@@ -103,6 +117,12 @@ export default function AdminLeaguesPage() {
   const [transferTarget, setTransferTarget] = useState<{
     leagueId: string;
     userId: string;
+  } | null>(null);
+  // Ligue dont les critères de classement sont en cours d'édition, et la
+  // liste en cours de composition (vide = retour à l'ordre par défaut).
+  const [orderTarget, setOrderTarget] = useState<{
+    league: AdminLeague;
+    rules: string[];
   } | null>(null);
 
   // Auth gate cote client : redirige les non-admin vers /. Le serveur
@@ -212,6 +232,35 @@ export default function AdminLeaguesPage() {
       setBusyId(null);
     }
   }, [transferTarget, reload]);
+
+  const handleSaveOrder = useCallback(async () => {
+    if (!orderTarget) return;
+    try {
+      setBusyId(orderTarget.league.id);
+      await fetchJSON(
+        `/admin/leagues/${orderTarget.league.id}/standings-order`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            // `null` = aucun critère retenu : la ligue repart sur l'ordre
+            // par défaut.
+            tieBreakRules:
+              orderTarget.rules.length > 0 ? orderTarget.rules : null,
+          }),
+        },
+      );
+      setOrderTarget(null);
+      await reload();
+    } catch (e: unknown) {
+      alert(
+        e instanceof Error
+          ? e.message
+          : "Echec de l'enregistrement des criteres",
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }, [orderTarget, reload]);
 
   const counts = useMemo(() => {
     const out: Record<string, number> = {};
@@ -357,6 +406,17 @@ export default function AdminLeaguesPage() {
                 ) : null}
                 <button
                   type="button"
+                  data-testid={`admin-league-order-${l.id}`}
+                  onClick={() =>
+                    setOrderTarget({ league: l, rules: l.tieBreakRules ?? [] })
+                  }
+                  disabled={busyId === l.id}
+                  className="px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                >
+                  🔢 Classement
+                </button>
+                <button
+                  type="button"
                   data-testid={`admin-league-transfer-${l.id}`}
                   onClick={() =>
                     setTransferTarget({ leagueId: l.id, userId: "" })
@@ -366,6 +426,18 @@ export default function AdminLeaguesPage() {
                 >
                   🔄 Transferer
                 </button>
+                <span
+                  data-testid={`admin-league-order-summary-${l.id}`}
+                  className="text-gray-500"
+                  title="Departages appliques, du premier au dernier"
+                >
+                  {(l.effectiveTieBreakRules ?? [])
+                    .map((slug) => LEAGUE_TIE_BREAK_LABELS[slug] ?? slug)
+                    .join(" › ")}
+                  {l.tieBreakRules && l.tieBreakRules.length > 0 ? null : (
+                    <span className="ml-1 text-gray-400">(defaut)</span>
+                  )}
+                </span>
                 <span className="text-gray-400">
                   Maj{" "}
                   {new Date(l.updatedAt).toLocaleDateString("fr-FR", {
@@ -378,6 +450,56 @@ export default function AdminLeaguesPage() {
           ))}
         </ul>
       )}
+
+      {orderTarget ? (
+        <div
+          data-testid="admin-standings-order-modal"
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          onClick={() => setOrderTarget(null)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg max-w-lg w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold">
+              Criteres de classement — {orderTarget.league.name}
+            </h2>
+            <p className="text-xs text-gray-500">
+              Departages appliques du premier au dernier. Sans selection,
+              l&apos;ordre par defaut s&apos;applique (
+              {describeDefaultLeagueTieBreak()}). Modifiable meme en cours de
+              saison : le classement est trie a la lecture, aucun compteur
+              persiste ne bouge.
+            </p>
+            <TieBreakOrderEditor
+              value={orderTarget.rules}
+              onChange={(rules) => setOrderTarget({ ...orderTarget, rules })}
+              catalogue={LEAGUE_TIE_BREAK_CATALOGUE}
+              labels={LEAGUE_TIE_BREAK_LABELS}
+              testIdPrefix="admin-tiebreak"
+              disabled={busyId === orderTarget.league.id}
+            />
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                data-testid="admin-standings-order-save"
+                onClick={handleSaveOrder}
+                disabled={busyId === orderTarget.league.id}
+                className="px-3 py-1.5 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
+              >
+                Enregistrer
+              </button>
+              <button
+                type="button"
+                onClick={() => setOrderTarget(null)}
+                className="text-sm text-gray-600 hover:text-gray-800"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {transferTarget ? (
         <div

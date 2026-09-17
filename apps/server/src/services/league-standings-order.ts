@@ -133,6 +133,27 @@ export function parseLeagueTieBreakRules(
 }
 
 /**
+ * Lit la colonne SANS appliquer le défaut : renvoie la liste telle qu'elle a
+ * été stockée (`null` si rien, ou si le contenu est illisible). C'est cette
+ * valeur que les formulaires rechargent — une ligue sans configuration doit
+ * revenir sur une liste vide, pas sur le défaut matérialisé, sinon l'écran
+ * le fige sans que personne l'ait demandé.
+ */
+export function readStoredLeagueTieBreakRules(
+  raw: string | null,
+): string[] | null {
+  if (!raw) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.every((v) => typeof v === "string")
+      ? (parsed as string[])
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Normalise une liste saisie (création / édition) avant persistance.
  * `null` signifie « aucun critère retenu » : la colonne repart à `null` et
  * le classement retombe sur l'ordre par défaut.

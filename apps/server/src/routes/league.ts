@@ -246,6 +246,7 @@ import {
 import {
   normalizeLeagueTieBreakRules,
   parseLeagueTieBreakRules,
+  readStoredLeagueTieBreakRules,
 } from "../services/league-standings-order";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { hasRole } from "../utils/roles";
@@ -346,7 +347,7 @@ function serializeLeague(
   // puisse l'afficher sans redériver la règle.
   const raw = (league.tieBreakRules as string | null) ?? null;
   const normalized = normalizeLeagueTieBreakRules(
-    parseRawTieBreakRules(raw),
+    readStoredLeagueTieBreakRules(raw),
   );
   return {
     ...league,
@@ -360,19 +361,6 @@ function serializeLeague(
     tieBreakRules: normalized,
     effectiveTieBreakRules: parseLeagueTieBreakRules(raw),
   };
-}
-
-/** Colonne `String?` → liste brute, sans normaliser (null si illisible). */
-function parseRawTieBreakRules(raw: string | null): string[] | null {
-  if (!raw) return null;
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.every((v) => typeof v === "string")
-      ? (parsed as string[])
-      : null;
-  } catch {
-    return null;
-  }
 }
 
 function domainError(res: Response, e: unknown): void {

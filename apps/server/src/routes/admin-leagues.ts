@@ -44,6 +44,7 @@ import {
 import {
   normalizeLeagueTieBreakRules,
   parseLeagueTieBreakRules,
+  readStoredLeagueTieBreakRules,
   serializeLeagueTieBreakRules,
 } from "../services/league-standings-order";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -62,6 +63,7 @@ interface AdminLeagueRow {
   isPublic: boolean;
   maxParticipants: number;
   creatorId: string;
+  tieBreakRules: string | null;
   createdAt: Date;
   updatedAt: Date;
   creator: {
@@ -131,6 +133,12 @@ export async function handleListAdminLeagues(
           maxParticipants: l.maxParticipants,
           creatorId: l.creatorId,
           creator: l.creator,
+          // Critères de classement : la valeur BRUTE (ce que la console
+          // re-poste) ET l'ordre EFFECTIF (ce qui s'applique réellement).
+          tieBreakRules: normalizeLeagueTieBreakRules(
+            readStoredLeagueTieBreakRules(l.tieBreakRules),
+          ),
+          effectiveTieBreakRules: parseLeagueTieBreakRules(l.tieBreakRules),
           seasonsCount: l._count.seasons,
           createdAt: l.createdAt,
           updatedAt: l.updatedAt,
