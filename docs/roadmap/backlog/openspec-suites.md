@@ -185,6 +185,25 @@ Source : `raise-the-dead-masters-of-undeath` (2026-09-11).
   blessures de la rencontre ne sont pas reportées sur le `TeamPlayer` créé
   (même limite que le journalier recruté).
 
+## Ordre de classement d'une ligue
+
+Source : `league-standings-order` (2026-09-17 → 2026-09-18).
+
+- **Additionner les bonus aux points.** `points` reste le barème
+  win/draw/loss pur et `Bo` son sous-total, compté à part ; les bonus sont un
+  critère de DÉPARTAGE, pas une redéfinition du total. Une ligue qui voudrait
+  classer sur `points + bonus` n'a aucun levier. Ce n'est pas un réglage de
+  plus : le total nourrit aussi les awards de fin de saison
+  (`league-scoring`) et le seeding des play-offs, qui devraient le suivre.
+- **Le commissaire reste bloqué sur TOUT le reste après le premier match.**
+  Seul l'ordre du classement lui échappe (il est appliqué à la lecture). Le
+  reste — barème, rosters autorisés, points bonus, coups de pouce — reste
+  gelé parce qu'il réécrirait des points déjà attribués ; le jour où l'un
+  d'eux devient corrigeable, il lui faudra son propre rattrapage, comme les
+  sorties ont eu le leur.
+- **Aucun ordre par POULE ni par phase.** Une ligue à poules applique le même
+  ordre partout, et le bracket de play-offs n'en dépend pas.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
