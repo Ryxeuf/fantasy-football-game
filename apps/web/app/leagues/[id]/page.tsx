@@ -390,15 +390,27 @@ export default function LeagueDetailPage() {
               ? t.leagues.visibilityPublic
               : t.leagues.visibilityPrivate}
           </span>
-          {/* L2.D — edition reservee au commissaire, tant que la ligue
-              n'est pas verrouillee (aucun match joue). */}
-          {leagueEnabled && isCreator && !league.hasScoredMatch ? (
+          {/* Réglages réservés au commissaire. L'accès reste OUVERT une fois
+              la ligue verrouillée par un match joué : le formulaire complet
+              est gelé, mais l'ordre du classement s'y modifie encore (il est
+              appliqué au tri, à la lecture). Masquer le bouton dans ce cas
+              rendait ce réglage introuvable. */}
+          {leagueEnabled && isCreator ? (
             <Link
               href={`/leagues/${leagueId}/edit`}
               data-testid="edit-league-cta"
+              title={
+                league.hasScoredMatch
+                  ? "Ligue lancée : seul l'ordre du classement reste modifiable"
+                  : undefined
+              }
               className="ml-auto inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-white border border-nuffle-gold text-nuffle-bronze text-sm font-medium hover:bg-nuffle-gold/10"
             >
-              ✏️ {t.leagues.editButton}
+              {league.hasScoredMatch ? (
+                <>⚙️ Réglages</>
+              ) : (
+                <>✏️ {t.leagues.editButton}</>
+              )}
             </Link>
           ) : null}
         </div>

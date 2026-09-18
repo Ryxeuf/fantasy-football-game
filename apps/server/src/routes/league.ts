@@ -19,6 +19,7 @@ import { prisma } from "../prisma";
 import {
   createLeague,
   updateLeague,
+  setLeagueStandingsOrder,
   hasLeagueScoredMatch,
   createSeason,
   addParticipant,
@@ -242,6 +243,8 @@ import {
   type StartPlayoffsBody,
   type ForfeitPairingBody,
   type RecordOfflineResultBody,
+  leagueStandingsOrderSchema,
+  type LeagueStandingsOrderBody,
 } from "../schemas/league.schemas";
 import {
   normalizeLeagueTieBreakRules,
@@ -588,6 +591,50 @@ export async function handleUpdateLeague(
       bonusPointsConfig: body.bonusPointsConfig,
     });
     sendSuccess(res, serializeLeague(updated as Record<string, unknown>));
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * PATCH /leagues/:id/standings-order
+ *
+ * Réordonne les critères de classement. Ouvert au COMMISSAIRE comme à un
+ * administrateur, et — contrairement à `PATCH /leagues/:id` — il ne se
+ * verrouille jamais : le classement est trié à la lecture, en changer
+ * l'ordre ne réécrit aucun point déjà attribué. C'est donc le seul réglage
+ * qu'un commissaire garde en main une fois sa ligue lancée.
+ *
+ * 404 sur une ligue inconnue OU invisible (ligue privée, cf.
+ * `services/league-access`), 403 sur une ligue visible mais dont on n'est ni
+ * le commissaire ni administrateur.
+ */
+export async function handleSetLeagueStandingsOrder(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const leagueId = req.params.id;
+  const visible = await ensureVisibleLeague(req, res, leagueId);
+  if (!visible) return;
+  const isAdmin = hasRole(req.user?.roles ?? [], "admin");
+  if (visible.creatorId !== userId && !isAdmin) {
+    sendError(
+      res,
+      "Seul le commissaire (createur) peut modifier cette ligue",
+      403,
+    );
+    return;
+  }
+  const body: LeagueStandingsOrderBody = req.body;
+  try {
+    const result = await setLeagueStandingsOrder(leagueId, body.tieBreakRules);
+    if (!result) {
+      sendError(res, LEAGUE_NOT_FOUND, 404);
+      return;
+    }
+    sendSuccess(res, result);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -3171,6 +3218,14 @@ router.patch(
   authUser,
   validate(updateLeagueSchema),
   handleUpdateLeague,
+);
+// Hors verrou d'édition : un commissaire garde la main sur l'ordre de son
+// classement même une fois sa ligue lancée (le tri se fait à la lecture).
+router.patch(
+  "/:id/standings-order",
+  authUser,
+  validate(leagueStandingsOrderSchema),
+  handleSetLeagueStandingsOrder,
 );
 router.get(
   "/",

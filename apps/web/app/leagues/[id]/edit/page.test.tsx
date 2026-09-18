@@ -49,6 +49,9 @@ function mockApi(opts: {
   league?: Record<string, unknown>;
   meUserId?: string | null;
   onPatch?: (body: unknown) => void;
+  /** Corps reçu par `PATCH /leagues/:id/standings-order` (mode verrouillé). */
+  onOrderPatch?: (body: unknown) => void;
+  orderFails?: boolean;
 }) {
   mockFetch.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
@@ -64,6 +67,20 @@ function mockApi(opts: {
     }
     if (/\/api\/rosters/.test(url)) {
       return { ok: true, json: () => Promise.resolve({ rosters: [] }) };
+    }
+    if (/\/leagues\/lg-1\/standings-order$/.test(url)) {
+      opts.onOrderPatch?.(init?.body ? JSON.parse(String(init.body)) : null);
+      if (opts.orderFails) {
+        return {
+          ok: false,
+          status: 403,
+          json: () => Promise.resolve({ error: "Interdit" }),
+        };
+      }
+      return {
+        ok: true,
+        json: () => Promise.resolve({ success: true, data: {} }),
+      };
     }
     if (/\/leagues\/lg-1(?:$|\?)/.test(url)) {
       if (method === "PATCH") {
@@ -113,12 +130,98 @@ describe("EditLeaguePage", () => {
     expect(screen.queryByTestId("edit-league-page")).toBeNull();
   });
 
-  it("redirects when the league is locked (a match has been scored)", async () => {
+  it("ligue verrouillée : panneau réduit au lieu d'une redirection", async () => {
+    // Avant, la page redirigeait : le commissaire n'avait plus AUCUN accès
+    // à ses réglages, alors que l'ordre du classement reste modifiable.
     mockApi({ league: { ...baseLeague, hasScoredMatch: true }, meUserId: "u1" });
     renderPage();
     await waitFor(() => {
-      expect(replaceMock).toHaveBeenCalledWith("/leagues/lg-1");
+      expect(screen.getByTestId("locked-league-settings")).toBeTruthy();
     });
+    expect(replaceMock).not.toHaveBeenCalled();
+    // Le formulaire complet est gelé…
+    expect(screen.queryByTestId("league-form-name")).toBeNull();
+    expect(screen.queryByTestId("league-form-win-points")).toBeNull();
+    // …et la raison est dite.
+    expect(screen.getByTestId("league-locked-notice").textContent).toMatch(
+      /match a déjà été joué/i,
+    );
+    // Seul l'ordre du classement est éditable.
+    expect(screen.getByTestId("league-form-tiebreak")).toBeTruthy();
+  });
+
+  it("ligue verrouillée : l'ordre part sur la route hors verrou", async () => {
+    const bodies: unknown[] = [];
+    mockApi({
+      league: {
+        ...baseLeague,
+        hasScoredMatch: true,
+        tieBreakRules: ["points"],
+      },
+      meUserId: "u1",
+      onOrderPatch: (b) => bodies.push(b),
+    });
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByTestId("locked-settings-submit")).toBeTruthy();
+    });
+    fireEvent.click(screen.getByTestId("league-tiebreak-add-cas_for"));
+    fireEvent.click(screen.getByTestId("locked-settings-submit"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("locked-settings-saved")).toBeTruthy();
+    });
+    expect(bodies).toEqual([{ tieBreakRules: ["points", "cas_for"] }]);
+    // Aucun PATCH sur la ligue entière : elle est verrouillée.
+    const fullPatch = mockFetch.mock.calls.find(
+      (c) =>
+        /\/leagues\/lg-1(?:$|\?)/.test(String(c[0])) &&
+        String((c[1] as RequestInit | undefined)?.method).toUpperCase() ===
+          "PATCH",
+    );
+    expect(fullPatch).toBeUndefined();
+  });
+
+  it("ligue verrouillée : une liste vidée repart sur `null` (défaut)", async () => {
+    const bodies: unknown[] = [];
+    mockApi({
+      league: {
+        ...baseLeague,
+        hasScoredMatch: true,
+        tieBreakRules: ["cas_for"],
+      },
+      meUserId: "u1",
+      onOrderPatch: (b) => bodies.push(b),
+    });
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByTestId("locked-settings-submit")).toBeTruthy();
+    });
+    fireEvent.click(screen.getByTestId("league-tiebreak-remove-cas_for"));
+    fireEvent.click(screen.getByTestId("locked-settings-submit"));
+
+    await waitFor(() => {
+      expect(bodies).toEqual([{ tieBreakRules: null }]);
+    });
+  });
+
+  it("ligue verrouillée : un refus serveur est affiché, pas avalé", async () => {
+    mockApi({
+      league: { ...baseLeague, hasScoredMatch: true },
+      meUserId: "u1",
+      orderFails: true,
+    });
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByTestId("locked-settings-submit")).toBeTruthy();
+    });
+    fireEvent.click(screen.getByTestId("league-tiebreak-add-points"));
+    fireEvent.click(screen.getByTestId("locked-settings-submit"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("locked-settings-error")).toBeTruthy();
+    });
+    expect(screen.queryByTestId("locked-settings-saved")).toBeNull();
   });
 
   it("PATCHes the league and navigates to the detail on submit", async () => {

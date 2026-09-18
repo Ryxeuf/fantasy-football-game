@@ -11,6 +11,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../services/league", () => ({
   createLeague: vi.fn(),
   updateLeague: vi.fn(),
+  setLeagueStandingsOrder: vi.fn(),
   hasLeagueScoredMatch: vi.fn(),
   createSeason: vi.fn(),
   addParticipant: vi.fn(),
@@ -52,6 +53,7 @@ import type { Request, Response } from "express";
 import {
   createLeague,
   updateLeague,
+  setLeagueStandingsOrder,
   hasLeagueScoredMatch,
   createSeason,
   addParticipant,
@@ -75,6 +77,7 @@ import {
   handleJoinSeason,
   handleCreateRound,
   handleGetStandings,
+  handleSetLeagueStandingsOrder,
   handleLeaveSeason,
   handleListThemes,
   handleListSeasonsByTheme,
@@ -84,6 +87,8 @@ import type { AuthenticatedRequest } from "../middleware/authUser";
 const mockService = {
   createLeague: createLeague as ReturnType<typeof vi.fn>,
   updateLeague: updateLeague as ReturnType<typeof vi.fn>,
+  setLeagueStandingsOrder:
+    setLeagueStandingsOrder as ReturnType<typeof vi.fn>,
   hasLeagueScoredMatch: hasLeagueScoredMatch as ReturnType<typeof vi.fn>,
   createSeason: createSeason as ReturnType<typeof vi.fn>,
   addParticipant: addParticipant as ReturnType<typeof vi.fn>,
@@ -915,6 +920,111 @@ describe("Critères de classement exposés par l'API", () => {
         showSeasonElo: true,
       }),
     });
+  });
+});
+
+describe("Route: PATCH /leagues/:id/standings-order", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  /** Ligue visible : `findVisibleLeague` lit prisma.league.findUnique. */
+  function visibleLeague(over: Record<string, unknown> = {}) {
+    mockPrisma.league.findUnique.mockResolvedValue({
+      id: "league-1",
+      creatorId: "commish",
+      isPublic: true,
+      ...over,
+    });
+  }
+
+  it("le COMMISSAIRE réordonne, même ligue verrouillée", async () => {
+    visibleLeague();
+    mockService.setLeagueStandingsOrder.mockResolvedValue({
+      leagueId: "league-1",
+      tieBreakRules: ["points", "cas_for", "name"],
+      effectiveTieBreakRules: ["points", "cas_for", "name"],
+    });
+    const req = createReq({
+      params: { id: "league-1" },
+      user: { id: "commish", roles: ["user"] },
+      body: { tieBreakRules: ["points", "cas_for"] },
+    });
+    const res = createRes();
+    await handleSetLeagueStandingsOrder(req, res);
+    // Le verrou d'édition n'est jamais consulté : le tri se fait à la lecture.
+    expect(mockService.hasLeagueScoredMatch).not.toHaveBeenCalled();
+    expect(mockService.setLeagueStandingsOrder).toHaveBeenCalledWith(
+      "league-1",
+      ["points", "cas_for"],
+    );
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: expect.objectContaining({
+        effectiveTieBreakRules: ["points", "cas_for", "name"],
+      }),
+    });
+  });
+
+  it("un administrateur qui n'est pas le commissaire y a droit aussi", async () => {
+    visibleLeague();
+    mockService.setLeagueStandingsOrder.mockResolvedValue({
+      leagueId: "league-1",
+      tieBreakRules: null,
+      effectiveTieBreakRules: ["points", "name"],
+    });
+    const req = createReq({
+      params: { id: "league-1" },
+      user: { id: "someone-else", roles: ["admin"] },
+      body: { tieBreakRules: null },
+    });
+    const res = createRes();
+    await handleSetLeagueStandingsOrder(req, res);
+    expect(mockService.setLeagueStandingsOrder).toHaveBeenCalledWith(
+      "league-1",
+      null,
+    );
+  });
+
+  it("403 pour un tiers sur une ligue publique, sans écrire", async () => {
+    visibleLeague();
+    const req = createReq({
+      params: { id: "league-1" },
+      user: { id: "intrus", roles: ["user"] },
+      body: { tieBreakRules: ["points"] },
+    });
+    const res = createRes();
+    await handleSetLeagueStandingsOrder(req, res);
+    expect(res.statusCode).toBe(403);
+    expect(mockService.setLeagueStandingsOrder).not.toHaveBeenCalled();
+  });
+
+  it("404 sur une ligue PRIVÉE dont on n'est pas membre (invisible)", async () => {
+    visibleLeague({ isPublic: false });
+    const req = createReq({
+      params: { id: "league-1" },
+      user: { id: "intrus", roles: ["user"] },
+      body: { tieBreakRules: ["points"] },
+    });
+    const res = createRes();
+    await handleSetLeagueStandingsOrder(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(res.payload).toEqual({
+      success: false,
+      error: "Ligue introuvable",
+    });
+    expect(mockService.setLeagueStandingsOrder).not.toHaveBeenCalled();
+  });
+
+  it("404 sur une ligue inconnue", async () => {
+    mockPrisma.league.findUnique.mockResolvedValue(null);
+    const req = createReq({
+      params: { id: "nope" },
+      user: { id: "commish", roles: ["user"] },
+      body: { tieBreakRules: ["points"] },
+    });
+    const res = createRes();
+    await handleSetLeagueStandingsOrder(req, res);
+    expect(res.statusCode).toBe(404);
+    expect(mockService.setLeagueStandingsOrder).not.toHaveBeenCalled();
   });
 });
 
