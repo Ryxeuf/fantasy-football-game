@@ -44,13 +44,21 @@ sentinelle DOIVENT être normalisés à l'écriture ; une liste vide ou `null`
 DOIT remettre la ligue sur l'ordre par défaut.
 
 Une fois un match joué, la ligue est verrouillée pour tout le reste, mais
-`PATCH /api/admin/leagues/:id/standings-order` (administrateur) DOIT rester
-ouvert — y compris sur une ligue en cours ou archivée. Le classement étant
-trié à la lecture, ce changement NE DOIT modifier aucun compteur persisté.
+l'ordre du classement DOIT rester modifiable, par son commissaire
+(`PATCH /leagues/:id/standings-order`) comme par un administrateur
+(`PATCH /api/admin/leagues/:id/standings-order`) — y compris sur une ligue en
+cours ou archivée. Le classement étant trié à la lecture, ce changement NE
+DOIT modifier aucun compteur persisté.
+
+Une ligue INVISIBLE au demandeur (ligue privée) DOIT répondre `404`, une
+ligue visible dont il n'est ni commissaire ni administrateur, `403`.
+
+L'écriture DOIT passer par un seul chemin, partagé par les deux routes.
 
 #### Scenario: Correction en cours de saison
-- WHEN un administrateur réordonne les critères d'une ligue dont des matchs sont joués
+- WHEN le commissaire ou un administrateur réordonne les critères d'une ligue dont des matchs sont joués
 - THEN le classement servi ensuite DOIT appliquer le nouvel ordre, sans qu'aucun compteur change
+- AND le verrou d'édition de la ligue NE DOIT PAS être consulté
 
 #### Scenario: Retour au défaut
 - WHEN les critères sont remis à `null`
@@ -59,6 +67,34 @@ trié à la lecture, ce changement NE DOIT modifier aucun compteur persisté.
 #### Scenario: Slug inconnu refusé
 - WHEN une écriture porte un critère qui n'existe pas
 - THEN elle DOIT être refusée sans rien modifier
+
+#### Scenario: Tiers sur une ligue privée
+- WHEN un compte qui ne voit pas la ligue tente de réordonner ses critères
+- THEN la réponse DOIT être `404`, et rien NE DOIT être écrit
+
+### Requirement: Les réglages d'une ligue restent ATTEIGNABLES une fois lancée
+
+La fiche d'une ligue DOIT exposer à son commissaire un accès à ses réglages
+quel que soit l'état de la ligue, y compris verrouillée par un match joué.
+L'écran de réglages NE DOIT PAS rediriger un commissaire : sur une ligue
+verrouillée, il DOIT servir un panneau réduit qui énonce ce qui est gelé et
+pourquoi, et n'expose que l'ordre du classement.
+
+Un réglage annoncé comme modifiable et dépourvu de chemin d'accès équivaut à
+un réglage absent.
+
+#### Scenario: Ligue dont un match est joué
+- WHEN le commissaire ouvre la fiche de sa ligue verrouillée
+- THEN un accès à ses réglages DOIT être présent
+
+#### Scenario: Écran de réglages d'une ligue verrouillée
+- WHEN le commissaire l'ouvre
+- THEN le formulaire complet NE DOIT PAS être servi
+- AND l'ordre du classement DOIT être modifiable et enregistrable
+
+#### Scenario: Non-commissaire
+- WHEN un tiers ouvre l'écran de réglages
+- THEN il DOIT être renvoyé vers la fiche de la ligue
 
 ### Requirement: L'ordre appliqué est visible
 

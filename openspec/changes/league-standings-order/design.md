@@ -69,6 +69,22 @@ C'est aussi ce que fait la coupe (`PATCH /cup/:id`, commissaire OU admin,
 barème et départages modifiables en cours de coupe) : la différence est que
 la ligue, elle, a un verrou à respecter pour tout le reste.
 
+**Correction d'après retour d'usage** : réserver la route aux seuls
+administrateurs de la PLATEFORME laissait le commissaire sans aucun chemin
+vers un réglage qu'on lui annonçait, puisque la fiche masquait son bouton et
+que l'écran d'édition redirigeait dès le premier match joué. La route
+`PATCH /leagues/:id/standings-order` est donc ouverte au commissaire aussi —
+la justification technique (rien de persisté ne bouge) vaut pour lui
+exactement comme pour un admin, et c'est la posture de la coupe. Les deux
+routes partagent une seule écriture (`setLeagueStandingsOrder`) et un seul
+schéma Zod.
+
+Corollaire d'écran, et la vraie leçon : **un écran de réglages ne redirige
+pas quand une PARTIE de son contenu est gelée**, il sert ce qui reste et dit
+pourquoi le reste ne l'est pas. Rediriger transforme un verrou partiel en
+absence totale de fonctionnalité — invisible à la relecture du code, évident
+pour qui utilise le produit.
+
 ## Un seul éditeur pour les deux compétitions
 
 `components/TieBreakOrderEditor` est agnostique du catalogue : il reçoit la

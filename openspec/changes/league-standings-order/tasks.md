@@ -31,6 +31,15 @@
 - [x] 4.4 Classement : les départages appliqués sous le tableau. Tests
       composant.
 
-## 5. Documentation
-- [x] 5.1 Mémoire `CLAUDE.md` (le tri suit les colonnes affichées ; une
-      règle de LECTURE échappe au verrou d'édition).
+## 5. Accès du commissaire (retour d'usage)
+- [x] 5.1 `PATCH /leagues/:id/standings-order` (commissaire ou admin, hors
+      verrou) ; écriture unifiée dans `setLeagueStandingsOrder`, schéma Zod
+      partagé avec la route admin. Tests de route.
+- [x] 5.2 La fiche de ligue garde son bouton de réglages une fois la ligue
+      verrouillée ; `/leagues/[id]/edit` sert un panneau RÉDUIT au lieu de
+      rediriger. Tests composant + page.
+
+## 6. Documentation
+- [x] 6.1 Mémoire `CLAUDE.md` (le tri suit les colonnes affichées ; une
+      règle de LECTURE échappe au verrou d'édition ; un réglage sans chemin
+      d'accès est un réglage absent).

@@ -818,6 +818,33 @@ par ligne dans la console admin avec la mention « (defaut) »). Un départage
 invisible est indistinguable d'un bug de tri — c'est exactement comme ça que
 celui-ci a été signalé.
 
+### Un écran de réglages NE REDIRIGE PAS quand une partie est gelée
+
+Suite directe, et le défaut que le change précédent a laissé passer. La règle
+« l'ordre de classement échappe au verrou » était juste côté serveur, mais
+côté écran :
+
+- la fiche de ligue masquait son bouton de réglages dès `hasScoredMatch` ;
+- `/leagues/[id]/edit` **redirigeait** vers la fiche dans le même cas.
+
+Résultat : sur une ligue en cours — la vie normale d'une ligue — le
+commissaire n'avait AUCUN chemin vers un réglage qu'on lui annonçait
+personnalisable. Un réglage sans chemin d'accès est un réglage absent, et
+c'est invisible à la relecture du code : le serveur répond parfaitement à une
+requête que personne ne peut déclencher.
+
+Règle : quand un verrou ne gèle qu'une PARTIE d'un écran, l'écran reste
+ouvert et sert le reste en énonçant ce qui est gelé et pourquoi. Rediriger
+transforme un verrou partiel en absence totale de fonctionnalité. Le bloc
+partagé (`StandingsOrderField`) est le même des deux côtés, pour que le
+panneau réduit ne dérive pas du formulaire complet.
+
+Corollaire d'autorisation : la justification « rien de persisté ne bouge »
+vaut pour le COMMISSAIRE autant que pour un admin —
+`PATCH /leagues/:id/standings-order` lui est donc ouvert (posture de la coupe,
+`PATCH /cup/:id` = commissaire OU admin). Les deux routes partagent une seule
+écriture (`setLeagueStandingsOrder`) et un seul schéma Zod.
+
 ### Haine (X) : le mot-clé se CHOISIT parmi ceux de l'adversaire
 
 Un joueur porte souvent plusieurs lignées (un Zombie est *Humain*,
@@ -1692,6 +1719,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   ouverte même après le verrou d'édition, et ordre appliqué affiché sous le
   classement. Éditeur de départages mutualisé avec les coupes. Change OpenSpec
   `league-standings-order`.
+- **2026-09-18** : suite du même change — le commissaire n'avait AUCUN accès à
+  ses réglages sur une ligue lancée (bouton masqué, écran d'édition qui
+  redirigeait). `PATCH /leagues/:id/standings-order` lui est ouvert (comme à
+  un admin), la fiche garde son bouton « ⚙️ Réglages » et l'écran sert un
+  panneau RÉDUIT au lieu de rediriger.
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures
