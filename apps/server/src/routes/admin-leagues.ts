@@ -29,15 +29,18 @@ import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
   adminLeaguesQuerySchema,
-  adminLeagueStandingsOrderSchema,
   adminLeagueStatusSchema,
   adminLeagueTransferSchema,
   type AdminLeaguesQuery,
-  type AdminLeagueStandingsOrderBody,
   type AdminLeagueStatusBody,
   type AdminLeagueTransferBody,
 } from "../schemas/admin-leagues.schemas";
 import {
+  leagueStandingsOrderSchema,
+  type LeagueStandingsOrderBody,
+} from "../schemas/league.schemas";
+import {
+  setLeagueStandingsOrder,
   withdrawParticipant,
   LeagueWithdrawError,
 } from "../services/league";
@@ -45,7 +48,6 @@ import {
   normalizeLeagueTieBreakRules,
   parseLeagueTieBreakRules,
   readStoredLeagueTieBreakRules,
-  serializeLeagueTieBreakRules,
 } from "../services/league-standings-order";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
@@ -305,32 +307,17 @@ export async function handleSetLeagueStandingsOrder(
   res: Response,
 ): Promise<void> {
   const id = req.params.id;
-  const body: AdminLeagueStandingsOrderBody = req.body;
+  const body: LeagueStandingsOrderBody = req.body;
 
-  const league = await prisma.league.findUnique({
-    where: { id },
-    select: { id: true, tieBreakRules: true },
-  });
-  if (!league) {
+  const result = await setLeagueStandingsOrder(id, body.tieBreakRules);
+  if (!result) {
     sendError(res, "Ligue introuvable", 404);
     return;
   }
-
-  const previous = parseLeagueTieBreakRules(league.tieBreakRules);
-  const stored = serializeLeagueTieBreakRules(body.tieBreakRules);
-  await prisma.league.update({
-    where: { id },
-    data: { tieBreakRules: stored },
-  });
-  const effective = parseLeagueTieBreakRules(stored);
   serverLog.info(
-    `[admin-leagues] standings order changed: id=${id} ${previous.join(">")} -> ${effective.join(">")} by admin=${req.user?.id}`,
+    `[admin-leagues] standings order changed: id=${id} by admin=${req.user?.id}`,
   );
-  sendSuccess(res, {
-    leagueId: id,
-    tieBreakRules: normalizeLeagueTieBreakRules(body.tieBreakRules),
-    effectiveTieBreakRules: effective,
-  });
+  sendSuccess(res, result);
 }
 
 /**
@@ -387,7 +374,7 @@ router.patch(
 router.post("/:id/archive", handleArchiveLeague);
 router.patch(
   "/:id/standings-order",
-  validate(adminLeagueStandingsOrderSchema),
+  validate(leagueStandingsOrderSchema),
   handleSetLeagueStandingsOrder,
 );
 router.patch(

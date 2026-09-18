@@ -12,13 +12,20 @@ import {
   serializeBonusRules,
   parseBonusRulesFromApi,
 } from "../../_components/bonus-rules";
+import { LockedLeagueSettings } from "./LockedLeagueSettings";
 import type { LeagueDetail } from "../types";
 
 // L2.D — Edition d'une ligue par son commissaire (createur). Reutilise
-// `LeagueForm` (mutualise avec la creation). Accessible uniquement au
-// createur ET tant qu'aucun match n'a ete joue (`hasScoredMatch`). Les
-// deux gardes sont aussi appliquees cote serveur (PATCH /leagues/:id) ;
-// ici on redirige tot pour ne pas afficher un formulaire inutilisable.
+// `LeagueForm` (mutualise avec la creation), gate cote serveur par
+// `PATCH /leagues/:id` (createur, ligue non verrouillee).
+//
+// DEUX MODES, parce que le verrou ne couvre pas tout : une fois un match
+// joue, le formulaire complet est gele (y toucher au bareme reecrirait des
+// points attribues) mais l'ordre du CLASSEMENT reste modifiable — il est
+// applique au tri, a la lecture. La page rendait auparavant `null` et
+// redirigeait dans ce cas : le commissaire n'avait alors AUCUN acces a ses
+// reglages, et le tri annonce comme personnalisable etait introuvable.
+// Seul le non-createur est encore redirige.
 
 interface MeResponse {
   user: { id: string } | null;
@@ -66,13 +73,13 @@ export default function EditLeaguePage() {
     };
   }, [leagueId, t.leagues.errorLoad]);
 
-  // Redirection si l'utilisateur n'est pas le commissaire ou si la ligue
-  // est verrouillee (match deja joue).
+  // Redirection pour un non-commissaire seulement : une ligue verrouillee
+  // garde son panneau reduit (ordre du classement).
   useEffect(() => {
     if (loading || !league) return;
     const isCreator =
       currentUserId !== null && league.creatorId === currentUserId;
-    if (!isCreator || league.hasScoredMatch) {
+    if (!isCreator) {
       router.replace(`/leagues/${leagueId}`);
     }
   }, [loading, league, currentUserId, leagueId, router]);
@@ -137,11 +144,12 @@ export default function EditLeaguePage() {
 
   const isCreator =
     currentUserId !== null && league.creatorId === currentUserId;
-  // Pendant que le useEffect de redirection s'execute, on ne rend pas le
-  // formulaire pour un non-createur / ligue verrouillee.
-  if (!isCreator || league.hasScoredMatch) {
+  // Pendant que le useEffect de redirection s'execute, on ne rend rien pour
+  // un non-createur.
+  if (!isCreator) {
     return null;
   }
+  const locked = league.hasScoredMatch === true;
 
   return (
     <div
@@ -159,37 +167,48 @@ export default function EditLeaguePage() {
           {t.leagues.editLeagueTitle}
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          {t.leagues.editLeagueDescription}
+          {locked
+            ? "Ligue lancée : seul l'ordre du classement reste modifiable."
+            : t.leagues.editLeagueDescription}
         </p>
       </div>
 
-      <LeagueForm
-        mode="edit"
-        submitting={submitting}
-        error={error}
-        cancelHref={`/leagues/${leagueId}`}
-        initialValues={{
-          name: league.name,
-          description: league.description ?? "",
-          ruleset:
-            league.ruleset === "season_2" ? "season_2" : "season_3",
-          tournamentRuleset: league.tournamentRuleset ?? null,
-          isPublic: league.isPublic,
-          maxParticipants: league.maxParticipants,
-          allowedRosters: league.allowedRosters ?? [],
-          allowedInducements: league.allowedInducements ?? [],
-          winPoints: league.winPoints,
-          drawPoints: league.drawPoints,
-          lossPoints: league.lossPoints,
-          forfeitPoints: league.forfeitPoints,
-          bonusPointsConfig: parseBonusRulesFromApi(league.bonusPointsConfig),
-          // Valeur BRUTE : `null` (rien de configuré) doit se relire comme
-          // une liste vide, pas comme l'ordre par défaut matérialisé —
-          // sinon le commissaire fige le défaut sans l'avoir demandé.
-          tieBreakRules: league.tieBreakRules ?? [],
-        }}
-        onSubmit={handleSubmit}
-      />
+      {locked ? (
+        <LockedLeagueSettings
+          leagueId={leagueId}
+          // Valeur BRUTE : une ligue sans configuration doit revenir sur une
+          // liste vide, pas sur le défaut matérialisé.
+          initialRules={league.tieBreakRules ?? []}
+          backHref={`/leagues/${leagueId}`}
+        />
+      ) : (
+        <LeagueForm
+          mode="edit"
+          submitting={submitting}
+          error={error}
+          cancelHref={`/leagues/${leagueId}`}
+          initialValues={{
+            name: league.name,
+            description: league.description ?? "",
+            ruleset: league.ruleset === "season_2" ? "season_2" : "season_3",
+            tournamentRuleset: league.tournamentRuleset ?? null,
+            isPublic: league.isPublic,
+            maxParticipants: league.maxParticipants,
+            allowedRosters: league.allowedRosters ?? [],
+            allowedInducements: league.allowedInducements ?? [],
+            winPoints: league.winPoints,
+            drawPoints: league.drawPoints,
+            lossPoints: league.lossPoints,
+            forfeitPoints: league.forfeitPoints,
+            bonusPointsConfig: parseBonusRulesFromApi(league.bonusPointsConfig),
+            // Valeur BRUTE : `null` (rien de configuré) doit se relire comme
+            // une liste vide, pas comme l'ordre par défaut matérialisé —
+            // sinon le commissaire fige le défaut sans l'avoir demandé.
+            tieBreakRules: league.tieBreakRules ?? [],
+          }}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 }

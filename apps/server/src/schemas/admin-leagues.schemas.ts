@@ -1,10 +1,14 @@
 /**
  * L2.C.6 — Sprint Ligues v2 PR10 : Zod schemas pour les routes
  * `/admin/leagues/*`.
+ *
+ * Le réordonnancement des critères de classement n'y figure pas : son schéma
+ * est PARTAGÉ avec la route du commissaire
+ * (`schemas/league.schemas.leagueStandingsOrderSchema`) — deux copies
+ * auraient divergé au premier critère ajouté.
  */
 
 import { z } from "zod";
-import { LEAGUE_TIE_BREAK_SLUGS } from "../services/league-standings-order";
 
 const leagueStatus = z.enum([
   "draft",
@@ -33,24 +37,8 @@ export const adminLeagueTransferSchema = z.object({
   userId: z.string().min(1, "userId requis"),
 });
 
-/**
- * Critères de classement d'une ligue, réordonnés par un administrateur.
- * Les slugs viennent de `services/league-standings-order` (module PUR) :
- * pas de miroir manuel à tenir. `null` (ou une liste vide) remet la ligue
- * sur l'ordre par défaut.
- */
-export const adminLeagueStandingsOrderSchema = z.object({
-  tieBreakRules: z
-    .array(z.enum(LEAGUE_TIE_BREAK_SLUGS))
-    .max(LEAGUE_TIE_BREAK_SLUGS.length)
-    .nullable(),
-});
-
 export type AdminLeaguesQuery = z.infer<typeof adminLeaguesQuerySchema>;
 export type AdminLeagueStatusBody = z.infer<typeof adminLeagueStatusSchema>;
 export type AdminLeagueTransferBody = z.infer<
   typeof adminLeagueTransferSchema
->;
-export type AdminLeagueStandingsOrderBody = z.infer<
-  typeof adminLeagueStandingsOrderSchema
 >;

@@ -9,12 +9,7 @@ import {
   INDUCEMENT_CATALOGUE,
 } from "@bb/game-engine";
 import { BonusRulesEditor } from "./BonusRulesEditor";
-import { TieBreakOrderEditor } from "../../components/TieBreakOrderEditor";
-import {
-  LEAGUE_TIE_BREAK_CATALOGUE,
-  LEAGUE_TIE_BREAK_LABELS,
-  describeDefaultLeagueTieBreak,
-} from "./standings-order";
+import { StandingsOrderField } from "./StandingsOrderField";
 import PendingCompetitionDocuments from "../../components/PendingCompetitionDocuments";
 import type { BonusRuleValue } from "./bonus-rules";
 
@@ -460,29 +455,14 @@ export function LeagueForm({
         />
 
         {/* Ordre de classement : les départages appliqués du premier au
-            dernier. Modifiable ensuite par un administrateur, même une fois
-            la ligue verrouillée (le classement est trié à la lecture). */}
-        <fieldset className="block" data-testid="league-form-tiebreak">
-          <legend className="text-sm font-medium text-gray-700">
-            Critères de classement
-          </legend>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Ajoutez les départages et ordonnez-les : ils sont appliqués du
-            premier au dernier. Sans sélection, l&apos;ordre par défaut
-            s&apos;applique ({describeDefaultLeagueTieBreak()}). Le nom de
-            l&apos;équipe tranche toujours en dernier recours.
-          </p>
-          <div className="mt-2">
-            <TieBreakOrderEditor
-              value={form.tieBreakRules}
-              onChange={(next) => updateField("tieBreakRules", next)}
-              catalogue={LEAGUE_TIE_BREAK_CATALOGUE}
-              labels={LEAGUE_TIE_BREAK_LABELS}
-              testIdPrefix="league-tiebreak"
-              disabled={submitting}
-            />
-          </div>
-        </fieldset>
+            dernier. Reste modifiable une fois la ligue verrouillée, par le
+            panneau réduit de `/leagues/[id]/edit` (le tri se fait à la
+            lecture, rien de persisté ne bouge). */}
+        <StandingsOrderField
+          value={form.tieBreakRules}
+          onChange={(next) => updateField("tieBreakRules", next)}
+          disabled={submitting}
+        />
 
         {mode === "create" && onPendingDocumentsChange ? (
           <PendingCompetitionDocuments

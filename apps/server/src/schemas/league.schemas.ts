@@ -41,6 +41,24 @@ const leagueThemeYear = z
  */
 const tieBreakSlug = z.enum(LEAGUE_TIE_BREAK_SLUGS);
 
+/**
+ * Réordonnancement SEUL des critères de classement
+ * (`PATCH /leagues/:id/standings-order` côté commissaire,
+ * `PATCH /admin/leagues/:id/standings-order` côté console). `null` remet la
+ * ligue sur l'ordre par défaut ; le champ est OBLIGATOIRE pour qu'un body
+ * vide n'efface rien par accident.
+ */
+export const leagueStandingsOrderSchema = z.object({
+  tieBreakRules: z
+    .array(tieBreakSlug)
+    .max(LEAGUE_TIE_BREAK_SLUGS.length)
+    .nullable(),
+});
+
+export type LeagueStandingsOrderBody = z.infer<
+  typeof leagueStandingsOrderSchema
+>;
+
 export const createLeagueSchema = z.object({
   name: z
     .string()

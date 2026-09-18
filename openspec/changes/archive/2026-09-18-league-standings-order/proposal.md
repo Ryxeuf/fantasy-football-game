@@ -39,10 +39,14 @@ définitive.
   ligue (liste ordonnée : ajouter, monter, descendre, retirer). L'ordre par
   défaut est annoncé en toutes lettres pour que « ne rien cocher » reste un
   choix informé.
-- **Un administrateur le corrige à tout moment** via
-  `PATCH /api/admin/leagues/:id/standings-order`, y compris sur une ligue
+- **Le commissaire comme un administrateur le corrigent à tout moment**
+  (`PATCH /leagues/:id/standings-order`,
+  `PATCH /api/admin/leagues/:id/standings-order`), y compris sur une ligue
   verrouillée, en cours ou archivée : le classement est trié À LA LECTURE,
-  aucun compteur persisté ne bouge.
+  aucun compteur persisté ne bouge. La fiche de ligue garde son accès aux
+  réglages dans ce cas, et l'écran sert un panneau réduit au lieu de
+  rediriger — un réglage annoncé sans chemin d'accès équivaut à un réglage
+  absent.
 - **L'ordre appliqué est visible** : sous le tableau de classement pour les
   coachs, sur chaque ligne de la console admin (avec la mention
   « (defaut) ») pour les administrateurs.

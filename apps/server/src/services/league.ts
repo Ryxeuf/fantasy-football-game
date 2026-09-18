@@ -36,6 +36,7 @@ import {
   type LeagueTieBreakSlug,
   parseLeagueTieBreakRules,
   makeLeagueStandingsComparator,
+  normalizeLeagueTieBreakRules,
   serializeLeagueTieBreakRules,
   isSeasonEloRanked,
 } from "./league-standings-order";
@@ -916,6 +917,55 @@ export type TieBreakSlug = LeagueTieBreakSlug;
 export const parseTieBreakRules = parseLeagueTieBreakRules;
 export const makeStandingsComparator = makeLeagueStandingsComparator;
 export { isSeasonEloRanked };
+
+/**
+ * Réordonne les critères de classement d'une ligue — SEUL chemin d'écriture,
+ * partagé par la route du commissaire (`PATCH /leagues/:id/standings-order`)
+ * et celle de la console admin.
+ *
+ * Volontairement HORS du verrou d'édition de `updateLeague` : le classement
+ * est trié À LA LECTURE, changer son ordre ne réécrit aucun point déjà
+ * attribué. Une ligue dont les matchs sont joués — ou archivée — reste donc
+ * corrigeable ici, et seulement ici.
+ *
+ * `tieBreakRules` à `null` (ou vide) remet la ligue sur l'ordre par défaut.
+ * Renvoie `null` si la ligue n'existe pas ; l'autorisation appartient à la
+ * couche route (commissaire ou admin).
+ */
+export interface LeagueStandingsOrderResult {
+  readonly leagueId: string;
+  /** Valeur CONFIGURÉE après écriture (null = ordre par défaut). */
+  readonly tieBreakRules: readonly string[] | null;
+  /** Ordre EFFECTIF appliqué au tri, défaut compris. */
+  readonly effectiveTieBreakRules: readonly string[];
+}
+
+export async function setLeagueStandingsOrder(
+  leagueId: string,
+  tieBreakRules: readonly string[] | null,
+): Promise<LeagueStandingsOrderResult | null> {
+  const league = await prisma.league.findUnique({
+    where: { id: leagueId },
+    select: { id: true, tieBreakRules: true },
+  });
+  if (!league) return null;
+
+  const previous = parseLeagueTieBreakRules(league.tieBreakRules);
+  const stored = serializeLeagueTieBreakRules(tieBreakRules);
+  await prisma.league.update({
+    where: { id: leagueId },
+    data: { tieBreakRules: stored },
+  });
+  const effective = parseLeagueTieBreakRules(stored);
+  serverLog.info(
+    `[league] standings order: id=${leagueId} ${previous.join(">")} -> ${effective.join(">")}`,
+  );
+  return {
+    leagueId,
+    tieBreakRules: normalizeLeagueTieBreakRules(tieBreakRules),
+    effectiveTieBreakRules: effective,
+  };
+}
 
 /**
  * S26.6b — Liste paginee des saisons d'un theme donne.

@@ -649,7 +649,9 @@ describe("LeagueDetailPage", () => {
       });
     });
 
-    it("hides the edit CTA once a match has been scored (locked)", async () => {
+    it("garde l'accès aux réglages une fois la ligue verrouillée", async () => {
+      // Le formulaire complet est gelé, mais l'ordre du classement s'y
+      // modifie encore : masquer le bouton rendait ce réglage introuvable.
       const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
       (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
         true,
@@ -666,7 +668,10 @@ describe("LeagueDetailPage", () => {
       await waitFor(() => {
         expect(screen.getByTestId("league-standings")).toBeTruthy();
       });
-      expect(screen.queryByTestId("edit-league-cta")).toBeNull();
+      const cta = screen.getByTestId("edit-league-cta");
+      expect(cta.getAttribute("href")).toBe(`/leagues/${mockLeague.id}/edit`);
+      // Le libellé dit ce qui reste possible.
+      expect(cta.textContent).toContain("Réglages");
     });
 
     it("hides the edit CTA for non-creator users", async () => {
