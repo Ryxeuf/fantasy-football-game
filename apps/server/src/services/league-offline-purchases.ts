@@ -35,6 +35,13 @@ import {
 } from "@bb/game-engine";
 import { serverLog } from "../utils/server-log";
 import { ACTIVE_PLAYER_WHERE } from "./player-status";
+import {
+  advancementsCount,
+  purchasedPlayerConsumed,
+  resolveCreatedPlayerBaselines,
+  type CreatedPlayerBaseline,
+  type PurchasedPlayerRow,
+} from "./league-offline-purchase-baseline";
 
 export type OfflinePurchaseKind =
   | "player"
@@ -98,6 +105,15 @@ export interface OfflinePurchaseInput {
  */
 export interface OfflineRosterMutationSide {
   readonly createdPlayerIds: readonly string[];
+  /**
+   * État À LA CRÉATION de chaque joueur créé (PSP, matchs joués, nombre
+   * d'avancements) : la référence du garde-fou `purchase-consumed`. Un
+   * journalier ou un mort relevé recruté arrive AVEC 1 match joué, ses PSP
+   * et son évolution du match — comparer à zéro rendait sa feuille
+   * définitive. Optionnel : absent des feuilles antérieures, où la référence
+   * est redérivée des achats du snapshot (`league-offline-purchase-baseline`).
+   */
+  readonly createdPlayers?: readonly CreatedPlayerBaseline[];
   readonly rerollsAdded: number;
   readonly assistantsAdded: number;
   readonly cheerleadersAdded: number;
@@ -339,6 +355,7 @@ export async function applyOfflinePurchasesForTeam(
   );
 
   const createdPlayerIds: string[] = [];
+  const createdPlayers: CreatedPlayerBaseline[] = [];
 
   for (const p of purchases) {
     switch (p.kind) {
@@ -401,6 +418,15 @@ export async function applyOfflinePurchasesForTeam(
         const skills = isJourneymanHire
           ? stripLoner(p.skills ?? position.skills)
           : position.skills;
+        // Ce qu'il a déjà gagné en jouant CE match — la référence que le
+        // garde-fou de reversion compare à l'état courant du joueur.
+        const baseline = isJourneymanHire
+          ? {
+              spp: Math.max(0, p.spp ?? 0),
+              advancements: p.advancements ?? "[]",
+              matchesPlayed: 1,
+            }
+          : { spp: 0, advancements: "[]", matchesPlayed: 0 };
         const created = await prisma.teamPlayer.create({
           data: {
             teamId,
@@ -413,17 +439,17 @@ export async function applyOfflinePurchasesForTeam(
             pa: p.stats?.pa ?? position.pa,
             av: p.stats?.av ?? position.av,
             skills,
-            ...(isJourneymanHire
-              ? {
-                  spp: p.spp ?? 0,
-                  advancements: p.advancements ?? "[]",
-                  matchesPlayed: 1,
-                }
-              : {}),
+            ...(isJourneymanHire ? baseline : {}),
           },
           select: { id: true },
         });
         createdPlayerIds.push(created.id);
+        createdPlayers.push({
+          id: created.id,
+          spp: baseline.spp,
+          matchesPlayed: baseline.matchesPlayed,
+          advancements: advancementsCount(baseline.advancements),
+        });
         aliveCount += 1;
         break;
       }
@@ -459,6 +485,7 @@ export async function applyOfflinePurchasesForTeam(
 
   const mutation: OfflineRosterMutationSide = {
     createdPlayerIds,
+    createdPlayers,
     rerollsAdded,
     assistantsAdded,
     cheerleadersAdded,
@@ -516,11 +543,21 @@ function resolvePosition(
 
 /**
  * Garde-fou de reversion : refuse si un joueur cree a deja "consomme" le
- * resultat (a joue un match ulterieur, gagne du SPP, progresse ou est mort).
- * Meme esprit que le garde-fou `advancement-consumed`.
+ * resultat DEPUIS SA CREATION (a joue un match ulterieur, gagne du SPP,
+ * progresse ou est mort). Meme esprit que le garde-fou `advancement-consumed`.
+ *
+ * La comparaison se fait contre l'état À LA CRÉATION, jamais contre zéro :
+ * un journalier ou un mort relevé recruté a joué CE match (1 match, ses PSP,
+ * son évolution) et ce n'est pas un usage postérieur. La référence vient de
+ * la trace (`createdPlayers`), sinon des achats du snapshot (feuilles
+ * antérieures), sinon zéro — cf. `league-offline-purchase-baseline`.
  */
 export async function offlinePurchasesConsumed(
   m: OfflineRosterMutations,
+  purchases: {
+    readonly home?: readonly OfflinePurchaseInput[];
+    readonly away?: readonly OfflinePurchaseInput[];
+  } = {},
 ): Promise<boolean> {
   const ids = [...m.home.createdPlayerIds, ...m.away.createdPlayerIds];
   if (ids.length === 0) return false;
@@ -528,38 +565,38 @@ export async function offlinePurchasesConsumed(
     where: { id: { in: ids } },
     select: {
       id: true,
+      name: true,
+      position: true,
       spp: true,
       matchesPlayed: true,
       dead: true,
       advancements: true,
     },
-  })) as Array<{
-    id: string;
-    spp: number;
-    matchesPlayed: number;
-    dead: boolean;
-    advancements: unknown;
-  }>;
-  return players.some(
-    (pl) =>
-      pl.spp > 0 ||
-      pl.matchesPlayed > 0 ||
-      pl.dead ||
-      advancementsLength(pl.advancements) > 0,
+  })) as Array<
+    Omit<PurchasedPlayerRow, "advancements"> & { advancements: unknown }
+  >;
+  const rows: PurchasedPlayerRow[] = players.map((pl) => ({
+    ...pl,
+    advancements: advancementsCount(pl.advancements),
+  }));
+  const rowsById = new Map(rows.map((r) => [r.id, r]));
+  const baselines = new Map([
+    ...resolveCreatedPlayerBaselines({
+      createdPlayerIds: m.home.createdPlayerIds,
+      createdPlayers: m.home.createdPlayers,
+      purchases: purchases.home ?? [],
+      rowsById,
+    }),
+    ...resolveCreatedPlayerBaselines({
+      createdPlayerIds: m.away.createdPlayerIds,
+      createdPlayers: m.away.createdPlayers,
+      purchases: purchases.away ?? [],
+      rowsById,
+    }),
+  ]);
+  return rows.some((row) =>
+    purchasedPlayerConsumed(row, baselines.get(row.id)),
   );
-}
-
-function advancementsLength(raw: unknown): number {
-  if (Array.isArray(raw)) return raw.length;
-  if (typeof raw === "string") {
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.length : 0;
-    } catch {
-      return 0;
-    }
-  }
-  return 0;
 }
 
 /**

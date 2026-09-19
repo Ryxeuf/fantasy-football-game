@@ -63,6 +63,7 @@ import { serverLog } from "../utils/server-log";
 import { revertPlayerStatus } from "./player-status";
 import { parseHateGrants, revertHateTraitGrants } from "./league-hate-trait";
 import { removeLatestAdvancements } from "./league-sheet-advancements";
+import { advancementsCount } from "./league-offline-purchase-baseline";
 import {
   playoffAdvancementState,
   unadvancePlayoffsForSlot,
@@ -91,20 +92,6 @@ export type ReverseOfflineOutcome =
 interface PendingChoiceLite {
   readonly teamPlayerId: string;
   readonly advancementsTaken: number;
-}
-
-/** Compte tolerant des advancements d'un joueur (array PG / string sqlite). */
-function advancementsCount(raw: unknown): number {
-  if (Array.isArray(raw)) return raw.length;
-  if (typeof raw === "string") {
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed.length : 0;
-    } catch {
-      return 0;
-    }
-  }
-  return 0;
 }
 
 function parsePendingChoices(raw: unknown): PendingChoiceLite[] {
@@ -464,13 +451,21 @@ export async function reverseOfflineLeagueResult(
   }
 
   // Garde-fou : achats consommes. Un joueur ACHETE qui a deja joue / gagne
-  // du SPP / progresse / est mort ne peut pas etre supprime par la reversion
-  // (meme esprit que `advancement-consumed`).
+  // du SPP / progresse / est mort DEPUIS SA CREATION ne peut pas etre
+  // supprime par la reversion (meme esprit que `advancement-consumed`). Les
+  // achats du snapshot servent de reference aux feuilles anterieures a la
+  // trace `createdPlayers` : un journalier ou un mort releve recrute a joue
+  // CE match, ce n'est pas un usage posterieur.
   const rosterMutations: OfflineRosterMutations = {
     home: snapshot.rosterMutations?.home ?? EMPTY_MUTATION_SIDE,
     away: snapshot.rosterMutations?.away ?? EMPTY_MUTATION_SIDE,
   };
-  if (await offlinePurchasesConsumed(rosterMutations)) {
+  if (
+    await offlinePurchasesConsumed(rosterMutations, {
+      home: snapshot.input.purchasesHome ?? [],
+      away: snapshot.input.purchasesAway ?? [],
+    })
+  ) {
     return { skipped: true, reason: "purchase-consumed" };
   }
 

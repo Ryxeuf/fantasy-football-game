@@ -530,6 +530,10 @@ describe("recordOfflineLeagueResult (option b)", () => {
     // home : 1 joueur cree + 1 relance ; away : pas d'achat.
     m.applyPurchases.mockResolvedValue({
       createdPlayerIds: ["np-1"],
+      // Référence du garde-fou de reversion : l'état du joueur À LA CRÉATION.
+      createdPlayers: [
+        { id: "np-1", spp: 0, matchesPlayed: 0, advancements: 0 },
+      ],
       rerollsAdded: 1,
       assistantsAdded: 0,
       cheerleadersAdded: 0,
@@ -563,6 +567,9 @@ describe("recordOfflineLeagueResult (option b)", () => {
     )?.[0] as { data: { offlineResultInput: { rosterMutations: any } } };
     expect(upd.data.offlineResultInput.rosterMutations.home).toMatchObject({
       createdPlayerIds: ["np-1"],
+      createdPlayers: [
+        { id: "np-1", spp: 0, matchesPlayed: 0, advancements: 0 },
+      ],
       rerollsAdded: 1,
     });
     expect(upd.data.offlineResultInput.rosterMutations.away).toEqual(
