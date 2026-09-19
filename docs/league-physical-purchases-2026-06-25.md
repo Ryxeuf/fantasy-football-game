@@ -41,8 +41,13 @@ Fonctions exposées :
     la position du roster). Position résolue par slug explicite sinon par
     **match unique de coût** (`cost*1000`). Plafonné à 16 joueurs vivants.
   - `kind:'other'` → aucune mutation roster (seul le débit treasury s'applique).
-- `offlinePurchasesConsumed(mutations)` — garde-fou réversion : `true` si un
-  joueur acheté a déjà joué / gagné du SPP / progressé / est mort.
+- `offlinePurchasesConsumed(mutations, purchases)` — garde-fou réversion :
+  `true` si un joueur acheté a joué / gagné du SPP / progressé / est mort
+  **depuis sa création**. La référence est l'état à la création
+  (`createdPlayers` dans la trace, sinon redérivé des achats du snapshot,
+  sinon zéro — cf. `league-offline-purchase-baseline`, pur) : un journalier
+  ou un mort relevé recruté arrive avec 1 match joué, ses PSP et son
+  évolution DU MATCH, ce qui bloquait à tort l'invalidation (2026-09-19).
 - `buildPurchaseReverseOps(teamId, side)` — ops Prisma de réversion
   (suppression des joueurs créés + décrément des compteurs des deltas exacts).
 
@@ -52,7 +57,9 @@ Fonctions exposées :
 
 - `input.purchasesHome/Away` (la saisie brute, traçabilité) ;
 - `rosterMutations` (optionnel, retro-compat) — la trace exacte renseignée
-  **après** application (ids des `TeamPlayer` créés + deltas de compteurs).
+  **après** application (ids des `TeamPlayer` créés + deltas de compteurs,
+  et depuis 2026-09-19 `createdPlayers` : l'état à la création de chaque
+  joueur créé, référence du garde-fou `purchase-consumed`).
 
 `recordOfflineLeagueResult` applique les achats après l'économie/blessures,
 puis **met à jour** `Match.offlineResultInput` avec `rosterMutations` (uniquement
@@ -95,5 +102,7 @@ si une mutation a eu lieu).
   les achats ne font QUE matérialiser l'élément.
 - **Réversion exacte** : on ne décrémente/supprime que ce qui a été
   réellement appliqué (deltas mémorisés, plafonds inclus).
-- **Garde-fou** : un joueur acheté ayant joué/progressé bloque la réversion
-  (même esprit que `advancement-consumed`).
+- **Garde-fou** : un joueur acheté ayant joué/progressé **depuis sa création**
+  bloque la réversion (même esprit que `advancement-consumed`). Comparer à
+  zéro rendait définitive toute feuille ayant recruté un journalier ou un
+  mort relevé.
