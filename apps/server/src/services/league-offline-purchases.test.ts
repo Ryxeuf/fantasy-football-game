@@ -233,6 +233,10 @@ describe("applyOfflinePurchasesForTeam", () => {
       skills: "block",
     });
     expect(out.createdPlayerIds).toEqual(["new-1"]);
+    // Un joueur acheté part de zéro : sa référence de reversion aussi.
+    expect(out.createdPlayers).toEqual([
+      { id: "new-1", spp: 0, matchesPlayed: 0, advancements: 0 },
+    ]);
     expect(m.tv).toHaveBeenCalledWith(prisma, "t1");
   });
 
@@ -265,6 +269,11 @@ describe("applyOfflinePurchasesForTeam", () => {
     });
     expect(JSON.parse(data.advancements as string)).toHaveLength(1);
     expect(out.createdPlayerIds).toEqual(["new-1"]);
+    // La trace porte son état À LA CRÉATION : c'est la référence du
+    // garde-fou de reversion (1 match joué, PSP restants, 1 avancement).
+    expect(out.createdPlayers).toEqual([
+      { id: "new-1", spp: 1, matchesPlayed: 1, advancements: 1 },
+    ]);
     // Gratuit : aucun debit ici non plus (la tresorerie est portee en amont).
     expect(m.teamUpdate).not.toHaveBeenCalled();
   });
@@ -381,6 +390,9 @@ describe("applyOfflinePurchasesForTeam", () => {
     expect(data.spp).toBe(0);
     expect(JSON.parse(data.advancements)).toHaveLength(1);
     expect(data.matchesPlayed).toBe(1);
+    expect(out.createdPlayers).toEqual([
+      { id: "jm-1", spp: 0, matchesPlayed: 1, advancements: 1 },
+    ]);
   });
 
   it("ne compte que le roster ACTIF : un mort ou un licencie libere sa place", async () => {
@@ -438,6 +450,132 @@ describe("offlinePurchasesConsumed", () => {
       home: { ...EMPTY_MUTATION_SIDE, createdPlayerIds: ["p1"] },
       away: EMPTY_MUTATION_SIDE,
     });
+    expect(consumed).toBe(false);
+  });
+
+  // Retour testeur (2026-09-19) : « Reversion impossible: purchase-consumed »
+  // sur une feuille dont le mort relevé venait d'être recruté. Le relevé (ou
+  // un journalier) est créé AVEC 1 match joué, ses PSP et son évolution DU
+  // MATCH : ce n'est pas un usage postérieur.
+  const RAISED_ROW = {
+    id: "rd-1",
+    name: "Lakrakzette",
+    position: "undead_trois_quart_zombie",
+    spp: 0,
+    matchesPlayed: 1,
+    dead: false,
+    advancements: JSON.stringify([
+      { skillSlug: "block", type: "random-primary", isRandom: true, at: 0 },
+    ]),
+  };
+  const RAISED_PURCHASE = {
+    kind: "raised_dead" as const,
+    name: "Lakrakzette",
+    cost: 0,
+    position: "undead_trois_quart_zombie",
+    spp: 0,
+    advancements: RAISED_ROW.advancements,
+  };
+
+  it("false pour un mort relevé recruté INTACT quand la trace porte sa référence (feuille récente)", async () => {
+    m.tpFindMany.mockResolvedValue([RAISED_ROW]);
+    const consumed = await offlinePurchasesConsumed({
+      home: {
+        ...EMPTY_MUTATION_SIDE,
+        createdPlayerIds: ["rd-1"],
+        createdPlayers: [
+          { id: "rd-1", spp: 0, matchesPlayed: 1, advancements: 1 },
+        ],
+      },
+      away: EMPTY_MUTATION_SIDE,
+    });
+    expect(consumed).toBe(false);
+    // Le garde-fou relit nom et poste (redérivation des feuilles antérieures).
+    expect(m.tpFindMany.mock.calls[0][0].select).toMatchObject({
+      name: true,
+      position: true,
+    });
+  });
+
+  it("false pour une feuille ANTÉRIEURE à la trace : la référence est redérivée des achats du snapshot", async () => {
+    m.tpFindMany.mockResolvedValue([RAISED_ROW]);
+    const consumed = await offlinePurchasesConsumed(
+      {
+        home: { ...EMPTY_MUTATION_SIDE, createdPlayerIds: ["rd-1"] },
+        away: EMPTY_MUTATION_SIDE,
+      },
+      { home: [{ kind: "reroll", name: "Relance", cost: 70000 }, RAISED_PURCHASE] },
+    );
+    expect(consumed).toBe(false);
+  });
+
+  it("true dès que le relevé recruté a REJOUÉ, progressé ou est mort depuis", async () => {
+    for (const row of [
+      { ...RAISED_ROW, matchesPlayed: 2 },
+      { ...RAISED_ROW, spp: 3 },
+      {
+        ...RAISED_ROW,
+        advancements: JSON.stringify([
+          { skillSlug: "block", type: "random-primary", isRandom: true, at: 0 },
+          { skillSlug: "guard", type: "primary", isRandom: false, at: 6 },
+        ]),
+      },
+      { ...RAISED_ROW, dead: true },
+    ]) {
+      m.tpFindMany.mockResolvedValue([row]);
+      const consumed = await offlinePurchasesConsumed(
+        {
+          home: { ...EMPTY_MUTATION_SIDE, createdPlayerIds: ["rd-1"] },
+          away: EMPTY_MUTATION_SIDE,
+        },
+        { home: [RAISED_PURCHASE] },
+      );
+      expect(consumed, JSON.stringify(row)).toBe(true);
+    }
+  });
+
+  it("sans trace ni achats lisibles, comparaison à zéro (historique) : le relevé passe pour consommé", async () => {
+    m.tpFindMany.mockResolvedValue([RAISED_ROW]);
+    const consumed = await offlinePurchasesConsumed({
+      home: { ...EMPTY_MUTATION_SIDE, createdPlayerIds: ["rd-1"] },
+      away: EMPTY_MUTATION_SIDE,
+    });
+    expect(consumed).toBe(true);
+  });
+
+  it("chaque côté est aligné sur SES achats : un journalier recruté à l'extérieur n'emprunte pas la référence du domicile", async () => {
+    const jmRow = {
+      id: "jm-1",
+      name: "Journalier 1",
+      position: "orc_trois_quart_gobelin",
+      spp: 2,
+      matchesPlayed: 1,
+      dead: false,
+      advancements: "[]",
+    };
+    m.tpFindMany.mockResolvedValue([
+      { ...RAISED_ROW, matchesPlayed: 1 },
+      jmRow,
+    ]);
+    const consumed = await offlinePurchasesConsumed(
+      {
+        home: { ...EMPTY_MUTATION_SIDE, createdPlayerIds: ["rd-1"] },
+        away: { ...EMPTY_MUTATION_SIDE, createdPlayerIds: ["jm-1"] },
+      },
+      {
+        home: [RAISED_PURCHASE],
+        away: [
+          {
+            kind: "journeyman",
+            name: "Journalier 1",
+            cost: 60000,
+            position: "orc_trois_quart_gobelin",
+            journeymanId: "journeyman-away-1",
+            spp: 2,
+          },
+        ],
+      },
+    );
     expect(consumed).toBe(false);
   });
 });

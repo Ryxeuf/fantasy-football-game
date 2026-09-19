@@ -17,7 +17,11 @@
  *    et son évolution stagée est acceptée ;
  *  - recruté à l'étape EMBAUCHES : Zombie au roster, compétence tirée, sans
  *    Solitaire, ZÉRO pièce d'or débitée même si le coach saisit un montant,
- *    entrée d'évolution tracée « appliquée » — et le mort adverse reste mort.
+ *    entrée d'évolution tracée « appliquée » — et le mort adverse reste mort ;
+ *  - la feuille reste INVALIDABLE malgré ce recrutement (retour testeur du
+ *    2026-09-19 : « Reversion impossible: purchase-consumed ») — le Zombie
+ *    quitte le roster, l'or et le mort adverse reviennent — et une nouvelle
+ *    validation le recrute à nouveau.
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
@@ -175,6 +179,9 @@ describe("E2E API — Maîtres de la Non-vie : Relever le Mort, du décès au re
   let victim: { id: string; number: number; name: string };
   let raised: SheetRaisedDead;
   let candidates: string[] = [];
+  /** État de l'équipe morte-vivante AVANT la validation (pour la reversion). */
+  let rosterSizeBefore = 0;
+  let treasuryBefore = 0;
 
   const readSheet = async (): Promise<SheetResponse> =>
     unwrap(await get<{ data: SheetResponse }>(s.url, s.necroToken));
@@ -357,6 +364,8 @@ describe("E2E API — Maîtres de la Non-vie : Relever le Mort, du décès au re
         s.necroToken,
       ),
     ).team;
+    rosterSizeBefore = before.players.length;
+    treasuryBefore = before.treasury;
 
     await post(`${s.url}/submit`, s.necroToken, {});
     await post(`${s.url}/submit`, s.humanToken, {});
@@ -403,5 +412,79 @@ describe("E2E API — Maîtres de la Non-vie : Relever le Mort, du décès au re
       applied: true,
       cost: 3,
     });
+  });
+
+  it("le commissaire peut INVALIDER la feuille malgré le recrutement du relevé : le Zombie quitte le roster, l'or et le mort adverse reviennent", async () => {
+    // Retour testeur (Discord, 2026-09-19) : « Reversion impossible:
+    // purchase-consumed — un joueur acheté après ce match a déjà joué ou
+    // progressé ». Le relevé recruté porte 1 match joué, ses PSP et son
+    // évolution DU MATCH dès sa création : le garde-fou les lisait comme un
+    // usage POSTÉRIEUR au match et rendait la feuille définitive.
+    const canInval = unwrap(
+      await get<{ data: { ok: boolean } }>(
+        `${s.url}/can-invalidate`,
+        s.necroToken,
+      ),
+    );
+    expect(canInval.ok).toBe(true);
+    const inval = await rawPost(`${s.url}/invalidate`, s.necroToken, {
+      reason: "E2E — relevé recruté",
+    });
+    expect(inval.status, await bodyOf(inval)).toBe(200);
+
+    const sheet = await readSheet();
+    expect(sheet.sheet.status).toBe("invalidated");
+    // Le choix « Relever le Mort » est conservé : le relevé reste dérivé.
+    expect(undeadSide(sheet).raisedDead).toMatchObject({ id: raised.id });
+    // L'entrée d'évolution n'est plus tracée « appliquée ».
+    const entries = parseList(
+      sheet.sheet[sideKey(s.side, "advancements") as "advancementsHome"],
+    );
+    expect(entries[0]).toMatchObject({ playerId: raised.id });
+    expect(entries[0].applied).not.toBe(true);
+
+    // Reversion exacte : le Zombie recruté est retiré, l'or revient.
+    const team = unwrap(
+      await get<{ data: TeamDetailDTO }>(
+        `/team/${s.undeadTeamId}`,
+        s.necroToken,
+      ),
+    ).team;
+    expect(team.players).toHaveLength(rosterSizeBefore);
+    expect(team.players.find((p) => p.name === victim.name)).toBeUndefined();
+    expect(team.treasury).toBe(treasuryBefore);
+
+    // Le mort adverse ressuscite : sa mort venait de CE match.
+    const skaven = unwrap(
+      await get<{ data: TeamDetailDTO }>(
+        `/team/${s.humanTeamId}`,
+        s.humanToken,
+      ),
+    ).team;
+    const revived = skaven.players.find((p) => p.id === victim.id);
+    expect(revived, "le Skaven tué doit être de retour").toBeTruthy();
+    expect(revived!.dead ?? false).toBe(false);
+  });
+
+  it("… et une nouvelle validation recrute à nouveau le relevé : le cycle « annuler puis re-saisir » tient", async () => {
+    await post(`${s.url}/submit`, s.necroToken, {});
+    await post(`${s.url}/submit`, s.humanToken, {});
+    const validate = await rawPost(`${s.url}/validate`, s.necroToken, {});
+    expect(validate.status, await bodyOf(validate)).toBe(200);
+
+    const team = unwrap(
+      await get<{ data: TeamDetailDTO }>(
+        `/team/${s.undeadTeamId}`,
+        s.necroToken,
+      ),
+    ).team;
+    expect(team.players).toHaveLength(rosterSizeBefore + 1);
+    const hired = team.players.find((p) => p.name === victim.name);
+    expect(hired, "le relevé doit être recruté à nouveau").toBeTruthy();
+    expect(hired!.position).toBe(ZOMBIE);
+    expect(hired!.skills.split(",")).toContain(candidates[0]);
+    expect(hired!.spp).toBe(0);
+    expect(team.treasury).toBe(treasuryBefore + 100_000);
+    expect((await readSheet()).sheet.status).toBe("validated");
   });
 });

@@ -22,7 +22,10 @@
  *           avec la compétence tirée, sans Solitaire, ses PSP débités du
  *           tirage — au prix 40 000 (poste) + 20 000 (évolution) po, débité
  *           de la trésorerie même si le coach a laissé le montant à 0 — et
- *           l'entrée est tracée « appliquée » sur la feuille.
+ *           l'entrée est tracée « appliquée » sur la feuille ;
+ *  - la feuille reste INVALIDABLE malgré ce recrutement (retour testeur du
+ *    2026-09-19 : « Reversion impossible: purchase-consumed ») — le Gobelin
+ *    quitte le roster et la trésorerie revient à son état d'avant.
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
@@ -248,6 +251,9 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
   let s: Scenario;
   let goblin: SheetJourneyman;
   let candidates: string[] = [];
+  /** État de l'équipe AVANT la validation (pour la reversion). */
+  let rosterSizeBefore = 0;
+  let treasuryBefore = 0;
   let ctvBefore = 0;
 
   const readSheet = async (): Promise<SheetResponse> =>
@@ -414,6 +420,8 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
     const before = unwrap(
       await get<{ data: TeamDetailDTO }>(`/team/${s.teamId}`, s.coachToken),
     ).team;
+    rosterSizeBefore = before.players.length;
+    treasuryBefore = before.treasury;
 
     await post(`${s.url}/submit`, s.coachToken, {});
     await post(`${s.url}/submit`, s.opponentToken, {});
@@ -452,5 +460,31 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
       applied: true,
       cost: 3,
     });
+  });
+
+  it("le commissaire peut INVALIDER la feuille malgré le recrutement du journalier : il quitte le roster, l'or revient", async () => {
+    // Retour testeur (Discord, 2026-09-19) : le journalier recruté porte
+    // 1 match joué et son évolution DU MATCH dès sa création — le garde-fou
+    // les lisait comme un usage POSTÉRIEUR et refusait l'invalidation.
+    const canInval = unwrap(
+      await get<{ data: { ok: boolean } }>(
+        `${s.url}/can-invalidate`,
+        s.commissionerToken,
+      ),
+    );
+    expect(canInval.ok).toBe(true);
+    const inval = await rawPost(`${s.url}/invalidate`, s.commissionerToken, {
+      reason: "E2E — journalier recruté",
+    });
+    expect(inval.status, await bodyOf(inval)).toBe(200);
+    expect((await readSheet()).sheet.status).toBe("invalidated");
+
+    const team = unwrap(
+      await get<{ data: TeamDetailDTO }>(`/team/${s.teamId}`, s.coachToken),
+    ).team;
+    expect(team.players).toHaveLength(rosterSizeBefore);
+    expect(team.players.find((p) => p.name === goblin.name)).toBeUndefined();
+    // Gains annulés, prix du recrutement rendu : retour exact.
+    expect(team.treasury).toBe(treasuryBefore);
   });
 });

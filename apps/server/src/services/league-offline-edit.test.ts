@@ -888,6 +888,100 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     expect(m.matchDelete).not.toHaveBeenCalled();
   });
 
+  // Retour testeur (2026-09-19) : « Reversion impossible: purchase-consumed »
+  // sur une feuille dont le mort relevé (Maîtres de la Non-vie) venait
+  // d'être recruté. Créé AVEC 1 match joué, ses PSP et son évolution DU
+  // MATCH, il passait pour « consommé » — la feuille devenait définitive.
+  const raisedDeadPurchase = {
+    kind: "raised_dead" as const,
+    name: "Lakrakzette",
+    cost: 0,
+    position: "undead_trois_quart_zombie",
+    spp: 0,
+    advancements: JSON.stringify([
+      { skillSlug: "block", type: "random-primary", isRandom: true, at: 0 },
+    ]),
+  };
+  const raisedDeadRow = {
+    id: "rd-1",
+    name: "Lakrakzette",
+    position: "undead_trois_quart_zombie",
+    spp: 0,
+    matchesPlayed: 1,
+    dead: false,
+    advancements: raisedDeadPurchase.advancements,
+  };
+  const hireMutations = (createdPlayers?: unknown) => ({
+    home: {
+      createdPlayerIds: ["rd-1"],
+      ...(createdPlayers ? { createdPlayers } : {}),
+      rerollsAdded: 0,
+      assistantsAdded: 0,
+      cheerleadersAdded: 0,
+      apothecaryAdded: false,
+      dedicatedFansAdded: 0,
+    },
+    away: {
+      createdPlayerIds: [],
+      rerollsAdded: 0,
+      assistantsAdded: 0,
+      cheerleadersAdded: 0,
+      apothecaryAdded: false,
+      dedicatedFansAdded: 0,
+    },
+  });
+
+  it("reverse une feuille dont le mort relevé a été recruté : son match joué et son évolution viennent de CE match (feuille antérieure, référence redérivée des achats)", async () => {
+    const snapshot = {
+      ...buildSnapshot({ purchasesHome: [raisedDeadPurchase] }),
+      rosterMutations: hireMutations(),
+    };
+    m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));
+    m.tpFindMany.mockResolvedValue([raisedDeadRow]);
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect("reversed" in r && r.reversed).toBe(true);
+    // Le Zombie recruté est retiré du roster.
+    expect(m.tpDeleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["rd-1"] } },
+    });
+  });
+
+  it("… idem avec la trace `createdPlayers` d'une feuille récente, sans relire les achats", async () => {
+    const snapshot = {
+      ...buildSnapshot(),
+      rosterMutations: hireMutations([
+        { id: "rd-1", spp: 0, matchesPlayed: 1, advancements: 1 },
+      ]),
+    };
+    m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));
+    m.tpFindMany.mockResolvedValue([raisedDeadRow]);
+
+    const r = await reverseOfflineLeagueResult("m-1");
+    expect("reversed" in r && r.reversed).toBe(true);
+    expect(m.tpDeleteMany).toHaveBeenCalledWith({
+      where: { id: { in: ["rd-1"] } },
+    });
+  });
+
+  it("refuse toujours la reversion si le relevé recruté a REJOUÉ depuis (purchase-consumed)", async () => {
+    const snapshot = {
+      ...buildSnapshot({ purchasesHome: [raisedDeadPurchase] }),
+      rosterMutations: hireMutations([
+        { id: "rd-1", spp: 0, matchesPlayed: 1, advancements: 1 },
+      ]),
+    };
+    m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));
+    m.tpFindMany.mockResolvedValue([{ ...raisedDeadRow, matchesPlayed: 2 }]);
+
+    expect(await reverseOfflineLeagueResult("m-1")).toEqual({
+      skipped: true,
+      reason: "purchase-consumed",
+    });
+    expect(m.tpDeleteMany).not.toHaveBeenCalled();
+    expect(m.matchDelete).not.toHaveBeenCalled();
+  });
+
   it("reverse les licenciements : re-active firedAt=null + recalcule TV", async () => {
     const snapshot = { ...buildSnapshot(), firedApplied: ["p1", "p2"] };
     m.matchFind.mockResolvedValue(buildMatch({ offlineResultInput: snapshot }));

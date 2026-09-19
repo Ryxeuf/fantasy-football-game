@@ -410,6 +410,18 @@ Trois pièges rencontrés en corrigeant les journaliers (sept. 2026) :
   Agilité ENTIÈRE (`resolveRandomPrimaryPool` ne garde que les slugs présents
   en base dès qu'il en trouve un — un catalogue partiel n'a rien à tirer).
 
+- **Un garde-fou de reversion compare à l'état À LA CRÉATION, jamais à zéro**
+  (retour testeur, 2026-09-19) : un journalier ou un mort relevé recruté est
+  créé AVEC 1 match joué, ses PSP et son évolution du match
+  (`applyOfflinePurchasesForTeam`), et `offlinePurchasesConsumed` lisait ces
+  compteurs comme un usage POSTÉRIEUR — « Reversion impossible:
+  purchase-consumed », feuille définitive. La référence vit dans la trace
+  (`createdPlayers`) pour les feuilles récentes et se REDÉRIVE des achats du
+  snapshot pour les anciennes (`league-offline-purchase-baseline`, pur ;
+  alignement dans l'ordre des achats créateurs, vérifié poste + nom, zéro si
+  un achat a été sauté). Tout nouveau compteur posé à la création d'un joueur
+  de feuille recruté doit entrer dans cette référence.
+
 Piège voisin (A159) : une règle d'affichage posée côté web (« seule la Ligue
 retenue ») ne couvre que la page qui l'importe — le même roster, consulté
 depuis la section Ligue, passait par `GET /leagues/:id/teams/:teamId/roster`
@@ -1724,6 +1736,14 @@ edition du `.json`, `pnpm --filter web typecheck` +
   redirigeait). `PATCH /leagues/:id/standings-order` lui est ouvert (comme à
   un admin), la fiche garde son bouton « ⚙️ Réglages » et l'écran sert un
   panneau RÉDUIT au lieu de rediriger.
+- **2026-09-19** : **L'invalidation d'une feuille n'est plus bloquée par un
+  journalier ou un mort relevé recruté** (retour testeur Discord : « Reversion
+  impossible: purchase-consumed » sur le Zombie relevé de Gones Kass'Krânes).
+  Le garde-fou compare désormais à l'état à la création (trace
+  `createdPlayers`, redérivée des achats du snapshot pour les feuilles
+  antérieures), module pur `league-offline-purchase-baseline`, e2e
+  invalidation + re-validation. Change OpenSpec
+  `invalidate-sheet-after-sheet-player-hire`.
 - **2026-09-11** : **Ligue privée = invisible** — `isPublic = false` tranché
   au sens fort : helper unique `services/league-access`, 404 (jamais 403) sur
   toutes les lectures d'une ligue par id, `optionalAuthUser` sur les lectures
