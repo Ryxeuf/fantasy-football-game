@@ -1373,6 +1373,16 @@ function parseSkills(raw: unknown): string[] {
 }
 ```
 
+### Retirer un feature flag : le code d'abord, la ligne en base ensuite
+
+Un flag qui ne gate plus rien (feature ouverte a tous) se retire du CODE
+(constante, entree `KNOWN_FLAGS`, miroir web `featureFlagKeys.ts`, gates,
+seeds) — mais sa ligne `FeatureFlag` reste en base (`db push`, aucun
+backfill). `listAll` expose donc `knownInCode` (cle absente de
+`KNOWN_FLAGS`) et `/admin/feature-flags` affiche « ⚠️ Absent du code » +
+un bandeau : c'est l'admin qui supprime la ligne. Precedent : `league`
+(2026-09-24).
+
 ### CI E2E API force-enable les flags
 Le workflow `.github/workflows/e2e.yml` exporte
 `FEATURE_FLAGS_FORCE_ENABLED: true`. Toujours penser a cette contrainte
@@ -1642,7 +1652,8 @@ edition du `.json`, `pnpm --filter web typecheck` +
   panneaux pre/post-match, fenetre d'invalidation). 5 migrations. Gating
   par un flag UNIQUE `league` (les 7 sous-flags `league_*` ont ete
   fusionnes le 2026-06-30 — voir memoire `nuffle-arena ligue = flag
-  unique`). Voir
+  unique`; flag lui-meme RETIRE du code le 2026-09-24, la ligue
+  etant ouverte a tous). Voir
   [`docs/roadmap/sessions/2026-06-06-league-management.md`](./docs/roadmap/sessions/2026-06-06-league-management.md)
   + guide rollout
   [`docs/roadmap/league-feature-flags-rollout.md`](./docs/roadmap/league-feature-flags-rollout.md).
