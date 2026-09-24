@@ -31,6 +31,7 @@ import {
   invalidateFeatureFlagsCache,
   syncFlagsFromCode,
   KNOWN_FLAGS,
+  isKnownInCode,
   ONLINE_PLAY_FLAG,
   AI_TRAINING_FLAG,
   NUFFLE_COACH_FLAG,
@@ -265,8 +266,37 @@ describe("featureFlags service", () => {
           createdAt: now,
           updatedAt: now,
           userOverrideCount: 3,
+          knownInCode: false,
         },
       ]);
+    });
+
+    it("flags keys declared in KNOWN_FLAGS as known in code", async () => {
+      mockPrisma.featureFlag.findMany.mockResolvedValue([
+        { ...flag("f1", ONLINE_PLAY_FLAG, true), _count: { userOverrides: 0 } },
+        { ...flag("f2", "league", true), _count: { userOverrides: 1 } },
+      ]);
+      const result = await listAll();
+      expect(result.map((f) => [f.key, f.knownInCode])).toEqual([
+        [ONLINE_PLAY_FLAG, true],
+        // Flag retire du code (ligue ouverte a tous) : encore en base, il
+        // doit etre signale comme absent du code.
+        ["league", false],
+      ]);
+    });
+  });
+
+  describe("isKnownInCode", () => {
+    it("is true for every KNOWN_FLAGS key", () => {
+      for (const spec of KNOWN_FLAGS) {
+        expect(isKnownInCode(spec.key)).toBe(true);
+      }
+    });
+
+    it("is false for the retired league flag and unknown keys", () => {
+      expect(isKnownInCode("league")).toBe(false);
+      expect(isKnownInCode("leagues_v2_ui")).toBe(false);
+      expect(isKnownInCode("")).toBe(false);
     });
   });
 

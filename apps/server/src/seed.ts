@@ -24,7 +24,6 @@ import { UNKNOWN_USER_ID } from "./utils/user-constants";
 import {
   ONLINE_PLAY_FLAG,
   AI_TRAINING_FLAG,
-  LEAGUE_FLAG,
   NUFFLE_COACH_FLAG,
   NUFFLE_COACH_TEST_FLAG,
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
@@ -1134,41 +1133,6 @@ async function main() {
     });
     serverLog.log(
       `   ✅ Override '${AI_TRAINING_FLAG}' ajouté pour user@example.com`,
-    );
-  }
-
-  // Brique "Ligue" Blood Bowl — flag unique qui gate TOUTE la
-  // fonctionnalite (hub /leagues + creation, edition, admin saison,
-  // inscription, calendrier interactif, level-up de roster). Desactive
-  // globalement par defaut ; admins l'ont via bypass de role et
-  // user@example.com via override pour faciliter les demos.
-  const leagueFlag = await prisma.featureFlag.upsert({
-    where: { key: LEAGUE_FLAG },
-    update: {
-      description:
-        "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
-    },
-    create: {
-      key: LEAGUE_FLAG,
-      description:
-        "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
-      enabled: false,
-    },
-  });
-  serverLog.log(
-    `   ✅ Flag '${LEAGUE_FLAG}' ${leagueFlag.enabled ? "actif" : "inactif (override admin/user)"}`,
-  );
-
-  if (testUser) {
-    await prisma.featureFlagUser.upsert({
-      where: {
-        flagId_userId: { flagId: leagueFlag.id, userId: testUser.id },
-      },
-      create: { flagId: leagueFlag.id, userId: testUser.id },
-      update: {},
-    });
-    serverLog.log(
-      `   ✅ Override '${LEAGUE_FLAG}' ajouté pour user@example.com`,
     );
   }
 

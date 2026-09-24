@@ -109,7 +109,6 @@ import { maintenanceMode } from "./middleware/maintenance";
 import {
   AI_TRAINING_FLAG,
   ONLINE_PLAY_FLAG,
-  LEAGUE_FLAG,
   OFFLINE_MATCH_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
@@ -1304,11 +1303,6 @@ if (process.env.TEST_SQLITE === "1") {
         {
           key: AI_TRAINING_FLAG,
           description: "Active les matchs d'entrainement contre l'IA",
-        },
-        {
-          key: LEAGUE_FLAG,
-          description:
-            "Ligue Blood Bowl — flag unique : hub /leagues + gestion complete (creation, edition, admin saison, inscription, calendrier interactif, level-up).",
         },
         {
           // OFF en prod, ON pour les suites : les specs e2e-api exercent
