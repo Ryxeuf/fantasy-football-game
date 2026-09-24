@@ -2,15 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext";
 
-// Sprint Ligues v2 PR2 — `LeagueDetailPage` consomme `useFeatureFlag`
-// pour gater le panneau admin / bouton de creation de saison /
-// inscription. On stub le hook pour que les tests existants restent
-// stables (pas de panneau admin visible) sans avoir a wrapper avec un
-// vrai `FeatureFlagProvider`.
-vi.mock("../../hooks/useFeatureFlag", () => ({
-  useFeatureFlag: vi.fn(() => false),
-}));
-
 import LeagueDetailPage from "./page";
 
 const mockFetch = vi.fn();
@@ -393,39 +384,9 @@ describe("LeagueDetailPage", () => {
     expect(headers.Authorization).toBe("Bearer test-token");
   });
 
-  // Sprint Ligues v2 PR2 — gating UI flag + creator
+  // Sprint Ligues v2 PR2 — gating par createur
   describe("Sprint Ligues v2 PR2 — admin panel & join button", () => {
-    it("hides the season admin panel when the v2 flag is off", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (
-        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
-      ).mockReturnValue(false);
-      mockApi({
-        league: mockLeague,
-        season: mockSeason,
-        standings: mockStandings,
-        meUserId: mockLeague.creatorId,
-      });
-
-      renderWithProvider();
-
-      // Wait until the season finished loading (standings rendered)
-      // before asserting absence of admin elements: otherwise the
-      // assertion could pass for the wrong reason (season still
-      // loading = controls not yet rendered).
-      await waitFor(() => {
-        expect(screen.getByTestId("league-standings")).toBeTruthy();
-      });
-
-      expect(screen.queryByTestId("season-admin-panel")).toBeNull();
-      expect(screen.queryByTestId("open-new-season-modal")).toBeNull();
-    });
-
-    it("shows admin panel & new-season button when v2 flag is on AND user is creator", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (
-        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
-      ).mockReturnValue(true);
+    it("shows admin panel & new-season button when user is creator", async () => {
       mockApi({
         league: mockLeague,
         season: mockSeason,
@@ -441,11 +402,7 @@ describe("LeagueDetailPage", () => {
       expect(screen.getByTestId("open-new-season-modal")).toBeTruthy();
     });
 
-    it("hides admin controls but shows Join button for non-creator users when v2 flag is on", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (
-        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
-      ).mockReturnValue(true);
+    it("hides admin controls but shows Join button for non-creator users", async () => {
       mockApi({
         league: mockLeague,
         season: { ...mockSeason, status: "draft" },
@@ -468,10 +425,6 @@ describe("LeagueDetailPage", () => {
     });
 
     it("shows Join button for the creator too (player-commissaire) when registrations are open", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (
-        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
-      ).mockReturnValue(true);
       mockApi({
         league: mockLeague,
         season: { ...mockSeason, status: "draft" },
@@ -490,10 +443,6 @@ describe("LeagueDetailPage", () => {
     });
 
     it("hides Join button when the season is in_progress (registrations closed)", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (
-        useFeatureFlag as unknown as ReturnType<typeof vi.fn>
-      ).mockReturnValue(true);
       mockApi({
         league: mockLeague,
         season: { ...mockSeason, status: "in_progress" },
@@ -612,10 +561,6 @@ describe("LeagueDetailPage", () => {
   // L2.D — badge Commissaire + edition des parametres de ligue
   describe("L2.D — commissaire badge & league edit CTA", () => {
     it("always shows the Commissioner badge in the header", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-        true,
-      );
       mockApi({
         league: mockLeague,
         season: mockSeason,
@@ -631,10 +576,6 @@ describe("LeagueDetailPage", () => {
     });
 
     it("shows the edit CTA for the creator when no match has been scored", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-        true,
-      );
       mockApi({
         league: { ...mockLeague, hasScoredMatch: false },
         season: mockSeason,
@@ -652,10 +593,6 @@ describe("LeagueDetailPage", () => {
     it("garde l'accès aux réglages une fois la ligue verrouillée", async () => {
       // Le formulaire complet est gelé, mais l'ordre du classement s'y
       // modifie encore : masquer le bouton rendait ce réglage introuvable.
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-        true,
-      );
       mockApi({
         league: { ...mockLeague, hasScoredMatch: true },
         season: mockSeason,
@@ -675,10 +612,6 @@ describe("LeagueDetailPage", () => {
     });
 
     it("hides the edit CTA for non-creator users", async () => {
-      const { useFeatureFlag } = await import("../../hooks/useFeatureFlag");
-      (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-        true,
-      );
       mockApi({
         league: { ...mockLeague, hasScoredMatch: false },
         season: mockSeason,

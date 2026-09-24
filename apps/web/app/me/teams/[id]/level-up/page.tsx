@@ -5,33 +5,17 @@
  * Enveloppe le composant partagé `AdvancementEditor` (liste des joueurs
  * avec un avancement en attente + picker + application). La même logique
  * est réutilisée dans l'onglet « Évolutions » de la feuille de match.
- *
- * Gate par le feature flag unique `league` : redirige vers /me/teams/:id
- * si le flag est off (cosmétique, le serveur reste accessible).
  */
 
-import { useEffect } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { AdvancementEditor } from "../../../../components/AdvancementEditor";
 import { useLanguage } from "../../../../contexts/LanguageContext";
-import { useFeatureFlag } from "../../../../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../../../../lib/featureFlagKeys";
 
 export default function LevelUpPage() {
   const { t } = useLanguage();
   const params = useParams();
-  const router = useRouter();
-  const flagEnabled = useFeatureFlag(LEAGUE_FLAG);
   const teamId = typeof params.id === "string" ? params.id : "";
-
-  useEffect(() => {
-    if (!flagEnabled) {
-      router.replace(`/me/teams/${teamId}`);
-    }
-  }, [flagEnabled, teamId, router]);
-
-  if (!flagEnabled) return null;
 
   return (
     <div

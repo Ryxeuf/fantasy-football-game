@@ -66,7 +66,7 @@ describe("OfflineMatchGate", () => {
   });
 
   it("n'est pas déverrouillé par les autres flags", async () => {
-    mockedFetchMyFlags.mockResolvedValue(["online_play", "league"]);
+    mockedFetchMyFlags.mockResolvedValue(["online_play"]);
     renderGate(
       <OfflineMatchGate>
         <Inside />

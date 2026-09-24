@@ -7,6 +7,8 @@ import {
   adminListFlags,
   adminSyncFlags,
   adminUpdateFlag,
+  isFlagMissingFromCode,
+  missingFromCodeNotice,
   type FeatureFlag,
 } from "../../lib/featureFlags";
 
@@ -38,6 +40,8 @@ export default function AdminFeatureFlagsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const missingFromCode = flags.filter(isFlagMissingFromCode);
 
   const toggleEnabled = async (flag: FeatureFlag) => {
     try {
@@ -159,6 +163,15 @@ export default function AdminFeatureFlagsPage() {
         </div>
       )}
 
+      {!loading && missingFromCode.length > 0 && (
+        <div
+          data-testid="feature-flags-missing-from-code"
+          className="mb-4 p-3 rounded bg-amber-50 text-amber-800 border border-amber-200 text-sm"
+        >
+          {missingFromCodeNotice(missingFromCode.map((f) => f.key))}
+        </div>
+      )}
+
       {createOpen && (
         <form
           onSubmit={submitCreate}
@@ -237,7 +250,18 @@ export default function AdminFeatureFlagsPage() {
               <tbody className="divide-y divide-gray-100">
                 {flags.map((flag) => (
                   <tr key={flag.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">{flag.key}</td>
+                    <td className="px-4 py-3 font-mono text-xs">
+                      <div>{flag.key}</div>
+                      {isFlagMissingFromCode(flag) && (
+                        <span
+                          data-testid={`flag-missing-from-code-${flag.key}`}
+                          title="Cette clé n'est plus déclarée dans le code : le flag ne gate plus rien, la ligne peut être supprimée."
+                          className="mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-sans text-[11px] font-semibold whitespace-nowrap"
+                        >
+                          ⚠️ Absent du code
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-700">
                       {flag.description || (
                         <span className="text-gray-400">—</span>

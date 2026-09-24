@@ -4,8 +4,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { LeagueForm, type LeagueFormValues } from "../_components/LeagueForm";
 import { uploadPendingCompetitionDocuments } from "../../lib/competition-documents";
 import { serializeBonusRules } from "../_components/bonus-rules";
@@ -25,7 +23,6 @@ interface CreatedLeague {
 export default function NewLeaguePage() {
   const router = useRouter();
   const { t } = useLanguage();
-  const flagEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Documents officiels choisis avant la creation : la ligue n'ayant pas
@@ -114,12 +111,6 @@ export default function NewLeaguePage() {
     },
     [router, t.leagues.formSubmitError, uploadDocuments, createdLeagueId],
   );
-
-  // Gate cosmetique cote client (cf. LeagueGate). Sans le flag, on ne
-  // rend rien (le useEffect du flag redirige vers /leagues).
-  if (!flagEnabled) {
-    return null;
-  }
 
   return (
     <div
