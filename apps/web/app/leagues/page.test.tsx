@@ -2,17 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { LanguageProvider } from "../contexts/LanguageContext";
 
-// `LeaguesPage` consomme `useFeatureFlag(LEAGUE_FLAG)` (flag unique de
-// la brique ligue) pour decider d'afficher le CTA "Creer une ligue".
-// On stub le hook ici plutot que de wrapper avec un
-// vrai `FeatureFlagProvider` : ca evite que la fetch mock globale
-// reponde aussi au call `/api/feature-flags/me` (qui sinon recevrait
-// un body `{ leagues: [...] }` et casserait le `new Set(...)` du
-// provider).
-vi.mock("../hooks/useFeatureFlag", () => ({
-  useFeatureFlag: vi.fn(() => false),
-}));
-
 // La page monte `JoinByCodeField` (saisie de code) qui consomme
 // `useRouter()` de next/navigation. On le stub pour le rendu en test.
 vi.mock("next/navigation", () => ({
@@ -250,31 +239,8 @@ describe("LeaguesPage", () => {
     expect(screen.getAllByText(/8/).length).toBeGreaterThanOrEqual(1);
   });
 
-  // Bouton "Creer une ligue" gate par le flag unique `league`.
-  it("hides the create-league CTA when league flag is off", async () => {
-    const { useFeatureFlag } = await import("../hooks/useFeatureFlag");
-    (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-      false,
-    );
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockLeaguesData),
-    });
-
-    renderWithProvider();
-
-    await waitFor(() => {
-      expect(screen.getByText("Open 5 Teams")).toBeTruthy();
-    });
-
-    expect(screen.queryByTestId("leagues-create-cta")).toBeNull();
-  });
-
-  it("shows the create-league CTA when league flag is on", async () => {
-    const { useFeatureFlag } = await import("../hooks/useFeatureFlag");
-    (useFeatureFlag as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-      true,
-    );
+  // La brique ligue n'est plus sous feature flag : le CTA est toujours la.
+  it("always shows the create-league CTA", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockLeaguesData),

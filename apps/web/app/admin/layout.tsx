@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { syncAuthCookie } from "../lib/auth-cookie";
-import { useFeatureFlag } from "../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../lib/featureFlagKeys";
 import EngineVersionsBadge from "./_components/EngineVersionsBadge";
 
 interface NavEntry {
@@ -24,20 +22,12 @@ interface NavSection {
 
 const STORAGE_KEY = "admin_nav_open_sections_v1";
 
-function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
+function buildSections(): ReadonlyArray<NavSection> {
   const competitionItems: NavEntry[] = [
     { href: "/admin/teams", label: "Équipes", icon: "⚽" },
     { href: "/admin/matches", label: "Parties", icon: "🎮" },
     { href: "/admin/local-matches", label: "Matchs locaux", icon: "🎯" },
-  ];
-  if (leaguesEnabled) {
-    competitionItems.push({
-      href: "/admin/leagues",
-      label: "Ligues",
-      icon: "🏅",
-    });
-  }
-  competitionItems.push(
+    { href: "/admin/leagues", label: "Ligues", icon: "🏅" },
     { href: "/admin/cups", label: "Coupes", icon: "🏆" },
     {
       href: "/admin/competition-documents",
@@ -45,7 +35,7 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
       icon: "📎",
     },
     { href: "/admin/nfl-fantasy", label: "NFL Fantasy", icon: "🐀" },
-  );
+  ];
 
   return [
     {
@@ -118,6 +108,8 @@ function buildSections(leaguesEnabled: boolean): ReadonlyArray<NavSection> {
   ];
 }
 
+const SECTIONS = buildSections();
+
 function matchesPath(entry: NavEntry, pathname: string | null): boolean {
   if (!pathname) return false;
   if (entry.exact || entry.href === "/admin") {
@@ -140,16 +132,11 @@ function findActiveSectionId(
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const leaguesEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const sections = useMemo(
-    () => buildSections(leaguesEnabled),
-    [leaguesEnabled],
-  );
   const activeSectionId = useMemo(
-    () => findActiveSectionId(sections, pathname),
-    [sections, pathname],
+    () => findActiveSectionId(SECTIONS, pathname),
+    [pathname],
   );
 
   const [openSections, setOpenSections] = useState<ReadonlySet<string>>(() => {
@@ -284,7 +271,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const navContent = (
     <nav className="p-3">
-      <div className="space-y-0.5">{sections.map(renderSection)}</div>
+      <div className="space-y-0.5">{SECTIONS.map(renderSection)}</div>
       <div className="pt-4 mt-4 border-t border-gray-200">
         <EngineVersionsBadge variant="sidebar" />
       </div>

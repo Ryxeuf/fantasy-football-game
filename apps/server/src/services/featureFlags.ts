@@ -24,20 +24,6 @@ export const ONLINE_PLAY_FLAG = "online_play" as const;
 export const AI_TRAINING_FLAG = "ai_training" as const;
 
 /**
- * Flag unique de la brique "Ligue" Blood Bowl (gestion de ligue facon regles
- * officielles : rosters, inscription, saisons, pairings, classements, ELO).
- * Gate a la fois l'acces au hub /leagues ET tous les ecrans de gestion
- * (creation `/leagues/new`, edition draft, creation saison, panneau admin
- * saison, calendrier interactif, level-up de roster, section admin "Ligues").
- * Distinct de `online_play` : la ligue a son propre flag pour pouvoir etre
- * activee independamment de la partie en ligne.
- *
- * Note historique : l'ancien flag `leagues_v2_ui` (qui gatait separement les
- * ecrans v2) a ete fusionne ici — il n'existe plus qu'un seul flag.
- */
-export const LEAGUE_FLAG = "league" as const;
-
-/**
  * Nuffle Coach (fantasy NFL skinne BB) — gate l'UI publique du
  * module : liens de menu, sous-nav, et pages user (catalogue
  * players, fiche player, standings d'une league, draft, about).
@@ -112,12 +98,11 @@ export const MAINTENANCE_MODE_FLAG = "maintenance_mode" as const;
 export const REGISTRATION_REQUIRES_VALIDATION_FLAG =
   "registration_requires_validation" as const;
 
-// Note : la brique Ligue est gatee par un FLAG UNIQUE `LEAGUE_FLAG`.
-// Les anciens sous-flags de rollout granulaire (`league_invitations`,
-// `league_bonus_points`, `league_manual_pairings`, `league_pools`,
-// `league_leaderboards`, `league_commissioner_edit`, `league_match_sheet`)
-// ont ete supprimes (fusionnes dans `LEAGUE_FLAG`, 2026-06-30) : toutes
-// les fonctionnalites ligue s'activent/se desactivent d'un seul geste.
+// Note : la brique Ligue (hub /leagues, feuilles de match, classements,
+// level-up, admin) n'est PLUS sous feature flag (2026-09-24) : ouverte a
+// tous en prod, son flag `league` a ete retire du code. Une ligne `league`
+// restee en base apparait « absente du code » dans le panneau admin
+// (`knownInCode: false`) et peut y etre supprimee sans effet.
 
 /**
  * Registre des feature flags connus du code. Source de vérité pour garder
@@ -146,11 +131,6 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
   {
     key: AI_TRAINING_FLAG,
     description: "Entraînement contre l'IA (practice + ai-next-move).",
-  },
-  {
-    key: LEAGUE_FLAG,
-    description:
-      "Ligue Blood Bowl — flag UNIQUE : hub /leagues + toute la gestion (création, saisons, invitations, poules, pairings manuels, points bonus, feuille de match, édition commissaire, classements, level-up, admin).",
   },
   {
     key: NUFFLE_COACH_FLAG,
@@ -190,6 +170,17 @@ export interface FeatureFlagDTO {
 
 export interface FeatureFlagWithCountDTO extends FeatureFlagDTO {
   userOverrideCount: number;
+  /**
+   * Faux quand la cle n'est plus declaree dans `KNOWN_FLAGS` : le code ne
+   * la lit plus (flag retire, ou cree a la main sans constante). Le panneau
+   * admin le signale pour que la ligne puisse etre supprimee.
+   */
+  knownInCode: boolean;
+}
+
+/** Vrai si `key` est declaree dans le registre `KNOWN_FLAGS`. */
+export function isKnownInCode(key: string): boolean {
+  return KNOWN_FLAGS.some((spec) => spec.key === key);
 }
 
 export interface FeatureFlagUserDTO {
@@ -329,6 +320,7 @@ export async function listAll(): Promise<FeatureFlagWithCountDTO[]> {
     createdAt: f.createdAt,
     updatedAt: f.updatedAt,
     userOverrideCount: f._count.userOverrides,
+    knownInCode: isKnownInCode(f.key),
   }));
 }
 

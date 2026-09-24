@@ -7,10 +7,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, cleanup, fireEvent } from "@testing-library/react";
 import { LanguageProvider } from "../../contexts/LanguageContext";
 
-vi.mock("../../hooks/useFeatureFlag", () => ({
-  useFeatureFlag: vi.fn(() => true),
-}));
-
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "lg-1" }),

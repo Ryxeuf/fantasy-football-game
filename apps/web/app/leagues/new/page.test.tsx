@@ -39,9 +39,6 @@ const FORM_VALUES = {
   tieBreakRules: [] as string[],
 };
 
-vi.mock("../../hooks/useFeatureFlag", () => ({
-  useFeatureFlag: vi.fn(() => true),
-}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace: vi.fn(), prefetch: vi.fn() }),
 }));
@@ -96,12 +93,10 @@ vi.mock("../_components/LeagueForm", () => ({
 
 import NewLeaguePage from "./page";
 import { apiRequest } from "../../lib/api-client";
-import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { uploadPendingCompetitionDocuments } from "../../lib/competition-documents";
 
 const mockedRequest = vi.mocked(apiRequest);
 const mockedUpload = vi.mocked(uploadPendingCompetitionDocuments);
-const mockedFlag = vi.mocked(useFeatureFlag);
 
 function renderPage() {
   return render(
@@ -117,7 +112,6 @@ beforeEach(() => {
   // implementations posees dans les factories `vi.mock` sont effacees, il
   // faut les reposer ici.
   vi.resetAllMocks();
-  mockedFlag.mockReturnValue(true);
   push.mockReset();
   mockedRequest.mockResolvedValue({ id: "league-1" });
   mockedUpload.mockResolvedValue([]);

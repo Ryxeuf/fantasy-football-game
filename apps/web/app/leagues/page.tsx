@@ -3,8 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
-import { useFeatureFlag } from "../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../lib/featureFlagKeys";
 import { PendingLeagueInvitations } from "./_components/PendingLeagueInvitations";
 import { JoinByCodeField } from "./_components/JoinByCodeField";
 
@@ -59,7 +57,6 @@ function buildListPath(status: StatusFilter): string {
 
 export default function LeaguesPage() {
   const { t } = useLanguage();
-  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -154,15 +151,13 @@ export default function LeaguesPage() {
           >
             📦 {t.leagues.archivedLink}
           </Link>
-          {leagueEnabled ? (
-            <Link
-              href="/leagues/new"
-              data-testid="leagues-create-cta"
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium hover:bg-nuffle-gold/90"
-            >
-              + {t.leagues.createLeagueButton}
-            </Link>
-          ) : null}
+          <Link
+            href="/leagues/new"
+            data-testid="leagues-create-cta"
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium hover:bg-nuffle-gold/90"
+          >
+            + {t.leagues.createLeagueButton}
+          </Link>
         </div>
       </div>
 

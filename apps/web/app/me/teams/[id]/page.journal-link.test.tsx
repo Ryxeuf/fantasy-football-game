@@ -47,9 +47,6 @@ vi.mock("./MatchReportBanner", () => ({ MatchReportBanner: () => null }));
 vi.mock("./FirstTeamWelcomeBanner", () => ({ default: () => null }));
 vi.mock("./TeamShareToggle", () => ({ default: () => null }));
 vi.mock("../components/TeamLogoUploader", () => ({ default: () => null }));
-vi.mock("../../../hooks/useFeatureFlag", () => ({
-  useFeatureFlag: () => false,
-}));
 vi.mock("../../../lib/tournament-rulesets", () => ({
   useTournamentRulesetLabel: () => null,
 }));

@@ -5,8 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
-import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../../lib/featureFlagKeys";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { NextMatchesPanel } from "./NextMatchesPanel";
 import { InviteCoachModal } from "./InviteCoachModal";
@@ -58,7 +56,6 @@ export default function LeagueDetailPage() {
   const params = useParams();
   const router = useRouter();
   const leagueId = typeof params.id === "string" ? params.id : "";
-  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   // Libellé du règlement servi par l'API (les règlements sont éditables).
@@ -288,13 +285,13 @@ export default function LeagueDetailPage() {
   }, [season]);
 
   const canJoinSeason = useMemo(() => {
-    if (!leagueEnabled || !season || !currentUserId) return false;
+    if (!season || !currentUserId) return false;
     // Le commissaire (createur) est AUSSI un coach : il peut inscrire une de
     // ses equipes (player-commissaire, standard en Blood Bowl). Le backend
     // l'autorise (handleJoinSeason ne verifie que la propriete de l'equipe).
     // Inscriptions ouvertes uniquement avant le demarrage de la saison.
     return season.status === "draft" || season.status === "scheduled";
-  }, [leagueEnabled, season, currentUserId]);
+  }, [season, currentUserId]);
 
   // L2.B.5 — participant actif du coach courant (si inscrit). Sert au
   // bouton "Coup de mecene" et au lien "Gerer mon equipe".
@@ -395,7 +392,7 @@ export default function LeagueDetailPage() {
               est gelé, mais l'ordre du classement s'y modifie encore (il est
               appliqué au tri, à la lecture). Masquer le bouton dans ce cas
               rendait ce réglage introuvable. */}
-          {leagueEnabled && isCreator ? (
+          {isCreator ? (
             <Link
               href={`/leagues/${leagueId}/edit`}
               data-testid="edit-league-cta"
@@ -452,7 +449,7 @@ export default function LeagueDetailPage() {
           <h2 className="text-lg font-semibold text-nuffle-anthracite">
             {t.leagues.seasonsSection}
           </h2>
-          {leagueEnabled && isCreator ? (
+          {isCreator ? (
             <div className="flex flex-wrap items-center gap-2">
               {/* Lot A — invitation d'un coach (commissaire). Gatee par le
                   flag unique `league` via le bloc parent. */}
@@ -483,7 +480,7 @@ export default function LeagueDetailPage() {
             </div>
           ) : null}
         </div>
-        {leagueEnabled && isCreator ? (
+        {isCreator ? (
           <SentInvitationsPanel
             leagueId={league.id}
             refreshKey={invitationsRefreshKey}
@@ -542,7 +539,7 @@ export default function LeagueDetailPage() {
 
           {season ? (
             <>
-              {leagueEnabled && isCreator ? (
+              {isCreator ? (
                 <SeasonAdminPanel
                   seasonId={season.id}
                   status={season.status}
@@ -558,7 +555,7 @@ export default function LeagueDetailPage() {
 
               {/* FR2 — gestion des poules (commissaire). Affiché aussi quand
                   des poules existent déjà (lecture seule si saison démarrée). */}
-              {leagueEnabled && isCreator && (seasonEditable || pools.length > 0) ? (
+              {isCreator && (seasonEditable || pools.length > 0) ? (
                 <PoolsManagerPanel
                   seasonId={season.id}
                   pools={pools}
@@ -647,7 +644,7 @@ export default function LeagueDetailPage() {
                   {t.leagues.calendarSection}
                 </h3>
                 {/* FR4 — saisie manuelle du calendrier (commissaire). */}
-                {leagueEnabled && isCreator ? (
+                {isCreator ? (
                   <ManualScheduleEditor
                     seasonId={season.id}
                     rounds={season.rounds}
@@ -661,7 +658,7 @@ export default function LeagueDetailPage() {
                 <SeasonCalendar
                   rounds={season.rounds}
                   currentUserId={currentUserId}
-                  canRecordResult={leagueEnabled && isCreator}
+                  canRecordResult={isCreator}
                   poolNamesById={poolNamesById}
                   poolIdByParticipantId={poolIdByParticipantId}
                   leagueId={leagueId}
@@ -670,7 +667,7 @@ export default function LeagueDetailPage() {
                     if (selectedSeasonId) loadSeason(selectedSeasonId);
                   }}
                   preferredPoolId={myPoolId}
-                  isCommissioner={leagueEnabled && isCreator}
+                  isCommissioner={isCreator}
                 />
               </div>
 
@@ -755,7 +752,7 @@ export default function LeagueDetailPage() {
                   commissaire tant qu'aucun match PO n'est lancé. */}
               <PlayoffBracketView
                 seasonId={season.id}
-                isCommissioner={leagueEnabled && isCreator}
+                isCommissioner={isCreator}
                 eligibleParticipants={season.participants
                   .filter((p) => p.status === "active")
                   .map((p) => ({ id: p.id, name: p.team.name }))}
@@ -775,7 +772,7 @@ export default function LeagueDetailPage() {
                   leagueId={league.id}
                   canViewRosters={canViewRosters}
                   commissionerLeagueId={
-                    leagueEnabled && isCreator ? league.id : undefined
+                    isCreator ? league.id : undefined
                   }
                   seasonId={season.id}
                   seasonStatus={season.status}
@@ -800,7 +797,7 @@ export default function LeagueDetailPage() {
         competitionId={league.id}
         name={league.name}
         archived={league.status === "archived"}
-        canManage={leagueEnabled && (isCreator || currentUserIsAdmin)}
+        canManage={isCreator || currentUserIsAdmin}
         onArchived={() => {
           apiRequest<{ league: LeagueDetail }>(`/leagues/${leagueId}`)
             .then(({ league: data }) => setLeague(data))
@@ -811,7 +808,7 @@ export default function LeagueDetailPage() {
         onDeleted={() => router.push("/leagues")}
       />
 
-      {leagueEnabled && isCreator ? (
+      {isCreator ? (
         <NewSeasonModal
           leagueId={league.id}
           open={newSeasonOpen}
@@ -843,7 +840,7 @@ export default function LeagueDetailPage() {
         />
       ) : null}
 
-      {leagueEnabled && isCreator ? (
+      {isCreator ? (
         <InviteCoachModal
           open={inviteOpen}
           onClose={() => setInviteOpen(false)}

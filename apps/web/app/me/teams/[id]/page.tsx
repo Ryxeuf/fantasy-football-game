@@ -32,8 +32,6 @@ import { shouldShowTeamLoadError } from "./team-detail-error";
 import { rosterPlayersOf } from "../../../lib/roster-players";
 import { isAdminUser } from "../../../lib/user-roles";
 import { makePlayerValueResolver } from "./roster-player-value";
-import { useFeatureFlag } from "../../../hooks/useFeatureFlag";
-import { LEAGUE_FLAG } from "../../../lib/featureFlagKeys";
 import { PendingAdvancementsBanner } from "./PendingAdvancementsBanner";
 import { MatchReportBanner } from "./MatchReportBanner";
 import TeamShareToggle from "./TeamShareToggle";
@@ -161,7 +159,6 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
 
 export default function TeamDetailPage() {
   const { t, language } = useLanguage();
-  const leagueEnabled = useFeatureFlag(LEAGUE_FLAG);
   const [data, setData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
   // Le journal d'équipe est un outil d'investigation (qui a changé quoi, et
@@ -571,7 +568,7 @@ export default function TeamDetailPage() {
           onExportPdf={handleExportRoster}
         />
       ) : null}
-      {leagueEnabled && id ? <PendingAdvancementsBanner teamId={id} /> : null}
+      {id ? <PendingAdvancementsBanner teamId={id} /> : null}
       {id ? <MatchReportBanner teamId={id} /> : null}
       {/* Logo d'equipe : upload / retrait. Le logo est repris devant le
           nom de l'equipe dans les matchs, le classement et la feuille de

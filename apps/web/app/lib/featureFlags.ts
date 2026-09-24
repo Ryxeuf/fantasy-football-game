@@ -8,6 +8,29 @@ export interface FeatureFlag {
   createdAt: string;
   updatedAt: string;
   userOverrideCount: number;
+  /**
+   * Faux quand la clé n'est plus déclarée dans le code (flag retiré) : la
+   * ligne ne gate plus rien et peut être supprimée. Optionnel pour rester
+   * compatible avec un serveur qui ne l'expose pas encore.
+   */
+  knownInCode?: boolean;
+}
+
+/**
+ * Vrai si le serveur signale le flag comme absent du code. Un champ absent
+ * (serveur antérieur) n'est PAS lu comme « absent du code ».
+ */
+export function isFlagMissingFromCode(flag: Pick<FeatureFlag, "knownInCode">): boolean {
+  return flag.knownInCode === false;
+}
+
+/** Bandeau du panneau admin listant les flags que le code n'utilise plus. */
+export function missingFromCodeNotice(keys: readonly string[]): string {
+  const list = keys.join(", ");
+  if (keys.length === 1) {
+    return `Le flag ${list} n'est plus utilisé par le code : il ne gate plus rien et peut être supprimé.`;
+  }
+  return `${keys.length} flags ne sont plus utilisés par le code (${list}) : ils ne gatent plus rien et peuvent être supprimés.`;
 }
 
 export interface FeatureFlagUser {

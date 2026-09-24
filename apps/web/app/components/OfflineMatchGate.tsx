@@ -11,7 +11,7 @@ interface OfflineMatchGateProps {
 /**
  * Gate client-side de la brique « partie offline » (`/local-matches`).
  *
- * Miroir d'`OnlinePlayGate` / `LeagueGate` sur le flag `offline_match`, OFF
+ * Miroir d'`OnlinePlayGate` sur le flag `offline_match`, OFF
  * par défaut : la saisie d'un résultat passe par la feuille de match. L'écran
  * de repli le DIT plutôt que de renvoyer à l'accueil sans explication — un
  * coach qui arrive par un signet doit savoir où saisir son match.

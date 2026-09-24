@@ -1,5 +1,12 @@
 # Unification du feature flag des ligues — 2026-06-05
 
+> **Maj 2026-09-24 — flag RETIRÉ** : la gestion des ligues étant ouverte à
+> tous en prod, le flag `league` a été supprimé du code (plus de
+> `LEAGUE_FLAG`, plus de `LeagueGate`, entrée retirée de `KNOWN_FLAGS`).
+> Une ligne `league` restée en base s'affiche « ⚠️ Absent du code » dans
+> `/admin/feature-flags` et peut y être supprimée sans effet. Ce document
+> est conservé pour l'historique.
+
 ## Contexte / bug
 
 La brique « Ligue » était gatée par **deux** feature flags distincts :
