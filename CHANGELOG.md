@@ -1,3 +1,10 @@
+## [1.242.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.3...v1.242.0) (2026-09-24)
+
+
+### ✨ Features
+
+* **feature-flags:** retirer le flag league et exposer knownInCode ([#1033](https://github.com/Ryxeuf/fantasy-football-game/issues/1033)) ([af94028](https://github.com/Ryxeuf/fantasy-football-game/commit/af940280eb6538a5a7d4be07682bfd231a55620a))
+
 ## [1.241.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.2...v1.241.3) (2026-09-11)
 
 
