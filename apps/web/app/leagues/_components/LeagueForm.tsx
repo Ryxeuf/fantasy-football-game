@@ -10,6 +10,11 @@ import {
 } from "@bb/game-engine";
 import { BonusRulesEditor } from "./BonusRulesEditor";
 import { StandingsOrderField } from "./StandingsOrderField";
+import { PredictionsScopeField } from "./PredictionsScopeField";
+import {
+  DEFAULT_PREDICTION_SCOPE,
+  type PredictionScope,
+} from "./predictions";
 import PendingCompetitionDocuments from "../../components/PendingCompetitionDocuments";
 import type { BonusRuleValue } from "./bonus-rules";
 
@@ -52,6 +57,11 @@ export interface LeagueFormValues {
    * tri reste SERVEUR : cette liste n'est qu'une consigne.
    */
   tieBreakRules: string[];
+  /**
+   * Qui pronostique les rencontres : personne, les membres, ou tout compte
+   * qui voit la ligue. Reste modifiable une fois la ligue verrouillée.
+   */
+  predictionsScope: PredictionScope;
 }
 
 export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
@@ -69,6 +79,7 @@ export const LEAGUE_FORM_DEFAULTS: LeagueFormValues = {
   forfeitPoints: -1,
   bonusPointsConfig: [],
   tieBreakRules: [],
+  predictionsScope: DEFAULT_PREDICTION_SCOPE,
 };
 
 interface RosterListItem {
@@ -461,6 +472,13 @@ export function LeagueForm({
         <StandingsOrderField
           value={form.tieBreakRules}
           onChange={(next) => updateField("tieBreakRules", next)}
+          disabled={submitting}
+        />
+
+        <PredictionsScopeField
+          value={form.predictionsScope}
+          onChange={(next) => updateField("predictionsScope", next)}
+          isPublic={form.isPublic}
           disabled={submitting}
         />
 

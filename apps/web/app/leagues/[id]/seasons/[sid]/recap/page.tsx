@@ -41,6 +41,11 @@ interface AwardsCatalogue {
   martyrs: AwardEntry[];
   cleanestSheet: AwardEntry[];
   mostWins: AwardEntry[];
+  /**
+   * Meilleur pronostiqueur du groupe Coachs (valeur = points de
+   * pronostics). Optionnel pour rétro-compat avec un serveur antérieur.
+   */
+  oracle?: AwardEntry[];
 }
 
 interface RecapResponse {
@@ -65,6 +70,11 @@ interface AwardCardSpec {
   description: string;
   icon: string;
   emptyHint: string;
+  /**
+   * Carte masquée quand elle est vide : l'Oracle n'a pas de sens sur une
+   * ligue sans pronostics, où « aucun pronostic » ne serait que du bruit.
+   */
+  hideWhenEmpty?: boolean;
 }
 
 const AWARD_CARDS: AwardCardSpec[] = [
@@ -109,6 +119,14 @@ const AWARD_CARDS: AwardCardSpec[] = [
     description: "Moins de sorties subies.",
     icon: "💎",
     emptyHint: "—",
+  },
+  {
+    key: "oracle",
+    title: "Oracle de la saison",
+    description: "Meilleur pronostiqueur parmi les coachs (points de pronostics).",
+    icon: "🔮",
+    emptyHint: "—",
+    hideWhenEmpty: true,
   },
 ];
 
@@ -271,6 +289,7 @@ export default function SeasonRecapPage() {
         >
           {AWARD_CARDS.map((spec) => {
             const entries = recap.awards[spec.key] ?? [];
+            if (spec.hideWhenEmpty && entries.length === 0) return null;
             return (
               <li
                 key={spec.key}

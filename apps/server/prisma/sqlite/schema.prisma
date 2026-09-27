@@ -108,6 +108,7 @@ model User {
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
+  competitionPredictions      CompetitionPrediction[]
   // Lot A — invitations envoyees / recues sur les ligues (mirror PG).
   leagueInvitationsSent       LeagueInvitation[]          @relation("LeagueInvitationInviter")
   leagueInvitationsReceived   LeagueInvitation[]          @relation("LeagueInvitationInvitee")
@@ -1111,6 +1112,7 @@ model League {
   tieBreakRules     String?
   /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
   bonusPointsConfig String?
+  predictionsScope  String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -1319,6 +1321,7 @@ model LeagueRound {
   bracketSlot String?
   startDate   DateTime?
   endDate     DateTime?
+  predictionsNotifiedAt DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -1359,6 +1362,8 @@ model LeaguePairing {
   bonusBreakdown    String?
   /// Lot G — feuille de match v2 (1-1, mirror PG).
   matchSheet        LeagueMatchSheet?
+  predictionsClosedAt DateTime?
+  predictions       CompetitionPrediction[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -1367,6 +1372,27 @@ model LeaguePairing {
   @@index([deadlineAt, status])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
+}
+
+/// Pronostic de rencontre de compétition (mirror PG, cf. schema.prisma).
+model CompetitionPrediction {
+  id              String        @id @default(cuid())
+  pairing         LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId       String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  pick            String
+  homeScore       Int?
+  awayScore       Int?
+  result          String?
+  resultHomeScore Int?
+  resultAwayScore Int?
+  settledAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([pairingId, userId])
+  @@index([userId])
 }
 
 /// Lot G — Feuille de match v2 (mirror PG). Les champs Json sont `Json?`

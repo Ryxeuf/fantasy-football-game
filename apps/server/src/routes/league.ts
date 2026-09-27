@@ -536,6 +536,7 @@ export async function handleCreateLeague(
       tieBreakRules: body.tieBreakRules ?? null,
       // Lot E — config bonus optionnelle, propagee au service.
       bonusPointsConfig: body.bonusPointsConfig ?? null,
+      predictionsScope: body.predictionsScope,
     });
     sendSuccess(res, serializeLeague(league as Record<string, unknown>), 201);
   } catch (e: unknown) {
@@ -589,6 +590,7 @@ export async function handleUpdateLeague(
       tieBreakRules: body.tieBreakRules,
       // Lot E — propagation de la config bonus en edition.
       bonusPointsConfig: body.bonusPointsConfig,
+      predictionsScope: body.predictionsScope,
     });
     sendSuccess(res, serializeLeague(updated as Record<string, unknown>));
   } catch (e: unknown) {

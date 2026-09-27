@@ -33,6 +33,7 @@ export type NotificationKind =
   | "league.pairing_scheduled"
   | "league.round_followup"
   | "league.match_validation"
+  | "league.predictions_settled"
   | "friend.request"
   | "friend.accepted"
   | "league.archived"

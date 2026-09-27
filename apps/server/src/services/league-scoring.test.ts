@@ -29,7 +29,16 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Oracle : le classement des pronostics est calculé à part (testé à part).
+vi.mock("./league-predictions-core", () => ({
+  computeSeasonPredictionLeaderboard: vi.fn(),
+}));
+vi.mock("../utils/server-log", () => ({
+  serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
+}));
+
 import { computeSeasonStandings } from "./league";
+import { computeSeasonPredictionLeaderboard } from "./league-predictions-core";
 import {
   computeSeasonRecap,
   persistSeasonAwards,
@@ -42,11 +51,26 @@ const mocked = {
   standings: computeSeasonStandings as unknown as MockFn,
   awardFind: prisma.leagueSeasonAward.findUnique as MockFn,
   awardCreate: prisma.leagueSeasonAward.create as MockFn,
+  predictionBoard: computeSeasonPredictionLeaderboard as unknown as MockFn,
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocked.predictionBoard.mockResolvedValue({ coach: [], stands: [] });
 });
+
+function boardEntry(userId: string, points: number, rank = 1) {
+  return {
+    rank,
+    userId,
+    displayName: userId,
+    group: "coach" as const,
+    points,
+    settled: 1,
+    correct: points > 0 ? 1 : 0,
+    exact: 0,
+  };
+}
 
 function row(over: Partial<StandingRow>): StandingRow {
   return {
@@ -71,6 +95,59 @@ function row(over: Partial<StandingRow>): StandingRow {
     ...over,
   };
 }
+
+describe("Oracle de la saison", () => {
+  const standings = [
+    row({ participantId: "p1", teamId: "t1", teamName: "Rats", ownerId: "u1", played: 2, wins: 2 }),
+    row({ participantId: "p2", teamId: "t2", teamName: "Nains", ownerId: "u2", played: 2 }),
+    row({ participantId: "p3", teamId: "t3", teamName: "Elfes", ownerId: "u3", played: 2 }),
+  ];
+
+  it("sacre le premier des coachs au classement des pronostics, ex æquo compris", async () => {
+    mocked.standings.mockResolvedValue(standings);
+    mocked.predictionBoard.mockResolvedValue({
+      coach: [boardEntry("u2", 8), boardEntry("u3", 8), boardEntry("u1", 3, 3)],
+      stands: [boardEntry("fan", 12)],
+    });
+    const recap = await computeSeasonRecap("season-1");
+    expect(mocked.predictionBoard).toHaveBeenCalledWith("season-1");
+    expect(recap.awards.oracle).toEqual([
+      { teamId: "t2", teamName: "Nains", roster: "skaven", ownerId: "u2", coachName: "Coach", value: 8 },
+      { teamId: "t3", teamName: "Elfes", roster: "skaven", ownerId: "u3", coachName: "Coach", value: 8 },
+    ]);
+  });
+
+  it("ne sacre personne à zéro point, ni un spectateur", async () => {
+    mocked.standings.mockResolvedValue(standings);
+    mocked.predictionBoard.mockResolvedValue({
+      coach: [boardEntry("u1", 0)],
+      stands: [boardEntry("fan", 12)],
+    });
+    const recap = await computeSeasonRecap("season-1");
+    expect(recap.awards.oracle).toEqual([]);
+  });
+
+  it("sert le palmarès même si le classement des pronostics échoue", async () => {
+    mocked.standings.mockResolvedValue(standings);
+    mocked.predictionBoard.mockRejectedValue(new Error("db down"));
+    const recap = await computeSeasonRecap("season-1");
+    expect(recap.awards.oracle).toEqual([]);
+    expect(recap.championUserId).toBe("u1");
+  });
+
+  it("relit un palmarès persisté AVANT l'Oracle comme sans Oracle", async () => {
+    mocked.awardFind.mockResolvedValue({
+      id: "award-1",
+      seasonId: "season-1",
+      championUserId: "u1",
+      championTeamId: "t1",
+      awards: JSON.stringify({ topScorer: [] }),
+      createdAt: new Date("2026-01-01T00:00:00Z"),
+    });
+    const persisted = await getPersistedSeasonAward("season-1");
+    expect(persisted?.awards.oracle).toEqual([]);
+  });
+});
 
 describe("computeSeasonRecap", () => {
   it("returns empty awards + null champion when standings are empty", async () => {

@@ -28,6 +28,8 @@
 import { prisma } from "../prisma";
 import { computeSeasonStandings, type StandingRow } from "./league";
 import { serverLog } from "../utils/server-log";
+import { computeSeasonPredictionLeaderboard } from "./league-predictions-core";
+import { leaderboardLeaders } from "./league-predictions-rules";
 
 export interface SeasonAwardEntry {
   /** TeamId du laureat. */
@@ -57,6 +59,12 @@ export interface SeasonAwardsCatalogue {
   readonly cleanestSheet: SeasonAwardEntry[];
   /** Plus de victoires. */
   readonly mostWins: SeasonAwardEntry[];
+  /**
+   * Oracle de la saison : premier du groupe Coachs au classement des
+   * pronostics (ex æquo compris, valeur = points). Absent des palmarès
+   * persistés avant la fonctionnalité : relu comme liste vide.
+   */
+  readonly oracle: SeasonAwardEntry[];
 }
 
 export interface SeasonRecap {
@@ -75,6 +83,7 @@ const EMPTY_AWARDS: SeasonAwardsCatalogue = {
   martyrs: [],
   cleanestSheet: [],
   mostWins: [],
+  oracle: [],
 };
 
 interface ComputeOptions {
@@ -128,6 +137,7 @@ export async function computeSeasonRecap(
       reverse: true,
     }),
     mostWins: pickTop(eligible, (s) => s.wins),
+    oracle: await computeOracleAward(seasonId, eligible),
   };
 
   return {
@@ -184,6 +194,40 @@ function pickTop(
     });
   }
   return result;
+}
+
+/**
+ * Titre d'Oracle : les premiers ex æquo du groupe Coachs au classement des
+ * pronostics, rattachés à leur équipe de la saison pour prendre la forme des
+ * autres distinctions (un coach a une équipe, une tribune non — le meilleur
+ * des tribunes reçoit un succès, pas une ligne de palmarès).
+ *
+ * Best-effort : un échec rend une liste vide, un palmarès se sert toujours.
+ */
+async function computeOracleAward(
+  seasonId: string,
+  rows: readonly StandingRow[],
+): Promise<SeasonAwardEntry[]> {
+  try {
+    const board = await computeSeasonPredictionLeaderboard(seasonId);
+    const entries: SeasonAwardEntry[] = [];
+    for (const leader of leaderboardLeaders(board.coach)) {
+      const row = rows.find((r) => r.ownerId === leader.userId);
+      if (!row) continue;
+      entries.push({
+        teamId: row.teamId,
+        teamName: row.teamName,
+        roster: row.roster,
+        ownerId: row.ownerId,
+        coachName: row.coachName ?? "—",
+        value: leader.points,
+      });
+    }
+    return entries;
+  } catch (e: unknown) {
+    serverLog.error(`[league-scoring] Oracle non calculé season=${seasonId}`, e);
+    return [];
+  }
 }
 
 interface PrismaWithAwards {
@@ -283,6 +327,7 @@ export async function getPersistedSeasonAward(
         ? json.cleanestSheet
         : [],
       mostWins: Array.isArray(json.mostWins) ? json.mostWins : [],
+      oracle: Array.isArray(json.oracle) ? json.oracle : [],
     };
   } catch {
     parsed = EMPTY_AWARDS;

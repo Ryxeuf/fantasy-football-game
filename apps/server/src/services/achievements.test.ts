@@ -4,7 +4,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     userAchievement: {
       findMany: vi.fn(),
-      createMany: vi.fn(),
+      upsert: vi.fn(),
     },
     teamSelection: {
       findMany: vi.fn(),
@@ -18,7 +18,22 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Statistiques de pronostic : calculées à part (league-predictions-core).
+vi.mock("./league-predictions-core", () => ({
+  EMPTY_USER_PREDICTION_STATS: {
+    correct: 0,
+    exact: 0,
+    oracleTitles: 0,
+    standsOracleTitles: 0,
+  },
+  computeUserPredictionStats: vi.fn(),
+}));
+vi.mock("../utils/server-log", () => ({
+  serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
+}));
+
 import { prisma } from "../prisma";
+import { computeUserPredictionStats } from "./league-predictions-core";
 import {
   ACHIEVEMENTS_CATALOG,
   evaluateAchievements,
@@ -42,7 +57,37 @@ const baseStats = (
   rostersPlayed: new Set<string>(),
   winsByRoster: new Map<string, number>(),
   leaguesCommissioned: 0,
+  predictionsCorrect: 0,
+  predictionsExact: 0,
+  oracleTitles: 0,
+  standsOracleTitles: 0,
   ...overrides,
+});
+
+const mockPredictionStats = computeUserPredictionStats as ReturnType<
+  typeof vi.fn
+>;
+
+describe("Rule: succès des pronostics", () => {
+  it.each([
+    ["prediction-first-correct", { predictionsCorrect: 1 }],
+    ["predictions-correct-10", { predictionsCorrect: 10 }],
+    ["prediction-exact-score", { predictionsExact: 1 }],
+    ["season-oracle", { oracleTitles: 1 }],
+    ["stands-oracle", { standsOracleTitles: 1 }],
+  ] as const)("débloque %s", (slug, overrides) => {
+    const def = ACHIEVEMENTS_CATALOG.find((a) => a.slug === slug);
+    expect(def?.category).toBe("predictions");
+    expect(def!.predicate(baseStats(overrides))).toBe(true);
+    expect(def!.predicate(baseStats())).toBe(false);
+  });
+
+  it("n'accorde « Devin » qu'à dix bons résultats", () => {
+    const def = ACHIEVEMENTS_CATALOG.find(
+      (a) => a.slug === "predictions-correct-10",
+    );
+    expect(def!.predicate(baseStats({ predictionsCorrect: 9 }))).toBe(false);
+  });
 });
 
 describe("Rule: Achievements catalog", () => {
@@ -217,25 +262,84 @@ describe("unlockAchievements", () => {
 
   it("no-ops when slugs is empty", async () => {
     await unlockAchievements("user-1", []);
-    expect(mockPrisma.userAchievement.createMany).not.toHaveBeenCalled();
+    expect(mockPrisma.userAchievement.upsert).not.toHaveBeenCalled();
   });
 
-  it("persists slugs with skipDuplicates", async () => {
-    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 2 });
+  it("persiste chaque succès par un upsert idempotent (portable SQLite)", async () => {
+    mockPrisma.userAchievement.upsert.mockResolvedValue({});
     await unlockAchievements("user-1", ["first-match", "first-win"]);
-    expect(mockPrisma.userAchievement.createMany).toHaveBeenCalledWith({
-      data: [
-        { userId: "user-1", slug: "first-match" },
-        { userId: "user-1", slug: "first-win" },
-      ],
-      skipDuplicates: true,
+    expect(mockPrisma.userAchievement.upsert).toHaveBeenCalledTimes(2);
+    expect(mockPrisma.userAchievement.upsert).toHaveBeenCalledWith({
+      where: { userId_slug: { userId: "user-1", slug: "first-match" } },
+      create: { userId: "user-1", slug: "first-match" },
+      update: {},
     });
+  });
+
+  it("une course (P2002) vaut « déjà débloqué », pas une erreur", async () => {
+    mockPrisma.userAchievement.upsert
+      .mockRejectedValueOnce(Object.assign(new Error("dup"), { code: "P2002" }))
+      .mockResolvedValueOnce({});
+    await expect(
+      unlockAchievements("user-1", ["first-match", "first-win"]),
+    ).resolves.toBeUndefined();
+    expect(mockPrisma.userAchievement.upsert).toHaveBeenCalledTimes(2);
+  });
+
+  it("toute autre erreur remonte", async () => {
+    mockPrisma.userAchievement.upsert.mockRejectedValueOnce(new Error("db down"));
+    await expect(unlockAchievements("user-1", ["first-match"])).rejects.toThrow(
+      "db down",
+    );
   });
 });
 
 describe("getUserAchievements (lazy evaluation)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPredictionStats.mockResolvedValue({
+      correct: 0,
+      exact: 0,
+      oracleTitles: 0,
+      standsOracleTitles: 0,
+    });
+  });
+
+  it("débloque les succès de pronostic à la lecture", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    mockPrisma.teamSelection.findMany.mockResolvedValue([]);
+    mockPrisma.friendship.count.mockResolvedValue(0);
+    mockPrisma.league.count.mockResolvedValue(0);
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 2 });
+    mockPredictionStats.mockResolvedValue({
+      correct: 3,
+      exact: 1,
+      oracleTitles: 0,
+      standsOracleTitles: 0,
+    });
+
+    const result = await getUserAchievements("user-1");
+
+    expect(mockPredictionStats).toHaveBeenCalledWith("user-1");
+    expect(result.newlyUnlocked).toEqual(
+      expect.arrayContaining(["prediction-first-correct", "prediction-exact-score"]),
+    );
+    expect(result.newlyUnlocked).not.toContain("season-oracle");
+    expect(result.stats).toMatchObject({ predictionsCorrect: 3, predictionsExact: 1 });
+  });
+
+  it("garde les autres succès quand les statistiques de pronostic échouent", async () => {
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    mockPrisma.teamSelection.findMany.mockResolvedValue([]);
+    mockPrisma.friendship.count.mockResolvedValue(1);
+    mockPrisma.league.count.mockResolvedValue(0);
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 1 });
+    mockPredictionStats.mockRejectedValue(new Error("db down"));
+
+    const result = await getUserAchievements("user-1");
+
+    expect(result.newlyUnlocked).toContain("first-friend");
+    expect(result.stats).toMatchObject({ predictionsCorrect: 0 });
   });
 
   it("returns every catalog entry with unlocked/locked status", async () => {
@@ -248,7 +352,7 @@ describe("getUserAchievements (lazy evaluation)", () => {
     ]);
     mockPrisma.teamSelection.findMany.mockResolvedValue([]);
     mockPrisma.friendship.count.mockResolvedValue(0);
-    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 0 });
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 0 });
 
     const result = await getUserAchievements("user-1");
 
@@ -302,7 +406,7 @@ describe("getUserAchievements (lazy evaluation)", () => {
       buildSelection("s6", "dwarf", 2, 1),
     ]);
     mockPrisma.friendship.count.mockResolvedValue(0);
-    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 0 });
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 0 });
 
     const result = await getUserAchievements("user-1");
 
@@ -342,7 +446,7 @@ describe("getUserAchievements (lazy evaluation)", () => {
       },
     ]);
     mockPrisma.friendship.count.mockResolvedValue(0);
-    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 3 });
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 3 });
     // After unlocks, findMany is called again to return the full state
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce([
       { slug: "first-match", unlockedAt: new Date() },
@@ -352,9 +456,10 @@ describe("getUserAchievements (lazy evaluation)", () => {
 
     const result = await getUserAchievements("user-1");
 
-    expect(mockPrisma.userAchievement.createMany).toHaveBeenCalled();
-    const call = mockPrisma.userAchievement.createMany.mock.calls[0][0];
-    const persistedSlugs = call.data.map((d: { slug: string }) => d.slug);
+    expect(mockPrisma.userAchievement.upsert).toHaveBeenCalled();
+    const persistedSlugs = mockPrisma.userAchievement.upsert.mock.calls.map(
+      ([args]: [{ create: { slug: string } }]) => args.create.slug,
+    );
     expect(persistedSlugs).toContain("first-match");
     expect(persistedSlugs).toContain("first-win");
     expect(persistedSlugs).toContain("roster-skaven");
@@ -395,7 +500,7 @@ describe("getUserAchievements (lazy evaluation)", () => {
       },
     ]);
     mockPrisma.friendship.count.mockResolvedValue(0);
-    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 3 });
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 3 });
     mockPrisma.userAchievement.findMany.mockResolvedValueOnce([
       { slug: "first-match", unlockedAt: new Date() },
       { slug: "first-win", unlockedAt: new Date() },
@@ -420,7 +525,7 @@ describe("getUserAchievements (lazy evaluation)", () => {
     ]);
     mockPrisma.teamSelection.findMany.mockResolvedValue([]);
     mockPrisma.friendship.count.mockResolvedValue(0);
-    mockPrisma.userAchievement.createMany.mockResolvedValue({ count: 0 });
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 0 });
 
     const result = await getUserAchievements("user-1");
 

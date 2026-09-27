@@ -24,6 +24,10 @@ vi.mock("./elo-update", () => ({
   updateEloAfterMatch: vi.fn(),
 }));
 
+vi.mock("./league-match-result", () => ({
+  recordLeagueMatchResult: vi.fn(),
+}));
+
 import {
   startForfeitTimer,
   cancelForfeitTimer,
@@ -34,6 +38,7 @@ import {
 import { prisma } from "../prisma";
 import { broadcastMatchForfeited } from "./game-broadcast";
 import { updateEloAfterMatch } from "./elo-update";
+import { recordLeagueMatchResult } from "./league-match-result";
 
 describe("forfeit-tracker", () => {
   beforeEach(() => {
@@ -178,6 +183,31 @@ describe("forfeit-tracker", () => {
         "user-b",
         0,
         1,
+      );
+    });
+  });
+
+  describe("ligue", () => {
+    it("signale le forfait à l'entonnoir : le score synthétique ne règle aucun pronostic", async () => {
+      vi.mocked(prisma.match.findUnique).mockResolvedValue({
+        id: "match-1",
+        status: "active",
+      });
+      vi.mocked(prisma.teamSelection.findMany).mockResolvedValue([
+        { userId: "user-a", teamId: "team-a" },
+        { userId: "user-b", teamId: "team-b" },
+      ]);
+      vi.mocked(prisma.turn.findMany).mockResolvedValue([
+        { number: 1, payload: { gameState: { score: { teamA: 0, teamB: 0 }, gamePhase: "playing" } } },
+      ]);
+      vi.mocked(prisma.match.update).mockResolvedValue({});
+      vi.mocked(prisma.turn.create).mockResolvedValue({});
+
+      startForfeitTimer("match-1", "user-a");
+      await vi.advanceTimersByTimeAsync(FORFEIT_TIMEOUT_MS);
+
+      expect(recordLeagueMatchResult).toHaveBeenCalledWith(
+        expect.objectContaining({ matchId: "match-1", forfeit: true }),
       );
     });
   });

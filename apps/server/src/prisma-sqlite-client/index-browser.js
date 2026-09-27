@@ -726,6 +726,7 @@ exports.Prisma.LeagueScalarFieldEnum = {
   forfeitPoints: 'forfeitPoints',
   tieBreakRules: 'tieBreakRules',
   bonusPointsConfig: 'bonusPointsConfig',
+  predictionsScope: 'predictionsScope',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -843,6 +844,7 @@ exports.Prisma.LeagueRoundScalarFieldEnum = {
   bracketSlot: 'bracketSlot',
   startDate: 'startDate',
   endDate: 'endDate',
+  predictionsNotifiedAt: 'predictionsNotifiedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   poolId: 'poolId'
@@ -859,6 +861,22 @@ exports.Prisma.LeaguePairingScalarFieldEnum = {
   bonusPointsHome: 'bonusPointsHome',
   bonusPointsAway: 'bonusPointsAway',
   bonusBreakdown: 'bonusBreakdown',
+  predictionsClosedAt: 'predictionsClosedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CompetitionPredictionScalarFieldEnum = {
+  id: 'id',
+  pairingId: 'pairingId',
+  userId: 'userId',
+  pick: 'pick',
+  homeScore: 'homeScore',
+  awayScore: 'awayScore',
+  result: 'result',
+  resultHomeScore: 'resultHomeScore',
+  resultAwayScore: 'resultAwayScore',
+  settledAt: 'settledAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -1534,6 +1552,7 @@ exports.Prisma.ModelName = {
   LeagueParticipant: 'LeagueParticipant',
   LeagueRound: 'LeagueRound',
   LeaguePairing: 'LeaguePairing',
+  CompetitionPrediction: 'CompetitionPrediction',
   LeagueMatchSheet: 'LeagueMatchSheet',
   LeagueMatchEvent: 'LeagueMatchEvent',
   TeamSpecialRule: 'TeamSpecialRule',

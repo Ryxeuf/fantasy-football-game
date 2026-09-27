@@ -56,6 +56,12 @@ vi.mock("./push-notifications", () => ({
   sendLeagueMatchValidationPush: vi.fn(),
 }));
 
+// Pronostics : la feuille pose leur clôture (premier évènement, première
+// soumission) ; le service est testé à part, on vérifie ici l'appel.
+vi.mock("./league-predictions-settlement", () => ({
+  markPairingPredictionsClosed: vi.fn(),
+}));
+
 // VE/VEA rafraîchies avant capture / à la lecture d'une feuille non figée
 // (la VEA exclut les absents). Service testé à part ; ici on vérifie la
 // délégation et la composition avec les journaliers.
@@ -119,6 +125,7 @@ import {
   reverseAppliedAdvancements,
 } from "./league-sheet-advancements";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
+import { markPairingPredictionsClosed } from "./league-predictions-settlement";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
 import {
   getSpecialRulesForTeam,
@@ -139,6 +146,9 @@ const mockResolveSpecialRules =
 const mockRecordOffline = recordOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockReverse = reverseOfflineLeagueResult as ReturnType<typeof vi.fn>;
 const mockPush = sendLeagueMatchValidationPush as ReturnType<typeof vi.fn>;
+const mockMarkPredictionsClosed = markPairingPredictionsClosed as ReturnType<
+  typeof vi.fn
+>;
 const mockApplyStaged = applyStagedAdvancements as ReturnType<typeof vi.fn>;
 const mockReverseStaged = reverseAppliedAdvancements as ReturnType<
   typeof vi.fn
@@ -361,6 +371,44 @@ describe("Lot G — league-match-sheet", () => {
       expect(args.data.injurySeverity).toBe("dead");
     });
 
+    it("ferme les pronostics de la rencontre au premier évènement consigné", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.create.mockResolvedValue({ id: "e1" });
+      await addEvent({
+        pairingId: "pair-1",
+        userId: HOME,
+        event: { kind: "touchdown", team: "home" },
+      });
+      expect(mockMarkPredictionsClosed).toHaveBeenCalledWith("pair-1");
+    });
+
+    it("ne touche à aucun pronostic sur une rencontre de COUPE", async () => {
+      mockPrisma.leaguePairing.findUnique.mockReset();
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+      mockPrisma.cupPairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        homeTeamId: "team-home",
+        awayTeamId: "team-away",
+        homeTeam: { ownerId: HOME },
+        awayTeam: { ownerId: AWAY },
+        round: { cup: { id: "cup-1", name: "Coupe", creatorId: COMMISH } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.create.mockResolvedValue({ id: "e1" });
+      await addEvent({
+        pairingId: "pair-1",
+        userId: HOME,
+        event: { kind: "touchdown", team: "home" },
+      });
+      expect(mockMarkPredictionsClosed).not.toHaveBeenCalled();
+    });
+
     it("merges half/turn into meta", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
@@ -466,6 +514,8 @@ describe("Lot G — league-match-sheet", () => {
       );
       const out = await submitByCoach({ pairingId: "pair-1", userId: HOME });
       expect((out as { status: string }).status).toBe("submitted_home");
+      // Une saisie soumise vaut match joué : les pronostics se ferment.
+      expect(mockMarkPredictionsClosed).toHaveBeenCalledWith("pair-1");
     });
 
     it("away submit when home already submitted -> both_submitted + notifies commissioner", async () => {

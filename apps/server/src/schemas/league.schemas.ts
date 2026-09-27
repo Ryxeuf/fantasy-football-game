@@ -8,6 +8,7 @@
 import { z } from "zod";
 import { isLeagueThemeSlug } from "../services/league-themes";
 import { LEAGUE_TIE_BREAK_SLUGS } from "../services/league-standings-order";
+import { PREDICTION_SCOPES } from "../services/league-predictions-rules";
 
 const rosterSlug = z
   .string()
@@ -72,6 +73,10 @@ export const createLeagueSchema = z.object({
   // aucun. Validé contre le registre côté service.
   tournamentRuleset: z.string().trim().max(64).optional().nullable(),
   isPublic: z.boolean().optional(),
+  // Portée des pronostics (« off » | « members » | « open »). Absente à la
+  // création ⇒ « members » (cf. `createLeague`). Réglable ensuite hors verrou
+  // par `PATCH /leagues/:id/predictions-scope`.
+  predictionsScope: z.enum(PREDICTION_SCOPES).optional(),
   maxParticipants: z.number().int().min(2).max(128).optional(),
   allowedRosters: z.array(rosterSlug).max(64).optional().nullable(),
   // FR17 — coups de pouce autorisés (slugs). null = tous autorisés.

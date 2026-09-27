@@ -38,6 +38,7 @@ vi.mock("../prisma", () => ({
       create: vi.fn(),
       deleteMany: vi.fn(),
       updateMany: vi.fn(),
+      findMany: vi.fn(),
     },
     leaguePairing: {
       createMany: vi.fn(),
@@ -58,6 +59,9 @@ vi.mock("./league-scoring", () => ({
     recap: {},
   })),
 }));
+vi.mock("./league-predictions-settlement", () => ({
+  notifyRoundPredictionResults: vi.fn(async () => 0),
+}));
 vi.mock("./themed-season-closure", () => ({
   applyThemedSeasonClosure: vi.fn(async () => ({
     skipped: true,
@@ -68,6 +72,7 @@ vi.mock("./themed-season-closure", () => ({
 import { prisma } from "../prisma";
 import { persistSeasonAwards } from "./league-scoring";
 import { applyThemedSeasonClosure } from "./themed-season-closure";
+import { notifyRoundPredictionResults } from "./league-predictions-settlement";
 import {
   startSeason,
   regenerateSchedule,
@@ -87,6 +92,7 @@ const mocked = {
   roundCreate: prisma.leagueRound.create as MockFn,
   roundDelete: prisma.leagueRound.deleteMany as MockFn,
   roundUpdateMany: prisma.leagueRound.updateMany as MockFn,
+  roundFindMany: prisma.leagueRound.findMany as MockFn,
   pairingCreateMany: prisma.leaguePairing.createMany as MockFn,
   pairingUpdateMany: prisma.leaguePairing.updateMany as MockFn,
   matchCount: prisma.match.count as MockFn,
@@ -99,6 +105,7 @@ beforeEach(() => {
   // (comportement historique). Les tests multi-poules dedies
   // override ce mock.
   mocked.poolFind.mockResolvedValue([]);
+  mocked.roundFindMany.mockResolvedValue([]);
 });
 
 describe("league-scheduler.startSeason", () => {
@@ -413,6 +420,28 @@ describe("league-scheduler.closeSeason", () => {
     // puisque plus aucun resultat ne cloture la saison de lui-meme.
     expect(persistSeasonAwards).toHaveBeenCalledWith("s1");
     expect(applyThemedSeasonClosure).toHaveBeenCalledWith("s1");
+  });
+
+  it("dresse le bilan des pronostics des journées qu'elle complète", async () => {
+    mocked.seasonFind.mockResolvedValue({ id: "s1", status: "in_progress" });
+    mocked.roundFindMany.mockResolvedValue([{ id: "r2" }, { id: "r3" }]);
+    mocked.pairingUpdateMany.mockResolvedValue({ count: 1 });
+    mocked.roundUpdateMany.mockResolvedValue({ count: 2 });
+    mocked.seasonUpdate.mockResolvedValue({});
+
+    await closeSeason("s1");
+
+    expect(mocked.roundFindMany).toHaveBeenCalledWith({
+      where: { seasonId: "s1", status: { not: "completed" } },
+      select: { id: true },
+    });
+    expect(notifyRoundPredictionResults).toHaveBeenCalledTimes(2);
+    expect(notifyRoundPredictionResults).toHaveBeenCalledWith("r2");
+    expect(notifyRoundPredictionResults).toHaveBeenCalledWith("r3");
+    // Après la complétion des journées, jamais avant.
+    expect(mocked.roundUpdateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      (notifyRoundPredictionResults as MockFn).mock.invocationCallOrder[0],
+    );
   });
 
   it("does not trigger awards nor themed closure when already completed", async () => {

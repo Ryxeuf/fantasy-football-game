@@ -33,6 +33,7 @@ describe("notificationIcon", () => {
     expect(notificationIcon("league.invitation")).toBe("🏅");
     expect(notificationIcon("league.round_pairing")).toBe("📅");
     expect(notificationIcon("league.match_validation")).toBe("📝");
+    expect(notificationIcon("league.predictions_settled")).toBe("🔮");
     expect(notificationIcon("cup.invitation")).toBe("🏆");
     expect(notificationIcon("friend.request")).toBe("🤝");
     expect(notificationIcon("league.archived")).toBe("📦");

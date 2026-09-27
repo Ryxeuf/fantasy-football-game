@@ -131,6 +131,24 @@ describe("Rule: League service", () => {
       });
     });
 
+    it("ouvre les pronostics aux membres d'une ligue neuve, sauf choix contraire", async () => {
+      mockPrisma.league.create.mockResolvedValue({ id: leagueId });
+
+      await createLeague({ creatorId, name: "Ligue des Oracles" });
+      expect(mockPrisma.league.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({ predictionsScope: "members" }),
+      });
+
+      await createLeague({
+        creatorId,
+        name: "Ligue ouverte",
+        predictionsScope: "open",
+      });
+      expect(mockPrisma.league.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({ predictionsScope: "open" }),
+      });
+    });
+
     it("accepts an allowedRosters list and serializes it to JSON", async () => {
       mockPrisma.league.create.mockImplementation(
         async ({ data }: { data: Record<string, unknown> }) => ({
@@ -1110,6 +1128,15 @@ describe("Rule: League service", () => {
           name: "Ma Ligue",
           allowedRosters: JSON.stringify(["skaven", "dwarf"]),
         },
+      });
+    });
+
+    it("propage la portée des pronostics quand elle est fournie", async () => {
+      mockPrisma.league.update.mockResolvedValue({ id: leagueId });
+      await updateLeague(leagueId, { predictionsScope: "off" });
+      expect(mockPrisma.league.update).toHaveBeenCalledWith({
+        where: { id: leagueId },
+        data: { predictionsScope: "off" },
       });
     });
 

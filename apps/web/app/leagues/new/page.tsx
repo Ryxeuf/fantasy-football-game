@@ -93,6 +93,7 @@ export default function NewLeaguePage() {
             // l'ordre par défaut.
             tieBreakRules:
               values.tieBreakRules.length > 0 ? values.tieBreakRules : null,
+            predictionsScope: values.predictionsScope,
           }),
         });
         // Depot des documents officiels choisis avant la creation. Un echec

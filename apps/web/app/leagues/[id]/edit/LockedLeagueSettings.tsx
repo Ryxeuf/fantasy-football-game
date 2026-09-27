@@ -4,6 +4,8 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../../lib/api-client";
 import { StandingsOrderField } from "../../_components/StandingsOrderField";
+import { PredictionsScopeField } from "../../_components/PredictionsScopeField";
+import type { PredictionScope } from "../../_components/predictions";
 
 /**
  * Réglages d'une ligue VERROUILLÉE (au moins un match joué).
@@ -16,13 +18,20 @@ import { StandingsOrderField } from "../../_components/StandingsOrderField";
  * annoncé mais introuvable.
  *
  * `PATCH /leagues/:id/standings-order` (commissaire ou admin) ignore le
- * verrou ; c'est le seul appel de ce panneau.
+ * verrou. Même posture pour la portée des PRONOSTICS
+ * (`PATCH /leagues/:id/predictions-scope`) : elle ne réécrit aucun point de
+ * classement. Chaque réglage garde son bouton — un échec de l'un ne doit pas
+ * laisser croire l'autre enregistré.
  */
 
 interface LockedLeagueSettingsProps {
   leagueId: string;
   /** Critères CONFIGURÉS (pas l'ordre effectif) : vide = ordre par défaut. */
   initialRules: readonly string[];
+  /** Portée EFFECTIVE des pronostics (une ligue antérieure lit « off »). */
+  initialPredictionsScope: PredictionScope;
+  /** Visibilité de la ligue, pour l'indice de la portée « Tout le monde ». */
+  isPublic: boolean;
   /**
    * `Route<T>` exige le motif exact d'une route dynamique (`typedRoutes`),
    * d'où le gabarit plutôt qu'un `string` trop large.
@@ -33,6 +42,8 @@ interface LockedLeagueSettingsProps {
 export function LockedLeagueSettings({
   leagueId,
   initialRules,
+  initialPredictionsScope,
+  isPublic,
   backHref,
 }: LockedLeagueSettingsProps) {
   const [rules, setRules] = useState<string[]>([...initialRules]);
@@ -70,8 +81,8 @@ export function LockedLeagueSettings({
       >
         Un match a déjà été joué : les paramètres de la ligue (barème, rosters
         autorisés, points bonus) sont figés, sans quoi des points déjà
-        attribués seraient réécrits. L&apos;ordre du classement, lui, reste
-        modifiable — il est appliqué au tri, à la lecture.
+        attribués seraient réécrits. L&apos;ordre du classement et les
+        pronostics, eux, restent modifiables — ils ne réécrivent aucun point.
       </p>
 
       <StandingsOrderField
@@ -101,16 +112,23 @@ export function LockedLeagueSettings({
         </p>
       ) : null}
 
-      <div className="flex items-center gap-3 pt-2">
-        <button
-          type="button"
-          data-testid="locked-settings-submit"
-          disabled={saving}
-          onClick={handleSave}
-          className="px-4 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
-        >
-          {saving ? "Enregistrement…" : "Enregistrer l'ordre"}
-        </button>
+      <button
+        type="button"
+        data-testid="locked-settings-submit"
+        disabled={saving}
+        onClick={handleSave}
+        className="px-4 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
+      >
+        {saving ? "Enregistrement…" : "Enregistrer l'ordre"}
+      </button>
+
+      <LockedPredictionsScope
+        leagueId={leagueId}
+        initialScope={initialPredictionsScope}
+        isPublic={isPublic}
+      />
+
+      <div className="pt-2">
         <Link
           href={backHref}
           className="text-sm text-gray-600 hover:text-gray-800"
@@ -118,6 +136,85 @@ export function LockedLeagueSettings({
           Retour à la ligue
         </Link>
       </div>
+    </div>
+  );
+}
+
+interface LockedPredictionsScopeProps {
+  leagueId: string;
+  initialScope: PredictionScope;
+  isPublic: boolean;
+}
+
+/** Portée des pronostics d'une ligue verrouillée, enregistrée à part. */
+function LockedPredictionsScope({
+  leagueId,
+  initialScope,
+  isPublic,
+}: LockedPredictionsScopeProps) {
+  const [scope, setScope] = useState<PredictionScope>(initialScope);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = useCallback(async () => {
+    setSaving(true);
+    setError(null);
+    setSaved(false);
+    try {
+      await apiRequest(`/leagues/${leagueId}/predictions-scope`, {
+        method: "PATCH",
+        body: JSON.stringify({ scope }),
+      });
+      setSaved(true);
+    } catch (e: unknown) {
+      setError(
+        e instanceof Error ? e.message : "Enregistrement impossible",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }, [leagueId, scope]);
+
+  return (
+    <div
+      data-testid="locked-predictions-settings"
+      className="space-y-3 border-t border-gray-200 pt-5"
+    >
+      <PredictionsScopeField
+        value={scope}
+        onChange={(next) => {
+          setScope(next);
+          setSaved(false);
+        }}
+        isPublic={isPublic}
+        disabled={saving}
+      />
+      {error ? (
+        <div
+          data-testid="locked-predictions-error"
+          className="rounded border border-red-200 bg-red-50 text-red-700 px-4 py-2 text-sm"
+        >
+          {error}
+        </div>
+      ) : null}
+      {saved ? (
+        <p
+          data-testid="locked-predictions-saved"
+          className="text-sm text-green-700"
+        >
+          Portée des pronostics enregistrée.
+        </p>
+      ) : null}
+      <button
+        type="button"
+        data-testid="locked-predictions-submit"
+        disabled={saving}
+        onClick={handleSave}
+        className="px-4 py-2 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
+      >
+        {saving ? "Enregistrement…" : "Enregistrer les pronostics"}
+      </button>
     </div>
   );
 }

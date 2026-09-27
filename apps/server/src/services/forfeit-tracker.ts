@@ -161,6 +161,8 @@ async function executeForfeit(matchId: string, forfeitingUserId: string): Promis
       scoreB,
       casualtiesA: 0,
       casualtiesB: 0,
+      // Score synthétique : les pronostics de la rencontre sont réglés void.
+      forfeit: true,
     });
   } catch {
     // League integration error — non-blocking, the ladder can be

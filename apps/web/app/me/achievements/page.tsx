@@ -1,14 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { API_BASE } from "../../auth-client";
-
-type Category =
-  | "matches"
-  | "scoring"
-  | "casualties"
-  | "social"
-  | "rosters"
-  | "leagues";
+import { groupAchievements } from "./grouping";
 
 interface AchievementView {
   slug: string;
@@ -16,7 +9,11 @@ interface AchievementView {
   nameEn: string;
   descriptionFr: string;
   descriptionEn: string;
-  category: Category;
+  /**
+   * `AchievementCategory` connue du web ; une catégorie inconnue (serveur
+   * plus récent) se range dans « Autres » (`groupAchievements`).
+   */
+  category: string;
   icon: string;
   unlocked: boolean;
   unlockedAt: string | null;
@@ -43,15 +40,6 @@ interface AchievementsResponse {
   };
   error?: string;
 }
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  matches: "Matchs",
-  scoring: "Touchdowns",
-  casualties: "Sorties",
-  social: "Social",
-  rosters: "Équipes prioritaires",
-  leagues: "Ligues",
-};
 
 async function fetchAchievements(): Promise<AchievementsResponse> {
   const token = localStorage.getItem("auth_token");
@@ -101,21 +89,14 @@ export default function AchievementsPage() {
   }, []);
 
   const grouped = useMemo(() => {
-    if (!data) return {} as Record<Category, AchievementView[]>;
-    const map: Record<Category, AchievementView[]> = {
-      matches: [],
-      scoring: [],
-      casualties: [],
-      social: [],
-      rosters: [],
-      leagues: [],
-    };
-    for (const ach of data.achievements) {
-      if (filter === "unlocked" && !ach.unlocked) continue;
-      if (filter === "locked" && ach.unlocked) continue;
-      map[ach.category].push(ach);
-    }
-    return map;
+    if (!data) return [];
+    return groupAchievements(
+      data.achievements.filter((ach) => {
+        if (filter === "unlocked") return ach.unlocked;
+        if (filter === "locked") return !ach.unlocked;
+        return true;
+      }),
+    );
   }, [data, filter]);
 
   const unlockedCount = data?.achievements.filter((a) => a.unlocked).length ?? 0;
@@ -220,14 +201,14 @@ export default function AchievementsPage() {
         ))}
       </div>
 
-      {(Object.keys(CATEGORY_LABELS) as Category[]).map((cat) => {
-        const items = grouped[cat];
-        if (!items || items.length === 0) return null;
+      {grouped.map(({ key, label, items }) => {
         return (
-          <section key={cat} className="space-y-3">
-            <h2 className="text-lg font-semibold text-white">
-              {CATEGORY_LABELS[cat]}
-            </h2>
+          <section
+            key={key}
+            data-testid={`achievements-category-${key}`}
+            className="space-y-3"
+          >
+            <h2 className="text-lg font-semibold text-white">{label}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {items.map((ach) => (
                 <AchievementCard

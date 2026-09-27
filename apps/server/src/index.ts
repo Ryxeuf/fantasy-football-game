@@ -91,6 +91,7 @@ import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import leagueInvitationRoutes from "./routes/league-invitation";
+import leaguePredictionsRoutes from "./routes/league-predictions";
 import {
   cupLifecycleRouter,
   leagueLifecycleRouter,
@@ -412,6 +413,9 @@ app.use("/coach", publicCache(), coachRoutes);
 // DELETE /leagues/:id) — cf. routes/competition-lifecycle.
 app.use("/leagues", leagueLifecycleRouter);
 app.use("/leagues", leagueRoutes);
+// Pronostics sur les rencontres de ligue (portée, pronostics, classement,
+// clôtures) — cf. routes/league-predictions.
+app.use("/leagues", leaguePredictionsRoutes);
 // Lot A — endpoints d'invitation (cree/liste/accepte/decline) et
 // autocomplete coachs. Monte sous /leagues pour partager le prefixe.
 app.use("/leagues", leagueInvitationRoutes);
@@ -536,6 +540,14 @@ if (process.env.TEST_SQLITE === "1") {
         "competitionDocument",
         () =>
           (prisma as any).competitionDocument?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
+      // Pronostics : cascadent depuis LeaguePairing et User, retirés d'abord
+      // pour la même raison que les feuilles ci-dessous.
+      await safe(
+        "competitionPrediction",
+        () =>
+          (prisma as any).competitionPrediction?.deleteMany?.({}) ??
           Promise.resolve(),
       );
       // Feuilles de match : elles cascadent depuis LeaguePairing ET depuis

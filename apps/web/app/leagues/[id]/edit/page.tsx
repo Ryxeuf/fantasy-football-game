@@ -13,6 +13,7 @@ import {
   parseBonusRulesFromApi,
 } from "../../_components/bonus-rules";
 import { LockedLeagueSettings } from "./LockedLeagueSettings";
+import { parsePredictionScope } from "../../_components/predictions";
 import type { LeagueDetail } from "../types";
 
 // L2.D — Edition d'une ligue par son commissaire (createur). Reutilise
@@ -113,6 +114,7 @@ export default function EditLeaguePage() {
             // l'ordre par défaut.
             tieBreakRules:
               values.tieBreakRules.length > 0 ? values.tieBreakRules : null,
+            predictionsScope: values.predictionsScope,
           }),
         });
         router.push(`/leagues/${leagueId}`);
@@ -168,7 +170,7 @@ export default function EditLeaguePage() {
         </h1>
         <p className="text-sm text-gray-600 mt-1">
           {locked
-            ? "Ligue lancée : seul l'ordre du classement reste modifiable."
+            ? "Ligue lancée : seuls l'ordre du classement et les pronostics restent modifiables."
             : t.leagues.editLeagueDescription}
         </p>
       </div>
@@ -179,6 +181,12 @@ export default function EditLeaguePage() {
           // Valeur BRUTE : une ligue sans configuration doit revenir sur une
           // liste vide, pas sur le défaut matérialisé.
           initialRules={league.tieBreakRules ?? []}
+          // Portée EFFECTIVE : une ligue antérieure (null) se relit
+          // « désactivés », ce qui est exactement son état.
+          initialPredictionsScope={parsePredictionScope(
+            league.predictionsScope,
+          )}
+          isPublic={league.isPublic}
           backHref={`/leagues/${leagueId}`}
         />
       ) : (
@@ -205,6 +213,7 @@ export default function EditLeaguePage() {
             // une liste vide, pas comme l'ordre par défaut matérialisé —
             // sinon le commissaire fige le défaut sans l'avoir demandé.
             tieBreakRules: league.tieBreakRules ?? [],
+            predictionsScope: parsePredictionScope(league.predictionsScope),
           }}
           onSubmit={handleSubmit}
         />

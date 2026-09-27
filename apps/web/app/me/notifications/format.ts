@@ -55,6 +55,7 @@ export function notificationIcon(kind: string): string {
   if (kind === "league.match_validation") return "📝";
   if (kind === "league.round_pairing") return "📅";
   if (kind === "league.round_followup") return "⏰";
+  if (kind === "league.predictions_settled") return "🔮";
   if (kind.startsWith("league.")) return "🏅";
   if (kind.startsWith("cup.")) return "🏆";
   if (kind.startsWith("friend.")) return "🤝";
