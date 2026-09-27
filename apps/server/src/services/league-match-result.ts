@@ -44,7 +44,10 @@ import {
   type MatchBonusContext,
 } from "./league-bonus-points";
 import { serverLog } from "../utils/server-log";
-import { settleLeaguePredictionsForResult } from "./league-predictions-settlement";
+import {
+  notifyRoundPredictionResults,
+  settleLeaguePredictionsForResult,
+} from "./league-predictions-settlement";
 
 export interface RecordMatchResultInput {
   readonly matchId: string;
@@ -352,6 +355,9 @@ export async function recordLeagueMatchResult(
         data: { status: "completed" },
       });
       roundCompleted = true;
+      // Bilan des pronostics de la journée (au plus une fois par journée,
+      // ne lève jamais) : les pronostics viennent d'être réglés ci-dessus.
+      await notifyRoundPredictionResults(match.leagueRoundId);
 
       const remainingRounds = await prisma.leagueRound.findMany({
         where: { seasonId, status: { not: "completed" } },

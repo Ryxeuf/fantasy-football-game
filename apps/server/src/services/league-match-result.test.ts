@@ -51,9 +51,15 @@ vi.mock("./league-predictions-settlement", () => ({
 
 import { prisma } from "../prisma";
 import { recordLeagueMatchResult } from "./league-match-result";
-import { settleLeaguePredictionsForResult } from "./league-predictions-settlement";
+import {
+  notifyRoundPredictionResults,
+  settleLeaguePredictionsForResult,
+} from "./league-predictions-settlement";
 
 const mockSettle = settleLeaguePredictionsForResult as ReturnType<typeof vi.fn>;
+const mockNotifyRound = notifyRoundPredictionResults as ReturnType<
+  typeof vi.fn
+>;
 
 const mockPrisma = prisma as unknown as {
   match: {
@@ -332,6 +338,8 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       roundCompleted: true,
       seasonReadyToClose: true,
     });
+    // Bilan des pronostics de la journée complétée.
+    expect(mockNotifyRound).toHaveBeenCalledWith("round-1");
   });
 
   it("keeps the round in progress when other matches are still pending", async () => {
@@ -361,6 +369,7 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
 
     expect(mockPrisma.leagueRound.update).not.toHaveBeenCalled();
     expect(mockPrisma.leagueSeason.update).not.toHaveBeenCalled();
+    expect(mockNotifyRound).not.toHaveBeenCalled();
   });
 
   it("gracefully skips when a participant is missing (team withdrew)", async () => {
@@ -589,6 +598,40 @@ describe("Rule: recordLeagueMatchResult (L.7)", () => {
       expect(mockSettle).toHaveBeenCalledWith(
         expect.objectContaining({ pairingId: "pair-1", forfeit: true }),
       );
+    });
+
+    it("dresse le bilan de la journée APRÈS le règlement de la dernière rencontre", async () => {
+      seedPairedMatch();
+      mockPrisma.leaguePairing.count.mockReset();
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(0); // pendingPairings
+      mockPrisma.leaguePairing.count.mockResolvedValueOnce(1); // totalPairings
+      mockPrisma.leagueRound.findMany.mockResolvedValue([]);
+
+      await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 2,
+        scoreB: 2,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+
+      expect(mockNotifyRound).toHaveBeenCalledWith("round-1");
+      expect(mockSettle.mock.invocationCallOrder[0]).toBeLessThan(
+        mockNotifyRound.mock.invocationCallOrder[0],
+      );
+    });
+
+    it("ne dresse aucun bilan tant que la journée n'est pas complète", async () => {
+      seedPairedMatch(); // 1 rencontre encore en attente
+      await recordLeagueMatchResult({
+        matchId: "match-1",
+        scoreA: 1,
+        scoreB: 0,
+        casualtiesA: 0,
+        casualtiesB: 0,
+      });
+      expect(mockSettle).toHaveBeenCalled();
+      expect(mockNotifyRound).not.toHaveBeenCalled();
     });
 
     it("ne règle rien pour un match sans rencontre de calendrier", async () => {

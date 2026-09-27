@@ -39,11 +39,20 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("./league-predictions-settlement", () => ({
+  markPairingPredictionsClosed: vi.fn(),
+  notifyRoundPredictionResults: vi.fn(),
+}));
+
 import { prisma } from "../prisma";
 import {
   recordForfeit,
   sweepDeadlinePairings,
 } from "./league-forfeit";
+import {
+  markPairingPredictionsClosed,
+  notifyRoundPredictionResults,
+} from "./league-predictions-settlement";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const mocked = {
@@ -199,6 +208,8 @@ describe("recordForfeit", () => {
     });
     // Cloture manuelle : un dernier forfait ne fige pas la saison.
     expect(mocked.seasonUpdate).not.toHaveBeenCalled();
+    // Bilan des pronostics de la journee completee.
+    expect(notifyRoundPredictionResults).toHaveBeenCalledWith("round-1");
   });
 
   it("does not complete the round when other pairings are still pending", async () => {
@@ -210,6 +221,25 @@ describe("recordForfeit", () => {
 
     expect(mocked.roundUpdate).not.toHaveBeenCalled();
     expect(mocked.seasonUpdate).not.toHaveBeenCalled();
+    expect(notifyRoundPredictionResults).not.toHaveBeenCalled();
+  });
+
+  it("persiste la cloture des pronostics de la rencontre forfaite", async () => {
+    mocked.pairFind.mockResolvedValue(buildPairing());
+    mocked.seasonFind.mockResolvedValue({ league: BAREME });
+
+    await recordForfeit({ pairingId: "pair-1" });
+
+    expect(markPairingPredictionsClosed).toHaveBeenCalledWith("pair-1");
+  });
+
+  it("ne touche pas aux pronostics d'une rencontre deja terminee", async () => {
+    mocked.pairFind.mockResolvedValue(buildPairing({ status: "played" }));
+
+    await recordForfeit({ pairingId: "pair-1" });
+
+    expect(markPairingPredictionsClosed).not.toHaveBeenCalled();
+    expect(notifyRoundPredictionResults).not.toHaveBeenCalled();
   });
 });
 

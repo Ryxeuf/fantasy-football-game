@@ -40,6 +40,10 @@ import {
   advancePlayoffsWithWinner,
 } from "./league-playoffs";
 import { serverLog } from "../utils/server-log";
+import {
+  markPairingPredictionsClosed,
+  notifyRoundPredictionResults,
+} from "./league-predictions-settlement";
 
 export type ForfeitSide = "home" | "away";
 
@@ -217,6 +221,11 @@ export async function recordForfeit(
 
   await prisma.$transaction(updates);
 
+  // Pronostics : un forfait les rend caducs par le STATUT du pairing (rien a
+  // regler), mais la cloture se persiste comme pour un resultat — une
+  // annulation ulterieure ne doit pas rouvrir la rencontre.
+  await markPairingPredictionsClosed(pairing.id);
+
   // Cloture de round / saison si applicable. Reutilise la meme
   // logique que `recordLeagueMatchResult` mais simplifiee : on ne
   // s'occupe que du round et de la saison liee a ce pairing.
@@ -270,6 +279,8 @@ export async function maybeCompleteRoundAndSeason(
     where: { id: roundId },
     data: { status: "completed" },
   });
+  // Bilan des pronostics de la journee (au plus une fois, ne leve jamais).
+  await notifyRoundPredictionResults(roundId);
 
   const remaining = await prisma.leagueRound.findMany({
     where: { seasonId, status: { not: "completed" } },
