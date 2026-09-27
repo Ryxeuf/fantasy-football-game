@@ -44,6 +44,12 @@ import {
   type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
+import {
+  changingWeatherKickoffs,
+  resolveSheetWeather,
+  weatherHintForEventKind,
+} from "./weather";
+import { WeatherReminder } from "./_components/WeatherReminder";
 import { parsePurchases } from "./purchases";
 import {
   eventKindHint,
@@ -675,6 +681,23 @@ export default function MatchSheetPage() {
   }, [data?.sheet.status, data?.viewerRole, pairingId]);
 
   const events = useMemo(() => data?.sheet.events ?? [], [data]);
+  // Météo d'avant-match, rappelée pendant la saisie (ses effets jouent
+  // tout le match).
+  const sheetWeather = useMemo(
+    () =>
+      data
+        ? resolveSheetWeather(
+            data.reference?.weatherTables ?? [],
+            data.sheet.weatherTable,
+            data.sheet.weather,
+          )
+        : null,
+    [data],
+  );
+  const changingWeather = useMemo(
+    () => changingWeatherKickoffs(events),
+    [events],
+  );
   // Timeline chronologique : tri par mi-temps puis tour, en conservant
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
@@ -1043,6 +1066,12 @@ export default function MatchSheetPage() {
             Au cours du match
           </h2>
 
+          <WeatherReminder
+            weather={sheetWeather}
+            changingWeather={changingWeather}
+            onEditPreMatch={canEdit ? () => setTab("before") : undefined}
+          />
+
           {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}
           {canEdit && (
             <div className="space-y-2 rounded border bg-slate-50/60 p-3">
@@ -1112,6 +1141,14 @@ export default function MatchSheetPage() {
                       className="mt-1 block text-[11px] font-normal text-slate-500"
                     >
                       {eventKindHint(kind)}
+                    </span>
+                  )}
+                  {weatherHintForEventKind(sheetWeather, kind) && (
+                    <span
+                      data-testid="event-weather-hint"
+                      className="mt-1 block text-[11px] font-normal text-sky-700"
+                    >
+                      🌦️ {weatherHintForEventKind(sheetWeather, kind)}
                     </span>
                   )}
                 </label>
