@@ -44,6 +44,7 @@ import {
   type MatchBonusContext,
 } from "./league-bonus-points";
 import { serverLog } from "../utils/server-log";
+import { settleLeaguePredictionsForResult } from "./league-predictions-settlement";
 
 export interface RecordMatchResultInput {
   readonly matchId: string;
@@ -58,6 +59,11 @@ export interface RecordMatchResultInput {
    * nuls (oldRating === newRating).
    */
   readonly skipSeasonElo?: boolean;
+  /**
+   * Forfait EN LIGNE : le score est synthétique (1-0), il ne doit rien
+   * rapporter aux pronostics de la rencontre, réglés `void`.
+   */
+  readonly forfeit?: boolean;
 }
 
 export type MatchWinner = "A" | "B" | "draw";
@@ -295,6 +301,22 @@ export async function recordLeagueMatchResult(
         ]
       : [updateA, updateB, markMatch];
   await prisma.$transaction(updates);
+
+  // Pronostics : réglés ICI, dans l'entonnoir UNIQUE des résultats de ligue
+  // (le score ne vit que dans la feuille OU dans l'instantané de saisie,
+  // selon le chemin). Après le commit, awaité pour que la réponse parte avec
+  // un classement à jour, mais sans jamais lever : le résultat est acquis.
+  // Les côtés se lisent par participant, pas par la convention « A = home ».
+  if (match.leaguePairingId) {
+    await settleLeaguePredictionsForResult({
+      pairingId: match.leaguePairingId,
+      scores: [
+        { participantId: participantA.id, score: input.scoreA },
+        { participantId: participantB.id, score: input.scoreB },
+      ],
+      forfeit: input.forfeit === true,
+    });
+  }
 
   let roundCompleted = false;
   let seasonReadyToClose = false;

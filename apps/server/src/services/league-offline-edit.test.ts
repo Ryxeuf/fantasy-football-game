@@ -75,6 +75,10 @@ vi.mock("./league-hate-trait", async (importOriginal) => {
   return { ...actual, revertHateTraitGrants: vi.fn(async () => 1) };
 });
 
+// Pronostics : la reversion les remet en attente (service testé à part).
+vi.mock("./league-predictions-settlement", () => ({
+  unsettleLeaguePredictions: vi.fn(),
+}));
 vi.mock("./league-playoffs", () => ({
   playoffAdvancementState: vi.fn(async () => "none"),
   unadvancePlayoffsForSlot: vi.fn(async () => ({ unadvanced: true })),
@@ -90,6 +94,7 @@ import {
 } from "./league-playoffs";
 import { revertHateTraitGrants } from "./league-hate-trait";
 import { updateTeamValues } from "../utils/team-values";
+import { unsettleLeaguePredictions } from "./league-predictions-settlement";
 import {
   reverseOfflineLeagueResult,
   editOfflineLeagueResult,
@@ -197,6 +202,12 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     m.roundUpdate.mockResolvedValue({});
   });
 
+  it("ne touche à aucun pronostic quand la reversion est refusée", async () => {
+    m.matchFind.mockResolvedValue(null);
+    await reverseOfflineLeagueResult("m-1");
+    expect(unsettleLeaguePredictions).not.toHaveBeenCalled();
+  });
+
   it("skip si le match est introuvable", async () => {
     m.matchFind.mockResolvedValue(null);
     expect(await reverseOfflineLeagueResult("nope")).toEqual({
@@ -277,6 +288,8 @@ describe("reverseOfflineLeagueResult (W-B2)", () => {
     const r = await reverseOfflineLeagueResult("m-1");
 
     expect(r).toEqual({ reversed: true, matchId: "m-1", pairingId: "pair-1" });
+    // Le résultat n'existe plus : ses pronostics repassent en attente.
+    expect(unsettleLeaguePredictions).toHaveBeenCalledWith("pair-1");
     // Le comptage global des rounds playoff n'est meme plus interroge.
     expect(m.roundCount).not.toHaveBeenCalled();
     expect(m.poState).toHaveBeenCalledWith("season-1", "sf1");

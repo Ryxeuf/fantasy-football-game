@@ -68,6 +68,7 @@ import {
   playoffAdvancementState,
   unadvancePlayoffsForSlot,
 } from "./league-playoffs";
+import { unsettleLeaguePredictions } from "./league-predictions-settlement";
 
 export type ReverseOfflineSkipReason =
   | "match-missing"
@@ -755,6 +756,11 @@ export async function reverseOfflineLeagueResult(
   );
 
   await prisma.$transaction(ops);
+
+  // Pronostics : le résultat n'existe plus, ils repassent en attente (la
+  // clôture, elle, reste posée — le résultat a été vu). Une nouvelle saisie
+  // les règle de nouveau par l'entonnoir. Ne lève jamais.
+  await unsettleLeaguePredictions(pairing.id);
 
   for (const [teamId, side] of [
     [home.teamId, "home"],
