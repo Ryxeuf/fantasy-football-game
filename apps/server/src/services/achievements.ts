@@ -12,6 +12,12 @@
  */
 
 import { prisma } from "../prisma";
+import {
+  EMPTY_USER_PREDICTION_STATS,
+  computeUserPredictionStats,
+  type UserPredictionStats,
+} from "./league-predictions-core";
+import { serverLog } from "../utils/server-log";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,7 +29,8 @@ export type AchievementCategory =
   | "casualties"
   | "social"
   | "rosters"
-  | "leagues";
+  | "leagues"
+  | "predictions";
 
 export interface UserAchievementStats {
   matchesPlayed: number;
@@ -40,6 +47,12 @@ export interface UserAchievementStats {
    * saison terminee (status "completed"). Sert au succes "commissaire".
    */
   leaguesCommissioned: number;
+  /** Pronostics de ligue : bons résultats (scores exacts compris). */
+  predictionsCorrect: number;
+  predictionsExact: number;
+  /** Saisons clôturées terminées en tête du groupe Coachs / Tribunes. */
+  oracleTitles: number;
+  standsOracleTitles: number;
 }
 
 export interface AchievementDefinition {
@@ -213,6 +226,63 @@ function buildCatalog(): AchievementDefinition[] {
     icon: "🏆",
     predicate: (s) => s.leaguesCommissioned >= 1,
   });
+
+  // Pronostics de ligue (cf. `league-predictions-core`). Les deux titres se
+  // lisent sur des saisons CLÔTURÉES, avec la même fonction que le palmarès.
+  catalog.push(
+    {
+      slug: "prediction-first-correct",
+      nameFr: "Premier pronostic juste",
+      nameEn: "First correct prediction",
+      descriptionFr: "Trouver le bon résultat d'une rencontre de ligue",
+      descriptionEn: "Call the right result of a league match",
+      category: "predictions",
+      icon: "🔮",
+      predicate: (s) => s.predictionsCorrect >= 1,
+    },
+    {
+      slug: "predictions-correct-10",
+      nameFr: "Devin",
+      nameEn: "Seer",
+      descriptionFr: "Trouver 10 bons résultats de rencontres de ligue",
+      descriptionEn: "Call 10 right results of league matches",
+      category: "predictions",
+      icon: "🔮",
+      predicate: (s) => s.predictionsCorrect >= 10,
+    },
+    {
+      slug: "prediction-exact-score",
+      nameFr: "Score exact",
+      nameEn: "Exact score",
+      descriptionFr: "Prédire le score exact d'une rencontre de ligue",
+      descriptionEn: "Predict the exact score of a league match",
+      category: "predictions",
+      icon: "🎯",
+      predicate: (s) => s.predictionsExact >= 1,
+    },
+    {
+      slug: "season-oracle",
+      nameFr: "Oracle de la saison",
+      nameEn: "Season oracle",
+      descriptionFr:
+        "Finir premier des coachs au classement des pronostics d'une saison",
+      descriptionEn: "Top the coaches' prediction table of a league season",
+      category: "predictions",
+      icon: "🏅",
+      predicate: (s) => s.oracleTitles >= 1,
+    },
+    {
+      slug: "stands-oracle",
+      nameFr: "Oracle des tribunes",
+      nameEn: "Stands oracle",
+      descriptionFr:
+        "Finir premier des tribunes au classement des pronostics d'une saison",
+      descriptionEn: "Top the stands' prediction table of a league season",
+      category: "predictions",
+      icon: "📣",
+      predicate: (s) => s.standsOracleTitles >= 1,
+    },
+  );
 
   for (const [roster, nameFr, nameEn] of PRIORITY_ROSTERS) {
     catalog.push({
@@ -398,6 +468,14 @@ export async function computeUserStats(
     },
   })) as number;
 
+  // Pronostics : best-effort, un échec ne prive pas des autres succès.
+  let predictions: UserPredictionStats = EMPTY_USER_PREDICTION_STATS;
+  try {
+    predictions = await computeUserPredictionStats(userId);
+  } catch (e: unknown) {
+    serverLog.error(`[achievements] stats de pronostic indisponibles user=${userId}`, e);
+  }
+
   return {
     matchesPlayed: selections.filter((s) => s.match?.status === "ended").length,
     wins,
@@ -409,6 +487,10 @@ export async function computeUserStats(
     rostersPlayed,
     winsByRoster,
     leaguesCommissioned,
+    predictionsCorrect: predictions.correct,
+    predictionsExact: predictions.exact,
+    oracleTitles: predictions.oracleTitles,
+    standsOracleTitles: predictions.standsOracleTitles,
   };
 }
 
@@ -466,6 +548,10 @@ export async function getUserAchievements(
       casualties: stats.casualties,
       friendsCount: stats.friendsCount,
       leaguesCommissioned: stats.leaguesCommissioned,
+      predictionsCorrect: stats.predictionsCorrect,
+      predictionsExact: stats.predictionsExact,
+      oracleTitles: stats.oracleTitles,
+      standsOracleTitles: stats.standsOracleTitles,
       rostersPlayed: Array.from(stats.rostersPlayed),
       winsByRoster: Object.fromEntries(stats.winsByRoster),
     },
