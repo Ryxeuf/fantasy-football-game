@@ -181,10 +181,10 @@ Les succès DOIVENT compter : un premier pronostic juste, dix pronostics
 justes, un score exact, un titre d'Oracle et une première place du groupe
 Tribunes, ces deux derniers sur des saisons clôturées.
 
-Quand une journée se complète, chaque utilisateur qui y a un pronostic réglé
-DOIT recevoir UNE notification interne résumant ses points de la journée. Une
-journée DOIT être notifiée au plus une fois, même invalidée puis complétée de
-nouveau.
+Quand une journée se complète — par un résultat, un forfait ou la clôture de
+la saison —, chaque utilisateur qui y a un pronostic réglé DOIT recevoir UNE
+notification interne résumant ses points de la journée. Une journée DOIT être
+notifiée au plus une fois, même invalidée puis complétée de nouveau.
 
 #### Scenario: Oracle au palmarès
 - WHEN une saison est clôturée
@@ -193,3 +193,7 @@ nouveau.
 #### Scenario: Journée notifiée une fois
 - WHEN une journée déjà notifiée se complète de nouveau après une invalidation
 - THEN aucune nouvelle notification NE DOIT partir
+
+#### Scenario: Journée complétée par la clôture de la saison
+- WHEN le commissaire clôture une saison dont une journée n'est jouée qu'en partie
+- THEN les pronostiqueurs des rencontres jouées de cette journée DOIVENT recevoir leur bilan

@@ -1162,6 +1162,40 @@ d'un test à l'autre (préférer `mockResolvedValueOnce`). Le test de référenc
 est `routes/league-access.test.ts` : chaîne Express réelle, JWT réels signés
 avec `JWT_SECRET`, Prisma mocké, en table sur dix lectures.
 
+### Pronostics : le RÉSULTAT se stocke, la clôture s'écrit une fois
+
+Pick'em de ligue (`CompetitionPrediction`, change `league-match-predictions`,
+doc [`docs/roadmap/sessions/2026-09-27-league-predictions.md`](./docs/roadmap/sessions/2026-09-27-league-predictions.md)).
+Quatre règles qui ne se voient pas en lisant un seul fichier :
+
+- **On copie le résultat, jamais des points.** Le règlement écrit l'issue et
+  le score RÉEL sur chaque pronostic ; note et points sont recalculés à la
+  lecture (`league-predictions-rules`, pur). Un changement de barème ne
+  laisse aucun compteur périmé (cf. « un correctif de calcul ne corrige pas
+  un compteur persisté »). Forfaits et annulations ne s'écrivent pas : le
+  statut du pairing les sort du classement.
+- **Le règlement vit dans l'entonnoir** `recordLeagueMatchResult` (le score
+  n'existe pas sur `Match`), la reversion dans `reverseOfflineLeagueResult`.
+  Les côtés se lisent par PARTICIPANT, pas par la convention « A = domicile ».
+- **La clôture est write-once** (`LeaguePairing.predictionsClosedAt`,
+  `updateMany … where null`) : premier évènement, première soumission,
+  résultat, forfait, clôture manuelle. La dériver de la feuille la rouvrirait
+  à chaque `removeEvent` / `unsubmitByCoach`. Une invalidation remet les
+  pronostics EN ATTENTE sans rouvrir la rencontre : le résultat a été vu.
+- **Tout chemin qui complète une journée appelle
+  `notifyRoundPredictionResults`** — résultat, forfait
+  (`maybeCompleteRoundAndSeason`), clôture de saison. Le bilan réclame
+  `LeagueRound.predictionsNotifiedAt` AVANT d'envoyer : une journée n'est
+  notifiée qu'une fois, même invalidée puis revalidée.
+
+Piège d'import associé : la chaîne des résultats (`league-match-sheet`,
+`league-match-result`, `league-offline-edit`, `league-forfeit`,
+`league-scheduler`) n'importe QUE les modules légers
+`league-predictions-settlement` / `league-predictions-core`. Le service des
+routes (`league-predictions`) tire `league-access` → `services/league` → la
+chaîne elle-même : le cycle ne casse rien au typecheck, il court-circuite les
+mocks de test (un `vi.mock` de `recordOfflineLeagueResult` ignoré).
+
 ### Poules : rondes COMMUNES, appariement par groupe
 
 Une ronde reste une ronde de la compétition (contrainte unique
@@ -1339,6 +1373,15 @@ qui passe des poids tactiques tombera sur le slow path. La majorite
 des tests et de gameplay direct ne passe pas de weights -> hot cache.
 
 ## Pieges connus
+
+### `createMany({ skipDuplicates })` n'existe pas sur SQLite
+
+Le miroir de test (`TEST_SQLITE=1`) rejette l'option : `GET /achievements`
+répondait 500 dès qu'un succès se débloquait, sans qu'aucune suite ne le
+voie avant la spec e2e des pronostics. `unlockAchievements` passe désormais
+par un `upsert` par clé composite (P2002 d'une course = « déjà fait »).
+Reste à traiter le jour où on y touche : `services/pro-badges.ts` (Pro
+League gelée).
 
 ### Une compétence déjà possédée n'est refusée nulle part par défaut
 
@@ -1799,3 +1842,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   qui ne les envoie pas, pas l'écran qui les masque. Points d'abord, Crowns
   seulement avec des puits (conversion rétroactive possible). Voir
   [`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](./docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).
+  Puis **implémentation** dans la foulée (change OpenSpec
+  `league-match-predictions`) : modèle `CompetitionPrediction` + trois
+  colonnes nullables, règles pures, service et routes, clôture posée par la
+  feuille, règlement dans l'entonnoir, Oracle au palmarès, cinq succès, bilan
+  de journée (résultat, forfait, clôture de saison), réglage de portée
+  (formulaire + panneau verrouillé), panneau de la fiche, page de saison,
+  spec e2e ; au passage, `unlockAchievements` rendu portable SQLite. Récit
+  [`docs/roadmap/sessions/2026-09-27-league-predictions.md`](./docs/roadmap/sessions/2026-09-27-league-predictions.md).

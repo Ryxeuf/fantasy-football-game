@@ -88,6 +88,28 @@ reverseOfflineLeagueResult ──▶ $transaction (pairing = scheduled)
   est marqué `void` (`RecordMatchResultInput.forfeit`).
 - **L'édition ex-post** est une reversion suivie d'une saisie : elle règle
   à nouveau, sans code de plus.
+- **Le forfait du balayage** (`recordForfeit`, qui n'emprunte pas
+  l'entonnoir) n'a rien à régler — le statut suffit — mais il pose la
+  clôture, comme un résultat.
+
+## Trois modules, pour ne pas boucler
+
+Les hooks vivent dans la chaîne des résultats (`league-match-sheet`,
+`league-match-result`, `league-offline-edit`, `league-forfeit`,
+`league-scheduler`). Un service unique aurait importé `league-access` et
+`league-playoffs`, qui tirent tout `services/league` — donc, de proche en
+proche, la chaîne des résultats elle-même : un cycle d'import, qui a cassé
+les mocks de test à la première tentative. D'où le découpage :
+
+| Module | Rôle | Importé par |
+|---|---|---|
+| `league-predictions-rules` | PUR : portée, note, clôture, éligibilité, classement | tous |
+| `league-predictions-core` | léger : appartenance, classement sans lecteur, stats d'un utilisateur | palmarès, succès, service |
+| `league-predictions-settlement` | léger : clôture, règlement, bilan de journée | la chaîne des résultats |
+| `league-predictions` | service des routes (visibilité, play-offs publiés) | les routes seulement |
+
+Les deux modules légers ne dépendent que de Prisma, du journal, des
+notifications internes et des règles pures.
 
 ## La clôture
 
@@ -174,7 +196,8 @@ dans un même tableau favoriserait les tribunes de 14 % (16 équipes) à 50 %
   saison, Oracle des tribunes. Les deux derniers se lisent sur les saisons
   CLÔTURÉES, avec la même fonction que le palmarès.
 - **Notification** `league.predictions_settled`, UNE par journée et par
-  joueur, quand la journée se complète (résultat ou forfait) :
+  joueur, quand la journée se complète (résultat, forfait, ou clôture de la
+  saison qui annule les rencontres restantes) :
   « Journée 3 : 7 pts, 2 bons résultats sur 3 ». `predictionsNotifiedAt`
   empêche un second envoi après une invalidation suivie d'une nouvelle
   saisie.

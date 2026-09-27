@@ -509,3 +509,8 @@ définition que l'appartenance (§3), ce qui fait tenir ensemble les décisions
 5. **Après merge** : `/opsx:sync` puis `/opsx:archive`, récit de session dans
    `docs/roadmap/sessions/`.
 
+
+> **État (2026-09-27, fin de session)** : étapes 1 à 3 faites sur la branche
+> — proposition, périmètre v1 complet, implémentation lot par lot ; récit
+> dans [`docs/roadmap/sessions/2026-09-27-league-predictions.md`](../sessions/2026-09-27-league-predictions.md).
+> Reste la PR, puis `/opsx:sync` + `/opsx:archive` après le merge.
