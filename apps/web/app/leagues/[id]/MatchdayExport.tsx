@@ -1,13 +1,17 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import {
+  downloadCompetitionPdf,
+  pdfFilename,
+} from "../../lib/competition-pdf/download";
+import { leagueMatchdayToPdf } from "../../lib/competition-pdf/adapters/league";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { LeagueRoundDetail, LeaguePairingDetail } from "./types";
 
 // Export d'une journee (W-C). Feuille imprimable (window.print scope via
-// `.matchday-print-area` dans globals.css) + telechargement PDF structure
-// (jsPDF + autotable, deja en deps — pas de rasterisation). Pour imprimer ou
+// `.matchday-print-area` dans globals.css) + telechargement PDF structure,
+// rendu par le gabarit commun des exports de competition
+// (`lib/competition-pdf`, cases de score a remplir). Pour imprimer ou
 // diffuser aux joueurs (ligue offline facon tabletop / mordorbihan).
 
 interface MatchdayExportProps {
@@ -59,56 +63,20 @@ export function MatchdayExport({
   }`;
   const date = formatDate(round.startDate, language);
 
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const exportPdf = useCallback(() => {
-    const doc = new jsPDF();
-    let y = 18;
-    if (leagueName) {
-      doc.setFontSize(11);
-      doc.setTextColor(120);
-      doc.text(leagueName, 14, y);
-      y += 7;
-    }
-    doc.setFontSize(16);
-    doc.setTextColor(20);
-    doc.text(roundTitle, 14, y);
-    y += 7;
-    if (date) {
-      doc.setFontSize(10);
-      doc.setTextColor(120);
-      doc.text(date, 14, y);
-      y += 4;
-    }
-    autoTable(doc, {
-      startY: y + 4,
-      head: [
-        [
-          t.leagues.exportHome,
-          "",
-          t.leagues.exportAway,
-          t.leagues.exportStatus,
-        ],
-      ],
-      body: pairings.map((p) => [
-        teamWithCoach(p.homeParticipant),
-        "vs",
-        teamWithCoach(p.awayParticipant),
-        statusLabel(p),
-      ]),
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [40, 40, 40] },
-    });
-    doc.save(`journee-${round.roundNumber}.pdf`);
-  }, [
-    leagueName,
-    roundTitle,
-    date,
-    pairings,
-    round.roundNumber,
-    statusLabel,
-    t.leagues.exportHome,
-    t.leagues.exportAway,
-    t.leagues.exportStatus,
-  ]);
+    setPdfError(null);
+    const name = leagueName ?? "Ligue";
+    downloadCompetitionPdf(
+      {
+        kind: "matchday",
+        data: leagueMatchdayToPdf(round, null, { leagueName: name }),
+      },
+      pdfFilename("matchday", name, `j${round.roundNumber}`),
+    ).catch((e: unknown) =>
+      setPdfError(e instanceof Error ? e.message : "Export impossible"),
+    );
+  }, [leagueName, round]);
 
   const print = useCallback(() => {
     window.print();
@@ -203,6 +171,11 @@ export function MatchdayExport({
               )}
             </div>
 
+            {pdfError ? (
+              <p role="alert" className="no-print text-xs text-red-600">
+                {pdfError}
+              </p>
+            ) : null}
             <div className="no-print flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"

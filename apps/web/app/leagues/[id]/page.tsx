@@ -26,6 +26,7 @@ import CompetitionDocuments from "../../components/CompetitionDocuments";
 import { CollapsibleSection } from "../../components/CollapsibleSection";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { getRosterName } from "@bb/game-engine";
+import LeaguePdfExports from "./LeaguePdfExports";
 import type {
   LeagueDetail,
   LeagueSeasonDetail,
@@ -578,6 +579,14 @@ export default function LeagueDetailPage() {
                 >
                   📊 Statistiques de la ligue
                 </Link>
+                <LeaguePdfExports
+                  league={league}
+                  season={season}
+                  standings={standings}
+                  poolStandings={orderedPoolStandings}
+                  pools={pools}
+                  tieBreakRules={tieBreakRules}
+                />
                 {season.status === "completed" ? (
                   <Link
                     href={`/leagues/${leagueId}/seasons/${season.id}/recap`}
