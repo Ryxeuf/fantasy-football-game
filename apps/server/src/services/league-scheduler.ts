@@ -37,6 +37,7 @@ import { notifyParticipantsOfFirstRound } from "./league-round-reminder";
 import { persistSeasonAwards } from "./league-scoring";
 import { applyThemedSeasonClosure } from "./themed-season-closure";
 import { serverLog } from "../utils/server-log";
+import { notifyRoundPredictionResults } from "./league-predictions-settlement";
 
 export interface StartSeasonOptions {
   /**
@@ -508,6 +509,13 @@ export async function closeSeason(seasonId: string): Promise<void> {
     return;
   }
 
+  // Journées que la clôture va compléter : leurs pronostiqueurs n'ont pas
+  // encore eu leur bilan (les rencontres annulées, elles, ne comptent pas).
+  const closingRounds = (await prisma.leagueRound.findMany({
+    where: { seasonId, status: { not: "completed" } },
+    select: { id: true },
+  })) as Array<{ id: string }>;
+
   await prisma.leaguePairing.updateMany({
     where: {
       round: { seasonId },
@@ -523,6 +531,12 @@ export async function closeSeason(seasonId: string): Promise<void> {
     where: { id: seasonId },
     data: { status: "completed" },
   });
+
+  // Bilan des pronostics des journées complétées ici (au plus une fois par
+  // journée, ne lève jamais).
+  for (const round of closingRounds) {
+    await notifyRoundPredictionResults(round.id);
+  }
 
   // L2.C.1 — fire-and-forget : snapshot d'awards de fin de saison.
   // Idempotent via seasonId @unique.
