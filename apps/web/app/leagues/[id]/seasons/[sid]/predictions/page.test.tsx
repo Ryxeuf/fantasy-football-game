@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 
+const nav = vi.hoisted(() => ({
+  params: { id: "lg-1", sid: "season-1" } as { id: string; sid: string },
+}));
 vi.mock("next/navigation", () => ({
-  useParams: () => ({ id: "lg-1", sid: "season-1" }),
+  useParams: () => nav.params,
 }));
 
 const apiRequest = vi.fn();
@@ -68,6 +71,7 @@ const PLAYED = makePairing({
 
 beforeEach(() => {
   vi.resetAllMocks();
+  nav.params = { id: "lg-1", sid: "season-1" };
 });
 
 describe("SeasonPredictionsPage", () => {
@@ -176,5 +180,29 @@ describe("SeasonPredictionsPage", () => {
         "Saison introuvable",
       );
     });
+  });
+
+  it("changer de saison n'affiche jamais la précédente sous le nom de la nouvelle", async () => {
+    mockApi(
+      makeView({ rounds: [makeRound({ id: "r1", pairings: [PLAYED] })] }),
+    );
+    const { rerender } = render(<SeasonPredictionsPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("prediction-round-r1")).toBeTruthy();
+    });
+
+    // Saison 2 : la lecture reste en attente.
+    apiRequest.mockImplementation(() => new Promise(() => {}));
+    nav.params = { id: "lg-1", sid: "season-2" };
+    rerender(<SeasonPredictionsPage />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("prediction-round-r1")).toBeNull();
+    });
+    expect(screen.queryByTestId("prediction-others-played")).toBeNull();
+    expect(screen.getByText("Chargement…")).toBeTruthy();
+    expect(apiRequest).toHaveBeenCalledWith(
+      "/leagues/seasons/season-2/predictions",
+    );
   });
 });

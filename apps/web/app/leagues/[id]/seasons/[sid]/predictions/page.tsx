@@ -105,7 +105,15 @@ export default function SeasonPredictionsPage() {
     }
   }, [seasonId]);
 
+  // Changer de saison sans remonter la page (navigation client sur le seul
+  // segment `[sid]`) ne doit jamais laisser la saison précédente à l'écran,
+  // étiquetée comme la nouvelle. `load` seul (rechargement après un
+  // pronostic) garde l'affichage, pour ne pas clignoter.
   useEffect(() => {
+    setLoading(true);
+    setView(null);
+    setBoard(null);
+    setError(null);
     load();
   }, [load]);
 
