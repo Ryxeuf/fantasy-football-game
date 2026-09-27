@@ -19,7 +19,13 @@ interface MockAchievementOpts {
   slug: string;
   unlocked: boolean;
   unlockedAt?: string | null;
-  category?: "matches" | "scoring" | "casualties" | "social" | "rosters";
+  category?:
+    | "matches"
+    | "scoring"
+    | "casualties"
+    | "social"
+    | "rosters"
+    | "predictions";
 }
 
 function buildAchievement(opts: MockAchievementOpts) {
@@ -164,5 +170,41 @@ describe("AchievementsPage — newly unlocked banner (S26.2b)", () => {
     expect(
       screen.queryByTestId("achievements-newly-unlocked-banner"),
     ).toBeNull();
+  });
+});
+
+describe("AchievementsPage — catégorie Pronostics", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorageMock.getItem.mockReturnValue("fake-token");
+  });
+
+  it("range les succès de pronostic sous « Pronostics »", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          success: true,
+          data: {
+            stats: baseStats,
+            achievements: [
+              buildAchievement({ slug: "first-match", unlocked: true }),
+              buildAchievement({
+                slug: "prediction-exact-score",
+                unlocked: true,
+                category: "predictions",
+              }),
+            ],
+          },
+        }),
+    });
+
+    render(<AchievementsPage />);
+
+    const section = await screen.findByTestId(
+      "achievements-category-predictions",
+    );
+    expect(section.textContent).toContain("Pronostics");
+    expect(section.textContent).toContain("Succes prediction-exact-score");
   });
 });
