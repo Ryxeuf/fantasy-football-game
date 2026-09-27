@@ -1,3 +1,10 @@
+## [1.243.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.242.0...v1.243.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **competition-pdf:** gabarits PDF imprimables des ligues et coupes ([#1036](https://github.com/Ryxeuf/fantasy-football-game/issues/1036)) ([c76411c](https://github.com/Ryxeuf/fantasy-football-game/commit/c76411cf48b98fba551a9ca210ad3016f2781e22))
+
 ## [1.242.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.241.3...v1.242.0) (2026-09-24)
 
 
