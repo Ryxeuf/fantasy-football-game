@@ -1779,3 +1779,16 @@ edition du `.json`, `pnpm --filter web typecheck` +
   tier-list (#893) ; notifications de re-engagement (Web Push persistant
   + digest e-mail hebdo, #894) ; assistant onboarding "Cree ton equipe
   en 60 secondes" (#895) ; OpenSpec workflow skills + commands (#897).
+- **2026-09-27** : **Exploration « pronostics de ligue »** (`/opsx:explore`,
+  aucun code). Reprend la session « Paris sur matchs de ligue » du 2026-09-11,
+  restée bloquée sur six décisions et dont la branche a disparu sans rien
+  consigner. À savoir avant d'y toucher : tout ce qui touche aux pronostics
+  et aux Crowns vit dans la Pro League, **gelée** depuis le 2026-06-01 (le
+  wallet est monté sous `/pro-league/**`, donc 404 en prod), et aucun puits
+  de Crowns n'existe hors Pro League. Retenu : pick'em à points (pas de
+  cotes, pas de mise), portée par ligue `off | members | open` composée avec
+  `isLeagueVisibleTo`, clôture DÉRIVÉE (min de `scheduledAt`, 1er évènement,
+  1re soumission) + manuelle, classement dérivé (jamais de compteur), points
+  d'abord et Crowns seulement avec des puits (conversion rétroactive
+  possible). Voir
+  [`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](./docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).
