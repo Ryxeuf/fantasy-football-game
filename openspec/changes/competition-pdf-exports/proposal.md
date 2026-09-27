@@ -42,14 +42,17 @@ Accès : un menu « Exports PDF » sur la fiche de ligue et sur la fiche de coup
 un bouton « Feuille imprimable (PDF) » sur la feuille de match. L'export de
 journée existant passe par le même gabarit.
 
-Côté serveur, un seul ajout, additif : `GET /leagues/seasons/:id/playoff-bracket`
-sert le statut et le score de la feuille de chaque rencontre (le bracket ne
-pouvait imprimer aucun résultat).
+Côté serveur, deux ajouts, tous deux additifs :
+
+- `GET /leagues/seasons/:id/playoff-bracket` sert le statut et le score de la
+  feuille de chaque rencontre (le bracket ne pouvait imprimer aucun résultat) ;
+- `GET /leagues/pairings/:id/sheet` sert `fixture` — journée ou ronde, nom,
+  stade de bracket, saison et date prévue — pour que la feuille imprimée
+  porte « Journée 5 » (ou « Ronde 3 », « Play-offs - Finale ») plutôt qu'un
+  « Rencontre » anonyme.
 
 ## Hors périmètre
 
-- Numéro de journée dans l'en-tête de la feuille imprimée : l'API de la
-  feuille ne le sert pas (en-tête « Rencontre »). Suite possible.
 - Génération côté serveur (PDF envoyé par e-mail, lien permanent).
 - Export des rosters d'équipe (existe déjà dans `/me/teams`).
 - Traduction anglaise des PDF (le contenu imprimé est en français).

@@ -26,6 +26,12 @@
 ## 3. Serveur
 - [x] 3.1 `GET /leagues/seasons/:id/playoff-bracket` sert `matchSheet`
       (statut + score). Test de route.
+- [x] 3.2 `resolveCompetitionPairing` lit le placement de la rencontre
+      (journée / ronde, nom, stade, saison, date de la rencontre sinon de la
+      ronde) via `fixtureInfoFromRow` (pur, tolérant à une ligne partielle) ;
+      `getMatchSheet` le sert en `fixture`. L'adaptateur web en dérive
+      l'en-tête (`sheetRoundLabel`), la saison et la date, avec repli
+      « Rencontre » sur un serveur antérieur. Tests contexte, service, web.
 
 ## 4. Écrans
 - [x] 4.1 `CompetitionPdfMenu` (menu, états occupé / erreur / désactivé).
@@ -42,6 +48,4 @@
       `MatchdayExport` adapté.
 
 ## Suites possibles (hors périmètre)
-- [ ] Servir le numéro de journée / ronde avec la feuille de match pour
-      l'en-tête de la feuille imprimée.
 - [ ] Version anglaise des PDF.

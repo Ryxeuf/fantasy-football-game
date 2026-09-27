@@ -129,6 +129,7 @@ import {
   type CompetitionKind,
   type CompetitionPairingContext,
   type CompetitionSheetRules,
+  type MatchSheetFixtureInfo,
 } from "./competition-match-sheet-context";
 import {
   FATAL_FLIGHT_SLUG,
@@ -586,6 +587,8 @@ interface PairingContext {
   homeOwnerId: string;
   awayOwnerId: string;
   rules: CompetitionSheetRules;
+  /** Placement de la rencontre (journée / ronde, saison, date prévue). */
+  fixture: MatchSheetFixtureInfo;
 }
 
 /**
@@ -617,6 +620,7 @@ async function loadPairingContext(pairingId: string): Promise<PairingContext> {
     homeOwnerId: ctx.homeOwnerId,
     awayOwnerId: ctx.awayOwnerId,
     rules: ctx.rules,
+    fixture: ctx.fixture,
   };
 }
 
@@ -4537,6 +4541,8 @@ export async function getMatchSheet(input: {
   /** Compétition du pairing : permet à l'UI un lien retour vers sa page. */
   leagueId: string;
   leagueName: string;
+  /** Journée / ronde, saison et date prévue (en-tête, feuille imprimée). */
+  fixture: MatchSheetFixtureInfo;
   viewerRole: "home" | "away" | "commissioner" | "none";
   /**
    * Équipe possédée par le viewer parmi les deux du match, INDÉPENDAMMENT de
@@ -4840,6 +4846,7 @@ export async function getMatchSheet(input: {
     competitionRules: ctx.rules,
     leagueId: ctx.leagueId,
     leagueName: ctx.leagueName,
+    fixture: ctx.fixture,
     teams: teamsWithRaisedDead,
     reference: await buildMatchSheetReference(
       teams,

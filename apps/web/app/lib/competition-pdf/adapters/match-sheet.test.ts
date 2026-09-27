@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchSheetToPdf, type SheetPdfInput, type SheetPdfTeam } from "./match-sheet";
+import { matchSheetToPdf, sheetRoundLabel, type SheetPdfInput, type SheetPdfTeam } from "./match-sheet";
 
 const stats = { ma: 6, st: 3, ag: 3, pa: 4, av: 9 };
 
@@ -128,5 +128,32 @@ describe("matchSheetToPdf", () => {
 
   it("déduit les règles d'une coupe quand le serveur ne les sert pas", () => {
     expect(matchSheetToPdf(input({ competitionKind: "cup" })).rules.economy).toBe(false);
+  });
+});
+
+describe("en-tête de la feuille : journée, saison, date", () => {
+  const fixture = { roundNumber: 5, roundName: null, bracketSlot: null, seasonName: "Saison 3", scheduledAt: "2026-10-04T18:30:00.000Z" };
+
+  it("nomme la journée d'une ligue et la ronde d'une coupe", () => {
+    expect(sheetRoundLabel(fixture, false)).toBe("Journée 5");
+    expect(sheetRoundLabel({ ...fixture, roundName: "Les Jardins de Morr" }, false)).toBe("Journée 5 - Les Jardins de Morr");
+    expect(sheetRoundLabel(fixture, true)).toBe("Ronde 5");
+    expect(sheetRoundLabel({ ...fixture, bracketSlot: "final" }, true)).toBe("Play-offs - Finale");
+    expect(sheetRoundLabel({ ...fixture, roundNumber: null, roundName: "Amicale" }, false)).toBe("Amicale");
+    expect(sheetRoundLabel(null, false)).toBeNull();
+  });
+
+  it("reporte journée, saison et date prévue dans le document", () => {
+    const doc = matchSheetToPdf(input({ fixture }));
+    expect(doc.roundLabel).toBe("Journée 5");
+    expect(doc.meta.seasonName).toBe("Saison 3");
+    expect(doc.scheduledLabel).toMatch(/^04\/10\/2026 \d{2}:30$/);
+  });
+
+  it("retombe sur « Rencontre » sans placement servi (serveur antérieur)", () => {
+    const doc = matchSheetToPdf(input());
+    expect(doc.roundLabel).toBe("Rencontre");
+    expect(doc.scheduledLabel).toBeNull();
+    expect(doc.meta.seasonName).toBeNull();
   });
 });

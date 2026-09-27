@@ -84,6 +84,24 @@ listés.
 - WHEN la rencontre appartient à une coupe
 - THEN la feuille NE DOIT comporter ni colonne de PSP, ni gains, ni améliorations, ni embauches, ni erreurs coûteuses
 
+### Requirement: En-tête de la feuille de rencontre
+
+`GET /leagues/pairings/:id/sheet` DOIT servir le placement de la rencontre :
+numéro et nom de journée (ligue) ou de ronde (coupe), stade de bracket,
+saison de ligue et date prévue (celle de la rencontre, sinon celle de la
+ronde). Une donnée absente DOIT être servie `null` sans empêcher la lecture
+de la feuille. La feuille imprimée DOIT en porter le libellé (« Journée 5 »,
+« Ronde 3 », « Play-offs - Finale »), la saison et la date ; servie par un
+serveur qui ne le fournit pas, elle DOIT retomber sur « Rencontre ».
+
+#### Scenario: Rencontre de ligue
+- WHEN la feuille imprimée porte sur la journée 5 de la « Saison 3 », prévue le 04/10/2026
+- THEN l'en-tête DOIT indiquer « Journée 5 », la saison « Saison 3 » et la date prévue
+
+#### Scenario: Finale de coupe
+- WHEN la rencontre est la finale du bracket d'une coupe
+- THEN l'en-tête DOIT indiquer « Play-offs - Finale »
+
 ### Requirement: Contenu imprimable
 
 Les PDF DOIVENT être lisibles une fois imprimés : fond blanc, pied de page

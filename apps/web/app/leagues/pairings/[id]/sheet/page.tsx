@@ -251,6 +251,17 @@ interface SheetResponse {
   /** Compétition du pairing (lien retour). Optionnel : rétro-compat pré-fix. */
   leagueId?: string;
   leagueName?: string;
+  /**
+   * Journée / ronde, saison et date prévue de la rencontre (en-tête de la
+   * feuille imprimée). Optionnel : rétro-compat avec un serveur antérieur.
+   */
+  fixture?: {
+    roundNumber: number | null;
+    roundName: string | null;
+    bracketSlot: string | null;
+    seasonName: string | null;
+    scheduledAt: string | null;
+  } | null;
   teams: { home: SheetTeam | null; away: SheetTeam | null };
   reference: MatchSheetReference;
   computedSpp: Record<string, number>;

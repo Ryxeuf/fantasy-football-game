@@ -17,7 +17,13 @@ import type {
   PdfSheetTeam,
 } from "../types";
 import { compressWeatherResults, kickoffTableRows, prayersTableRows } from "../reference";
-import { defaultRosterName, type RosterNameResolver } from "./common";
+import {
+  bracketStageLabel,
+  defaultRosterName,
+  formatPdfDate,
+  stageOfSlot,
+  type RosterNameResolver,
+} from "./common";
 import { KICKOFF_EVENTS, LEGACY_KICKOFF_EVENT_IDS } from "@bb/game-engine";
 
 // ─── Formes d'entrée (sous-ensemble de la réponse API) ──────────────────────
@@ -106,11 +112,41 @@ export interface SheetPdfInput {
     firingsEnabled?: boolean;
   };
   leagueName?: string;
+  /** Placement de la rencontre. Optionnel : rétro-compat serveur antérieur. */
+  fixture?: SheetPdfFixture | null;
   teams: { home: SheetPdfTeam | null; away: SheetPdfTeam | null };
   reference?: {
     weatherTables?: Array<{ id: string; name: string; results: Array<{ roll: number; condition: string }> }>;
   } | null;
   computedSpp?: Record<string, number>;
+}
+
+export interface SheetPdfFixture {
+  roundNumber: number | null;
+  roundName: string | null;
+  bracketSlot: string | null;
+  seasonName: string | null;
+  scheduledAt: string | null;
+}
+
+/**
+ * « Journée 5 - Les Jardins de Morr », « Ronde 3 », « Play-offs - Finale ».
+ * `null` quand le serveur ne sert pas le placement (l'en-tête retombe sur
+ * « Rencontre »).
+ */
+export function sheetRoundLabel(
+  fixture: SheetPdfFixture | null | undefined,
+  isCup: boolean,
+): string | null {
+  if (!fixture) return null;
+  const stage = stageOfSlot(fixture.bracketSlot);
+  const base = stage
+    ? `Play-offs - ${bracketStageLabel(stage)}`
+    : fixture.roundNumber !== null
+      ? `${isCup ? "Ronde" : "Journée"} ${fixture.roundNumber}`
+      : null;
+  if (!base) return fixture.roundName ?? null;
+  return fixture.roundName ? `${base} - ${fixture.roundName}` : base;
 }
 
 export interface SheetPdfContext {
@@ -378,11 +414,11 @@ export function matchSheetToPdf(input: SheetPdfInput, ctx: SheetPdfContext = {})
     meta: {
       competitionName: input.leagueName ?? (isCup ? "Coupe" : "Ligue"),
       competitionKind: isCup ? "cup" : "league",
-      seasonName: null,
+      seasonName: input.fixture?.seasonName ?? null,
       generatedAt: ctx.now ?? new Date(),
     },
-    roundLabel: ctx.roundLabel ?? "Rencontre",
-    scheduledLabel: ctx.scheduledLabel ?? null,
+    roundLabel: ctx.roundLabel ?? sheetRoundLabel(input.fixture, isCup) ?? "Rencontre",
+    scheduledLabel: ctx.scheduledLabel ?? formatPdfDate(input.fixture?.scheduledAt),
     home,
     away,
     rules,

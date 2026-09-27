@@ -71,8 +71,15 @@ describe("resolveCompetitionPairing", () => {
   it("résout une rencontre de ligue (et n'interroge pas les coupes)", async () => {
     mockPrisma.leaguePairing.findUnique.mockResolvedValue({
       id: "p1",
+      scheduledAt: new Date("2026-10-04T18:30:00Z"),
       round: {
-        season: { league: { id: "L1", name: "Ma Ligue", creatorId: "u-com" } },
+        roundNumber: 5,
+        name: "Les Jardins de Morr",
+        bracketSlot: null,
+        season: {
+          name: "Saison 3",
+          league: { id: "L1", name: "Ma Ligue", creatorId: "u-com" },
+        },
       },
       homeParticipant: { teamId: "t1", team: { ownerId: "u-home" } },
       awayParticipant: { teamId: "t2", team: { ownerId: "u-away" } },
@@ -91,6 +98,13 @@ describe("resolveCompetitionPairing", () => {
       homeOwnerId: "u-home",
       awayOwnerId: "u-away",
       rules: LEAGUE_SHEET_RULES,
+      fixture: {
+        roundNumber: 5,
+        roundName: "Les Jardins de Morr",
+        bracketSlot: null,
+        seasonName: "Saison 3",
+        scheduledAt: "2026-10-04T18:30:00.000Z",
+      },
     });
     expect(mockPrisma.cupPairing.findUnique).not.toHaveBeenCalled();
   });
@@ -116,6 +130,35 @@ describe("resolveCompetitionPairing", () => {
       homeTeamId: "t1",
       awayTeamId: "t2",
       rules: CUP_SHEET_RULES,
+    });
+  });
+
+  it("place une rencontre de coupe : ronde, stade, date de la ronde en repli", async () => {
+    mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+    mockPrisma.cupPairing.findUnique.mockResolvedValue({
+      id: "cp1",
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      scheduledAt: null,
+      homeTeam: { ownerId: "u-home" },
+      awayTeam: { ownerId: "u-away" },
+      round: {
+        roundNumber: 6,
+        name: null,
+        bracketSlot: "sf1",
+        scheduledAt: "2026-10-04T14:00:00.000Z",
+        cup: { id: "C1", name: "World Cup", creatorId: "u-com" },
+      },
+    });
+
+    const ctx = await resolveCompetitionPairing("cp1");
+
+    expect(ctx?.fixture).toEqual({
+      roundNumber: 6,
+      roundName: null,
+      bracketSlot: "sf1",
+      seasonName: null,
+      scheduledAt: "2026-10-04T14:00:00.000Z",
     });
   });
 
@@ -148,5 +191,13 @@ describe("resolveCompetitionPairing", () => {
     });
     const ctx = await resolveCompetitionPairing("p1");
     expect(ctx).toMatchObject({ homeTeamId: "", awayTeamId: "" });
+    // Ligne partielle : placement inconnu, jamais d'erreur.
+    expect(ctx?.fixture).toEqual({
+      roundNumber: null,
+      roundName: null,
+      bracketSlot: null,
+      seasonName: null,
+      scheduledAt: null,
+    });
   });
 });
