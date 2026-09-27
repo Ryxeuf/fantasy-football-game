@@ -42,6 +42,10 @@ import {
 } from "./league-standings-order";
 import { LEAGUE_ARCHIVED_STATUS } from "./competition-lifecycle";
 import { healSeasonCasualties } from "./league-season-casualty-heal";
+import {
+  DEFAULT_PREDICTION_SCOPE,
+  type PredictionScope,
+} from "./league-predictions-rules";
 
 export type LeagueStatus =
   | "draft"
@@ -92,6 +96,8 @@ export interface CreateLeagueInput {
    * Lot E — Points bonus configurables. Array de regles ou null.
    */
   bonusPointsConfig?: readonly unknown[] | null;
+  /** Portée des pronostics ; absente ⇒ `DEFAULT_PREDICTION_SCOPE`. */
+  predictionsScope?: PredictionScope;
 }
 
 export interface CreateSeasonInput {
@@ -253,6 +259,9 @@ export async function createLeague(input: CreateLeagueInput) {
       }),
       tieBreakRules,
       bonusPointsConfig: bonusPointsConfig ?? undefined,
+      // Une ligue NEUVE ouvre les pronostics à ses membres ; une ligue
+      // antérieure (colonne à null) les garde coupés, sans backfill.
+      predictionsScope: input.predictionsScope ?? DEFAULT_PREDICTION_SCOPE,
     },
   });
 }
@@ -1062,6 +1071,8 @@ export interface UpdateLeagueInput {
    * score (cf. `hasLeagueScoredMatch`).
    */
   bonusPointsConfig?: readonly unknown[] | null;
+  /** Portée des pronostics (le formulaire complet d'une ligue non verrouillée). */
+  predictionsScope?: PredictionScope;
 }
 
 /**
@@ -1145,6 +1156,9 @@ export async function updateLeague(
       input.bonusPointsConfig && input.bonusPointsConfig.length > 0
         ? (input.bonusPointsConfig as unknown[])
         : null;
+  }
+  if (input.predictionsScope !== undefined) {
+    data.predictionsScope = input.predictionsScope;
   }
 
   return prisma.league.update({ where: { id: leagueId }, data });
