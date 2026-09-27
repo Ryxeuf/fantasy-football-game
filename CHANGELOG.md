@@ -1,3 +1,10 @@
+## [1.244.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.243.0...v1.244.0) (2026-09-27)
+
+
+### ✨ Features
+
+* **league-sheet:** rappel des effets météo pendant la saisie du match ([#1037](https://github.com/Ryxeuf/fantasy-football-game/issues/1037)) ([80942ea](https://github.com/Ryxeuf/fantasy-football-game/commit/80942ea1c4ac3988e5b0d92d0b35534501e0b6e5))
+
 ## [1.243.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.242.0...v1.243.0) (2026-09-27)
 
 
