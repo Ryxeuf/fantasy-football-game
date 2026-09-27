@@ -1,8 +1,8 @@
 # 2026-09-27 — Les pronostics de ligue
 
-> Récit de session. Décision versionnée dans
-> `openspec/changes/league-match-predictions/` (à archiver après le merge),
-> exploration dans
+> Récit de session. Livré par #1034. Décision versionnée dans
+> `openspec/changes/archive/2026-09-27-league-match-predictions/` (spec
+> principale : `openspec/specs/league-predictions/spec.md`), exploration dans
 > [`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](../explorations/2026-09-27-pronostics-de-ligue.md).
 
 ## Le point de départ
@@ -106,7 +106,8 @@ vivant d'un run précédent a fait échouer toute la suite en `ECONNREFUSED`.
 
 ## Suites
 
-Hors périmètre, à remonter dans `openspec-suites.md` à l'archivage : les
-coupes (`cupPairingId`), les Crowns (et leurs puits), un widget « pronostics
-à faire » sur l'accueil, une puce « ton prono » dans les cartes du
-calendrier, d'autres types de pronostics.
+Hors périmètre, remontées dans
+[`docs/roadmap/backlog/openspec-suites.md`](../backlog/openspec-suites.md)
+(section « Pronostics de ligue ») : les coupes (`cupPairingId`), les Crowns
+(et leurs puits), un widget « pronostics à faire » sur l'accueil, une puce
+« ton prono » dans les cartes du calendrier, d'autres types de pronostics.

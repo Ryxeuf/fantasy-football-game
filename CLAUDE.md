@@ -1846,8 +1846,9 @@ edition du `.json`, `pnpm --filter web typecheck` +
   qui ne les envoie pas, pas l'écran qui les masque. Points d'abord, Crowns
   seulement avec des puits (conversion rétroactive possible). Voir
   [`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](./docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).
-  Puis **implémentation** dans la foulée (change OpenSpec
-  `league-match-predictions`) : modèle `CompetitionPrediction` + trois
+  Puis **implémentation** dans la foulée (#1034, change OpenSpec
+  `league-match-predictions`, synchronisé dans
+  `openspec/specs/league-predictions/` puis archivé) : modèle `CompetitionPrediction` + trois
   colonnes nullables, règles pures, service et routes, clôture posée par la
   feuille, règlement dans l'entonnoir, Oracle au palmarès, cinq succès, bilan
   de journée (résultat, forfait, clôture de saison), réglage de portée
