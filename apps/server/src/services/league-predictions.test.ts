@@ -653,23 +653,88 @@ describe("clôtures manuelles", () => {
     ).rejects.toMatchObject({ code: "forbidden" });
   });
 
-  it("le commissaire ferme une journée entière, pas un coach", async () => {
-    db.leagueRound.findUnique.mockResolvedValue({
+  it("n'écrit rien sur une rencontre fermée pour une autre raison", async () => {
+    // Écrite ici, la clôture survivrait à sa raison (write-once) : bracket
+    // publié, ligue désarchivée ou date reportée, la rencontre resterait close.
+    const alreadyClosed = [
+      pairingContext({ status: "played" }),
+      pairingContext({ scheduledAt: PAST }),
+      pairingContext({
+        round: {
+          ...pairingContext().round,
+          kind: "playoff",
+          bracketSlot: "final",
+          season: { ...pairingContext().round.season, playoffsPublished: false },
+        },
+      }),
+      pairingContext({ league: { status: "archived" } }),
+    ];
+    for (const ctx of alreadyClosed) {
+      db.leaguePairing.findUnique.mockResolvedValueOnce(ctx);
+      await expect(
+        closePairingPredictions({
+          pairingId: "pairing-1",
+          viewer: { userId: COMMISH },
+          now: NOW,
+        }),
+      ).resolves.toEqual({ closedAt: null });
+    }
+    expect(db.leaguePairing.updateMany).not.toHaveBeenCalled();
+  });
+
+  function roundRow(overrides: Record<string, unknown> = {}) {
+    return {
       id: "round-1",
-      season: { league: league() },
-    });
-    db.leaguePairing.updateMany.mockResolvedValueOnce({ count: 3 });
+      kind: "regular",
+      bracketSlot: null,
+      season: { playoffsPublished: null, league: league() },
+      pairings: [
+        { id: "open", status: "scheduled", scheduledAt: null, predictionsClosedAt: null },
+        { id: "played", status: "played", scheduledAt: null, predictionsClosedAt: null },
+        { id: "past", status: "scheduled", scheduledAt: PAST, predictionsClosedAt: null },
+        { id: "closed", status: "scheduled", scheduledAt: null, predictionsClosedAt: PAST },
+      ],
+      ...overrides,
+    };
+  }
+
+  it("le commissaire ferme une journée entière — ses rencontres ouvertes seulement —, pas un coach", async () => {
+    db.leagueRound.findUnique.mockResolvedValue(roundRow());
+    db.leaguePairing.updateMany.mockResolvedValueOnce({ count: 1 });
     await expect(
       closeRoundPredictions({ roundId: "round-1", viewer: { userId: COMMISH }, now: NOW }),
-    ).resolves.toEqual({ closed: 3 });
+    ).resolves.toEqual({ closed: 1 });
     expect(db.leaguePairing.updateMany).toHaveBeenCalledWith({
-      where: { roundId: "round-1", predictionsClosedAt: null },
+      where: { id: { in: ["open"] }, predictionsClosedAt: null },
       data: { predictionsClosedAt: NOW },
     });
 
     await expect(
       closeRoundPredictions({ roundId: "round-1", viewer: { userId: HOME_COACH }, now: NOW }),
     ).rejects.toMatchObject({ code: "forbidden" });
+  });
+
+  it("une journée de play-off non publiée ou d'une ligue archivée ne se ferme pas", async () => {
+    db.leagueRound.findUnique.mockResolvedValueOnce(
+      roundRow({
+        kind: "playoff",
+        bracketSlot: "sf1",
+        season: { playoffsPublished: false, league: league() },
+      }),
+    );
+    await expect(
+      closeRoundPredictions({ roundId: "round-1", viewer: { userId: COMMISH }, now: NOW }),
+    ).resolves.toEqual({ closed: 0 });
+
+    db.leagueRound.findUnique.mockResolvedValueOnce(
+      roundRow({
+        season: { playoffsPublished: null, league: league({ status: "archived" }) },
+      }),
+    );
+    await expect(
+      closeRoundPredictions({ roundId: "round-1", viewer: { userId: COMMISH }, now: NOW }),
+    ).resolves.toEqual({ closed: 0 });
+    expect(db.leaguePairing.updateMany).not.toHaveBeenCalled();
   });
 });
 

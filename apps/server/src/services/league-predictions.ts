@@ -792,12 +792,20 @@ export async function setLeaguePredictionsScope(input: {
   return { predictionsScope: input.scope };
 }
 
-/** « Coup d'envoi » : un coach de la rencontre, le commissaire ou un admin. */
+/**
+ * « Coup d'envoi » : un coach de la rencontre, le commissaire ou un admin.
+ *
+ * N'écrit que sur une rencontre OUVERTE. Fermée pour une autre raison — jouée,
+ * date passée, play-off non publié, ligue archivée —, elle n'a rien à fermer,
+ * et une clôture posée alors SURVIVRAIT à sa raison (write-once) : le bracket
+ * une fois publié, la ligue désarchivée ou la date reportée, la rencontre
+ * resterait fermée. `closedAt: null` = rien d'écrit.
+ */
 export async function closePairingPredictions(input: {
   readonly pairingId: string;
   readonly viewer: LeagueViewer & { readonly userId: string };
   readonly now?: Date;
-}): Promise<{ readonly closedAt: Date }> {
+}): Promise<{ readonly closedAt: Date | null }> {
   const now = input.now ?? new Date();
   const pairing = await loadPairingContext(input.pairingId, input.viewer);
   const userId = input.viewer.userId;
@@ -815,6 +823,7 @@ export async function closePairingPredictions(input: {
   if (pairing.predictionsClosedAt) {
     return { closedAt: pairing.predictionsClosedAt };
   }
+  if (isPairingClosed(pairing, now)) return { closedAt: null };
   await prisma.leaguePairing.updateMany({
     where: { id: pairing.id, predictionsClosedAt: null },
     data: { predictionsClosedAt: now },
@@ -822,7 +831,26 @@ export async function closePairingPredictions(input: {
   return { closedAt: now };
 }
 
-/** Ferme toute une journée : le commissaire ou un admin. */
+interface RoundCloseRow {
+  readonly id: string;
+  readonly kind: string;
+  readonly bracketSlot: string | null;
+  readonly season: {
+    readonly playoffsPublished: boolean | null;
+    readonly league: LeagueRow;
+  };
+  readonly pairings: ReadonlyArray<{
+    readonly id: string;
+    readonly status: string;
+    readonly scheduledAt: Date | null;
+    readonly predictionsClosedAt: Date | null;
+  }>;
+}
+
+/**
+ * Ferme toute une journée : le commissaire ou un admin. Seules ses rencontres
+ * encore OUVERTES reçoivent la clôture (cf. `closePairingPredictions`).
+ */
 export async function closeRoundPredictions(input: {
   readonly roundId: string;
   readonly viewer: LeagueViewer & { readonly userId: string };
@@ -833,9 +861,24 @@ export async function closeRoundPredictions(input: {
     where: { id: input.roundId },
     select: {
       id: true,
-      season: { select: { league: { select: LEAGUE_SELECT } } },
+      kind: true,
+      bracketSlot: true,
+      season: {
+        select: {
+          playoffsPublished: true,
+          league: { select: LEAGUE_SELECT },
+        },
+      },
+      pairings: {
+        select: {
+          id: true,
+          status: true,
+          scheduledAt: true,
+          predictionsClosedAt: true,
+        },
+      },
     },
-  })) as { id: string; season: { league: LeagueRow } } | null;
+  })) as RoundCloseRow | null;
   if (
     !round ||
     !(await canViewLeagueRow(toVisibilityRow(round.season.league), input.viewer))
@@ -851,8 +894,19 @@ export async function closeRoundPredictions(input: {
       "Seul le commissaire ferme une journée entière",
     );
   }
+  const hiddenPlayoff =
+    isPlayoffRound(round) &&
+    !isPlayoffBracketVisible(round.season.playoffsPublished);
+  const leagueArchived = round.season.league.status === "archived";
+  const openIds = round.pairings
+    .filter(
+      (p) =>
+        !isPredictionClosed({ ...p, hiddenPlayoff, leagueArchived }, now),
+    )
+    .map((p) => p.id);
+  if (openIds.length === 0) return { closed: 0 };
   const out = await prisma.leaguePairing.updateMany({
-    where: { roundId: round.id, predictionsClosedAt: null },
+    where: { id: { in: openIds }, predictionsClosedAt: null },
     data: { predictionsClosedAt: now },
   });
   return { closed: out.count };

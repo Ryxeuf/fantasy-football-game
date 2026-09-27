@@ -1182,6 +1182,10 @@ Quatre règles qui ne se voient pas en lisant un seul fichier :
   résultat, forfait, clôture manuelle. La dériver de la feuille la rouvrirait
   à chaque `removeEvent` / `unsubmitByCoach`. Une invalidation remet les
   pronostics EN ATTENTE sans rouvrir la rencontre : le résultat a été vu.
+  Corollaire : une valeur write-once ne s'écrit que si la rencontre est
+  OUVERTE. Posée sur une rencontre fermée pour une raison PASSAGÈRE (play-off
+  non publié, ligue archivée, date prévue passée), elle survivrait à sa
+  raison — bracket publié ou date reportée, la rencontre resterait close.
 - **Tout chemin qui complète une journée appelle
   `notifyRoundPredictionResults`** — résultat, forfait
   (`maybeCompleteRoundAndSeason`), clôture de saison. Le bilan réclame

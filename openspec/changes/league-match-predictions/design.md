@@ -133,7 +133,10 @@ donne « fermé au début de la journée » sans code dédié ; un report
 
 Clôture manuelle : le commissaire (ou un admin) ferme une journée entière ;
 les deux coachs d'une rencontre, le commissaire ou un admin ferment une
-rencontre (« Coup d'envoi », le filet des soirées en club).
+rencontre (« Coup d'envoi », le filet des soirées en club). Elle n'écrit que
+sur une rencontre OUVERTE : fermée pour une raison passagère (play-off non
+publié, ligue archivée, date passée), une clôture écrite survivrait à sa
+raison et la rencontre ne se rouvrirait jamais.
 
 ## Qui peut pronostiquer
 

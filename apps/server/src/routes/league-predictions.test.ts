@@ -163,7 +163,20 @@ function seed(isPublic: boolean, predictionsScope: string | null = "members") {
   );
   db.leagueRound.findUnique.mockResolvedValue({
     id: "round-1",
-    season: { league: leagueRow(isPublic, predictionsScope) },
+    kind: "regular",
+    bracketSlot: null,
+    season: {
+      playoffsPublished: null,
+      league: leagueRow(isPublic, predictionsScope),
+    },
+    pairings: [
+      {
+        id: "pairing-1",
+        status: "scheduled",
+        scheduledAt: null,
+        predictionsClosedAt: null,
+      },
+    ],
   });
   // Visibilité (toute saison) comme appartenance active : les coachs actifs.
   db.leagueParticipant.count.mockImplementation(
