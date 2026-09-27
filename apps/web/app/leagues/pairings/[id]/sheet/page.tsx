@@ -58,6 +58,7 @@ import {
   REMOVE_CONSUMED_CONFIRM_MESSAGE,
 } from "./invalidate-consumed";
 import { RosterSection } from "./_components/RosterSection";
+import { MatchSheetPdfButton } from "./_components/MatchSheetPdfButton";
 import TeamLogo from "../../../../components/TeamLogo";
 import {
   competitionBackLabel,
@@ -796,18 +797,23 @@ export default function MatchSheetPage() {
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4" data-testid="match-sheet">
-      {/* Retour vers la page de la ligue */}
-      {data.leagueId && (
-        <Link
-          href={dynamicRoute(
-            competitionHref(data.competitionKind, data.leagueId),
-          )}
-          className="inline-block text-sm text-nuffle-bronze hover:underline"
-          data-testid="back-to-league"
-        >
-          {competitionBackLabel(data.competitionKind, data.leagueName)}
-        </Link>
-      )}
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        {/* Retour vers la page de la ligue */}
+        {data.leagueId ? (
+          <Link
+            href={dynamicRoute(
+              competitionHref(data.competitionKind, data.leagueId),
+            )}
+            className="inline-block text-sm text-nuffle-bronze hover:underline"
+            data-testid="back-to-league"
+          >
+            {competitionBackLabel(data.competitionKind, data.leagueName)}
+          </Link>
+        ) : (
+          <span />
+        )}
+        <MatchSheetPdfButton data={data} />
+      </div>
       {isCup && (
         <p
           data-testid="cup-sheet-notice"
