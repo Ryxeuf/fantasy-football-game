@@ -138,3 +138,88 @@ export function changingWeatherKickoffs<E extends KickoffLikeEvent>(
     return id === "changing-weather";
   });
 }
+
+// ───────────────────────────── RENDU VISUEL ──────────────────────────────
+
+/** Ambiance graphique d'une condition (pluie, brouillard…). */
+export type WeatherVisualKind =
+  | "clear"
+  | "sun"
+  | "heat"
+  | "rain"
+  | "storm"
+  | "snow"
+  | "frost"
+  | "fog"
+  | "gloom"
+  | "toxic"
+  | "wind"
+  | "sand"
+  | "swarm"
+  | "debris";
+
+export interface WeatherVisual {
+  kind: WeatherVisualKind;
+  /** Densité des particules / opacité du voile. */
+  intensity: "light" | "heavy";
+}
+
+/**
+ * Règles lues DANS L'ORDRE : la plus spécifique d'abord (« Pluie
+ * radioactive » est toxique avant d'être une pluie, « Tempête de neige »
+ * est de la neige avant d'être une tempête).
+ */
+const VISUAL_RULES: ReadonlyArray<{
+  match: RegExp;
+  visual: WeatherVisual;
+}> = [
+  { match: /radioactive|gaz toxiques|marais toxique/, visual: { kind: "toxic", intensity: "heavy" } },
+  { match: /scorpions|moustiques|insectes/, visual: { kind: "swarm", intensity: "heavy" } },
+  { match: /tempête de sable/, visual: { kind: "sand", intensity: "heavy" } },
+  { match: /blizzard|tempête de neige|tempête de glace|avalanche/, visual: { kind: "snow", intensity: "heavy" } },
+  { match: /neige/, visual: { kind: "snow", intensity: "light" } },
+  { match: /givre|verglas|froid glacial/, visual: { kind: "frost", intensity: "light" } },
+  { match: /pluie verglaçante|pluie fine|giboulée/, visual: { kind: "rain", intensity: "light" } },
+  { match: /pluie torrentielle|raz-de-marée|^tempête$/, visual: { kind: "storm", intensity: "heavy" } },
+  { match: /pluie|averse/, visual: { kind: "rain", intensity: "heavy" } },
+  { match: /brouillard épais/, visual: { kind: "fog", intensity: "heavy" } },
+  { match: /brouillard/, visual: { kind: "fog", intensity: "light" } },
+  { match: /lugubre|désolation|âmes errantes|banshees/, visual: { kind: "gloom", intensity: "heavy" } },
+  { match: /tempête de feuilles|vent|bourrasque/, visual: { kind: "wind", intensity: "heavy" } },
+  { match: /affaissement|éboulement|attaque des arbres/, visual: { kind: "debris", intensity: "heavy" } },
+  { match: /chaleur|canicule|sécheresse|mirage/, visual: { kind: "heat", intensity: "heavy" } },
+  { match: /ensoleillé|œil des dieux/, visual: { kind: "sun", intensity: "heavy" } },
+];
+
+/** Ambiance graphique d'une condition ; ciel dégagé par défaut. */
+export function weatherVisual(condition: string | null | undefined): WeatherVisual {
+  const c = (condition ?? "").trim().toLowerCase();
+  if (c) {
+    for (const rule of VISUAL_RULES) {
+      if (rule.match.test(c)) return rule.visual;
+    }
+  }
+  return { kind: "clear", intensity: "light" };
+}
+
+const EFFECTS_PREF_KEY = "match_sheet_weather_effects";
+
+/**
+ * Préférence « ambiance météo » du lecteur (confort visuel, par
+ * navigateur). Stockage indisponible (navigation privée…) ⇒ activée.
+ */
+export function readWeatherEffectsPreference(): boolean {
+  try {
+    return window.localStorage.getItem(EFFECTS_PREF_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+export function writeWeatherEffectsPreference(enabled: boolean): void {
+  try {
+    window.localStorage.setItem(EFFECTS_PREF_KEY, enabled ? "on" : "off");
+  } catch {
+    // Préférence non mémorisée : sans conséquence.
+  }
+}

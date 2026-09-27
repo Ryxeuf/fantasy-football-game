@@ -1,8 +1,12 @@
 import { describe, it, expect } from "vitest";
+import { WEATHER_TYPES } from "@bb/game-engine";
 import {
   changingWeatherKickoffs,
+  readWeatherEffectsPreference,
   resolveSheetWeather,
   weatherHintForEventKind,
+  weatherVisual,
+  writeWeatherEffectsPreference,
 } from "./weather";
 
 const TABLES = [
@@ -112,5 +116,60 @@ describe("changingWeatherKickoffs", () => {
       { id: "d", kind: "kickoff", meta: null },
     ];
     expect(changingWeatherKickoffs(events).map((e) => e.id)).toEqual(["a"]);
+  });
+});
+
+describe("weatherVisual", () => {
+  it.each([
+    ["Pluie battante", "rain", "heavy"],
+    ["Pluie fine", "rain", "light"],
+    ["Pluie torrentielle", "storm", "heavy"],
+    ["Tempête", "storm", "heavy"],
+    ["Pluie radioactive", "toxic", "heavy"],
+    ["Pluie de scorpions", "swarm", "heavy"],
+    ["Brouillard léger", "fog", "light"],
+    ["Brouillard épais", "fog", "heavy"],
+    ["Ambiance lugubre", "gloom", "heavy"],
+    ["Blizzard", "snow", "heavy"],
+    ["Tempête de neige", "snow", "heavy"],
+    ["Neige forte", "snow", "light"],
+    ["Verglas", "frost", "light"],
+    ["Tempête de sable", "sand", "heavy"],
+    ["Tempête de feuilles", "wind", "heavy"],
+    ["Très ensoleillé", "sun", "heavy"],
+    ["Chaleur écrasante", "heat", "heavy"],
+    ["Éboulement", "debris", "heavy"],
+    ["Conditions parfaites", "clear", "light"],
+  ])("%s → %s (%s)", (condition, kind, intensity) => {
+    expect(weatherVisual(condition)).toEqual({ kind, intensity });
+  });
+
+  it("ciel dégagé sans condition", () => {
+    expect(weatherVisual(null).kind).toBe("clear");
+    expect(weatherVisual("")).toEqual({ kind: "clear", intensity: "light" });
+  });
+
+  it("toute condition du catalogue moteur autre que « parfaites » a une ambiance", () => {
+    const conditions = new Set(
+      WEATHER_TYPES.flatMap((t) =>
+        Object.values(t.table).map((c) => c.condition),
+      ),
+    );
+    const unmapped = [...conditions].filter(
+      (c) =>
+        !/conditions parfaites/i.test(c) && weatherVisual(c).kind === "clear",
+    );
+    expect(unmapped).toEqual([]);
+  });
+});
+
+describe("préférence d'ambiance météo", () => {
+  it("activée par défaut, mémorisée ensuite", () => {
+    window.localStorage.clear();
+    expect(readWeatherEffectsPreference()).toBe(true);
+    writeWeatherEffectsPreference(false);
+    expect(readWeatherEffectsPreference()).toBe(false);
+    writeWeatherEffectsPreference(true);
+    expect(readWeatherEffectsPreference()).toBe(true);
   });
 });

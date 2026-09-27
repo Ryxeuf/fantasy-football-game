@@ -1,6 +1,7 @@
 "use client";
 
-import type { SheetWeatherView } from "../weather";
+import { weatherVisual, type SheetWeatherView } from "../weather";
+import { WeatherScene } from "./WeatherScene";
 
 interface ChangingWeatherKickoff {
   id: string;
@@ -15,18 +16,46 @@ export function WeatherReminder({
   weather,
   changingWeather,
   onEditPreMatch,
+  effectsEnabled = true,
+  onToggleEffects,
 }: {
   weather: SheetWeatherView | null;
   /** Coups d'envoi « Météo capricieuse » déjà saisis. */
   changingWeather: ReadonlyArray<ChangingWeatherKickoff>;
   /** Absent si l'utilisateur ne peut pas modifier l'avant-match. */
   onEditPreMatch?: () => void;
+  /** Ambiance graphique (pluie, brouillard…) affichée. */
+  effectsEnabled?: boolean;
+  /** Absent : pas d'interrupteur. */
+  onToggleEffects?: () => void;
 }) {
+  const showScene = Boolean(weather) && effectsEnabled;
   return (
     <div
       data-testid="weather-reminder"
-      className="mb-3 rounded border-l-4 border-sky-500 bg-sky-50 px-3 py-2 text-xs text-slate-700"
+      className="relative isolate mb-3 overflow-hidden rounded border-l-4 border-sky-500 bg-sky-50 px-3 py-2 text-xs text-slate-700"
     >
+      {showScene && weather && (
+        <div className="absolute inset-0 -z-10">
+          <WeatherScene visual={weatherVisual(weather.condition)} />
+        </div>
+      )}
+      {weather && onToggleEffects && (
+        <button
+          type="button"
+          onClick={onToggleEffects}
+          aria-pressed={effectsEnabled}
+          data-testid="weather-effects-toggle"
+          title={
+            effectsEnabled
+              ? "Masquer l'ambiance météo"
+              : "Afficher l'ambiance météo"
+          }
+          className="float-right ml-2 rounded bg-white/80 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 shadow-sm hover:bg-white"
+        >
+          {effectsEnabled ? "✨ Effets : on" : "✨ Effets : off"}
+        </button>
+      )}
       {weather ? (
         <>
           <div className="flex flex-wrap items-baseline gap-x-2">
@@ -54,7 +83,7 @@ export function WeatherReminder({
             </p>
           )}
           {weather.description && (
-            <p className="mt-1 text-[11px] italic text-slate-500">
+            <p className="mt-1 text-[11px] italic text-slate-600">
               {weather.description}
             </p>
           )}

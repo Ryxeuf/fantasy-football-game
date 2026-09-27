@@ -173,6 +173,7 @@ function withWeather(weather: string, events: unknown[] = []) {
 describe("feuille de match — rappel météo pendant la saisie", () => {
   beforeEach(() => {
     apiRequest.mockReset();
+    window.localStorage.clear();
   });
 
   it("affiche la météo d'avant-match et son effet sur les passes", async () => {
@@ -186,6 +187,16 @@ describe("feuille de match — rappel météo pendant la saisie", () => {
     expect(screen.getByTestId("weather-reminder-effects").textContent).toContain(
       "-1 aux tests de Capacité de Passe",
     );
+
+    // Ambiance graphique : bandeau ET voile derrière la saisie.
+    expect(
+      screen.getByTestId("weather-scene-banner").getAttribute("data-weather-kind"),
+    ).toBe("sun");
+    expect(screen.getByTestId("weather-scene-ambient")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("weather-effects-toggle"));
+    expect(screen.queryByTestId("weather-scene-ambient")).toBeNull();
+    expect(screen.queryByTestId("weather-scene-banner")).toBeNull();
+    fireEvent.click(screen.getByTestId("weather-effects-toggle"));
 
     // Touchdown par défaut : aucun rappel ciblé.
     expect(screen.queryByTestId("event-weather-hint")).toBeNull();

@@ -46,10 +46,14 @@ import {
 import { chronologicalTimeline } from "./timeline";
 import {
   changingWeatherKickoffs,
+  readWeatherEffectsPreference,
   resolveSheetWeather,
   weatherHintForEventKind,
+  weatherVisual,
+  writeWeatherEffectsPreference,
 } from "./weather";
 import { WeatherReminder } from "./_components/WeatherReminder";
+import { WeatherScene } from "./_components/WeatherScene";
 import { parsePurchases } from "./purchases";
 import {
   eventKindHint,
@@ -698,6 +702,18 @@ export default function MatchSheetPage() {
     () => changingWeatherKickoffs(events),
     [events],
   );
+  // Préférence locale (confort de lecture) : relue après montage pour ne
+  // pas diverger du rendu serveur.
+  const [weatherEffects, setWeatherEffects] = useState(true);
+  useEffect(() => {
+    setWeatherEffects(readWeatherEffectsPreference());
+  }, []);
+  const toggleWeatherEffects = useCallback(() => {
+    setWeatherEffects((on) => {
+      writeWeatherEffectsPreference(!on);
+      return !on;
+    });
+  }, []);
   // Timeline chronologique : tri par mi-temps puis tour, en conservant
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
@@ -1061,7 +1077,17 @@ export default function MatchSheetPage() {
 
       {/* AU COURS DU MATCH */}
       {tab === "during" && (
-        <section className="rounded-lg border bg-white p-4">
+        <section className="relative isolate overflow-hidden rounded-lg border bg-white p-4">
+          {/* Voile d'ambiance DERRIÈRE la saisie (z négatif dans un
+              contexte isolé) : il colore les marges sans couvrir le texte. */}
+          {sheetWeather && weatherEffects && (
+            <div className="absolute inset-0 -z-10">
+              <WeatherScene
+                visual={weatherVisual(sheetWeather.condition)}
+                variant="ambient"
+              />
+            </div>
+          )}
           <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
             Au cours du match
           </h2>
@@ -1070,6 +1096,8 @@ export default function MatchSheetPage() {
             weather={sheetWeather}
             changingWeather={changingWeather}
             onEditPreMatch={canEdit ? () => setTab("before") : undefined}
+            effectsEnabled={weatherEffects}
+            onToggleEffects={toggleWeatherEffects}
           />
 
           {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}

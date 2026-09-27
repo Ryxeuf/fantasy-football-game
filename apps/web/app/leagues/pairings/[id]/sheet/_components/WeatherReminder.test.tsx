@@ -72,4 +72,50 @@ describe("WeatherReminder", () => {
     );
     expect(screen.queryByTestId("weather-reminder-edit")).toBeNull();
   });
+
+  it("dessine l'ambiance de la condition derrière le texte", () => {
+    render(
+      <WeatherReminder
+        weather={resolveSheetWeather(TABLES, "classique", "Pluie battante")}
+        changingWeather={[]}
+      />,
+    );
+    expect(
+      screen.getByTestId("weather-scene-banner").getAttribute("data-weather-kind"),
+    ).toBe("rain");
+  });
+
+  it("l'interrupteur masque l'ambiance sans masquer le rappel", () => {
+    const onToggle = vi.fn();
+    const weather = resolveSheetWeather(TABLES, "classique", "Pluie battante");
+    const { rerender } = render(
+      <WeatherReminder
+        weather={weather}
+        changingWeather={[]}
+        effectsEnabled
+        onToggleEffects={onToggle}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("weather-effects-toggle"));
+    expect(onToggle).toHaveBeenCalledOnce();
+
+    rerender(
+      <WeatherReminder
+        weather={weather}
+        changingWeather={[]}
+        effectsEnabled={false}
+        onToggleEffects={onToggle}
+      />,
+    );
+    expect(screen.queryByTestId("weather-scene-banner")).toBeNull();
+    expect(screen.getByTestId("weather-reminder-effects")).toBeTruthy();
+    expect(
+      screen.getByTestId("weather-effects-toggle").getAttribute("aria-pressed"),
+    ).toBe("false");
+  });
+
+  it("pas d'ambiance sans météo saisie", () => {
+    render(<WeatherReminder weather={null} changingWeather={[]} />);
+    expect(screen.queryByTestId("weather-scene-banner")).toBeNull();
+  });
 });
