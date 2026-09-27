@@ -538,6 +538,14 @@ if (process.env.TEST_SQLITE === "1") {
           (prisma as any).competitionDocument?.deleteMany?.({}) ??
           Promise.resolve(),
       );
+      // Pronostics : cascadent depuis LeaguePairing et User, retirés d'abord
+      // pour la même raison que les feuilles ci-dessous.
+      await safe(
+        "competitionPrediction",
+        () =>
+          (prisma as any).competitionPrediction?.deleteMany?.({}) ??
+          Promise.resolve(),
+      );
       // Feuilles de match : elles cascadent depuis LeaguePairing ET depuis
       // CupPairing (rattachement polymorphe), mais on les retire d'abord pour
       // que le reset reste deterministe quel que soit le mode referentiel du

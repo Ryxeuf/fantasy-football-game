@@ -108,6 +108,7 @@ model User {
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
+  competitionPredictions      CompetitionPrediction[]
   // Lot A — invitations envoyees / recues sur les ligues (mirror PG).
   leagueInvitationsSent       LeagueInvitation[]          @relation("LeagueInvitationInviter")
   leagueInvitationsReceived   LeagueInvitation[]          @relation("LeagueInvitationInvitee")
@@ -1111,6 +1112,7 @@ model League {
   tieBreakRules      String?
   /// Lot E — Points bonus configurables. JSON serialise (sqlite mirror).
   bonusPointsConfig  String?
+  predictionsScope   String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -1308,19 +1310,20 @@ model LeagueParticipant {
 }
 
 model LeagueRound {
-  id          String       @id @default(cuid())
-  season      LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  seasonId    String
-  roundNumber Int
-  name        String?
-  status      String       @default("pending") // "pending" | "in_progress" | "completed"
+  id                    String       @id @default(cuid())
+  season                LeagueSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId              String
+  roundNumber           Int
+  name                  String?
+  status                String       @default("pending") // "pending" | "in_progress" | "completed"
   // L2.C.3 — "regular" | "playoff" (mirror PG)
-  kind        String       @default("regular")
-  bracketSlot String?
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  kind                  String       @default("regular")
+  bracketSlot           String?
+  startDate             DateTime?
+  endDate               DateTime?
+  predictionsNotifiedAt DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
 
   matches  Match[]         @relation("LeagueRoundMatches")
   pairings LeaguePairing[]
@@ -1340,33 +1343,56 @@ model LeagueRound {
 // font `prisma.leaguePairing.X(...)` ou des includes `rounds.pairings`
 // fonctionnent contre la DB SQLite in-memory utilisee par les e2e-api.
 model LeaguePairing {
-  id                String            @id @default(cuid())
-  round             LeagueRound       @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundId           String
-  homeParticipant   LeagueParticipant @relation("LeaguePairingHome", fields: [homeParticipantId], references: [id], onDelete: Cascade)
-  homeParticipantId String
-  awayParticipant   LeagueParticipant @relation("LeaguePairingAway", fields: [awayParticipantId], references: [id], onDelete: Cascade)
-  awayParticipantId String
+  id                  String                  @id @default(cuid())
+  round               LeagueRound             @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId             String
+  homeParticipant     LeagueParticipant       @relation("LeaguePairingHome", fields: [homeParticipantId], references: [id], onDelete: Cascade)
+  homeParticipantId   String
+  awayParticipant     LeagueParticipant       @relation("LeaguePairingAway", fields: [awayParticipantId], references: [id], onDelete: Cascade)
+  awayParticipantId   String
   // "scheduled" | "in_progress" | "played" | "forfeit_home" | "forfeit_away" | "cancelled"
-  status            String            @default("scheduled")
-  scheduledAt       DateTime?
-  deadlineAt        DateTime?
-  match             Match?
+  status              String                  @default("scheduled")
+  scheduledAt         DateTime?
+  deadlineAt          DateTime?
+  match               Match?
   /// Lot E — Snapshot des points bonus appliques (mirror PG).
-  bonusPointsHome   Int               @default(0)
-  bonusPointsAway   Int               @default(0)
+  bonusPointsHome     Int                     @default(0)
+  bonusPointsAway     Int                     @default(0)
   /// Lot E — Breakdown JSON serialise (sqlite mirror).
-  bonusBreakdown    String?
+  bonusBreakdown      String?
   /// Lot G — feuille de match v2 (1-1, mirror PG).
-  matchSheet        LeagueMatchSheet?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  matchSheet          LeagueMatchSheet?
+  predictionsClosedAt DateTime?
+  predictions         CompetitionPrediction[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
 
   @@index([roundId])
   @@index([status])
   @@index([deadlineAt, status])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
+}
+
+/// Pronostic de rencontre de compétition (mirror PG, cf. schema.prisma).
+model CompetitionPrediction {
+  id              String        @id @default(cuid())
+  pairing         LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId       String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  pick            String
+  homeScore       Int?
+  awayScore       Int?
+  result          String?
+  resultHomeScore Int?
+  resultAwayScore Int?
+  settledAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([pairingId, userId])
+  @@index([userId])
 }
 
 /// Lot G — Feuille de match v2 (mirror PG). Les champs Json sont `Json?`

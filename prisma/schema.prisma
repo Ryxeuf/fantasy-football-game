@@ -136,6 +136,8 @@ model User {
   proGazetteComments          ProGazetteComment[]
   proMatchPredictions         ProMatchPrediction[]
   proTournamentEntries        ProTournamentEntry[]
+  /// Pronostics sur les rencontres de ligue.
+  competitionPredictions      CompetitionPrediction[]
   blogPosts                   BlogPost[]                  @relation("BlogPostAuthor")
   // Lot A — invitations envoyees / recues sur les ligues.
   leagueInvitationsSent       LeagueInvitation[]          @relation("LeagueInvitationInviter")
@@ -1632,6 +1634,11 @@ model League {
   /// `services/league-bonus-points.ts`). null = pas de bonus applique
   /// au scoring. Modifiable tant qu'aucun match n'a ete score.
   bonusPointsConfig Json?
+  /// Portée des pronostics : "off" | "members" | "open". NULLABLE sans
+  /// défaut : `db push` pose null sur l'existant, lu comme "off" (aucun
+  /// backfill possible) ; `createLeague` écrit "members". Règle de LECTURE,
+  /// elle échappe au verrou d'édition (`PATCH /leagues/:id/predictions-scope`).
+  predictionsScope  String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -1801,6 +1808,9 @@ model LeagueRound {
   bracketSlot String?
   startDate   DateTime?
   endDate     DateTime?
+  /// Journée notifiée aux pronostiqueurs (write-once) : une invalidation
+  /// suivie d'une nouvelle saisie ne renvoie pas la notification.
+  predictionsNotifiedAt DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -1855,6 +1865,12 @@ model LeaguePairing {
   bonusBreakdown    Json?
   // Lot G — feuille de match v2 (1-1, optionnelle).
   matchSheet        LeagueMatchSheet?
+  /// Clôture des pronostics, WRITE-ONCE : premier évènement de la feuille,
+  /// première soumission, résultat ou clôture manuelle. Jamais effacée —
+  /// une clôture recalculée depuis la feuille se rouvrirait (`removeEvent`,
+  /// `unsubmitByCoach`). `scheduledAt`, lui, est relu à chaque lecture.
+  predictionsClosedAt DateTime?
+  predictions       CompetitionPrediction[]
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -1863,6 +1879,46 @@ model LeaguePairing {
   @@index([deadlineAt, status])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
+}
+
+/// Pronostic d'un utilisateur sur une rencontre de COMPÉTITION (ligue en v1).
+///
+/// Nom GÉNÉRIQUE dès le départ : les coupes ajouteront un `cupPairingId`
+/// nullable (patron `CompetitionDocument`). Renommer un modèle sous
+/// `db push`, c'est DROP + CREATE — `LeagueMatchSheet` a dû garder son nom
+/// pour cette raison.
+///
+/// On stocke le RÉSULTAT, jamais les points : la note (exact / outcome /
+/// wrong) et les points sont recalculés à la lecture par le module pur
+/// `services/league-predictions-rules`. Un changement de barème ne laisse
+/// donc aucun compteur périmé.
+///
+/// Règlement : `recordLeagueMatchResult` (entonnoir unique des résultats)
+/// copie l'issue et le score réel ; `reverseOfflineLeagueResult` les remet à
+/// null. Forfaits et annulations ne s'écrivent pas : le statut du pairing
+/// suffit à les sortir du classement.
+model CompetitionPrediction {
+  id              String        @id @default(cuid())
+  pairing         LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId       String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  /// "home" | "draw" | "away".
+  pick            String
+  /// Score prédit, optionnel : les deux côtés ou aucun, cohérent avec `pick`.
+  homeScore       Int?
+  awayScore       Int?
+  /// null = en attente ; "home" | "draw" | "away" | "void" une fois réglé.
+  result          String?
+  /// Score RÉEL copié au règlement.
+  resultHomeScore Int?
+  resultAwayScore Int?
+  settledAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([pairingId, userId])
+  @@index([userId])
 }
 
 /// Lot G — Feuille de match collaborative (saisie joueurs + validation
