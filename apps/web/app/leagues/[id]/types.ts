@@ -63,6 +63,12 @@ export interface LeagueDetail {
    * pour rétro-compat avec un serveur antérieur.
    */
   effectiveTieBreakRules?: string[];
+  /**
+   * Portée des pronostics TELLE QUE stockée : `null` = ligue antérieure à la
+   * fonctionnalité (donc désactivés). Lire via `parsePredictionScope`.
+   * Optionnel pour rétro-compat avec un serveur antérieur.
+   */
+  predictionsScope?: string | null;
   createdAt: string;
   updatedAt: string;
   seasons: LeagueSeasonSummary[];

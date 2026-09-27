@@ -191,3 +191,43 @@ describe("LeagueForm — critères de classement", () => {
     expect(screen.queryByTestId("league-tiebreak-add-points")).toBeNull();
   });
 });
+
+describe("LeagueForm — portée des pronostics", () => {
+  function scopeRadio(scope: string): HTMLInputElement {
+    return screen.getByTestId(
+      `league-predictions-scope-${scope}`,
+    ) as HTMLInputElement;
+  }
+
+  it("une ligue neuve ouvre les pronostics aux membres par défaut", async () => {
+    const { onSubmit } = await renderForm();
+    expect(scopeRadio("members").checked).toBe(true);
+    fireEvent.click(screen.getByTestId("league-form-submit"));
+    expect(onSubmit.mock.calls[0][0].predictionsScope).toBe("members");
+  });
+
+  it("transmet la portée choisie", async () => {
+    const { onSubmit } = await renderForm();
+    fireEvent.click(scopeRadio("open"));
+    fireEvent.click(screen.getByTestId("league-form-submit"));
+    expect(onSubmit.mock.calls[0][0].predictionsScope).toBe("open");
+  });
+
+  it("hydrate la portée d'une ligue existante (désactivés compris)", async () => {
+    await renderForm({ predictionsScope: "off" });
+    expect(scopeRadio("off").checked).toBe(true);
+    expect(scopeRadio("members").checked).toBe(false);
+  });
+
+  it("précise, sur une ligue privée ouverte à tous, qui la voit", async () => {
+    await renderForm({ isPublic: false, predictionsScope: "open" });
+    expect(
+      screen.getByTestId("league-predictions-private-hint").textContent,
+    ).toMatch(/invités/);
+  });
+
+  it("pas d'indice sur une ligue publique", async () => {
+    await renderForm({ isPublic: true, predictionsScope: "open" });
+    expect(screen.queryByTestId("league-predictions-private-hint")).toBeNull();
+  });
+});

@@ -52,6 +52,9 @@ function mockApi(opts: {
   /** Corps reçu par `PATCH /leagues/:id/standings-order` (mode verrouillé). */
   onOrderPatch?: (body: unknown) => void;
   orderFails?: boolean;
+  /** Corps reçu par `PATCH /leagues/:id/predictions-scope` (mode verrouillé). */
+  onScopePatch?: (body: unknown) => void;
+  scopeFails?: boolean;
 }) {
   mockFetch.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
@@ -75,6 +78,20 @@ function mockApi(opts: {
           ok: false,
           status: 403,
           json: () => Promise.resolve({ error: "Interdit" }),
+        };
+      }
+      return {
+        ok: true,
+        json: () => Promise.resolve({ success: true, data: {} }),
+      };
+    }
+    if (/\/leagues\/lg-1\/predictions-scope$/.test(url)) {
+      opts.onScopePatch?.(init?.body ? JSON.parse(String(init.body)) : null);
+      if (opts.scopeFails) {
+        return {
+          ok: false,
+          status: 403,
+          json: () => Promise.resolve({ error: "Réservé au commissaire" }),
         };
       }
       return {
@@ -247,5 +264,84 @@ describe("EditLeaguePage", () => {
     });
     expect(patched).toHaveLength(1);
     expect(patched[0]).toMatchObject({ winPoints: 4, name: "Open 5 Teams" });
+  });
+
+  it("re-poste la portée des pronostics de la ligue", async () => {
+    const patched: unknown[] = [];
+    mockApi({
+      league: { ...baseLeague, predictionsScope: "open" },
+      meUserId: "u1",
+      onPatch: (body) => patched.push(body),
+    });
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByTestId("league-form-submit")).toBeTruthy();
+    });
+    fireEvent.click(screen.getByTestId("league-form-submit"));
+    await waitFor(() => {
+      expect(patched).toHaveLength(1);
+    });
+    expect(patched[0]).toMatchObject({ predictionsScope: "open" });
+  });
+
+  describe("ligue verrouillée : portée des pronostics", () => {
+    it("une ligue antérieure (null) se relit « désactivés »", async () => {
+      mockApi({
+        league: { ...baseLeague, hasScoredMatch: true, predictionsScope: null },
+        meUserId: "u1",
+      });
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByTestId("locked-predictions-settings")).toBeTruthy();
+      });
+      expect(
+        (screen.getByTestId("league-predictions-scope-off") as HTMLInputElement)
+          .checked,
+      ).toBe(true);
+    });
+
+    it("part sur la route hors verrou, sans toucher à l'ordre", async () => {
+      const scopes: unknown[] = [];
+      const orders: unknown[] = [];
+      mockApi({
+        league: { ...baseLeague, hasScoredMatch: true, predictionsScope: null },
+        meUserId: "u1",
+        onScopePatch: (b) => scopes.push(b),
+        onOrderPatch: (b) => orders.push(b),
+      });
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByTestId("locked-predictions-submit")).toBeTruthy();
+      });
+      fireEvent.click(screen.getByTestId("league-predictions-scope-members"));
+      fireEvent.click(screen.getByTestId("locked-predictions-submit"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("locked-predictions-saved")).toBeTruthy();
+      });
+      expect(scopes).toEqual([{ scope: "members" }]);
+      expect(orders).toEqual([]);
+      // L'ordre du classement n'est pas annoncé enregistré pour autant.
+      expect(screen.queryByTestId("locked-settings-saved")).toBeNull();
+    });
+
+    it("un refus serveur est affiché, pas avalé", async () => {
+      mockApi({
+        league: { ...baseLeague, hasScoredMatch: true, predictionsScope: "members" },
+        meUserId: "u1",
+        scopeFails: true,
+      });
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByTestId("locked-predictions-submit")).toBeTruthy();
+      });
+      fireEvent.click(screen.getByTestId("league-predictions-scope-open"));
+      fireEvent.click(screen.getByTestId("locked-predictions-submit"));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("locked-predictions-error")).toBeTruthy();
+      });
+      expect(screen.queryByTestId("locked-predictions-saved")).toBeNull();
+    });
   });
 });
