@@ -44,6 +44,16 @@ import {
   type MatchSheetReference,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
+import {
+  changingWeatherKickoffs,
+  readWeatherEffectsPreference,
+  resolveSheetWeather,
+  weatherHintForEventKind,
+  weatherVisual,
+  writeWeatherEffectsPreference,
+} from "./weather";
+import { WeatherReminder } from "./_components/WeatherReminder";
+import { WeatherScene } from "./_components/WeatherScene";
 import { parsePurchases } from "./purchases";
 import {
   eventKindHint,
@@ -687,6 +697,35 @@ export default function MatchSheetPage() {
   }, [data?.sheet.status, data?.viewerRole, pairingId]);
 
   const events = useMemo(() => data?.sheet.events ?? [], [data]);
+  // Météo d'avant-match, rappelée pendant la saisie (ses effets jouent
+  // tout le match).
+  const sheetWeather = useMemo(
+    () =>
+      data
+        ? resolveSheetWeather(
+            data.reference?.weatherTables ?? [],
+            data.sheet.weatherTable,
+            data.sheet.weather,
+          )
+        : null,
+    [data],
+  );
+  const changingWeather = useMemo(
+    () => changingWeatherKickoffs(events),
+    [events],
+  );
+  // Préférence locale (confort de lecture) : relue après montage pour ne
+  // pas diverger du rendu serveur.
+  const [weatherEffects, setWeatherEffects] = useState(true);
+  useEffect(() => {
+    setWeatherEffects(readWeatherEffectsPreference());
+  }, []);
+  const toggleWeatherEffects = useCallback(() => {
+    setWeatherEffects((on) => {
+      writeWeatherEffectsPreference(!on);
+      return !on;
+    });
+  }, []);
   // Timeline chronologique : tri par mi-temps puis tour, en conservant
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
@@ -1055,10 +1094,28 @@ export default function MatchSheetPage() {
 
       {/* AU COURS DU MATCH */}
       {tab === "during" && (
-        <section className="rounded-lg border bg-white p-4">
+        <section className="relative isolate overflow-hidden rounded-lg border bg-white p-4">
+          {/* Voile d'ambiance DERRIÈRE la saisie (z négatif dans un
+              contexte isolé) : il colore les marges sans couvrir le texte. */}
+          {sheetWeather && weatherEffects && (
+            <div className="absolute inset-0 -z-10">
+              <WeatherScene
+                visual={weatherVisual(sheetWeather.condition)}
+                variant="ambient"
+              />
+            </div>
+          )}
           <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
             Au cours du match
           </h2>
+
+          <WeatherReminder
+            weather={sheetWeather}
+            changingWeather={changingWeather}
+            onEditPreMatch={canEdit ? () => setTab("before") : undefined}
+            effectsEnabled={weatherEffects}
+            onToggleEffects={toggleWeatherEffects}
+          />
 
           {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}
           {canEdit && (
@@ -1129,6 +1186,14 @@ export default function MatchSheetPage() {
                       className="mt-1 block text-[11px] font-normal text-slate-500"
                     >
                       {eventKindHint(kind)}
+                    </span>
+                  )}
+                  {weatherHintForEventKind(sheetWeather, kind) && (
+                    <span
+                      data-testid="event-weather-hint"
+                      className="mt-1 block text-[11px] font-normal text-sky-700"
+                    >
+                      🌦️ {weatherHintForEventKind(sheetWeather, kind)}
                     </span>
                   )}
                 </label>
