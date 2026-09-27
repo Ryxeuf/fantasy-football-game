@@ -58,6 +58,15 @@ export function FeatureFlagProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Variante tolérante : `null` hors `FeatureFlagProvider` au lieu de lever.
+ * Pour les gates posés dans des composants que les tests rendent sans
+ * provider (patron « hook no-op hors provider »).
+ */
+export function useOptionalFeatureFlagContext(): FeatureFlagContextValue | null {
+  return useContext(FeatureFlagContext) ?? null;
+}
+
 export function useFeatureFlagContext(): FeatureFlagContextValue {
   const ctx = useContext(FeatureFlagContext);
   if (!ctx) {

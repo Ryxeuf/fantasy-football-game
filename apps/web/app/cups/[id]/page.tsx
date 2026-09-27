@@ -14,6 +14,7 @@ import CupRoundsView, { type CupRoundView } from "./CupRoundsView";
 import CupStandings from "./CupStandings";
 import CupPoolsManagerPanel from "./CupPoolsManagerPanel";
 import CupPlayoffBracketView from "./CupPlayoffBracketView";
+import CupPdfExports from "./CupPdfExports";
 import {
   poolIdByTeamId,
   poolNamesById,
@@ -866,6 +867,16 @@ export default function CupDetailPage() {
               créent le match local de leur rencontre. */}
           {(cup.status !== "ouverte" || (cup.rounds ?? []).length > 0) && (
             <div className="pt-6 border-t border-gray-200">
+              {/* Exports imprimables : ronde, classement, tops, calendrier,
+                  play-offs, statistiques. */}
+              <div className="mb-4 flex justify-end">
+                <CupPdfExports
+                  cup={{
+                    ...cup,
+                    participantPools: poolIdByTeamId(cup.participants ?? []),
+                  }}
+                />
+              </div>
               <CupRoundsView
                 cupId={cup.id}
                 cupStatus={cup.status}

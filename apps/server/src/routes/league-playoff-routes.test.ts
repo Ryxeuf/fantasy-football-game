@@ -287,6 +287,30 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
     });
   });
 
+  it("sert le score validé de chaque rencontre (export PDF du bracket)", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      playoffSize: 4,
+      status: "in_progress",
+      playoffsPublished: true,
+      league: { id: "league-1", creatorId: "user-1", isPublic: true },
+    });
+    mocked.roundFindMany.mockResolvedValue([]);
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.poolFindMany.mockResolvedValue([]);
+
+    const req = createReq({ params: { seasonId: "s1" } as never });
+    const res = createRes();
+    await handleGetPlayoffBracket(req, res);
+
+    const args = mocked.roundFindMany.mock.calls.at(-1)?.[0] as {
+      include: { pairings: { include: Record<string, unknown> } };
+    };
+    expect(args.include.pairings.include.matchSheet).toEqual({
+      select: { status: true, scoreHome: true, scoreAway: true },
+    });
+  });
+
   it("signale une config de poules incoherente", async () => {
     mocked.seasonFind.mockResolvedValue({
       id: "s1",

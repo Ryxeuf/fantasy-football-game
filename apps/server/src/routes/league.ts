@@ -1091,6 +1091,10 @@ export async function handleGetPlayoffBracket(
           orderBy: { createdAt: "asc" },
           include: {
             match: { select: { id: true, status: true } },
+            // Score validé : l'export PDF du bracket imprime les résultats.
+            matchSheet: {
+              select: { status: true, scoreHome: true, scoreAway: true },
+            },
             homeParticipant: {
               select: {
                 id: true,

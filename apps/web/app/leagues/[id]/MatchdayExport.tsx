@@ -1,13 +1,21 @@
 "use client";
 import { useCallback, useRef, useState } from "react";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import {
+  downloadCompetitionPdf,
+  pdfFilename,
+} from "../../lib/competition-pdf/download";
+import { leagueMatchdayToPdf } from "../../lib/competition-pdf/adapters/league";
+import { useFeatureFlagOrOff } from "../../hooks/useFeatureFlag";
+import { COMPETITION_PDF_EXPORTS_FLAG } from "../../lib/featureFlagKeys";
+import { exportLegacyMatchdayPdf } from "./matchday-legacy-pdf";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { LeagueRoundDetail, LeaguePairingDetail } from "./types";
 
 // Export d'une journee (W-C). Feuille imprimable (window.print scope via
-// `.matchday-print-area` dans globals.css) + telechargement PDF structure
-// (jsPDF + autotable, deja en deps — pas de rasterisation). Pour imprimer ou
+// `.matchday-print-area` dans globals.css) + telechargement PDF structure,
+// rendu par le gabarit commun des exports de competition
+// (`lib/competition-pdf`, cases de score a remplir) quand le flag
+// `competition_pdf_exports` est actif, par le tableau historique sinon. Pour imprimer ou
 // diffuser aux joueurs (ligue offline facon tabletop / mordorbihan).
 
 interface MatchdayExportProps {
@@ -19,14 +27,6 @@ interface MatchdayExportProps {
    * match (« En attente validation »), pas seulement de `status`.
    */
   statusLabel: (pairing: LeaguePairingDetail) => string;
-}
-
-/** « Nom d'équipe (Coach) » pour le PDF — le coach si l'API le fournit. */
-function teamWithCoach(
-  participant: LeaguePairingDetail["homeParticipant"],
-): string {
-  const coach = participant.team.owner?.coachName;
-  return coach ? `${participant.team.name} (${coach})` : participant.team.name;
 }
 
 function formatDate(iso: string | null, language: string): string | null {
@@ -59,51 +59,42 @@ export function MatchdayExport({
   }`;
   const date = formatDate(round.startDate, language);
 
+  const newTemplate = useFeatureFlagOrOff(COMPETITION_PDF_EXPORTS_FLAG);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const exportPdf = useCallback(() => {
-    const doc = new jsPDF();
-    let y = 18;
-    if (leagueName) {
-      doc.setFontSize(11);
-      doc.setTextColor(120);
-      doc.text(leagueName, 14, y);
-      y += 7;
-    }
-    doc.setFontSize(16);
-    doc.setTextColor(20);
-    doc.text(roundTitle, 14, y);
-    y += 7;
-    if (date) {
-      doc.setFontSize(10);
-      doc.setTextColor(120);
-      doc.text(date, 14, y);
-      y += 4;
-    }
-    autoTable(doc, {
-      startY: y + 4,
-      head: [
-        [
-          t.leagues.exportHome,
-          "",
-          t.leagues.exportAway,
-          t.leagues.exportStatus,
-        ],
-      ],
-      body: pairings.map((p) => [
-        teamWithCoach(p.homeParticipant),
-        "vs",
-        teamWithCoach(p.awayParticipant),
-        statusLabel(p),
-      ]),
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [40, 40, 40] },
-    });
-    doc.save(`journee-${round.roundNumber}.pdf`);
+    setPdfError(null);
+    const name = leagueName ?? "Ligue";
+    const run = newTemplate
+      ? downloadCompetitionPdf(
+          {
+            kind: "matchday",
+            data: leagueMatchdayToPdf(round, null, { leagueName: name }),
+          },
+          pdfFilename("matchday", name, `j${round.roundNumber}`),
+        )
+      : exportLegacyMatchdayPdf({
+          leagueName,
+          roundTitle,
+          roundNumber: round.roundNumber,
+          date,
+          pairings,
+          statusLabel,
+          labels: {
+            home: t.leagues.exportHome,
+            away: t.leagues.exportAway,
+            status: t.leagues.exportStatus,
+          },
+        });
+    run.catch((e: unknown) =>
+      setPdfError(e instanceof Error ? e.message : "Export impossible"),
+    );
   }, [
+    newTemplate,
     leagueName,
+    round,
     roundTitle,
     date,
     pairings,
-    round.roundNumber,
     statusLabel,
     t.leagues.exportHome,
     t.leagues.exportAway,
@@ -203,6 +194,11 @@ export function MatchdayExport({
               )}
             </div>
 
+            {pdfError ? (
+              <p role="alert" className="no-print text-xs text-red-600">
+                {pdfError}
+              </p>
+            ) : null}
             <div className="no-print flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"

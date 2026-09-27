@@ -1371,6 +1371,34 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.summary.scoreAway).toBe(1);
     });
 
+    it("sert la journee, la saison et la date prevue de la rencontre", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValueOnce({
+        id: "pair-1",
+        homeParticipant: { team: { ownerId: HOME } },
+        awayParticipant: { team: { ownerId: AWAY } },
+        scheduledAt: new Date("2026-10-04T18:30:00Z"),
+        round: {
+          roundNumber: 5,
+          name: null,
+          bracketSlot: null,
+          season: { name: "Saison 3", league: { id: "L1", creatorId: COMMISH } },
+        },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: AWAY });
+      expect(out.fixture).toEqual({
+        roundNumber: 5,
+        roundName: null,
+        bracketSlot: null,
+        seasonName: "Saison 3",
+        scheduledAt: "2026-10-04T18:30:00.000Z",
+      });
+    });
+
     it("expose les jets de Haine persistes d'une feuille validee", async () => {
       // Le recap doit survivre a un rechargement de page : il est relu du
       // snapshot du match, pas de la reponse ponctuelle de validation.

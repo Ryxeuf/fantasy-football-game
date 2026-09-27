@@ -86,6 +86,52 @@ export function sheetRulesFor(kind: CompetitionKind): CompetitionSheetRules {
   return kind === "cup" ? CUP_SHEET_RULES : LEAGUE_SHEET_RULES;
 }
 
+/**
+ * Où se place la rencontre dans sa compétition : journée / ronde, stade de
+ * bracket, saison, date prévue. Sert l'en-tête de la feuille (écran et PDF
+ * imprimé). Tous les champs sont nullables : une ligne partielle (round
+ * supprimé, mock de test) ne doit jamais empêcher de servir la feuille.
+ */
+export interface MatchSheetFixtureInfo {
+  readonly roundNumber: number | null;
+  readonly roundName: string | null;
+  /** `qf1`, `sf2`, `final` pour un tour de bracket, sinon `null`. */
+  readonly bracketSlot: string | null;
+  /** Saison de ligue (`null` pour une coupe). */
+  readonly seasonName: string | null;
+  /** Date prévue (ISO) : celle de la rencontre, sinon celle de la ronde. */
+  readonly scheduledAt: string | null;
+}
+
+type FixtureRowFields = {
+  scheduledAt?: Date | string | null;
+  round?: {
+    roundNumber?: number | null;
+    name?: string | null;
+    bracketSlot?: string | null;
+    scheduledAt?: Date | string | null;
+    season?: { name?: string | null } | null;
+  } | null;
+};
+
+function isoOrNull(d: Date | string | null | undefined): string | null {
+  if (!d) return null;
+  const date = d instanceof Date ? d : new Date(d);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/** Extraction PURE et tolérante du placement de la rencontre. */
+export function fixtureInfoFromRow(row: FixtureRowFields): MatchSheetFixtureInfo {
+  const round = row.round ?? null;
+  return {
+    roundNumber: typeof round?.roundNumber === "number" ? round.roundNumber : null,
+    roundName: round?.name ?? null,
+    bracketSlot: round?.bracketSlot ?? null,
+    seasonName: round?.season?.name ?? null,
+    scheduledAt: isoOrNull(row.scheduledAt) ?? isoOrNull(round?.scheduledAt),
+  };
+}
+
 /** Contexte d'autorisation et de rattachement d'une rencontre. */
 export interface CompetitionPairingContext {
   readonly kind: CompetitionKind;
@@ -100,6 +146,8 @@ export interface CompetitionPairingContext {
   readonly homeOwnerId: string;
   readonly awayOwnerId: string;
   readonly rules: CompetitionSheetRules;
+  /** Placement de la rencontre (en-tête de feuille). */
+  readonly fixture: MatchSheetFixtureInfo;
 }
 
 /**
@@ -123,16 +171,19 @@ export function sheetCreateData(
   return sheetWhere(ctx);
 }
 
-type LeaguePairingRow = {
+type LeaguePairingRow = FixtureRowFields & {
   id: string;
   homeParticipant: { teamId: string; team: { ownerId: string } } | null;
   awayParticipant: { teamId: string; team: { ownerId: string } } | null;
   round: {
-    season: { league: { id: string; name: string; creatorId: string } };
+    season: {
+      name?: string | null;
+      league: { id: string; name: string; creatorId: string };
+    };
   };
 };
 
-type CupPairingRow = {
+type CupPairingRow = FixtureRowFields & {
   id: string;
   homeTeamId: string;
   awayTeamId: string | null;
@@ -156,10 +207,15 @@ export async function resolveCompetitionPairing(
     where: { id: pairingId },
     select: {
       id: true,
+      scheduledAt: true,
       round: {
         select: {
+          roundNumber: true,
+          name: true,
+          bracketSlot: true,
           season: {
             select: {
+              name: true,
               league: { select: { id: true, name: true, creatorId: true } },
             },
           },
@@ -187,6 +243,7 @@ export async function resolveCompetitionPairing(
       homeOwnerId: leaguePairing.homeParticipant?.team.ownerId ?? "",
       awayOwnerId: leaguePairing.awayParticipant?.team.ownerId ?? "",
       rules: LEAGUE_SHEET_RULES,
+      fixture: fixtureInfoFromRow(leaguePairing),
     };
   }
 
@@ -196,10 +253,15 @@ export async function resolveCompetitionPairing(
       id: true,
       homeTeamId: true,
       awayTeamId: true,
+      scheduledAt: true,
       homeTeam: { select: { ownerId: true } },
       awayTeam: { select: { ownerId: true } },
       round: {
         select: {
+          roundNumber: true,
+          name: true,
+          bracketSlot: true,
+          scheduledAt: true,
           cup: { select: { id: true, name: true, creatorId: true } },
         },
       },
@@ -222,5 +284,6 @@ export async function resolveCompetitionPairing(
     homeOwnerId: cupPairing.homeTeam?.ownerId ?? "",
     awayOwnerId: cupPairing.awayTeam?.ownerId ?? "",
     rules: CUP_SHEET_RULES,
+    fixture: fixtureInfoFromRow(cupPairing),
   };
 }

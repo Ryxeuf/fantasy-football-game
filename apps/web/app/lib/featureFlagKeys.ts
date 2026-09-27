@@ -36,3 +36,16 @@ export const NUFFLE_COACH_TEST_FLAG = "nuffle_coach_test" as const;
  * `apps/server/src/services/featureFlags.ts.OFFLINE_MATCH_FLAG`.
  */
 export const OFFLINE_MATCH_FLAG = "offline_match" as const;
+
+/**
+ * Exports PDF imprimables des ligues et des coupes (journée, classement,
+ * tops, calendrier, play-offs, statistiques, feuille de rencontre).
+ *
+ * OFF par défaut (2026-09-27) : en recette avant ouverture. Les admins le
+ * voient par bypass de rôle ; un testeur s'active par override utilisateur.
+ * Tant qu'il est OFF, l'export de journée historique garde son ancien rendu.
+ *
+ * À garder synchronisé avec
+ * `apps/server/src/services/featureFlags.ts.COMPETITION_PDF_EXPORTS_FLAG`.
+ */
+export const COMPETITION_PDF_EXPORTS_FLAG = "competition_pdf_exports" as const;

@@ -29,6 +29,7 @@ import {
   REGISTRATION_REQUIRES_VALIDATION_FLAG,
   MAINTENANCE_MODE_FLAG,
   OFFLINE_MATCH_FLAG,
+  COMPETITION_PDF_EXPORTS_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1156,6 +1157,26 @@ async function main() {
   });
   serverLog.log(
     `   ✅ Flag '${OFFLINE_MATCH_FLAG}' ${offlineMatchFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
+  );
+
+  // Exports PDF des competitions — EN RECETTE : OFF, bypass admin, un
+  // testeur s'active par override. `update` ne touche PAS `enabled` : la
+  // bascule faite en admin survit a un re-seed.
+  const pdfExportsFlag = await prisma.featureFlag.upsert({
+    where: { key: COMPETITION_PDF_EXPORTS_FLAG },
+    update: {
+      description:
+        "Exports PDF des ligues et coupes (journée, classement, tops, calendrier, play-offs, stats, feuille de rencontre). OFF : en recette.",
+    },
+    create: {
+      key: COMPETITION_PDF_EXPORTS_FLAG,
+      description:
+        "Exports PDF des ligues et coupes (journée, classement, tops, calendrier, play-offs, stats, feuille de rencontre). OFF : en recette.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${COMPETITION_PDF_EXPORTS_FLAG}' ${pdfExportsFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
   );
 
   // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav

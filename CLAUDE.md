@@ -1826,6 +1826,18 @@ edition du `.json`, `pnpm --filter web typecheck` +
   tier-list (#893) ; notifications de re-engagement (Web Push persistant
   + digest e-mail hebdo, #894) ; assistant onboarding "Cree ton equipe
   en 60 secondes" (#895) ; OpenSpec workflow skills + commands (#897).
+- **2026-09-27** : **Exports PDF imprimables des ligues et des coupes** —
+  module pur `apps/web/app/lib/competition-pdf` (gabarits jsPDF chargés au
+  clic + adaptateurs API → modèles de vue) : prochaine journée à cases de
+  score, classement par poule, tops, calendrier, bracket de play-offs,
+  statistiques, et feuille de rencontre papier de 5 pages alignée sur la
+  feuille de match du site (codes d'évènements, tables du moteur, séquence
+  p.68, sections gouvernées par `competitionRules`). Mêmes gabarits pour
+  ligue et coupe. Le bracket de ligue sert désormais le score de la feuille,
+  la feuille son placement (journée, saison, date). En recette derrière le
+  flag `competition_pdf_exports` (OFF, bypass admin, override par compte ;
+  `useFeatureFlagOrOff` = gate fermé hors provider). Change OpenSpec
+  `competition-pdf-exports`.
 - **2026-09-27** : **Exploration « pronostics de ligue »** (`/opsx:explore`,
   aucun code). Reprend la session « Paris sur matchs de ligue » du 2026-09-11,
   restée bloquée sur six décisions et dont la branche a disparu sans rien
