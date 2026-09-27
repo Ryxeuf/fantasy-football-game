@@ -203,6 +203,7 @@ import {
 } from "./tournament-inducements";
 import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
+import { markPairingPredictionsClosed } from "./league-predictions";
 import {
   getDeclaredRegionalRules,
   getRosterFromDb,
@@ -923,7 +924,7 @@ export async function addEvent(input: {
   if (input.event.turn != null) baseMeta.turn = input.event.turn;
   const meta = Object.keys(baseMeta).length > 0 ? baseMeta : undefined;
 
-  return prisma.leagueMatchEvent.create({
+  const created = await prisma.leagueMatchEvent.create({
     data: {
       matchSheetId: sheet.id,
       kind: input.event.kind,
@@ -935,6 +936,13 @@ export async function addEvent(input: {
       meta: meta as object | undefined,
     },
   });
+  // Premier évènement consigné = le match se joue : les pronostics de la
+  // rencontre se ferment, UNE fois pour toutes (retirer l'évènement ne les
+  // rouvre pas). Best-effort, ne lève jamais.
+  if (ctx.kind === "league") {
+    await markPairingPredictionsClosed(ctx.pairingId);
+  }
+  return created;
 }
 
 /** Supprime un evenement (correction de saisie). */
@@ -1756,6 +1764,12 @@ export async function submitByCoach(input: {
       ...snapshotData,
     },
   });
+
+  // Une saisie soumise vaut match joué : les pronostics se ferment (couvre
+  // les coachs qui remplissent la feuille après coup). Best-effort.
+  if (ctx.kind === "league") {
+    await markPairingPredictionsClosed(ctx.pairingId);
+  }
 
   // Lot H — quand les 2 coachs ont soumis, alerte le commissaire
   // (fire-and-forget, non-bloquant). On a deja `ctx` (creator + teams).
