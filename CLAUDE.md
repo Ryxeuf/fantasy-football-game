@@ -1786,9 +1786,14 @@ edition du `.json`, `pnpm --filter web typecheck` +
   et aux Crowns vit dans la Pro League, **gelée** depuis le 2026-06-01 (le
   wallet est monté sous `/pro-league/**`, donc 404 en prod), et aucun puits
   de Crowns n'existe hors Pro League. Retenu : pick'em à points (pas de
-  cotes, pas de mise), portée par ligue `off | members | open` composée avec
-  `isLeagueVisibleTo`, clôture DÉRIVÉE (min de `scheduledAt`, 1er évènement,
-  1re soumission) + manuelle, classement dérivé (jamais de compteur), points
-  d'abord et Crowns seulement avec des puits (conversion rétroactive
-  possible). Voir
+  cotes, pas de mise ; nul juste = victoire juste = 3 pts, +2 au score
+  exact), portée par ligue `off | members | open` composée avec
+  `isLeagueVisibleTo`, un coach RETIRÉ n'est plus membre. Clôture PERSISTÉE
+  au premier signal (`LeaguePairing.predictionsClosedAt` write-once : 1er
+  évènement, 1re soumission, clôture manuelle) + `scheduledAt` relu à chaque
+  lecture — PAS dérivée de la feuille, que `removeEvent` / `unsubmitByCoach`
+  rouvriraient. Classement dérivé (jamais de compteur) en DEUX onglets,
+  Coachs (équipe active, N-1 rencontres) / Tribunes (N), groupe relu à
+  l'affichage, Oracle au meilleur coach. Points d'abord, Crowns seulement
+  avec des puits (conversion rétroactive possible). Voir
   [`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](./docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).

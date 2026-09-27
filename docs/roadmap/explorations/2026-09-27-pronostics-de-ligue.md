@@ -70,7 +70,7 @@ Deux différences de fond avec la Pro League, qui changent le produit :
 2. **Pas de coup d'envoi.** Un match de ligue se joue quand les deux coachs
    se voient. `scheduledAt` est optionnel, la feuille peut être ouverte des
    jours avant (journaliers, coups de pouce) et remplie après. La clôture doit
-   être **dérivée** de plusieurs signaux (§4).
+   se déduire de plusieurs signaux, et rester fermée une fois posée (§4).
 
 ## 3. Portée × visibilité : qui peut pronostiquer
 
@@ -141,23 +141,38 @@ ou impair »… Elles se lisent toutes dans le résumé de feuille existant
 ### Quand ça ferme
 
 ```
-   publication      scheduledAt     1er évènement     1re soumission     résultat
-   de la journée    (si posé)       sur la feuille    de la feuille      validé
-        │               │               │                 │                │
-   ─────┼───────────────┼───────────────┼─────────────────┼────────────────┼────▶ t
-        │◀── OUVERT ───▶│               │                 │                │
-                        └────────── closesAt = min(signaux présents) ──────┘
-                                        + clôture manuelle du commissaire (journée)
+   date prévue            1er évènement      1re soumission     clôture         résultat
+   (scheduledAt)          sur la feuille     de la feuille      manuelle        validé
+        │                      │                  │                 │               │
+   ─────┼──────────────────────┼──────────────────┼─────────────────┼───────────────┼──▶ t
+   lue à chaque lecture        └──────── le PREMIER de ces signaux écrit ───────────┘
+   (peut être déplacée)                  LeaguePairing.predictionsClosedAt
+                                         UNE fois (write-once), jamais effacé
 ```
 
-- `closesAt` est **dérivé** par une fonction pure à partir du pairing, de la
-  feuille et de la journée ; on ne stocke qu'une chose : la clôture manuelle
-  (`LeagueRound.predictionsClosedAt`), parce que c'est la seule qui soit une
-  décision.
-- Le **premier évènement** consigné sur la feuille est le meilleur proxy du
-  coup d'envoi (un coach qui remplit en direct) ; la **première soumission**
-  couvre ceux qui remplissent après coup ; `scheduledAt` couvre les ligues
-  organisées. L'un des trois suffit toujours.
+Règle pure : une rencontre est fermée si son statut est terminal (`played`,
+`forfeit_*`, `cancelled`), si `predictionsClosedAt` est posé, ou si
+`scheduledAt` est passé. L'heure affichée est `predictionsClosedAt ??
+scheduledAt`.
+
+- **Pourquoi persister au lieu de dériver** (corrigé le 2026-09-27, la
+  première version recalculait tout depuis la feuille) : la saisie permet de
+  supprimer un évènement (`removeEvent`) et de retirer une soumission
+  (`unsubmitByCoach`). Une clôture recalculée se ROUVRIRAIT alors — il
+  suffirait d'ajouter puis de retirer un évènement. `addEvent` et
+  `submitByCoach` écrivent donc la clôture au premier passage
+  (`updateMany … where predictionsClosedAt: null`), et plus rien ne l'efface.
+- **La date prévue reste lue à chaque fois**, et c'est voulu : c'est une
+  prévision, pas un fait. Sur une ligue datée, le calendrier pose
+  `scheduledAt` = début de la journée (`computeRoundDates`), ce qui donne la
+  règle MPG « fermé au début de la journée » sans rien coder. Si les coachs
+  reportent la rencontre (`schedulePairing`), les pronostics suivent la
+  nouvelle date — et un match réellement joué est déjà fermé par la feuille.
+- **Clôture manuelle** : le commissaire ferme une journée entière (toutes ses
+  rencontres) ; les deux coachs d'une rencontre et le commissaire peuvent
+  fermer une rencontre (« Coup d'envoi »). C'est le filet des soirs de club :
+  sans date prévue ni feuille remplie en direct, un spectateur présent
+  pourrait sinon pronostiquer en voyant le match se jouer.
 - Avant clôture : on affiche seulement « 5 coachs ont pronostiqué ». Après :
   les picks nommés (respecter `User.privateProfile` → « Coach anonyme »).
   C'est ce qui rend la chose sociale (« tout le monde voyait les Orques
@@ -274,7 +289,7 @@ spectateurs d'une ligue ouverte (§3, `open`) sont précisément les tribunes.
 |---|---|---|---|
 | 1 | Pronostiquer son propre match ? | **Non** (`own-match`). | Équité (chacun a N-1 rencontres) et anti-triche : le coach connaît le résultat avant la soumission. Le nombre de rencontres exemptes (bye) reste une petite asymétrie, acceptée. |
 | 2 | Forfait : annulation ou victoire ? | **Annulation** (`void`, 0 point, hors précision). Idem `cancelled`. | Un forfait n'est pas un résultat sportif ; personne ne pouvait le prévoir. La Pro League a déjà le statut `void`. |
-| 3 | Clôture auto ou manuelle ? | **Les deux** : dérivée (`min` des signaux, §4) + clôture manuelle par journée par le commissaire. | Sans heure de coup d'envoi fiable, la dérivation seule laisse des trous ; la manuelle seule repose sur la discipline du commissaire. |
+| 3 | Clôture auto ou manuelle ? | **Les deux** : persistée au premier évènement ou à la première soumission, date prévue lue à chaque lecture, plus clôture manuelle (journée par le commissaire, rencontre par ses coachs ou le commissaire). Voir §4. | Sans heure de coup d'envoi fiable, l'automatique seule laisse des trous ; la manuelle seule repose sur la discipline du commissaire. |
 | 4 | Mise plafonnée ? | **Sans objet** : pas de mise, un barème fixe. Si Crowns un jour : mise fixe par pronostic, jamais libre. | Sans cote, une mise libre revient à « all-in sur le favori ». |
 | 5 | Le commissaire joue-t-il ? | **Oui**, comme tout membre, sauf sur les rencontres de sa propre équipe. | Il voit les feuilles soumises avant validation : la clôture au premier évènement / à la première soumission neutralise l'avantage. |
 | 6 | « Paris » ou « pronos » ? | **« Pronostics »** partout. | Pas de mise, pas de cote, pas d'argent : le mot « paris » attire des contraintes (App Store, vocabulaire des jeux d'argent) pour rien. |
@@ -295,7 +310,7 @@ CompetitionPrediction {
   @@unique([pairingId, userId])  @@index([userId])  @@index([pairingId, settledAt])
 }
 League.predictionsScope      String?    // null = off (antérieur), "off" | "members" | "open"
-LeagueRound.predictionsClosedAt DateTime?  // clôture manuelle
+LeaguePairing.predictionsClosedAt DateTime? // write-once : 1er évènement, 1re soumission, clôture manuelle
 ```
 
 **Modules purs, testables sans Prisma** (convention du dépôt) :
@@ -312,10 +327,13 @@ PUT    /leagues/pairings/:pairingId/prediction             upsert tant que ouver
 DELETE /leagues/pairings/:pairingId/prediction
 GET    /leagues/seasons/:seasonId/predictions/leaderboard  dérivé (groupBy)
 PATCH  /leagues/:id/predictions-scope                      commissaire OU admin, hors verrou (+ miroir /admin)
-POST   /leagues/rounds/:roundId/predictions/close          commissaire
+POST   /leagues/rounds/:roundId/predictions/close          commissaire (toute la journée)
+POST   /leagues/pairings/:pairingId/predictions/close      coach de la rencontre OU commissaire
 ```
 
-**Hooks** : `settleLeaguePredictions` appelé après la transaction de
+**Hooks** : `addEvent` et `submitByCoach` posent `predictionsClosedAt`
+s'il est vide (une requête `updateMany`, best-effort : un échec ne doit pas
+faire échouer la saisie). `settleLeaguePredictions` appelé après la transaction de
 `recordLeagueMatchResult` (les deux entrées : validation de feuille et
 forfait online) et dans `recordForfeit` (void) ; `unsettleLeaguePredictions`
 dans `reverseOfflineLeagueResult`. Jamais dans les motifs de refus de
@@ -364,16 +382,16 @@ Tranché le 2026-09-27 :
   `LeagueParticipant.status = "active"` ; ses points restent, ses droits
   s'arrêtent (§3).
 - **Un nul juste vaut une victoire juste** : 3 points, barème plat (§4).
+- **Deux classements, une seule implémentation** (option A, §10) : onglet
+  « Coachs » et onglet « Tribunes », titre Oracle au meilleur coach.
 
-Encore ouvert :
+Encore ouvert (non bloquant, défaut proposé) :
 
-- **Classement unique ou séparé** en mode `open` : les termes du choix sont
-  posés en §10.
 - **Faut-il montrer la distribution des picks avant clôture** (« 60 % sur les
   Orques ») ? Non par défaut : ça oriente. À reconsidérer si l'engagement est
   faible.
 
-## 10. Classement unique ou séparé : les termes du choix
+## 10. Classement unique ou séparé — option A retenue (2026-09-27)
 
 Le problème n'existe qu'en mode `open`, et il découle de la décision 1 (pas
 de pronostic sur sa propre rencontre). Sur une journée de N rencontres, un
@@ -435,4 +453,26 @@ piège de l'ordre de classement invisible (cf. CLAUDE.md).
 
 Avis : **A**. Elle garde la décision 1, ne coûte rien au mode par défaut, et
 c'est la seule où le titre de la saison compare des gens qui ont joué au
-même jeu.
+même jeu. **Retenue le 2026-09-27.**
+
+### Qui est dans quel onglet
+
+Le groupe n'est PAS stocké : il se lit à chaque affichage, avec la même
+définition que l'appartenance (§3), ce qui fait tenir ensemble les décisions
+« un coach retiré n'est plus membre » et « option A ».
+
+| Lecteur | Groupe | Pourquoi |
+|---|---|---|
+| Propriétaire d'une équipe **active** de la saison | Coachs | N-1 rencontres par journée, comparable entre coachs |
+| Commissaire sans équipe dans la saison | Tribunes | il pronostique les N rencontres |
+| Coach **retiré** | Tribunes, avec ses points déjà acquis | il n'est plus membre ; ses points de coach, acquis sur N-1, ne le favorisent pas face aux tribunes |
+| Tout autre compte (mode `open`) | Tribunes | N rencontres |
+
+- Un retrait en cours de saison est rare : après le démarrage, il passe par
+  un forçage admin (`withdrawParticipant({ force })`), le chemin normal étant
+  le forfait. La règle couvre le cas sans colonne ni backfill.
+- **Titre Oracle** (palmarès, à `closeSeason`) : le premier de l'onglet
+  Coachs. Il a la forme des autres distinctions (`SeasonAwardEntry` :
+  `teamId`, `teamName`, `roster`, `ownerId`), puisqu'un coach a une équipe.
+- **Meilleur des tribunes** : un succès (« Oracle des tribunes »), pas une
+  entrée de palmarès — une tribune n'a pas d'équipe à y inscrire.
