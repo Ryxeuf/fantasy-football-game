@@ -58,7 +58,7 @@ vi.mock("./push-notifications", () => ({
 
 // Pronostics : la feuille pose leur clôture (premier évènement, première
 // soumission) ; le service est testé à part, on vérifie ici l'appel.
-vi.mock("./league-predictions", () => ({
+vi.mock("./league-predictions-settlement", () => ({
   markPairingPredictionsClosed: vi.fn(),
 }));
 
@@ -125,7 +125,7 @@ import {
   reverseAppliedAdvancements,
 } from "./league-sheet-advancements";
 import { sendLeagueMatchValidationPush } from "./push-notifications";
-import { markPairingPredictionsClosed } from "./league-predictions";
+import { markPairingPredictionsClosed } from "./league-predictions-settlement";
 import { captureRosterSnapshot } from "./cup-roster-snapshot";
 import {
   getSpecialRulesForTeam,

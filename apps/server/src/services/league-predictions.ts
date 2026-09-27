@@ -1,30 +1,42 @@
 /**
- * Pronostics de ligue — service (lectures et écritures Prisma).
+ * Pronostics de ligue — service exposé aux routes (lectures d'un lecteur,
+ * écritures d'un pronostic, portée, clôtures manuelles).
  *
- * Toute DÉCISION vit dans le module pur `league-predictions-rules` ; ce
- * service charge les lignes, appelle les règles et écrit. Il est le SEUL
- * chemin d'écriture de `CompetitionPrediction`.
+ * Toute DÉCISION vit dans le module pur `league-predictions-rules`. Les
+ * fonctions appelées par la chaîne des résultats (règlement, clôture posée
+ * par la feuille, notification de journée) vivent dans
+ * `league-predictions-settlement`, et le classement sans lecteur dans
+ * `league-predictions-core` : ce module-ci importe `league-access` (donc tout
+ * `services/league`) et ne doit être importé que par des routes.
  *
  * Trois invariants à ne pas perdre (cf. `openspec/changes/league-match-predictions`) :
  *  - la visibilité de la ligue passe AVANT toute autre règle : une ligue
  *    privée invisible est introuvable, en lecture comme en écriture ;
  *  - rien des pronostics des autres ne sort avant la clôture d'une rencontre
  *    — pas même leur nombre : c'est la réponse qui les omet, pas l'écran ;
- *  - le classement est DÉRIVÉ, jamais persisté : on stocke le résultat d'une
- *    rencontre sur ses pronostics, et les points se recalculent à la lecture.
+ *  - le classement est DÉRIVÉ, jamais persisté.
  */
 
 import { prisma } from "../prisma";
-import { serverLog } from "../utils/server-log";
 import { canViewLeagueRow, type LeagueViewer } from "./league-access";
 import { isPlayoffBracketVisible } from "./league-playoffs";
-import { createInAppNotification } from "./in-app-notifications";
+import {
+  LEAGUE_SELECT,
+  PREDICTION_SELECT,
+  isLeagueMember,
+  isMember,
+  leaderboardRows,
+  loadLeaderboardSource,
+  membershipOf,
+  type LeagueRow,
+  type Membership,
+  type PredictionRow,
+} from "./league-predictions-core";
 import {
   computePredictionLeaderboard,
   gradePrediction,
   isPlaceholderPairing,
   isPredictionClosed,
-  leaderboardLeaders,
   outcomeOf,
   parsePredictionScope,
   pickDistribution,
@@ -33,15 +45,11 @@ import {
   predictionGroupOf,
   predictorDisplayName,
   validatePredictionInput,
-  isSettledGrade,
-  type GradablePrediction,
-  type LeaderboardPrediction,
   type PickDistribution,
   type PredictionEligibility,
   type PredictionGrade,
   type PredictionGroup,
   type PredictionInputError,
-  type PredictionLeaderboard,
   type PredictionLeaderboardEntry,
   type PredictionPick,
   type PredictionResult,
@@ -78,8 +86,7 @@ export class LeaguePredictionError extends Error {
 
 const INPUT_ERROR_MESSAGES: Readonly<Record<PredictionInputError, string>> = {
   invalid_pick: "Choix invalide : domicile, nul ou extérieur",
-  partial_score:
-    "Le score se donne pour les deux équipes, ou pas du tout",
+  partial_score: "Le score se donne pour les deux équipes, ou pas du tout",
   invalid_score: "Score invalide",
   score_pick_mismatch: "Le score ne correspond pas au vainqueur choisi",
 };
@@ -212,19 +219,8 @@ export interface SeasonPredictionLeaderboardView {
 }
 
 // ---------------------------------------------------------------------------
-// Chargements
+// Chargement d'une saison
 // ---------------------------------------------------------------------------
-
-interface PredictionRow {
-  readonly userId: string;
-  readonly pick: string;
-  readonly homeScore: number | null;
-  readonly awayScore: number | null;
-  readonly result: string | null;
-  readonly resultHomeScore: number | null;
-  readonly resultAwayScore: number | null;
-  readonly user: { readonly coachName: string | null; readonly privateProfile: boolean };
-}
 
 interface ParticipantRow {
   readonly id: string;
@@ -267,14 +263,6 @@ interface RoundRow {
   readonly pairings: readonly PairingRow[];
 }
 
-interface LeagueRow {
-  readonly id: string;
-  readonly creatorId: string;
-  readonly isPublic: boolean;
-  readonly status: string;
-  readonly predictionsScope: string | null;
-}
-
 interface SeasonRow {
   readonly id: string;
   readonly status: string;
@@ -286,14 +274,6 @@ interface SeasonRow {
   }>;
   readonly rounds: readonly RoundRow[];
 }
-
-const LEAGUE_SELECT = {
-  id: true,
-  creatorId: true,
-  isPublic: true,
-  status: true,
-  predictionsScope: true,
-} as const;
 
 const PARTICIPANT_SELECT = {
   id: true,
@@ -308,17 +288,6 @@ const PARTICIPANT_SELECT = {
       owner: { select: { coachName: true } },
     },
   },
-} as const;
-
-const PREDICTION_SELECT = {
-  userId: true,
-  pick: true,
-  homeScore: true,
-  awayScore: true,
-  result: true,
-  resultHomeScore: true,
-  resultAwayScore: true,
-  user: { select: { coachName: true, privateProfile: true } },
 } as const;
 
 async function loadSeason(seasonId: string): Promise<SeasonRow | null> {
@@ -363,46 +332,6 @@ async function loadSeason(seasonId: string): Promise<SeasonRow | null> {
       },
     },
   })) as SeasonRow | null;
-}
-
-/** Appartenance à la saison, lue une fois pour toutes les rencontres. */
-interface Membership {
-  readonly creatorId: string;
-  /** Propriétaires d'une équipe ACTIVE de la saison (groupe Coachs). */
-  readonly activeCoachIds: ReadonlySet<string>;
-  /** Propriétaires d'une équipe de la saison, retirée ou non. */
-  readonly anyCoachIds: ReadonlySet<string>;
-}
-
-function membershipOf(season: {
-  readonly league: { readonly creatorId: string };
-  readonly participants: ReadonlyArray<{
-    readonly status: string;
-    readonly team: { readonly ownerId: string };
-  }>;
-}): Membership {
-  const active = new Set<string>();
-  const any = new Set<string>();
-  for (const p of season.participants) {
-    any.add(p.team.ownerId);
-    if (p.status === "active") active.add(p.team.ownerId);
-  }
-  return {
-    creatorId: season.league.creatorId,
-    activeCoachIds: active,
-    anyCoachIds: any,
-  };
-}
-
-/** Commissaire, ou coach d'une équipe ACTIVE : peut pronostiquer en `members`. */
-function isMember(m: Membership, userId: string | null): boolean {
-  if (!userId) return false;
-  return userId === m.creatorId || m.activeCoachIds.has(userId);
-}
-
-/** Déjà nommé sur la fiche de ligue : jamais anonymisé. */
-function isLeagueMember(m: Membership, userId: string): boolean {
-  return userId === m.creatorId || m.anyCoachIds.has(userId);
 }
 
 function isPlayoffRound(round: { kind: string; bracketSlot: string | null }) {
@@ -590,8 +519,7 @@ export async function getSeasonPredictions(input: {
           placeholder,
           closed,
         }),
-        canClose:
-          !closed && (isAdmin || isCommissioner || ownsPairingTeam),
+        canClose: !closed && (isAdmin || isCommissioner || ownsPairingTeam),
         myPrediction: mine ? predictionView(mine, pairing.status) : null,
         // RIEN des autres avant la clôture — ni les choix, ni leur nombre.
         predictions: closed ? othersView(pairing, membership, viewerId) : null,
@@ -607,8 +535,7 @@ export async function getSeasonPredictions(input: {
       status: round.status,
       kind: round.kind,
       startDate: round.startDate,
-      canClose:
-        (isAdmin || isCommissioner) && pairings.some((p) => !p.closed),
+      canClose: (isAdmin || isCommissioner) && pairings.some((p) => !p.closed),
       pairings,
     });
   }
@@ -616,76 +543,8 @@ export async function getSeasonPredictions(input: {
 }
 
 // ---------------------------------------------------------------------------
-// Classement
+// Classement d'un lecteur
 // ---------------------------------------------------------------------------
-
-interface LeaderboardSource {
-  readonly membership: Membership;
-  readonly scope: PredictionScope;
-  readonly league: LeagueRow;
-  readonly predictions: ReadonlyArray<
-    PredictionRow & { readonly pairing: { readonly status: string } }
-  >;
-}
-
-async function loadLeaderboardSource(
-  seasonId: string,
-): Promise<LeaderboardSource | null> {
-  const season = (await prisma.leagueSeason.findUnique({
-    where: { id: seasonId },
-    select: {
-      id: true,
-      league: { select: LEAGUE_SELECT },
-      participants: {
-        select: { status: true, team: { select: { ownerId: true } } },
-      },
-    },
-  })) as Pick<SeasonRow, "id" | "league" | "participants"> | null;
-  if (!season) return null;
-  const predictions = (await prisma.competitionPrediction.findMany({
-    where: { pairing: { round: { seasonId } } },
-    select: { ...PREDICTION_SELECT, pairing: { select: { status: true } } },
-  })) as LeaderboardSource["predictions"];
-  return {
-    membership: membershipOf(season),
-    scope: parsePredictionScope(season.league.predictionsScope),
-    league: season.league,
-    predictions,
-  };
-}
-
-function leaderboardRows(
-  source: LeaderboardSource,
-  viewerId: string | null,
-): LeaderboardPrediction[] {
-  return source.predictions.map((row) => {
-    const { grade, points } = gradePrediction(row, row.pairing.status);
-    return {
-      userId: row.userId,
-      displayName: predictorDisplayName({
-        coachName: row.user.coachName,
-        privateProfile: row.user.privateProfile,
-        isLeagueMember: isLeagueMember(source.membership, row.userId),
-        isViewer: row.userId === viewerId,
-      }),
-      group: predictionGroupOf(source.membership.activeCoachIds.has(row.userId)),
-      grade,
-      points,
-    };
-  });
-}
-
-/**
- * Classement d'une saison sans lecteur (palmarès, succès) : tous les noms,
- * aucune anonymisation — il ne sort pas tel quel vers un client.
- */
-export async function computeSeasonPredictionLeaderboard(
-  seasonId: string,
-): Promise<PredictionLeaderboard> {
-  const source = await loadLeaderboardSource(seasonId);
-  if (!source) return { coach: [], stands: [] };
-  return computePredictionLeaderboard(leaderboardRows(source, null));
-}
 
 export async function getSeasonPredictionLeaderboard(input: {
   readonly seasonId: string;
@@ -835,6 +694,12 @@ async function assertCanPredict(
   if (eligibility !== "ok") throw eligibilityError(eligibility);
 }
 
+export interface SavedPrediction {
+  readonly pick: PredictionPick;
+  readonly homeScore: number | null;
+  readonly awayScore: number | null;
+}
+
 export async function upsertPrediction(input: {
   readonly pairingId: string;
   readonly viewer: LeagueViewer & { readonly userId: string };
@@ -842,7 +707,7 @@ export async function upsertPrediction(input: {
   readonly homeScore?: number | null;
   readonly awayScore?: number | null;
   readonly now?: Date;
-}): Promise<{ readonly pick: PredictionPick; readonly homeScore: number | null; readonly awayScore: number | null }> {
+}): Promise<SavedPrediction> {
   const now = input.now ?? new Date();
   const pairing = await loadPairingContext(input.pairingId, input.viewer);
   await assertCanPredict(pairing, input.viewer.userId, now);
@@ -927,30 +792,6 @@ export async function setLeaguePredictionsScope(input: {
   return { predictionsScope: input.scope };
 }
 
-/**
- * Pose la clôture d'une rencontre si elle ne l'est pas encore (write-once).
- * Best-effort : ne lève JAMAIS — appelé depuis la saisie de la feuille et
- * l'enregistrement du résultat, qu'un échec ici ne doit pas faire échouer.
- */
-export async function markPairingPredictionsClosed(
-  pairingId: string,
-  now: Date = new Date(),
-): Promise<boolean> {
-  try {
-    const out = await prisma.leaguePairing.updateMany({
-      where: { id: pairingId, predictionsClosedAt: null },
-      data: { predictionsClosedAt: now },
-    });
-    return out.count > 0;
-  } catch (e: unknown) {
-    serverLog.error(
-      `[league-predictions] clôture non posée pairing=${pairingId}`,
-      e,
-    );
-    return false;
-  }
-}
-
 /** « Coup d'envoi » : un coach de la rencontre, le commissaire ou un admin. */
 export async function closePairingPredictions(input: {
   readonly pairingId: string;
@@ -1015,340 +856,4 @@ export async function closeRoundPredictions(input: {
     data: { predictionsClosedAt: now },
   });
   return { closed: out.count };
-}
-
-// ---------------------------------------------------------------------------
-// Règlement (appelé par l'entonnoir des résultats)
-// ---------------------------------------------------------------------------
-
-export interface ParticipantScore {
-  readonly participantId: string;
-  readonly score: number;
-}
-
-/**
- * Règle les pronostics d'une rencontre dont le résultat vient d'être
- * enregistré (`recordLeagueMatchResult`, entonnoir UNIQUE des résultats de
- * ligue). Copie l'issue et le score réel — jamais des points — et pose la
- * clôture : un résultat vu ne doit pas rouvrir la rencontre après une
- * invalidation.
- *
- * Les côtés se lisent par PARTICIPANT : l'entonnoir parle de « A » et « B »,
- * pas de domicile et d'extérieur. Un forfait en ligne (score synthétique)
- * est réglé `void`. Ne lève JAMAIS : le résultat est déjà committé.
- */
-export async function settleLeaguePredictionsForResult(input: {
-  readonly pairingId: string;
-  readonly scores: readonly ParticipantScore[];
-  readonly forfeit?: boolean;
-  readonly now?: Date;
-}): Promise<{ readonly settled: number }> {
-  const now = input.now ?? new Date();
-  try {
-    await markPairingPredictionsClosed(input.pairingId, now);
-    if (input.forfeit) {
-      const out = await prisma.competitionPrediction.updateMany({
-        where: { pairingId: input.pairingId },
-        data: {
-          result: "void",
-          resultHomeScore: null,
-          resultAwayScore: null,
-          settledAt: now,
-        },
-      });
-      return { settled: out.count };
-    }
-    const pairing = (await prisma.leaguePairing.findUnique({
-      where: { id: input.pairingId },
-      select: { homeParticipantId: true, awayParticipantId: true },
-    })) as { homeParticipantId: string; awayParticipantId: string } | null;
-    if (!pairing) return { settled: 0 };
-    const home = input.scores.find(
-      (s) => s.participantId === pairing.homeParticipantId,
-    );
-    const away = input.scores.find(
-      (s) => s.participantId === pairing.awayParticipantId,
-    );
-    if (!home || !away) {
-      serverLog.warn(
-        `[league-predictions] règlement ignoré, côtés introuvables pairing=${input.pairingId}`,
-      );
-      return { settled: 0 };
-    }
-    const out = await prisma.competitionPrediction.updateMany({
-      where: { pairingId: input.pairingId },
-      data: {
-        result: outcomeOf(home.score, away.score),
-        resultHomeScore: home.score,
-        resultAwayScore: away.score,
-        settledAt: now,
-      },
-    });
-    return { settled: out.count };
-  } catch (e: unknown) {
-    serverLog.error(
-      `[league-predictions] règlement échoué pairing=${input.pairingId}`,
-      e,
-    );
-    return { settled: 0 };
-  }
-}
-
-/**
- * Remet en attente les pronostics d'une rencontre dont le résultat est
- * annulé (`reverseOfflineLeagueResult` : invalidation, édition ex-post). La
- * clôture, elle, reste posée. Ne lève JAMAIS.
- */
-export async function unsettleLeaguePredictions(
-  pairingId: string,
-): Promise<{ readonly unsettled: number }> {
-  try {
-    const out = await prisma.competitionPrediction.updateMany({
-      where: { pairingId },
-      data: {
-        result: null,
-        resultHomeScore: null,
-        resultAwayScore: null,
-        settledAt: null,
-      },
-    });
-    return { unsettled: out.count };
-  } catch (e: unknown) {
-    serverLog.error(
-      `[league-predictions] dérèglement échoué pairing=${pairingId}`,
-      e,
-    );
-    return { unsettled: 0 };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Notification de journée
-// ---------------------------------------------------------------------------
-
-/** Rencontre d'une journée et ses pronostics, pour le bilan de la journée. */
-export interface RoundPairingPredictions {
-  readonly status: string;
-  readonly predictions: ReadonlyArray<
-    GradablePrediction & { readonly userId: string }
-  >;
-}
-
-interface RoundNotificationRow {
-  readonly id: string;
-  readonly roundNumber: number;
-  readonly name: string | null;
-  readonly status: string;
-  readonly predictionsNotifiedAt: Date | null;
-  readonly season: {
-    readonly id: string;
-    readonly league: { readonly id: string; readonly name: string; readonly predictionsScope: string | null };
-  };
-  readonly pairings: readonly RoundPairingPredictions[];
-}
-
-export interface RoundPredictionSummary {
-  readonly userId: string;
-  readonly points: number;
-  readonly settled: number;
-  readonly correct: number;
-}
-
-/** Bilan d'une journée par pronostiqueur (pur) : seuls les réglés comptent. */
-export function summarizeRoundPredictions(
-  pairings: readonly RoundPairingPredictions[],
-): RoundPredictionSummary[] {
-  const byUser = new Map<string, RoundPredictionSummary>();
-  for (const pairing of pairings) {
-    for (const row of pairing.predictions) {
-      const { grade, points } = gradePrediction(row, pairing.status);
-      if (!isSettledGrade(grade)) continue;
-      const current = byUser.get(row.userId) ?? {
-        userId: row.userId,
-        points: 0,
-        settled: 0,
-        correct: 0,
-      };
-      byUser.set(row.userId, {
-        ...current,
-        points: current.points + points,
-        settled: current.settled + 1,
-        correct:
-          current.correct + (grade === "exact" || grade === "outcome" ? 1 : 0),
-      });
-    }
-  }
-  return Array.from(byUser.values());
-}
-
-function roundLabel(round: { roundNumber: number; name: string | null }): string {
-  return round.name?.trim() || `Journée ${round.roundNumber}`;
-}
-
-/**
- * Une notification par pronostiqueur quand une journée se complète — au plus
- * UNE fois par journée : `predictionsNotifiedAt` est réclamé avant l'envoi
- * (`updateMany … where null`), si bien qu'une invalidation suivie d'une
- * nouvelle saisie ne renvoie rien. Best-effort : ne lève JAMAIS.
- */
-export async function notifyRoundPredictionResults(
-  roundId: string,
-  now: Date = new Date(),
-): Promise<number> {
-  try {
-    const round = (await prisma.leagueRound.findUnique({
-      where: { id: roundId },
-      select: {
-        id: true,
-        roundNumber: true,
-        name: true,
-        status: true,
-        predictionsNotifiedAt: true,
-        season: {
-          select: {
-            id: true,
-            league: { select: { id: true, name: true, predictionsScope: true } },
-          },
-        },
-        pairings: {
-          select: {
-            status: true,
-            predictions: {
-              select: {
-                userId: true,
-                pick: true,
-                homeScore: true,
-                awayScore: true,
-                result: true,
-                resultHomeScore: true,
-                resultAwayScore: true,
-              },
-            },
-          },
-        },
-      },
-    })) as RoundNotificationRow | null;
-    if (!round || round.status !== "completed" || round.predictionsNotifiedAt) {
-      return 0;
-    }
-    if (parsePredictionScope(round.season.league.predictionsScope) === "off") {
-      return 0;
-    }
-    const summaries = summarizeRoundPredictions(round.pairings);
-    if (summaries.length === 0) return 0;
-
-    const claim = await prisma.leagueRound.updateMany({
-      where: { id: round.id, predictionsNotifiedAt: null },
-      data: { predictionsNotifiedAt: now },
-    });
-    if (claim.count === 0) return 0;
-
-    const label = roundLabel(round);
-    const league = round.season.league;
-    const url = `/leagues/${league.id}/seasons/${round.season.id}/predictions`;
-    let sent = 0;
-    for (const s of summaries) {
-      const created = await createInAppNotification({
-        userId: s.userId,
-        kind: "league.predictions_settled",
-        title: `${label} : tes pronostics`,
-        body: `${league.name} — ${s.points} pt${s.points > 1 ? "s" : ""}, ${s.correct} bon${s.correct > 1 ? "s" : ""} résultat${s.correct > 1 ? "s" : ""} sur ${s.settled}.`,
-        url,
-        meta: {
-          leagueId: league.id,
-          seasonId: round.season.id,
-          roundId: round.id,
-          points: s.points,
-        },
-      });
-      if (created) sent += 1;
-    }
-    return sent;
-  } catch (e: unknown) {
-    serverLog.error(
-      `[league-predictions] notification de journée échouée round=${roundId}`,
-      e,
-    );
-    return 0;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Statistiques d'un utilisateur (succès)
-// ---------------------------------------------------------------------------
-
-export interface UserPredictionStats {
-  /** Bons résultats, scores exacts compris. */
-  readonly correct: number;
-  readonly exact: number;
-  /** Saisons CLÔTURÉES terminées en tête du groupe Coachs. */
-  readonly oracleTitles: number;
-  /** Saisons CLÔTURÉES terminées en tête du groupe Tribunes. */
-  readonly standsOracleTitles: number;
-}
-
-export const EMPTY_USER_PREDICTION_STATS: UserPredictionStats = {
-  correct: 0,
-  exact: 0,
-  oracleTitles: 0,
-  standsOracleTitles: 0,
-};
-
-/**
- * Statistiques de pronostic d'un utilisateur, pour les succès. Les titres se
- * lisent sur les saisons clôturées avec LA MÊME fonction que le palmarès.
- */
-export async function computeUserPredictionStats(
-  userId: string,
-): Promise<UserPredictionStats> {
-  const rows = (await prisma.competitionPrediction.findMany({
-    where: { userId },
-    select: {
-      pick: true,
-      homeScore: true,
-      awayScore: true,
-      result: true,
-      resultHomeScore: true,
-      resultAwayScore: true,
-      pairing: {
-        select: {
-          status: true,
-          round: { select: { seasonId: true, season: { select: { status: true } } } },
-        },
-      },
-    },
-  })) as ReadonlyArray<
-    Omit<PredictionRow, "userId" | "user"> & {
-      readonly pairing: {
-        readonly status: string;
-        readonly round: {
-          readonly seasonId: string;
-          readonly season: { readonly status: string };
-        };
-      };
-    }
-  >;
-  let correct = 0;
-  let exact = 0;
-  const completedSeasons = new Set<string>();
-  for (const row of rows) {
-    const { grade } = gradePrediction(row, row.pairing.status);
-    if (grade === "exact" || grade === "outcome") correct += 1;
-    if (grade === "exact") exact += 1;
-    if (isSettledGrade(grade) && row.pairing.round.season.status === "completed") {
-      completedSeasons.add(row.pairing.round.seasonId);
-    }
-  }
-  let oracleTitles = 0;
-  let standsOracleTitles = 0;
-  for (const seasonId of completedSeasons) {
-    const board = await computeSeasonPredictionLeaderboard(seasonId);
-    if (leaderboardLeaders(board.coach).some((e) => e.userId === userId)) {
-      oracleTitles += 1;
-    }
-    if (leaderboardLeaders(board.stands).some((e) => e.userId === userId)) {
-      standsOracleTitles += 1;
-    }
-  }
-  return { correct, exact, oracleTitles, standsOracleTitles };
 }

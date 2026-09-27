@@ -203,7 +203,7 @@ import {
 } from "./tournament-inducements";
 import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
-import { markPairingPredictionsClosed } from "./league-predictions";
+import { markPairingPredictionsClosed } from "./league-predictions-settlement";
 import {
   getDeclaredRegionalRules,
   getRosterFromDb,
