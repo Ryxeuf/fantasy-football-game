@@ -510,7 +510,9 @@ définition que l'appartenance (§3), ce qui fait tenir ensemble les décisions
    `docs/roadmap/sessions/`.
 
 
-> **État (2026-09-27, fin de session)** : étapes 1 à 3 faites sur la branche
-> — proposition, périmètre v1 complet, implémentation lot par lot ; récit
+> **État (2026-09-27, fin de session)** : toutes les étapes sont faites —
+> proposition, périmètre v1 complet, implémentation lot par lot, PR #1034
+> mergée, puis `/opsx:sync` (spec principale
+> `openspec/specs/league-predictions/spec.md`) et `/opsx:archive`
+> (`openspec/changes/archive/2026-09-27-league-match-predictions/`). Récit
 > dans [`docs/roadmap/sessions/2026-09-27-league-predictions.md`](../sessions/2026-09-27-league-predictions.md).
-> Reste la PR, puis `/opsx:sync` + `/opsx:archive` après le merge.

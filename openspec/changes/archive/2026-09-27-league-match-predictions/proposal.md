@@ -13,7 +13,7 @@ cotes en Crowns, mini-ligues de pronostics, Survivor), GELÉE depuis le
 qui vit — n'a aucun pronostic. Une première session (« Paris sur matchs de
 ligue », 2026-09-11) s'était arrêtée sur six décisions sans rien consigner ;
 elles sont tranchées dans
-[`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](../../../docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).
+[`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](../../../../docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).
 
 ## Quoi
 

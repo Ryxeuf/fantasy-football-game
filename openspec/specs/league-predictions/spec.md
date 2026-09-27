@@ -1,6 +1,21 @@
 # league-predictions
 
-## ADDED Requirements
+## Purpose
+
+Pronostics sur les rencontres d'une saison de ligue : un pick'em à points,
+pas un pari — ni cote, ni mise, ni monnaie. Chacun prédit l'issue d'une
+rencontre (et, s'il le veut, son score exact) ; un classement en deux groupes,
+Coachs et Tribunes, désigne l'Oracle de la saison.
+
+La capacité tient sur quatre choix, qui ne se voient pas en lisant un seul
+écran : la portée se COMPOSE avec la visibilité de la ligue (une ligue privée
+reste introuvable, quelle que soit la portée) ; la clôture d'une rencontre
+s'écrit une fois et ne s'efface jamais, la date prévue restant une prévision
+relue à chaque lecture ; rien des pronostics des autres ne quitte le serveur
+avant la clôture ; et l'on stocke le RÉSULTAT d'une rencontre sur chaque
+pronostic, jamais des points, que le classement recalcule à la lecture.
+
+## Requirements
 
 ### Requirement: Une portée de pronostics par ligue
 
@@ -104,9 +119,12 @@ premier évènement consigné sur la feuille de match, à la première soumissio
 d'un coach, à l'enregistrement du résultat, ou par une clôture manuelle. Le
 commissaire ou un administrateur DOIT pouvoir fermer une journée entière ;
 les deux coachs d'une rencontre, le commissaire ou un administrateur DOIVENT
-pouvoir fermer une rencontre. La date prévue DOIT être relue à chaque lecture,
-pour qu'un report rouvre la rencontre tant qu'aucun autre signal ne l'a
-fermée.
+pouvoir fermer une rencontre. Une clôture manuelle NE DOIT s'enregistrer que
+sur une rencontre OUVERTE : fermée pour une raison passagère (journée de
+play-off non publiée, ligue archivée, date prévue passée), elle NE DOIT rien
+écrire, sans quoi la clôture survivrait à sa raison. La date prévue DOIT être
+relue à chaque lecture, pour qu'un report rouvre la rencontre tant qu'aucun
+autre signal ne l'a fermée.
 
 #### Scenario: Premier évènement
 - WHEN un coach consigne le premier évènement de la feuille d'une rencontre
@@ -123,6 +141,11 @@ fermée.
 #### Scenario: Report
 - WHEN la date prévue d'une rencontre est passée puis reportée, sans autre signal
 - THEN la rencontre DOIT être de nouveau ouverte jusqu'à la nouvelle date
+
+#### Scenario: Clôture manuelle d'une rencontre de play-off non publiée
+- WHEN le commissaire ferme une rencontre d'une journée de play-off pas encore publiée
+- THEN rien NE DOIT être enregistré
+- AND la rencontre DOIT s'ouvrir aux pronostics une fois le bracket publié
 
 ### Requirement: Rien des pronostics des autres avant la clôture
 

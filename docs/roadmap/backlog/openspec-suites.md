@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-09-11
+> Dernière mise à jour : 2026-09-27
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -204,6 +204,31 @@ Source : `league-standings-order` (2026-09-17 → 2026-09-18).
 - **Aucun ordre par POULE ni par phase.** Une ligue à poules applique le même
   ordre partout, et le bracket de play-offs n'en dépend pas.
 
+## Pronostics de ligue
+
+Source : `league-match-predictions` (archivé 2026-09-27, #1034). Pick'em à
+points par rencontre de ligue, portée `off | members | open`, clôture
+write-once, classement Coachs / Tribunes, Oracle au palmarès. Restent :
+
+- **Les coupes.** Le modèle s'appelle déjà `CompetitionPrediction` : il
+  accueillera un `cupPairingId` nullable (XOR `pairingId`, invariant tenu par
+  le service, patron `CompetitionDocument`) — sans renommage, qui serait un
+  DROP + CREATE sous `db push`.
+- **Les Crowns (phase 2).** Les points restent des points tant qu'aucun puits
+  de Crowns n'existe hors Pro League (gelée). Le jour où il en existe un, la
+  conversion peut être RÉTROACTIVE (« N Crowns par point, plafond par
+  saison »), puisque les points se dérivent des pronostics réglés — gate
+  décrite au §5 de `docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`.
+- **Widget « pronostics à faire »** sur l'accueil connecté, et **puce « ton
+  prono »** dans les cartes du calendrier (`MatchCard`).
+- **D'autres types de pronostics** (sorties, morts, TD pairs…), lisibles dans
+  le résumé de feuille mais hors v1.
+- Trouvé au passage : `services/pro-badges.ts` utilise encore
+  `createMany({ skipDuplicates })`, absent du miroir SQLite (Pro League
+  gelée) ; et le serveur lancé par `tests/e2e-api/setup.ts` survit à la fin
+  de la suite (`proc.kill()` ne tue pas l'arbre `pnpm → tsx → node`), si bien
+  que le run suivant le réutilise et échoue en `ECONNREFUSED` quand il meurt.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -219,3 +244,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | ~~`casualties-are-spp-eliminations`~~ | **Plus rien à faire** depuis `casualty-count-and-hate-keyword-choice` : le rattrapage se déclenche à la première lecture du classement de chaque saison. Le script `db:resync-sheet-casualties` reste disponible pour une saison clôturée (que le balayage ignore) ou pour forcer une rencontre (`-- --pairing <id>`). |
 | `raise-the-dead-masters-of-undeath` | `prisma db push` (colonnes `LeagueMatchSheet.raisedDeadHome/Away`, nullables, aucun backfill). |
 | `casualty-count-and-hate-keyword-choice` | `prisma db push` (colonnes `LeagueMatchSheet.casualtyRuleVersion` et `hateChoices`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh` (étape 3/5). Puis ouvrir une fois le classement de chaque ligue active pour déclencher le rattrapage. |
+| `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
