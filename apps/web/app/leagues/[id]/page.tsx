@@ -7,6 +7,7 @@ import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { NextMatchesPanel } from "./NextMatchesPanel";
+import { LeaguePredictionsPanel } from "./LeaguePredictionsPanel";
 import { InviteCoachModal } from "./InviteCoachModal";
 import { SentInvitationsPanel } from "./SentInvitationsPanel";
 import { TestParticipantButton } from "./TestParticipantButton";
@@ -637,6 +638,14 @@ export default function LeagueDetailPage() {
               <NextMatchesPanel
                 rounds={season.rounds}
                 currentUserId={currentUserId}
+              />
+
+              {/* Pronostics de la journée ouverte (se masque sur une ligue
+                  qui ne les a pas activés, sauf l'invitation au commissaire). */}
+              <LeaguePredictionsPanel
+                key={season.id}
+                leagueId={league.id}
+                seasonId={season.id}
               />
 
               <div className="space-y-3">
