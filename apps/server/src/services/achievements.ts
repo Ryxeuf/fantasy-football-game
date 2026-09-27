@@ -333,15 +333,39 @@ export function evaluateAchievements(
 // Persistence
 // ---------------------------------------------------------------------------
 
+/** Violation d'unicité Prisma (P2002), sans dépendre de la classe d'erreur. */
+function isUniqueViolation(e: unknown): boolean {
+  return (
+    typeof e === "object" &&
+    e !== null &&
+    (e as { code?: unknown }).code === "P2002"
+  );
+}
+
+/**
+ * Persiste des succès débloqués, de façon idempotente.
+ *
+ * Un `upsert` par succès plutôt que `createMany({ skipDuplicates })` :
+ * l'option n'existe pas sur SQLite (miroir de test), où tout déblocage
+ * faisait échouer `GET /achievements` en 500. Un déblocage reste rare
+ * (quelques succès au plus par lecture), et une course entre deux lectures
+ * concurrentes (P2002) veut simplement dire « déjà débloqué ».
+ */
 export async function unlockAchievements(
   userId: string,
   slugs: ReadonlyArray<string>,
 ): Promise<void> {
-  if (slugs.length === 0) return;
-  await (prisma as any).userAchievement.createMany({
-    data: slugs.map((slug) => ({ userId, slug })),
-    skipDuplicates: true,
-  });
+  for (const slug of slugs) {
+    try {
+      await (prisma as any).userAchievement.upsert({
+        where: { userId_slug: { userId, slug } },
+        create: { userId, slug },
+        update: {},
+      });
+    } catch (e: unknown) {
+      if (!isUniqueViolation(e)) throw e;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
