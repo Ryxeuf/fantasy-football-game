@@ -1794,6 +1794,8 @@ edition du `.json`, `pnpm --filter web typecheck` +
   lecture — PAS dérivée de la feuille, que `removeEvent` / `unsubmitByCoach`
   rouvriraient. Classement dérivé (jamais de compteur) en DEUX onglets,
   Coachs (équipe active, N-1 rencontres) / Tribunes (N), groupe relu à
-  l'affichage, Oracle au meilleur coach. Points d'abord, Crowns seulement
-  avec des puits (conversion rétroactive possible). Voir
+  l'affichage, Oracle au meilleur coach. RIEN des pronostics des autres
+  avant la clôture (ni répartition, ni noms, ni nombre) : c'est le SERVEUR
+  qui ne les envoie pas, pas l'écran qui les masque. Points d'abord, Crowns
+  seulement avec des puits (conversion rétroactive possible). Voir
   [`docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md`](./docs/roadmap/explorations/2026-09-27-pronostics-de-ligue.md).

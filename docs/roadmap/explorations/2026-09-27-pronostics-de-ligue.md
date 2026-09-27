@@ -173,10 +173,16 @@ scheduledAt`.
   fermer une rencontre (« Coup d'envoi »). C'est le filet des soirs de club :
   sans date prévue ni feuille remplie en direct, un spectateur présent
   pourrait sinon pronostiquer en voyant le match se jouer.
-- Avant clôture : on affiche seulement « 5 coachs ont pronostiqué ». Après :
-  les picks nommés (respecter `User.privateProfile` → « Coach anonyme »).
-  C'est ce qui rend la chose sociale (« tout le monde voyait les Orques
-  gagner ») sans effet moutonnier avant.
+- **Avant clôture, rien des pronostics des autres** (tranché le
+  2026-09-27) : ni répartition, ni noms, ni même leur nombre. Chacun ne voit
+  que le sien. C'est le SERVEUR qui les retient — la réponse de l'API ne les
+  contient pas — et non l'écran qui les masque : une réponse se lit dans les
+  outils du navigateur. Le classement ne compte que les pronostics réglés,
+  donc fermés : il ne trahit rien non plus.
+- Après clôture : les picks nommés et leur répartition (respecter
+  `User.privateProfile` → « Coach anonyme »). C'est ce qui rend la chose
+  sociale (« tout le monde voyait les Orques gagner ») sans effet moutonnier
+  avant.
 
 ### Règlement, forfait, annulation, invalidation
 
@@ -322,7 +328,7 @@ LeaguePairing.predictionsClosedAt DateTime? // write-once : 1er évènement, 1re
 lecture en `optionalAuthUser`, mutations `authUser` + `validate`) :
 
 ```
-GET    /leagues/seasons/:seasonId/predictions              journées, closesAt, mon pick, compteurs, picks clos, motif d'inéligibilité
+GET    /leagues/seasons/:seasonId/predictions              journées, closesAt, mon pick, picks des autres UNIQUEMENT sur les rencontres closes, motif d'inéligibilité
 PUT    /leagues/pairings/:pairingId/prediction             upsert tant que ouvert
 DELETE /leagues/pairings/:pairingId/prediction
 GET    /leagues/seasons/:seasonId/predictions/leaderboard  dérivé (groupBy)
@@ -352,7 +358,7 @@ d'une ligue verrouillée (patron `StandingsOrderField`). Plus tard : widget
  │  Gones Kass'Krânes  vs  Orcs de Nuln        [1] [N] [2]   score  _ - _      │
  │  Skavens du Ruisseau vs Halflings du Pré    [1] [N] [2]   score  2 - 1  ✓   │
  │  Ta rencontre : Nains vs Elfes              — pas de pronostic sur son match │
- │  5 coachs ont pronostiqué · picks visibles à la clôture                     │
+ │  Les pronostics des autres s'affichent à la clôture                         │
  ├─ Oracle de la saison ───────────────────────────────────────────────────────┤
  │  1. Marie   23 pts (4 scores exacts)   2. Karim 21   3. toi 17              │
  └─────────────────────────────────────────────────────────────────────────────┘
@@ -374,7 +380,7 @@ feuille → classement → invalider → classement revenu → revalider.
 | 4 — coupes | `cupPairingId`, même service, exempts et placeholders (`home === away`) non pronosticables | 2 j |
 | Phase 2 — Crowns | détacher le wallet ; article de Gazette ; joker ; conversion rétroactive | 1 j + 2-3 j + 1 j + 1 j |
 
-## 9. Décisions prises et questions encore ouvertes
+## 9. Décisions prises
 
 Tranché le 2026-09-27 :
 
@@ -384,12 +390,11 @@ Tranché le 2026-09-27 :
 - **Un nul juste vaut une victoire juste** : 3 points, barème plat (§4).
 - **Deux classements, une seule implémentation** (option A, §10) : onglet
   « Coachs » et onglet « Tribunes », titre Oracle au meilleur coach.
+- **Rien des pronostics des autres avant la clôture** : ni répartition, ni
+  noms, ni nombre, et c'est le serveur qui ne les envoie pas (§4).
 
-Encore ouvert (non bloquant, défaut proposé) :
-
-- **Faut-il montrer la distribution des picks avant clôture** (« 60 % sur les
-  Orques ») ? Non par défaut : ça oriente. À reconsidérer si l'engagement est
-  faible.
+Plus aucune question ouverte : l'exploration est prête à devenir une
+proposition OpenSpec (§11).
 
 ## 10. Classement unique ou séparé — option A retenue (2026-09-27)
 
@@ -476,3 +481,31 @@ définition que l'appartenance (§3), ce qui fait tenir ensemble les décisions
   `teamId`, `teamName`, `roster`, `ownerId`), puisqu'un coach a une équipe.
 - **Meilleur des tribunes** : un succès (« Oracle des tribunes »), pas une
   entrée de palmarès — une tribune n'a pas d'équipe à y inscrire.
+
+## 11. La suite
+
+```
+ exploration ──▶ proposition ──▶ implémentation ──▶ PR + CI ──▶ mise en prod ──▶ sync + archive
+ (ce document)   OpenSpec         lots 1 → 3          revue      db push           suites remontées
+```
+
+1. **Proposition OpenSpec** `league-match-predictions` : `proposal.md`
+   (pourquoi, quoi), `design.md` (les décisions et alternatives de ce
+   document), `specs/league-predictions/spec.md` (exigences + scénarios),
+   `tasks.md` (les lots). Le CLI `openspec` n'était pas installé dans le
+   conteneur de cette session, mais les changes du dépôt sont écrits à la
+   main dans ce format (aucun `.openspec.yaml`) : rien ne bloque.
+2. **Périmètre v1 = lots 1 à 3** (§8) : serveur, web, palmarès / succès /
+   notification. Hors périmètre, à remonter dans
+   `docs/roadmap/backlog/openspec-suites.md` à l'archivage : coupes, Crowns
+   (phase 2 et sa gate, §5), widget « pronostics à faire » sur l'accueil,
+   nouveaux types de pronostics.
+3. **Implémentation** (`/opsx:apply`) sur la branche
+   `claude/match-predictions-system-emybke`, un commit par tâche, serveur
+   d'abord : les modules purs et la spec e2e-api fixent la règle avant l'écran.
+4. **Mise en prod sans risque pour l'existant** : `db push` ajoute une table et
+   des colonnes nullables ; `predictionsScope = null` ⇒ pronostics coupés sur
+   toutes les ligues existantes, jusqu'à ce qu'un commissaire les active.
+5. **Après merge** : `/opsx:sync` puis `/opsx:archive`, récit de session dans
+   `docs/roadmap/sessions/`.
+
