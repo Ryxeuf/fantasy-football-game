@@ -91,6 +91,7 @@ import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import leagueInvitationRoutes from "./routes/league-invitation";
+import leaguePredictionsRoutes from "./routes/league-predictions";
 import {
   cupLifecycleRouter,
   leagueLifecycleRouter,
@@ -412,6 +413,9 @@ app.use("/coach", publicCache(), coachRoutes);
 // DELETE /leagues/:id) — cf. routes/competition-lifecycle.
 app.use("/leagues", leagueLifecycleRouter);
 app.use("/leagues", leagueRoutes);
+// Pronostics sur les rencontres de ligue (portée, pronostics, classement,
+// clôtures) — cf. routes/league-predictions.
+app.use("/leagues", leaguePredictionsRoutes);
 // Lot A — endpoints d'invitation (cree/liste/accepte/decline) et
 // autocomplete coachs. Monte sous /leagues pour partager le prefixe.
 app.use("/leagues", leagueInvitationRoutes);
