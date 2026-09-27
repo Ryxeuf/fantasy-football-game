@@ -111,6 +111,7 @@ import {
   AI_TRAINING_FLAG,
   ONLINE_PLAY_FLAG,
   OFFLINE_MATCH_FLAG,
+  COMPETITION_PDF_EXPORTS_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -1323,6 +1324,12 @@ if (process.env.TEST_SQLITE === "1") {
           key: OFFLINE_MATCH_FLAG,
           description:
             "Partie offline (Match Local) — hub /local-matches, creation, saisie des actions, partage.",
+        },
+        {
+          // OFF en prod (recette), ON pour les suites e2e-ui.
+          key: COMPETITION_PDF_EXPORTS_FLAG,
+          description:
+            "Exports PDF des ligues et coupes (journée, classement, tops, calendrier, play-offs, stats, feuille de rencontre).",
         },
       ];
       for (const flag of flagSeeds) {

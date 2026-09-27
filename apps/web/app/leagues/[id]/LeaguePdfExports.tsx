@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import { apiRequest } from "../../lib/api-client";
+import { useFeatureFlagOrOff } from "../../hooks/useFeatureFlag";
+import { COMPETITION_PDF_EXPORTS_FLAG } from "../../lib/featureFlagKeys";
 import CompetitionPdfMenu, {
   type CompetitionPdfMenuItem,
 } from "../../components/CompetitionPdfMenu";
@@ -53,6 +55,8 @@ export default function LeaguePdfExports({
   pools,
   tieBreakRules,
 }: LeaguePdfExportsProps) {
+  // En recette : masqué tant que le flag n'est pas actif pour ce compte.
+  const enabled = useFeatureFlagOrOff(COMPETITION_PDF_EXPORTS_FLAG);
   const items = useMemo<CompetitionPdfMenuItem[]>(() => {
     const ctx = (): LeaguePdfContext => ({
       leagueName: league.name,
@@ -154,5 +158,6 @@ export default function LeaguePdfExports({
     ];
   }, [league, season, standings, poolStandings, pools, tieBreakRules]);
 
+  if (!enabled) return null;
   return <CompetitionPdfMenu items={items} testId="league-pdf-menu" />;
 }

@@ -1833,8 +1833,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   statistiques, et feuille de rencontre papier de 5 pages alignée sur la
   feuille de match du site (codes d'évènements, tables du moteur, séquence
   p.68, sections gouvernées par `competitionRules`). Mêmes gabarits pour
-  ligue et coupe. Le bracket de ligue sert désormais le score de la feuille.
-  Change OpenSpec `competition-pdf-exports`.
+  ligue et coupe. Le bracket de ligue sert désormais le score de la feuille,
+  la feuille son placement (journée, saison, date). En recette derrière le
+  flag `competition_pdf_exports` (OFF, bypass admin, override par compte ;
+  `useFeatureFlagOrOff` = gate fermé hors provider). Change OpenSpec
+  `competition-pdf-exports`.
 - **2026-09-27** : **Exploration « pronostics de ligue »** (`/opsx:explore`,
   aucun code). Reprend la session « Paris sur matchs de ligue » du 2026-09-11,
   restée bloquée sur six décisions et dont la branche a disparu sans rien

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useFeatureFlagOrOff } from "../../../../../hooks/useFeatureFlag";
+import { COMPETITION_PDF_EXPORTS_FLAG } from "../../../../../lib/featureFlagKeys";
 import {
   downloadCompetitionPdf,
   pdfFilename,
@@ -16,6 +18,8 @@ import {
  * évènements, JDM) ; une feuille vierge donne une feuille vierge.
  */
 export function MatchSheetPdfButton({ data }: { data: SheetPdfInput }) {
+  // En recette : masqué tant que le flag n'est pas actif pour ce compte.
+  const enabled = useFeatureFlagOrOff(COMPETITION_PDF_EXPORTS_FLAG);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +40,7 @@ export function MatchSheetPdfButton({ data }: { data: SheetPdfInput }) {
     }
   };
 
+  if (!enabled) return null;
   return (
     <div className="inline-flex flex-col items-end">
       <button

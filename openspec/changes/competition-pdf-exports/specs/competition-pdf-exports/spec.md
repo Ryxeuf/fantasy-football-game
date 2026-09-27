@@ -21,6 +21,23 @@ classement) DOIT être désactivée.
 - WHEN la coupe n'a pas de bracket configuré
 - THEN l'entrée « Play-offs » DOIT être désactivée
 
+### Requirement: Recette derrière un feature flag
+
+Tous les points d'entrée des exports PDF (menus de ligue et de coupe, bouton
+de la feuille de match, nouveau gabarit de l'export de journée) DOIVENT être
+conditionnés au feature flag `competition_pdf_exports`, désactivé par défaut.
+Flag inactif pour le compte, aucun de ces points d'entrée NE DOIT être rendu
+et l'export de journée historique DOIT garder son rendu antérieur. Hors
+contexte de flags, le gate DOIT rester fermé.
+
+#### Scenario: Coach sans le flag
+- WHEN un coach sans override ouvre la fiche de sa ligue alors que le flag est désactivé
+- THEN le menu « Exports PDF » NE DOIT PAS être affiché
+
+#### Scenario: Testeur activé
+- WHEN un override active le flag pour un compte
+- THEN ce compte DOIT voir les menus d'export et le bouton de feuille imprimable
+
 ### Requirement: Rendu chargé à la demande
 
 Le moteur de rendu PDF NE DOIT être chargé qu'au clic sur un export. Une

@@ -89,6 +89,23 @@ résultat) ; une feuille soumise mais non validée n'imprime rien. Coupe : le
 match local complété, orienté domicile/extérieur (le match local a ses propres
 côtés A/B). D'où l'ajout serveur du `matchSheet` au bracket de ligue.
 
+### Recette derrière un feature flag
+
+`competition_pdf_exports` est un gate NORMAL (pas un kill-switch) : admins et
+`FEATURE_FLAGS_FORCE_ENABLED` (CI) le voient, les autres comptes seulement
+par override. Il est purement CLIENT — les PDF sont rendus dans le
+navigateur à partir de lectures déjà ouvertes, et les deux ajouts serveur
+(score du bracket, placement de la rencontre) sont des champs additifs sans
+effet visible : aucune route n'est gatée.
+
+Les points d'entrée lisent le flag par `useFeatureFlagOrOff`, qui rend
+`false` hors `FeatureFlagProvider` au lieu de lever : un gate reste FERMÉ
+faute de contexte, et les tests existants des pages (rendues sans provider)
+ne changent pas. L'export de journée historique conserve son rendu
+(`matchday-legacy-pdf`) flag OFF : ce que les commissaires utilisent déjà ne
+change pas pendant la recette. À la levée du flag : retirer la constante, les
+gates et `matchday-legacy-pdf` (cf. « Retirer un feature flag »).
+
 ## Risques
 
 - **Gabarit figé côté client** : un changement de colonnes du classement doit

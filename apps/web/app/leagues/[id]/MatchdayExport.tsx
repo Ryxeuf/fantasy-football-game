@@ -5,13 +5,17 @@ import {
   pdfFilename,
 } from "../../lib/competition-pdf/download";
 import { leagueMatchdayToPdf } from "../../lib/competition-pdf/adapters/league";
+import { useFeatureFlagOrOff } from "../../hooks/useFeatureFlag";
+import { COMPETITION_PDF_EXPORTS_FLAG } from "../../lib/featureFlagKeys";
+import { exportLegacyMatchdayPdf } from "./matchday-legacy-pdf";
 import { useLanguage } from "../../contexts/LanguageContext";
 import type { LeagueRoundDetail, LeaguePairingDetail } from "./types";
 
 // Export d'une journee (W-C). Feuille imprimable (window.print scope via
 // `.matchday-print-area` dans globals.css) + telechargement PDF structure,
 // rendu par le gabarit commun des exports de competition
-// (`lib/competition-pdf`, cases de score a remplir). Pour imprimer ou
+// (`lib/competition-pdf`, cases de score a remplir) quand le flag
+// `competition_pdf_exports` est actif, par le tableau historique sinon. Pour imprimer ou
 // diffuser aux joueurs (ligue offline facon tabletop / mordorbihan).
 
 interface MatchdayExportProps {
@@ -23,14 +27,6 @@ interface MatchdayExportProps {
    * match (« En attente validation »), pas seulement de `status`.
    */
   statusLabel: (pairing: LeaguePairingDetail) => string;
-}
-
-/** « Nom d'équipe (Coach) » pour le PDF — le coach si l'API le fournit. */
-function teamWithCoach(
-  participant: LeaguePairingDetail["homeParticipant"],
-): string {
-  const coach = participant.team.owner?.coachName;
-  return coach ? `${participant.team.name} (${coach})` : participant.team.name;
 }
 
 function formatDate(iso: string | null, language: string): string | null {
@@ -63,20 +59,47 @@ export function MatchdayExport({
   }`;
   const date = formatDate(round.startDate, language);
 
+  const newTemplate = useFeatureFlagOrOff(COMPETITION_PDF_EXPORTS_FLAG);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const exportPdf = useCallback(() => {
     setPdfError(null);
     const name = leagueName ?? "Ligue";
-    downloadCompetitionPdf(
-      {
-        kind: "matchday",
-        data: leagueMatchdayToPdf(round, null, { leagueName: name }),
-      },
-      pdfFilename("matchday", name, `j${round.roundNumber}`),
-    ).catch((e: unknown) =>
+    const run = newTemplate
+      ? downloadCompetitionPdf(
+          {
+            kind: "matchday",
+            data: leagueMatchdayToPdf(round, null, { leagueName: name }),
+          },
+          pdfFilename("matchday", name, `j${round.roundNumber}`),
+        )
+      : exportLegacyMatchdayPdf({
+          leagueName,
+          roundTitle,
+          roundNumber: round.roundNumber,
+          date,
+          pairings,
+          statusLabel,
+          labels: {
+            home: t.leagues.exportHome,
+            away: t.leagues.exportAway,
+            status: t.leagues.exportStatus,
+          },
+        });
+    run.catch((e: unknown) =>
       setPdfError(e instanceof Error ? e.message : "Export impossible"),
     );
-  }, [leagueName, round]);
+  }, [
+    newTemplate,
+    leagueName,
+    round,
+    roundTitle,
+    date,
+    pairings,
+    statusLabel,
+    t.leagues.exportHome,
+    t.leagues.exportAway,
+    t.leagues.exportStatus,
+  ]);
 
   const print = useCallback(() => {
     window.print();

@@ -71,6 +71,17 @@ export const NUFFLE_COACH_TEST_FLAG = "nuffle_coach_test" as const;
 export const OFFLINE_MATCH_FLAG = "offline_match" as const;
 
 /**
+ * Exports PDF imprimables des ligues et des coupes (journée, classement,
+ * tops, calendrier, play-offs, statistiques, feuille de rencontre).
+ *
+ * DESACTIVE par defaut (2026-09-27) : en recette avant ouverture. Gate
+ * NORMAL (pas un kill-switch) : admins et `FEATURE_FLAGS_FORCE_ENABLED` le
+ * voient. Purement CLIENT — les PDF sont rendus dans le navigateur a partir
+ * de lectures deja ouvertes ; aucune route serveur n'est gatee.
+ */
+export const COMPETITION_PDF_EXPORTS_FLAG = "competition_pdf_exports" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,
@@ -146,6 +157,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: OFFLINE_MATCH_FLAG,
     description:
       "Partie offline (Match Local) — hub /local-matches, creation, saisie des actions, partage. OFF : la feuille de match est le chemin de saisie d'un resultat.",
+  },
+  {
+    key: COMPETITION_PDF_EXPORTS_FLAG,
+    description:
+      "Exports PDF des ligues et coupes (journée, classement, tops, calendrier, play-offs, stats, feuille de rencontre). OFF : en recette.",
   },
   {
     key: MAINTENANCE_MODE_FLAG,

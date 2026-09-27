@@ -40,6 +40,16 @@
 - [x] 4.4 Feuille de match : `MatchSheetPdfButton`.
 - [x] 4.5 `MatchdayExport` passe par le gabarit commun.
 
+## 4bis. Feature flag (recette)
+- [x] 4b.1 `competition_pdf_exports` : constante serveur + `KNOWN_FLAGS`,
+      miroir web, seed prod (OFF, `update` sans toucher `enabled`), seed
+      `/__test/seed-rosters` (ON pour les suites).
+- [x] 4b.2 `useFeatureFlagOrOff` (fermé hors provider) ; gates sur les
+      menus ligue / coupe et le bouton de feuille ; export de journée
+      historique conservé flag OFF (`matchday-legacy-pdf`).
+- [x] 4b.3 Tests : gate fermé hors provider / OFF, ouvert ON ; journée
+      historique vs gabarit commun selon le flag.
+
 ## 5. Tests
 - [x] 5.1 Rendu des 14 exemples (pages, textes, paysage, documents vides,
       feuille de coupe sans économie) + helpers.
@@ -48,4 +58,7 @@
       `MatchdayExport` adapté.
 
 ## Suites possibles (hors périmètre)
+- [ ] Recette validée : activer puis retirer le flag `competition_pdf_exports`
+      du code (constante, `KNOWN_FLAGS`, miroir web, gates, seeds,
+      `matchday-legacy-pdf`) ; la ligne en base se supprime depuis l'admin.
 - [ ] Version anglaise des PDF.

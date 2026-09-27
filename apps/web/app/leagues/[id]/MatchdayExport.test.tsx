@@ -1,12 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
-const { downloadMock } = vi.hoisted(() => ({
+const { downloadMock, legacyMock, flag } = vi.hoisted(() => ({
   downloadMock: vi.fn(() => Promise.resolve()),
+  legacyMock: vi.fn(() => Promise.resolve()),
+  flag: { on: false },
 }));
 vi.mock("../../lib/competition-pdf/download", async (orig) => ({
   ...(await orig<typeof import("../../lib/competition-pdf/download")>()),
   downloadCompetitionPdf: downloadMock,
+}));
+vi.mock("./matchday-legacy-pdf", () => ({
+  exportLegacyMatchdayPdf: legacyMock,
+}));
+vi.mock("../../hooks/useFeatureFlag", () => ({
+  useFeatureFlagOrOff: () => flag.on,
 }));
 
 import { LanguageProvider } from "../../contexts/LanguageContext";
@@ -46,7 +54,10 @@ function renderExport() {
 }
 
 describe("MatchdayExport (W-C)", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    flag.on = false;
+  });
 
   it("ouvre la feuille imprimable au clic sur Exporter", () => {
     renderExport();
@@ -59,10 +70,26 @@ describe("MatchdayExport (W-C)", () => {
     expect(modal.textContent).toContain("Elfes");
   });
 
-  it("genere le PDF de la journee (gabarit commun) au clic sur Télécharger PDF", () => {
+  it("flag OFF : garde le rendu historique de la journee", () => {
     renderExport();
     fireEvent.click(screen.getByTestId("round-export-round-1"));
     fireEvent.click(screen.getByTestId("matchday-export-pdf-round-1"));
+    expect(downloadMock).not.toHaveBeenCalled();
+    expect(legacyMock).toHaveBeenCalledTimes(1);
+    const [input] = legacyMock.mock.calls[0] as unknown as [
+      { roundTitle: string; roundNumber: number; pairings: unknown[] },
+    ];
+    expect(input.roundTitle).toBe("J1 — Ouverture");
+    expect(input.roundNumber).toBe(1);
+    expect(input.pairings).toHaveLength(1);
+  });
+
+  it("flag ON : genere le PDF de la journee (gabarit commun)", () => {
+    flag.on = true;
+    renderExport();
+    fireEvent.click(screen.getByTestId("round-export-round-1"));
+    fireEvent.click(screen.getByTestId("matchday-export-pdf-round-1"));
+    expect(legacyMock).not.toHaveBeenCalled();
     expect(downloadMock).toHaveBeenCalledTimes(1);
     const [request, filename] = downloadMock.mock.calls[0] as unknown as [
       { kind: string; data: { round: { title: string; groups: Array<{ fixtures: Array<{ home: { name: string }; away: { name: string } }> }> } } },

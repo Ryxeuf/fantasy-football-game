@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import { apiRequest } from "../../lib/api-client";
+import { useFeatureFlagOrOff } from "../../hooks/useFeatureFlag";
+import { COMPETITION_PDF_EXPORTS_FLAG } from "../../lib/featureFlagKeys";
 import CompetitionPdfMenu, {
   type CompetitionPdfMenuItem,
 } from "../../components/CompetitionPdfMenu";
@@ -24,6 +26,8 @@ import {
  * vient de `GET /cup/:id` déjà chargé, sauf le bracket (chargé au clic).
  */
 export default function CupPdfExports({ cup }: { cup: CupPdfInput & { id: string } }) {
+  // En recette : masqué tant que le flag n'est pas actif pour ce compte.
+  const enabled = useFeatureFlagOrOff(COMPETITION_PDF_EXPORTS_FLAG);
   const items = useMemo<CompetitionPdfMenuItem[]>(() => {
     const ctx = () => ({ now: new Date() });
     const file = (kind: Parameters<typeof pdfFilename>[0], suffix?: string) =>
@@ -95,5 +99,6 @@ export default function CupPdfExports({ cup }: { cup: CupPdfInput & { id: string
     ];
   }, [cup]);
 
+  if (!enabled) return null;
   return <CompetitionPdfMenu items={items} testId="cup-pdf-menu" />;
 }

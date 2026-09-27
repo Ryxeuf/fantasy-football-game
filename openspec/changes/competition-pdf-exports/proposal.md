@@ -42,6 +42,12 @@ Accès : un menu « Exports PDF » sur la fiche de ligue et sur la fiche de coup
 un bouton « Feuille imprimable (PDF) » sur la feuille de match. L'export de
 journée existant passe par le même gabarit.
 
+**Livré derrière le feature flag `competition_pdf_exports`, OFF par défaut**,
+pour une recette avant ouverture : les admins le voient (bypass de rôle), un
+testeur s'active par override utilisateur depuis `/admin/feature-flags`. Flag
+OFF, aucun point d'entrée n'est rendu et l'export de journée historique garde
+son ancien rendu.
+
 Côté serveur, deux ajouts, tous deux additifs :
 
 - `GET /leagues/seasons/:id/playoff-bracket` sert le statut et le score de la
