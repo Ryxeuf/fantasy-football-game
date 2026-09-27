@@ -102,9 +102,12 @@ canPredict({ viewer, league, membership, pairing, closesAt, now })
     | "not-member" | "own-match" | "closed"
 ```
 
-- `members` = propriétaire d'une équipe **de la saison** de la rencontre
-  (`LeagueParticipant.team.ownerId`, tout statut, un coach retiré peut
-  continuer à jouer) ou commissaire (`creatorId`).
+- `members` = propriétaire d'une équipe **active de la saison** de la
+  rencontre (`LeagueParticipant.team.ownerId` avec `status = "active"`) ou
+  commissaire (`creatorId`). **Un coach retiré (`withdrawn`) n'est plus
+  membre** (tranché le 2026-09-27) : ses pronostics déjà réglés restent au
+  classement, il ne peut plus en poser — sauf en mode `open`, comme
+  n'importe quel lecteur connecté.
 - `own-match` : un coach ne pronostique pas sa propre rencontre (§6, déc. 1).
 - Le réglage est une **règle de lecture** : rien de persisté n'en dépend.
   Comme l'ordre de classement, il échappe au verrou `PATCH /leagues/:id`
@@ -127,8 +130,10 @@ Pas besoin de feature flag global : l'opt-in par ligue EST le gate.
 | Vainqueur (`home` / `draw` / `away`) | oui | 3 si juste |
 | Score exact en TD (`homeScore`, `awayScore`) | non | +2 si juste (donc 5 max) |
 
-Un barème unique, pas de réglage par ligue en v1 (un réglage de plus, c'est
-un réglage à afficher et à départager). Extensions naturelles en v2, très
+**Un nul juste vaut une victoire juste : 3 points** (tranché le
+2026-09-27). Barème plat, un seul chiffre à retenir. Un barème unique, pas de
+réglage par ligue en v1 (un réglage de plus, c'est un réglage à afficher et à
+départager). Extensions naturelles en v2, très
 Blood Bowl : « au moins une sortie », « un mort ? », « le total de TD est pair
 ou impair »… Elles se lisent toutes dans le résumé de feuille existant
 (`summarizeMatchSheet`), rien à ressaisir.
@@ -351,16 +356,83 @@ feuille → classement → invalider → classement revenu → revalider.
 | 4 — coupes | `cupPairingId`, même service, exempts et placeholders (`home === away`) non pronosticables | 2 j |
 | Phase 2 — Crowns | détacher le wallet ; article de Gazette ; joker ; conversion rétroactive | 1 j + 2-3 j + 1 j + 1 j |
 
-## 9. Questions encore ouvertes
+## 9. Décisions prises et questions encore ouvertes
 
-- **Classement unique ou « coachs » / « tribunes »** en mode `open` ? Les
-  spectateurs pronostiquent toutes les rencontres, les coachs N-1. Un seul
-  classement avec filtre me paraît suffire, et le titre `oracle` du palmarès
-  pourrait rester réservé aux coachs.
-- **Nul à 3 points aussi ?** Le nul est rare en Blood Bowl ; un barème plat
-  est plus lisible, mais un « nul à 4 » ferait jouer les audacieux.
+Tranché le 2026-09-27 :
+
+- **Un coach retiré n'est plus membre.** L'appartenance se lit sur
+  `LeagueParticipant.status = "active"` ; ses points restent, ses droits
+  s'arrêtent (§3).
+- **Un nul juste vaut une victoire juste** : 3 points, barème plat (§4).
+
+Encore ouvert :
+
+- **Classement unique ou séparé** en mode `open` : les termes du choix sont
+  posés en §10.
 - **Faut-il montrer la distribution des picks avant clôture** (« 60 % sur les
   Orques ») ? Non par défaut : ça oriente. À reconsidérer si l'engagement est
   faible.
-- **Un coach retiré (`withdrawn`) reste-t-il membre ?** Proposé oui (il suit
-  encore sa ligue). À trancher avec les premiers retours.
+
+## 10. Classement unique ou séparé : les termes du choix
+
+Le problème n'existe qu'en mode `open`, et il découle de la décision 1 (pas
+de pronostic sur sa propre rencontre). Sur une journée de N rencontres, un
+coach en a N-1 à pronostiquer ; une tribune (spectateur, ou commissaire sans
+équipe) en a N. À la taille des ligues sur table, l'écart n'est pas un
+détail :
+
+| Équipes | Rencontres / journée | Un coach pronostique | Une tribune | Avantage tribune |
+|---|---|---|---|---|
+| 6 | 3 | 2 | 3 | +50 % |
+| 8 | 4 | 3 | 4 | +33 % |
+| 10 | 5 | 4 | 5 | +25 % |
+| 16 | 8 | 7 | 8 | +14 % |
+
+Entre coachs, en revanche, tout se compense sur une saison : l'exempt (nombre
+impair d'équipes) tourne, chacun l'a une fois par tour de round-robin. Le
+classement des coachs est comparable de coach à coach ; il ne l'est pas avec
+les tribunes.
+
+### A. Deux classements, une seule implémentation (recommandé)
+
+Chaque ligne du classement porte un groupe, `coach` (possède une équipe
+active de la saison) ou `tribune` (tous les autres, commissaire sans équipe
+compris), et son rang est calculé DANS son groupe. L'écran montre un onglet
+« Coachs » toujours, un onglet « Tribunes » seulement s'il a des lignes : en
+mode `members` (le défaut), rien ne change. Le titre `oracle` du palmarès va
+au meilleur coach ; les tribunes ont leur propre distinction, hors palmarès.
+En prime, un crochet social gratuit : « tribunes 2,1 pts par rencontre,
+coachs 1,8 ».
+
+Coût : un champ `group` dans la réponse, un onglet. Ce qu'on perd : un
+spectateur ne peut pas dire « j'ai battu tous les coachs » sur le même
+tableau.
+
+### B. Un seul classement, et on autorise son propre match
+
+La seule façon d'avoir UN classement équitable sans normaliser : tout le
+monde a N rencontres par journée, exempt compris. Elle revient sur la
+décision 1. L'argument anti-triche était plus faible qu'il n'y paraît : dans
+une ligue sur table, le résultat circule sur Discord avant la saisie de la
+feuille, pour tout le monde — la fuite est structurelle, pas propre au coach
+concerné, et la clôture (heure prévue, premier évènement, première
+soumission, clôture manuelle) protège autant les deux cas. Ce qui reste
+contre : « on ne pronostique pas son propre match » est un réflexe sain, et
+le coach concerné connaît TOUJOURS le résultat le premier.
+
+### C. Un seul classement brut, tribunes « hors concours »
+
+Une liste, une icône sur les lignes des tribunes, et `oracle` calculé parmi
+les coachs. Le plus simple à l'écran, mais le biais du tableau ci-dessus
+reste visible : une tribune peut trôner au-dessus de l'Oracle avec un tiers
+de rencontres en plus. Honnête si on l'affiche, frustrant à lire.
+
+Écartée : la normalisation (points par rencontre ouverte, précision en %).
+Elle demande un seuil minimal de rencontres (sinon un arrivant à 2/2 est
+premier), tranche mal les ex æquo et se lit moins bien qu'un total. C'est le
+genre de règle qu'on finit par réexpliquer sous le tableau — exactement le
+piège de l'ordre de classement invisible (cf. CLAUDE.md).
+
+Avis : **A**. Elle garde la décision 1, ne coûte rien au mode par défaut, et
+c'est la seule où le titre de la saison compare des gens qui ont joué au
+même jeu.
