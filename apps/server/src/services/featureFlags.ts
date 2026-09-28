@@ -82,6 +82,16 @@ export const OFFLINE_MATCH_FLAG = "offline_match" as const;
 export const COMPETITION_PDF_EXPORTS_FLAG = "competition_pdf_exports" as const;
 
 /**
+ * Bandeau « À la une » de la home (derniers résultats de ligue et de coupe
+ * publiques, dernier article de blog, inscriptions ouvertes).
+ *
+ * DESACTIVE par defaut (2026-09-28) : en recette avant ouverture. Gate
+ * NORMAL (pas un kill-switch) : admins et `FEATURE_FLAGS_FORCE_ENABLED` le
+ * voient. Gate la route `GET /api/public/news-ticker` ET le composant web.
+ */
+export const HOME_NEWS_TICKER_FLAG = "home_news_ticker" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,
@@ -162,6 +172,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: COMPETITION_PDF_EXPORTS_FLAG,
     description:
       "Exports PDF des ligues et coupes (journée, classement, tops, calendrier, play-offs, stats, feuille de rencontre). OFF : en recette.",
+  },
+  {
+    key: HOME_NEWS_TICKER_FLAG,
+    description:
+      "Bandeau « À la une » de la home (résultats de ligue et de coupe publiques, dernier article, inscriptions ouvertes). OFF : en recette.",
   },
   {
     key: MAINTENANCE_MODE_FLAG,

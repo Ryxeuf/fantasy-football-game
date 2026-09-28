@@ -11,6 +11,8 @@ import { test, expect } from "@playwright/test";
  * On valide :
  *  - le H1 sr-only "Nuffle Arena" est rendu
  *  - les CTA Hero pointent vers les bonnes routes (/me/teams, /teams)
+ *  - la ligue est presentee comme ouverte (CTA vers /leagues, plus de
+ *    « demande d'acces » beta)
  *  - les pages publiques principales repondent (skills, star-players, teams)
  *  - le footer / les liens "discover" ne pointent pas vers une 404
  */
@@ -46,6 +48,17 @@ test.describe("E2E UI — homepage publique", () => {
         url.pathname.startsWith("/me/teams") || url.pathname === "/login",
       { timeout: 15_000 },
     );
+  });
+
+  test("le CTA ligue pointe vers /leagues (ligue ouverte a tous)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const cta = page.getByTestId("home-leagues-cta");
+    await expect(cta).toBeVisible();
+    await expect(cta).toHaveAttribute("href", "/leagues");
+    await expect(page.locator('a[href="/feedback"]').filter({ hasText: /acc[eè]s/i })).toHaveCount(0);
   });
 
   test("la page /skills est accessible publiquement", async ({ page }) => {

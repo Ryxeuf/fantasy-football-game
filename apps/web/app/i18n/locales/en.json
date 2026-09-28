@@ -97,7 +97,6 @@
     "no": "No"
   },
   "home": {
-    "betaBanner": "BETA version open to everyone.",
     "title": "The arena where chance becomes divine.",
     "heroBadge": "Season 3 · Official 2025 rules",
     "heroQuotes": [
@@ -123,8 +122,8 @@
       "“You don't lose at Blood Bowl. You learn to bleed.”"
     ],
     "statsFreeValue": "0 GP",
-    "description": "Free digital platform to create, manage, and live out your Blood Bowl teams. Build your rosters, recruit legendary Star Players, and track your tabletop matches.",
-    "subtitle": "Compliant with the official Blood Bowl 2025 rules: 31 full rosters, 60+ Star Players, 130+ skills, budget and treasury management, PDF export for your games.",
+    "description": "Free digital platform to create, manage, and live out your Blood Bowl teams. Build your rosters, recruit legendary Star Players, then take them into leagues and cups with rulebook-accurate match sheets.",
+    "subtitle": "Compliant with the official Blood Bowl 2025 rules: 31 full rosters, 60+ Star Players, 130+ skills, budget and treasury management, full leagues and cups, PDF export for your games.",
     "manageTeams": "Manage my teams",
     "dashboardBannerGreeting": "Welcome back, {name}!",
     "dashboardBannerCta": "My dashboard",
@@ -159,23 +158,31 @@
     },
     "cups": {
       "title": "Cups & tournaments",
-      "description": "Create and manage your Blood Bowl cups: single-elimination tournaments, brackets, round-by-round results and honour rolls.",
+      "description": "Run your Blood Bowl tournaments: Swiss rounds, random draw or manual pairing, pools then single-elimination playoffs, the same match sheet as leagues and configurable tie-breakers.",
       "cta": "View the cups",
-      "tags": ["Single elimination", "Bracket", "Round-by-round", "Honour roll"]
+      "tags": [
+        "Swiss rounds",
+        "Pools & playoffs",
+        "Match sheet",
+        "Configurable tie-breakers",
+        "Honour roll"
+      ]
     },
     "leagues": {
       "title": "League management",
-      "badge": "Closed beta · on request",
-      "tagline": "Early access",
-      "seal": "Beta",
-      "description": "Run a full season: divisions, automatic schedule, standings, promotions/relegations, bonus points and match sheets. Nuffle Arena's most complete feature, open to a handful of pilot leagues.",
-      "cta": "Request access",
+      "badge": "Free · open to everyone",
+      "tagline": "Available to all",
+      "seal": "Open",
+      "description": "Run a full season: pools and automatic schedule, rulebook-accurate match sheets (post-match sequence, SPP, injuries, journeymen, treasury), standings, bonus points, playoffs and predictions. Nuffle Arena's most complete feature, now open to every commissioner.",
+      "cta": "View the leagues",
+      "ctaCreate": "Create my league",
       "tags": [
-        "Divisions & schedule",
-        "Standings",
-        "Promotion / relegation",
+        "Pools & schedule",
+        "Match sheet",
+        "Standings & tie-breakers",
         "Bonus points",
-        "Match sheet"
+        "Playoffs",
+        "Predictions"
       ]
     },
     "competitions": {
@@ -188,7 +195,6 @@
       "subtitle": "From nimble Skaven to stubborn Dwarves — pick your side."
     },
     "exploreCta": "Explore",
-    "requestAccessCta": "Request access",
     "diceRollerCta": "Roll the dice",
     "diceRollerHint": "Defy Nuffle — official block die distribution",
     "activityLine": "Already {teams} teams forged and {matches} matches tracked by the community.",
@@ -196,7 +202,7 @@
     "faqKicker": "Before kickoff",
     "blogKicker": "The Gazette",
     "discoverTitle": "Everything you need to play Blood Bowl",
-    "discoverSubtitle": "A complete companion for coaches, from team building to tournament tracking.",
+    "discoverSubtitle": "A complete companion for coaches, from team building to a full league season.",
     "statsTitle": "Nuffle Arena by the numbers",
     "statsRosters": "Official rosters",
     "statsStarPlayers": "Star Players",
@@ -216,9 +222,11 @@
     "faqQ2": "Is this an official Blood Bowl product?",
     "faqA2": "No. Nuffle Arena is a fan project, independent of Games Workshop. It follows the Blood Bowl 2025 (Season 3) rules for an authentic experience.",
     "faqQ3": "Can I use Nuffle Arena for my tabletop matches?",
-    "faqA3": "Yes. Build your team, export it to PDF, and track your tabletop games with our tracker (scores, injuries, player progression, treasury).",
+    "faqA3": "Yes. Build your team, export it to PDF, then enter it in a league or a cup: every match is recorded on a match sheet (score, casualties, injuries, SPP, advancements, treasury) that carries your team from one game to the next.",
     "faqQ4": "Which teams are available?",
     "faqA4": "All 31 official Season 3 rosters: Skaven, Elves (Union, Wood, Dark, Pro Elves), Orcs, Black Orcs, Dwarves, Lizardmen, Gnomes, Halflings, Imperial Nobility, Chaos, Tomb Kings, Nurgle, Undead, Vampires, Amazons, Norse and more.",
+    "faqQ5": "Can I run my own league?",
+    "faqA5": "Yes, league management is free and open to everyone. Create a public or private league, invite coaches, generate the schedule, validate match sheets and follow standings, playoffs and predictions. Cups (Swiss rounds, pools and playoffs) work the same way.",
     "dashboard": {
       "kicker": "Your locker room",
       "backToHome": "Back to home",
@@ -244,6 +252,15 @@
       "actionExploreDesc": "Browse the 31 rosters and the Star Players.",
       "actionTutorial": "Tutorials",
       "actionTutorialDesc": "Learn or brush up on the rules step by step."
+    },
+    "ticker": {
+      "title": "Latest",
+      "leagueResult": "League",
+      "cupResult": "Cup",
+      "blogPost": "Gazette",
+      "leagueOpen": "Registration open · League",
+      "cupOpen": "Registration open · Cup",
+      "forfeit": "forfeit"
     }
   },
   "skills": {

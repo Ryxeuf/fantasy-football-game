@@ -29,6 +29,7 @@ import {
   StadiumBackdrop,
 } from "./NuffleScenes";
 import BlockDiceRoller from "./BlockDiceRoller";
+import NewsTicker from "./NewsTicker";
 
 /* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
    partout (badges d'icones, poster final) pour eviter le patchwork. */
@@ -194,6 +195,9 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
       {/* Canvas unique : un seul fond parchemin chaud sur toute la page,
           full-bleed (on sort du padding du layout) pour eviter les seams. */}
       <div className="-mx-4 sm:-mx-6 -mb-4 sm:-mb-6 bg-gradient-to-b from-[#F3EAD6] via-[#EFE4CD] to-[#E7DABF] text-nuffle-anthracite">
+        {/* Bandeau « À la une » : résultats, Gazette, inscriptions ouvertes.
+            Absent tant que l'API n'a rien à annoncer. */}
+        <NewsTicker />
         {/* Hero */}
         <section className="relative overflow-hidden">
           {/* texture : hachures de terrain tres discretes, communes a la page */}
@@ -354,7 +358,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
           </div>
         </section>
 
-        {/* Compétitions — coupes + annonce ligue (bêta) */}
+        {/* Compétitions — coupes + ligue (ouverte à tous) */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
           <SectionTitle
             kicker={t.home.competitions.kicker}
@@ -392,7 +396,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
               </a>
             </div>
 
-            {/* Gestion de ligue — annonce bêta, traitement distinct (poster sombre orné) */}
+            {/* Gestion de ligue — fonctionnalité phare, traitement distinct (poster sombre orné) */}
             <div className="relative overflow-hidden rounded-3xl bg-[#1B1610] text-nuffle-ivory ring-1 ring-nuffle-gold/50 shadow-[0_24px_60px_rgba(27,22,16,0.4)]">
               <div
                 className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[repeating-linear-gradient(115deg,transparent,transparent_40px,#E8C96A_40px,#E8C96A_41px)]"
@@ -407,7 +411,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
               <Flourish className="pointer-events-none absolute left-3 bottom-3 w-9 opacity-60 [transform:scaleY(-1)]" />
               <Flourish className="pointer-events-none absolute right-3 bottom-3 w-9 opacity-60 [transform:scale(-1)]" />
 
-              {/* sceau bêta */}
+              {/* sceau « ouvert » */}
               <div className="pointer-events-none absolute right-5 top-5 sm:right-8 sm:top-8 rotate-12">
                 <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full border-2 border-nuffle-gold/70">
                   <div className="flex h-[86%] w-[86%] items-center justify-center rounded-full border border-nuffle-gold/40">
@@ -424,7 +428,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
                 </div>
                 <div className="flex-1 text-center md:text-left">
                   <span className="inline-flex items-center gap-2 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/10 px-4 py-1.5 text-xs font-subtitle font-bold uppercase tracking-[0.2em] text-nuffle-gold">
-                    <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold animate-pulse" aria-hidden="true" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
                     {t.home.leagues.tagline}
                   </span>
                   <h3 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-heading font-bold bg-gradient-to-br from-[#F3Dd92] via-nuffle-gold to-[#a8852b] bg-clip-text text-transparent">
@@ -445,10 +449,17 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
                   </ul>
                   <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
                     <a
-                      href="/feedback"
+                      href="/leagues"
+                      data-testid="home-leagues-cta"
                       className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_8px_28px_rgba(203,161,53,0.4)] hover:-translate-y-0.5 transition-all"
                     >
                       {t.home.leagues.cta} <span aria-hidden="true">→</span>
+                    </a>
+                    <a
+                      href="/leagues/new"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-nuffle-gold/40 text-nuffle-ivory hover:bg-nuffle-gold/15 font-subtitle font-bold uppercase tracking-wide transition-all"
+                    >
+                      {t.home.leagues.ctaCreate}
                     </a>
                     <span className="text-xs font-subtitle font-semibold uppercase tracking-wide text-nuffle-ivory/55">
                       {t.home.leagues.badge}
@@ -508,6 +519,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
               { q: t.home.faqQ2, a: t.home.faqA2 },
               { q: t.home.faqQ3, a: t.home.faqA3 },
               { q: t.home.faqQ4, a: t.home.faqA4 },
+              { q: t.home.faqQ5, a: t.home.faqA5 },
             ].map((item) => (
               <details
                 key={item.q}

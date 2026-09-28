@@ -4,8 +4,9 @@ import { render, screen, waitFor } from "@testing-library/react";
 vi.mock("./lib/api-client", () => ({
   apiRequest: vi.fn(),
 }));
+const { flags } = vi.hoisted(() => ({ flags: { keys: [] as string[] } }));
 vi.mock("./lib/featureFlags", () => ({
-  fetchMyFlags: vi.fn().mockResolvedValue([]),
+  fetchMyFlags: vi.fn(async () => flags.keys),
 }));
 
 import { apiRequest } from "./lib/api-client";
@@ -28,6 +29,7 @@ function renderHome() {
 describe("HomePage (accueil marketing + bandeau coach)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    flags.keys = [];
     window.localStorage.clear();
     // Par defaut : la home marketing fetch /api/public/stats — on simule
     // le repli silencieux (reject) pour rester sur les valeurs catalogue.
@@ -92,5 +94,44 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(screen.queryByTestId("coach-dashboard")).toBeNull();
     // Token invalide => pas de bandeau coach.
     expect(screen.queryByTestId("home-dashboard-link")).toBeNull();
+  });
+
+  it("presente la ligue comme ouverte a tous (plus d'acces anticipe)", async () => {
+    renderHome();
+    const cta = screen.getByTestId("home-leagues-cta");
+    expect(cta.getAttribute("href")).toBe("/leagues");
+    expect(screen.getByText("Disponible pour tous")).toBeTruthy();
+    expect(screen.queryByText(/Accès anticipé|Bêta fermée|Demander l'accès/)).toBeNull();
+    expect(
+      screen.getByText("Créer ma ligue").closest("a")?.getAttribute("href"),
+    ).toBe("/leagues/new");
+  });
+
+  it("ne monte pas le bandeau d'actualite tant que le flag est OFF", async () => {
+    renderHome();
+    await waitFor(() =>
+      expect(screen.getByText("L'arène où le hasard devient divin.")).toBeTruthy(),
+    );
+    const calledPaths = mockedApiRequest.mock.calls.map((c) => c[0] as string);
+    expect(calledPaths.some((p) => p.startsWith("/api/public/news-ticker"))).toBe(false);
+    expect(screen.queryByTestId("home-news-ticker")).toBeNull();
+  });
+
+  it("monte le bandeau d'actualite quand le flag est ON et l'API sert des items", async () => {
+    flags.keys = ["home_news_ticker"];
+    mockedApiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/api/public/news-ticker"))
+        return Promise.resolve({
+          items: [
+            { kind: "blog_post", id: "b1", at: "2026-09-20T00:00:00Z", href: "/blog/x", title: "Nouvel article" },
+          ],
+        });
+      if (path.startsWith("/api/public/stats"))
+        return Promise.reject(new Error("no stats in test"));
+      return Promise.resolve({});
+    });
+    renderHome();
+    const ticker = await screen.findByTestId("home-news-ticker");
+    expect(ticker.textContent).toContain("Nouvel article");
   });
 });

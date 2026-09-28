@@ -67,7 +67,7 @@ export default function HomeStructuredData() {
         url: BASE_URL,
         name: "Nuffle Arena",
         description:
-          "Gestionnaire d'équipes Blood Bowl : rosters, Star Players, compétences, export PDF et suivi de match sur table.",
+          "Gestionnaire d'équipes Blood Bowl : rosters, Star Players, compétences, export PDF, ligues et coupes avec feuilles de match.",
         inLanguage: ["fr-FR", "en"],
         publisher: { "@id": `${BASE_URL}#organization` },
         dateModified: lastUpdated,
@@ -100,7 +100,9 @@ export default function HomeStructuredData() {
           "Recrutement et gestion de budget",
           "Export PDF prêt pour la table",
           "Tutoriels interactifs",
-          "Suivi des matchs joués sur table",
+          "Gestion de ligue : poules, calendrier, classements, play-offs, pronostics",
+          "Coupes et tournois : rondes suisses, poules et play-offs",
+          "Feuilles de match conformes au livre (PSP, blessures, trésorerie)",
           "Multilingue français / anglais",
         ],
         screenshot: `${BASE_URL}/images/logo.png`,
@@ -139,7 +141,15 @@ export default function HomeStructuredData() {
             name: "Puis-je utiliser Nuffle Arena pour mes matchs Blood Bowl sur table ?",
             acceptedAnswer: {
               "@type": "Answer",
-              text: "Oui. Créez votre équipe, exportez-la en PDF et suivez vos matchs sur table avec notre outil de suivi (scores, blessures, progression des joueurs, trésorerie).",
+              text: "Oui. Créez votre équipe, exportez-la en PDF, puis inscrivez-la à une ligue ou à une coupe : chaque match se saisit sur une feuille de match (score, sorties, blessures, PSP, évolutions, trésorerie) qui fait vivre votre équipe d'une rencontre à l'autre.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Puis-je organiser ma propre ligue Blood Bowl ?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Oui, la gestion de ligue est ouverte à tous et gratuite. Créez une ligue publique ou privée, invitez les coachs, générez le calendrier, validez les feuilles de match et suivez classements, play-offs et pronostics. Les coupes (rondes suisses, poules et play-offs) fonctionnent de la même façon.",
             },
           },
           {
