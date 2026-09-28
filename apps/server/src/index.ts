@@ -60,6 +60,7 @@ import publicRostersRoutes from "./routes/public-rosters";
 import publicPositionsRoutes from "./routes/public-positions";
 import publicBlogRoutes from "./routes/public-blog";
 import publicStatsRoutes from "./routes/public-stats";
+import publicNewsTickerRoutes from "./routes/public-news-ticker";
 import publicTeamsRoutes from "./routes/public-teams";
 import adminBlogRoutes from "./routes/admin-blog";
 import adminNflIngestRoutes from "./routes/admin-nfl-ingest";
@@ -359,6 +360,8 @@ app.use("/api", publicCache(), publicRostersRoutes);
 app.use("/api", publicCache(), publicPositionsRoutes);
 app.use("/api", publicCache(), publicBlogRoutes);
 app.use("/api", publicCache(), publicStatsRoutes);
+// Bandeau d'actualité de la home : cache court (2 min, SWR 10 min).
+app.use("/api", publicCache(120, 600), publicNewsTickerRoutes);
 app.use("/api", publicCache(), publicTeamsRoutes);
 app.use("/api/admin/blog", adminBlogRoutes);
 // Invitations montées AVANT cupRoutes : les routes littérales
