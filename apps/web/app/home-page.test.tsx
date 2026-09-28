@@ -93,4 +93,32 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     // Token invalide => pas de bandeau coach.
     expect(screen.queryByTestId("home-dashboard-link")).toBeNull();
   });
+
+  it("presente la ligue comme ouverte a tous (plus d'acces anticipe)", async () => {
+    renderHome();
+    const cta = screen.getByTestId("home-leagues-cta");
+    expect(cta.getAttribute("href")).toBe("/leagues");
+    expect(screen.getByText("Disponible pour tous")).toBeTruthy();
+    expect(screen.queryByText(/Accès anticipé|Bêta fermée|Demander l'accès/)).toBeNull();
+    expect(
+      screen.getByText("Créer ma ligue").closest("a")?.getAttribute("href"),
+    ).toBe("/leagues/new");
+  });
+
+  it("monte le bandeau d'actualite quand l'API sert des items", async () => {
+    mockedApiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/api/public/news-ticker"))
+        return Promise.resolve({
+          items: [
+            { kind: "blog_post", id: "b1", at: "2026-09-20T00:00:00Z", href: "/blog/x", title: "Nouvel article" },
+          ],
+        });
+      if (path.startsWith("/api/public/stats"))
+        return Promise.reject(new Error("no stats in test"));
+      return Promise.resolve({});
+    });
+    renderHome();
+    const ticker = await screen.findByTestId("home-news-ticker");
+    expect(ticker.textContent).toContain("Nouvel article");
+  });
 });
