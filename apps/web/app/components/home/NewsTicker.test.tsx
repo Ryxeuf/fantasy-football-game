@@ -4,24 +4,55 @@ import { render, screen, waitFor } from "@testing-library/react";
 vi.mock("../../lib/api-client", () => ({
   apiRequest: vi.fn(),
 }));
+const { flags } = vi.hoisted(() => ({ flags: { keys: [] as string[] } }));
+vi.mock("../../lib/featureFlags", () => ({
+  fetchMyFlags: vi.fn(async () => flags.keys),
+}));
 
 import { apiRequest } from "../../lib/api-client";
 import { LanguageProvider } from "../../contexts/LanguageContext";
+import { FeatureFlagProvider } from "../../contexts/FeatureFlagContext";
+import { HOME_NEWS_TICKER_FLAG } from "../../lib/featureFlagKeys";
 import NewsTicker from "./NewsTicker";
 
 const mockedApiRequest = apiRequest as unknown as ReturnType<typeof vi.fn>;
 
-function renderTicker() {
-  return render(
-    <LanguageProvider>
+function renderTicker(withProvider = true) {
+  const tree = withProvider ? (
+    <FeatureFlagProvider>
       <NewsTicker />
-    </LanguageProvider>,
+    </FeatureFlagProvider>
+  ) : (
+    <NewsTicker />
   );
+  return render(<LanguageProvider>{tree}</LanguageProvider>);
 }
 
 describe("NewsTicker (bandeau « À la une » de la home)", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
+    mockedApiRequest.mockReset();
+    flags.keys = [HOME_NEWS_TICKER_FLAG];
+  });
+
+  it("flag OFF : aucun appel API, aucun rendu", async () => {
+    flags.keys = ["offline_match"];
+    mockedApiRequest.mockResolvedValue({
+      items: [{ kind: "blog_post", id: "b1", at: "", href: "/blog/x", title: "Article" }],
+    });
+    renderTicker();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mockedApiRequest).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("home-news-ticker")).toBeNull();
+  });
+
+  it("hors FeatureFlagProvider : fermé", async () => {
+    mockedApiRequest.mockResolvedValue({ items: [] });
+    renderTicker(false);
+    await Promise.resolve();
+    expect(mockedApiRequest).not.toHaveBeenCalled();
+    expect(screen.queryByTestId("home-news-ticker")).toBeNull();
   });
 
   it("affiche résultats et article, liens compris", async () => {

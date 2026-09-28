@@ -8,6 +8,9 @@ import { seedAndLogin } from "../helpers/factories";
  * Route publique, sans auth. Valide contre une vraie base (miroir SQLite)
  * que les requêtes imbriquées du service passent, et la règle de visibilité :
  * une coupe PRIVÉE ne s'annonce jamais. `resetDb` invalide la mémoïsation.
+ * La route est gatée par `home_news_ticker` (OFF en prod) : la suite tourne
+ * avec `FEATURE_FLAGS_FORCE_ENABLED` (cf. setup.ts), le gate lui-même est
+ * couvert par `apps/server/src/routes/public-news-ticker.test.ts`.
  */
 
 interface TickerItem {

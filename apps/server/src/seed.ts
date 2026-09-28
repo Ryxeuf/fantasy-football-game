@@ -30,6 +30,7 @@ import {
   MAINTENANCE_MODE_FLAG,
   OFFLINE_MATCH_FLAG,
   COMPETITION_PDF_EXPORTS_FLAG,
+  HOME_NEWS_TICKER_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1177,6 +1178,25 @@ async function main() {
   });
   serverLog.log(
     `   ✅ Flag '${COMPETITION_PDF_EXPORTS_FLAG}' ${pdfExportsFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
+  );
+
+  // Bandeau « À la une » de la home — EN RECETTE : OFF, bypass admin, un
+  // testeur s'active par override. `update` ne touche PAS `enabled`.
+  const newsTickerFlag = await prisma.featureFlag.upsert({
+    where: { key: HOME_NEWS_TICKER_FLAG },
+    update: {
+      description:
+        "Bandeau « À la une » de la home (résultats de ligue et de coupe publiques, dernier article, inscriptions ouvertes). OFF : en recette.",
+    },
+    create: {
+      key: HOME_NEWS_TICKER_FLAG,
+      description:
+        "Bandeau « À la une » de la home (résultats de ligue et de coupe publiques, dernier article, inscriptions ouvertes). OFF : en recette.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${HOME_NEWS_TICKER_FLAG}' ${newsTickerFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
   );
 
   // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav

@@ -113,6 +113,7 @@ import {
   ONLINE_PLAY_FLAG,
   OFFLINE_MATCH_FLAG,
   COMPETITION_PDF_EXPORTS_FLAG,
+  HOME_NEWS_TICKER_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -360,8 +361,9 @@ app.use("/api", publicCache(), publicRostersRoutes);
 app.use("/api", publicCache(), publicPositionsRoutes);
 app.use("/api", publicCache(), publicBlogRoutes);
 app.use("/api", publicCache(), publicStatsRoutes);
-// Bandeau d'actualité de la home : cache court (2 min, SWR 10 min).
-app.use("/api", publicCache(120, 600), publicNewsTickerRoutes);
+// Bandeau d'actualité de la home : gaté par `home_news_ticker` DANS le
+// routeur (la réponse dépend de l'appelant => cache privé, pas publicCache).
+app.use("/api", publicNewsTickerRoutes);
 app.use("/api", publicCache(), publicTeamsRoutes);
 app.use("/api/admin/blog", adminBlogRoutes);
 // Invitations montées AVANT cupRoutes : les routes littérales
@@ -1333,6 +1335,12 @@ if (process.env.TEST_SQLITE === "1") {
           key: COMPETITION_PDF_EXPORTS_FLAG,
           description:
             "Exports PDF des ligues et coupes (journée, classement, tops, calendrier, play-offs, stats, feuille de rencontre).",
+        },
+        {
+          // OFF en prod (recette), ON pour les suites e2e-ui.
+          key: HOME_NEWS_TICKER_FLAG,
+          description:
+            "Bandeau « À la une » de la home (résultats, dernier article, inscriptions ouvertes).",
         },
       ];
       for (const flag of flagSeeds) {

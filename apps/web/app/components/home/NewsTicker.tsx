@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useFeatureFlagOrOff } from "../../hooks/useFeatureFlag";
+import { HOME_NEWS_TICKER_FLAG } from "../../lib/featureFlagKeys";
 import {
   tickerDurationSeconds,
   toTickerLines,
@@ -13,6 +15,9 @@ import {
  * Bandeau défilant « À la une » en tête de la home : derniers résultats de
  * ligue et de coupe publiques, dernier article de la Gazette, compétitions
  * ouvertes aux inscriptions.
+ *
+ * Derrière le flag `home_news_ticker` (OFF par défaut, fermé hors
+ * provider) : flag inactif => aucun appel API, aucun rendu.
  *
  * Rien n'est rendu tant que l'API n'a rien servi (ni pendant le chargement,
  * ni en cas d'erreur) : pas de bandeau vide. Le défilement se met en pause
@@ -56,9 +61,11 @@ function TickerEntry({ line, hidden }: { line: NewsTickerLine; hidden?: boolean 
 
 export default function NewsTicker() {
   const { t } = useLanguage();
+  const enabled = useFeatureFlagOrOff(HOME_NEWS_TICKER_FLAG);
   const [response, setResponse] = useState<NewsTickerResponse | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     apiRequest<NewsTickerResponse>("/api/public/news-ticker")
       .then((r) => {
@@ -70,11 +77,11 @@ export default function NewsTicker() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   const labels = t.home.ticker;
   const lines = toTickerLines(response, labels);
-  if (lines.length === 0) return null;
+  if (!enabled || lines.length === 0) return null;
 
   const duration = `${tickerDurationSeconds(lines.length)}s`;
 

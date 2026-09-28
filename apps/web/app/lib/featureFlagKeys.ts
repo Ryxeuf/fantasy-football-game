@@ -49,3 +49,15 @@ export const OFFLINE_MATCH_FLAG = "offline_match" as const;
  * `apps/server/src/services/featureFlags.ts.COMPETITION_PDF_EXPORTS_FLAG`.
  */
 export const COMPETITION_PDF_EXPORTS_FLAG = "competition_pdf_exports" as const;
+
+/**
+ * Bandeau « À la une » de la home (résultats de ligue et de coupe publiques,
+ * dernier article, inscriptions ouvertes).
+ *
+ * OFF par défaut (2026-09-28) : en recette. Admins par bypass de rôle,
+ * testeurs par override utilisateur. Gate aussi la route serveur.
+ *
+ * À garder synchronisé avec
+ * `apps/server/src/services/featureFlags.ts.HOME_NEWS_TICKER_FLAG`.
+ */
+export const HOME_NEWS_TICKER_FLAG = "home_news_ticker" as const;
