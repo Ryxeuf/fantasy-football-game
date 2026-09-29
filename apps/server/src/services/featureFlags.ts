@@ -92,6 +92,17 @@ export const COMPETITION_PDF_EXPORTS_FLAG = "competition_pdf_exports" as const;
 export const HOME_NEWS_TICKER_FLAG = "home_news_ticker" as const;
 
 /**
+ * Thèmes de dés (Dé de Blocage + D6) : choix du thème dans le profil et
+ * application du thème choisi partout où un dé est dessiné.
+ *
+ * DESACTIVE par defaut (2026-09-29) : un seul thème existe (le défaut), les
+ * thèmes payants attendent les Crowns. Gate NORMAL (pas un kill-switch) :
+ * admins et `FEATURE_FLAGS_FORCE_ENABLED` le voient. Gate la route
+ * `/dice-themes/*` ET le sélecteur web ; OFF, tout le monde voit le défaut.
+ */
+export const DICE_THEMES_FLAG = "dice_themes" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,
@@ -177,6 +188,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: HOME_NEWS_TICKER_FLAG,
     description:
       "Bandeau « À la une » de la home (résultats de ligue et de coupe publiques, dernier article, inscriptions ouvertes). OFF : en recette.",
+  },
+  {
+    key: DICE_THEMES_FLAG,
+    description:
+      "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : thème par défaut pour tous.",
   },
   {
     key: MAINTENANCE_MODE_FLAG,

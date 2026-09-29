@@ -85,6 +85,7 @@ import leaderboardRoutes from "./routes/leaderboard";
 import pushRoutes from "./routes/push";
 import notificationRoutes from "./routes/notifications";
 import emailDigestRoutes from "./routes/email-digest";
+import diceThemeRoutes from "./routes/dice-theme";
 import adminDigestRoutes from "./routes/admin-digest";
 import friendsRoutes from "./routes/friends";
 import careerStatsRoutes from "./routes/career-stats";
@@ -114,6 +115,7 @@ import {
   OFFLINE_MATCH_FLAG,
   COMPETITION_PDF_EXPORTS_FLAG,
   HOME_NEWS_TICKER_FLAG,
+  DICE_THEMES_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -410,6 +412,8 @@ app.use("/push", pushRoutes);
 // Notifications internes (historique in-app, compteur de non lus du menu).
 app.use("/notifications", notificationRoutes);
 app.use("/email", emailDigestRoutes);
+// Thème de dés du coach : gaté en entier (flag OFF => défaut pour tous).
+app.use("/dice-themes", requireFeatureFlag(DICE_THEMES_FLAG), diceThemeRoutes);
 app.use("/admin/digest", adminDigestRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
@@ -1341,6 +1345,11 @@ if (process.env.TEST_SQLITE === "1") {
           key: HOME_NEWS_TICKER_FLAG,
           description:
             "Bandeau « À la une » de la home (résultats, dernier article, inscriptions ouvertes).",
+        },
+        {
+          // OFF en prod (un seul thème), ON pour les suites.
+          key: DICE_THEMES_FLAG,
+          description: "Thèmes de dés (Dé de Blocage + D6).",
         },
       ];
       for (const flag of flagSeeds) {
