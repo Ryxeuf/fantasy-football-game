@@ -135,6 +135,17 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     ).toBe("/leagues/new");
   });
 
+  it("place les competitions juste apres le hero, avant tout le reste", async () => {
+    renderHome();
+    const sections = Array.from(document.querySelectorAll("section"));
+    const heroIndex = sections.findIndex((s) =>
+      s.textContent?.includes("L'arène où le hasard devient divin."),
+    );
+    const competitions = screen.getByTestId("home-competitions");
+    expect(sections.indexOf(competitions)).toBe(heroIndex + 1);
+    expect(screen.getByTestId("home-cups-cta").getAttribute("href")).toBe("/cups");
+  });
+
   it("ne monte pas le bandeau d'actualite tant que le flag est OFF", async () => {
     renderHome();
     await waitFor(() =>

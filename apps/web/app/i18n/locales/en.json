@@ -157,7 +157,7 @@
     },
     "cups": {
       "title": "Cups & tournaments",
-      "description": "Run your Blood Bowl tournaments: Swiss rounds, random draw or manual pairing, pools then single-elimination playoffs, the same match sheet as leagues and configurable tie-breakers.",
+      "description": "Run your tournaments: Swiss rounds or random draw, pools then playoffs, the same match sheet as leagues.",
       "cta": "View the cups",
       "tags": [
         "Swiss rounds",
@@ -171,8 +171,7 @@
       "title": "League management",
       "badge": "Free · open to everyone",
       "tagline": "Available to all",
-      "seal": "Open",
-      "description": "Run a full season: pools and automatic schedule, rulebook-accurate match sheets (post-match sequence, SPP, injuries, journeymen, treasury), standings, bonus points, playoffs and predictions. Nuffle Arena's most complete feature, now open to every commissioner.",
+      "description": "Run a full season: automatic schedule, rulebook-accurate match sheets (SPP, injuries, journeymen, treasury), standings, playoffs and predictions.",
       "cta": "View the leagues",
       "ctaCreate": "Create my league",
       "tags": [

@@ -19,41 +19,17 @@ import {
   EmblemTabletop,
   EmblemPdf,
 } from "./NuffleArt";
-import {
-  FactionCrest,
-  FACTIONS,
-  LeagueCrest,
-  CupCrest,
-  Flourish,
-  StadiumBackdrop,
-} from "./NuffleScenes";
+import { FactionCrest, FACTIONS, StadiumBackdrop } from "./NuffleScenes";
 import BlockDiceRoller from "./BlockDiceRoller";
 import NewsTicker from "./NewsTicker";
+import SectionTitle from "./SectionTitle";
+import CompetitionsSection from "./CompetitionsSection";
 import { heroLoginHref, heroPrimaryCta } from "./hero-cta";
 
 /* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
    partout (badges d'icones, poster final) pour eviter le patchwork. */
 const COIN_BADGE =
   "relative flex items-center justify-center rounded-full bg-[#1B1610] text-nuffle-gold ring-1 ring-nuffle-gold/40 shadow-[inset_0_1px_0_rgba(232,201,106,0.25),0_6px_16px_rgba(27,22,16,0.35)]";
-
-function SectionTitle({ kicker, title, subtitle }: { kicker?: string; title: string; subtitle?: string }) {
-  return (
-    <div className="text-center max-w-2xl mx-auto">
-      {kicker && (
-        <p className="font-subtitle text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-nuffle-gold/90">
-          {kicker}
-        </p>
-      )}
-      <h2 className="mt-2 text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-nuffle-anthracite">
-        {title}
-      </h2>
-      <span className="mt-3 inline-block h-px w-20 bg-gradient-to-r from-transparent via-nuffle-gold to-transparent" aria-hidden="true" />
-      {subtitle && (
-        <p className="mt-3 text-base sm:text-lg text-nuffle-bronze/90 font-body">{subtitle}</p>
-      )}
-    </div>
-  );
-}
 
 interface FeatureCardProps {
   href?: string;
@@ -304,6 +280,9 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
           </div>
         </section>
 
+        {/* Compétitions — la valeur principale, juste après le hero */}
+        <CompetitionsSection />
+
         {/* Vitrine des factions — bande d'ecus graves */}
         <section className="border-y border-nuffle-bronze/20 bg-[#1B1610]/[0.03]">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 md:py-12">
@@ -362,119 +341,6 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
                 {link.label}
               </a>
             ))}
-          </div>
-        </section>
-
-        {/* Compétitions — coupes + ligue (ouverte à tous) */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
-          <SectionTitle
-            kicker={t.home.competitions.kicker}
-            title={t.home.competitions.title}
-            subtitle={t.home.competitions.subtitle}
-          />
-
-          <div className="mt-10 md:mt-12 space-y-6">
-            {/* Coupes — panneau clair, disponible */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 rounded-2xl bg-[#FBF7EC] border border-nuffle-bronze/20 p-6 sm:p-7 shadow-[0_2px_10px_rgba(107,78,46,0.06)]">
-              <CupCrest className="w-24 sm:w-28 flex-shrink-0" />
-              <div className="flex-1 text-center sm:text-left">
-                <h3 className="text-xl sm:text-2xl font-heading font-bold text-nuffle-anthracite">
-                  {t.home.cups.title}
-                </h3>
-                <p className="mt-2 text-nuffle-anthracite/75 font-body text-sm sm:text-base">
-                  {t.home.cups.description}
-                </p>
-                <ul className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
-                  {t.home.cups.tags.map((tag) => (
-                    <li
-                      key={tag}
-                      className="rounded-full border border-nuffle-bronze/25 bg-white/50 px-3 py-1 text-xs font-subtitle font-semibold text-nuffle-bronze"
-                    >
-                      {tag}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <a
-                href="/cups"
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-6 py-3 rounded-xl border-2 border-nuffle-bronze/40 text-nuffle-bronze hover:border-nuffle-gold hover:text-nuffle-anthracite hover:bg-nuffle-gold/10 font-subtitle font-bold uppercase tracking-wide transition-all"
-              >
-                {t.home.cups.cta} <span aria-hidden="true">→</span>
-              </a>
-            </div>
-
-            {/* Gestion de ligue — fonctionnalité phare, traitement distinct (poster sombre orné) */}
-            <div className="relative overflow-hidden rounded-3xl bg-[#1B1610] text-nuffle-ivory ring-1 ring-nuffle-gold/50 shadow-[0_24px_60px_rgba(27,22,16,0.4)]">
-              <div
-                className="pointer-events-none absolute inset-0 opacity-[0.06] bg-[repeating-linear-gradient(115deg,transparent,transparent_40px,#E8C96A_40px,#E8C96A_41px)]"
-                aria-hidden="true"
-              />
-              <div
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(203,161,53,0.18),transparent_55%),radial-gradient(ellipse_at_bottom_right,rgba(122,31,31,0.28),transparent_55%)]"
-                aria-hidden="true"
-              />
-              {/* fioritures d'angle */}
-              <Flourish className="pointer-events-none absolute left-3 top-3 w-9 opacity-60" />
-              <Flourish className="pointer-events-none absolute left-3 bottom-3 w-9 opacity-60 [transform:scaleY(-1)]" />
-              <Flourish className="pointer-events-none absolute right-3 bottom-3 w-9 opacity-60 [transform:scale(-1)]" />
-
-              {/* sceau « ouvert » */}
-              <div className="pointer-events-none absolute right-5 top-5 sm:right-8 sm:top-8 rotate-12">
-                <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full border-2 border-nuffle-gold/70">
-                  <div className="flex h-[86%] w-[86%] items-center justify-center rounded-full border border-nuffle-gold/40">
-                    <span className="font-heading font-bold text-sm sm:text-base uppercase tracking-wide text-nuffle-gold">
-                      {t.home.leagues.seal}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative flex flex-col md:flex-row items-center gap-8 md:gap-10 p-8 sm:p-10 md:p-12">
-                <div className="flex-shrink-0">
-                  <LeagueCrest className="w-36 sm:w-44 drop-shadow-[0_12px_30px_rgba(27,22,16,0.5)]" />
-                </div>
-                <div className="flex-1 text-center md:text-left">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/10 px-4 py-1.5 text-xs font-subtitle font-bold uppercase tracking-[0.2em] text-nuffle-gold">
-                    <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
-                    {t.home.leagues.tagline}
-                  </span>
-                  <h3 className="mt-4 text-2xl sm:text-3xl md:text-4xl font-heading font-bold bg-gradient-to-br from-[#F3Dd92] via-nuffle-gold to-[#a8852b] bg-clip-text text-transparent">
-                    {t.home.leagues.title}
-                  </h3>
-                  <p className="mt-3 text-nuffle-ivory/75 font-body text-sm sm:text-base max-w-2xl mx-auto md:mx-0">
-                    {t.home.leagues.description}
-                  </p>
-                  <ul className="mt-4 flex flex-wrap gap-2 justify-center md:justify-start">
-                    {t.home.leagues.tags.map((tag) => (
-                      <li
-                        key={tag}
-                        className="rounded-full border border-nuffle-gold/30 bg-nuffle-gold/10 px-3 py-1 text-xs font-subtitle font-semibold text-nuffle-gold/90"
-                      >
-                        {tag}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6 flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start">
-                    <a
-                      href="/leagues"
-                      data-testid="home-leagues-cta"
-                      className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_8px_28px_rgba(203,161,53,0.4)] hover:-translate-y-0.5 transition-all"
-                    >
-                      {t.home.leagues.cta} <span aria-hidden="true">→</span>
-                    </a>
-                    <a
-                      href="/leagues/new"
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-nuffle-gold/40 text-nuffle-ivory hover:bg-nuffle-gold/15 font-subtitle font-bold uppercase tracking-wide transition-all"
-                    >
-                      {t.home.leagues.ctaCreate}
-                    </a>
-                    <span className="text-xs font-subtitle font-semibold uppercase tracking-wide text-nuffle-ivory/55">
-                      {t.home.leagues.badge}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 

@@ -157,7 +157,7 @@
     },
     "cups": {
       "title": "Coupes & tournois",
-      "description": "Organisez vos tournois Blood Bowl : rondes suisses, tirage au sort ou appariement manuel, poules puis play-offs à élimination directe, feuille de match partagée avec la ligue et classement aux critères configurables.",
+      "description": "Organisez vos tournois : rondes suisses ou tirage au sort, poules puis play-offs, même feuille de match que la ligue.",
       "cta": "Voir les coupes",
       "tags": [
         "Rondes suisses",
@@ -171,8 +171,7 @@
       "title": "Gestion de ligue",
       "badge": "Gratuit · ouverte à tous",
       "tagline": "Disponible pour tous",
-      "seal": "Ouvert",
-      "description": "Pilotez une saison entière : poules et calendrier automatique, feuilles de match conformes au livre (séquence d'après-match, PSP, blessures, journaliers, trésorerie), classements, points bonus, play-offs et pronostics. La fonctionnalité la plus complète de Nuffle Arena, désormais ouverte à tous les commissaires.",
+      "description": "Pilotez une saison entière : calendrier automatique, feuilles de match conformes au livre (PSP, blessures, journaliers, trésorerie), classements, play-offs et pronostics.",
       "cta": "Voir les ligues",
       "ctaCreate": "Créer ma ligue",
       "tags": [
