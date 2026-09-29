@@ -53,8 +53,8 @@ export default function LatestBlogPosts() {
   const dateLocale = language === "en" ? "en-US" : "fr-FR";
 
   return (
-    <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-3">
+    <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-10 md:py-14">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-6 sm:mb-8 gap-2 sm:gap-3">
         <div>
           <p className="font-subtitle text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-nuffle-gold/90">
             {t.home.blogKicker}
@@ -62,7 +62,7 @@ export default function LatestBlogPosts() {
           <h2 className="mt-2 text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite">
             {t.home.latestNewsTitle}
           </h2>
-          <p className="mt-1 text-base text-nuffle-bronze/90 font-body">
+          <p className="mt-1 hidden sm:block text-base text-nuffle-bronze/90 font-body">
             {t.home.latestNewsSubtitle}
           </p>
         </div>
@@ -73,7 +73,9 @@ export default function LatestBlogPosts() {
           {t.home.latestNewsSeeAll} <span aria-hidden="true">→</span>
         </a>
       </div>
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Sur mobile : liste compacte (titre + date), sans vignette ni extrait
+          — trois vignettes 16/9 empilees faisaient 1,7 ecran. */}
+      <div className="grid gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
           <article
             key={post.id}
@@ -81,7 +83,7 @@ export default function LatestBlogPosts() {
           >
             <a href={`/blog/${post.slug}`} className="flex flex-col flex-1">
               {post.coverImageUrl ? (
-                <div className="w-full aspect-[16/9] bg-[#1B1610] overflow-hidden">
+                <div data-testid="blog-cover" className="hidden sm:block w-full aspect-[16/9] bg-[#1B1610] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={post.coverImageUrl}
@@ -91,7 +93,7 @@ export default function LatestBlogPosts() {
                   />
                 </div>
               ) : (
-                <div className="w-full aspect-[16/9] bg-[#1B1610] flex items-center justify-center relative overflow-hidden">
+                <div data-testid="blog-cover" className="hidden sm:flex w-full aspect-[16/9] bg-[#1B1610] items-center justify-center relative overflow-hidden">
                   <div
                     className="absolute inset-0 opacity-[0.08] bg-[repeating-linear-gradient(115deg,transparent,transparent_24px,#E8C96A_24px,#E8C96A_25px)]"
                     aria-hidden="true"
@@ -101,16 +103,16 @@ export default function LatestBlogPosts() {
                   </span>
                 </div>
               )}
-              <div className="p-5 flex-1 flex flex-col">
-                <h3 className="text-lg font-heading font-bold text-nuffle-anthracite mb-2 line-clamp-2">
+              <div className="p-4 sm:p-5 flex-1 flex flex-col">
+                <h3 className="text-base sm:text-lg font-heading font-bold text-nuffle-anthracite mb-2 line-clamp-2">
                   {post.title}
                 </h3>
                 {post.excerpt && (
-                  <p className="text-sm text-nuffle-anthracite/75 mb-4 line-clamp-3 flex-1 font-body">
+                  <p data-testid="blog-excerpt" className="hidden sm:block text-sm text-nuffle-anthracite/75 mb-4 line-clamp-3 flex-1 font-body">
                     {post.excerpt}
                   </p>
                 )}
-                <div className="text-xs text-nuffle-bronze/70 flex items-center gap-2 pt-3 border-t border-nuffle-bronze/15">
+                <div className="text-xs text-nuffle-bronze/70 flex items-center gap-2 sm:pt-3 sm:border-t border-nuffle-bronze/15">
                   {post.authorName && <span>{post.authorName}</span>}
                   {post.authorName && post.publishedAt && <span aria-hidden="true">·</span>}
                   {post.publishedAt && (

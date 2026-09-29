@@ -96,6 +96,34 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(screen.queryByTestId("home-dashboard-link")).toBeNull();
   });
 
+  it("hero : un visiteur deconnecte est invite a s'inscrire, ou a se connecter", async () => {
+    renderHome();
+    const cta = screen.getByTestId("home-hero-cta");
+    expect(cta.getAttribute("href")).toBe("/register?redirect=%2Fme%2Fteams");
+    expect(cta.textContent).toContain("Créer mon équipe");
+    expect(screen.getByTestId("home-hero-login").getAttribute("href")).toBe(
+      "/login?redirect=%2Fme%2Fteams",
+    );
+    expect(screen.getByTestId("home-hero-leagues").getAttribute("href")).toBe("/leagues");
+  });
+
+  it("hero : un coach connecte va droit a ses equipes, sans lien de connexion", async () => {
+    window.localStorage.setItem("auth_token", "fake-token");
+    mockedApiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/auth/me"))
+        return Promise.resolve({ user: { id: "u1", coachName: "Nuffle" } });
+      if (path.startsWith("/api/public/stats"))
+        return Promise.reject(new Error("no stats in test"));
+      return Promise.resolve({});
+    });
+    renderHome();
+    await screen.findByTestId("home-dashboard-link");
+    const cta = screen.getByTestId("home-hero-cta");
+    expect(cta.getAttribute("href")).toBe("/me/teams");
+    expect(cta.textContent).toContain("Gérer mes équipes");
+    expect(screen.queryByTestId("home-hero-login")).toBeNull();
+  });
+
   it("presente la ligue comme ouverte a tous (plus d'acces anticipe)", async () => {
     renderHome();
     const cta = screen.getByTestId("home-leagues-cta");
@@ -105,6 +133,45 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(
       screen.getByText("Créer ma ligue").closest("a")?.getAttribute("href"),
     ).toBe("/leagues/new");
+  });
+
+  it("place les competitions juste apres le hero, avant tout le reste", async () => {
+    renderHome();
+    const sections = Array.from(document.querySelectorAll("section"));
+    const heroIndex = sections.findIndex((s) =>
+      s.textContent?.includes("L'arène où le hasard devient divin."),
+    );
+    const competitions = screen.getByTestId("home-competitions");
+    expect(sections.indexOf(competitions)).toBe(heroIndex + 1);
+    expect(screen.getByTestId("home-cups-cta").getAttribute("href")).toBe("/cups");
+  });
+
+  it("catalogue en tuiles liees, sans rangee « Acces rapide » en doublon", async () => {
+    renderHome();
+    const compendium = screen.getByTestId("home-compendium");
+    const hrefs = Array.from(compendium.querySelectorAll("a")).map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(expect.arrayContaining(["/compendium", "/aide-de-jeu", "/me/teams"]));
+    expect(new Set(hrefs).size).toBe(hrefs.length);
+    expect(screen.queryByText(/Accès rapide/)).toBeNull();
+  });
+
+  it("factions sous le catalogue, chaque ecu menant a sa fiche", async () => {
+    renderHome();
+    const sections = Array.from(document.querySelectorAll("section"));
+    const factions = screen.getByTestId("home-factions");
+    expect(sections.indexOf(factions)).toBeGreaterThan(
+      sections.indexOf(screen.getByTestId("home-compendium")),
+    );
+    expect(screen.getByText("Orques").closest("a")?.getAttribute("href")).toBe("/teams/orc");
+  });
+
+  it("fin de page : un seul bloc final, qui porte aussi le lien de soutien", async () => {
+    renderHome();
+    const final = screen.getByTestId("home-final-cta");
+    expect(final.querySelector('a[href="/register?redirect=%2Fme%2Fteams"]')).toBeTruthy();
+    expect(screen.getByTestId("home-support-link").getAttribute("href")).toBe("/support");
+    expect(final.contains(screen.getByTestId("home-support-link"))).toBe(true);
+    expect(document.querySelectorAll('a[href="/support"]')).toHaveLength(1);
   });
 
   it("ne monte pas le bandeau d'actualite tant que le flag est OFF", async () => {
