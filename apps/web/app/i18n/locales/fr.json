@@ -280,7 +280,8 @@
         "title": "Match hors ligne",
         "desc": "Saisissez un match joué sur table."
       }
-    }
+    },
+    "supportLine": "Gratuit, sans pub, maintenu par des passionnés."
   },
   "skills": {
     "title": "Compétences, Mutations et Traits",

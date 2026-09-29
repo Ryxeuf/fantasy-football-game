@@ -165,6 +165,15 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(screen.getByText("Orques").closest("a")?.getAttribute("href")).toBe("/teams/orc");
   });
 
+  it("fin de page : un seul bloc final, qui porte aussi le lien de soutien", async () => {
+    renderHome();
+    const final = screen.getByTestId("home-final-cta");
+    expect(final.querySelector('a[href="/register?redirect=%2Fme%2Fteams"]')).toBeTruthy();
+    expect(screen.getByTestId("home-support-link").getAttribute("href")).toBe("/support");
+    expect(final.contains(screen.getByTestId("home-support-link"))).toBe(true);
+    expect(document.querySelectorAll('a[href="/support"]')).toHaveLength(1);
+  });
+
   it("ne monte pas le bandeau d'actualite tant que le flag est OFF", async () => {
     renderHome();
     await waitFor(() =>

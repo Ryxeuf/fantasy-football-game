@@ -280,7 +280,8 @@
         "title": "Offline match",
         "desc": "Record a match played on the tabletop."
       }
-    }
+    },
+    "supportLine": "Free, ad-free, maintained by passionate fans."
   },
   "skills": {
     "title": "Skills, Mutations and Traits",

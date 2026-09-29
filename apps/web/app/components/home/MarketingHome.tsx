@@ -6,10 +6,7 @@ import LatestBlogPosts from "../LatestBlogPosts";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
 import { ONLINE_PLAY_FLAG } from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
-import {
-  NuffleMedallion,
-  BlockDie,
-} from "./NuffleArt";
+import { NuffleMedallion } from "./NuffleArt";
 import { FactionCrest, FACTIONS, StadiumBackdrop } from "./NuffleScenes";
 import BlockDiceRoller from "./BlockDiceRoller";
 import NewsTicker from "./NewsTicker";
@@ -17,11 +14,6 @@ import SectionTitle from "./SectionTitle";
 import CompetitionsSection from "./CompetitionsSection";
 import CompendiumTiles from "./CompendiumTiles";
 import { heroLoginHref, heroPrimaryCta } from "./hero-cta";
-
-/* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
-   partout (badges d'icones, poster final) pour eviter le patchwork. */
-const COIN_BADGE =
-  "relative flex items-center justify-center rounded-full bg-[#1B1610] text-nuffle-gold ring-1 ring-nuffle-gold/40 shadow-[inset_0_1px_0_rgba(232,201,106,0.25),0_6px_16px_rgba(27,22,16,0.35)]";
 
 interface PublicStats {
   rosters: number;
@@ -289,7 +281,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
         )}
 
         {/* FAQ */}
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-14 md:py-20">
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 py-10 md:py-14">
           <SectionTitle kicker={t.home.faqKicker} title={t.home.faqTitle} />
           <div className="mt-8 space-y-3">
             {[
@@ -315,61 +307,47 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
           </div>
         </section>
 
-        {/* Support CTA */}
-        <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-14 md:pb-20">
-          <div className="rounded-2xl bg-[#FBF7EC] border border-nuffle-bronze/20 p-6 sm:p-8 shadow-[0_2px_10px_rgba(107,78,46,0.06)]">
-            <div className="flex flex-col md:flex-row items-center gap-5 md:gap-8">
-              <span className={`${COIN_BADGE} h-16 w-16 flex-shrink-0`}>
-                <svg className="h-8 w-8 text-nuffle-red" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-              </span>
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-xl sm:text-2xl font-heading font-bold text-nuffle-anthracite">
-                  {t.support?.homeCta || "Vous aimez Nuffle Arena ?"}
-                </h2>
-                <p className="text-nuffle-anthracite/75 mt-2 font-body text-sm sm:text-base">
-                  {t.support?.homeCtaDescription || "Ce projet est 100 % gratuit et maintenu par des passionnés. Un petit coup de pouce nous aide à garder les serveurs en ligne !"}
-                </p>
-              </div>
-              <a
-                href="/support"
-                className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-lg hover:-translate-y-0.5 transition-all whitespace-nowrap"
-              >
-                {t.support?.homeCtaButton || "Nous soutenir"}
-              </a>
-            </div>
-          </div>
-        </section>
-
-        {/* Poster final — meme materiau jeton que le hero, en grand */}
-        <section className="px-4 sm:px-6 pb-16 md:pb-24">
-          <div className="relative max-w-6xl mx-auto overflow-hidden rounded-[28px] bg-[#1B1610] text-nuffle-ivory ring-1 ring-nuffle-gold/50 px-6 py-12 sm:px-12 sm:py-16">
+        {/* Bloc final unique : creer son equipe + soutenir le projet
+            (auparavant deux sections, dont un poster qui redisait le hero). */}
+        <section className="px-4 sm:px-6 pb-12 md:pb-16">
+          <div
+            data-testid="home-final-cta"
+            className="relative max-w-6xl mx-auto overflow-hidden rounded-[24px] bg-[#1B1610] text-nuffle-ivory ring-1 ring-nuffle-gold/50 px-6 py-9 sm:px-10 sm:py-11"
+          >
             <div
               className="pointer-events-none absolute inset-0 opacity-[0.07] bg-[repeating-linear-gradient(115deg,transparent,transparent_40px,#E8C96A_40px,#E8C96A_41px)]"
               aria-hidden="true"
             />
-            <div className="pointer-events-none absolute -right-10 -top-12 w-56 opacity-20 hidden sm:block" aria-hidden="true">
+            <div className="pointer-events-none absolute -right-10 -top-12 w-48 opacity-20 hidden sm:block" aria-hidden="true">
               <NuffleMedallion className="w-full" />
             </div>
             <div className="relative max-w-2xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-nuffle-gold/40 px-4 py-1.5 text-xs font-subtitle font-semibold uppercase tracking-[0.2em] text-nuffle-gold/90">
-                <BlockDie face="pow" className="w-4" />
-                {t.home.heroBadge}
-              </span>
-              <h2 className="mt-5 text-3xl sm:text-4xl md:text-5xl font-heading font-bold bg-gradient-to-br from-[#F3Dd92] via-nuffle-gold to-[#a8852b] bg-clip-text text-transparent leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold bg-gradient-to-br from-[#F3Dd92] via-nuffle-gold to-[#a8852b] bg-clip-text text-transparent leading-tight">
                 {t.home.createFirstTeam}
               </h2>
-              <p className="mt-4 text-nuffle-ivory/75 font-body text-sm sm:text-base">
+              <p className="mt-3 text-nuffle-ivory/75 font-body text-sm sm:text-base">
                 {t.home.createFirstTeamDesc}
               </p>
               <a
-                href="/me/teams"
-                className="mt-7 inline-flex px-8 py-4 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_8px_28px_rgba(203,161,53,0.4)] hover:-translate-y-0.5 transition-all"
+                href={primaryCta.href}
+                className="mt-6 inline-flex px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_8px_28px_rgba(203,161,53,0.4)] hover:-translate-y-0.5 transition-all"
               >
-                {t.home.manageTeams}
+                {t.home[primaryCta.labelKey]}
               </a>
             </div>
+            <p className="relative mt-8 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-nuffle-gold/20 pt-5 text-sm font-body text-nuffle-ivory/70">
+              <svg className="h-4 w-4 text-nuffle-red" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+              <span>{t.home.supportLine}</span>
+              <a
+                href="/support"
+                data-testid="home-support-link"
+                className="font-subtitle font-semibold text-nuffle-gold hover:text-nuffle-ivory transition-colors"
+              >
+                {t.support?.homeCtaButton || "Nous soutenir"} <span aria-hidden="true">→</span>
+              </a>
+            </p>
           </div>
         </section>
       </div>
