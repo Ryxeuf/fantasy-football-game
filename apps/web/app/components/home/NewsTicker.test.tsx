@@ -148,6 +148,37 @@ describe("NewsTicker (bandeau « À la une » de la home)", () => {
     expect(screen.getAllByTestId("home-news-ticker-result")).toHaveLength(1);
   });
 
+  it("garde le score dans la carte malgré un nom d'équipe très long", async () => {
+    mockedApiRequest.mockResolvedValue({
+      items: [{ ...RESULT_ITEM, away: { name: "Kat' plakaj' é un entair'man !", roster: "lizardmen" } }],
+    });
+    renderTicker();
+    const card = await screen.findByTestId("home-news-ticker-result");
+    // Sans piste `minmax(0,1fr)`, la colonne `auto` du grid prend la largeur
+    // du nom non coupé et pousse le score hors de la carte (jsdom ne fait pas
+    // de mise en page : on verrouille la classe qui l'évite).
+    const rows = card.querySelector(".grid");
+    expect(rows?.className).toContain("grid-cols-[minmax(0,1fr)]");
+    for (const row of Array.from(rows?.children ?? [])) {
+      expect(row.className).toContain("min-w-0");
+    }
+  });
+
+  it("donne un bloc conteneur à la bande de cartes (pas de débordement de page)", async () => {
+    mockedApiRequest.mockResolvedValue({ items: [RESULT_ITEM, { ...RESULT_ITEM, id: "s2" }] });
+    renderTicker();
+    const card = (await screen.findAllByTestId("home-news-ticker-result"))[0];
+    // Les résumés `sr-only` sont en position absolue : sans ancêtre positionné
+    // DANS la bande, ils échappaient à son `overflow-x` et élargissaient la
+    // page sur mobile (545 px pour un écran de 412).
+    const srOnly = card.querySelector(".sr-only");
+    expect(srOnly).toBeTruthy();
+    const strip = card.closest("ul");
+    expect(strip?.className).toMatch(/\boverflow-x-auto\b/);
+    expect(strip?.className).toMatch(/\brelative\b/);
+    expect(card.className).toMatch(/\brelative\b/);
+  });
+
   it("ne rend rien quand il n'y a rien à annoncer", async () => {
     mockedApiRequest.mockResolvedValue({ items: [] });
     renderTicker();

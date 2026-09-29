@@ -230,79 +230,70 @@ export default function AdminFeatureFlagsPage() {
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs uppercase text-gray-500">
-                <tr>
-                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">Clé</th>
-                  <th className="px-3 sm:px-4 py-3">Description</th>
-                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                    Global
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                    Utilisateurs
-                  </th>
-                  <th className="px-3 sm:px-4 py-3 text-right whitespace-nowrap">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {flags.map((flag) => (
-                  <tr key={flag.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs">
-                      <div>{flag.key}</div>
-                      {isFlagMissingFromCode(flag) && (
-                        <span
-                          data-testid={`flag-missing-from-code-${flag.key}`}
-                          title="Cette clé n'est plus déclarée dans le code : le flag ne gate plus rien, la ligne peut être supprimée."
-                          className="mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-sans text-[11px] font-semibold whitespace-nowrap"
-                        >
-                          ⚠️ Absent du code
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">
-                      {flag.description || (
-                        <span className="text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => toggleEnabled(flag)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
-                          flag.enabled
-                            ? "bg-green-100 text-green-700 hover:bg-green-200"
-                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                        }`}
-                      >
-                        {flag.enabled ? "ON" : "OFF"}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link
-                        href={`/admin/feature-flags/${flag.id}`}
-                        className="text-nuffle-bronze hover:underline"
-                      >
-                        {flag.userOverrideCount} override
-                        {flag.userOverrideCount !== 1 ? "s" : ""}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => removeFlag(flag)}
-                        className="text-red-600 hover:text-red-800 text-xs"
-                      >
-                        Supprimer
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Une seule liste pour toutes les largeurs : en cartes empilées sur
+              mobile, en colonnes dès `sm`. L'ancien tableau rejetait
+              « Supprimer » hors de l'écran, derrière un défilement horizontal. */}
+          <div
+            aria-hidden="true"
+            className="hidden sm:grid grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] gap-4 px-4 py-3 bg-gray-50 text-left text-xs uppercase text-gray-500"
+          >
+            <span>Clé</span>
+            <span>Description</span>
+            <span className="text-right">Global · Utilisateurs · Actions</span>
           </div>
+          <ul className="divide-y divide-gray-100 text-sm">
+            {flags.map((flag) => (
+              <li
+                key={flag.id}
+                data-testid={`flag-row-${flag.key}`}
+                className="grid gap-2 px-4 py-3 hover:bg-gray-50 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] sm:items-center sm:gap-4"
+              >
+                <div className="min-w-0 font-mono text-xs">
+                  <div className="break-all">{flag.key}</div>
+                  {isFlagMissingFromCode(flag) && (
+                    <span
+                      data-testid={`flag-missing-from-code-${flag.key}`}
+                      title="Cette clé n'est plus déclarée dans le code : le flag ne gate plus rien, la ligne peut être supprimée."
+                      className="mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-sans text-[11px] font-semibold whitespace-nowrap"
+                    >
+                      ⚠️ Absent du code
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 text-gray-700 break-words">
+                  {flag.description || <span className="text-gray-400">—</span>}
+                </div>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={() => toggleEnabled(flag)}
+                    aria-label={`Global : ${flag.enabled ? "ON" : "OFF"} — basculer ${flag.key}`}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
+                      flag.enabled
+                        ? "bg-green-100 text-green-700 hover:bg-green-200"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {flag.enabled ? "ON" : "OFF"}
+                  </button>
+                  <Link
+                    href={`/admin/feature-flags/${flag.id}`}
+                    className="py-1 text-nuffle-bronze hover:underline whitespace-nowrap"
+                  >
+                    {flag.userOverrideCount} override
+                    {flag.userOverrideCount !== 1 ? "s" : ""}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => removeFlag(flag)}
+                    className="ml-auto sm:ml-0 px-3 py-1.5 rounded border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-800 text-xs"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

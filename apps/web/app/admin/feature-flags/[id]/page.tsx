@@ -132,7 +132,7 @@ export default function AdminFeatureFlagDetailPage() {
       </div>
 
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-nuffle-anthracite font-mono">
+        <h1 className="text-2xl sm:text-3xl font-bold text-nuffle-anthracite font-mono break-all">
           {flag.key}
         </h1>
         {flag.description && (
@@ -167,10 +167,10 @@ export default function AdminFeatureFlagDetailPage() {
             {searchResults.map((u) => (
               <li
                 key={u.id}
-                className="px-3 py-2 flex justify-between items-center hover:bg-gray-50"
+                className="px-3 py-2 flex justify-between items-center gap-3 hover:bg-gray-50"
               >
-                <div>
-                  <div className="text-sm font-medium">{u.email}</div>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium break-all">{u.email}</div>
                   {u.coachName && (
                     <div className="text-xs text-gray-500">{u.coachName}</div>
                   )}
@@ -178,7 +178,7 @@ export default function AdminFeatureFlagDetailPage() {
                 <button
                   type="button"
                   onClick={() => addUser(u.id)}
-                  className="text-xs px-2 py-1 bg-nuffle-gold text-white rounded hover:bg-nuffle-bronze"
+                  className="shrink-0 text-xs px-3 py-1.5 bg-nuffle-gold text-white rounded hover:bg-nuffle-bronze"
                 >
                   Ajouter
                 </button>
@@ -199,36 +199,34 @@ export default function AdminFeatureFlagDetailPage() {
             Aucun override utilisateur.
           </div>
         ) : (
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 text-xs uppercase text-gray-500">
-              <tr>
-                <th className="px-4 py-2 text-left">Email</th>
-                <th className="px-4 py-2 text-left">Coach</th>
-                <th className="px-4 py-2 text-left">Ajouté le</th>
-                <th className="px-4 py-2 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {users.map((u) => (
-                <tr key={u.id}>
-                  <td className="px-4 py-2">{u.email}</td>
-                  <td className="px-4 py-2 text-gray-600">{u.coachName}</td>
-                  <td className="px-4 py-2 text-gray-500 text-xs">
-                    {new Date(u.createdAt).toLocaleString("fr-FR")}
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => removeUser(u.userId)}
-                      className="text-red-600 hover:text-red-800 text-xs"
-                    >
-                      Retirer
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          // Liste plutôt que tableau : sur mobile, la colonne « Retirer »
+          // sortait de la carte (`overflow-hidden`) et l'override devenait
+          // impossible à supprimer.
+          <ul className="divide-y divide-gray-100 text-sm">
+            {users.map((u) => (
+              <li
+                key={u.id}
+                data-testid={`flag-override-${u.userId}`}
+                className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
+              >
+                <div className="min-w-0 flex-1 basis-56">
+                  <div className="break-all font-medium">{u.email}</div>
+                  <div className="text-xs text-gray-500">
+                    {u.coachName && <span>{u.coachName} · </span>}
+                    ajouté le {new Date(u.createdAt).toLocaleString("fr-FR")}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeUser(u.userId)}
+                  aria-label={`Retirer l'override de ${u.email}`}
+                  className="shrink-0 px-3 py-1.5 rounded border border-red-200 text-red-600 hover:bg-red-50 hover:text-red-800 text-xs"
+                >
+                  Retirer
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
