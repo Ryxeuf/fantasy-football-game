@@ -131,7 +131,14 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
       return Promise.resolve({});
     });
     renderHome();
-    const ticker = await screen.findByTestId("home-news-ticker");
+    // Deux resolutions asynchrones enchainees (flags du provider, puis
+    // /api/public/news-ticker) : le timeout par defaut de 1 s de `findBy*`
+    // deborde sous la charge du run coverage complet en CI.
+    const ticker = await screen.findByTestId(
+      "home-news-ticker",
+      {},
+      { timeout: 5000 },
+    );
     expect(ticker.textContent).toContain("Nouvel article");
   });
 });
