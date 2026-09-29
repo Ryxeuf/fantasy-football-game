@@ -193,7 +193,7 @@ function HeadlineLine({
 function TeamRow({ team, forfeitLabel }: { team: NewsTickerSide; forfeitLabel: string }) {
   return (
     <div
-      className={`flex items-center gap-2 text-sm ${
+      className={`flex min-w-0 items-center gap-2 text-sm ${
         team.winner ? "font-bold text-nuffle-ivory" : "text-nuffle-ivory/75"
       }`}
     >
@@ -250,7 +250,9 @@ function ResultCard({
         <span aria-hidden="true" className="truncate text-[12.5px] text-nuffle-ivory/70" title={card.context}>
           {card.context}
         </span>
-        <span aria-hidden="true" className="mt-auto grid gap-1">
+        {/* `minmax(0,1fr)` : sans lui, la piste `auto` prend la largeur d'un nom
+            long non coupé et pousse le score hors de la carte. */}
+        <span aria-hidden="true" className="mt-auto grid grid-cols-[minmax(0,1fr)] gap-1">
           <TeamRow team={card.home} forfeitLabel={forfeitLabel} />
           <TeamRow team={card.away} forfeitLabel={forfeitLabel} />
         </span>
