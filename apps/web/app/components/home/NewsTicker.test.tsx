@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 
 vi.mock("../../lib/api-client", () => ({
   apiRequest: vi.fn(),
@@ -55,20 +55,22 @@ describe("NewsTicker (bandeau « À la une » de la home)", () => {
     expect(screen.queryByTestId("home-news-ticker")).toBeNull();
   });
 
-  it("affiche résultats et article, liens compris", async () => {
+  const RESULT_ITEM = {
+    kind: "league_result",
+    id: "s1",
+    at: "2026-09-20T10:00:00Z",
+    href: "/leagues/L1",
+    title: "Ligue du Reikland",
+    home: { name: "Rats", roster: "skaven" },
+    away: { name: "Nains", roster: "dwarf" },
+    scoreHome: 2,
+    scoreAway: 1,
+  };
+
+  it("affiche les résultats en cartes et l'article sur la ligne d'actualité", async () => {
     mockedApiRequest.mockResolvedValue({
       items: [
-        {
-          kind: "league_result",
-          id: "s1",
-          at: "2026-09-20T10:00:00Z",
-          href: "/leagues/L1",
-          title: "Ligue du Reikland",
-          home: { name: "Rats", roster: "skaven" },
-          away: { name: "Nains", roster: "dwarf" },
-          scoreHome: 2,
-          scoreAway: 1,
-        },
+        RESULT_ITEM,
         { kind: "blog_post", id: "b1", at: "2026-09-19T10:00:00Z", href: "/blog/saison", title: "Nouvel article" },
       ],
     });
@@ -77,12 +79,73 @@ describe("NewsTicker (bandeau « À la une » de la home)", () => {
 
     const ticker = await screen.findByTestId("home-news-ticker");
     expect(mockedApiRequest).toHaveBeenCalledWith("/api/public/news-ticker");
-    expect(ticker.textContent).toContain("Rats 2 – 1 Nains");
-    expect(ticker.textContent).toContain("Nouvel article");
-    // Libellé accessible + une seule copie lisible (la copie de boucle est aria-hidden).
     expect(screen.getByRole("region", { name: "À la une" })).toBeTruthy();
+
+    const line = screen.getByTestId("home-news-ticker-headlines");
+    expect(line.textContent).toContain("Nouvel article");
+    expect(line.textContent).toContain("Gazette");
+    // Une seule actualité : ni flèches, ni pause, ni barre de progression.
+    expect(within(line).queryAllByRole("button")).toHaveLength(0);
+
+    const card = screen.getByTestId("home-news-ticker-result");
+    expect(card.getAttribute("href")).toBe("/leagues/L1");
+    // Phrase complète pour les lecteurs d'écran, le visuel étant masqué.
+    expect(card.textContent).toContain("Ligue du Reikland — Rats 2 – 1 Nains");
+    expect(ticker.textContent).toContain("Derniers résultats");
+
     const links = screen.getAllByRole("link");
-    expect(links.map((a) => a.getAttribute("href"))).toEqual(["/leagues/L1", "/blog/saison"]);
+    expect(links.map((a) => a.getAttribute("href"))).toEqual(["/blog/saison", "/leagues/L1"]);
+  });
+
+  it("fait tourner plusieurs actualités, avec flèches et pause", async () => {
+    mockedApiRequest.mockResolvedValue({
+      items: [
+        { kind: "blog_post", id: "b1", at: "2026-09-19T10:00:00Z", href: "/blog/a", title: "Article A" },
+        {
+          kind: "competition_open",
+          competition: "cup",
+          id: "c1",
+          at: "2026-09-18T10:00:00Z",
+          href: "/cups/C1",
+          title: "Coupe des Brasseurs",
+        },
+      ],
+    });
+
+    renderTicker();
+
+    const line = await screen.findByTestId("home-news-ticker-headlines");
+    expect(line.textContent).toContain("Article A");
+    expect(line.textContent).toContain("1/2");
+    // Aucune carte de résultat sans résultat.
+    expect(screen.queryByTestId("home-news-ticker-result")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Actualité suivante" }));
+    expect(line.textContent).toContain("Coupe des Brasseurs");
+    expect(line.textContent).toContain("Coupe ouverte");
+    expect(line.textContent).toContain("2/2");
+
+    // La fin de la barre de progression fait passer à l'actualité suivante.
+    fireEvent.animationEnd(screen.getByTestId("home-news-ticker-progress"));
+    expect(line.textContent).toContain("Article A");
+
+    fireEvent.click(screen.getByRole("button", { name: "Actualité précédente" }));
+    expect(line.textContent).toContain("Coupe des Brasseurs");
+
+    fireEvent.click(screen.getByRole("button", { name: "Mettre en pause" }));
+    expect(screen.queryByTestId("home-news-ticker-progress")).toBeNull();
+    const resume = screen.getByRole("button", { name: "Reprendre le défilement" });
+    expect(resume.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(resume);
+    expect(screen.getByTestId("home-news-ticker-progress")).toBeTruthy();
+  });
+
+  it("n'affiche que les cartes quand il n'y a que des résultats", async () => {
+    mockedApiRequest.mockResolvedValue({ items: [RESULT_ITEM] });
+    renderTicker();
+    await screen.findByTestId("home-news-ticker");
+    expect(screen.queryByTestId("home-news-ticker-headlines")).toBeNull();
+    expect(screen.getAllByTestId("home-news-ticker-result")).toHaveLength(1);
   });
 
   it("ne rend rien quand il n'y a rien à annoncer", async () => {
