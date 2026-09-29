@@ -64,8 +64,14 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
 
     renderHome();
 
-    // Bandeau personnalise pointant vers la page perso (/me).
-    const link = await screen.findByTestId("home-dashboard-link");
+    // Bandeau personnalise pointant vers la page perso (/me). Resolution
+    // asynchrone (token lu au montage, puis /auth/me) : le timeout par defaut
+    // de 1 s de `findBy*` deborde sous la charge du run coverage complet en CI.
+    const link = await screen.findByTestId(
+      "home-dashboard-link",
+      {},
+      { timeout: 5000 },
+    );
     expect(link.getAttribute("href")).toBe("/me");
     expect(link.textContent).toContain("Nuffle");
     // La home publique reste montee ; aucun dashboard inline a la racine.
@@ -117,7 +123,7 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
       return Promise.resolve({});
     });
     renderHome();
-    await screen.findByTestId("home-dashboard-link");
+    await screen.findByTestId("home-dashboard-link", {}, { timeout: 5000 });
     const cta = screen.getByTestId("home-hero-cta");
     expect(cta.getAttribute("href")).toBe("/me/teams");
     expect(cta.textContent).toContain("Gérer mes équipes");
