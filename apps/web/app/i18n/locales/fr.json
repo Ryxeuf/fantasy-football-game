@@ -131,30 +131,6 @@
     "discoverTeams": "Explorer les équipes",
     "createFirstTeam": "Créez votre première équipe",
     "createFirstTeamDesc": "Choisissez parmi 31 rosters officiels, recrutez vos joueurs et vos Star Players, puis exportez votre équipe en PDF prête pour la table.",
-    "rosters": {
-      "title": "31 rosters officiels",
-      "description": "Toutes les équipes Saison 3 : Skaven, Elfes, Orques, Nains, Hommes-Lézards, Gnomes, Noblesse Impériale et bien plus. Chaque roster respecte les règles et budgets officiels."
-    },
-    "starPlayers": {
-      "title": "60+ Star Players",
-      "description": "Recrutez parmi plus de 60 mercenaires légendaires — Griff Oberwald, Morg 'n' Thorg, Hakflem Skuttlespike — avec règles spéciales et règles régionales intégrées."
-    },
-    "exportPdf": {
-      "title": "Export PDF pour la table",
-      "description": "Exportez vos rosters au format PDF avec toutes les informations : joueurs, Star Players, budget, trésorerie et statistiques, prêts pour votre partie en présentiel."
-    },
-    "skillsReference": {
-      "title": "Bibliothèque de compétences",
-      "description": "Plus de 130 compétences, mutations et traits Blood Bowl détaillés, recherchables et catégorisés pour préparer vos coups et vos recrutements."
-    },
-    "tutorial": {
-      "title": "Tutoriels interactifs",
-      "description": "Apprenez Nuffle Arena pas à pas avec des scénarios guidés. Mouvement, blocage, passe, tacle, esquive : de débutant à avancé."
-    },
-    "localMatches": {
-      "title": "Saisie de match hors ligne",
-      "description": "Saisissez et suivez vos matchs Blood Bowl joués sur table : scores, blessures, SPP, trésorerie — et conservez l'historique complet de votre équipe, hors ligne."
-    },
     "cups": {
       "title": "Coupes & tournois",
       "description": "Organisez vos tournois : rondes suisses ou tirage au sort, poules puis play-offs, même feuille de match que la ligue.",
@@ -192,7 +168,6 @@
       "title": "31 équipes, une seule arène",
       "subtitle": "Des Skavens véloces aux Nains tenaces — choisissez votre camp."
     },
-    "exploreCta": "Explorer",
     "diceRollerCta": "Lancer les dés",
     "diceRollerHint": "Défie Nuffle — distribution officielle du dé de blocage",
     "activityLine": "Déjà {teams} équipes forgées et {matches} matchs suivis par la communauté.",
@@ -200,17 +175,11 @@
     "faqKicker": "Avant le coup d'envoi",
     "blogKicker": "La Gazette",
     "discoverTitle": "Tout ce qu'il faut pour jouer à Blood Bowl",
-    "discoverSubtitle": "Un compagnon complet pour les coachs, de la création d'équipe à la saison de ligue.",
     "statsTitle": "Nuffle Arena en chiffres",
     "statsRosters": "Rosters officiels",
     "statsStarPlayers": "Star Players",
     "statsSkills": "Compétences référencées",
     "statsFree": "100% gratuit, sans pub",
-    "quickAccess": "Accès rapide",
-    "quickAccessTeams": "Voir les équipes",
-    "quickAccessStarPlayers": "Voir les Star Players",
-    "quickAccessSkills": "Voir les compétences",
-    "quickAccessTutorial": "Commencer un tutoriel",
     "latestNewsTitle": "Dernières actualités",
     "latestNewsSubtitle": "Articles, guides et coulisses du blog Nuffle Arena.",
     "latestNewsSeeAll": "Tous les articles",
@@ -263,7 +232,45 @@
     "ctaCreateTeam": "Créer mon équipe — gratuit",
     "ctaLeagues": "Trouver une ligue",
     "ctaLoginHint": "Déjà un compte ?",
-    "ctaLogin": "Se connecter"
+    "ctaLogin": "Se connecter",
+    "tiles": {
+      "rosters": {
+        "title": "31 rosters officiels",
+        "desc": "Toutes les équipes Saison 3, budgets compris."
+      },
+      "starPlayers": {
+        "title": "60+ Star Players",
+        "desc": "Mercenaires légendaires et leurs règles."
+      },
+      "skills": {
+        "title": "Compétences",
+        "desc": "130+ compétences, traits et mutations."
+      },
+      "rules": {
+        "title": "Règles du jeu",
+        "desc": "Le compendium des règles 2025, chapitre par chapitre."
+      },
+      "gameAid": {
+        "title": "Aide de jeu",
+        "desc": "Tables et rappels à garder près du terrain."
+      },
+      "tierList": {
+        "title": "Tier list",
+        "desc": "Les rosters classés et comparés."
+      },
+      "tutorial": {
+        "title": "Tutoriels",
+        "desc": "Apprenez à jouer pas à pas."
+      },
+      "exportPdf": {
+        "title": "Export PDF",
+        "desc": "Votre roster imprimé, prêt pour la table."
+      },
+      "localMatches": {
+        "title": "Match hors ligne",
+        "desc": "Saisissez un match joué sur table."
+      }
+    }
   },
   "skills": {
     "title": "Compétences, Mutations et Traits",

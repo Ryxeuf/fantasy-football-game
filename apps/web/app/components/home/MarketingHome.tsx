@@ -1,86 +1,27 @@
 "use client";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import HomeStructuredData from "../HomeStructuredData";
 import LatestBlogPosts from "../LatestBlogPosts";
 import { useFeatureFlag } from "../../hooks/useFeatureFlag";
-import {
-  OFFLINE_MATCH_FLAG,
-  ONLINE_PLAY_FLAG,
-} from "../../lib/featureFlagKeys";
+import { ONLINE_PLAY_FLAG } from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
 import {
   NuffleMedallion,
   BlockDie,
-  EmblemRosters,
-  EmblemStar,
-  EmblemSkills,
-  EmblemTutorial,
-  EmblemTabletop,
-  EmblemPdf,
 } from "./NuffleArt";
 import { FactionCrest, FACTIONS, StadiumBackdrop } from "./NuffleScenes";
 import BlockDiceRoller from "./BlockDiceRoller";
 import NewsTicker from "./NewsTicker";
 import SectionTitle from "./SectionTitle";
 import CompetitionsSection from "./CompetitionsSection";
+import CompendiumTiles from "./CompendiumTiles";
 import { heroLoginHref, heroPrimaryCta } from "./hero-cta";
 
 /* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
    partout (badges d'icones, poster final) pour eviter le patchwork. */
 const COIN_BADGE =
   "relative flex items-center justify-center rounded-full bg-[#1B1610] text-nuffle-gold ring-1 ring-nuffle-gold/40 shadow-[inset_0_1px_0_rgba(232,201,106,0.25),0_6px_16px_rgba(27,22,16,0.35)]";
-
-interface FeatureCardProps {
-  href?: string;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  badge?: string;
-  cta?: string;
-}
-
-function FeatureCard({ href, icon, title, description, badge, cta }: FeatureCardProps) {
-  const inner = (
-    <>
-      <div className="flex items-start gap-4">
-        <span className={`${COIN_BADGE} h-14 w-14 flex-shrink-0`}>
-          <span className="h-8 w-8 flex items-center justify-center [&>svg]:h-8 [&>svg]:w-8">{icon}</span>
-        </span>
-        <div className="min-w-0">
-          <h3 className="font-heading font-bold text-lg leading-tight text-nuffle-anthracite">{title}</h3>
-          {badge && (
-            <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/15 px-2.5 py-0.5 text-[11px] font-subtitle font-bold uppercase tracking-wide text-nuffle-bronze">
-              <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
-              {badge}
-            </span>
-          )}
-        </div>
-      </div>
-      <span className="mt-4 block h-px w-full bg-nuffle-bronze/15" aria-hidden="true" />
-      <p className="mt-4 text-nuffle-anthracite/75 font-body text-sm sm:text-[15px] leading-relaxed">
-        {description}
-      </p>
-      {href && cta && (
-        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-subtitle font-semibold text-nuffle-bronze group-hover:text-nuffle-gold transition-colors">
-          {cta}
-          <span className="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
-        </span>
-      )}
-    </>
-  );
-
-  const cardClass =
-    "group h-full rounded-2xl bg-[#FBF7EC] border border-nuffle-bronze/20 p-6 shadow-[0_2px_10px_rgba(107,78,46,0.06)] hover:border-nuffle-gold/60 hover:shadow-[0_10px_30px_rgba(107,78,46,0.14)] hover:-translate-y-1 transition-all";
-
-  return href ? (
-    <a href={href} className={cardClass}>
-      {inner}
-    </a>
-  ) : (
-    <div className={cardClass}>{inner}</div>
-  );
-}
 
 interface PublicStats {
   rosters: number;
@@ -107,7 +48,6 @@ interface MarketingHomeProps {
 export default function MarketingHome({ coachName = null }: MarketingHomeProps) {
   const { t, language } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
-  const offlineMatchEnabled = useFeatureFlag(OFFLINE_MATCH_FLAG);
 
   // Stats live (compteurs reels) via /api/public/stats — endpoint leger
   // (6 COUNT), fetch cote client avec repli sur les valeurs catalogue.
@@ -134,26 +74,6 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
         .replace("{teams}", liveStats.teamsCreated.toLocaleString(numLocale))
         .replace("{matches}", liveStats.matchesTracked.toLocaleString(numLocale))
     : "";
-
-  const explore = t.home.exploreCta;
-  const features: ReadonlyArray<FeatureCardProps> = [
-    { href: "/teams", icon: <EmblemRosters />, title: t.home.rosters.title, description: t.home.rosters.description, cta: explore },
-    { href: "/star-players", icon: <EmblemStar />, title: t.home.starPlayers.title, description: t.home.starPlayers.description, cta: explore },
-    { href: "/skills", icon: <EmblemSkills />, title: t.home.skillsReference.title, description: t.home.skillsReference.description, cta: explore },
-    { href: "/tutoriel", icon: <EmblemTutorial />, title: t.home.tutorial.title, description: t.home.tutorial.description, cta: explore },
-    // Carte « parties offline » : seulement quand la brique est active.
-    ...(offlineMatchEnabled
-      ? [{ href: "/local-matches", icon: <EmblemTabletop />, title: t.home.localMatches.title, description: t.home.localMatches.description, cta: explore }]
-      : []),
-    { icon: <EmblemPdf />, title: t.home.exportPdf.title, description: t.home.exportPdf.description },
-  ];
-
-  const quickLinks = [
-    { href: "/teams", label: t.home.quickAccessTeams },
-    { href: "/star-players", label: t.home.quickAccessStarPlayers },
-    { href: "/skills", label: t.home.quickAccessSkills },
-    { href: "/tutoriel", label: t.home.quickAccessTutorial },
-  ];
 
   // Citation de Nuffle tiree au hasard a chaque chargement. On part de
   // l'index 0 (stable SSR + premier rendu client) puis on randomise au
@@ -318,31 +238,8 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
           </div>
         </section>
 
-        {/* Features */}
-        <section className="relative max-w-6xl mx-auto px-4 sm:px-6 py-14 md:py-20">
-          <SectionTitle kicker={t.home.featuresKicker} title={t.home.discoverTitle} subtitle={t.home.discoverSubtitle} />
-          <div className="mt-10 md:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f) => (
-              <FeatureCard key={f.title} {...f} />
-            ))}
-          </div>
-
-          {/* Acces rapide — pills discrets, meme famille */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-2.5">
-            <span className="text-xs font-subtitle font-semibold uppercase tracking-[0.2em] text-nuffle-bronze/70">
-              {t.home.quickAccess} :
-            </span>
-            {quickLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="rounded-full border border-nuffle-bronze/30 bg-[#FBF7EC] px-4 py-1.5 text-sm font-subtitle font-semibold text-nuffle-bronze hover:border-nuffle-gold hover:text-nuffle-anthracite hover:bg-nuffle-gold/10 transition-all"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </section>
+        {/* Catalogue de reference — tuiles compactes */}
+        <CompendiumTiles />
 
         {/* Latest blog posts */}
         <LatestBlogPosts />

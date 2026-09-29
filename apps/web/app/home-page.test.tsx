@@ -146,6 +146,15 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(screen.getByTestId("home-cups-cta").getAttribute("href")).toBe("/cups");
   });
 
+  it("catalogue en tuiles liees, sans rangee « Acces rapide » en doublon", async () => {
+    renderHome();
+    const compendium = screen.getByTestId("home-compendium");
+    const hrefs = Array.from(compendium.querySelectorAll("a")).map((a) => a.getAttribute("href"));
+    expect(hrefs).toEqual(expect.arrayContaining(["/compendium", "/aide-de-jeu", "/me/teams"]));
+    expect(new Set(hrefs).size).toBe(hrefs.length);
+    expect(screen.queryByText(/Accès rapide/)).toBeNull();
+  });
+
   it("ne monte pas le bandeau d'actualite tant que le flag est OFF", async () => {
     renderHome();
     await waitFor(() =>

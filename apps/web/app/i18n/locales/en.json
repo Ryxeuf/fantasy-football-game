@@ -131,30 +131,6 @@
     "discoverTeams": "Explore the teams",
     "createFirstTeam": "Create your first team",
     "createFirstTeamDesc": "Choose from 31 official rosters, recruit your players and Star Players, then export your team as a tabletop-ready PDF.",
-    "rosters": {
-      "title": "31 official rosters",
-      "description": "Every Season 3 team: Skaven, Elves, Orcs, Dwarves, Lizardmen, Gnomes, Imperial Nobility, and many more. Each roster follows the official rules and budgets."
-    },
-    "starPlayers": {
-      "title": "60+ Star Players",
-      "description": "Recruit from 60+ legendary mercenaries — Griff Oberwald, Morg 'n' Thorg, Hakflem Skuttlespike — with full special rules and regional rules support."
-    },
-    "exportPdf": {
-      "title": "Tabletop PDF export",
-      "description": "Export your rosters as PDF with full information: players, Star Players, budget, treasury and statistics, ready for your in-person game."
-    },
-    "skillsReference": {
-      "title": "Skills library",
-      "description": "130+ Blood Bowl skills, mutations and traits, fully detailed, searchable and categorised to help you plan moves and recruit smartly."
-    },
-    "tutorial": {
-      "title": "Interactive tutorials",
-      "description": "Learn Nuffle Arena step by step with guided scenarios. Movement, blocking, passing, tackling, dodging: from beginner to advanced."
-    },
-    "localMatches": {
-      "title": "Offline match entry",
-      "description": "Record and track your tabletop Blood Bowl matches: scores, injuries, SPP, treasury — and keep the full history of your team, offline."
-    },
     "cups": {
       "title": "Cups & tournaments",
       "description": "Run your tournaments: Swiss rounds or random draw, pools then playoffs, the same match sheet as leagues.",
@@ -192,7 +168,6 @@
       "title": "31 teams, one arena",
       "subtitle": "From nimble Skaven to stubborn Dwarves — pick your side."
     },
-    "exploreCta": "Explore",
     "diceRollerCta": "Roll the dice",
     "diceRollerHint": "Defy Nuffle — official block die distribution",
     "activityLine": "Already {teams} teams forged and {matches} matches tracked by the community.",
@@ -200,17 +175,11 @@
     "faqKicker": "Before kickoff",
     "blogKicker": "The Gazette",
     "discoverTitle": "Everything you need to play Blood Bowl",
-    "discoverSubtitle": "A complete companion for coaches, from team building to a full league season.",
     "statsTitle": "Nuffle Arena by the numbers",
     "statsRosters": "Official rosters",
     "statsStarPlayers": "Star Players",
     "statsSkills": "Listed skills",
     "statsFree": "100% free, ad-free",
-    "quickAccess": "Quick access",
-    "quickAccessTeams": "Browse teams",
-    "quickAccessStarPlayers": "Browse Star Players",
-    "quickAccessSkills": "Browse skills",
-    "quickAccessTutorial": "Start a tutorial",
     "latestNewsTitle": "Latest news",
     "latestNewsSubtitle": "Articles, guides and behind-the-scenes from the Nuffle Arena blog.",
     "latestNewsSeeAll": "All articles",
@@ -263,7 +232,45 @@
     "ctaCreateTeam": "Create my team — free",
     "ctaLeagues": "Find a league",
     "ctaLoginHint": "Already have an account?",
-    "ctaLogin": "Log in"
+    "ctaLogin": "Log in",
+    "tiles": {
+      "rosters": {
+        "title": "31 official rosters",
+        "desc": "Every Season 3 team, budgets included."
+      },
+      "starPlayers": {
+        "title": "60+ Star Players",
+        "desc": "Legendary mercenaries and their rules."
+      },
+      "skills": {
+        "title": "Skills",
+        "desc": "130+ skills, traits and mutations."
+      },
+      "rules": {
+        "title": "Game rules",
+        "desc": "The 2025 rules compendium, chapter by chapter."
+      },
+      "gameAid": {
+        "title": "Game aid",
+        "desc": "Tables and reminders to keep by the pitch."
+      },
+      "tierList": {
+        "title": "Tier list",
+        "desc": "Rosters ranked and compared."
+      },
+      "tutorial": {
+        "title": "Tutorials",
+        "desc": "Learn to play step by step."
+      },
+      "exportPdf": {
+        "title": "PDF export",
+        "desc": "Your roster printed, table-ready."
+      },
+      "localMatches": {
+        "title": "Offline match",
+        "desc": "Record a match played on the tabletop."
+      }
+    }
   },
   "skills": {
     "title": "Skills, Mutations and Traits",
