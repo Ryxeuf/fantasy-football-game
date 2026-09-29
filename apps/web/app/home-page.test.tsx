@@ -96,6 +96,34 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(screen.queryByTestId("home-dashboard-link")).toBeNull();
   });
 
+  it("hero : un visiteur deconnecte est invite a s'inscrire, ou a se connecter", async () => {
+    renderHome();
+    const cta = screen.getByTestId("home-hero-cta");
+    expect(cta.getAttribute("href")).toBe("/register?redirect=%2Fme%2Fteams");
+    expect(cta.textContent).toContain("Créer mon équipe");
+    expect(screen.getByTestId("home-hero-login").getAttribute("href")).toBe(
+      "/login?redirect=%2Fme%2Fteams",
+    );
+    expect(screen.getByTestId("home-hero-leagues").getAttribute("href")).toBe("/leagues");
+  });
+
+  it("hero : un coach connecte va droit a ses equipes, sans lien de connexion", async () => {
+    window.localStorage.setItem("auth_token", "fake-token");
+    mockedApiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/auth/me"))
+        return Promise.resolve({ user: { id: "u1", coachName: "Nuffle" } });
+      if (path.startsWith("/api/public/stats"))
+        return Promise.reject(new Error("no stats in test"));
+      return Promise.resolve({});
+    });
+    renderHome();
+    await screen.findByTestId("home-dashboard-link");
+    const cta = screen.getByTestId("home-hero-cta");
+    expect(cta.getAttribute("href")).toBe("/me/teams");
+    expect(cta.textContent).toContain("Gérer mes équipes");
+    expect(screen.queryByTestId("home-hero-login")).toBeNull();
+  });
+
   it("presente la ligue comme ouverte a tous (plus d'acces anticipe)", async () => {
     renderHome();
     const cta = screen.getByTestId("home-leagues-cta");

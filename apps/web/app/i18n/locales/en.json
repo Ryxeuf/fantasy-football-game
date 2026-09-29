@@ -123,7 +123,6 @@
     ],
     "statsFreeValue": "0 GP",
     "description": "Free digital platform to create, manage, and live out your Blood Bowl teams. Build your rosters, recruit legendary Star Players, then take them into leagues and cups with rulebook-accurate match sheets.",
-    "subtitle": "Compliant with the official Blood Bowl 2025 rules: 31 full rosters, 60+ Star Players, 130+ skills, budget and treasury management, full leagues and cups, PDF export for your games.",
     "manageTeams": "Manage my teams",
     "dashboardBannerGreeting": "Welcome back, {name}!",
     "dashboardBannerCta": "My dashboard",
@@ -261,7 +260,11 @@
       "leagueOpen": "Registration open · League",
       "cupOpen": "Registration open · Cup",
       "forfeit": "forfeit"
-    }
+    },
+    "ctaCreateTeam": "Create my team — free",
+    "ctaLeagues": "Find a league",
+    "ctaLoginHint": "Already have an account?",
+    "ctaLogin": "Log in"
   },
   "skills": {
     "title": "Skills, Mutations and Traits",

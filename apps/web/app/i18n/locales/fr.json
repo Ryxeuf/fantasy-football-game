@@ -123,7 +123,6 @@
     ],
     "statsFreeValue": "0 PO",
     "description": "Plateforme digitale gratuite pour créer, gérer et faire vivre vos équipes Blood Bowl. Construisez vos rosters, recrutez des Star Players légendaires, puis lancez-vous en ligue ou en coupe avec des feuilles de match conformes au livre.",
-    "subtitle": "Conforme aux règles officielles Blood Bowl 2025 : 31 rosters complets, 60+ Star Players, 130+ compétences, gestion du budget et de la trésorerie, ligues et coupes complètes, export PDF pour vos parties.",
     "manageTeams": "Gérer mes équipes",
     "dashboardBannerGreeting": "Bon retour, {name} !",
     "dashboardBannerCta": "Mon tableau de bord",
@@ -261,7 +260,11 @@
       "leagueOpen": "Inscriptions ouvertes · Ligue",
       "cupOpen": "Inscriptions ouvertes · Coupe",
       "forfeit": "forfait"
-    }
+    },
+    "ctaCreateTeam": "Créer mon équipe — gratuit",
+    "ctaLeagues": "Trouver une ligue",
+    "ctaLoginHint": "Déjà un compte ?",
+    "ctaLogin": "Se connecter"
   },
   "skills": {
     "title": "Compétences, Mutations et Traits",

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
-import Logo from "../Logo";
 import { useLanguage } from "../../contexts/LanguageContext";
 import HomeStructuredData from "../HomeStructuredData";
 import LatestBlogPosts from "../LatestBlogPosts";
@@ -30,6 +29,7 @@ import {
 } from "./NuffleScenes";
 import BlockDiceRoller from "./BlockDiceRoller";
 import NewsTicker from "./NewsTicker";
+import { heroLoginHref, heroPrimaryCta } from "./hero-cta";
 
 /* Materiau « jeton sombre grave » — l'unique accent sombre, reutilise
    partout (badges d'icones, poster final) pour eviter le patchwork. */
@@ -188,6 +188,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
     setQuoteIndex(Math.floor(Math.random() * heroQuotes.length));
   }, [heroQuotes.length]);
   const heroQuote = heroQuotes[quoteIndex] ?? heroQuotes[0];
+  const primaryCta = heroPrimaryCta(coachName !== null);
 
   return (
     <>
@@ -205,7 +206,7 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
             className="pointer-events-none absolute inset-0 opacity-[0.05] bg-[repeating-linear-gradient(115deg,transparent,transparent_46px,#6B4E2E_46px,#6B4E2E_47px)]"
             aria-hidden="true"
           />
-          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-14 sm:pt-16 sm:pb-20 grid md:grid-cols-[1.1fr_0.9fr] items-center gap-10 md:gap-12">
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-10 sm:pt-12 sm:pb-14 grid md:grid-cols-[1.1fr_0.9fr] items-center gap-10 md:gap-12">
             <div>
               {/* Bandeau coach connecté : raccourci vers le tableau de bord
                   personnalisé (/me). Absent pour les visiteurs déconnectés. */}
@@ -224,42 +225,50 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
                   </span>
                 </a>
               )}
-              <div className="mb-6">
-                <Logo variant="default" showText={true} />
-              </div>
               <span className="inline-flex items-center gap-2 rounded-full border border-nuffle-gold/50 bg-nuffle-gold/10 px-4 py-1.5 text-xs sm:text-sm font-subtitle font-semibold uppercase tracking-[0.2em] text-nuffle-bronze">
                 <span className="h-1.5 w-1.5 rounded-full bg-nuffle-gold" aria-hidden="true" />
                 {t.home.heroBadge}
               </span>
-              <h1 className="mt-5 font-heading font-bold text-4xl sm:text-5xl md:text-[3.4rem] leading-[1.05] text-nuffle-anthracite">
+              <h1 className="mt-4 font-heading font-bold text-4xl sm:text-5xl md:text-[3.4rem] leading-[1.05] text-nuffle-anthracite">
                 {t.home.title}
               </h1>
-              <p className="mt-5 text-base sm:text-lg text-nuffle-anthracite/80 leading-relaxed font-body max-w-xl">
+              <p className="mt-4 text-base sm:text-lg text-nuffle-anthracite/80 leading-relaxed font-body max-w-xl">
                 {t.home.description}
               </p>
-              <p className="mt-3 text-sm sm:text-base text-nuffle-bronze/90 leading-relaxed font-body max-w-xl">
-                {t.home.subtitle}
-              </p>
 
-              <div className="mt-7 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+              <div className="mt-6 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                 <a
-                  href="/me/teams"
+                  href={primaryCta.href}
+                  data-testid="home-hero-cta"
                   className="px-7 py-3.5 rounded-xl bg-gradient-to-b from-[#E0BC52] to-nuffle-gold hover:from-nuffle-gold hover:to-[#a8852b] text-nuffle-anthracite font-subtitle font-bold uppercase tracking-wide shadow-[0_6px_20px_rgba(203,161,53,0.35)] hover:shadow-[0_8px_28px_rgba(203,161,53,0.5)] transition-all hover:-translate-y-0.5 text-center"
                 >
-                  {t.home.manageTeams}
+                  {t.home[primaryCta.labelKey]}
                 </a>
                 <a
-                  href="/teams"
+                  href="/leagues"
+                  data-testid="home-hero-leagues"
                   className="px-7 py-3.5 rounded-xl border-2 border-nuffle-bronze/40 text-nuffle-bronze hover:border-nuffle-gold hover:text-nuffle-anthracite hover:bg-nuffle-gold/10 font-subtitle font-bold uppercase tracking-wide transition-all text-center"
                 >
-                  {t.home.discoverTeams}
+                  {t.home.ctaLeagues}
                 </a>
               </div>
+              {coachName === null && (
+                <p className="mt-3 text-sm font-body text-nuffle-bronze/90">
+                  {t.home.ctaLoginHint}{" "}
+                  <a
+                    href={heroLoginHref()}
+                    data-testid="home-hero-login"
+                    className="font-subtitle font-semibold underline decoration-nuffle-gold/60 underline-offset-2 hover:text-nuffle-anthracite"
+                  >
+                    {t.home.ctaLogin}
+                  </a>
+                </p>
+              )}
 
               {/* Stats integrees au hero (pas de bande separee) */}
               <dl
                 data-testid="home-stats"
-                className="mt-9 grid grid-cols-4 gap-2 sm:gap-4 max-w-lg border-t border-nuffle-bronze/20 pt-5"
+                className="mt-6 grid grid-cols-4 gap-2 sm:gap-4 max-w-lg border-t border-nuffle-bronze/20 pt-4"
               >
                 {stats.map((stat) => (
                   <div key={stat.label} className="text-center sm:text-left">
@@ -279,21 +288,19 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
               )}
             </div>
 
-            {/* Medaillon + lanceur de dés interactif */}
-            <div className="relative mx-auto w-full max-w-[380px]">
+            {/* Medaillon + lanceur de dés interactif : reserve aux ecrans
+                larges. Sur mobile il repoussait tout le contenu utile d'un
+                ecran entier. La citation de Nuffle vit sous les des. */}
+            <div className="relative mx-auto hidden w-full max-w-[340px] md:block">
               <StadiumBackdrop className="pointer-events-none absolute -inset-x-10 -top-10 -bottom-4 h-[120%] w-[120%] opacity-60" />
               <NuffleMedallion className="relative w-full drop-shadow-[0_18px_40px_rgba(27,22,16,0.25)]" />
               <div className="relative -mt-4">
                 <BlockDiceRoller />
               </div>
+              <blockquote className="relative mt-3 text-center text-sm italic text-nuffle-bronze/80 font-body">
+                {heroQuote}
+              </blockquote>
             </div>
-          </div>
-
-          {/* citation Nuffle — liseré */}
-          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pb-10">
-            <blockquote className="border-l-4 border-nuffle-red/70 pl-4 text-sm sm:text-base italic text-nuffle-bronze/80 font-body">
-              {heroQuote}
-            </blockquote>
           </div>
         </section>
 
