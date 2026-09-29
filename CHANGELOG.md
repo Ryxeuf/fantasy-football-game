@@ -1,3 +1,10 @@
+## [1.245.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.244.0...v1.245.0) (2026-09-29)
+
+
+### ✨ Features
+
+* **home:** bandeau « À la une » lisible, cartes de résultats + ligne d'actualité ([#1042](https://github.com/Ryxeuf/fantasy-football-game/issues/1042)) ([1876a24](https://github.com/Ryxeuf/fantasy-football-game/commit/1876a24bbdc1f594eb7f12c88c9ebb61ecbde89e))
+
 ## [1.244.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.243.0...v1.244.0) (2026-09-27)
 
 
