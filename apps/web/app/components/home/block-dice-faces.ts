@@ -1,4 +1,4 @@
-import type { BlockDieFace } from "./NuffleArt";
+import type { BlockDieFace } from "../dice/types";
 
 /**
  * Miroir web de la table des faces du Dé de Blocage.

@@ -108,115 +108,13 @@ export function NuffleMedallion({ className }: SvgProps) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Des de blocage — tuile sombre + symbole or grave                    */
+/* Des de blocage — rendus par le THEME DE DES du coach                */
 /* ------------------------------------------------------------------ */
 
-export type BlockDieFace = "pow" | "push" | "stumble" | "bothdown" | "down";
-
-function powPoints(): string {
-  const cx = 20;
-  const cy = 20;
-  const pts: string[] = [];
-  for (let i = 0; i < 16; i += 1) {
-    const r = i % 2 === 0 ? 12 : 6;
-    const a = (i * 22.5 * Math.PI) / 180;
-    pts.push(`${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`);
-  }
-  return pts.join(" ");
-}
-
-/**
- * Noms officiels des cinq icônes du Dé de Blocage (livre 2025). Ils
- * doivent rester ceux du moteur (`BLOCK_DIE_FACE_INFO`) et du compendium :
- * les anciens libellés approximatifs (« Joueur à terre », « Hésitation »,
- * « Tous à terre ») ne correspondaient à aucune face du dé, et `pow`
- * portait carrément le nom d'une autre face.
- */
-const DIE_LABEL: Record<BlockDieFace, string> = {
-  pow: "Défenseur Plaqué",
-  push: "Repoussé",
-  stumble: "Bousculé",
-  bothdown: "Les Deux Plaqués",
-  down: "Attaquant Plaqué",
-};
-
-export function BlockDie({ face, className }: { readonly face: BlockDieFace; readonly className?: string }) {
-  return (
-    <svg viewBox="0 0 40 40" className={className} role="img" aria-label={DIE_LABEL[face]}>
-      <rect x="2" y="2" width="36" height="36" rx="9" fill={COIN} stroke="url(#bd-gold)" strokeWidth="1.6" />
-      <rect x="4.5" y="4.5" width="31" height="31" rx="7" fill="none" stroke={GOLD_DEEP} strokeWidth="0.7" opacity="0.5" />
-      <defs>
-        <linearGradient id="bd-gold" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#F3Dd92" />
-          <stop offset="100%" stopColor={GOLD_DEEP} />
-        </linearGradient>
-      </defs>
-
-      {face === "pow" && (
-        <>
-          <polygon points={powPoints()} fill="url(#bd-gold)" />
-          <circle cx="20" cy="20" r="4.2" fill={COIN} />
-        </>
-      )}
-
-      {face === "push" && (
-        <path
-          d="M9 20h13M17 13l7 7-7 7"
-          fill="none"
-          stroke="url(#bd-gold)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
-
-      {face === "stumble" && (
-        <>
-          <path
-            d="M9 22h11M16 16l6 6-6 6"
-            fill="none"
-            stroke="url(#bd-gold)"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path d="M27 11v7" stroke="url(#bd-gold)" strokeWidth="2.6" strokeLinecap="round" />
-          <circle cx="27" cy="22.5" r="1.5" fill="url(#bd-gold)" />
-        </>
-      )}
-
-      {/* Les Deux Plaqués : un crâne sur une explosion (icône du livre). */}
-      {face === "bothdown" && (
-        <g>
-          <polygon points={powPoints()} fill="url(#bd-gold)" opacity="0.55" />
-          <g fill="url(#bd-gold)">
-            <circle cx="20" cy="18" r="6.4" />
-            <rect x="15.2" y="23" width="9.6" height="5.4" rx="1.7" />
-          </g>
-          <g fill={COIN}>
-            <circle cx="17.6" cy="17.4" r="1.9" />
-            <circle cx="22.4" cy="17.4" r="1.9" />
-            <path d="M20 19.2l1.3 2.4h-2.6z" />
-          </g>
-        </g>
-      )}
-
-      {face === "down" && (
-        <g>
-          <path
-            fill="url(#bd-gold)"
-            d="M20 7c-5 0-8.6 3.4-8.6 8.1 0 2.7 1.3 4.5 2.7 5.6.6.4.9.8.9 1.5V25c0 .6.3 1 .9 1h1c.5 0 .8-.4.8-1v-1.4h1.2V25c0 .6.4 1 .9 1s.9-.4.9-1v-1.4h1.2V25c0 .6.3 1 .8 1h1c.6 0 .9-.4.9-1v-1.8c0-.7.3-1.1.9-1.5 1.4-1.1 2.7-2.9 2.7-5.6C28.6 10.4 25 7 20 7z"
-          />
-          <g fill={COIN}>
-            <circle cx="16.8" cy="14.9" r="2.2" />
-            <circle cx="23.2" cy="14.9" r="2.2" />
-            <path d="M20 16.6l1.5 2.7h-3z" />
-          </g>
-        </g>
-      )}
-    </svg>
-  );
-}
+// Le dessin vit dans `components/dice/themes` (thème « Nuffle » par
+// défaut) : `BlockDie` reste exporté ici pour les appelants historiques.
+export { BlockDieIcon as BlockDie } from "../dice/BlockDieIcon";
+export type { BlockDieFace } from "../dice/types";
 
 /* ------------------------------------------------------------------ */
 /* Emblemes de categories — gravure or, trait constant (viewBox 24)    */

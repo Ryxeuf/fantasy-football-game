@@ -21,7 +21,7 @@ import {
   BLOCK_DIE_FACE_INFO,
   blockResultFromRoll,
 } from "@bb/game-engine";
-import type { BlockDieFace } from "./NuffleArt";
+import type { BlockDieFace } from "../dice/types";
 import { BLOCK_DIE_FACES, BLOCK_DIE_FACE_LABELS } from "./block-dice-faces";
 import { getChapter } from "../../compendium/data";
 

@@ -4,6 +4,7 @@ import { API_BASE } from "../../auth-client";
 import NotificationPreferences from "../../components/NotificationPreferences";
 import EmailDigestPreference from "../../components/EmailDigestPreference";
 import PrivateProfileToggle from "./PrivateProfileToggle";
+import DiceThemePicker from "./DiceThemePicker";
 
 type UserProfile = {
   id: string;
@@ -639,6 +640,9 @@ export default function ProfilePage() {
 
       {/* Reengagement Phase B — opt-in digest e-mail hebdomadaire */}
       <EmailDigestPreference />
+
+      {/* Thème de dés (flag `dice_themes` ; masqué quand il est OFF) */}
+      <DiceThemePicker />
 
       {/* Actions rapides */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">

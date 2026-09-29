@@ -17,6 +17,7 @@
 import { useMemo } from "react";
 import type { JSX } from "react";
 import { useSkillCatalog } from "./SheetAdvancementsEditor";
+import { D6Icon } from "../../../../../components/dice/D6Icon";
 import type { SkillCatalogItem } from "../../../../../components/AdvancementEditor";
 
 /** Un jet de Haine tel que servi par l'API (cf. `services/league-hate-trait`). */
@@ -97,16 +98,13 @@ export function HateRollsRecap({
               className="flex flex-wrap items-center gap-2"
               data-testid={r.granted ? "hate-roll-granted" : "hate-roll-failed"}
             >
-              <span
-                aria-label={`Résultat du dé : ${r.roll}`}
-                className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded border text-xs font-bold ${
-                  r.granted
-                    ? "border-purple-400 bg-white text-purple-800"
-                    : "border-slate-300 bg-white text-slate-500"
-                }`}
-              >
-                {r.roll}
-              </span>
+              {/* Face dessinée dans le thème de dés du coach ; un jet raté
+                  est estompé plutôt que recoloré (le thème fixe les couleurs). */}
+              <D6Icon
+                value={r.roll}
+                label={`Résultat du dé : ${r.roll}`}
+                className={`h-6 w-6 shrink-0 ${r.granted ? "" : "opacity-50 grayscale"}`}
+              />
               <span className="font-medium">
                 {r.playerName || r.playerId}
                 {teamName ? (
