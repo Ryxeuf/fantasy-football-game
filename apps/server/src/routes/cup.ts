@@ -52,6 +52,7 @@ import {
   parseCupTieBreakRules,
 } from "../services/cup-standings-order";
 import { groupCupStandingsByPool } from "../services/cup-pool";
+import { buildCupListWhere } from "../services/cup-listing";
 
 /** Poule telle que `GET /cup/:id` la charge (ordre + quota). */
 interface CupPoolRow {
@@ -180,12 +181,15 @@ function serializeTieBreakRules(
 }
 
 // GET /cup - Liste les coupes visibles par l'utilisateur
-// Règles : coupes publiques ET ouvertes, OU coupes auxquelles l'utilisateur participe
+// Règles (cf. `buildCupListWhere`) : coupes publiques non archivées, OU coupes
+// créées par l'utilisateur, OU coupes auxquelles il participe.
 router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    const { publicOnly } = req.query;
-    const showAll = publicOnly === "false"; // Si publicOnly=false, on montre toutes les coupes (pour l'admin)
-    
+    // `publicOnly=false` = vue admin (archivées et privées comprises) : réservé
+    // aux admins, sinon n'importe quel compte listerait les coupes privées.
+    const showAll =
+      req.query.publicOnly === "false" && hasRole(req.user!.roles, "admin");
+
     // Récupérer les équipes de l'utilisateur pour vérifier sa participation
     const userTeams = await prisma.team.findMany({
       where: { ownerId: req.user!.id, deletedAt: null },
@@ -193,41 +197,11 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
     });
     const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
 
-    // Construire la condition where
-    let whereClause: any = {};
-
-    if (!showAll) {
-      // Pour les utilisateurs normaux : coupes publiques ET ouvertes, OU coupes auxquelles ils participent
-      // Si userTeamIds est vide, on ne peut pas participer, donc on ne montre que les coupes publiques ouvertes
-      if (userTeamIds.length === 0) {
-        whereClause = {
-          status: "ouverte",
-          isPublic: true,
-        };
-      } else {
-        whereClause = {
-          status: { not: "archivee" }, // Exclure les coupes archivées
-          OR: [
-            // Coupes publiques ET ouvertes (inscriptions ouvertes)
-            {
-              isPublic: true,
-              status: "ouverte",
-            },
-            // OU coupes auxquelles l'utilisateur participe (via ses équipes) - peu importe le statut
-            {
-              participants: {
-                some: {
-                  teamId: { in: userTeamIds },
-                },
-              },
-            },
-          ],
-        };
-      }
-    } else {
-      // Pour l'admin : toutes les coupes (y compris archivées)
-      whereClause = {};
-    }
+    const whereClause = buildCupListWhere({
+      userId: req.user!.id,
+      userTeamIds,
+      showAll,
+    });
 
     const cups = await prisma.cup.findMany({
       where: whereClause,
