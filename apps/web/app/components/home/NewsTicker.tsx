@@ -240,7 +240,7 @@ function ResultCard({
       <a
         href={card.href}
         data-testid="home-news-ticker-result"
-        className="flex min-h-[124px] w-[76vw] max-w-[248px] flex-col gap-1.5 rounded-lg border border-nuffle-ivory/10 bg-[#2C241A] px-3 py-2.5 text-nuffle-ivory hover:border-nuffle-gold/45 hover:bg-[#372D20] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E0BC52] sm:w-[232px]"
+        className="relative flex min-h-[124px] w-[76vw] max-w-[248px] flex-col gap-1.5 rounded-lg border border-nuffle-ivory/10 bg-[#2C241A] px-3 py-2.5 text-nuffle-ivory hover:border-nuffle-gold/45 hover:bg-[#372D20] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E0BC52] sm:w-[232px]"
       >
         <span className="sr-only">{card.summary}</span>
         <span aria-hidden="true" className="flex items-center justify-between gap-2">
@@ -326,10 +326,13 @@ function ResultStrip({
           ›
         </button>
       </div>
+      {/* `relative` : les textes `sr-only` des cartes (position absolue) doivent
+          avoir la bande pour bloc conteneur, sinon ils échappent à son
+          `overflow-x` et élargissent toute la page sur mobile. */}
       <ul
         ref={stripRef}
         onScroll={updateEdges}
-        className="na-ticker-strip m-0 flex list-none snap-x snap-mandatory scroll-px-4 gap-2.5 overflow-x-auto px-4 pb-1 pt-0.5"
+        className="na-ticker-strip relative m-0 flex list-none snap-x snap-mandatory scroll-px-4 gap-2.5 overflow-x-auto px-4 pb-1 pt-0.5"
       >
         {results.map((card) => (
           <ResultCard key={card.key} card={card} forfeitLabel={labels.forfeit} now={now} locale={locale} />

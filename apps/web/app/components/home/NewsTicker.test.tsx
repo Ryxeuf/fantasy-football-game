@@ -164,6 +164,21 @@ describe("NewsTicker (bandeau « À la une » de la home)", () => {
     }
   });
 
+  it("donne un bloc conteneur à la bande de cartes (pas de débordement de page)", async () => {
+    mockedApiRequest.mockResolvedValue({ items: [RESULT_ITEM, { ...RESULT_ITEM, id: "s2" }] });
+    renderTicker();
+    const card = (await screen.findAllByTestId("home-news-ticker-result"))[0];
+    // Les résumés `sr-only` sont en position absolue : sans ancêtre positionné
+    // DANS la bande, ils échappaient à son `overflow-x` et élargissaient la
+    // page sur mobile (545 px pour un écran de 412).
+    const srOnly = card.querySelector(".sr-only");
+    expect(srOnly).toBeTruthy();
+    const strip = card.closest("ul");
+    expect(strip?.className).toMatch(/\boverflow-x-auto\b/);
+    expect(strip?.className).toMatch(/\brelative\b/);
+    expect(card.className).toMatch(/\brelative\b/);
+  });
+
   it("ne rend rien quand il n'y a rien à annoncer", async () => {
     mockedApiRequest.mockResolvedValue({ items: [] });
     renderTicker();
