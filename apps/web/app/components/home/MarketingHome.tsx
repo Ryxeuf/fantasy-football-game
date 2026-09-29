@@ -203,9 +203,15 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
         {/* Compétitions — la valeur principale, juste après le hero */}
         <CompetitionsSection />
 
-        {/* Vitrine des factions — bande d'ecus graves */}
-        <section className="border-y border-nuffle-bronze/20 bg-[#1B1610]/[0.03]">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 md:py-12">
+        {/* Catalogue de reference — tuiles compactes */}
+        <CompendiumTiles />
+
+        {/* Vitrine des factions — ecus cliquables vers la fiche du roster */}
+        <section
+          data-testid="home-factions"
+          className="border-y border-nuffle-bronze/20 bg-[#1B1610]/[0.03]"
+        >
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 md:py-10">
             <div className="text-center">
               <h2 className="text-xl sm:text-2xl font-heading font-bold text-nuffle-anthracite">
                 {t.home.factions.title}
@@ -214,20 +220,25 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
                 {t.home.factions.subtitle}
               </p>
             </div>
-            <ul className="mt-8 flex flex-wrap items-start justify-center gap-x-6 gap-y-6 sm:gap-x-9">
+            <ul className="mt-6 grid grid-cols-4 sm:flex sm:flex-wrap items-start justify-center gap-x-3 gap-y-5 sm:gap-x-9">
               {FACTIONS.map((f) => (
-                <li key={f.label} className="group flex w-16 flex-col items-center gap-2 sm:w-20">
-                  <FactionCrest
-                    emblem={f.emblem}
-                    className="w-12 sm:w-14 drop-shadow-[0_6px_14px_rgba(27,22,16,0.3)] transition-transform group-hover:-translate-y-1"
-                  />
-                  <span className="text-center text-[11px] sm:text-xs font-subtitle font-semibold uppercase tracking-wide text-nuffle-bronze/80 leading-tight">
-                    {f.label}
-                  </span>
+                <li key={f.slug} className="flex justify-center">
+                  <a
+                    href={`/teams/${f.slug}`}
+                    className="group flex w-16 flex-col items-center gap-2 sm:w-20"
+                  >
+                    <FactionCrest
+                      emblem={f.emblem}
+                      className="w-11 sm:w-14 drop-shadow-[0_6px_14px_rgba(27,22,16,0.3)] transition-transform group-hover:-translate-y-1"
+                    />
+                    <span className="text-center text-[11px] sm:text-xs font-subtitle font-semibold uppercase tracking-wide text-nuffle-bronze/80 group-hover:text-nuffle-anthracite leading-tight">
+                      {t.home.factions.names[f.slug]}
+                    </span>
+                  </a>
                 </li>
               ))}
             </ul>
-            <p className="mt-7 text-center">
+            <p className="mt-6 text-center">
               <a
                 href="/teams"
                 className="inline-flex items-center gap-1.5 text-sm font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
@@ -237,9 +248,6 @@ export default function MarketingHome({ coachName = null }: MarketingHomeProps) 
             </p>
           </div>
         </section>
-
-        {/* Catalogue de reference — tuiles compactes */}
-        <CompendiumTiles />
 
         {/* Latest blog posts */}
         <LatestBlogPosts />

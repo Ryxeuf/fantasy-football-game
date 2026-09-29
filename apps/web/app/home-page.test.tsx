@@ -155,6 +155,16 @@ describe("HomePage (accueil marketing + bandeau coach)", () => {
     expect(screen.queryByText(/Accès rapide/)).toBeNull();
   });
 
+  it("factions sous le catalogue, chaque ecu menant a sa fiche", async () => {
+    renderHome();
+    const sections = Array.from(document.querySelectorAll("section"));
+    const factions = screen.getByTestId("home-factions");
+    expect(sections.indexOf(factions)).toBeGreaterThan(
+      sections.indexOf(screen.getByTestId("home-compendium")),
+    );
+    expect(screen.getByText("Orques").closest("a")?.getAttribute("href")).toBe("/teams/orc");
+  });
+
   it("ne monte pas le bandeau d'actualite tant que le flag est OFF", async () => {
     renderHome();
     await waitFor(() =>

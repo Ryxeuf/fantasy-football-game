@@ -166,7 +166,17 @@
     },
     "factions": {
       "title": "31 équipes, une seule arène",
-      "subtitle": "Des Skavens véloces aux Nains tenaces — choisissez votre camp."
+      "subtitle": "Des Skavens véloces aux Nains tenaces — choisissez votre camp.",
+      "names": {
+        "skaven": "Skaven",
+        "orc": "Orques",
+        "wood_elf": "Elfes Sylvains",
+        "dwarf": "Nains",
+        "undead": "Morts-Vivants",
+        "lizardmen": "Hommes-Lézards",
+        "chaos_chosen": "Chaos",
+        "amazon": "Amazones"
+      }
     },
     "diceRollerCta": "Lancer les dés",
     "diceRollerHint": "Défie Nuffle — distribution officielle du dé de blocage",

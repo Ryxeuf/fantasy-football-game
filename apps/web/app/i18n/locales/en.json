@@ -166,7 +166,17 @@
     },
     "factions": {
       "title": "31 teams, one arena",
-      "subtitle": "From nimble Skaven to stubborn Dwarves — pick your side."
+      "subtitle": "From nimble Skaven to stubborn Dwarves — pick your side.",
+      "names": {
+        "skaven": "Skaven",
+        "orc": "Orcs",
+        "wood_elf": "Wood Elves",
+        "dwarf": "Dwarves",
+        "undead": "Undead",
+        "lizardmen": "Lizardmen",
+        "chaos_chosen": "Chaos",
+        "amazon": "Amazons"
+      }
     },
     "diceRollerCta": "Roll the dice",
     "diceRollerHint": "Defy Nuffle — official block die distribution",

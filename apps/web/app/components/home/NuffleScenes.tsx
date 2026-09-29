@@ -28,16 +28,22 @@ export type FactionEmblem =
   | "sun"
   | "bolt";
 
-export const FACTIONS: ReadonlyArray<{ emblem: FactionEmblem; label: string }> = [
-  { emblem: "bolt", label: "Skaven" },
-  { emblem: "tusks", label: "Orques" },
-  { emblem: "leaf", label: "Elfes Sylvains" },
-  { emblem: "hammer", label: "Nains" },
-  { emblem: "skull", label: "Morts-Vivants" },
-  { emblem: "claw", label: "Hommes-Lézards" },
-  { emblem: "horns", label: "Chaos" },
-  { emblem: "sun", label: "Amazones" },
-];
+/**
+ * Ecus de la vitrine. `slug` est le slug de roster (fiche `/teams/<slug>`)
+ * et la cle du libelle traduit (`home.factions.names`).
+ */
+export const FACTIONS = [
+  { emblem: "bolt", slug: "skaven" },
+  { emblem: "tusks", slug: "orc" },
+  { emblem: "leaf", slug: "wood_elf" },
+  { emblem: "hammer", slug: "dwarf" },
+  { emblem: "skull", slug: "undead" },
+  { emblem: "claw", slug: "lizardmen" },
+  { emblem: "horns", slug: "chaos_chosen" },
+  { emblem: "sun", slug: "amazon" },
+] as const satisfies ReadonlyArray<{ emblem: FactionEmblem; slug: string }>;
+
+export type FactionSlug = (typeof FACTIONS)[number]["slug"];
 
 function Emblem({ emblem }: { emblem: FactionEmblem }) {
   switch (emblem) {
