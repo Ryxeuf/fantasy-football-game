@@ -31,6 +31,7 @@ import {
   OFFLINE_MATCH_FLAG,
   COMPETITION_PDF_EXPORTS_FLAG,
   HOME_NEWS_TICKER_FLAG,
+  DICE_THEMES_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1197,6 +1198,25 @@ async function main() {
   });
   serverLog.log(
     `   ✅ Flag '${HOME_NEWS_TICKER_FLAG}' ${newsTickerFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
+  );
+
+  // Thèmes de dés — OFF : un seul thème (le défaut), les payants attendent
+  // les Crowns. `update` ne touche PAS `enabled`.
+  const diceThemesFlag = await prisma.featureFlag.upsert({
+    where: { key: DICE_THEMES_FLAG },
+    update: {
+      description:
+        "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : thème par défaut pour tous.",
+    },
+    create: {
+      key: DICE_THEMES_FLAG,
+      description:
+        "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : thème par défaut pour tous.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${DICE_THEMES_FLAG}' ${diceThemesFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
   );
 
   // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav

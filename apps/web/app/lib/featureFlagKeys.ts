@@ -61,3 +61,16 @@ export const COMPETITION_PDF_EXPORTS_FLAG = "competition_pdf_exports" as const;
  * `apps/server/src/services/featureFlags.ts.HOME_NEWS_TICKER_FLAG`.
  */
 export const HOME_NEWS_TICKER_FLAG = "home_news_ticker" as const;
+
+/**
+ * Thèmes de dés (Dé de Blocage + D6) : sélecteur dans le profil et thème
+ * choisi appliqué partout où un dé est dessiné.
+ *
+ * OFF par défaut (2026-09-29) : un seul thème (le défaut) ; les thèmes
+ * payants attendent les Crowns. OFF, tout le monde voit le défaut et
+ * aucune requête n'est faite. Gate aussi la route serveur `/dice-themes`.
+ *
+ * À garder synchronisé avec
+ * `apps/server/src/services/featureFlags.ts.DICE_THEMES_FLAG`.
+ */
+export const DICE_THEMES_FLAG = "dice_themes" as const;

@@ -1,15 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BlockDie, type BlockDieFace } from "./NuffleArt";
+import { BlockDieIcon } from "../dice/BlockDieIcon";
+import { D6Icon } from "../dice/D6Icon";
+import type { BlockDieFace } from "../dice/types";
 import { BLOCK_DIE_FACES, BLOCK_DIE_FACE_LABELS } from "./block-dice-faces";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 /**
  * Lanceur de dés de blocage interactif pour le hero.
  *
- * Pur front : aucun appel réseau. Reprend les illustrations `BlockDie`
- * pour rester homogène. Tire dans `BLOCK_DIE_FACES`, miroir de la table
+ * Pur front : aucun appel réseau. Les faces sont dessinées dans le THÈME
+ * DE DÉS du coach (`BlockDieIcon`, thème par défaut hors flag). Tire dans `BLOCK_DIE_FACES`, miroir de la table
  * du moteur (`@bb/game-engine`) : six faces pour cinq icônes, dont deux
  * `Repoussé`. Respecte `prefers-reduced-motion`.
  */
@@ -89,9 +91,10 @@ export default function BlockDiceRoller() {
         className={`flex items-center gap-2.5 ${rolling ? "animate-pulse" : ""}`}
       >
         {faces.map((face, i) => (
-          <BlockDie
+          <BlockDieIcon
             key={i}
             face={face}
+            lang={lang}
             className={`drop-shadow-lg transition-transform ${
               i === 1 ? "w-16 sm:w-[4.5rem] -translate-y-1.5" : "w-14 sm:w-16"
             } ${rolling ? "scale-95" : ""}`}
@@ -109,7 +112,7 @@ export default function BlockDiceRoller() {
           className={rolling ? "inline-block animate-spin" : "inline-block"}
           aria-hidden="true"
         >
-          ⚄
+          <D6Icon value={5} lang={lang} className="h-5 w-5" />
         </span>
         {t.home.diceRollerCta}
       </button>

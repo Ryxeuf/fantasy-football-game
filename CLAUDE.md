@@ -1282,6 +1282,21 @@ ligue ou une coupe par son commissaire) resout les destinataires AVANT un
 `delete` en cascade et notifie APRES sa reussite — jamais d'annonce d'une
 suppression qui a echoue.
 
+### Thèmes de dés : le thème DESSINE, le contexte RÉSOUT
+
+Toute face de Dé de Blocage ou de D6 passe par `BlockDieIcon` / `D6Icon`
+(`apps/web/app/components/dice/`), jamais par un SVG ou un chiffre posé à la
+main : c'est ce qui applique le thème choisi par le coach (`User.diceTheme`,
+flag `dice_themes`). Un thème (`DiceThemeRenderer`) n'a que deux composants
+à écrire (`BlockFace`, `D6Face`) ; le libellé accessible et la préférence
+lui sont passés. Ajouter un thème = un fichier dans `themes/` + une entrée
+dans le registre + une entrée au catalogue web ET serveur
+(`services/dice-theme-catalogue`, verrouillé par
+`catalogue-consistency.test.ts`). Un id inconnu, non possédé ou `null`
+retombe sur le défaut à la LECTURE ; seule l'écriture refuse. L'achat en
+Crowns se branchera sur `loadOwnedPaidThemeIds`. Change OpenSpec
+`dice-themes`.
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :

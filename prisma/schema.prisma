@@ -62,6 +62,11 @@ model User {
   /// d'opt-in. Le service `naf-sync.ts` fetch les resultats via NAF API
   /// quand `naf_integration` flag est ON.
   nafName                     String?
+  /// Thème de dés choisi (Dé de Blocage + D6), cf. services/dice-theme-catalogue.
+  /// null = jamais choisi => thème par défaut (colonne nullable : `db push`,
+  /// aucun backfill possible). Un id inconnu ou non possédé retombe aussi sur
+  /// le défaut à la lecture.
+  diceTheme                   String?
   valid                       Boolean                     @default(false)
   /// Lot P.B.4 — moderation. Date de debut du dernier bannissement. null = jamais banni.
   bannedAt                    DateTime?
