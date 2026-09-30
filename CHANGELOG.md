@@ -1,3 +1,10 @@
+## [1.246.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.245.0...v1.246.0) (2026-09-30)
+
+
+### ✨ Features
+
+* **dice-themes:** thèmes de dés (Dé de Blocage + D6) sous flag ([#1044](https://github.com/Ryxeuf/fantasy-football-game/issues/1044)) ([1232e8a](https://github.com/Ryxeuf/fantasy-football-game/commit/1232e8a5e7422eb6421bde49544a9710e260b7af))
+
 ## [1.245.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.244.0...v1.245.0) (2026-09-29)
 
 
