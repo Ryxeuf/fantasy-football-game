@@ -358,7 +358,55 @@ export default function ConditionsUtilisationPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">9. Résiliation</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            9. Compétitions et matchs publics
+          </h2>
+          <p className="mb-4">
+            Lorsqu&apos;une compétition (ligue, coupe ou tout autre format
+            proposé par le Site) ou un match est rendu public, ses résultats
+            et les informations qui s&apos;y rattachent sont librement
+            consultables par tout visiteur du Site, y compris sans compte.
+          </p>
+          <p className="mb-4">
+            En participant à une compétition ou à un match public, vous
+            acceptez que ces résultats et informations puissent être
+            affichés et réutilisés ailleurs sur le Site, notamment dans :
+          </p>
+          <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
+            <li>les classements, palmarès et statistiques (équipes, joueurs,
+              coachs) ;</li>
+            <li>les fiches d&apos;équipe, de joueur et de profil de coach ;</li>
+            <li>les pages d&apos;accueil, fils d&apos;actualité, récapitulatifs
+              et contenus éditoriaux (articles, chroniques) ;</li>
+            <li>les fonctionnalités communautaires (pronostics, commentaires,
+              partages) ;</li>
+            <li>les exports et documents générés par le Site (PDF, images de
+              partage).</li>
+          </ul>
+          <p className="mb-4">
+            Sont concernés notamment : le score, le détail des évènements de
+            match (touchdowns, sorties, passes, blessures, etc.), le nom de
+            l&apos;équipe et de ses joueurs, le roster engagé, ainsi que le
+            pseudonyme du coach.
+          </p>
+          <p className="mb-4">
+            Cette réutilisation reste limitée au Site et à son
+            fonctionnement ; elle n&apos;inclut ni votre adresse e-mail ni
+            aucune autre donnée de contact. Les compétitions et matchs
+            privés restent réservés à leurs participants dans les conditions
+            prévues par le Site.
+          </p>
+          <p className="mb-4">
+            Les résultats des rencontres publiques auxquelles vous avez
+            participé peuvent être conservés et rester affichés après la
+            suppression de votre compte, afin de préserver l&apos;intégrité
+            des classements et de l&apos;historique des compétitions
+            concernées.
+          </p>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">10. Résiliation</h2>
           <p className="mb-4">
             Vous pouvez résilier votre compte à tout moment en supprimant votre
             compte via les paramètres de votre profil.
@@ -383,7 +431,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            10. Liens hypertextes
+            11. Liens hypertextes
           </h2>
           <p className="mb-4">
             Le site Nuffle Arena peut contenir des liens hypertextes vers des
@@ -400,7 +448,7 @@ export default function ConditionsUtilisationPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">11. Force majeure</h2>
+          <h2 className="text-2xl font-semibold mb-4">12. Force majeure</h2>
           <p className="mb-4">
             L&apos;éditeur ne pourra être tenu responsable de tout manquement ou
             retard dans l&apos;exécution de ses obligations au titre des présentes
@@ -414,7 +462,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            12. Modifications des conditions
+            13. Modifications des conditions
           </h2>
           <p className="mb-4">
             L&apos;éditeur se réserve le droit de modifier les présentes
@@ -430,7 +478,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">
-            13. Loi applicable et juridiction
+            14. Loi applicable et juridiction
           </h2>
           <p className="mb-4">
             Les présentes conditions d&apos;utilisation sont régies par la loi
@@ -448,7 +496,7 @@ export default function ConditionsUtilisationPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">14. Contact</h2>
+          <h2 className="text-2xl font-semibold mb-4">15. Contact</h2>
           <p className="mb-4">
             Pour toute question concernant les présentes conditions
             d&apos;utilisation, vous pouvez nous contacter :
@@ -462,7 +510,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <p className="text-sm text-gray-500 italic">
-            Dernière mise à jour : 16 avril 2026
+            Dernière mise à jour : 2 octobre 2026
           </p>
         </section>
       </div>
