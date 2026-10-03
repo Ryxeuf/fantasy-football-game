@@ -43,7 +43,7 @@ export default function MentionsLegalesPage() {
             </p>
             <p className="mb-2">
               <strong>Email de contact :</strong>{" "}
-              contact@nufflearena.fr
+              nufflearena@gmail.com
             </p>
             <p className="mb-2">
               <strong>Site web :</strong> nufflearena.fr
@@ -252,7 +252,7 @@ export default function MentionsLegalesPage() {
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p>
-              <strong>Email :</strong> contact@nufflearena.fr
+              <strong>Email :</strong> nufflearena@gmail.com
             </p>
           </div>
         </section>
