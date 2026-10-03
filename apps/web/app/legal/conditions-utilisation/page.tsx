@@ -167,7 +167,7 @@ export default function ConditionsUtilisationPage() {
             Les dons étant des libéralités volontaires, ils ne sont pas
             remboursables sauf en cas d&apos;erreur technique avérée
             (doublon de paiement, montant erroné). Dans ce cas, contactez
-            l&apos;éditeur à contact@nufflearena.fr ou directement le
+            l&apos;éditeur à nufflearena@gmail.com ou directement le
             support Ko-fi.
           </p>
         </section>
@@ -503,7 +503,7 @@ export default function ConditionsUtilisationPage() {
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p>
-              <strong>Email :</strong> contact@nufflearena.fr
+              <strong>Email :</strong> nufflearena@gmail.com
             </p>
           </div>
         </section>

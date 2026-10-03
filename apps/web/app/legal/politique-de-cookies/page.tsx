@@ -299,7 +299,7 @@ export default function PolitiqueDeCookiesPage() {
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="mb-2">
-              <strong>Email :</strong> contact@nufflearena.fr
+              <strong>Email :</strong> nufflearena@gmail.com
             </p>
           </div>
           <p className="mt-4 mb-4">

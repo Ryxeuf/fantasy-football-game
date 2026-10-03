@@ -56,7 +56,7 @@ export default function PolitiqueDeConfidentialitePage() {
             </p>
             <p className="mb-2">
               <strong>Email de contact :</strong>{" "}
-              contact@nufflearena.fr
+              nufflearena@gmail.com
             </p>
           </div>
           <p className="mt-4 mb-4">
@@ -368,7 +368,7 @@ export default function PolitiqueDeConfidentialitePage() {
           <ul className="list-disc list-inside mb-4 space-y-2 ml-4">
             <li>
               Envoyer un email à{" "}
-              <strong>contact@nufflearena.fr</strong> en précisant
+              <strong>nufflearena@gmail.com</strong> en précisant
               votre demande et les informations permettant de vous identifier
             </li>
             <li>
@@ -473,7 +473,7 @@ export default function PolitiqueDeConfidentialitePage() {
           </p>
           <div className="bg-gray-50 p-4 rounded-lg">
             <p className="mb-2">
-              <strong>Email :</strong> contact@nufflearena.fr
+              <strong>Email :</strong> nufflearena@gmail.com
             </p>
             <p>
               <strong>Objet recommandé :</strong> « Données personnelles — [votre

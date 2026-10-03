@@ -11,7 +11,7 @@ import { createInAppNotification } from "./in-app-notifications";
 // VAPID Configuration
 // ---------------------------------------------------------------------------
 
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:contact@nufflearena.fr";
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:nufflearena@gmail.com";
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || "";
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || "";
 
