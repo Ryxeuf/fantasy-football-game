@@ -408,19 +408,30 @@ export default function ConditionsUtilisationPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">10. Résiliation</h2>
           <p className="mb-4">
-            Vous pouvez résilier votre compte à tout moment en supprimant votre
-            compte via les paramètres de votre profil.
+            Vous pouvez résilier votre compte à tout moment en le désactivant
+            depuis les paramètres de votre profil. La désactivation est
+            immédiate : vous ne pouvez plus vous connecter avec cet accès. Vos
+            données ne sont en revanche pas effacées à ce stade.
           </p>
           <p className="mb-4">
-            La suppression de votre compte entraîne la suppression de vos données
-            personnelles conformément à notre{" "}
+            Pour obtenir l&apos;effacement de vos données personnelles, au titre
+            du droit à l&apos;effacement prévu par l&apos;article 17 du RGPD,
+            adressez votre demande à nufflearena@gmail.com depuis l&apos;adresse
+            associée à votre compte. Elle est traitée dans un délai d&apos;un
+            mois, conformément à l&apos;article 12 du RGPD et à notre{" "}
             <Link
               href="/legal/politique-de-confidentialite"
               className="text-emerald-600 hover:text-emerald-700 hover:underline"
             >
               politique de confidentialité
-            </Link>{" "}
-            et au droit à l&apos;effacement prévu par l&apos;article 17 du RGPD.
+            </Link>
+            .
+          </p>
+          <p className="mb-4">
+            Les résultats des compétitions et matchs publics auxquels vous avez
+            participé peuvent être conservés après l&apos;effacement, dans les
+            conditions prévues à l&apos;article 9 des présentes CGU, de même que
+            les données que la loi impose de conserver.
           </p>
           <p className="mb-4">
             L&apos;éditeur se réserve le droit de suspendre ou supprimer votre
@@ -510,7 +521,7 @@ export default function ConditionsUtilisationPage() {
 
         <section className="mb-8">
           <p className="text-sm text-gray-500 italic">
-            Dernière mise à jour : 2 octobre 2026
+            Dernière mise à jour : 3 octobre 2026
           </p>
         </section>
       </div>

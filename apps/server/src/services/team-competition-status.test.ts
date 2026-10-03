@@ -72,15 +72,44 @@ describe('getTeamsEngagement (batch)', () => {
 
   it('map coupe + ligue, coupe prioritaire', async () => {
     cupFindMany.mockResolvedValue([
-      { teamId: 'A', cup: { name: 'Coupe X' } },
+      { teamId: 'A', cupId: 'cup-1', cup: { name: 'Coupe X' } },
     ]);
     leagueFindMany.mockResolvedValue([
-      { teamId: 'A', season: { name: 'S1', league: { name: 'L' } } }, // ignoré (coupe déjà)
-      { teamId: 'B', season: { name: 'S1', league: { name: 'L' } } },
+      // ignoré (coupe déjà)
+      {
+        teamId: 'A',
+        seasonId: 's-1',
+        season: { name: 'S1', leagueId: 'lg-1', league: { name: 'L' } },
+      },
+      {
+        teamId: 'B',
+        seasonId: 's-1',
+        season: { name: 'S1', leagueId: 'lg-1', league: { name: 'L' } },
+      },
     ]);
     const map = await getTeamsEngagement(['A', 'B', 'C']);
-    expect(map.get('A')).toEqual({ kind: 'cup', name: 'Coupe X' });
-    expect(map.get('B')).toEqual({ kind: 'league', name: 'L — S1' });
+    expect(map.get('A')).toEqual({
+      kind: 'cup',
+      name: 'Coupe X',
+      competitionId: 'cup-1',
+    });
+    expect(map.get('B')).toEqual({
+      kind: 'league',
+      name: 'L — S1',
+      competitionId: 'lg-1',
+      seasonId: 's-1',
+    });
     expect(map.has('C')).toBe(false);
+  });
+
+  it('sélectionne les ids nécessaires au lien (coupe, ligue, saison)', async () => {
+    cupFindMany.mockResolvedValue([]);
+    leagueFindMany.mockResolvedValue([]);
+    await getTeamsEngagement(['A']);
+    expect(cupFindMany.mock.calls[0][0].select).toMatchObject({ cupId: true });
+    expect(leagueFindMany.mock.calls[0][0].select).toMatchObject({
+      seasonId: true,
+      season: { select: { leagueId: true } },
+    });
   });
 });

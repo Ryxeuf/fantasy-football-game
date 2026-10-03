@@ -5,6 +5,7 @@ import { apiRequest } from "../../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../../lib/tournament-rulesets";
 import SkillTooltip from "../components/SkillTooltip";
 import { displayedRegionalLeagues } from "./regional-leagues";
+import { competitionLink } from "./competition-link";
 import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
@@ -455,6 +456,9 @@ export default function TeamDetailPage() {
   const [removingPlayerId, setRemovingPlayerId] = useState<string | null>(null);
 
   const team = data?.team;
+  // Compétition dans laquelle l'équipe est engagée (coupe ou saison de
+  // ligue active) : la fiche y renvoie. Absent = équipe libre, pas de lien.
+  const engagedCompetition = competitionLink(team?.competition);
   // Libellé du règlement servi par l'API (les règlements sont éditables) ;
   // `?slug=` couvre aussi un règlement désactivé depuis la création.
   const tournamentRulesetLabel = useTournamentRulesetLabel(
@@ -658,6 +662,24 @@ export default function TeamDetailPage() {
               </span>
             )}
           </div>
+          {engagedCompetition ? (
+            <a
+              data-testid="team-competition-link"
+              href={engagedCompetition.href}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs sm:text-sm font-medium text-indigo-700 hover:bg-indigo-100 hover:underline"
+            >
+              <span aria-hidden="true">
+                {engagedCompetition.kind === "cup" ? "🏆" : "🏟️"}
+              </span>
+              <span>
+                {engagedCompetition.kind === "cup"
+                  ? t.teams.competitionEngagedCup
+                  : t.teams.competitionEngagedLeague}
+                {" : "}
+                <strong>{engagedCompetition.name}</strong>
+              </span>
+            </a>
+          ) : null}
           {/* Fluff du coach. C'est aussi le texte servi dans l'apercu quand
               l'equipe est partagee — il doit donc etre visible ici, sinon on
               ne comprend pas d'ou il sort. Se modifie sur « Modifier
