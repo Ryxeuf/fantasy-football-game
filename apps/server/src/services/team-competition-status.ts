@@ -69,6 +69,13 @@ export async function getTeamEngagement(
 export interface TeamEngagementLabel {
   readonly kind: 'cup' | 'league';
   readonly name: string;
+  /**
+   * Id de la COUPE, ou de la LIGUE (pas de la saison) : c'est la fiche que
+   * le web sait ouvrir (`/cups/:id`, `/leagues/:id`).
+   */
+  readonly competitionId: string;
+  /** Saison de ligue concernée (absent pour une coupe). */
+  readonly seasonId?: string;
 }
 
 /**
@@ -84,10 +91,12 @@ export async function getTeamsEngagement(
 
   const cups = await prisma.cupParticipant.findMany({
     where: { teamId: { in: [...teamIds] }, cup: { status: { in: ACTIVE_CUP_STATUSES } } },
-    select: { teamId: true, cup: { select: { name: true } } },
+    select: { teamId: true, cupId: true, cup: { select: { name: true } } },
   });
   for (const c of cups) {
-    if (!map.has(c.teamId)) map.set(c.teamId, { kind: 'cup', name: c.cup.name });
+    if (!map.has(c.teamId)) {
+      map.set(c.teamId, { kind: 'cup', name: c.cup.name, competitionId: c.cupId });
+    }
   }
 
   const leagues = await prisma.leagueParticipant.findMany({
@@ -98,7 +107,10 @@ export async function getTeamsEngagement(
     },
     select: {
       teamId: true,
-      season: { select: { name: true, league: { select: { name: true } } } },
+      seasonId: true,
+      season: {
+        select: { name: true, leagueId: true, league: { select: { name: true } } },
+      },
     },
   });
   for (const l of leagues) {
@@ -106,6 +118,8 @@ export async function getTeamsEngagement(
       map.set(l.teamId, {
         kind: 'league',
         name: `${l.season.league.name} — ${l.season.name}`,
+        competitionId: l.season.leagueId,
+        seasonId: l.seasonId,
       });
     }
   }

@@ -35,6 +35,10 @@ import {
   fallbackPspCostForTeam,
   poolSpentForTeamId,
 } from '../services/team-advancement-editing';
+import {
+  getTeamsEngagement,
+  type TeamEngagementLabel,
+} from '../services/team-competition-status';
 import { computePlayerValuesFor } from '../utils/team-values';
 import { serverLog } from '../utils/server-log';
 import {
@@ -365,6 +369,16 @@ export async function handleGetTeamDetail(
       }
     }
 
+    // Compétition dans laquelle l'équipe est engagée (coupe ou saison de
+    // ligue active), pour que la fiche y renvoie. Enrichissement d'affichage :
+    // même posture que le pool de PSP, la fiche se sert sans le lien.
+    let competition: TeamEngagementLabel | null = null;
+    try {
+      competition = (await getTeamsEngagement([team.id])).get(team.id) ?? null;
+    } catch (e: unknown) {
+      serverLog.error('[team-detail] engagement en competition', e);
+    }
+
     sendSuccess(res, {
       team: {
         ...team,
@@ -376,6 +390,7 @@ export async function handleGetTeamDetail(
         pspPool,
         playerValues,
         specialRules,
+        competition,
       },
       currentMatch: selection?.match || null,
       localMatchStats,

@@ -619,6 +619,8 @@
     "po": "po",
     "backToTeam": "Back to team",
     "treasuryTitle": "Treasury",
+    "competitionEngagedCup": "Entered in cup",
+    "competitionEngagedLeague": "Entered in league",
     "treasuryDescription": "Spend the gold earned between matches to hire players and improve your team.",
     "treasuryEmpty": "No treasury available yet. Earn gold by playing matches.",
     "levelUpTitle": "Player advancements",

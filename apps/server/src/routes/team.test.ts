@@ -2911,4 +2911,113 @@ describe("Route: GET /team/:id (S25.5ae)", () => {
     expect(res.statusCode).toBe(500);
     expect(res.payload).toMatchObject({ success: false });
   });
+
+  describe("competition (lien vers la compétition engagée)", () => {
+    async function arrange() {
+      const { teamFindFirst, selectionFindFirst, localMatchFindMany } =
+        await getMocks();
+      teamFindFirst.mockResolvedValue({
+        id: "team-1",
+        ownerId: "user-1",
+        ruleset: "season_3",
+        players: [],
+        starPlayers: [],
+      });
+      selectionFindFirst.mockResolvedValue(null);
+      localMatchFindMany.mockResolvedValue([]);
+      const prismaMock = vi.mocked(await import("../prisma")).prisma;
+      return {
+        cupFindMany: prismaMock.cupParticipant.findMany as ReturnType<
+          typeof vi.fn
+        >,
+        leagueFindMany: prismaMock.leagueParticipant.findMany as ReturnType<
+          typeof vi.fn
+        >,
+      };
+    }
+
+    async function call() {
+      const req = createReq({ params: { id: "team-1" } });
+      const res = createRes();
+      await handleGetTeamDetail(req, res);
+      return res;
+    }
+
+    it("expose la coupe active de l'équipe", async () => {
+      const { cupFindMany } = await arrange();
+      cupFindMany.mockResolvedValueOnce([
+        { teamId: "team-1", cupId: "cup-9", cup: { name: "Coupe d'hiver" } },
+      ]);
+
+      const res = await call();
+
+      expect(res.payload).toMatchObject({
+        success: true,
+        data: {
+          team: {
+            competition: {
+              kind: "cup",
+              name: "Coupe d'hiver",
+              competitionId: "cup-9",
+            },
+          },
+        },
+      });
+    });
+
+    it("expose la ligue (et la saison) active de l'équipe", async () => {
+      const { leagueFindMany } = await arrange();
+      leagueFindMany.mockResolvedValueOnce([
+        {
+          teamId: "team-1",
+          seasonId: "season-2",
+          season: {
+            name: "Saison 2",
+            leagueId: "league-7",
+            league: { name: "Ligue du Vieux Monde" },
+          },
+        },
+      ]);
+
+      const res = await call();
+
+      expect(res.payload).toMatchObject({
+        data: {
+          team: {
+            competition: {
+              kind: "league",
+              name: "Ligue du Vieux Monde — Saison 2",
+              competitionId: "league-7",
+              seasonId: "season-2",
+            },
+          },
+        },
+      });
+    });
+
+    it("renvoie competition: null quand l'équipe n'est engagée nulle part", async () => {
+      await arrange();
+
+      const res = await call();
+
+      expect(res.statusCode).toBe(200);
+      expect(
+        (res.payload as { data: { team: { competition: unknown } } }).data.team
+          .competition,
+      ).toBeNull();
+    });
+
+    it("sert la fiche sans le lien si la lecture d'engagement échoue", async () => {
+      const { cupFindMany } = await arrange();
+      cupFindMany.mockRejectedValueOnce(new Error("db down"));
+
+      const res = await call();
+
+      expect(res.statusCode).toBe(200);
+      expect(
+        (res.payload as { data: { team: { competition: unknown } } }).data.team
+          .competition,
+      ).toBeNull();
+    });
+  });
 });
