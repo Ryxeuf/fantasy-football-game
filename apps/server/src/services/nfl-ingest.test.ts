@@ -31,6 +31,7 @@ import {
   NflIngestError,
   backfillNflSeason,
   buildNflverseUrl,
+  computeNflSeasonWindows,
   filterRowsForWeek,
   ingestNflverseWeek,
   normalizeNflverseGameId,
@@ -276,6 +277,98 @@ describe("seedNflTeams", () => {
 });
 
 // ────────────────────────────────────────────────────────────────────
+// computeNflSeasonWindows
+// ────────────────────────────────────────────────────────────────────
+
+/**
+ * [saison, week, 1er coup d'envoi UTC, dernier coup d'envoi UTC], tire de
+ * nflverse `schedules/games.csv` (gameday + gametime ET convertis en UTC).
+ * 2026 : calendrier REG publie, play-offs pas encore programmes.
+ */
+const REAL_KICKOFFS: ReadonlyArray<readonly [number, number, string, string]> = [
+  [2025, 1, "2025-09-05T00:20Z", "2025-09-09T00:15Z"],
+  [2025, 2, "2025-09-12T00:15Z", "2025-09-16T02:00Z"],
+  [2025, 3, "2025-09-19T00:15Z", "2025-09-23T00:15Z"],
+  [2025, 4, "2025-09-26T00:15Z", "2025-09-30T00:15Z"],
+  [2025, 5, "2025-10-03T00:15Z", "2025-10-07T00:15Z"],
+  [2025, 6, "2025-10-10T00:15Z", "2025-10-14T00:15Z"],
+  [2025, 7, "2025-10-17T00:15Z", "2025-10-21T02:00Z"],
+  [2025, 8, "2025-10-24T00:15Z", "2025-10-28T00:15Z"],
+  [2025, 9, "2025-10-31T00:15Z", "2025-11-04T01:15Z"],
+  [2025, 10, "2025-11-07T01:15Z", "2025-11-11T01:15Z"],
+  [2025, 11, "2025-11-14T01:15Z", "2025-11-18T01:15Z"],
+  [2025, 12, "2025-11-21T01:15Z", "2025-11-25T01:15Z"],
+  [2025, 13, "2025-11-27T18:00Z", "2025-12-02T01:15Z"],
+  [2025, 14, "2025-12-05T01:15Z", "2025-12-09T01:15Z"],
+  [2025, 15, "2025-12-12T01:15Z", "2025-12-16T01:15Z"],
+  [2025, 16, "2025-12-19T01:15Z", "2025-12-23T01:15Z"],
+  [2025, 17, "2025-12-25T18:00Z", "2025-12-30T01:15Z"],
+  [2025, 18, "2026-01-03T21:30Z", "2026-01-05T01:20Z"],
+  [2025, 19, "2026-01-10T21:30Z", "2026-01-13T01:00Z"],
+  [2025, 20, "2026-01-17T21:30Z", "2026-01-18T23:30Z"],
+  [2025, 21, "2026-01-25T20:00Z", "2026-01-25T23:30Z"],
+  [2025, 22, "2026-02-08T23:30Z", "2026-02-08T23:30Z"],
+  [2026, 1, "2026-09-10T00:20Z", "2026-09-15T00:15Z"],
+  [2026, 2, "2026-09-18T00:15Z", "2026-09-22T00:15Z"],
+  [2026, 3, "2026-09-25T00:15Z", "2026-09-29T00:15Z"],
+  [2026, 4, "2026-10-02T00:15Z", "2026-10-06T00:15Z"],
+  [2026, 5, "2026-10-09T00:15Z", "2026-10-13T00:15Z"],
+  [2026, 6, "2026-10-16T00:15Z", "2026-10-20T00:15Z"],
+  [2026, 7, "2026-10-23T00:15Z", "2026-10-27T00:15Z"],
+  [2026, 8, "2026-10-30T00:15Z", "2026-11-03T01:15Z"],
+  [2026, 9, "2026-11-06T01:15Z", "2026-11-10T01:15Z"],
+  [2026, 10, "2026-11-13T01:15Z", "2026-11-17T01:15Z"],
+  [2026, 11, "2026-11-20T01:15Z", "2026-11-24T01:15Z"],
+  [2026, 12, "2026-11-26T01:00Z", "2026-12-01T01:15Z"],
+  [2026, 13, "2026-12-04T01:15Z", "2026-12-08T01:15Z"],
+  [2026, 14, "2026-12-11T01:15Z", "2026-12-15T01:15Z"],
+  [2026, 15, "2026-12-18T01:15Z", "2026-12-22T01:15Z"],
+  [2026, 16, "2026-12-25T01:15Z", "2026-12-29T01:15Z"],
+  [2026, 17, "2027-01-01T01:15Z", "2027-01-05T01:15Z"],
+  [2026, 18, "2027-01-10T18:00Z", "2027-01-10T18:00Z"],
+];
+
+describe("computeNflSeasonWindows", () => {
+  it("ancre la W1 au mardi qui suit le Labor Day, 10h UTC", () => {
+    // 2026 : Labor Day lun. 07/09 ; 2025 : lun. 01/09 ; 2024 : lun. 02/09.
+    expect(computeNflSeasonWindows(2026).seasonStart.toISOString()).toBe(
+      "2026-09-08T10:00:00.000Z",
+    );
+    expect(computeNflSeasonWindows(2025).seasonStart.toISOString()).toBe(
+      "2025-09-02T10:00:00.000Z",
+    );
+    expect(computeNflSeasonWindows(2024).seasonStart.toISOString()).toBe(
+      "2024-09-03T10:00:00.000Z",
+    );
+    // Labor Day un 1er septembre exactement (2025) ou un 7 (2026) : bornes.
+    expect(computeNflSeasonWindows(2025).weeks[0]!.startDate.getUTCDay()).toBe(2);
+    expect(computeNflSeasonWindows(2026).weeks[0]!.startDate.getUTCDay()).toBe(2);
+  });
+
+  it("produit 22 fenetres contigues, play-offs a partir de la W19", () => {
+    const { weeks, seasonEnd } = computeNflSeasonWindows(2026);
+    expect(weeks).toHaveLength(22);
+    for (let i = 1; i < weeks.length; i++) {
+      expect(weeks[i]!.startDate.getTime()).toBe(weeks[i - 1]!.endDate.getTime());
+    }
+    expect(weeks.filter((w) => w.isPlayoffs).map((w) => w.weekNumber)).toEqual([
+      19, 20, 21, 22,
+    ]);
+    // W22 etiree jusqu'a la fin de saison (Super Bowl 2 semaines apres W21).
+    expect(weeks[21]!.endDate).toEqual(seasonEnd);
+  });
+
+  it.each(REAL_KICKOFFS)(
+    "%i W%i : tous les coups d'envoi reels tombent dans la fenetre",
+    (season, week, first, last) => {
+      const w = computeNflSeasonWindows(season).weeks[week - 1]!;
+      expect(new Date(first).getTime()).toBeGreaterThanOrEqual(w.startDate.getTime());
+      expect(new Date(last).getTime()).toBeLessThan(w.endDate.getTime());
+    },
+  );
+});
+
+// ────────────────────────────────────────────────────────────────────
 // seedNflSeason
 // ────────────────────────────────────────────────────────────────────
 
@@ -301,6 +394,21 @@ describe("seedNflSeason", () => {
     const w19 = calls.find((c) => (c[0]?.where as { id: string }).id === "2025:W19");
     expect((w10?.[0]?.create as { isPlayoffs: boolean })?.isPlayoffs).toBe(false);
     expect((w19?.[0]?.create as { isPlayoffs: boolean })?.isPlayoffs).toBe(true);
+  });
+
+  it("ecrit les fenetres reelles (2026 : W4 du mar. 29/09 au mar. 06/10)", async () => {
+    vi.mocked(prisma.nflSeason.upsert).mockResolvedValue({} as never);
+    vi.mocked(prisma.nflWeek.upsert).mockResolvedValue({} as never);
+
+    await seedNflSeason("2026");
+
+    const w4 = vi
+      .mocked(prisma.nflWeek.upsert)
+      .mock.calls.find((c) => (c[0]?.where as { id: string }).id === "2026:W4");
+    expect(w4?.[0]?.update).toMatchObject({
+      startDate: new Date("2026-09-29T10:00:00Z"),
+      endDate: new Date("2026-10-06T10:00:00Z"),
+    });
   });
 
   it("throw si seasonId invalide", async () => {

@@ -519,8 +519,63 @@ export async function seedNflTeams(): Promise<SeedResult> {
   return { teamsCreated: created, teamsUpdated: updated };
 }
 
+const DAY_MS = 24 * 3600 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+
+/**
+ * Heure UTC de bascule d'une week a la suivante, le mardi. 10h UTC = 6h ET :
+ * le Monday Night (coup d'envoi 00h15 UTC mardi) est termine, aucun match
+ * du mardi n'a commence.
+ */
+const WEEK_ROLLOVER_HOUR_UTC = 10;
+
+export interface NflWeekWindow {
+  readonly weekNumber: number;
+  readonly startDate: Date;
+  readonly endDate: Date;
+  readonly isPlayoffs: boolean;
+}
+
+export interface NflSeasonWindows {
+  readonly seasonStart: Date;
+  readonly seasonEnd: Date;
+  readonly weeks: readonly NflWeekWindow[];
+}
+
+/**
+ * Fenetres des 22 weeks d'une saison NFL (1-18 REG, 19-22 POST). Pur.
+ *
+ * La saison reguliere demarre toujours dans la foulee du Labor Day
+ * (1er lundi de septembre) et chaque week court du jeudi au lundi : on
+ * ancre donc la W1 au mardi qui suit le Labor Day et on enchaine des
+ * fenetres mardi -> mardi. Verifie contre nflverse `games.csv` sur
+ * 2021-2026 : seul le Super Bowl (deux semaines apres les finales de
+ * conference) sort d'une fenetre de 7 jours, d'ou une W22 etiree jusqu'a
+ * la fin de saison.
+ *
+ * Avant : ancrage fixe au 5 septembre, un samedi en 2026 => 247 matchs REG
+ * sur 272 hors de leur fenetre, et le cron visait la mauvaise week.
+ */
+export function computeNflSeasonWindows(year: number): NflSeasonWindows {
+  const laborDayOffset = (8 - new Date(Date.UTC(year, 8, 1)).getUTCDay()) % 7;
+  const seasonStart = new Date(
+    Date.UTC(year, 8, 1 + laborDayOffset + 1, WEEK_ROLLOVER_HOUR_UTC),
+  );
+  const seasonEnd = new Date(Date.UTC(year + 1, 1, 20)); // apres le Super Bowl
+
+  const weeks: NflWeekWindow[] = [];
+  for (let w = 1; w <= 22; w++) {
+    const startDate = new Date(seasonStart.getTime() + (w - 1) * WEEK_MS);
+    const endDate =
+      w === 22 ? seasonEnd : new Date(startDate.getTime() + WEEK_MS);
+    weeks.push({ weekNumber: w, startDate, endDate, isPlayoffs: w >= 19 });
+  }
+  return { seasonStart, seasonEnd, weeks };
+}
+
 /**
  * Cree (idempotent) une NflSeason et ses 22 NflWeek (1-18 REG + 19-22 POST).
+ * Re-executer le seed reecrit les fenetres (cf. `computeNflSeasonWindows`).
  *
  * @param seasonId Format "{yearStart}" ex: "2025" pour la saison 2025-26.
  */
@@ -530,10 +585,7 @@ export async function seedNflSeason(seasonId: string): Promise<void> {
     throw new NflIngestError("SEASON_NOT_FOUND", `seasonId invalide: ${seasonId}`);
   }
 
-  // Approximations dates (kickoff regulier 1er jeudi de septembre).
-  // Phase 2 — affinage via ingestion ESPN schedules a venir.
-  const seasonStart = new Date(Date.UTC(year, 8, 5)); // 5 septembre
-  const seasonEnd = new Date(Date.UTC(year + 1, 1, 15)); // 15 fevrier (post-SB)
+  const { seasonStart, seasonEnd, weeks } = computeNflSeasonWindows(year);
 
   await prisma.nflSeason.upsert({
     where: { id: seasonId },
@@ -546,30 +598,25 @@ export async function seedNflSeason(seasonId: string): Promise<void> {
     },
   });
 
-  // Chaque semaine NFL dure 7 jours (kickoff jeudi -> mercredi suivant).
-  // On etale 22 semaines a partir de seasonStart. Necessaire pour que
-  // findWeekNumberAt (cycles Nuffle Coach) puisse mapper une date a une
+  // Fenetres contigues : necessaire pour que findWeekNumberAt (cycles
+  // Nuffle Coach) et findCurrentNflWeek (cron) mappent une date a une
   // semaine sans ambiguite.
-  const WEEK_MS = 7 * 24 * 3600 * 1000;
-  for (let w = 1; w <= 22; w++) {
+  for (const { weekNumber: w, startDate, endDate, isPlayoffs } of weeks) {
     const weekId = `${seasonId}:W${w}`;
-    const isPlayoffs = w >= 19;
-    const weekStart = new Date(seasonStart.getTime() + (w - 1) * WEEK_MS);
-    const weekEnd = new Date(weekStart.getTime() + WEEK_MS);
     await prisma.nflWeek.upsert({
       where: { id: weekId },
       update: {
         weekNumber: w,
         isPlayoffs,
-        startDate: weekStart,
-        endDate: weekEnd,
+        startDate,
+        endDate,
       },
       create: {
         id: weekId,
         seasonId,
         weekNumber: w,
-        startDate: weekStart,
-        endDate: weekEnd,
+        startDate,
+        endDate,
         isPlayoffs,
       },
     });
