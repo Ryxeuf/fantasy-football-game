@@ -1311,7 +1311,8 @@ erreur : le dé ORIGINAL or & charbon (PNG de `public/images/dices/`).
 
 Un id inconnu, non possédé ou `null` retombe sur le défaut à la LECTURE ;
 seule l'écriture refuse. Changes OpenSpec `dice-themes` puis
-`dice-theme-shop-and-crowns`.
+`dice-theme-shop-and-crowns` (archivés le 2026-10-05) ; specs vivantes
+`openspec/specs/dice-themes/` et `openspec/specs/crowns/`.
 
 ### Couronnes (Crowns) : UNE monnaie, celle du wallet Pro League
 
