@@ -19,7 +19,13 @@
  * (typiquement 50-300 events par match, ~10-30 KB JSON).
  */
 
-import { decompressEvents, decompressReplay } from "@bb/sim-engine";
+import {
+  decompressEvents,
+  decompressReplay,
+  journalMoves,
+  replayJournal,
+  type ReplayJournal,
+} from "@bb/sim-engine";
 import type { GameState, Move } from "@bb/game-engine";
 import type { MatchEvent } from "@bb/shared-types";
 
@@ -99,6 +105,13 @@ export interface MatchFullReplayDump {
    * match step-by-step sans avoir à exposer le seed RNG.
    */
   readonly states: readonly GameState[];
+  /**
+   * Lot 2 « journal rejouable » — le journal persisté (état initial +
+   * coups + dés) quand le replay est au format v2. `states` en est alors
+   * DÉRIVÉ côté serveur (`replayJournal`) ; le client peut aussi le
+   * rejouer lui-même. Absent pour un replay v1 (snapshots).
+   */
+  readonly journal?: ReplayJournal;
   /**
    * Données d'équipe utiles au rendu visuel (couleurs primaires /
    * secondaires, slug pour les variantes Pixi). `null` côté si la
@@ -192,7 +205,15 @@ export async function getMatchFullReplayDump(
     );
   }
   const wrapper = await decompressReplay(replay.payload as Buffer);
-  if (!wrapper.fullReplay) {
+  // Lot 2 — format v2 : les états sont re-dérivés du journal.
+  const fullReplay = wrapper.journal
+    ? {
+        initialState: wrapper.journal.initialState,
+        moves: journalMoves(wrapper.journal),
+        states: replayJournal(wrapper.journal).states,
+      }
+    : wrapper.fullReplay;
+  if (!fullReplay) {
     throw new ReplayDumpError(
       "FULL_REPLAY_NOT_AVAILABLE",
       `Replay '${matchId}' produit sans données de re-jeu visuel (driver hybrid ou pré-Lot 3.D.1) — pas de full replay disponible`,
@@ -202,9 +223,10 @@ export async function getMatchFullReplayDump(
     matchId,
     status: match.status as string,
     durationMs: replay.durationMs,
-    initialState: wrapper.fullReplay.initialState,
-    moves: wrapper.fullReplay.moves,
-    states: wrapper.fullReplay.states,
+    initialState: fullReplay.initialState,
+    moves: fullReplay.moves,
+    states: fullReplay.states,
+    ...(wrapper.journal ? { journal: wrapper.journal } : {}),
     teams: {
       home: match.homeTeam
         ? {

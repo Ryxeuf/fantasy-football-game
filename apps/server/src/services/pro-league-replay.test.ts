@@ -10,6 +10,12 @@ vi.mock("../prisma", () => ({
 vi.mock("@bb/sim-engine", () => ({
   decompressEvents: vi.fn(),
   decompressReplay: vi.fn(),
+  journalMoves: vi.fn((journal: { steps: Array<{ move: unknown }> }) =>
+    journal.steps.map((s) => s.move),
+  ),
+  replayJournal: vi.fn((journal: { steps: unknown[] }) => ({
+    states: journal.steps.map((_, i) => ({ gamePhase: "playing", turn: i + 2 })),
+  })),
 }));
 
 import { prisma } from "../prisma";
@@ -183,6 +189,29 @@ describe("getMatchFullReplayDump — Lot 3.D.2", () => {
       getMatchFullReplayDump("m1"),
       "FULL_REPLAY_NOT_AVAILABLE",
     );
+  });
+
+  it("Lot 2 — dérive moves + states d'un journal v2 et le renvoie", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(matchSelect);
+    mocked.replay.findUnique.mockResolvedValue({
+      payload: Buffer.from([1, 2, 3]),
+      durationMs: 60_000,
+    });
+    const journal = {
+      v: 2,
+      seed: 7,
+      initialState: { gamePhase: "playing", half: 1, turn: 1 },
+      steps: [
+        { move: { type: "END_TURN" }, dice: [] },
+        { move: { type: "END_TURN" }, drive: true, dice: [] },
+      ],
+    };
+    mockedDecompressReplay.mockResolvedValue({ events: [], journal } as never);
+    const dump = await getMatchFullReplayDump("m1");
+    expect(dump.moves).toEqual([{ type: "END_TURN" }, { type: "END_TURN" }]);
+    expect(dump.states).toHaveLength(2);
+    expect(dump.initialState).toEqual(journal.initialState);
+    expect(dump.journal).toEqual(journal);
   });
 
   it("renvoie initialState + moves + states + teams quand disponible", async () => {

@@ -20,6 +20,7 @@ import {
   runVersionComparison,
 } from "../services/pro-league-admin-tools";
 import {
+  getMatchSheetText,
   NarrationError,
   getMatchNarration,
 } from "../services/pro-league-narration";
@@ -292,6 +293,12 @@ export async function handleGetMatchNarration(
   const { id } = req.params as { id: string };
   const format = (req.query.format as string | undefined) ?? "json";
   try {
+    // Lot 2 — `?format=sheet` : feuille de match papier dérivée du journal.
+    if (format === "sheet") {
+      const sheet = await getMatchSheetText(id);
+      res.type("text/plain; charset=utf-8").send(sheet.sheet);
+      return;
+    }
     const out = await getMatchNarration(id);
     if (format === "text") {
       res.type("text/plain; charset=utf-8").send(out.narration);
@@ -304,7 +311,8 @@ export async function handleGetMatchNarration(
         err.code === "MATCH_NOT_REPLAYABLE"
           ? 409
           : err.code === "MATCH_NOT_FOUND" ||
-              err.code === "REPLAY_NOT_FOUND"
+              err.code === "REPLAY_NOT_FOUND" ||
+              err.code === "SHEET_NOT_AVAILABLE"
             ? 404
             : 500;
       res.status(status).json({ error: err.message, code: err.code });
