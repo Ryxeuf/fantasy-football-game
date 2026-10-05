@@ -1,3 +1,10 @@
+## [1.253.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.252.0...v1.253.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **pro-league:** lot 3 « le cerveau du coach » — plan de drive, activations scorées en espérance, huit bugs du moteur (engine 0.29.0) ([#1056](https://github.com/Ryxeuf/fantasy-football-game/issues/1056)) ([f1006a7](https://github.com/Ryxeuf/fantasy-football-game/commit/f1006a763745e2d98bcd1c7ab96ffe5e471c66c0))
+
 ## [1.252.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.251.0...v1.252.0) (2026-10-05)
 
 

@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-09-27
+> Dernière mise à jour : 2026-10-05
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -229,6 +229,25 @@ write-once, classement Coachs / Tribunes, Oracle au palmarès. Restent :
   de la suite (`proc.kill()` ne tue pas l'arbre `pnpm → tsx → node`), si bien
   que le run suivant le réutilise et échoue en `ECONNREFUSED` quand il meurt.
 
+## Thèmes de dés et Couronnes
+
+Source : `dice-themes` puis `dice-theme-shop-and-crowns` (archivés
+2026-10-05). Le dé original est servi partout ; boutique (flag `dice_themes`)
+et Couronnes (flag `crowns`) sont en recette. Restent :
+
+- **Sources de Couronnes hors Pro League** : aujourd'hui seul l'admin en
+  crédite (`PATCH /admin/wallets/:id/balance`). Bonus quotidien, récompenses
+  de ligue ou d'Oracle des pronostics (cf. la suite « conversion rétroactive »
+  ci-dessus) sont à décider avant d'ouvrir `crowns` à tous.
+- **App mobile (Expo)** : le choix de blocage y reste textuel, aucun dé
+  dessiné ; brancher `@bb/ui/dice` (skins) côté React Native.
+- **Upload de nouvelles faces depuis l'admin** : un thème reste un contrat de
+  code (PNG du dépôt + skin + entrée du catalogue). Un upload suivrait le
+  patron « Upload de binaire » de CLAUDE.md.
+- **Thème de l'adversaire en match en ligne** : chacun voit ses propres dés ;
+  afficher ceux du lanceur demanderait de servir son thème dans l'état du
+  match.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -244,4 +263,5 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | ~~`casualties-are-spp-eliminations`~~ | **Plus rien à faire** depuis `casualty-count-and-hate-keyword-choice` : le rattrapage se déclenche à la première lecture du classement de chaque saison. Le script `db:resync-sheet-casualties` reste disponible pour une saison clôturée (que le balayage ignore) ou pour forcer une rencontre (`-- --pairing <id>`). |
 | `raise-the-dead-masters-of-undeath` | `prisma db push` (colonnes `LeagueMatchSheet.raisedDeadHome/Away`, nullables, aucun backfill). |
 | `casualty-count-and-hate-keyword-choice` | `prisma db push` (colonnes `LeagueMatchSheet.casualtyRuleVersion` et `hateChoices`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh` (étape 3/5). Puis ouvrir une fois le classement de chaque ligue active pour déclencher le rattrapage. |
+| `dice-theme-shop-and-crowns` | `prisma db push` (tables `DiceTheme`, `UserDiceTheme`), joué par `scripts/deploy.sh`. Le catalogue sert le compilé tant que la table est vide ; le seed (`syncDiceThemes`, create-if-missing) la remplit pour l'éditer en admin. Créer la ligne du flag `crowns` (seed ou « Synchroniser depuis le code » dans `/admin/feature-flags`) pour pouvoir l'allumer. |
 | `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
