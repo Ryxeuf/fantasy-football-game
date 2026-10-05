@@ -148,20 +148,20 @@ export default function AdminNflFantasyPage(): JSX.Element {
   const [authorized, setAuthorized] = useState(false);
 
   // States des inputs (groupes par action)
-  const [seedSeasonId, setSeedSeasonId] = useState("2025");
+  const [seedSeasonId, setSeedSeasonId] = useState("2026");
 
-  const [weekSeasonId, setWeekSeasonId] = useState("2025");
-  const [weekNumber, setWeekNumber] = useState(10);
+  const [weekSeasonId, setWeekSeasonId] = useState("2026");
+  const [weekNumber, setWeekNumber] = useState(4);
 
-  const [gamedayDate, setGamedayDate] = useState("20251109");
+  const [gamedayDate, setGamedayDate] = useState("20261004");
 
-  const [rostersSeasonId, setRostersSeasonId] = useState("2025");
+  const [rostersSeasonId, setRostersSeasonId] = useState("2026");
   const [rostersTeamCodes, setRostersTeamCodes] = useState("KC,MIA");
 
-  const [lockWeekId, setLockWeekId] = useState("2025:W10");
+  const [lockWeekId, setLockWeekId] = useState("2026:W5");
 
   const [matchupsLeagueId, setMatchupsLeagueId] = useState("");
-  const [matchupsWeekId, setMatchupsWeekId] = useState("2025:W10");
+  const [matchupsWeekId, setMatchupsWeekId] = useState("2026:W4");
 
   const [settleLeagueId, setSettleLeagueId] = useState("");
   const [settleWeekId, setSettleWeekId] = useState("2026:W4");

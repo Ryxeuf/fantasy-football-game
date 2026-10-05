@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../../../lib/api-client";
+import { currentNflSeasonId } from "../../../season";
 import type { LeagueWithEntries } from "../../../types";
 import { RaceIcon } from "../../../RaceIcon";
 
@@ -102,7 +103,6 @@ interface MeResponse {
   readonly user?: { id: string } | null;
 }
 
-const SEASON_ID = "2025";
 
 // Label FR par BbRace pour le filtre de race. `raceLabel` cote
 // teams.json contient en fait le nom complet de l'equipe NFL
@@ -226,6 +226,9 @@ export default function NuffleCoachDraftPage() {
     [league, currentUserId],
   );
   const isOwner = league && currentUserId && league.ownerId === currentUserId;
+  // Catalogue agrege sur la saison de la league (SPP + cote) : ecrit en dur
+  // a "2025" jusqu'au kickoff 2026, ce qui notait un draft 2026 sur 2025.
+  const seasonId = league?.seasonId ?? currentNflSeasonId(new Date());
 
   const activeSession = useMemo(
     () => (sessions ?? []).find((s) => s.status === "open") ?? null,
@@ -349,7 +352,7 @@ export default function NuffleCoachDraftPage() {
         const params = new URLSearchParams();
         params.set("page", String(page));
         params.set("pageSize", String(pageSize));
-        params.set("seasonId", SEASON_ID);
+        params.set("seasonId", seasonId);
         if (filters.search.trim()) params.set("search", filters.search.trim());
         if (filters.teamCode) params.set("teamCode", filters.teamCode);
         if (filters.bbRace) params.set("bbRace", filters.bbRace);
@@ -379,7 +382,7 @@ export default function NuffleCoachDraftPage() {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [leagueId, filters, page, pageSize]);
+  }, [leagueId, seasonId, filters, page, pageSize]);
 
   // Liste des races uniques (codes BbRace) extraite des 32 equipes.
   // Le label affiche vient de BB_RACE_LABEL_FR — `t.raceLabel` est en
@@ -824,7 +827,7 @@ export default function NuffleCoachDraftPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <Link
-                      href={`/nfl-fantasy/players/${r.player.id}?seasonId=${SEASON_ID}`}
+                      href={`/nfl-fantasy/players/${r.player.id}?seasonId=${seasonId}`}
                       className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
                     >
                       <RaceIcon
@@ -888,7 +891,7 @@ export default function NuffleCoachDraftPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <Link
-                      href={`/nfl-fantasy/players/${b.playerId}?seasonId=${SEASON_ID}`}
+                      href={`/nfl-fantasy/players/${b.playerId}?seasonId=${seasonId}`}
                       className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
                     >
                       <RaceIcon
@@ -933,7 +936,7 @@ export default function NuffleCoachDraftPage() {
         <section>
           <div className="flex items-baseline justify-between gap-2">
             <h2 className="text-lg font-semibold text-nuffle-anthracite">
-              Catalogue · saison {SEASON_ID}
+              Catalogue · saison {seasonId}
             </h2>
             <p className="text-xs text-nuffle-anthracite/60">
               {catalog === null
@@ -1094,7 +1097,7 @@ export default function NuffleCoachDraftPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/nfl-fantasy/players/${p.id}?seasonId=${SEASON_ID}`}
+                        href={`/nfl-fantasy/players/${p.id}?seasonId=${seasonId}`}
                         className="font-medium text-nuffle-anthracite hover:text-nuffle-gold"
                       >
                         <RaceIcon
