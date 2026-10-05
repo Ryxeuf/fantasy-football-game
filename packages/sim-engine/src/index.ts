@@ -36,6 +36,12 @@ export {
   RACE_TO_ROSTER_SLUG,
 } from './driver/engine-roster-fixture';
 export {
+  buildEngineRoster,
+  buildEngineSimInput,
+  rosterSlugForRace,
+  RACE_TO_ROSTER_SLUG,
+} from './driver/engine-roster-fixture';
+export {
   DEFAULT_TACTICAL_PROFILE,
   TACTICAL_PROFILE_PARAMETERS,
   parseTacticalProfile,

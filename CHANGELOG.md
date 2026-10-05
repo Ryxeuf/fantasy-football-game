@@ -1,3 +1,15 @@
+## [1.250.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.249.0...v1.250.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **pro-league:** lot 1 « un match complet » — relevé, choix obligatoires, remise en jeu après TD (engine 0.27.0) ([#1053](https://github.com/Ryxeuf/fantasy-football-game/issues/1053)) ([9204054](https://github.com/Ryxeuf/fantasy-football-game/commit/920405489ce87eb2f8f4a63fae12caab23600a16))
+
+
+### 📝 Documentation
+
+* **pro-league:** exploration « un match intégral, un coach qui évolue, un replay rejouable » ([#1051](https://github.com/Ryxeuf/fantasy-football-game/issues/1051)) ([aea9fc4](https://github.com/Ryxeuf/fantasy-football-game/commit/aea9fc457a623907ad91b138e84a6dc89b7140ef))
+
 ## [1.249.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.248.0...v1.249.0) (2026-10-05)
 
 
