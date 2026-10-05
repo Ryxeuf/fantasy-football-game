@@ -61,7 +61,7 @@ export default function NuffleCoachAboutPage() {
           {
             icon: "📅",
             title: "Lineup hebdomadaire",
-            body: "Choisis ton onze, ton capitaine et ton vice-capitaine. Lock automatique a 17:00 UTC le dimanche.",
+            body: "Choisis ton onze, ton capitaine et ton vice-capitaine. Chaque joueur se fige au coup d'envoi de son match : celui du jeudi ne bouge plus une fois le jeudi joué.",
           },
           {
             icon: "📊",

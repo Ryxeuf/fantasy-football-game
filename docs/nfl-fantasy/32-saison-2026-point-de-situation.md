@@ -177,6 +177,20 @@ Non rejoué par le re-settle : la Gazette déjà générée d'un matchup
 (« Régénérer (force) » depuis l'admin) et les lineups modifiés pendant les
 matchs à cause du verrouillage sur la mauvaise week (irréparable).
 
+### 4.5 Lineup modifiable après le match du jeudi — corrigé
+
+Repéré en relisant le cron : le seul verrou était le dimanche 17h UTC, donc
+un joueur du jeudi pouvait être aligné ou nommé capitaine après son match.
+Chaque joueur se fige désormais au coup d'envoi de SON match (cf.
+[`13-roster-lineup.md`](./13-roster-lineup.md)). Deux prérequis corrigés au
+passage :
+
+- `parseScheduleDate` figeait l'heure de New York à `-05:00` : de septembre
+  au 1er dimanche de novembre, tous les coups d'envoi étaient enregistrés
+  **une heure trop tard** (`easternUtcOffset`, règle US de l'heure d'été) ;
+- un match n'existait en base qu'une fois joué : le calendrier nflverse crée
+  désormais les matchs à venir (`nflverseScheduleTick`, et le bootstrap).
+
 ## 5. Procédure de rattrapage
 
 **Quand** : après le déploiement des correctifs, et **après mardi 06/10
@@ -201,7 +215,9 @@ Ce que fait la cible (`bootstrap-nfl-prod.ts --season 2026 --refresh-stats
 2. rosters 2026 post-cutdown ;
 3. stats W1-W22 **ré-ingérées** (`--refresh-stats` : une week ingérée
    partiellement par le cron est marquée `success` et serait sinon sautée) ;
-4. scores et coups d'envoi depuis `games.csv` ;
+4. scores et coups d'envoi depuis `games.csv` (recalés à l'heure d'été),
+   matchs à venir créés `scheduled` — sans eux, le verrouillage au coup
+   d'envoi ne connaît pas les matchs de la W5 ;
 5. re-settle W1-W4 de toutes les ligues 2026 `in_progress`.
 
 Contrôles après coup : `NflGameStat` ≈ 1 040-1 120 par week, 16 matchs

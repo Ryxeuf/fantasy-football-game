@@ -18,6 +18,7 @@ setInterval(5min)
    └─ runOnceAtATime("nfl-fantasy-cron")
         └─ nflFantasyOrchestratorTick(now)
               ├─ nflverseIngestTick   (fenetre 03:00 UTC)
+              ├─ nflverseScheduleTick (fenetre 03:00 UTC)
               ├─ espnGamedayTick      (Thu/Fri/Sat/Sun/Mon UTC)
               ├─ lockLineupsTick      (Sunday 17:00 UTC)
               └─ settleWeekTick       (Wednesday 12:00 UTC)
@@ -64,6 +65,7 @@ fenetre (pratique pour tests + scripts admin).
 | Tick | Quand | Service appele |
 |---|---|---|
 | `nflverseIngestTick` | 03:00 UTC daily | `ingestNflverseWeek` sur la week precedente PUIS la courante (erreurs isolees par week) |
+| `nflverseScheduleTick` | 03:00 UTC daily | `backfillScoresFromSchedules({ seasonId: courante, createMissing: true })` : matchs a venir crees `scheduled`, coups d'envoi recales (matchs deplaces). Base du verrouillage des lineups au coup d'envoi |
 | `espnGamedayTick` | Thu/Fri/Sat/Sun/Mon | `ingestEspnGameday(dateYmd(now))` |
 | `lockLineupsTick` | Sunday 17:00 UTC | `lockLineups(currentWeekId)` |
 | `settleWeekTick` | Wednesday 12:00 UTC | `ingestNflverseWeek` de la previous week (sauf ingest reussi < 90 min ; echec => pas de settle, le tick suivant retente), puis pour chaque league `in_progress` : `generateMatchups` + `settleNflFantasyWeek` |
