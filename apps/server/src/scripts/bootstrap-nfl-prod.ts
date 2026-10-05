@@ -29,6 +29,14 @@
  *   --skip-stats       Skip backfillNflSeason (utile si deja fait).
  *   --skip-rosters     Skip ingestNflverseRosters.
  *   --skip-scores      Skip backfillScoresFromSchedules.
+ *   --refresh-stats    Re-ingere les weeks deja ingerees (skipExisting=false).
+ *                      Indispensable pour un rattrapage : une week ingeree
+ *                      partiellement par le cron (TNF seul) est marquee
+ *                      `success` et serait sinon sautee.
+ *   --resettle-weeks A-B
+ *                      Step 6 : re-settle les weeks A..B de toutes les
+ *                      leagues in_progress de chaque saison (sans double
+ *                      credit de carriere, cf. resettleSeasonWeeks).
  *
  * Duree estimee : ~5-7 min par saison sur connexion correcte.
  *
@@ -41,6 +49,10 @@
  *   met a jour en continu ; les rosters definitifs a 53 sont figes
  *   apres le cutdown du 30/08/2026 (re-run idempotent a ce moment).
  *   Cf. docs/nfl-fantasy/09-transitions-2026.md pour le calendrier.
+ *
+ * Rattrapage d'une saison en cours (ex: 2026 apres W4, cf. doc 32) :
+ *     pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts \
+ *       --season 2026 --refresh-stats --resettle-weeks 1-4
  */
 
 import { prisma } from "../prisma";
@@ -51,21 +63,42 @@ import {
   seedNflTeams,
 } from "../services/nfl-ingest";
 import { ingestNflverseRosters } from "../services/nfl-ingest-rosters";
+import { resettleSeasonWeeks } from "../services/nfl-fantasy-scoring";
 
 const DEFAULT_SEASONS = ["2023", "2024", "2025"] as const;
 
-interface CliArgs {
+export interface CliArgs {
   readonly seasons: ReadonlyArray<string>;
   readonly skipStats: boolean;
   readonly skipRosters: boolean;
   readonly skipScores: boolean;
+  readonly refreshStats: boolean;
+  readonly resettleWeeks: { readonly from: number; readonly to: number } | null;
 }
 
-function parseArgs(argv: ReadonlyArray<string>): CliArgs {
+const USAGE =
+  "Usage: tsx bootstrap-nfl-prod.ts [--season YYYY ...] [--skip-stats] [--skip-rosters] [--skip-scores] [--refresh-stats] [--resettle-weeks A-B]";
+
+/** "1-4" -> { from: 1, to: 4 } ; null si invalide (bornes 1..22, from <= to). Pur. */
+export function parseWeekRange(
+  raw: string,
+): { from: number; to: number } | null {
+  const m = /^(\d{1,2})-(\d{1,2})$/.exec(raw.trim());
+  if (!m) return null;
+  const from = Number(m[1]);
+  const to = Number(m[2]);
+  if (from < 1 || to > 22 || from > to) return null;
+  return { from, to };
+}
+
+/** Pur : leve sur un argument inconnu ou invalide. */
+export function parseArgs(argv: ReadonlyArray<string>): CliArgs {
   const seasons: string[] = [];
   let skipStats = false;
   let skipRosters = false;
   let skipScores = false;
+  let refreshStats = false;
+  let resettleWeeks: CliArgs["resettleWeeks"] = null;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--season" && i + 1 < argv.length) {
@@ -77,11 +110,16 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
       skipRosters = true;
     } else if (a === "--skip-scores") {
       skipScores = true;
-    } else if (a === "--help" || a === "-h") {
-      console.log(
-        "Usage: tsx bootstrap-nfl-prod.ts [--season YYYY ...] [--skip-stats] [--skip-rosters] [--skip-scores]",
-      );
-      process.exit(0);
+    } else if (a === "--refresh-stats") {
+      refreshStats = true;
+    } else if (a === "--resettle-weeks" && i + 1 < argv.length) {
+      resettleWeeks = parseWeekRange(argv[i + 1]!);
+      if (!resettleWeeks) {
+        throw new Error(`--resettle-weeks invalide: ${argv[i + 1]} (attendu A-B, 1..22)`);
+      }
+      i++;
+    } else {
+      throw new Error(`Argument inconnu: ${a}\n${USAGE}`);
     }
   }
   return {
@@ -89,6 +127,8 @@ function parseArgs(argv: ReadonlyArray<string>): CliArgs {
     skipStats,
     skipRosters,
     skipScores,
+    refreshStats,
+    resettleWeeks,
   };
 }
 
@@ -126,13 +166,16 @@ async function step3Rosters(seasons: ReadonlyArray<string>): Promise<void> {
   }
 }
 
-async function step4Stats(seasons: ReadonlyArray<string>): Promise<void> {
+async function step4Stats(
+  seasons: ReadonlyArray<string>,
+  refresh: boolean,
+): Promise<void> {
   section(`Step 4/5 — Backfill stats nflverse W1-W22 pour ${seasons.join(", ")}`);
   for (const s of seasons) {
     const t0 = Date.now();
     const r = await backfillNflSeason({
       seasonId: s,
-      skipExisting: true,
+      skipExisting: !refresh,
       onProgress: (weekNum, status) => {
         if (status === "ingested") process.stdout.write(`W${weekNum} `);
       },
@@ -154,6 +197,24 @@ async function step5Scores(seasons: ReadonlyArray<string>): Promise<void> {
     console.log(
       `  ${s} : rows=${r.schedulesRows} scores=${r.scoresUpdated} kickoffs=${r.kickoffsUpdated} notInDb=${r.notInDb} (${dt}s)`,
     );
+  }
+}
+
+async function step6Resettle(
+  seasons: ReadonlyArray<string>,
+  range: { from: number; to: number },
+): Promise<void> {
+  section(`Step 6 — Re-settle W${range.from}-W${range.to} pour ${seasons.join(", ")}`);
+  for (const s of seasons) {
+    const r = await resettleSeasonWeeks({
+      seasonId: s,
+      fromWeek: range.from,
+      toWeek: range.to,
+    });
+    console.log(
+      `  ${s} : leagues=${r.leaguesProcessed} matchups=${r.matchupsSettled} errors=${r.errors.length}`,
+    );
+    for (const e of r.errors) console.log(`    ! ${e.leagueId} ${e.weekId} : ${e.error}`);
   }
 }
 
@@ -182,7 +243,18 @@ async function printSummary(seasons: ReadonlyArray<string>): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const args = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (argv.includes("--help") || argv.includes("-h")) {
+    console.log(USAGE);
+    process.exit(0);
+  }
+  let args: CliArgs;
+  try {
+    args = parseArgs(argv);
+  } catch (e) {
+    console.error((e as Error).message);
+    process.exit(1);
+  }
   console.log(`[bootstrap-nfl-prod] seasons=${args.seasons.join(",")}`);
 
   const t0 = Date.now();
@@ -190,8 +262,9 @@ async function main(): Promise<void> {
     await step1Teams();
     await step2Seasons(args.seasons);
     if (!args.skipRosters) await step3Rosters(args.seasons);
-    if (!args.skipStats) await step4Stats(args.seasons);
+    if (!args.skipStats) await step4Stats(args.seasons, args.refreshStats);
     if (!args.skipScores) await step5Scores(args.seasons);
+    if (args.resettleWeeks) await step6Resettle(args.seasons, args.resettleWeeks);
     await printSummary(args.seasons);
 
     const dtMin = ((Date.now() - t0) / 60000).toFixed(1);
@@ -204,4 +277,6 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+if (process.argv[1]?.includes("bootstrap-nfl-prod")) {
+  void main();
+}

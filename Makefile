@@ -380,6 +380,21 @@ nfl-bootstrap-prod-2026-rosters: ## (PROD) Seed saison 2026 + rosters seuls (ski
 	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD) --season 2026 --skip-stats --skip-scores"
 	@echo "✅ Rosters 2026 ingérés"
 
+# Rattrapage d'une saison en cours (cf. docs/nfl-fantasy/32) : re-seed des
+# fenetres de week, rosters, stats RE-ingerees (une week ingeree partiellement
+# par le cron est marquee success), scores, puis re-settle des weeks deja
+# reglees. NFL_RESETTLE_WEEKS=1-5 make ... pour etendre la plage.
+NFL_RESETTLE_WEEKS ?= 1-4
+
+nfl-catchup-2026: ## Rattrapage saison 2026 (seed + rosters + stats re-ingerees + scores + re-settle W$(NFL_RESETTLE_WEEKS)). LOCAL DEV.
+	@cd apps/server && $(PNPM) exec tsx src/scripts/bootstrap-nfl-prod.ts --season 2026 --refresh-stats --resettle-weeks $(NFL_RESETTLE_WEEKS)
+	@echo "✅ Rattrapage 2026 terminé"
+
+nfl-catchup-prod-2026: ## (PROD) Rattrapage saison 2026 via `docker exec` (re-settle W$(NFL_RESETTLE_WEEKS), override NFL_RESETTLE_WEEKS=1-5)
+	@echo "🏈 Rattrapage NFL 2026 via $(NFL_BOOTSTRAP_CONTAINER)..."
+	@docker exec $(NFL_BOOTSTRAP_CONTAINER) sh -c "$(NFL_BOOTSTRAP_CMD) --season 2026 --refresh-stats --resettle-weeks $(NFL_RESETTLE_WEEKS)"
+	@echo "✅ Rattrapage 2026 terminé"
+
 db-migrate-status: ## Vérifie le statut des migrations Prisma
 	@echo "📊 Statut des migrations Prisma..."
 	@npx prisma migrate status --schema prisma/schema.prisma
