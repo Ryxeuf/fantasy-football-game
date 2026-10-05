@@ -486,6 +486,22 @@ export type ProMatchPrediction = $Result.DefaultSelection<Prisma.$ProMatchPredic
  * Le slug est la valeur référencée par `Team`/`League`/`Cup.tournamentRuleset`.
  */
 export type TournamentRuleset = $Result.DefaultSelection<Prisma.$TournamentRulesetPayload>
+/**
+ * Model DiceTheme
+ * Mirror PG — Thème de dés — catalogue « base d'abord » (repli : `DICE_THEME_CATALOGUE`
+ * compilé de `services/dice-theme-catalogue`, source du seed create-if-missing).
+ * Le slug est un CONTRAT de code : il doit exister dans le registre de rendu
+ * web (faces PNG + D6), sinon la ligne est ignorée à la lecture. L'admin en
+ * édite les libellés, le prix, la mise en vente et l'ordre — pas les visuels.
+ */
+export type DiceTheme = $Result.DefaultSelection<Prisma.$DiceThemePayload>
+/**
+ * Model UserDiceTheme
+ * Thème de dés ACQUIS par un coach : achat en Crowns (débit `SINK` du
+ * wallet, même transaction) ou cadeau d'un admin. L'unicité (coach, thème)
+ * empêche un double achat ; seule une révocation admin supprime la ligne.
+ */
+export type UserDiceTheme = $Result.DefaultSelection<Prisma.$UserDiceThemePayload>
 
 /**
  * Enums
@@ -1538,6 +1554,26 @@ export class PrismaClient<
     * ```
     */
   get tournamentRuleset(): Prisma.TournamentRulesetDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.diceTheme`: Exposes CRUD operations for the **DiceTheme** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DiceThemes
+    * const diceThemes = await prisma.diceTheme.findMany()
+    * ```
+    */
+  get diceTheme(): Prisma.DiceThemeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.userDiceTheme`: Exposes CRUD operations for the **UserDiceTheme** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserDiceThemes
+    * const userDiceThemes = await prisma.userDiceTheme.findMany()
+    * ```
+    */
+  get userDiceTheme(): Prisma.UserDiceThemeDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -2066,7 +2102,9 @@ export namespace Prisma {
     ProPlayerOfMatchVote: 'ProPlayerOfMatchVote',
     ProGazetteComment: 'ProGazetteComment',
     ProMatchPrediction: 'ProMatchPrediction',
-    TournamentRuleset: 'TournamentRuleset'
+    TournamentRuleset: 'TournamentRuleset',
+    DiceTheme: 'DiceTheme',
+    UserDiceTheme: 'UserDiceTheme'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -2085,7 +2123,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -8675,6 +8713,154 @@ export namespace Prisma {
           }
         }
       }
+      DiceTheme: {
+        payload: Prisma.$DiceThemePayload<ExtArgs>
+        fields: Prisma.DiceThemeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DiceThemeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DiceThemeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>
+          }
+          findFirst: {
+            args: Prisma.DiceThemeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DiceThemeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>
+          }
+          findMany: {
+            args: Prisma.DiceThemeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>[]
+          }
+          create: {
+            args: Prisma.DiceThemeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>
+          }
+          createMany: {
+            args: Prisma.DiceThemeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DiceThemeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>[]
+          }
+          delete: {
+            args: Prisma.DiceThemeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>
+          }
+          update: {
+            args: Prisma.DiceThemeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>
+          }
+          deleteMany: {
+            args: Prisma.DiceThemeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DiceThemeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.DiceThemeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>[]
+          }
+          upsert: {
+            args: Prisma.DiceThemeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DiceThemePayload>
+          }
+          aggregate: {
+            args: Prisma.DiceThemeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDiceTheme>
+          }
+          groupBy: {
+            args: Prisma.DiceThemeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DiceThemeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DiceThemeCountArgs<ExtArgs>
+            result: $Utils.Optional<DiceThemeCountAggregateOutputType> | number
+          }
+        }
+      }
+      UserDiceTheme: {
+        payload: Prisma.$UserDiceThemePayload<ExtArgs>
+        fields: Prisma.UserDiceThemeFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserDiceThemeFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserDiceThemeFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>
+          }
+          findFirst: {
+            args: Prisma.UserDiceThemeFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserDiceThemeFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>
+          }
+          findMany: {
+            args: Prisma.UserDiceThemeFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>[]
+          }
+          create: {
+            args: Prisma.UserDiceThemeCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>
+          }
+          createMany: {
+            args: Prisma.UserDiceThemeCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserDiceThemeCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>[]
+          }
+          delete: {
+            args: Prisma.UserDiceThemeDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>
+          }
+          update: {
+            args: Prisma.UserDiceThemeUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>
+          }
+          deleteMany: {
+            args: Prisma.UserDiceThemeDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserDiceThemeUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserDiceThemeUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>[]
+          }
+          upsert: {
+            args: Prisma.UserDiceThemeUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserDiceThemePayload>
+          }
+          aggregate: {
+            args: Prisma.UserDiceThemeAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserDiceTheme>
+          }
+          groupBy: {
+            args: Prisma.UserDiceThemeGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserDiceThemeGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserDiceThemeCountArgs<ExtArgs>
+            result: $Utils.Optional<UserDiceThemeCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -8860,6 +9046,8 @@ export namespace Prisma {
     proGazetteComment?: ProGazetteCommentOmit
     proMatchPrediction?: ProMatchPredictionOmit
     tournamentRuleset?: TournamentRulesetOmit
+    diceTheme?: DiceThemeOmit
+    userDiceTheme?: UserDiceThemeOmit
   }
 
   /* Types for Logging */
@@ -8958,6 +9146,7 @@ export namespace Prisma {
     eloSnapshots: number
     tutorialCompletions: number
     proSpectatorFollows: number
+    diceThemes: number
     proBets: number
     proUserBadges: number
     proHofDedications: number
@@ -8995,6 +9184,7 @@ export namespace Prisma {
     eloSnapshots?: boolean | UserCountOutputTypeCountEloSnapshotsArgs
     tutorialCompletions?: boolean | UserCountOutputTypeCountTutorialCompletionsArgs
     proSpectatorFollows?: boolean | UserCountOutputTypeCountProSpectatorFollowsArgs
+    diceThemes?: boolean | UserCountOutputTypeCountDiceThemesArgs
     proBets?: boolean | UserCountOutputTypeCountProBetsArgs
     proUserBadges?: boolean | UserCountOutputTypeCountProUserBadgesArgs
     proHofDedications?: boolean | UserCountOutputTypeCountProHofDedicationsArgs
@@ -9148,6 +9338,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountProSpectatorFollowsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProSpectatorFollowWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountDiceThemesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserDiceThemeWhereInput
   }
 
   /**
@@ -10672,6 +10869,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     nafName: string | null
+    diceTheme: string | null
     valid: boolean | null
     bannedAt: Date | null
     bannedUntil: Date | null
@@ -10708,6 +10906,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     nafName: string | null
+    diceTheme: string | null
     valid: boolean | null
     bannedAt: Date | null
     bannedUntil: Date | null
@@ -10744,6 +10943,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: number
     privateProfile: number
     nafName: number
+    diceTheme: number
     valid: number
     bannedAt: number
     bannedUntil: number
@@ -10790,6 +10990,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     nafName?: true
+    diceTheme?: true
     valid?: true
     bannedAt?: true
     bannedUntil?: true
@@ -10826,6 +11027,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     nafName?: true
+    diceTheme?: true
     valid?: true
     bannedAt?: true
     bannedUntil?: true
@@ -10862,6 +11064,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     nafName?: true
+    diceTheme?: true
     valid?: true
     bannedAt?: true
     bannedUntil?: true
@@ -10985,6 +11188,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string
     privateProfile: boolean
     nafName: string | null
+    diceTheme: string | null
     valid: boolean
     bannedAt: Date | null
     bannedUntil: Date | null
@@ -11040,6 +11244,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
     bannedUntil?: boolean
@@ -11075,6 +11280,7 @@ export namespace Prisma {
     tutorialCompletions?: boolean | User$tutorialCompletionsArgs<ExtArgs>
     proSpectatorFollows?: boolean | User$proSpectatorFollowsArgs<ExtArgs>
     proWallet?: boolean | User$proWalletArgs<ExtArgs>
+    diceThemes?: boolean | User$diceThemesArgs<ExtArgs>
     proBets?: boolean | User$proBetsArgs<ExtArgs>
     proUserBadges?: boolean | User$proUserBadgesArgs<ExtArgs>
     proHofDedications?: boolean | User$proHofDedicationsArgs<ExtArgs>
@@ -11113,6 +11319,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
     bannedUntil?: boolean
@@ -11149,6 +11356,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
     bannedUntil?: boolean
@@ -11185,6 +11393,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
     bannedUntil?: boolean
@@ -11202,7 +11411,7 @@ export namespace Prisma {
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "nafName" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "mustChangePassword" | "deletedAt" | "deletionReason" | "lastLoginAt" | "leaderboardStatus" | "leaderboardStatusReason" | "leaderboardStatusUpdatedAt" | "leaderboardStatusUpdatedBy" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "nafName" | "diceTheme" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "mustChangePassword" | "deletedAt" | "deletionReason" | "lastLoginAt" | "leaderboardStatus" | "leaderboardStatusReason" | "leaderboardStatusUpdatedAt" | "leaderboardStatusUpdatedBy" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -11224,6 +11433,7 @@ export namespace Prisma {
     tutorialCompletions?: boolean | User$tutorialCompletionsArgs<ExtArgs>
     proSpectatorFollows?: boolean | User$proSpectatorFollowsArgs<ExtArgs>
     proWallet?: boolean | User$proWalletArgs<ExtArgs>
+    diceThemes?: boolean | User$diceThemesArgs<ExtArgs>
     proBets?: boolean | User$proBetsArgs<ExtArgs>
     proUserBadges?: boolean | User$proUserBadgesArgs<ExtArgs>
     proHofDedications?: boolean | User$proHofDedicationsArgs<ExtArgs>
@@ -11268,6 +11478,10 @@ export namespace Prisma {
       tutorialCompletions: Prisma.$TutorialCompletionPayload<ExtArgs>[]
       proSpectatorFollows: Prisma.$ProSpectatorFollowPayload<ExtArgs>[]
       proWallet: Prisma.$ProWalletPayload<ExtArgs> | null
+      /**
+       * Mirror PG — thèmes de dés acquis.
+       */
+      diceThemes: Prisma.$UserDiceThemePayload<ExtArgs>[]
       proBets: Prisma.$ProBetPayload<ExtArgs>[]
       proUserBadges: Prisma.$ProUserBadgePayload<ExtArgs>[]
       proHofDedications: Prisma.$ProHallOfFameDedicationPayload<ExtArgs>[]
@@ -11340,6 +11554,10 @@ export namespace Prisma {
        * Sprint R lot R.D.3 — NAF opt-in. Mirror PG.
        */
       nafName: string | null
+      /**
+       * Mirror PG — thème de dés choisi (null = défaut).
+       */
+      diceTheme: string | null
       /**
        * Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
        */
@@ -11788,6 +12006,7 @@ export namespace Prisma {
     tutorialCompletions<T extends User$tutorialCompletionsArgs<ExtArgs> = {}>(args?: Subset<T, User$tutorialCompletionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TutorialCompletionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proSpectatorFollows<T extends User$proSpectatorFollowsArgs<ExtArgs> = {}>(args?: Subset<T, User$proSpectatorFollowsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProSpectatorFollowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proWallet<T extends User$proWalletArgs<ExtArgs> = {}>(args?: Subset<T, User$proWalletArgs<ExtArgs>>): Prisma__ProWalletClient<$Result.GetResult<Prisma.$ProWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    diceThemes<T extends User$diceThemesArgs<ExtArgs> = {}>(args?: Subset<T, User$diceThemesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proBets<T extends User$proBetsArgs<ExtArgs> = {}>(args?: Subset<T, User$proBetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProBetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proUserBadges<T extends User$proUserBadgesArgs<ExtArgs> = {}>(args?: Subset<T, User$proUserBadgesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProUserBadgePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proHofDedications<T extends User$proHofDedicationsArgs<ExtArgs> = {}>(args?: Subset<T, User$proHofDedicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -11851,6 +12070,7 @@ export namespace Prisma {
     readonly totalDonatedCentsByCurrency: FieldRef<"User", 'String'>
     readonly privateProfile: FieldRef<"User", 'Boolean'>
     readonly nafName: FieldRef<"User", 'String'>
+    readonly diceTheme: FieldRef<"User", 'String'>
     readonly valid: FieldRef<"User", 'Boolean'>
     readonly bannedAt: FieldRef<"User", 'DateTime'>
     readonly bannedUntil: FieldRef<"User", 'DateTime'>
@@ -12719,6 +12939,30 @@ export namespace Prisma {
      */
     include?: ProWalletInclude<ExtArgs> | null
     where?: ProWalletWhereInput
+  }
+
+  /**
+   * User.diceThemes
+   */
+  export type User$diceThemesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    where?: UserDiceThemeWhereInput
+    orderBy?: UserDiceThemeOrderByWithRelationInput | UserDiceThemeOrderByWithRelationInput[]
+    cursor?: UserDiceThemeWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserDiceThemeScalarFieldEnum | UserDiceThemeScalarFieldEnum[]
   }
 
   /**
@@ -118459,6 +118703,2252 @@ export namespace Prisma {
 
 
   /**
+   * Model DiceTheme
+   */
+
+  export type AggregateDiceTheme = {
+    _count: DiceThemeCountAggregateOutputType | null
+    _avg: DiceThemeAvgAggregateOutputType | null
+    _sum: DiceThemeSumAggregateOutputType | null
+    _min: DiceThemeMinAggregateOutputType | null
+    _max: DiceThemeMaxAggregateOutputType | null
+  }
+
+  export type DiceThemeAvgAggregateOutputType = {
+    priceCrowns: number | null
+    sortOrder: number | null
+  }
+
+  export type DiceThemeSumAggregateOutputType = {
+    priceCrowns: number | null
+    sortOrder: number | null
+  }
+
+  export type DiceThemeMinAggregateOutputType = {
+    slug: string | null
+    collection: string | null
+    nameFr: string | null
+    nameEn: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    priceCrowns: number | null
+    enabled: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DiceThemeMaxAggregateOutputType = {
+    slug: string | null
+    collection: string | null
+    nameFr: string | null
+    nameEn: string | null
+    descriptionFr: string | null
+    descriptionEn: string | null
+    priceCrowns: number | null
+    enabled: boolean | null
+    sortOrder: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DiceThemeCountAggregateOutputType = {
+    slug: number
+    collection: number
+    nameFr: number
+    nameEn: number
+    descriptionFr: number
+    descriptionEn: number
+    priceCrowns: number
+    enabled: number
+    sortOrder: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DiceThemeAvgAggregateInputType = {
+    priceCrowns?: true
+    sortOrder?: true
+  }
+
+  export type DiceThemeSumAggregateInputType = {
+    priceCrowns?: true
+    sortOrder?: true
+  }
+
+  export type DiceThemeMinAggregateInputType = {
+    slug?: true
+    collection?: true
+    nameFr?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    priceCrowns?: true
+    enabled?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DiceThemeMaxAggregateInputType = {
+    slug?: true
+    collection?: true
+    nameFr?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    priceCrowns?: true
+    enabled?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DiceThemeCountAggregateInputType = {
+    slug?: true
+    collection?: true
+    nameFr?: true
+    nameEn?: true
+    descriptionFr?: true
+    descriptionEn?: true
+    priceCrowns?: true
+    enabled?: true
+    sortOrder?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DiceThemeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DiceTheme to aggregate.
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DiceThemes to fetch.
+     */
+    orderBy?: DiceThemeOrderByWithRelationInput | DiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DiceThemes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DiceThemes
+    **/
+    _count?: true | DiceThemeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DiceThemeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DiceThemeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DiceThemeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DiceThemeMaxAggregateInputType
+  }
+
+  export type GetDiceThemeAggregateType<T extends DiceThemeAggregateArgs> = {
+        [P in keyof T & keyof AggregateDiceTheme]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDiceTheme[P]>
+      : GetScalarType<T[P], AggregateDiceTheme[P]>
+  }
+
+
+
+
+  export type DiceThemeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DiceThemeWhereInput
+    orderBy?: DiceThemeOrderByWithAggregationInput | DiceThemeOrderByWithAggregationInput[]
+    by: DiceThemeScalarFieldEnum[] | DiceThemeScalarFieldEnum
+    having?: DiceThemeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DiceThemeCountAggregateInputType | true
+    _avg?: DiceThemeAvgAggregateInputType
+    _sum?: DiceThemeSumAggregateInputType
+    _min?: DiceThemeMinAggregateInputType
+    _max?: DiceThemeMaxAggregateInputType
+  }
+
+  export type DiceThemeGroupByOutputType = {
+    slug: string
+    collection: string
+    nameFr: string
+    nameEn: string
+    descriptionFr: string | null
+    descriptionEn: string | null
+    priceCrowns: number | null
+    enabled: boolean
+    sortOrder: number
+    createdAt: Date
+    updatedAt: Date
+    _count: DiceThemeCountAggregateOutputType | null
+    _avg: DiceThemeAvgAggregateOutputType | null
+    _sum: DiceThemeSumAggregateOutputType | null
+    _min: DiceThemeMinAggregateOutputType | null
+    _max: DiceThemeMaxAggregateOutputType | null
+  }
+
+  type GetDiceThemeGroupByPayload<T extends DiceThemeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DiceThemeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DiceThemeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DiceThemeGroupByOutputType[P]>
+            : GetScalarType<T[P], DiceThemeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DiceThemeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    slug?: boolean
+    collection?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    priceCrowns?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["diceTheme"]>
+
+  export type DiceThemeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    slug?: boolean
+    collection?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    priceCrowns?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["diceTheme"]>
+
+  export type DiceThemeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    slug?: boolean
+    collection?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    priceCrowns?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["diceTheme"]>
+
+  export type DiceThemeSelectScalar = {
+    slug?: boolean
+    collection?: boolean
+    nameFr?: boolean
+    nameEn?: boolean
+    descriptionFr?: boolean
+    descriptionEn?: boolean
+    priceCrowns?: boolean
+    enabled?: boolean
+    sortOrder?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DiceThemeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"slug" | "collection" | "nameFr" | "nameEn" | "descriptionFr" | "descriptionEn" | "priceCrowns" | "enabled" | "sortOrder" | "createdAt" | "updatedAt", ExtArgs["result"]["diceTheme"]>
+
+  export type $DiceThemePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DiceTheme"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      slug: string
+      /**
+       * "classic" | "team"
+       */
+      collection: string
+      nameFr: string
+      nameEn: string
+      descriptionFr: string | null
+      descriptionEn: string | null
+      /**
+       * Prix en Crowns ; null = gratuit (possédé d'office).
+       */
+      priceCrowns: number | null
+      /**
+       * Faux = retiré de la vente ; ses acheteurs le gardent.
+       */
+      enabled: boolean
+      sortOrder: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["diceTheme"]>
+    composites: {}
+  }
+
+  type DiceThemeGetPayload<S extends boolean | null | undefined | DiceThemeDefaultArgs> = $Result.GetResult<Prisma.$DiceThemePayload, S>
+
+  type DiceThemeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DiceThemeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DiceThemeCountAggregateInputType | true
+    }
+
+  export interface DiceThemeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DiceTheme'], meta: { name: 'DiceTheme' } }
+    /**
+     * Find zero or one DiceTheme that matches the filter.
+     * @param {DiceThemeFindUniqueArgs} args - Arguments to find a DiceTheme
+     * @example
+     * // Get one DiceTheme
+     * const diceTheme = await prisma.diceTheme.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DiceThemeFindUniqueArgs>(args: SelectSubset<T, DiceThemeFindUniqueArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one DiceTheme that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DiceThemeFindUniqueOrThrowArgs} args - Arguments to find a DiceTheme
+     * @example
+     * // Get one DiceTheme
+     * const diceTheme = await prisma.diceTheme.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DiceThemeFindUniqueOrThrowArgs>(args: SelectSubset<T, DiceThemeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DiceTheme that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeFindFirstArgs} args - Arguments to find a DiceTheme
+     * @example
+     * // Get one DiceTheme
+     * const diceTheme = await prisma.diceTheme.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DiceThemeFindFirstArgs>(args?: SelectSubset<T, DiceThemeFindFirstArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DiceTheme that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeFindFirstOrThrowArgs} args - Arguments to find a DiceTheme
+     * @example
+     * // Get one DiceTheme
+     * const diceTheme = await prisma.diceTheme.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DiceThemeFindFirstOrThrowArgs>(args?: SelectSubset<T, DiceThemeFindFirstOrThrowArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DiceThemes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DiceThemes
+     * const diceThemes = await prisma.diceTheme.findMany()
+     * 
+     * // Get first 10 DiceThemes
+     * const diceThemes = await prisma.diceTheme.findMany({ take: 10 })
+     * 
+     * // Only select the `slug`
+     * const diceThemeWithSlugOnly = await prisma.diceTheme.findMany({ select: { slug: true } })
+     * 
+     */
+    findMany<T extends DiceThemeFindManyArgs>(args?: SelectSubset<T, DiceThemeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a DiceTheme.
+     * @param {DiceThemeCreateArgs} args - Arguments to create a DiceTheme.
+     * @example
+     * // Create one DiceTheme
+     * const DiceTheme = await prisma.diceTheme.create({
+     *   data: {
+     *     // ... data to create a DiceTheme
+     *   }
+     * })
+     * 
+     */
+    create<T extends DiceThemeCreateArgs>(args: SelectSubset<T, DiceThemeCreateArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many DiceThemes.
+     * @param {DiceThemeCreateManyArgs} args - Arguments to create many DiceThemes.
+     * @example
+     * // Create many DiceThemes
+     * const diceTheme = await prisma.diceTheme.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DiceThemeCreateManyArgs>(args?: SelectSubset<T, DiceThemeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many DiceThemes and returns the data saved in the database.
+     * @param {DiceThemeCreateManyAndReturnArgs} args - Arguments to create many DiceThemes.
+     * @example
+     * // Create many DiceThemes
+     * const diceTheme = await prisma.diceTheme.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DiceThemes and only return the `slug`
+     * const diceThemeWithSlugOnly = await prisma.diceTheme.createManyAndReturn({
+     *   select: { slug: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DiceThemeCreateManyAndReturnArgs>(args?: SelectSubset<T, DiceThemeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a DiceTheme.
+     * @param {DiceThemeDeleteArgs} args - Arguments to delete one DiceTheme.
+     * @example
+     * // Delete one DiceTheme
+     * const DiceTheme = await prisma.diceTheme.delete({
+     *   where: {
+     *     // ... filter to delete one DiceTheme
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DiceThemeDeleteArgs>(args: SelectSubset<T, DiceThemeDeleteArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one DiceTheme.
+     * @param {DiceThemeUpdateArgs} args - Arguments to update one DiceTheme.
+     * @example
+     * // Update one DiceTheme
+     * const diceTheme = await prisma.diceTheme.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DiceThemeUpdateArgs>(args: SelectSubset<T, DiceThemeUpdateArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more DiceThemes.
+     * @param {DiceThemeDeleteManyArgs} args - Arguments to filter DiceThemes to delete.
+     * @example
+     * // Delete a few DiceThemes
+     * const { count } = await prisma.diceTheme.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DiceThemeDeleteManyArgs>(args?: SelectSubset<T, DiceThemeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DiceThemes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DiceThemes
+     * const diceTheme = await prisma.diceTheme.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DiceThemeUpdateManyArgs>(args: SelectSubset<T, DiceThemeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DiceThemes and returns the data updated in the database.
+     * @param {DiceThemeUpdateManyAndReturnArgs} args - Arguments to update many DiceThemes.
+     * @example
+     * // Update many DiceThemes
+     * const diceTheme = await prisma.diceTheme.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more DiceThemes and only return the `slug`
+     * const diceThemeWithSlugOnly = await prisma.diceTheme.updateManyAndReturn({
+     *   select: { slug: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends DiceThemeUpdateManyAndReturnArgs>(args: SelectSubset<T, DiceThemeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one DiceTheme.
+     * @param {DiceThemeUpsertArgs} args - Arguments to update or create a DiceTheme.
+     * @example
+     * // Update or create a DiceTheme
+     * const diceTheme = await prisma.diceTheme.upsert({
+     *   create: {
+     *     // ... data to create a DiceTheme
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DiceTheme we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DiceThemeUpsertArgs>(args: SelectSubset<T, DiceThemeUpsertArgs<ExtArgs>>): Prisma__DiceThemeClient<$Result.GetResult<Prisma.$DiceThemePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of DiceThemes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeCountArgs} args - Arguments to filter DiceThemes to count.
+     * @example
+     * // Count the number of DiceThemes
+     * const count = await prisma.diceTheme.count({
+     *   where: {
+     *     // ... the filter for the DiceThemes we want to count
+     *   }
+     * })
+    **/
+    count<T extends DiceThemeCountArgs>(
+      args?: Subset<T, DiceThemeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DiceThemeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DiceTheme.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DiceThemeAggregateArgs>(args: Subset<T, DiceThemeAggregateArgs>): Prisma.PrismaPromise<GetDiceThemeAggregateType<T>>
+
+    /**
+     * Group by DiceTheme.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DiceThemeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DiceThemeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DiceThemeGroupByArgs['orderBy'] }
+        : { orderBy?: DiceThemeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DiceThemeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDiceThemeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DiceTheme model
+   */
+  readonly fields: DiceThemeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DiceTheme.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DiceThemeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DiceTheme model
+   */
+  interface DiceThemeFieldRefs {
+    readonly slug: FieldRef<"DiceTheme", 'String'>
+    readonly collection: FieldRef<"DiceTheme", 'String'>
+    readonly nameFr: FieldRef<"DiceTheme", 'String'>
+    readonly nameEn: FieldRef<"DiceTheme", 'String'>
+    readonly descriptionFr: FieldRef<"DiceTheme", 'String'>
+    readonly descriptionEn: FieldRef<"DiceTheme", 'String'>
+    readonly priceCrowns: FieldRef<"DiceTheme", 'Int'>
+    readonly enabled: FieldRef<"DiceTheme", 'Boolean'>
+    readonly sortOrder: FieldRef<"DiceTheme", 'Int'>
+    readonly createdAt: FieldRef<"DiceTheme", 'DateTime'>
+    readonly updatedAt: FieldRef<"DiceTheme", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DiceTheme findUnique
+   */
+  export type DiceThemeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * Filter, which DiceTheme to fetch.
+     */
+    where: DiceThemeWhereUniqueInput
+  }
+
+  /**
+   * DiceTheme findUniqueOrThrow
+   */
+  export type DiceThemeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * Filter, which DiceTheme to fetch.
+     */
+    where: DiceThemeWhereUniqueInput
+  }
+
+  /**
+   * DiceTheme findFirst
+   */
+  export type DiceThemeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * Filter, which DiceTheme to fetch.
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DiceThemes to fetch.
+     */
+    orderBy?: DiceThemeOrderByWithRelationInput | DiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DiceThemes.
+     */
+    cursor?: DiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DiceThemes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DiceThemes.
+     */
+    distinct?: DiceThemeScalarFieldEnum | DiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * DiceTheme findFirstOrThrow
+   */
+  export type DiceThemeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * Filter, which DiceTheme to fetch.
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DiceThemes to fetch.
+     */
+    orderBy?: DiceThemeOrderByWithRelationInput | DiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DiceThemes.
+     */
+    cursor?: DiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DiceThemes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DiceThemes.
+     */
+    distinct?: DiceThemeScalarFieldEnum | DiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * DiceTheme findMany
+   */
+  export type DiceThemeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * Filter, which DiceThemes to fetch.
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DiceThemes to fetch.
+     */
+    orderBy?: DiceThemeOrderByWithRelationInput | DiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DiceThemes.
+     */
+    cursor?: DiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DiceThemes.
+     */
+    skip?: number
+    distinct?: DiceThemeScalarFieldEnum | DiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * DiceTheme create
+   */
+  export type DiceThemeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * The data needed to create a DiceTheme.
+     */
+    data: XOR<DiceThemeCreateInput, DiceThemeUncheckedCreateInput>
+  }
+
+  /**
+   * DiceTheme createMany
+   */
+  export type DiceThemeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DiceThemes.
+     */
+    data: DiceThemeCreateManyInput | DiceThemeCreateManyInput[]
+  }
+
+  /**
+   * DiceTheme createManyAndReturn
+   */
+  export type DiceThemeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * The data used to create many DiceThemes.
+     */
+    data: DiceThemeCreateManyInput | DiceThemeCreateManyInput[]
+  }
+
+  /**
+   * DiceTheme update
+   */
+  export type DiceThemeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * The data needed to update a DiceTheme.
+     */
+    data: XOR<DiceThemeUpdateInput, DiceThemeUncheckedUpdateInput>
+    /**
+     * Choose, which DiceTheme to update.
+     */
+    where: DiceThemeWhereUniqueInput
+  }
+
+  /**
+   * DiceTheme updateMany
+   */
+  export type DiceThemeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DiceThemes.
+     */
+    data: XOR<DiceThemeUpdateManyMutationInput, DiceThemeUncheckedUpdateManyInput>
+    /**
+     * Filter which DiceThemes to update
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * Limit how many DiceThemes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DiceTheme updateManyAndReturn
+   */
+  export type DiceThemeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * The data used to update DiceThemes.
+     */
+    data: XOR<DiceThemeUpdateManyMutationInput, DiceThemeUncheckedUpdateManyInput>
+    /**
+     * Filter which DiceThemes to update
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * Limit how many DiceThemes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DiceTheme upsert
+   */
+  export type DiceThemeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * The filter to search for the DiceTheme to update in case it exists.
+     */
+    where: DiceThemeWhereUniqueInput
+    /**
+     * In case the DiceTheme found by the `where` argument doesn't exist, create a new DiceTheme with this data.
+     */
+    create: XOR<DiceThemeCreateInput, DiceThemeUncheckedCreateInput>
+    /**
+     * In case the DiceTheme was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DiceThemeUpdateInput, DiceThemeUncheckedUpdateInput>
+  }
+
+  /**
+   * DiceTheme delete
+   */
+  export type DiceThemeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+    /**
+     * Filter which DiceTheme to delete.
+     */
+    where: DiceThemeWhereUniqueInput
+  }
+
+  /**
+   * DiceTheme deleteMany
+   */
+  export type DiceThemeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DiceThemes to delete
+     */
+    where?: DiceThemeWhereInput
+    /**
+     * Limit how many DiceThemes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * DiceTheme without action
+   */
+  export type DiceThemeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DiceTheme
+     */
+    select?: DiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DiceTheme
+     */
+    omit?: DiceThemeOmit<ExtArgs> | null
+  }
+
+
+  /**
+   * Model UserDiceTheme
+   */
+
+  export type AggregateUserDiceTheme = {
+    _count: UserDiceThemeCountAggregateOutputType | null
+    _avg: UserDiceThemeAvgAggregateOutputType | null
+    _sum: UserDiceThemeSumAggregateOutputType | null
+    _min: UserDiceThemeMinAggregateOutputType | null
+    _max: UserDiceThemeMaxAggregateOutputType | null
+  }
+
+  export type UserDiceThemeAvgAggregateOutputType = {
+    priceCrowns: number | null
+  }
+
+  export type UserDiceThemeSumAggregateOutputType = {
+    priceCrowns: number | null
+  }
+
+  export type UserDiceThemeMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    themeId: string | null
+    source: string | null
+    priceCrowns: number | null
+    grantedById: string | null
+    createdAt: Date | null
+  }
+
+  export type UserDiceThemeMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    themeId: string | null
+    source: string | null
+    priceCrowns: number | null
+    grantedById: string | null
+    createdAt: Date | null
+  }
+
+  export type UserDiceThemeCountAggregateOutputType = {
+    id: number
+    userId: number
+    themeId: number
+    source: number
+    priceCrowns: number
+    grantedById: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type UserDiceThemeAvgAggregateInputType = {
+    priceCrowns?: true
+  }
+
+  export type UserDiceThemeSumAggregateInputType = {
+    priceCrowns?: true
+  }
+
+  export type UserDiceThemeMinAggregateInputType = {
+    id?: true
+    userId?: true
+    themeId?: true
+    source?: true
+    priceCrowns?: true
+    grantedById?: true
+    createdAt?: true
+  }
+
+  export type UserDiceThemeMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    themeId?: true
+    source?: true
+    priceCrowns?: true
+    grantedById?: true
+    createdAt?: true
+  }
+
+  export type UserDiceThemeCountAggregateInputType = {
+    id?: true
+    userId?: true
+    themeId?: true
+    source?: true
+    priceCrowns?: true
+    grantedById?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type UserDiceThemeAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserDiceTheme to aggregate.
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserDiceThemes to fetch.
+     */
+    orderBy?: UserDiceThemeOrderByWithRelationInput | UserDiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserDiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserDiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserDiceThemes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserDiceThemes
+    **/
+    _count?: true | UserDiceThemeCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UserDiceThemeAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserDiceThemeSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserDiceThemeMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserDiceThemeMaxAggregateInputType
+  }
+
+  export type GetUserDiceThemeAggregateType<T extends UserDiceThemeAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserDiceTheme]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserDiceTheme[P]>
+      : GetScalarType<T[P], AggregateUserDiceTheme[P]>
+  }
+
+
+
+
+  export type UserDiceThemeGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserDiceThemeWhereInput
+    orderBy?: UserDiceThemeOrderByWithAggregationInput | UserDiceThemeOrderByWithAggregationInput[]
+    by: UserDiceThemeScalarFieldEnum[] | UserDiceThemeScalarFieldEnum
+    having?: UserDiceThemeScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserDiceThemeCountAggregateInputType | true
+    _avg?: UserDiceThemeAvgAggregateInputType
+    _sum?: UserDiceThemeSumAggregateInputType
+    _min?: UserDiceThemeMinAggregateInputType
+    _max?: UserDiceThemeMaxAggregateInputType
+  }
+
+  export type UserDiceThemeGroupByOutputType = {
+    id: string
+    userId: string
+    themeId: string
+    source: string
+    priceCrowns: number | null
+    grantedById: string | null
+    createdAt: Date
+    _count: UserDiceThemeCountAggregateOutputType | null
+    _avg: UserDiceThemeAvgAggregateOutputType | null
+    _sum: UserDiceThemeSumAggregateOutputType | null
+    _min: UserDiceThemeMinAggregateOutputType | null
+    _max: UserDiceThemeMaxAggregateOutputType | null
+  }
+
+  type GetUserDiceThemeGroupByPayload<T extends UserDiceThemeGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserDiceThemeGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserDiceThemeGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserDiceThemeGroupByOutputType[P]>
+            : GetScalarType<T[P], UserDiceThemeGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserDiceThemeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    themeId?: boolean
+    source?: boolean
+    priceCrowns?: boolean
+    grantedById?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userDiceTheme"]>
+
+  export type UserDiceThemeSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    themeId?: boolean
+    source?: boolean
+    priceCrowns?: boolean
+    grantedById?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userDiceTheme"]>
+
+  export type UserDiceThemeSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    themeId?: boolean
+    source?: boolean
+    priceCrowns?: boolean
+    grantedById?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userDiceTheme"]>
+
+  export type UserDiceThemeSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    themeId?: boolean
+    source?: boolean
+    priceCrowns?: boolean
+    grantedById?: boolean
+    createdAt?: boolean
+  }
+
+  export type UserDiceThemeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "themeId" | "source" | "priceCrowns" | "grantedById" | "createdAt", ExtArgs["result"]["userDiceTheme"]>
+  export type UserDiceThemeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type UserDiceThemeIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type UserDiceThemeIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $UserDiceThemePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserDiceTheme"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      /**
+       * Slug du thème (pas de FK : le catalogue compilé fait repli).
+       */
+      themeId: string
+      /**
+       * "purchase" | "admin_grant"
+       */
+      source: string
+      /**
+       * Prix payé en Crowns ; null pour un cadeau.
+       */
+      priceCrowns: number | null
+      /**
+       * Admin auteur d'un cadeau.
+       */
+      grantedById: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["userDiceTheme"]>
+    composites: {}
+  }
+
+  type UserDiceThemeGetPayload<S extends boolean | null | undefined | UserDiceThemeDefaultArgs> = $Result.GetResult<Prisma.$UserDiceThemePayload, S>
+
+  type UserDiceThemeCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserDiceThemeFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserDiceThemeCountAggregateInputType | true
+    }
+
+  export interface UserDiceThemeDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserDiceTheme'], meta: { name: 'UserDiceTheme' } }
+    /**
+     * Find zero or one UserDiceTheme that matches the filter.
+     * @param {UserDiceThemeFindUniqueArgs} args - Arguments to find a UserDiceTheme
+     * @example
+     * // Get one UserDiceTheme
+     * const userDiceTheme = await prisma.userDiceTheme.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserDiceThemeFindUniqueArgs>(args: SelectSubset<T, UserDiceThemeFindUniqueArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserDiceTheme that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserDiceThemeFindUniqueOrThrowArgs} args - Arguments to find a UserDiceTheme
+     * @example
+     * // Get one UserDiceTheme
+     * const userDiceTheme = await prisma.userDiceTheme.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserDiceThemeFindUniqueOrThrowArgs>(args: SelectSubset<T, UserDiceThemeFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserDiceTheme that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeFindFirstArgs} args - Arguments to find a UserDiceTheme
+     * @example
+     * // Get one UserDiceTheme
+     * const userDiceTheme = await prisma.userDiceTheme.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserDiceThemeFindFirstArgs>(args?: SelectSubset<T, UserDiceThemeFindFirstArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserDiceTheme that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeFindFirstOrThrowArgs} args - Arguments to find a UserDiceTheme
+     * @example
+     * // Get one UserDiceTheme
+     * const userDiceTheme = await prisma.userDiceTheme.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserDiceThemeFindFirstOrThrowArgs>(args?: SelectSubset<T, UserDiceThemeFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserDiceThemes that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserDiceThemes
+     * const userDiceThemes = await prisma.userDiceTheme.findMany()
+     * 
+     * // Get first 10 UserDiceThemes
+     * const userDiceThemes = await prisma.userDiceTheme.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userDiceThemeWithIdOnly = await prisma.userDiceTheme.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserDiceThemeFindManyArgs>(args?: SelectSubset<T, UserDiceThemeFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserDiceTheme.
+     * @param {UserDiceThemeCreateArgs} args - Arguments to create a UserDiceTheme.
+     * @example
+     * // Create one UserDiceTheme
+     * const UserDiceTheme = await prisma.userDiceTheme.create({
+     *   data: {
+     *     // ... data to create a UserDiceTheme
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserDiceThemeCreateArgs>(args: SelectSubset<T, UserDiceThemeCreateArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserDiceThemes.
+     * @param {UserDiceThemeCreateManyArgs} args - Arguments to create many UserDiceThemes.
+     * @example
+     * // Create many UserDiceThemes
+     * const userDiceTheme = await prisma.userDiceTheme.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserDiceThemeCreateManyArgs>(args?: SelectSubset<T, UserDiceThemeCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserDiceThemes and returns the data saved in the database.
+     * @param {UserDiceThemeCreateManyAndReturnArgs} args - Arguments to create many UserDiceThemes.
+     * @example
+     * // Create many UserDiceThemes
+     * const userDiceTheme = await prisma.userDiceTheme.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserDiceThemes and only return the `id`
+     * const userDiceThemeWithIdOnly = await prisma.userDiceTheme.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserDiceThemeCreateManyAndReturnArgs>(args?: SelectSubset<T, UserDiceThemeCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserDiceTheme.
+     * @param {UserDiceThemeDeleteArgs} args - Arguments to delete one UserDiceTheme.
+     * @example
+     * // Delete one UserDiceTheme
+     * const UserDiceTheme = await prisma.userDiceTheme.delete({
+     *   where: {
+     *     // ... filter to delete one UserDiceTheme
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserDiceThemeDeleteArgs>(args: SelectSubset<T, UserDiceThemeDeleteArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserDiceTheme.
+     * @param {UserDiceThemeUpdateArgs} args - Arguments to update one UserDiceTheme.
+     * @example
+     * // Update one UserDiceTheme
+     * const userDiceTheme = await prisma.userDiceTheme.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserDiceThemeUpdateArgs>(args: SelectSubset<T, UserDiceThemeUpdateArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserDiceThemes.
+     * @param {UserDiceThemeDeleteManyArgs} args - Arguments to filter UserDiceThemes to delete.
+     * @example
+     * // Delete a few UserDiceThemes
+     * const { count } = await prisma.userDiceTheme.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserDiceThemeDeleteManyArgs>(args?: SelectSubset<T, UserDiceThemeDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserDiceThemes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserDiceThemes
+     * const userDiceTheme = await prisma.userDiceTheme.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserDiceThemeUpdateManyArgs>(args: SelectSubset<T, UserDiceThemeUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserDiceThemes and returns the data updated in the database.
+     * @param {UserDiceThemeUpdateManyAndReturnArgs} args - Arguments to update many UserDiceThemes.
+     * @example
+     * // Update many UserDiceThemes
+     * const userDiceTheme = await prisma.userDiceTheme.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserDiceThemes and only return the `id`
+     * const userDiceThemeWithIdOnly = await prisma.userDiceTheme.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserDiceThemeUpdateManyAndReturnArgs>(args: SelectSubset<T, UserDiceThemeUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserDiceTheme.
+     * @param {UserDiceThemeUpsertArgs} args - Arguments to update or create a UserDiceTheme.
+     * @example
+     * // Update or create a UserDiceTheme
+     * const userDiceTheme = await prisma.userDiceTheme.upsert({
+     *   create: {
+     *     // ... data to create a UserDiceTheme
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserDiceTheme we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserDiceThemeUpsertArgs>(args: SelectSubset<T, UserDiceThemeUpsertArgs<ExtArgs>>): Prisma__UserDiceThemeClient<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserDiceThemes.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeCountArgs} args - Arguments to filter UserDiceThemes to count.
+     * @example
+     * // Count the number of UserDiceThemes
+     * const count = await prisma.userDiceTheme.count({
+     *   where: {
+     *     // ... the filter for the UserDiceThemes we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserDiceThemeCountArgs>(
+      args?: Subset<T, UserDiceThemeCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserDiceThemeCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserDiceTheme.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserDiceThemeAggregateArgs>(args: Subset<T, UserDiceThemeAggregateArgs>): Prisma.PrismaPromise<GetUserDiceThemeAggregateType<T>>
+
+    /**
+     * Group by UserDiceTheme.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserDiceThemeGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserDiceThemeGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserDiceThemeGroupByArgs['orderBy'] }
+        : { orderBy?: UserDiceThemeGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserDiceThemeGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserDiceThemeGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserDiceTheme model
+   */
+  readonly fields: UserDiceThemeFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserDiceTheme.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserDiceThemeClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserDiceTheme model
+   */
+  interface UserDiceThemeFieldRefs {
+    readonly id: FieldRef<"UserDiceTheme", 'String'>
+    readonly userId: FieldRef<"UserDiceTheme", 'String'>
+    readonly themeId: FieldRef<"UserDiceTheme", 'String'>
+    readonly source: FieldRef<"UserDiceTheme", 'String'>
+    readonly priceCrowns: FieldRef<"UserDiceTheme", 'Int'>
+    readonly grantedById: FieldRef<"UserDiceTheme", 'String'>
+    readonly createdAt: FieldRef<"UserDiceTheme", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserDiceTheme findUnique
+   */
+  export type UserDiceThemeFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * Filter, which UserDiceTheme to fetch.
+     */
+    where: UserDiceThemeWhereUniqueInput
+  }
+
+  /**
+   * UserDiceTheme findUniqueOrThrow
+   */
+  export type UserDiceThemeFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * Filter, which UserDiceTheme to fetch.
+     */
+    where: UserDiceThemeWhereUniqueInput
+  }
+
+  /**
+   * UserDiceTheme findFirst
+   */
+  export type UserDiceThemeFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * Filter, which UserDiceTheme to fetch.
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserDiceThemes to fetch.
+     */
+    orderBy?: UserDiceThemeOrderByWithRelationInput | UserDiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserDiceThemes.
+     */
+    cursor?: UserDiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserDiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserDiceThemes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserDiceThemes.
+     */
+    distinct?: UserDiceThemeScalarFieldEnum | UserDiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * UserDiceTheme findFirstOrThrow
+   */
+  export type UserDiceThemeFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * Filter, which UserDiceTheme to fetch.
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserDiceThemes to fetch.
+     */
+    orderBy?: UserDiceThemeOrderByWithRelationInput | UserDiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserDiceThemes.
+     */
+    cursor?: UserDiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserDiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserDiceThemes.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserDiceThemes.
+     */
+    distinct?: UserDiceThemeScalarFieldEnum | UserDiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * UserDiceTheme findMany
+   */
+  export type UserDiceThemeFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * Filter, which UserDiceThemes to fetch.
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserDiceThemes to fetch.
+     */
+    orderBy?: UserDiceThemeOrderByWithRelationInput | UserDiceThemeOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserDiceThemes.
+     */
+    cursor?: UserDiceThemeWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserDiceThemes from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserDiceThemes.
+     */
+    skip?: number
+    distinct?: UserDiceThemeScalarFieldEnum | UserDiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * UserDiceTheme create
+   */
+  export type UserDiceThemeCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserDiceTheme.
+     */
+    data: XOR<UserDiceThemeCreateInput, UserDiceThemeUncheckedCreateInput>
+  }
+
+  /**
+   * UserDiceTheme createMany
+   */
+  export type UserDiceThemeCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserDiceThemes.
+     */
+    data: UserDiceThemeCreateManyInput | UserDiceThemeCreateManyInput[]
+  }
+
+  /**
+   * UserDiceTheme createManyAndReturn
+   */
+  export type UserDiceThemeCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserDiceThemes.
+     */
+    data: UserDiceThemeCreateManyInput | UserDiceThemeCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserDiceTheme update
+   */
+  export type UserDiceThemeUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserDiceTheme.
+     */
+    data: XOR<UserDiceThemeUpdateInput, UserDiceThemeUncheckedUpdateInput>
+    /**
+     * Choose, which UserDiceTheme to update.
+     */
+    where: UserDiceThemeWhereUniqueInput
+  }
+
+  /**
+   * UserDiceTheme updateMany
+   */
+  export type UserDiceThemeUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserDiceThemes.
+     */
+    data: XOR<UserDiceThemeUpdateManyMutationInput, UserDiceThemeUncheckedUpdateManyInput>
+    /**
+     * Filter which UserDiceThemes to update
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * Limit how many UserDiceThemes to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserDiceTheme updateManyAndReturn
+   */
+  export type UserDiceThemeUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * The data used to update UserDiceThemes.
+     */
+    data: XOR<UserDiceThemeUpdateManyMutationInput, UserDiceThemeUncheckedUpdateManyInput>
+    /**
+     * Filter which UserDiceThemes to update
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * Limit how many UserDiceThemes to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserDiceTheme upsert
+   */
+  export type UserDiceThemeUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserDiceTheme to update in case it exists.
+     */
+    where: UserDiceThemeWhereUniqueInput
+    /**
+     * In case the UserDiceTheme found by the `where` argument doesn't exist, create a new UserDiceTheme with this data.
+     */
+    create: XOR<UserDiceThemeCreateInput, UserDiceThemeUncheckedCreateInput>
+    /**
+     * In case the UserDiceTheme was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserDiceThemeUpdateInput, UserDiceThemeUncheckedUpdateInput>
+  }
+
+  /**
+   * UserDiceTheme delete
+   */
+  export type UserDiceThemeDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+    /**
+     * Filter which UserDiceTheme to delete.
+     */
+    where: UserDiceThemeWhereUniqueInput
+  }
+
+  /**
+   * UserDiceTheme deleteMany
+   */
+  export type UserDiceThemeDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserDiceThemes to delete
+     */
+    where?: UserDiceThemeWhereInput
+    /**
+     * Limit how many UserDiceThemes to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserDiceTheme without action
+   */
+  export type UserDiceThemeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserDiceTheme
+     */
+    select?: UserDiceThemeSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserDiceTheme
+     */
+    omit?: UserDiceThemeOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserDiceThemeInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -118488,6 +120978,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
     privateProfile: 'privateProfile',
     nafName: 'nafName',
+    diceTheme: 'diceTheme',
     valid: 'valid',
     bannedAt: 'bannedAt',
     bannedUntil: 'bannedUntil',
@@ -120074,6 +122565,36 @@ export namespace Prisma {
   export type TournamentRulesetScalarFieldEnum = (typeof TournamentRulesetScalarFieldEnum)[keyof typeof TournamentRulesetScalarFieldEnum]
 
 
+  export const DiceThemeScalarFieldEnum: {
+    slug: 'slug',
+    collection: 'collection',
+    nameFr: 'nameFr',
+    nameEn: 'nameEn',
+    descriptionFr: 'descriptionFr',
+    descriptionEn: 'descriptionEn',
+    priceCrowns: 'priceCrowns',
+    enabled: 'enabled',
+    sortOrder: 'sortOrder',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DiceThemeScalarFieldEnum = (typeof DiceThemeScalarFieldEnum)[keyof typeof DiceThemeScalarFieldEnum]
+
+
+  export const UserDiceThemeScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    themeId: 'themeId',
+    source: 'source',
+    priceCrowns: 'priceCrowns',
+    grantedById: 'grantedById',
+    createdAt: 'createdAt'
+  };
+
+  export type UserDiceThemeScalarFieldEnum = (typeof UserDiceThemeScalarFieldEnum)[keyof typeof UserDiceThemeScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -120236,6 +122757,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     nafName?: StringNullableFilter<"User"> | string | null
+    diceTheme?: StringNullableFilter<"User"> | string | null
     valid?: BoolFilter<"User"> | boolean
     bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -120271,6 +122793,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionListRelationFilter
     proSpectatorFollows?: ProSpectatorFollowListRelationFilter
     proWallet?: XOR<ProWalletNullableScalarRelationFilter, ProWalletWhereInput> | null
+    diceThemes?: UserDiceThemeListRelationFilter
     proBets?: ProBetListRelationFilter
     proUserBadges?: ProUserBadgeListRelationFilter
     proHofDedications?: ProHallOfFameDedicationListRelationFilter
@@ -120308,6 +122831,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrderInput | SortOrder
+    diceTheme?: SortOrderInput | SortOrder
     valid?: SortOrder
     bannedAt?: SortOrderInput | SortOrder
     bannedUntil?: SortOrderInput | SortOrder
@@ -120343,6 +122867,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionOrderByRelationAggregateInput
     proSpectatorFollows?: ProSpectatorFollowOrderByRelationAggregateInput
     proWallet?: ProWalletOrderByWithRelationInput
+    diceThemes?: UserDiceThemeOrderByRelationAggregateInput
     proBets?: ProBetOrderByRelationAggregateInput
     proUserBadges?: ProUserBadgeOrderByRelationAggregateInput
     proHofDedications?: ProHallOfFameDedicationOrderByRelationAggregateInput
@@ -120383,6 +122908,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     nafName?: StringNullableFilter<"User"> | string | null
+    diceTheme?: StringNullableFilter<"User"> | string | null
     valid?: BoolFilter<"User"> | boolean
     bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -120418,6 +122944,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionListRelationFilter
     proSpectatorFollows?: ProSpectatorFollowListRelationFilter
     proWallet?: XOR<ProWalletNullableScalarRelationFilter, ProWalletWhereInput> | null
+    diceThemes?: UserDiceThemeListRelationFilter
     proBets?: ProBetListRelationFilter
     proUserBadges?: ProUserBadgeListRelationFilter
     proHofDedications?: ProHallOfFameDedicationListRelationFilter
@@ -120455,6 +122982,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrderInput | SortOrder
+    diceTheme?: SortOrderInput | SortOrder
     valid?: SortOrder
     bannedAt?: SortOrderInput | SortOrder
     bannedUntil?: SortOrderInput | SortOrder
@@ -120499,6 +123027,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringWithAggregatesFilter<"User"> | string
     privateProfile?: BoolWithAggregatesFilter<"User"> | boolean
     nafName?: StringNullableWithAggregatesFilter<"User"> | string | null
+    diceTheme?: StringNullableWithAggregatesFilter<"User"> | string | null
     valid?: BoolWithAggregatesFilter<"User"> | boolean
     bannedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     bannedUntil?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -128835,6 +131364,158 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"TournamentRuleset"> | Date | string
   }
 
+  export type DiceThemeWhereInput = {
+    AND?: DiceThemeWhereInput | DiceThemeWhereInput[]
+    OR?: DiceThemeWhereInput[]
+    NOT?: DiceThemeWhereInput | DiceThemeWhereInput[]
+    slug?: StringFilter<"DiceTheme"> | string
+    collection?: StringFilter<"DiceTheme"> | string
+    nameFr?: StringFilter<"DiceTheme"> | string
+    nameEn?: StringFilter<"DiceTheme"> | string
+    descriptionFr?: StringNullableFilter<"DiceTheme"> | string | null
+    descriptionEn?: StringNullableFilter<"DiceTheme"> | string | null
+    priceCrowns?: IntNullableFilter<"DiceTheme"> | number | null
+    enabled?: BoolFilter<"DiceTheme"> | boolean
+    sortOrder?: IntFilter<"DiceTheme"> | number
+    createdAt?: DateTimeFilter<"DiceTheme"> | Date | string
+    updatedAt?: DateTimeFilter<"DiceTheme"> | Date | string
+  }
+
+  export type DiceThemeOrderByWithRelationInput = {
+    slug?: SortOrder
+    collection?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    priceCrowns?: SortOrderInput | SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DiceThemeWhereUniqueInput = Prisma.AtLeast<{
+    slug?: string
+    AND?: DiceThemeWhereInput | DiceThemeWhereInput[]
+    OR?: DiceThemeWhereInput[]
+    NOT?: DiceThemeWhereInput | DiceThemeWhereInput[]
+    collection?: StringFilter<"DiceTheme"> | string
+    nameFr?: StringFilter<"DiceTheme"> | string
+    nameEn?: StringFilter<"DiceTheme"> | string
+    descriptionFr?: StringNullableFilter<"DiceTheme"> | string | null
+    descriptionEn?: StringNullableFilter<"DiceTheme"> | string | null
+    priceCrowns?: IntNullableFilter<"DiceTheme"> | number | null
+    enabled?: BoolFilter<"DiceTheme"> | boolean
+    sortOrder?: IntFilter<"DiceTheme"> | number
+    createdAt?: DateTimeFilter<"DiceTheme"> | Date | string
+    updatedAt?: DateTimeFilter<"DiceTheme"> | Date | string
+  }, "slug">
+
+  export type DiceThemeOrderByWithAggregationInput = {
+    slug?: SortOrder
+    collection?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrderInput | SortOrder
+    descriptionEn?: SortOrderInput | SortOrder
+    priceCrowns?: SortOrderInput | SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DiceThemeCountOrderByAggregateInput
+    _avg?: DiceThemeAvgOrderByAggregateInput
+    _max?: DiceThemeMaxOrderByAggregateInput
+    _min?: DiceThemeMinOrderByAggregateInput
+    _sum?: DiceThemeSumOrderByAggregateInput
+  }
+
+  export type DiceThemeScalarWhereWithAggregatesInput = {
+    AND?: DiceThemeScalarWhereWithAggregatesInput | DiceThemeScalarWhereWithAggregatesInput[]
+    OR?: DiceThemeScalarWhereWithAggregatesInput[]
+    NOT?: DiceThemeScalarWhereWithAggregatesInput | DiceThemeScalarWhereWithAggregatesInput[]
+    slug?: StringWithAggregatesFilter<"DiceTheme"> | string
+    collection?: StringWithAggregatesFilter<"DiceTheme"> | string
+    nameFr?: StringWithAggregatesFilter<"DiceTheme"> | string
+    nameEn?: StringWithAggregatesFilter<"DiceTheme"> | string
+    descriptionFr?: StringNullableWithAggregatesFilter<"DiceTheme"> | string | null
+    descriptionEn?: StringNullableWithAggregatesFilter<"DiceTheme"> | string | null
+    priceCrowns?: IntNullableWithAggregatesFilter<"DiceTheme"> | number | null
+    enabled?: BoolWithAggregatesFilter<"DiceTheme"> | boolean
+    sortOrder?: IntWithAggregatesFilter<"DiceTheme"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"DiceTheme"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DiceTheme"> | Date | string
+  }
+
+  export type UserDiceThemeWhereInput = {
+    AND?: UserDiceThemeWhereInput | UserDiceThemeWhereInput[]
+    OR?: UserDiceThemeWhereInput[]
+    NOT?: UserDiceThemeWhereInput | UserDiceThemeWhereInput[]
+    id?: StringFilter<"UserDiceTheme"> | string
+    userId?: StringFilter<"UserDiceTheme"> | string
+    themeId?: StringFilter<"UserDiceTheme"> | string
+    source?: StringFilter<"UserDiceTheme"> | string
+    priceCrowns?: IntNullableFilter<"UserDiceTheme"> | number | null
+    grantedById?: StringNullableFilter<"UserDiceTheme"> | string | null
+    createdAt?: DateTimeFilter<"UserDiceTheme"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type UserDiceThemeOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    themeId?: SortOrder
+    source?: SortOrder
+    priceCrowns?: SortOrderInput | SortOrder
+    grantedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type UserDiceThemeWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_themeId?: UserDiceThemeUserIdThemeIdCompoundUniqueInput
+    AND?: UserDiceThemeWhereInput | UserDiceThemeWhereInput[]
+    OR?: UserDiceThemeWhereInput[]
+    NOT?: UserDiceThemeWhereInput | UserDiceThemeWhereInput[]
+    userId?: StringFilter<"UserDiceTheme"> | string
+    themeId?: StringFilter<"UserDiceTheme"> | string
+    source?: StringFilter<"UserDiceTheme"> | string
+    priceCrowns?: IntNullableFilter<"UserDiceTheme"> | number | null
+    grantedById?: StringNullableFilter<"UserDiceTheme"> | string | null
+    createdAt?: DateTimeFilter<"UserDiceTheme"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "userId_themeId">
+
+  export type UserDiceThemeOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    themeId?: SortOrder
+    source?: SortOrder
+    priceCrowns?: SortOrderInput | SortOrder
+    grantedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: UserDiceThemeCountOrderByAggregateInput
+    _avg?: UserDiceThemeAvgOrderByAggregateInput
+    _max?: UserDiceThemeMaxOrderByAggregateInput
+    _min?: UserDiceThemeMinOrderByAggregateInput
+    _sum?: UserDiceThemeSumOrderByAggregateInput
+  }
+
+  export type UserDiceThemeScalarWhereWithAggregatesInput = {
+    AND?: UserDiceThemeScalarWhereWithAggregatesInput | UserDiceThemeScalarWhereWithAggregatesInput[]
+    OR?: UserDiceThemeScalarWhereWithAggregatesInput[]
+    NOT?: UserDiceThemeScalarWhereWithAggregatesInput | UserDiceThemeScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UserDiceTheme"> | string
+    userId?: StringWithAggregatesFilter<"UserDiceTheme"> | string
+    themeId?: StringWithAggregatesFilter<"UserDiceTheme"> | string
+    source?: StringWithAggregatesFilter<"UserDiceTheme"> | string
+    priceCrowns?: IntNullableWithAggregatesFilter<"UserDiceTheme"> | number | null
+    grantedById?: StringNullableWithAggregatesFilter<"UserDiceTheme"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"UserDiceTheme"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -128854,6 +131535,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -128889,6 +131571,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -128926,6 +131609,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -128961,6 +131645,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -128998,6 +131683,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -129033,6 +131719,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -129070,6 +131757,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -129105,6 +131793,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -129142,6 +131831,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -129178,6 +131868,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -129214,6 +131905,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -138563,6 +141255,173 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DiceThemeCreateInput = {
+    slug: string
+    collection?: string
+    nameFr: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    priceCrowns?: number | null
+    enabled?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DiceThemeUncheckedCreateInput = {
+    slug: string
+    collection?: string
+    nameFr: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    priceCrowns?: number | null
+    enabled?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DiceThemeUpdateInput = {
+    slug?: StringFieldUpdateOperationsInput | string
+    collection?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DiceThemeUncheckedUpdateInput = {
+    slug?: StringFieldUpdateOperationsInput | string
+    collection?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DiceThemeCreateManyInput = {
+    slug: string
+    collection?: string
+    nameFr: string
+    nameEn: string
+    descriptionFr?: string | null
+    descriptionEn?: string | null
+    priceCrowns?: number | null
+    enabled?: boolean
+    sortOrder?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DiceThemeUpdateManyMutationInput = {
+    slug?: StringFieldUpdateOperationsInput | string
+    collection?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DiceThemeUncheckedUpdateManyInput = {
+    slug?: StringFieldUpdateOperationsInput | string
+    collection?: StringFieldUpdateOperationsInput | string
+    nameFr?: StringFieldUpdateOperationsInput | string
+    nameEn?: StringFieldUpdateOperationsInput | string
+    descriptionFr?: NullableStringFieldUpdateOperationsInput | string | null
+    descriptionEn?: NullableStringFieldUpdateOperationsInput | string | null
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserDiceThemeCreateInput = {
+    id?: string
+    themeId: string
+    source: string
+    priceCrowns?: number | null
+    grantedById?: string | null
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutDiceThemesInput
+  }
+
+  export type UserDiceThemeUncheckedCreateInput = {
+    id?: string
+    userId: string
+    themeId: string
+    source: string
+    priceCrowns?: number | null
+    grantedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserDiceThemeUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutDiceThemesNestedInput
+  }
+
+  export type UserDiceThemeUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserDiceThemeCreateManyInput = {
+    id?: string
+    userId: string
+    themeId: string
+    source: string
+    priceCrowns?: number | null
+    grantedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserDiceThemeUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserDiceThemeUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -138735,6 +141594,12 @@ export namespace Prisma {
     isNot?: ProWalletWhereInput | null
   }
 
+  export type UserDiceThemeListRelationFilter = {
+    every?: UserDiceThemeWhereInput
+    some?: UserDiceThemeWhereInput
+    none?: UserDiceThemeWhereInput
+  }
+
   export type ProBetListRelationFilter = {
     every?: ProBetWhereInput
     some?: ProBetWhereInput
@@ -138888,6 +141753,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type UserDiceThemeOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type ProBetOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -138963,6 +141832,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrder
+    diceTheme?: SortOrder
     valid?: SortOrder
     bannedAt?: SortOrder
     bannedUntil?: SortOrder
@@ -139003,6 +141873,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrder
+    diceTheme?: SortOrder
     valid?: SortOrder
     bannedAt?: SortOrder
     bannedUntil?: SortOrder
@@ -139039,6 +141910,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrder
+    diceTheme?: SortOrder
     valid?: SortOrder
     bannedAt?: SortOrder
     bannedUntil?: SortOrder
@@ -144754,6 +147626,101 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type DiceThemeCountOrderByAggregateInput = {
+    slug?: SortOrder
+    collection?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    priceCrowns?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DiceThemeAvgOrderByAggregateInput = {
+    priceCrowns?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type DiceThemeMaxOrderByAggregateInput = {
+    slug?: SortOrder
+    collection?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    priceCrowns?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DiceThemeMinOrderByAggregateInput = {
+    slug?: SortOrder
+    collection?: SortOrder
+    nameFr?: SortOrder
+    nameEn?: SortOrder
+    descriptionFr?: SortOrder
+    descriptionEn?: SortOrder
+    priceCrowns?: SortOrder
+    enabled?: SortOrder
+    sortOrder?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DiceThemeSumOrderByAggregateInput = {
+    priceCrowns?: SortOrder
+    sortOrder?: SortOrder
+  }
+
+  export type UserDiceThemeUserIdThemeIdCompoundUniqueInput = {
+    userId: string
+    themeId: string
+  }
+
+  export type UserDiceThemeCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    themeId?: SortOrder
+    source?: SortOrder
+    priceCrowns?: SortOrder
+    grantedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type UserDiceThemeAvgOrderByAggregateInput = {
+    priceCrowns?: SortOrder
+  }
+
+  export type UserDiceThemeMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    themeId?: SortOrder
+    source?: SortOrder
+    priceCrowns?: SortOrder
+    grantedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type UserDiceThemeMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    themeId?: SortOrder
+    source?: SortOrder
+    priceCrowns?: SortOrder
+    grantedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type UserDiceThemeSumOrderByAggregateInput = {
+    priceCrowns?: SortOrder
+  }
+
   export type MatchCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -144889,6 +147856,13 @@ export namespace Prisma {
     create?: XOR<ProWalletCreateWithoutUserInput, ProWalletUncheckedCreateWithoutUserInput>
     connectOrCreate?: ProWalletCreateOrConnectWithoutUserInput
     connect?: ProWalletWhereUniqueInput
+  }
+
+  export type UserDiceThemeCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserDiceThemeCreateWithoutUserInput, UserDiceThemeUncheckedCreateWithoutUserInput> | UserDiceThemeCreateWithoutUserInput[] | UserDiceThemeUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserDiceThemeCreateOrConnectWithoutUserInput | UserDiceThemeCreateOrConnectWithoutUserInput[]
+    createMany?: UserDiceThemeCreateManyUserInputEnvelope
+    connect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
   }
 
   export type ProBetCreateNestedManyWithoutUserInput = {
@@ -145138,6 +148112,13 @@ export namespace Prisma {
     create?: XOR<ProWalletCreateWithoutUserInput, ProWalletUncheckedCreateWithoutUserInput>
     connectOrCreate?: ProWalletCreateOrConnectWithoutUserInput
     connect?: ProWalletWhereUniqueInput
+  }
+
+  export type UserDiceThemeUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserDiceThemeCreateWithoutUserInput, UserDiceThemeUncheckedCreateWithoutUserInput> | UserDiceThemeCreateWithoutUserInput[] | UserDiceThemeUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserDiceThemeCreateOrConnectWithoutUserInput | UserDiceThemeCreateOrConnectWithoutUserInput[]
+    createMany?: UserDiceThemeCreateManyUserInputEnvelope
+    connect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
   }
 
   export type ProBetUncheckedCreateNestedManyWithoutUserInput = {
@@ -145549,6 +148530,20 @@ export namespace Prisma {
     delete?: ProWalletWhereInput | boolean
     connect?: ProWalletWhereUniqueInput
     update?: XOR<XOR<ProWalletUpdateToOneWithWhereWithoutUserInput, ProWalletUpdateWithoutUserInput>, ProWalletUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserDiceThemeUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserDiceThemeCreateWithoutUserInput, UserDiceThemeUncheckedCreateWithoutUserInput> | UserDiceThemeCreateWithoutUserInput[] | UserDiceThemeUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserDiceThemeCreateOrConnectWithoutUserInput | UserDiceThemeCreateOrConnectWithoutUserInput[]
+    upsert?: UserDiceThemeUpsertWithWhereUniqueWithoutUserInput | UserDiceThemeUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserDiceThemeCreateManyUserInputEnvelope
+    set?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    disconnect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    delete?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    connect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    update?: UserDiceThemeUpdateWithWhereUniqueWithoutUserInput | UserDiceThemeUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserDiceThemeUpdateManyWithWhereWithoutUserInput | UserDiceThemeUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserDiceThemeScalarWhereInput | UserDiceThemeScalarWhereInput[]
   }
 
   export type ProBetUpdateManyWithoutUserNestedInput = {
@@ -146044,6 +149039,20 @@ export namespace Prisma {
     delete?: ProWalletWhereInput | boolean
     connect?: ProWalletWhereUniqueInput
     update?: XOR<XOR<ProWalletUpdateToOneWithWhereWithoutUserInput, ProWalletUpdateWithoutUserInput>, ProWalletUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserDiceThemeCreateWithoutUserInput, UserDiceThemeUncheckedCreateWithoutUserInput> | UserDiceThemeCreateWithoutUserInput[] | UserDiceThemeUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserDiceThemeCreateOrConnectWithoutUserInput | UserDiceThemeCreateOrConnectWithoutUserInput[]
+    upsert?: UserDiceThemeUpsertWithWhereUniqueWithoutUserInput | UserDiceThemeUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserDiceThemeCreateManyUserInputEnvelope
+    set?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    disconnect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    delete?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    connect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+    update?: UserDiceThemeUpdateWithWhereUniqueWithoutUserInput | UserDiceThemeUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserDiceThemeUpdateManyWithWhereWithoutUserInput | UserDiceThemeUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserDiceThemeScalarWhereInput | UserDiceThemeScalarWhereInput[]
   }
 
   export type ProBetUncheckedUpdateManyWithoutUserNestedInput = {
@@ -151458,6 +154467,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProMatchPredictionsInput, UserUpdateWithoutProMatchPredictionsInput>, UserUncheckedUpdateWithoutProMatchPredictionsInput>
   }
 
+  export type UserCreateNestedOneWithoutDiceThemesInput = {
+    create?: XOR<UserCreateWithoutDiceThemesInput, UserUncheckedCreateWithoutDiceThemesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDiceThemesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutDiceThemesNestedInput = {
+    create?: XOR<UserCreateWithoutDiceThemesInput, UserUncheckedCreateWithoutDiceThemesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutDiceThemesInput
+    upsert?: UserUpsertWithoutDiceThemesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDiceThemesInput, UserUpdateWithoutDiceThemesInput>, UserUncheckedUpdateWithoutDiceThemesInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -152603,6 +155626,33 @@ export namespace Prisma {
   export type ProWalletCreateOrConnectWithoutUserInput = {
     where: ProWalletWhereUniqueInput
     create: XOR<ProWalletCreateWithoutUserInput, ProWalletUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserDiceThemeCreateWithoutUserInput = {
+    id?: string
+    themeId: string
+    source: string
+    priceCrowns?: number | null
+    grantedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserDiceThemeUncheckedCreateWithoutUserInput = {
+    id?: string
+    themeId: string
+    source: string
+    priceCrowns?: number | null
+    grantedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type UserDiceThemeCreateOrConnectWithoutUserInput = {
+    where: UserDiceThemeWhereUniqueInput
+    create: XOR<UserDiceThemeCreateWithoutUserInput, UserDiceThemeUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserDiceThemeCreateManyUserInputEnvelope = {
+    data: UserDiceThemeCreateManyUserInput | UserDiceThemeCreateManyUserInput[]
   }
 
   export type ProBetCreateWithoutUserInput = {
@@ -153768,6 +156818,35 @@ export namespace Prisma {
     transactions?: ProTransactionUncheckedUpdateManyWithoutWalletNestedInput
   }
 
+  export type UserDiceThemeUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserDiceThemeWhereUniqueInput
+    update: XOR<UserDiceThemeUpdateWithoutUserInput, UserDiceThemeUncheckedUpdateWithoutUserInput>
+    create: XOR<UserDiceThemeCreateWithoutUserInput, UserDiceThemeUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserDiceThemeUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserDiceThemeWhereUniqueInput
+    data: XOR<UserDiceThemeUpdateWithoutUserInput, UserDiceThemeUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserDiceThemeUpdateManyWithWhereWithoutUserInput = {
+    where: UserDiceThemeScalarWhereInput
+    data: XOR<UserDiceThemeUpdateManyMutationInput, UserDiceThemeUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserDiceThemeScalarWhereInput = {
+    AND?: UserDiceThemeScalarWhereInput | UserDiceThemeScalarWhereInput[]
+    OR?: UserDiceThemeScalarWhereInput[]
+    NOT?: UserDiceThemeScalarWhereInput | UserDiceThemeScalarWhereInput[]
+    id?: StringFilter<"UserDiceTheme"> | string
+    userId?: StringFilter<"UserDiceTheme"> | string
+    themeId?: StringFilter<"UserDiceTheme"> | string
+    source?: StringFilter<"UserDiceTheme"> | string
+    priceCrowns?: IntNullableFilter<"UserDiceTheme"> | number | null
+    grantedById?: StringNullableFilter<"UserDiceTheme"> | string | null
+    createdAt?: DateTimeFilter<"UserDiceTheme"> | Date | string
+  }
+
   export type ProBetUpsertWithWhereUniqueWithoutUserInput = {
     where: ProBetWhereUniqueInput
     update: XOR<ProBetUpdateWithoutUserInput, ProBetUncheckedUpdateWithoutUserInput>
@@ -154252,6 +157331,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -154286,6 +157366,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -154323,6 +157404,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -154357,6 +157439,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -154410,6 +157493,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -154444,6 +157528,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -154481,6 +157566,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -154515,6 +157601,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -154552,6 +157639,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -154586,6 +157674,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -154623,6 +157712,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -154657,6 +157747,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -154710,6 +157801,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -154744,6 +157836,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -154781,6 +157874,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -154815,6 +157909,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -154852,6 +157947,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -154886,6 +157982,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -154923,6 +158020,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -154957,6 +158055,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -155010,6 +158109,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155044,6 +158144,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -155081,6 +158182,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155115,6 +158217,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -155152,6 +158255,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -155186,6 +158290,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -155223,6 +158328,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -155257,6 +158363,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -155310,6 +158417,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155344,6 +158452,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -155381,6 +158490,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155415,6 +158525,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -155452,6 +158563,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -155486,6 +158598,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -155523,6 +158636,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -155557,6 +158671,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -155610,6 +158725,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155644,6 +158760,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -155681,6 +158798,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155715,6 +158833,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -155752,6 +158871,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -155786,6 +158906,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -155823,6 +158944,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -155857,6 +158979,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -155910,6 +159033,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -155944,6 +159068,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -155981,6 +159106,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -156015,6 +159141,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -156052,6 +159179,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -156086,6 +159214,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -156123,6 +159252,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -156157,6 +159287,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -156199,6 +159330,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -156233,6 +159365,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -156270,6 +159403,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -156304,6 +159438,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -156357,6 +159492,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -156391,6 +159527,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -156428,6 +159565,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -156462,6 +159600,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -156510,6 +159649,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -156544,6 +159684,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -156581,6 +159722,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -156615,6 +159757,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -156712,6 +159855,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -156746,6 +159890,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -156783,6 +159928,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -156817,6 +159963,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -156899,6 +160046,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -156933,6 +160081,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -156970,6 +160119,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -157004,6 +160154,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -157041,6 +160192,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -157075,6 +160227,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -157112,6 +160265,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -157146,6 +160300,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -157188,6 +160343,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -157222,6 +160378,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -157259,6 +160416,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -157293,6 +160451,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -157560,6 +160719,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -157594,6 +160754,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -157631,6 +160792,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -157665,6 +160827,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -157721,6 +160884,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     nafName?: StringNullableFilter<"User"> | string | null
+    diceTheme?: StringNullableFilter<"User"> | string | null
     valid?: BoolFilter<"User"> | boolean
     bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     bannedUntil?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -158191,6 +161355,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -158225,6 +161390,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -158262,6 +161428,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -158296,6 +161463,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -158501,6 +161669,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -158535,6 +161704,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -158572,6 +161742,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -158606,6 +161777,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -158730,6 +161902,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -158764,6 +161937,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -158801,6 +161975,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -158835,6 +162010,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -159406,6 +162582,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -159440,6 +162617,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -159477,6 +162655,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -159511,6 +162690,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -161640,6 +164820,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -161674,6 +164855,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -161711,6 +164893,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -161745,6 +164928,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -162036,6 +165220,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -162070,6 +165255,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -162107,6 +165293,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -162141,6 +165328,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -163859,6 +167047,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -163893,6 +167082,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -163930,6 +167120,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -163964,6 +167155,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -164098,6 +167290,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -164132,6 +167325,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -164169,6 +167363,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -164203,6 +167398,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -164327,6 +167523,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -164361,6 +167558,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -164398,6 +167596,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -164432,6 +167631,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -164804,6 +168004,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -164838,6 +168039,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -164875,6 +168077,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -164909,6 +168112,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -165396,6 +168600,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -165430,6 +168635,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -165467,6 +168673,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -165501,6 +168708,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -165693,6 +168901,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -165727,6 +168936,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -165764,6 +168974,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -165798,6 +169009,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -166757,6 +169969,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -166792,6 +170005,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -166828,6 +170042,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -166863,6 +170078,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -166904,6 +170120,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -166939,6 +170156,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -166975,6 +170193,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -167010,6 +170229,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -167259,6 +170479,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167294,6 +170515,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -167330,6 +170552,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167365,6 +170588,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -167412,6 +170636,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167447,6 +170672,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -167483,6 +170709,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167518,6 +170745,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -167718,6 +170946,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -167753,6 +170982,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -167789,6 +171019,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -167824,6 +171055,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -167865,6 +171097,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -167900,6 +171133,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -167936,6 +171170,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -167971,6 +171206,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -168187,6 +171423,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168222,6 +171459,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -168258,6 +171496,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168293,6 +171532,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -168340,6 +171580,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168375,6 +171616,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -168411,6 +171653,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168446,6 +171689,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -168701,6 +171945,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -168735,6 +171980,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -168772,6 +172018,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -168806,6 +172053,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -169003,6 +172251,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -169037,6 +172286,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -169074,6 +172324,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -169108,6 +172359,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -170678,6 +173930,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -170713,6 +173966,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -170749,6 +174003,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -170784,6 +174039,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -170883,6 +174139,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -170918,6 +174175,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -170954,6 +174212,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -170989,6 +174248,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -173990,6 +177250,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -174024,6 +177285,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -174061,6 +177323,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -174095,6 +177358,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -174195,6 +177459,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174229,6 +177494,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -174266,6 +177532,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174300,6 +177567,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -174390,6 +177658,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -174424,6 +177693,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -174461,6 +177731,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -174495,6 +177766,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -174573,6 +177845,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174607,6 +177880,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -174644,6 +177918,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174678,6 +177953,7 @@ export namespace Prisma {
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -175030,6 +178306,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -175065,6 +178342,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
@@ -175101,6 +178379,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -175136,6 +178415,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
@@ -175217,6 +178497,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -175252,6 +178533,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
@@ -175288,6 +178570,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -175323,6 +178606,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
@@ -175458,6 +178742,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -175493,6 +178778,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
@@ -175529,6 +178815,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -175564,6 +178851,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
@@ -175616,6 +178904,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -175651,6 +178940,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
@@ -175687,6 +178977,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -175722,6 +179013,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
@@ -175891,6 +179183,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -175926,6 +179219,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
@@ -175962,6 +179256,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -175997,6 +179292,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
@@ -176100,6 +179396,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176135,6 +179432,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
@@ -176171,6 +179469,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176206,6 +179505,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
@@ -176314,6 +179614,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -176349,6 +179650,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -176385,6 +179687,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -176420,6 +179723,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -176511,6 +179815,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176546,6 +179851,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -176582,6 +179888,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176617,6 +179924,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -176653,6 +179961,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -176688,6 +179997,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -176724,6 +180034,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -176759,6 +180070,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -176863,6 +180175,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176898,6 +180211,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -176934,6 +180248,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176969,6 +180284,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -177064,6 +180380,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -177099,6 +180416,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -177135,6 +180453,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -177170,6 +180489,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -177255,6 +180575,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -177290,6 +180611,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -177326,6 +180648,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -177361,6 +180684,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -177424,6 +180748,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -177459,6 +180784,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -177495,6 +180821,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -177530,6 +180857,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -177682,6 +181010,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -177717,6 +181046,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -177753,6 +181083,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -177788,6 +181119,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -177938,6 +181270,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -177973,6 +181306,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -178009,6 +181343,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -178044,6 +181379,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -178221,6 +181557,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -178256,6 +181593,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -178292,6 +181630,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -178327,6 +181666,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -178613,6 +181953,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -178648,6 +181989,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -178684,6 +182026,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -178719,6 +182062,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -178915,6 +182259,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -178950,6 +182295,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -178986,6 +182332,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -179021,6 +182368,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -179242,6 +182590,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -179277,6 +182626,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -179313,6 +182663,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -179348,6 +182699,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -179435,6 +182787,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -179470,6 +182823,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -179506,6 +182860,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -179541,6 +182896,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -179644,6 +183000,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -179679,6 +183036,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -179715,6 +183073,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
     bannedUntil?: Date | string | null
@@ -179750,6 +183109,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -179875,6 +183235,315 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutProMatchPredictionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserCreateWithoutDiceThemesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutDiceThemesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutDiceThemesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutDiceThemesInput, UserUncheckedCreateWithoutDiceThemesInput>
+  }
+
+  export type UserUpsertWithoutDiceThemesInput = {
+    update: XOR<UserUpdateWithoutDiceThemesInput, UserUncheckedUpdateWithoutDiceThemesInput>
+    create: XOR<UserCreateWithoutDiceThemesInput, UserUncheckedCreateWithoutDiceThemesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutDiceThemesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutDiceThemesInput, UserUncheckedUpdateWithoutDiceThemesInput>
+  }
+
+  export type UserUpdateWithoutDiceThemesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -179919,6 +183588,7 @@ export namespace Prisma {
     proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
     proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
     proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
     proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
     competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
     leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
@@ -179927,7 +183597,7 @@ export namespace Prisma {
     cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
   }
 
-  export type UserUncheckedUpdateWithoutProMatchPredictionsInput = {
+  export type UserUncheckedUpdateWithoutDiceThemesInput = {
     id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
@@ -179946,6 +183616,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -179990,6 +183661,7 @@ export namespace Prisma {
     proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
     proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
     proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
     proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
     competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
     leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
@@ -180232,6 +183904,15 @@ export namespace Prisma {
     id?: string
     proTeamId: string
     since?: Date | string
+    createdAt?: Date | string
+  }
+
+  export type UserDiceThemeCreateManyUserInput = {
+    id?: string
+    themeId: string
+    source: string
+    priceCrowns?: number | null
+    grantedById?: string | null
     createdAt?: Date | string
   }
 
@@ -181275,6 +184956,33 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UserDiceThemeUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserDiceThemeUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserDiceThemeUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    themeId?: StringFieldUpdateOperationsInput | string
+    source?: StringFieldUpdateOperationsInput | string
+    priceCrowns?: NullableIntFieldUpdateOperationsInput | number | null
+    grantedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ProBetUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     selection?: StringFieldUpdateOperationsInput | string
@@ -181907,6 +185615,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -181941,6 +185650,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -181978,6 +185688,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -182012,6 +185723,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -182049,6 +185761,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

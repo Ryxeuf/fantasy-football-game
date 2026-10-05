@@ -155,6 +155,8 @@ model User {
   competitionDocuments        CompetitionDocument[]       @relation("CompetitionDocumentUploader")
   /// Notifications internes (in-app), cf. `services/in-app-notifications.ts`.
   notifications               Notification[]
+  /// Thèmes de dés acquis (achat en Crowns ou cadeau admin).
+  diceThemes                  UserDiceTheme[]
 
   @@index([leaderboardStatus])
 }
@@ -4004,4 +4006,47 @@ model NflFantasyDraftBid {
   @@unique([sessionId, entryId, playerId])
   @@index([sessionId, playerId])
   @@index([entryId])
+}
+
+/// Thème de dés — catalogue « base d'abord » (repli : `DICE_THEME_CATALOGUE`
+/// compilé de `services/dice-theme-catalogue`, source du seed create-if-missing).
+/// Le slug est un CONTRAT de code : il doit exister dans le registre de rendu
+/// web (faces PNG + D6), sinon la ligne est ignorée à la lecture. L'admin en
+/// édite les libellés, le prix, la mise en vente et l'ordre — pas les visuels.
+model DiceTheme {
+  slug          String   @id
+  /// "classic" | "team"
+  collection    String   @default("team")
+  nameFr        String
+  nameEn        String
+  descriptionFr String?
+  descriptionEn String?
+  /// Prix en Crowns ; null = gratuit (possédé d'office).
+  priceCrowns   Int?
+  /// Faux = retiré de la vente ; ses acheteurs le gardent.
+  enabled       Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// Thème de dés ACQUIS par un coach : achat en Crowns (débit `SINK` du
+/// wallet, même transaction) ou cadeau d'un admin. L'unicité (coach, thème)
+/// empêche un double achat ; seule une révocation admin supprime la ligne.
+model UserDiceTheme {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Slug du thème (pas de FK : le catalogue compilé fait repli).
+  themeId     String
+  /// "purchase" | "admin_grant"
+  source      String
+  /// Prix payé en Crowns ; null pour un cadeau.
+  priceCrowns Int?
+  /// Admin auteur d'un cadeau.
+  grantedById String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, themeId])
+  @@index([themeId])
 }

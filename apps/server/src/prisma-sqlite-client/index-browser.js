@@ -136,6 +136,7 @@ exports.Prisma.UserScalarFieldEnum = {
   totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
   privateProfile: 'privateProfile',
   nafName: 'nafName',
+  diceTheme: 'diceTheme',
   valid: 'valid',
   bannedAt: 'bannedAt',
   bannedUntil: 'bannedUntil',
@@ -1455,6 +1456,30 @@ exports.Prisma.TournamentRulesetScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.DiceThemeScalarFieldEnum = {
+  slug: 'slug',
+  collection: 'collection',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  descriptionFr: 'descriptionFr',
+  descriptionEn: 'descriptionEn',
+  priceCrowns: 'priceCrowns',
+  enabled: 'enabled',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserDiceThemeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  themeId: 'themeId',
+  source: 'source',
+  priceCrowns: 'priceCrowns',
+  grantedById: 'grantedById',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1591,7 +1616,9 @@ exports.Prisma.ModelName = {
   ProPlayerOfMatchVote: 'ProPlayerOfMatchVote',
   ProGazetteComment: 'ProGazetteComment',
   ProMatchPrediction: 'ProMatchPrediction',
-  TournamentRuleset: 'TournamentRuleset'
+  TournamentRuleset: 'TournamentRuleset',
+  DiceTheme: 'DiceTheme',
+  UserDiceTheme: 'UserDiceTheme'
 };
 
 /**
