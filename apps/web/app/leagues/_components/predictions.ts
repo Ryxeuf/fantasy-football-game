@@ -365,29 +365,6 @@ export function pickShare(distribution: PickDistribution, pick: PredictionPick):
 // Sélection
 // ---------------------------------------------------------------------------
 
-/**
- * La journée à mettre en avant : la première qui a encore une rencontre
- * ouverte, sinon la dernière journée jouée (pour voir les pronostics des
- * autres), sinon rien.
- */
-export function featuredRound(
-  rounds: readonly RoundPredictionsView[],
-): RoundPredictionsView | null {
-  const open = rounds.find((r) =>
-    r.pairings.some((p) => !p.closed && !p.placeholder),
-  );
-  if (open) return open;
-  const withResults = rounds.filter((r) =>
-    r.pairings.some((p) => p.result !== null),
-  );
-  return withResults.length > 0 ? withResults[withResults.length - 1] : null;
-}
-
-/** Nombre de rencontres encore pronostiquables par le lecteur. */
-export function openPredictableCount(round: RoundPredictionsView): number {
-  return round.pairings.filter((p) => p.eligibility === "ok").length;
-}
-
 /** La ligne du lecteur dans un onglet du classement, s'il y figure. */
 export function viewerEntry(
   entries: readonly LeaderboardEntryView[],

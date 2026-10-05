@@ -2,9 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   describePrediction,
   draftFromPrediction,
-  featuredRound,
   formatClosesAt,
-  openPredictableCount,
   outcomeOf,
   parsePredictionScope,
   pickLabel,
@@ -14,61 +12,7 @@ import {
   validatePredictionDraft,
   viewerEntry,
   type LeaderboardEntryView,
-  type PairingPredictionsView,
-  type RoundPredictionsView,
 } from "./predictions";
-
-function pairing(
-  overrides: Partial<PairingPredictionsView> = {},
-): PairingPredictionsView {
-  return {
-    id: "pair-1",
-    status: "scheduled",
-    scheduledAt: null,
-    closesAt: null,
-    closed: false,
-    placeholder: false,
-    home: {
-      participantId: "p-h",
-      teamId: "t-h",
-      name: "Orques",
-      roster: "orc",
-      logoUrl: null,
-      coachName: "Alice",
-    },
-    away: {
-      participantId: "p-a",
-      teamId: "t-a",
-      name: "Elfes",
-      roster: "wood_elf",
-      logoUrl: null,
-      coachName: "Bob",
-    },
-    result: null,
-    eligibility: "ok",
-    canClose: false,
-    myPrediction: null,
-    predictions: null,
-    distribution: null,
-    ...overrides,
-  };
-}
-
-function round(
-  roundNumber: number,
-  pairings: PairingPredictionsView[],
-): RoundPredictionsView {
-  return {
-    id: `r-${roundNumber}`,
-    roundNumber,
-    name: null,
-    status: "pending",
-    kind: "regular",
-    startDate: null,
-    canClose: false,
-    pairings,
-  };
-}
 
 describe("parsePredictionScope", () => {
   it("lit une portée connue telle quelle", () => {
@@ -204,51 +148,6 @@ describe("libellés", () => {
     expect(outcomeOf(2, 1)).toBe("home");
     expect(outcomeOf(1, 1)).toBe("draw");
     expect(outcomeOf(0, 3)).toBe("away");
-  });
-});
-
-describe("featuredRound", () => {
-  it("met en avant la première journée qui a une rencontre ouverte", () => {
-    const rounds = [
-      round(1, [pairing({ closed: true, result: { outcome: "home", homeScore: 1, awayScore: 0 } })]),
-      round(2, [pairing({ id: "pair-2" })]),
-      round(3, [pairing({ id: "pair-3" })]),
-    ];
-    expect(featuredRound(rounds)?.roundNumber).toBe(2);
-  });
-
-  it("ignore une affiche à venir (bracket) pour choisir la journée ouverte", () => {
-    const rounds = [
-      round(1, [pairing({ closed: true, result: { outcome: "draw", homeScore: 1, awayScore: 1 } })]),
-      round(2, [pairing({ id: "final", placeholder: true })]),
-    ];
-    expect(featuredRound(rounds)?.roundNumber).toBe(1);
-  });
-
-  it("retombe sur la dernière journée jouée, sinon sur rien", () => {
-    const played = round(2, [
-      pairing({ closed: true, result: { outcome: "away", homeScore: 0, awayScore: 1 } }),
-    ]);
-    expect(
-      featuredRound([
-        round(1, [pairing({ closed: true, result: { outcome: "home", homeScore: 1, awayScore: 0 } })]),
-        played,
-      ])?.roundNumber,
-    ).toBe(2);
-    expect(featuredRound([round(1, [pairing({ closed: true })])])).toBeNull();
-    expect(featuredRound([])).toBeNull();
-  });
-
-  it("compte les rencontres que le lecteur peut encore pronostiquer", () => {
-    expect(
-      openPredictableCount(
-        round(1, [
-          pairing(),
-          pairing({ id: "own", eligibility: "own-match" }),
-          pairing({ id: "closed", eligibility: "closed", closed: true }),
-        ]),
-      ),
-    ).toBe(1);
   });
 });
 
