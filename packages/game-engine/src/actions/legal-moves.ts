@@ -23,6 +23,8 @@ import {
   canPlayerContinueMoving,
   shouldAutoEndTurn,
   canTeamBlitz,
+  canPlayerStandUp,
+  getPlayerAction,
 } from '../core/game-state';
 import { getPassRange, canAttemptPassForRange } from '../mechanics/passing';
 import { canThrowTeamMate, getThrowRange } from '../mechanics/throw-team-mate';
@@ -124,6 +126,15 @@ export function getLegalMoves(state: GameState): Move[] {
     ];
   }
 
+  // Lot 1 « match complet » — un CHOIX en attente ferme la liste : seuls
+  // les coups qui le résolvent sont légaux. Avant, `getLegalMoves` ne
+  // générait jamais BLOCK_CHOOSE / PUSH_CHOOSE / FOLLOW_UP_CHOOSE /
+  // DUMP_OFF_CHOOSE : l'IA ne pouvait pas résoudre un blocage à 2-3 dés
+  // (85 % des blocages d'un match IA contre IA restaient en attente et
+  // étaient effacés par END_TURN).
+  const pendingChoiceMoves = getPendingChoiceMoves(state);
+  if (pendingChoiceMoves) return pendingChoiceMoves;
+
   // Si c'est un turnover, seul END_TURN est possible
   if (state.isTurnover) {
     return moves;
@@ -134,9 +145,34 @@ export function getLegalMoves(state: GameState): Move[] {
     return moves;
   }
 
-  const myPlayers = state.players.filter(
-    p => p.team === team && (canPlayerMove(state, p.id) || canPlayerContinueMoving(state, p.id))
+  // Lot 1 « match complet » — ACTIVATION CONTIGUË : tant qu'un joueur a
+  // une activation ouverte (déplacement ou blitz entamé, PM restants),
+  // seuls ses coups sont légaux. Avant, les coups d'une case de plusieurs
+  // joueurs s'entremêlaient, ce qu'aucune règle n'autorise et qu'aucun
+  // plateau ne peut rejouer.
+  const openActivation = findOpenActivation(state);
+  // Saison 2025 — « Charge » (10) : seuls les joueurs désignés sont
+  // activables pendant le tour de blitz de coup d'envoi.
+  const blitzAllowed =
+    state.kickoffBlitzTurn && state.kickoffBlitzPlayerIds && state.kickoffBlitzPlayerIds.length > 0
+      ? new Set(state.kickoffBlitzPlayerIds)
+      : null;
+  const candidates = (openActivation
+    ? state.players.filter(p => p.id === openActivation.id)
+    : state.players.filter(p => p.team === team)
+  ).filter(p => !blitzAllowed || blitzAllowed.has(p.id));
+  const myPlayers = candidates.filter(
+    p => canPlayerMove(state, p.id) || canPlayerContinueMoving(state, p.id)
   );
+
+  // Se relever (Prone) — uniquement hors activation ouverte.
+  if (!openActivation) {
+    for (const p of candidates) {
+      if (canPlayerStandUp(state, p.id)) {
+        moves.push({ type: 'STAND_UP', playerId: p.id });
+      }
+    }
+  }
   const occ = new Map<string, Player>();
   state.players.forEach(p => occ.set(`${p.pos.x},${p.pos.y}`, p));
 
@@ -185,7 +221,9 @@ export function getLegalMoves(state: GameState): Move[] {
     // une action (MOVE typiquement), un BLOCK simple n'est plus légal.
     const playerAction = state.playerActions?.[p.id];
     const adjacentOpponents = getAdjacentOpponents(state, p.pos, p.team);
-    if (!playerAction) {
+    // Pendant « Charge », une Action de Blocage simple n'est pas permise
+    // (le dispatcher la refuse) : ne pas la proposer.
+    if (!playerAction && !state.kickoffBlitzTurn) {
       for (const opponent of adjacentOpponents) {
         if (canBlock(state, p.id, opponent.id)) {
           moves.push({ type: 'BLOCK', playerId: p.id, targetId: opponent.id });
@@ -336,4 +374,67 @@ export function getLegalMoves(state: GameState): Move[] {
     }
   }
   return moves;
+}
+
+/**
+ * Lot 1 « match complet » — joueur dont l'activation est OUVERTE : action
+ * MOVE ou BLITZ enregistrée et encore des PM (ou GFI) disponibles.
+ * `handleEndPlayerTurn` met PM à 0 et gfiUsed à 2 : l'activation est alors
+ * close et la main revient aux autres joueurs.
+ */
+function findOpenActivation(state: GameState): Player | undefined {
+  return state.players.find(p => {
+    if (p.team !== state.currentPlayer) return false;
+    const action = getPlayerAction(state, p.id);
+    if (action !== 'MOVE' && action !== 'BLITZ') return false;
+    return canPlayerContinueMoving(state, p.id);
+  });
+}
+
+/**
+ * Lot 1 « match complet » — coups de résolution d'un choix en attente.
+ * Retourne `null` quand aucun choix n'est en attente.
+ */
+function getPendingChoiceMoves(state: GameState): Move[] | null {
+  if (state.pendingBlock) {
+    const { attackerId, targetId, options } = state.pendingBlock;
+    const unique = Array.from(new Set(options));
+    return unique.map(result => ({
+      type: 'BLOCK_CHOOSE' as const,
+      playerId: attackerId,
+      targetId,
+      result,
+    }));
+  }
+  if (state.pendingPushChoice) {
+    const { attackerId, targetId, availableDirections } = state.pendingPushChoice;
+    return availableDirections.map(direction => ({
+      type: 'PUSH_CHOOSE' as const,
+      playerId: attackerId,
+      targetId,
+      direction,
+    }));
+  }
+  if (state.pendingFollowUpChoice) {
+    const { attackerId, targetId } = state.pendingFollowUpChoice;
+    return [
+      { type: 'FOLLOW_UP_CHOOSE', playerId: attackerId, targetId, followUp: true },
+      { type: 'FOLLOW_UP_CHOOSE', playerId: attackerId, targetId, followUp: false },
+    ];
+  }
+  if (state.pendingDumpOff) {
+    const { targetId, receiverOptions } = state.pendingDumpOff;
+    return [
+      ...receiverOptions.map(receiverId => ({
+        type: 'DUMP_OFF_CHOOSE' as const,
+        passerId: targetId,
+        receiverId,
+      })),
+      { type: 'DUMP_OFF_CHOOSE', passerId: targetId, receiverId: null },
+    ];
+  }
+  if (state.pendingOnTheBall) {
+    return [{ type: 'ON_THE_BALL_DECLINE' }];
+  }
+  return null;
 }

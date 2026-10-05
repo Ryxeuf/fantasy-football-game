@@ -46,6 +46,7 @@ import {
   handleEndTurn,
   handleFoul,
 } from './turn-foul-actions';
+import { handleStandUp } from './stand-up-handler';
 // S27.8.4 — Helpers d'echec (applyRollFailure / applyPickupFailure)
 // extraits dans `actions/failure-helpers.ts`. Reutilises par
 // handleNormalMove / handleDodgeRoll / handleRerollChoose / handleLeap
@@ -149,6 +150,22 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
 
   // Si un pendingReroll est en attente, seuls REROLL_CHOOSE et END_TURN sont acceptés
   if (state.pendingReroll && move.type !== 'REROLL_CHOOSE' && move.type !== 'END_TURN') {
+    return state;
+  }
+
+  // Lot 1 « match complet » — un choix en attente (dé de blocage, poussée,
+  // suivi, remise) doit être résolu avant tout autre coup. END_TURN reste
+  // accepté comme nettoyage de secours (journalisé dans handleEndTurn).
+  if (state.pendingBlock && move.type !== 'BLOCK_CHOOSE' && move.type !== 'END_TURN') {
+    return state;
+  }
+  if (state.pendingPushChoice && move.type !== 'PUSH_CHOOSE' && move.type !== 'END_TURN') {
+    return state;
+  }
+  if (state.pendingFollowUpChoice && move.type !== 'FOLLOW_UP_CHOOSE' && move.type !== 'END_TURN') {
+    return state;
+  }
+  if (state.pendingDumpOff && move.type !== 'DUMP_OFF_CHOOSE' && move.type !== 'END_TURN') {
     return state;
   }
 
@@ -257,6 +274,8 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
       return truncateGameLog(handleEndTurn(activeState, rng), 200);
     case 'END_PLAYER_TURN':
       return handleEndPlayerTurn(activeState, move);
+    case 'STAND_UP':
+      return handleStandUp(activeState, move);
     case 'MOVE':
       return handleMove(activeState, move, rng);
     case 'LEAP':
