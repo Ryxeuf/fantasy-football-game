@@ -7,7 +7,7 @@ import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { NextMatchesPanel } from "./NextMatchesPanel";
-import { LeaguePredictionsPanel } from "./LeaguePredictionsPanel";
+import { LeaguePredictionsSummary } from "./LeaguePredictionsSummary";
 import { useSeasonPredictions } from "../_components/useSeasonPredictions";
 import { roundPredictionLinks } from "../_components/prediction-rounds";
 import { InviteCoachModal } from "./InviteCoachModal";
@@ -659,12 +659,15 @@ export default function LeagueDetailPage() {
                 currentUserId={currentUserId}
               />
 
-              {/* Pronostics de la journée ouverte (se masque sur une ligue
-                  qui ne les a pas activés, sauf l'invitation au commissaire). */}
-              <LeaguePredictionsPanel
-                key={season.id}
+              {/* Pronostics : une ligne (à faire + place au classement).
+                  La saisie vit sur la page de chaque journée, ouverte par le
+                  bouton 🔮 du calendrier. */}
+              <LeaguePredictionsSummary
                 leagueId={league.id}
                 seasonId={season.id}
+                view={predictions.view}
+                board={predictions.board}
+                error={predictions.error}
               />
 
               <div className="space-y-3">
