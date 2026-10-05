@@ -43,6 +43,7 @@ import {
 } from '../src/tactics/race-profiles';
 import type { ComparisonAggregate, ComparisonRun } from '../src/compare/compare-drivers';
 import type { SimInput } from '../src/types';
+import { buildEngineSimInput } from '../src/driver/engine-roster-fixture';
 
 const HELP = `pnpm sim:compare — hybrid vs full driver comparator
 
@@ -92,16 +93,14 @@ function parse(argv: readonly string[]): CliArgs {
   return values as CliArgs;
 }
 
+// Lot 1 « match complet » : profils, VE et rosters réels (13 joueurs), sinon
+// le full driver joue à 2 contre 2 et la comparaison ne vaut rien.
 function buildSimInput(
   home: ProTeamProfile,
   away: ProTeamProfile,
   seed: number
 ): SimInput {
-  return {
-    seed,
-    home: { id: home.id, name: home.name, side: 'home' },
-    away: { id: away.id, name: away.name, side: 'away' },
-  };
+  return buildEngineSimInput(home, away, seed);
 }
 
 interface PairingReport {

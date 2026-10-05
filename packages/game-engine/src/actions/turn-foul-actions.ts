@@ -21,6 +21,7 @@ import {
   checkPlayerTurnEnd,
   advanceHalfIfNeeded,
   handlePostTouchdown,
+  getGfiCap,
 } from '../core/game-state';
 import { checkTouchdowns } from '../mechanics/ball';
 import { canFoul, executeFoul } from '../mechanics/foul';
@@ -38,11 +39,16 @@ export function handleEndPlayerTurn(
   if (!player) return state;
   if (player.team !== state.currentPlayer) return state;
 
-  // Mettre les PM du joueur a 0 pour empecher d'autres actions
+  // Mettre les PM du joueur a 0 pour empecher d'autres actions.
+  // Lot 1 « match complet » : `gfiUsed` est porté au CAP réel du joueur
+  // (Sprint = 3), sinon un joueur avec Sprint gardait une activation
+  // « ouverte » après END_PLAYER_TURN et l'IA bouclait dessus.
   const newState = {
     ...state,
     players: state.players.map((p) =>
-      p.id === move.playerId ? { ...p, pm: 0, gfiUsed: 2 } : p,
+      p.id === move.playerId
+        ? { ...p, pm: 0, gfiUsed: Math.max(2, getGfiCap(state, p)) }
+        : p,
     ),
     selectedPlayerId: null,
   };
@@ -115,12 +121,30 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
   // préserver la compat des tests qui ne définissent pas explicitement
   // l'équipe kickeuse.
   const bumpingTeam: TeamId = state.kickingTeam ?? 'B';
+  // Lot 1 « match complet » — un choix en attente effacé par END_TURN est
+  // un nettoyage de SECOURS, pas un chemin normal : on le journalise.
+  const clearedPending = [
+    state.pendingBlock && 'pendingBlock',
+    state.pendingPushChoice && 'pendingPushChoice',
+    state.pendingFollowUpChoice && 'pendingFollowUpChoice',
+    state.pendingDumpOff && 'pendingDumpOff',
+    state.pendingReroll && 'pendingReroll',
+    state.pendingApothecary && 'pendingApothecary',
+  ].filter((x): x is string => typeof x === 'string');
+  const endingTeam = state.currentPlayer;
   const newState: GameState = {
     ...state,
     currentPlayer: state.currentPlayer === 'A' ? 'B' : 'A',
     turn: state.currentPlayer === bumpingTeam ? state.turn + 1 : state.turn,
     selectedPlayerId: null,
-    players: state.players.map((p) => ({ ...p, pm: p.ma, gfiUsed: 0 })),
+    // Lot 1 « match complet » — fin du tour de l'équipe : ses joueurs SONNÉS
+    // sont retournés face visible (Prone) et pourront se relever au tour
+    // suivant. Le flag `stunned` (= au sol) reste posé.
+    players: state.players.map((p) =>
+      p.team === endingTeam && p.state === 'stunned' && p.pos.x >= 0
+        ? { ...p, state: 'active' as const, pm: p.ma, gfiUsed: 0 }
+        : { ...p, pm: p.ma, gfiUsed: 0 },
+    ),
     isTurnover: false,
     lastDiceResult: undefined,
     playerActions: {} as Record<string, ActionType>,
@@ -164,6 +188,18 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
     newState.currentPlayer,
   );
   newState.gameLog = [...newState.gameLog, turnLogEntry];
+  if (clearedPending.length > 0) {
+    newState.gameLog = [
+      ...newState.gameLog,
+      createLogEntry(
+        'info',
+        `Fin de tour forcée : choix en attente abandonné (${clearedPending.join(', ')})`,
+        undefined,
+        endingTeam,
+        { warning: 'pending-cleared', cleared: clearedPending },
+      ),
+    ];
+  }
 
   // Le porteur de ballon garde le ballon lors du changement de tour
   // Verifier touchdowns, puis passage de mi-temps si besoin

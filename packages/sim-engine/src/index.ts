@@ -15,6 +15,12 @@ export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
 export { runFullDriver } from './driver/full-driver';
 export { buildGameStateFromRosters } from './driver/full-driver-roster';
 export {
+  buildEngineRoster,
+  buildEngineSimInput,
+  rosterSlugForRace,
+  RACE_TO_ROSTER_SLUG,
+} from './driver/engine-roster-fixture';
+export {
   DEFAULT_TACTICAL_PROFILE,
   TACTICAL_PROFILE_PARAMETERS,
   parseTacticalProfile,

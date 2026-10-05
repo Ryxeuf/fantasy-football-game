@@ -18,6 +18,7 @@
  */
 
 import {
+  buildEngineSimInput,
   ENGINE_VER,
   PRO_LEAGUE_TEAM_BY_ID,
   aggregateComparisons,
@@ -51,24 +52,15 @@ export interface RunEngineComparisonResult {
   readonly engineVer: string;
 }
 
+// Lot 1 « match complet » : profils, VE et rosters réels (13 joueurs tirés
+// du catalogue du moteur), sinon le full driver joue à 2 contre 2 et la
+// comparaison ne décrit pas la production.
 function buildSimInput(
   home: ProTeamProfile,
   away: ProTeamProfile,
   seed: number,
 ): SimInput {
-  return {
-    seed,
-    home: {
-      id: home.id,
-      name: home.name,
-      side: "home",
-    },
-    away: {
-      id: away.id,
-      name: away.name,
-      side: "away",
-    },
-  };
+  return buildEngineSimInput(home, away, seed);
 }
 
 /**

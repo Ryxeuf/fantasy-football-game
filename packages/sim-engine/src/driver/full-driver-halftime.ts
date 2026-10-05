@@ -45,8 +45,29 @@ export function executeHeadlessHalftime(
   state: GameState,
   rng: RNG,
 ): GameState {
+  return executeHeadlessDrive(state, rng);
+}
+
+/**
+ * Lot 1 « match complet » — UNE séquence « placement + coup d'envoi » pour
+ * les trois entrées : mi-temps (`gamePhase === 'halftime'`) et remise en
+ * jeu après un touchdown (`gamePhase === 'playing'`, les joueurs renvoyés
+ * en réserve par `handlePostTouchdown`). La différence est l'état d'entrée,
+ * pas la séquence.
+ *
+ * Précondition : `preMatch.phase === 'setup'`.
+ * Postcondition : `gamePhase === 'playing'`, les deux équipes placées, le
+ * ballon résolu.
+ */
+export function executeHeadlessDrive(
+  state: GameState,
+  rng: RNG,
+): GameState {
   const ext = state as ExtendedGameState;
-  if (state.gamePhase !== 'halftime' || ext.preMatch?.phase !== 'setup') {
+  const awaitingSetup =
+    ext.preMatch?.phase === 'setup' &&
+    (state.gamePhase === 'halftime' || state.gamePhase === 'playing');
+  if (!awaitingSetup) {
     return state;
   }
 

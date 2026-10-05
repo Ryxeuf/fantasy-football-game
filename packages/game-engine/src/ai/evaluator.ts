@@ -13,7 +13,7 @@
  * seront ajoutees ulterieurement.
  */
 
-import type { GameState, Move, Player, Position, TeamId } from '../core/types';
+import type { BlockResult, GameState, Move, Player, Position, TeamId } from '../core/types';
 import { getAdjacentOpponents, isAdjacent } from '../mechanics/movement';
 import { getLegalMoves } from '../actions/actions';
 import { hasSkill } from '../skills/skill-effects';
@@ -565,8 +565,23 @@ function scoreMoveMove(
     ball: player.hasBall ? { ...move.to } : state.ball,
   };
   const after = evaluatePosition(simulated, team, weightsOverride).total;
-  return after - before;
+  // Lot 1 « match complet » — une case jouée sans PM est un GFI (échec sur
+  // 1 : joueur au sol, turnover). Le coût attendu est retranché pour qu'un
+  // GFI ne soit tenté que lorsqu'il rapporte vraiment (marquer, échapper).
+  const weights = resolveWeights(weightsOverride);
+  const gfiRisk =
+    player.pm <= 0
+      ? (weights.PLAYER_ACTIVE + weights.PLAYER_STUNNED_PENALTY + (player.hasBall ? weights.POSSESSION * 0.5 : 0)) / 6
+      : 0;
+  // Coût d'une case : une case qui n'apporte RIEN (delta nul, par exemple
+  // sans ballon sur le terrain) doit perdre contre END_PLAYER_TURN (−0,5)
+  // et END_TURN (−1), sinon chaque joueur erre jusqu'à épuiser ses PM.
+  // Une case utile (+POSITIONING_PER_STEP = 2) reste positive.
+  return after - before - gfiRisk - MOVE_STEP_COST;
 }
+
+/** Lot 1 « match complet » — coût d'une case jouée, cf. `scoreMoveMove`. */
+const MOVE_STEP_COST = 1.25;
 
 function scoreMoveBlockInternal(
   state: GameState,
@@ -721,10 +736,167 @@ export function scoreMove(
     case 'FOUL':
       return scoreMoveFoul(state, move, team, weightsOverride);
     case 'END_PLAYER_TURN':
-      return -5;
+      // Lot 1 « match complet » — clore l'activation d'un joueur doit rester
+      // préférable à END_TURN (−END_TURN_PENALTY) tant que d'autres joueurs
+      // peuvent agir : les coups légaux étant restreints au joueur dont
+      // l'activation est ouverte, un score inférieur à END_TURN aurait fini
+      // le tour entier dès qu'aucun coup positif ne restait.
+      return -0.5;
+    case 'STAND_UP':
+      return scoreStandUp(state, move, team, weightsOverride);
+    case 'BLOCK_CHOOSE':
+      return scoreBlockChoose(state, move, team);
+    case 'PUSH_CHOOSE':
+      return scorePushChoose(state, move, team);
+    case 'FOLLOW_UP_CHOOSE':
+      return scoreFollowUpChoose(state, move);
+    case 'REROLL_CHOOSE':
+      return scoreRerollChoose(state, move);
+    case 'APOTHECARY_CHOOSE':
+      return scoreApothecaryChoose(state, move);
+    case 'DUMP_OFF_CHOOSE':
+      return move.receiverId ? 10 : 0;
+    case 'ON_THE_BALL_DECLINE':
+      return 0;
     default:
       return -50;
   }
+}
+
+// ─── Lot 1 « match complet » — scoring des CHOIX ────────────────────────
+// Règles volontairement simples (le plan de drive du lot 3 les raffinera) :
+// elles rendent chaque choix DÉCIDÉ au lieu d'être abandonné à END_TURN.
+
+function scoreStandUp(
+  state: GameState,
+  move: Extract<Move, { type: 'STAND_UP' }>,
+  team: TeamId,
+  weightsOverride?: Partial<EvalWeights>
+): number {
+  const player = findPlayer(state, move.playerId);
+  if (!player || player.team !== team) return -Infinity;
+  const weights = resolveWeights(weightsOverride);
+  // Un joueur debout vaut PLAYER_ACTIVE ; se relever en récupère une part
+  // nette, avant même tout déplacement.
+  return weights.PLAYER_ACTIVE * 0.5;
+}
+
+/** Ordre de préférence d'un résultat de blocage pour l'ATTAQUANT. */
+function blockResultValueForAttacker(
+  state: GameState,
+  result: BlockResult,
+  attacker: Player,
+  target: Player
+): number {
+  switch (result) {
+    case 'POW':
+      return 100;
+    case 'STUMBLE':
+      return hasSkill(target, 'dodge') && !hasSkill(attacker, 'tackle') ? 55 : 85;
+    case 'PUSH_BACK':
+      return 40;
+    case 'BOTH_DOWN': {
+      const attackerSafe = hasSkill(attacker, 'block') || hasSkill(attacker, 'wrestle');
+      const targetSafe = hasSkill(target, 'block');
+      if (attackerSafe && !targetSafe) return 90;
+      if (attackerSafe && targetSafe) return 30;
+      return 5;
+    }
+    case 'PLAYER_DOWN':
+      return 0;
+    default:
+      return 0;
+  }
+}
+
+function scoreBlockChoose(
+  state: GameState,
+  move: Extract<Move, { type: 'BLOCK_CHOOSE' }>,
+  team: TeamId
+): number {
+  const attacker = findPlayer(state, move.playerId);
+  const target = findPlayer(state, move.targetId);
+  if (!attacker || !target || !state.pendingBlock) return -Infinity;
+  const value = blockResultValueForAttacker(state, move.result, attacker, target);
+  // Quand c'est le DÉFENSEUR qui choisit (plus de dés contre l'attaquant),
+  // le choix est fait dans son intérêt : ordre inversé.
+  const defenderChooses = state.pendingBlock.chooser === 'defender';
+  const attackerIsUs = attacker.team === team;
+  return defenderChooses === attackerIsUs ? 100 - value : value;
+}
+
+function scorePushChoose(
+  state: GameState,
+  move: Extract<Move, { type: 'PUSH_CHOOSE' }>,
+  team: TeamId
+): number {
+  const target = findPlayer(state, move.targetId);
+  if (!target) return -Infinity;
+  const dest = { x: target.pos.x + move.direction.x, y: target.pos.y + move.direction.y };
+  const outOfBounds =
+    dest.x < 0 || dest.y < 0 || dest.x >= state.width || dest.y >= state.height;
+  const targetIsOpponent = target.team !== team;
+  // Pousser un adversaire dans la foule : la meilleure poussée qui soit.
+  if (outOfBounds) return targetIsOpponent ? 100 : -100;
+  let score = 0;
+  // Loin du ballon (un adversaire), près du ballon (un coéquipier poussé).
+  if (state.ball) {
+    const dist = Math.max(Math.abs(dest.x - state.ball.x), Math.abs(dest.y - state.ball.y));
+    score += targetIsOpponent ? dist * 4 : -dist * 4;
+  }
+  // Éviter de pousser en chaîne un coéquipier.
+  const occupant = state.players.find(p => p.pos.x === dest.x && p.pos.y === dest.y);
+  if (occupant && occupant.team === team) score -= 30;
+  // Un adversaire est préféré vers SA ligne de touche / son camp.
+  if (targetIsOpponent) {
+    const towardsOwnEnd = team === 'A' ? -move.direction.x : move.direction.x;
+    score += towardsOwnEnd * 5;
+  }
+  return score;
+}
+
+function scoreFollowUpChoose(
+  state: GameState,
+  move: Extract<Move, { type: 'FOLLOW_UP_CHOOSE' }>
+): number {
+  const attacker = findPlayer(state, move.playerId);
+  if (!attacker) return -Infinity;
+  // Le porteur de ballon ne suit pas (il s'exposerait) ; sinon on suit pour
+  // garder le contact et le terrain gagné.
+  const wantsToFollow = !attacker.hasBall;
+  return move.followUp === wantsToFollow ? 10 : -10;
+}
+
+function scoreRerollChoose(
+  state: GameState,
+  move: Extract<Move, { type: 'REROLL_CHOOSE' }>
+): number {
+  const pending = state.pendingReroll;
+  if (!pending) return -Infinity;
+  const rerolls =
+    pending.team === 'A' ? state.teamRerolls?.teamA ?? 0 : state.teamRerolls?.teamB ?? 0;
+  const available = rerolls > 0 && !state.rerollUsedThisTurn;
+  const player = findPlayer(state, pending.playerId);
+  // On relance un ramassage, l'esquive du porteur ou tout jet tardif dans la
+  // mi-temps ; un GFI de simple positionnement ne vaut pas la relance.
+  const worthIt =
+    pending.rollType === 'pickup' ||
+    (pending.rollType === 'dodge' && !!player?.hasBall) ||
+    state.turn >= 6;
+  if (move.useReroll) return available && worthIt ? 10 : -10;
+  return 0;
+}
+
+function scoreApothecaryChoose(
+  state: GameState,
+  move: Extract<Move, { type: 'APOTHECARY_CHOOSE' }>
+): number {
+  const pending = state.pendingApothecary;
+  if (!pending) return -Infinity;
+  // Toujours soigner une blessure (mort, durable, sérieuse) ; garder
+  // l'apothicaire sur un simple KO.
+  const wantsToUse = pending.injuryType === 'casualty';
+  return move.useApothecary === wantsToUse ? 10 : -10;
 }
 
 /**

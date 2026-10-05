@@ -73,6 +73,24 @@ describe("Bug de continuation de mouvement après blitz", () => {
 
     currentState = applyMove(currentState, blockChooseMove, rng);
 
+    // Lot 1 « match complet » : un choix en attente (direction de poussée,
+    // suivi) ferme la liste des coups légaux — on le résout d'abord.
+    if (currentState.pendingPushChoice) {
+      const dir = currentState.pendingPushChoice.availableDirections[0];
+      currentState = applyMove(
+        currentState,
+        { type: "PUSH_CHOOSE", playerId: "A2", targetId: "B2", direction: dir },
+        rng,
+      );
+    }
+    if (currentState.pendingFollowUpChoice) {
+      currentState = applyMove(
+        currentState,
+        { type: "FOLLOW_UP_CHOOSE", playerId: "A2", targetId: "B2", followUp: false },
+        rng,
+      );
+    }
+
     // Vérifier que A2 a encore des PM après le blocage
     const a2AfterBlock = currentState.players.find((p) => p.id === "A2");
     expect(a2AfterBlock.pm).toBeGreaterThan(0);

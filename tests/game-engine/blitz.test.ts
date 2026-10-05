@@ -466,6 +466,24 @@ describe("Action de Blitz", () => {
       attacker = result.players.find((p) => p.id === "A1")!;
       expect(attacker.pm).toBe(5);
 
+      // Lot 1 « match complet » : un choix en attente (direction de poussée,
+      // suivi) ferme la liste des coups légaux — on le résout d'abord.
+      if (result.pendingPushChoice) {
+        const dir = result.pendingPushChoice.availableDirections[0];
+        result = applyMove(
+          result,
+          { type: "PUSH_CHOOSE", playerId: "A1", targetId: "B1", direction: dir },
+          rng,
+        );
+      }
+      if (result.pendingFollowUpChoice) {
+        result = applyMove(
+          result,
+          { type: "FOLLOW_UP_CHOOSE", playerId: "A1", targetId: "B1", followUp: false },
+          rng,
+        );
+      }
+
       // Vérifier que le joueur peut continuer à bouger
       const moves = getLegalMoves(result);
       const continueMoves = moves.filter(
