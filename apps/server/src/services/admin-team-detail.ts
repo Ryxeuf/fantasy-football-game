@@ -111,3 +111,100 @@ export async function enrichTeamStarPlayers(
     }),
   );
 }
+
+export interface AdminTeamLeagueEntry {
+  leagueId: string;
+  leagueName: string;
+  leagueStatus: string;
+  isPublic: boolean;
+  seasonId: string;
+  seasonName: string;
+  seasonNumber: number;
+  seasonStatus: string;
+  /** Statut de l'inscription (`active`, `withdrawn`…). */
+  participantStatus: string;
+}
+
+export interface AdminTeamCupEntry {
+  cupId: string;
+  cupName: string;
+  cupStatus: string;
+  isPublic: boolean;
+}
+
+export interface AdminTeamCompetitions {
+  leagues: AdminTeamLeagueEntry[];
+  cups: AdminTeamCupEntry[];
+}
+
+/**
+ * Compétitions auxquelles une équipe est inscrite : une entrée par SAISON de
+ * ligue (une équipe peut enchaîner plusieurs saisons d'une même ligue) et
+ * une par coupe. Sert les liens de la fiche admin vers les fiches admin des
+ * compétitions. Archivées et privées comprises : c'est une vue admin.
+ */
+export async function listTeamCompetitions(
+  teamId: string,
+): Promise<AdminTeamCompetitions> {
+  const [leagueRows, cupRows] = await Promise.all([
+    prisma.leagueParticipant.findMany({
+      where: { teamId },
+      orderBy: { joinedAt: "desc" },
+      select: {
+        status: true,
+        season: {
+          select: {
+            id: true,
+            name: true,
+            seasonNumber: true,
+            status: true,
+            league: {
+              select: { id: true, name: true, status: true, isPublic: true },
+            },
+          },
+        },
+      },
+    }),
+    prisma.cupParticipant.findMany({
+      where: { teamId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        cup: {
+          select: { id: true, name: true, status: true, isPublic: true },
+        },
+      },
+    }),
+  ]);
+  interface LeagueRow {
+    status: string;
+    season: {
+      id: string;
+      name: string;
+      seasonNumber: number;
+      status: string;
+      league: { id: string; name: string; status: string; isPublic: boolean };
+    };
+  }
+  interface CupRow {
+    cup: { id: string; name: string; status: string; isPublic: boolean };
+  }
+  return {
+    leagues: (leagueRows as LeagueRow[]).map((r) => ({
+      leagueId: r.season.league.id,
+      leagueName: r.season.league.name,
+      leagueStatus: r.season.league.status,
+      isPublic: r.season.league.isPublic,
+      seasonId: r.season.id,
+      seasonName: r.season.name,
+      seasonNumber: r.season.seasonNumber,
+      seasonStatus: r.season.status,
+      participantStatus: r.status,
+    })),
+    cups: (cupRows as CupRow[]).map((r) => ({
+      cupId: r.cup.id,
+      cupName: r.cup.name,
+      cupStatus: r.cup.status,
+      isPublic: r.cup.isPublic,
+    })),
+  };
+}

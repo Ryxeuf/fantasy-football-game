@@ -376,14 +376,24 @@ interface AdminLeagueSeasonRow {
   startDate: Date | null;
   endDate: Date | null;
   _count: { participants: number };
+  participants: Array<{
+    status: string;
+    team: {
+      id: string;
+      name: string;
+      roster: string;
+      deletedAt: Date | null;
+      owner: { id: string; coachName: string | null };
+    };
+  }>;
 }
 
 /**
  * GET /admin/leagues/:id
  *
  * Fiche d'une ligue pour la console admin : tous les reglages editables,
- * le creator (email compris — reserve aux admins), les saisons avec leur
- * nombre d'inscrits et le verrou d'edition du bareme (`scoringLocked`).
+ * le creator (email compris — reserve aux admins), les saisons avec leurs
+ * equipes inscrites et le verrou d'edition du bareme (`scoringLocked`).
  * Aucune regle de visibilite : un admin voit aussi les ligues privees.
  */
 export async function handleGetAdminLeague(
@@ -420,6 +430,21 @@ export async function handleGetAdminLeague(
             startDate: true,
             endDate: true,
             _count: { select: { participants: true } },
+            participants: {
+              orderBy: { joinedAt: "asc" },
+              select: {
+                status: true,
+                team: {
+                  select: {
+                    id: true,
+                    name: true,
+                    roster: true,
+                    deletedAt: true,
+                    owner: { select: { id: true, coachName: true } },
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -433,10 +458,21 @@ export async function handleGetAdminLeague(
     sendSuccess(res, {
       ...rest,
       scoringLocked,
-      seasons: (seasons as AdminLeagueSeasonRow[]).map(({ _count, ...s }) => ({
-        ...s,
-        participantsCount: _count.participants,
-      })),
+      seasons: (seasons as AdminLeagueSeasonRow[]).map(
+        ({ _count, participants, ...s }) => ({
+          ...s,
+          participantsCount: _count.participants,
+          // Équipes inscrites, pour les liens vers leurs fiches admin.
+          participants: participants.map((p) => ({
+            teamId: p.team.id,
+            teamName: p.team.name,
+            roster: p.team.roster,
+            coachName: p.team.owner.coachName,
+            status: p.status,
+            deleted: p.team.deletedAt !== null,
+          })),
+        }),
+      ),
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erreur serveur";

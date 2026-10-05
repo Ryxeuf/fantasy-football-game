@@ -140,6 +140,18 @@ describe("GET /admin/leagues/:id", () => {
           startDate: null,
           endDate: null,
           _count: { participants: 6 },
+          participants: [
+            {
+              status: "active",
+              team: {
+                id: "t1",
+                name: "Les Rats",
+                roster: "skaven",
+                deletedAt: null,
+                owner: { id: "u2", coachName: "Ratman" },
+              },
+            },
+          ],
         },
       ],
     });
@@ -155,6 +167,16 @@ describe("GET /admin/leagues/:id", () => {
       expect.objectContaining({ id: "s1", participantsCount: 6 }),
     ]);
     expect(res.body.data.seasons[0]._count).toBeUndefined();
+    expect(res.body.data.seasons[0].participants).toEqual([
+      {
+        teamId: "t1",
+        teamName: "Les Rats",
+        roster: "skaven",
+        coachName: "Ratman",
+        status: "active",
+        deleted: false,
+      },
+    ]);
   });
 
   it("404 sur une ligue inconnue", async () => {

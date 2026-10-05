@@ -416,9 +416,13 @@ export default function AdminCupManagePage() {
                 className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex flex-col gap-2"
               >
                 <div className="min-w-0">
-                  <div className="font-medium text-gray-900 break-words">
+                  <Link
+                    href={`/admin/teams/${p.id}`}
+                    data-testid={`admin-cup-team-link-${p.id}`}
+                    className="font-medium text-blue-700 hover:underline break-words"
+                  >
                     {p.name}
-                  </div>
+                  </Link>
                   <div className="text-xs text-gray-500 break-words">
                     {p.roster} · {p.owner.coachName ?? "—"}
                   </div>

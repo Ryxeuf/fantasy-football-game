@@ -389,30 +389,59 @@ export default function AdminLeagueManagePage() {
         {league.seasons.length === 0 ? (
           <p className="text-sm text-gray-500">Aucune saison créée.</p>
         ) : (
-          <ul className="divide-y divide-gray-100 -my-2">
+          <ul className="divide-y divide-gray-100 -my-3">
             {league.seasons.map((s) => (
               <li
                 key={s.id}
                 data-testid={`admin-league-season-${s.id}`}
-                className="py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
+                className="py-3 space-y-2"
               >
-                <div className="min-w-0">
-                  <div className="font-medium text-sm text-gray-900 break-words">
-                    #{s.seasonNumber} · {s.name}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm text-gray-900 break-words">
+                      #{s.seasonNumber} · {s.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatDate(s.startDate)} → {formatDate(s.endDate)}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {formatDate(s.startDate)} → {formatDate(s.endDate)}
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="px-2 py-0.5 rounded-full bg-gray-100">
+                      {SEASON_STATUS_LABELS[s.status] ?? s.status}
+                    </span>
+                    <span>
+                      {s.participantsCount} équipe
+                      {s.participantsCount > 1 ? "s" : ""}
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <span className="px-2 py-0.5 rounded-full bg-gray-100">
-                    {SEASON_STATUS_LABELS[s.status] ?? s.status}
-                  </span>
-                  <span>
-                    {s.participantsCount} équipe
-                    {s.participantsCount > 1 ? "s" : ""}
-                  </span>
-                </div>
+                {s.participants && s.participants.length > 0 ? (
+                  <ul className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {s.participants.map((p) => (
+                      <li key={p.teamId}>
+                        <Link
+                          href={`/admin/teams/${p.teamId}`}
+                          data-testid={`admin-league-team-${s.id}-${p.teamId}`}
+                          className={`block h-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 hover:bg-gray-100 hover:border-gray-300 transition-colors ${
+                            p.deleted || p.status !== "active" ? "opacity-60" : ""
+                          }`}
+                        >
+                          <span
+                            className={`block text-sm font-medium text-blue-700 break-words ${
+                              p.deleted ? "line-through" : ""
+                            }`}
+                          >
+                            {p.teamName}
+                          </span>
+                          <span className="block text-xs text-gray-500 break-words">
+                            {p.roster} · {p.coachName ?? "—"}
+                            {p.status !== "active" ? ` · ${p.status}` : ""}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </li>
             ))}
           </ul>

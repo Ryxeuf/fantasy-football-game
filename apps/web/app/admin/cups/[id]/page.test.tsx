@@ -130,6 +130,13 @@ describe("Fiche admin d'une coupe", () => {
     });
   });
 
+  it("lie chaque équipe inscrite à sa fiche admin", async () => {
+    routeFetch();
+    render(<AdminCupManagePage />);
+    const link = await screen.findByTestId("admin-cup-team-link-t1");
+    expect(link.getAttribute("href")).toBe("/admin/teams/t1");
+  });
+
   it("rend une coupe privée publique", async () => {
     routeFetch();
     render(<AdminCupManagePage />);

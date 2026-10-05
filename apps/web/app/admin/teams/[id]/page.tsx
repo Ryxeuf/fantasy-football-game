@@ -22,6 +22,9 @@ import { getDisplayName, getPlayerCost, type Ruleset } from "@bb/game-engine";
 
 import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
+import TeamCompetitionsPanel, {
+  type AdminTeamCompetitions,
+} from "./TeamCompetitionsPanel";
 import { formatPlusStat } from "../../../lib/format-stats";
 import KeywordChips from "../../../components/KeywordChips";
 import SkillTooltip from "../../../me/teams/components/SkillTooltip";
@@ -120,6 +123,9 @@ export default function AdminTeamDetailPage() {
 
   const [team, setTeam] = useState<AdminTeamDetail | null>(null);
   const [ownerTeams, setOwnerTeams] = useState<AdminOwnerTeam[]>([]);
+  // Optionnel (champ ajouté à l'API) : absent ⇒ panneau masqué.
+  const [competitions, setCompetitions] =
+    useState<AdminTeamCompetitions | null>(null);
   const [rosterDetail, setRosterDetail] = useState<any>(null);
   const [journal, setJournal] = useState<JournalPreviewEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,6 +140,7 @@ export default function AdminTeamDetailPage() {
       const data = await fetchAdminJSON(`/admin/teams/${teamId}`);
       setTeam(data.team ?? null);
       setOwnerTeams(data.ownerTeams ?? []);
+      setCompetitions(data.competitions ?? null);
     } catch (e: any) {
       setError(e?.message || "Erreur lors du chargement de l'équipe");
       setTeam(null);
@@ -408,6 +415,10 @@ export default function AdminTeamDetailPage() {
           </div>
         )}
       </div>
+
+      {competitions ? (
+        <TeamCompetitionsPanel competitions={competitions} />
+      ) : null}
 
       {/* Informations générales */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
