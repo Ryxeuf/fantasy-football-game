@@ -32,6 +32,7 @@ import adminInducementRoutes from "./routes/admin-inducements";
 import adminAdvancementCostRoutes from "./routes/admin-advancement-costs";
 import publicTournamentRulesetRoutes from "./routes/public-tournament-rulesets";
 import adminLeaguesRoutes from "./routes/admin-leagues";
+import adminCupsRoutes from "./routes/admin-cups";
 import competitionDocumentRoutes from "./routes/competition-documents";
 import adminCompetitionDocumentRoutes from "./routes/admin-competition-documents";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
@@ -442,6 +443,8 @@ app.use("/admin/feature-flags", adminFeatureFlagsRouter);
 // L2.C.6 — admin leagues : reservation aux admins, route distincte
 // pour ne pas polluer /admin (qui devient un sac fourre-tout).
 app.use("/admin/leagues", adminLeaguesRoutes);
+// Pendant de /admin/leagues pour les coupes (liste paginee + filtres).
+app.use("/admin/cups", adminCupsRoutes);
 // Documents officiels des competitions (ligues et coupes) : un seul jeu de
 // handlers pour les deux familles (`/api/competitions/:kind/...`).
 app.use("/api/competitions", competitionDocumentRoutes);

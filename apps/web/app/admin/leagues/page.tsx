@@ -15,10 +15,14 @@
  *     rien de persiste ne bouge) — c'est le seul chemin qui reste ouvert,
  *     `PATCH /leagues/:id` (commissaire) repondant alors 409
  *
- * UX volontairement minimale : scrollable list, modale legere pour
- * choisir le nouveau status. Le transfer-creator necessite de
- * connaitre l'userId cible — pour l'instant on expose une input
- * texte. Une autocomplete coach pourra etre ajoutee plus tard.
+ *   - visibilite : filtre Publiques / Privees et bascule en un clic
+ *     (`PATCH /admin/leagues/:id { isPublic }`, hors verrou d'edition)
+ *   - suppression definitive (`DELETE /leagues/:id`, ouvert aux admins)
+ *   - fiche complete (edition, saisons) sur `/admin/leagues/[id]`
+ *
+ * Responsive : cartes empilees, barre d'actions en grille 2 colonnes sur
+ * mobile puis en ligne des `sm`. Le transfer-creator necessite de
+ * connaitre l'userId cible — pour l'instant on expose une input texte.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -26,6 +30,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { TieBreakOrderEditor } from "../../components/TieBreakOrderEditor";
+import {
+  LEAGUE_STATUS_META,
+  StatusBadge,
+  VisibilityToggle,
+} from "../_components/competition-admin";
 import {
   LEAGUE_TIE_BREAK_CATALOGUE,
   LEAGUE_TIE_BREAK_LABELS,
@@ -66,6 +75,20 @@ interface ListResponse {
   data: { leagues: AdminLeague[] };
   meta: { total: number; limit: number; page: number };
 }
+
+type VisibilityFilter = "all" | "public" | "private";
+
+const VISIBILITY_OPTIONS: ReadonlyArray<{
+  value: VisibilityFilter;
+  label: string;
+}> = [
+  { value: "all", label: "Toutes" },
+  { value: "public", label: "🌍 Publiques" },
+  { value: "private", label: "🔒 Privées" },
+];
+
+const ACTION_BTN =
+  "inline-flex items-center justify-center gap-1 min-h-[36px] px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50";
 
 const STATUS_OPTIONS: ReadonlyArray<{
   value: LeagueStatus | "all";
@@ -113,6 +136,8 @@ export default function AdminLeaguesPage() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeagueStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [visibilityFilter, setVisibilityFilter] =
+    useState<VisibilityFilter>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [transferTarget, setTransferTarget] = useState<{
     leagueId: string;
@@ -158,6 +183,9 @@ export default function AdminLeaguesPage() {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       if (search.trim().length > 0) params.set("search", search.trim());
+      if (visibilityFilter !== "all") {
+        params.set("publicOnly", visibilityFilter === "public" ? "true" : "false");
+      }
       const path = `/admin/leagues${
         params.toString() ? `?${params.toString()}` : ""
       }`;
@@ -168,7 +196,7 @@ export default function AdminLeaguesPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, search]);
+  }, [statusFilter, search, visibilityFilter]);
 
   useEffect(() => {
     reload();
@@ -205,6 +233,48 @@ export default function AdminLeaguesPage() {
         await reload();
       } catch (e: unknown) {
         alert(e instanceof Error ? e.message : "Echec de l'archivage");
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [reload],
+  );
+
+  const handleToggleVisibility = useCallback(
+    async (league: AdminLeague) => {
+      try {
+        setBusyId(league.id);
+        await fetchJSON(`/admin/leagues/${league.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ isPublic: !league.isPublic }),
+        });
+        await reload();
+      } catch (e: unknown) {
+        alert(
+          e instanceof Error ? e.message : "Echec du changement de visibilite",
+        );
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [reload],
+  );
+
+  const handleDelete = useCallback(
+    async (league: AdminLeague) => {
+      if (
+        !confirm(
+          `Supprimer definitivement la ligue « ${league.name} » ? Saisons, calendrier et resultats seront perdus. Preferez l'archivage pour garder l'historique.`,
+        )
+      ) {
+        return;
+      }
+      try {
+        setBusyId(league.id);
+        await fetchJSON(`/leagues/${league.id}`, { method: "DELETE" });
+        await reload();
+      } catch (e: unknown) {
+        alert(e instanceof Error ? e.message : "Echec de la suppression");
       } finally {
         setBusyId(null);
       }
@@ -286,11 +356,12 @@ export default function AdminLeaguesPage() {
           🛠️ Console ligues
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          Liste globale, force-status, archivage, transfert de creator.
+          Liste globale : statut, visibilité, archivage, suppression,
+          transfert de commissaire. « Gérer » ouvre la fiche complète.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-[auto_auto_1fr] gap-3 items-end">
         <label className="block">
           <span className="text-xs font-medium text-gray-700">Status</span>
           <select
@@ -299,7 +370,7 @@ export default function AdminLeaguesPage() {
             onChange={(e) =>
               setStatusFilter(e.target.value as LeagueStatus | "all")
             }
-            className="mt-1 block rounded-md border border-gray-300 px-3 py-1.5 text-sm bg-white"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s.value} value={s.value}>
@@ -312,15 +383,33 @@ export default function AdminLeaguesPage() {
           </select>
         </label>
 
-        <label className="block flex-1 min-w-[200px]">
+        <label className="block">
+          <span className="text-xs font-medium text-gray-700">Visibilité</span>
+          <select
+            data-testid="admin-leagues-visibility-filter"
+            value={visibilityFilter}
+            onChange={(e) =>
+              setVisibilityFilter(e.target.value as VisibilityFilter)
+            }
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+          >
+            {VISIBILITY_OPTIONS.map((v) => (
+              <option key={v.value} value={v.value}>
+                {v.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block min-w-0">
           <span className="text-xs font-medium text-gray-700">Recherche</span>
           <input
             data-testid="admin-leagues-search"
-            type="text"
+            type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Nom de ligue…"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
           />
         </label>
       </div>
@@ -349,43 +438,57 @@ export default function AdminLeaguesPage() {
             <li
               key={l.id}
               data-testid={`admin-league-${l.id}`}
-              className="border border-gray-200 rounded-lg bg-white p-3 space-y-2"
+              className="border border-gray-200 rounded-lg bg-white p-3 sm:p-4 space-y-3"
             >
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div className="min-w-0 space-y-1">
                   <Link
-                    href={`/leagues/${l.id}`}
-                    className="font-semibold text-nuffle-anthracite hover:underline"
+                    href={`/admin/leagues/${l.id}`}
+                    className="block font-semibold text-nuffle-anthracite hover:underline break-words"
                   >
                     {l.name}
                   </Link>
-                  <span className="ml-2 text-xs uppercase tracking-wide bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
-                    {l.status}
-                  </span>
-                  {l.seasonsCount === 0 ? (
-                    <span className="ml-1 text-xs uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                      Vide
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <StatusBadge status={l.status} meta={LEAGUE_STATUS_META} />
+                    {l.seasonsCount === 0 ? (
+                      <span className="text-xs uppercase tracking-wide bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                        Vide
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-500">
+                        {l.seasonsCount} saison
+                        {l.seasonsCount > 1 ? "s" : ""}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      · Maj{" "}
+                      {new Date(l.updatedAt).toLocaleDateString("fr-FR", {
+                        day: "2-digit",
+                        month: "short",
+                      })}
                     </span>
-                  ) : (
-                    <span className="ml-1 text-xs text-gray-500">
-                      {l.seasonsCount} saison
-                      {l.seasonsCount > 1 ? "s" : ""}
-                    </span>
-                  )}
+                  </div>
+                  <div className="text-xs text-gray-500 break-all">
+                    {l.creator.coachName ?? l.creator.email}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {l.creator.coachName ?? l.creator.email}
-                </div>
+                <VisibilityToggle
+                  isPublic={l.isPublic}
+                  onToggle={() => handleToggleVisibility(l)}
+                  disabled={busyId === l.id}
+                  testId={`admin-league-visibility-${l.id}`}
+                />
               </div>
-              <div className="flex flex-wrap gap-2 items-center text-xs">
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs">
                 <select
                   data-testid={`admin-league-status-${l.id}`}
+                  aria-label="Changer le statut"
                   value={l.status}
                   disabled={busyId === l.id}
                   onChange={(e) =>
                     handleSetStatus(l.id, e.target.value as LeagueStatus)
                   }
-                  className="rounded border border-gray-300 px-2 py-1 bg-white"
+                  className="col-span-2 sm:col-span-1 min-h-[36px] rounded-md border border-gray-300 px-2 py-1 bg-white"
                 >
                   {STATUS_OPTIONS.filter((s) => s.value !== "all").map((s) => (
                     <option key={s.value} value={s.value}>
@@ -393,13 +496,23 @@ export default function AdminLeaguesPage() {
                     </option>
                   ))}
                 </select>
+                <Link
+                  href={`/admin/leagues/${l.id}`}
+                  data-testid={`admin-league-manage-${l.id}`}
+                  className={`${ACTION_BTN} border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100`}
+                >
+                  ⚙️ Gérer
+                </Link>
+                <Link href={`/leagues/${l.id}`} className={ACTION_BTN}>
+                  👁️ Voir
+                </Link>
                 {l.status !== "archived" ? (
                   <button
                     type="button"
                     data-testid={`admin-league-archive-${l.id}`}
                     onClick={() => handleArchive(l.id)}
                     disabled={busyId === l.id}
-                    className="px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                    className={ACTION_BTN}
                   >
                     📦 Archiver
                   </button>
@@ -411,7 +524,7 @@ export default function AdminLeaguesPage() {
                     setOrderTarget({ league: l, rules: l.tieBreakRules ?? [] })
                   }
                   disabled={busyId === l.id}
-                  className="px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                  className={ACTION_BTN}
                 >
                   🔢 Classement
                 </button>
@@ -422,30 +535,32 @@ export default function AdminLeaguesPage() {
                     setTransferTarget({ leagueId: l.id, userId: "" })
                   }
                   disabled={busyId === l.id}
-                  className="px-2 py-1 rounded border border-gray-300 bg-white hover:bg-gray-50"
+                  className={ACTION_BTN}
                 >
                   🔄 Transferer
                 </button>
-                <span
-                  data-testid={`admin-league-order-summary-${l.id}`}
-                  className="text-gray-500"
-                  title="Departages appliques, du premier au dernier"
+                <button
+                  type="button"
+                  data-testid={`admin-league-delete-${l.id}`}
+                  onClick={() => handleDelete(l)}
+                  disabled={busyId === l.id}
+                  className={`${ACTION_BTN} border-red-200 bg-red-50 text-red-700 hover:bg-red-100`}
                 >
-                  {(l.effectiveTieBreakRules ?? [])
-                    .map((slug) => LEAGUE_TIE_BREAK_LABELS[slug] ?? slug)
-                    .join(" › ")}
-                  {l.tieBreakRules && l.tieBreakRules.length > 0 ? null : (
-                    <span className="ml-1 text-gray-400">(defaut)</span>
-                  )}
-                </span>
-                <span className="text-gray-400">
-                  Maj{" "}
-                  {new Date(l.updatedAt).toLocaleDateString("fr-FR", {
-                    day: "2-digit",
-                    month: "short",
-                  })}
-                </span>
+                  🗑️ Supprimer
+                </button>
               </div>
+              <p
+                data-testid={`admin-league-order-summary-${l.id}`}
+                className="text-xs text-gray-500 break-words"
+                title="Departages appliques, du premier au dernier"
+              >
+                {(l.effectiveTieBreakRules ?? [])
+                  .map((slug) => LEAGUE_TIE_BREAK_LABELS[slug] ?? slug)
+                  .join(" › ")}
+                {l.tieBreakRules && l.tieBreakRules.length > 0 ? null : (
+                  <span className="ml-1 text-gray-400">(defaut)</span>
+                )}
+              </p>
             </li>
           ))}
         </ul>
@@ -454,11 +569,11 @@ export default function AdminLeaguesPage() {
       {orderTarget ? (
         <div
           data-testid="admin-standings-order-modal"
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center sm:px-4"
           onClick={() => setOrderTarget(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg max-w-lg w-full p-5 space-y-3 max-h-[85vh] overflow-y-auto"
+            className="bg-white rounded-t-xl sm:rounded-lg shadow-lg max-w-lg w-full p-4 sm:p-5 space-y-3 max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold">
@@ -504,11 +619,11 @@ export default function AdminLeaguesPage() {
       {transferTarget ? (
         <div
           data-testid="admin-transfer-modal"
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4"
+          className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center sm:px-4"
           onClick={() => setTransferTarget(null)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg max-w-md w-full p-5 space-y-3"
+            className="bg-white rounded-t-xl sm:rounded-lg shadow-lg max-w-md w-full p-4 sm:p-5 space-y-3"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold">Transferer le creator</h2>

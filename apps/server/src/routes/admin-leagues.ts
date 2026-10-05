@@ -13,6 +13,9 @@
  *     autre user (ex: coach disparu)
  *   - PATCH /admin/leagues/:id/standings-order : reordonner les criteres
  *     de departage du classement, meme apres le verrou d'edition
+ *   - GET   /admin/leagues/:id : fiche complete (saisons, verrou, creator)
+ *   - PATCH /admin/leagues/:id : edition admin (identite, capacite,
+ *     visibilite, bareme) sans etre commissaire
  *
  * Ne deplace pas les actions saison (start / regenerate / close) :
  * elles existent deja sous /league/seasons/:id/* gates par
@@ -31,6 +34,8 @@ import {
   adminLeaguesQuerySchema,
   adminLeagueStatusSchema,
   adminLeagueTransferSchema,
+  adminLeagueUpdateSchema,
+  type AdminLeagueUpdateBody,
   type AdminLeaguesQuery,
   type AdminLeagueStatusBody,
   type AdminLeagueTransferBody,
@@ -40,7 +45,9 @@ import {
   type LeagueStandingsOrderBody,
 } from "../schemas/league.schemas";
 import {
+  hasLeagueScoredMatch,
   setLeagueStandingsOrder,
+  updateLeague,
   withdrawParticipant,
   LeagueWithdrawError,
 } from "../services/league";
@@ -361,10 +368,155 @@ export async function handleAdminForceWithdraw(
   }
 }
 
+interface AdminLeagueSeasonRow {
+  id: string;
+  seasonNumber: number;
+  name: string;
+  status: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  _count: { participants: number };
+}
+
+/**
+ * GET /admin/leagues/:id
+ *
+ * Fiche d'une ligue pour la console admin : tous les reglages editables,
+ * le creator (email compris — reserve aux admins), les saisons avec leur
+ * nombre d'inscrits et le verrou d'edition du bareme (`scoringLocked`).
+ * Aucune regle de visibilite : un admin voit aussi les ligues privees.
+ */
+export async function handleGetAdminLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  try {
+    const league = await prisma.league.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        ruleset: true,
+        status: true,
+        isPublic: true,
+        maxParticipants: true,
+        winPoints: true,
+        drawPoints: true,
+        lossPoints: true,
+        forfeitPoints: true,
+        creatorId: true,
+        createdAt: true,
+        updatedAt: true,
+        creator: { select: { id: true, coachName: true, email: true } },
+        seasons: {
+          orderBy: { seasonNumber: "desc" },
+          select: {
+            id: true,
+            seasonNumber: true,
+            name: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+            _count: { select: { participants: true } },
+          },
+        },
+      },
+    });
+    if (!league) {
+      sendError(res, "Ligue introuvable", 404);
+      return;
+    }
+    const scoringLocked = await hasLeagueScoredMatch(id);
+    const { seasons, ...rest } = league;
+    sendSuccess(res, {
+      ...rest,
+      scoringLocked,
+      seasons: (seasons as AdminLeagueSeasonRow[]).map(({ _count, ...s }) => ({
+        ...s,
+        participantsCount: _count.participants,
+      })),
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Erreur serveur";
+    serverLog.error("[admin-leagues] get failed:", msg);
+    sendError(res, "Erreur serveur", 500);
+  }
+}
+
+const SCORING_FIELDS = [
+  "winPoints",
+  "drawPoints",
+  "lossPoints",
+  "forfeitPoints",
+] as const;
+
+/**
+ * PATCH /admin/leagues/:id
+ *
+ * Edition d'une ligue par un administrateur, sans etre son commissaire.
+ * Nom, description, capacite et VISIBILITE se changent a tout moment (rien
+ * de persiste n'en depend). Le bareme, lui, reste fige des qu'un match a ete
+ * scoré : le modifier reecrirait des points deja attribues (meme verrou que
+ * `PATCH /leagues/:id`, 409).
+ */
+export async function handleUpdateAdminLeague(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const id = req.params.id;
+  const body: AdminLeagueUpdateBody = req.body;
+
+  const league = await prisma.league.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+  if (!league) {
+    sendError(res, "Ligue introuvable", 404);
+    return;
+  }
+  const touchesScoring = SCORING_FIELDS.some((k) => body[k] !== undefined);
+  if (touchesScoring && (await hasLeagueScoredMatch(id))) {
+    sendError(
+      res,
+      "Bareme verrouille : un match a deja ete joue, les points ne peuvent plus etre modifies",
+      409,
+    );
+    return;
+  }
+  try {
+    const updated = await updateLeague(id, body);
+    serverLog.info(
+      `[admin-leagues] updated: id=${id} fields=${Object.keys(body).join(",")} by admin=${req.user?.id}`,
+    );
+    sendSuccess(res, {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      isPublic: updated.isPublic,
+      maxParticipants: updated.maxParticipants,
+      winPoints: updated.winPoints,
+      drawPoints: updated.drawPoints,
+      lossPoints: updated.lossPoints,
+      forfeitPoints: updated.forfeitPoints,
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Erreur serveur";
+    sendError(res, msg, 400);
+  }
+}
+
 router.get(
   "/",
   validateQuery(adminLeaguesQuerySchema),
   handleListAdminLeagues,
+);
+router.get("/:id", handleGetAdminLeague);
+router.patch(
+  "/:id",
+  validate(adminLeagueUpdateSchema),
+  handleUpdateAdminLeague,
 );
 router.patch(
   "/:id/status",

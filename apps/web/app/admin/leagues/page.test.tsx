@@ -132,3 +132,46 @@ describe("Console admin — critères de classement d'une ligue", () => {
     });
   });
 });
+
+describe("Console admin — visibilité d'une ligue", () => {
+  it("bascule une ligue publique en privée via PATCH /admin/leagues/:id", async () => {
+    routeFetch();
+    render(<AdminLeaguesPage />);
+    const toggle = await screen.findByTestId("admin-league-visibility-l1");
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      const call = mockFetch.mock.calls.find(
+        (c) =>
+          String(c[0]).endsWith("/admin/leagues/l1") &&
+          c[1]?.method === "PATCH",
+      );
+      expect(call).toBeTruthy();
+      expect(JSON.parse(String(call?.[1]?.body))).toEqual({ isPublic: false });
+    });
+  });
+
+  it("filtre les ligues privées côté serveur (publicOnly=false)", async () => {
+    routeFetch();
+    render(<AdminLeaguesPage />);
+    fireEvent.change(
+      await screen.findByTestId("admin-leagues-visibility-filter"),
+      { target: { value: "private" } },
+    );
+    await waitFor(() => {
+      expect(
+        mockFetch.mock.calls.some((c) =>
+          String(c[0]).includes("/admin/leagues?publicOnly=false"),
+        ),
+      ).toBe(true);
+    });
+  });
+
+  it("propose un lien de gestion vers la fiche admin", async () => {
+    routeFetch();
+    render(<AdminLeaguesPage />);
+    const link = await screen.findByTestId("admin-league-manage-l1");
+    expect(link.getAttribute("href")).toBe("/admin/leagues/l1");
+  });
+});
