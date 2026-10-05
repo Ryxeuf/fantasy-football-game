@@ -60,6 +60,15 @@ toucher à la qualité tactique de l'IA :
 `ENGINE_VER` est bumpé : les issues de match changent à graine constante,
 `bench/bench-baseline.json` est re-snapshoté.
 
+## Décisions cadres (2026-10-05)
+
+Prises sur l'exploration et applicables à ce lot : le full driver devient le
+**seul** driver de production (l'hybride ne sert plus qu'aux cotes jusqu'à un
+estimateur) ; un lot = une PR, en séquence, le bench de ce lot servant de gate
+au lot 2 ; budget de calcul ≤ 30 s par match (la perf de ce lot vise p95 < 5 s
+avant l'IA du lot 3) ; le replay rejouable (RNG forké par coup + dés
+enregistrés) est le lot 2, ce lot garde le RNG unique.
+
 ## Hors périmètre
 
 - Plan de drive, planificateur d'activations, probabilités, personnalités,
