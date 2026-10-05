@@ -9,8 +9,26 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Lot 5 — les deux checks d'exploitation sont testés à part ; ici ils
+// répondent « up » pour ne pas changer le statut global des cas historiques.
+vi.mock("./pro-league-match-completion", () => ({
+  countStaleLiveMatches: vi.fn(async () => 0),
+}));
+vi.mock("./pro-league-sim-pool", () => ({
+  getSimPoolStats: vi.fn(() => ({
+    mode: "inline",
+    size: 0,
+    busy: 0,
+    queued: 0,
+    completed: 0,
+    failed: 0,
+    respawned: 0,
+  })),
+}));
+
 import { prisma } from "../prisma";
-import { getProLeagueHealth } from "./pro-league-health";
+import { countStaleLiveMatches } from "./pro-league-match-completion";
+import { checkSimPool, getProLeagueHealth } from "./pro-league-health";
 
 interface MockedPrisma {
   proLeagueSeason: { findFirst: ReturnType<typeof vi.fn> };
@@ -187,5 +205,30 @@ describe("getProLeagueHealth — sprint 1.F.2", () => {
 
     await getProLeagueHealth();
     expect(order).toHaveLength(4);
+  });
+});
+
+describe("checks d'exploitation (lot 5)", () => {
+  it("simPool : up en inline, up/degraded/down selon le pool", () => {
+    expect(checkSimPool({ mode: "inline", size: 0, busy: 0, queued: 0, completed: 0, failed: 0, respawned: 0 }).status).toBe("up");
+    const base = { mode: "pool" as const, size: 2, busy: 2, completed: 10, failed: 0, respawned: 0 };
+    expect(checkSimPool({ ...base, queued: 10 }).status).toBe("up");
+    expect(checkSimPool({ ...base, queued: 51 }).status).toBe("degraded");
+    expect(checkSimPool({ ...base, queued: 0, respawned: 1 }).status).toBe("degraded");
+    expect(checkSimPool({ ...base, size: 0, queued: 0 }).status).toBe("down");
+  });
+
+  it("liveCompletion : degraded quand un match en direct attend sa clôture depuis plus de 3h", async () => {
+    mocked.proLeagueSeason.findFirst.mockResolvedValue({ id: "s", year: 2026 });
+    mocked.proLeagueMatch.findFirst.mockResolvedValue({ completedAt: recentDate(1) });
+    mocked.proGazetteArticle.findFirst.mockResolvedValue({ date: recentDate(1) });
+    mocked.proBetMarket.count.mockResolvedValue(1);
+    vi.mocked(countStaleLiveMatches).mockResolvedValueOnce(2);
+    const out = await getProLeagueHealth();
+    const check = out.checks.find((c) => c.name === "liveCompletion");
+    expect(check?.status).toBe("degraded");
+    expect(check?.detail).toContain("2 match(s)");
+    expect(out.status).toBe("degraded");
+    expect(out.checks.find((c) => c.name === "simPool")?.status).toBe("up");
   });
 });
