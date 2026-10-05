@@ -22,7 +22,7 @@
 import { buildEngineRoster, rosterSlugForRace } from '../driver/engine-roster-fixture';
 import { simulateMatch, type SimulateDriverKind as DriverKind } from '../simulate-match';
 import type { ProTeamProfile } from '../tactics/race-profiles';
-import type { SimInput, SimTeamInput } from '../types';
+import type { SimInput, SimResult, SimTeamInput } from '../types';
 
 import {
   computeVivacityMetrics,
@@ -116,6 +116,62 @@ export function runBench(input: BenchInput): BenchPairing {
     metrics: computeVivacityMetrics(samples),
     favorite,
   };
+}
+
+/**
+ * Lot 5 « exploitation » — même bench, simulateur ASYNCHRONE (pool de
+ * workers). Les graines sont identiques à `runBench` : à `simulate` égal,
+ * les métriques le sont aussi.
+ */
+export type AsyncSimulate = (sim: SimInput, options: { driverKind: DriverKind }) => Promise<SimResult>;
+
+export async function runBenchAsync(input: BenchInput, simulate: AsyncSimulate): Promise<BenchPairing> {
+  if (!Number.isInteger(input.runs) || input.runs <= 0) {
+    throw new Error('runBenchAsync: runs must be a positive integer');
+  }
+  const favorite = deriveFavorite(input.pairing);
+  const driverKind: DriverKind = input.driverKind ?? 'hybrid';
+  const sims: SimInput[] = [];
+  for (let i = 0; i < input.runs; i += 1) {
+    sims.push({
+      seed: input.seedOffset + i,
+      home: toSimTeamInput(input.pairing.home, 'home', driverKind),
+      away: toSimTeamInput(input.pairing.away, 'away', driverKind),
+    });
+  }
+  const results = await Promise.all(sims.map((sim) => simulate(sim, { driverKind })));
+  return {
+    pairing: input.pairing,
+    matches: input.runs,
+    metrics: computeVivacityMetrics(results.map((r) => simResultToSample(r, favorite))),
+    favorite,
+  };
+}
+
+export async function runBenchMatrixAsync(
+  input: BenchMatrixInput,
+  simulate: AsyncSimulate,
+): Promise<BenchMatrixResult> {
+  if (input.teams.length < 2) {
+    throw new Error('runBenchMatrixAsync: at least 2 teams are required');
+  }
+  if (!Number.isInteger(input.runs) || input.runs <= 0) {
+    throw new Error('runBenchMatrixAsync: runs must be a positive integer');
+  }
+  const jobs: Promise<BenchPairing>[] = [];
+  let cursor = input.seedOffset;
+  for (let i = 0; i < input.teams.length; i += 1) {
+    for (let j = i + 1; j < input.teams.length; j += 1) {
+      jobs.push(
+        runBenchAsync(
+          { pairing: { home: input.teams[i], away: input.teams[j] }, runs: input.runs, seedOffset: cursor, driverKind: input.driverKind },
+          simulate,
+        ),
+      );
+      cursor += input.runs;
+    }
+  }
+  return { pairings: await Promise.all(jobs) };
 }
 
 export function runBenchMatrix(input: BenchMatrixInput): BenchMatrixResult {

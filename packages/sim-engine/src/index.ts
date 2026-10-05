@@ -146,7 +146,10 @@ export {
 export {
   formatBenchReport,
   runBench,
+  runBenchAsync,
   runBenchMatrix,
+  runBenchMatrixAsync,
+  type AsyncSimulate,
   type BenchInput,
   type BenchMatrixInput,
   type BenchMatrixResult,
@@ -299,6 +302,16 @@ export {
   type FullDriverTraceTurn,
 } from './driver/full-driver-trace';
 
+// Lot 5 « exploitation » — pool de worker_threads pour sortir les
+// simulations de l'event loop.
+export {
+  createSimPool,
+  resolveWorkerUrl,
+  type SimPool,
+  type SimPoolConfig,
+  type SimPoolStats,
+} from './pool/sim-pool';
+export type { SimPoolOptions, SimPoolRequest, SimPoolResponse } from './pool/protocol';
 export {
   measureSimulationPerf,
   type MeasureSimulationPerfInput,

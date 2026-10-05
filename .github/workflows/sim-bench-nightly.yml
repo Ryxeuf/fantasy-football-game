@@ -1,0 +1,59 @@
+name: Sim Bench Nightly
+
+# Lot 5 « exploitation » (Pro League). Le bench de chaque PR (`sim-bench.yml`)
+# est un SMOKE : 3 duels × 20 matchs en full driver. Chaque nuit, ce workflow
+# joue la matrice COMPLÈTE (16 équipes, 120 duels) sur un pool de workers et
+# resserre le gate de régression (100 matchs par duel sur la baseline).
+#
+# `schedule` n'est pas un `push` sur main : rien à ajouter à
+# `DOWNSTREAM_WORKFLOWS` dans `auto-merge.yml` (cf. CLAUDE.md).
+
+on:
+  schedule:
+    # 03:17 UTC — hors des créneaux de déploiement et des pics de CI.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'Matchs par duel pour la matrice complète'
+        required: false
+        default: '20'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sim-bench-nightly
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Regression gate (baseline, 100 matchs par duel)
+        run: pnpm --filter @bb/sim-engine sim:bench:ci --runs=100
+
+      - name: Full matrix (16 équipes, pool de workers)
+        run: pnpm --filter @bb/sim-engine sim:bench:nightly --runs=${{ github.event.inputs.runs || '20' }} --out=bench/nightly/report.json
+
+      - name: Upload nightly report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-bench-nightly-${{ github.run_number }}
+          path: packages/sim-engine/bench/nightly/report.json
+          retention-days: 30
