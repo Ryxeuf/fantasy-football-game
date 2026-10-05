@@ -42,6 +42,16 @@ const LEAGUE: AdminLeagueDetail = {
       startDate: null,
       endDate: null,
       participantsCount: 6,
+      participants: [
+        {
+          teamId: "t1",
+          teamName: "Les Rats",
+          roster: "skaven",
+          coachName: "Ratman",
+          status: "active",
+          deleted: false,
+        },
+      ],
     },
   ],
 };
@@ -131,6 +141,14 @@ describe("Fiche admin d'une ligue", () => {
     expect(screen.getByTestId("admin-league-season-s1").textContent).toContain(
       "6 équipes",
     );
+  });
+
+  it("lie chaque équipe inscrite à sa fiche admin", async () => {
+    routeFetch();
+    render(<AdminLeagueManagePage />);
+    const link = await screen.findByTestId("admin-league-team-s1-t1");
+    expect(link.getAttribute("href")).toBe("/admin/teams/t1");
+    expect(link.textContent).toContain("Les Rats");
   });
 
   it("enregistre uniquement les champs modifiés", async () => {

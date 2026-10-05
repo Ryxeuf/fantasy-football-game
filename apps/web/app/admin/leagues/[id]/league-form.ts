@@ -16,6 +16,17 @@ export interface AdminLeagueSeason {
   startDate: string | null;
   endDate: string | null;
   participantsCount: number;
+  /** Équipes inscrites. Optionnel : absent d'une API antérieure. */
+  participants?: AdminLeagueParticipant[];
+}
+
+export interface AdminLeagueParticipant {
+  teamId: string;
+  teamName: string;
+  roster: string;
+  coachName: string | null;
+  status: string;
+  deleted: boolean;
 }
 
 export interface AdminLeagueDetail {
