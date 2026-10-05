@@ -16,6 +16,7 @@ import { makePlayer, baseState } from '../__tests__/helpers';
 import { makeRNG } from '../utils/rng';
 import { scoreMove } from '../ai/evaluator';
 import { isProne, canPlayerStandUp } from '../core/game-state';
+import { checkTouchdowns } from '../mechanics/ball';
 import type { Move } from '../core/types';
 
 const rng = makeRNG('lot1');
@@ -196,5 +197,30 @@ describe('Lot 1 — activation contiguë', () => {
     expect(scoreMove(state, { type: 'END_PLAYER_TURN', playerId: 'A1' }, 'A')).toBeGreaterThan(
       scoreMove(state, { type: 'END_TURN' }, 'A'),
     );
+  });
+});
+
+describe('touchdown par poussée (lot 2)', () => {
+  it('un TD marqué par le joueur repoussé efface le choix de suivi en attente', () => {
+    // Le porteur B1 est repoussé dans l'en-but de A (x = 0) : TD pour B.
+    const a1 = makePlayer({ id: 'A1', team: 'A', pos: { x: 1, y: 7 }, name: 'A1' });
+    const b1 = makePlayer({ id: 'B1', team: 'B', pos: { x: 0, y: 7 }, name: 'B1', hasBall: true });
+    const state = baseState([a1, b1], {
+      currentPlayer: 'A',
+      kickingTeam: 'B',
+      ball: undefined,
+      pendingFollowUpChoice: {
+        attackerId: 'A1',
+        targetId: 'B1',
+        targetNewPosition: { x: 0, y: 7 },
+        targetOldPosition: { x: 1, y: 7 },
+      },
+    });
+    const next = checkTouchdowns(state);
+    expect(next.gamePhase).toBe('post-td');
+    expect(next.score.teamB).toBe(1);
+    expect(next.pendingFollowUpChoice).toBeUndefined();
+    expect(next.pendingPushChoice).toBeUndefined();
+    expect(getLegalMoves(next).some((m) => m.type === 'FOLLOW_UP_CHOOSE')).toBe(false);
   });
 });
