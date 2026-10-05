@@ -1,3 +1,15 @@
+## [1.254.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.253.0...v1.254.0) (2026-10-05)
+
+
+### ✨ Features
+
+* Boutique, admin des Couronnes et des wallets ([#1060](https://github.com/Ryxeuf/fantasy-football-game/issues/1060)) ([1c783be](https://github.com/Ryxeuf/fantasy-football-game/commit/1c783be142ffdcb63a87fac3f03e962bb49c268d))
+
+
+### 📝 Documentation
+
+* **openspec:** archive dice-themes et dice-theme-shop-and-crowns ([ccecd63](https://github.com/Ryxeuf/fantasy-football-game/commit/ccecd63d8c297cd45dda00cc5ce3c2b7e9f29d6f))
+
 ## [1.253.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.252.0...v1.253.0) (2026-10-05)
 
 
