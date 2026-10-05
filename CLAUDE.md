@@ -1928,3 +1928,22 @@ edition du `.json`, `pnpm --filter web typecheck` +
   un TD obtenu par POUSSÉE laissait un `pendingFollowUpChoice` ouvert
   (`awardTouchdown` l'efface). Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md).
+- **2026-10-05** : **Pro League lot 3 « le cerveau du coach »** (change
+  OpenSpec `pro-league-coach-brain`, `ENGINE_VER` 0.29.0). Un COACH par
+  équipe (`packages/sim-engine/src/coach/`) remplace l'évaluateur glouton du
+  full driver : plan de drive COLLANT (ré-évalué sur évènement seulement),
+  activations ENTIÈRES scorées `P × gain − (1 − P) × coût du turnover` avec
+  les probabilités DU MOTEUR (jamais une transcription : un modèle maison de
+  soutiens annonçait deux dés là où le moteur en lançait un), fonction de
+  valeur LOCALE (contribution par joueur, ~1 s par match), cage ancrée sur
+  la case VISÉE du porteur (sinon elle le retient), libération du porteur
+  avant son esquive, ordre canonique quasi strict, un TD vaut toujours 1000
+  de PLUS que rester. Le bench CI mesure le full driver (20 matchs par duel,
+  tolérance 0,3). HUIT bugs du moteur trouvés par le bench (ramassage
+  rejoué par le porteur à chaque case, ballon coincé sous un joueur au sol,
+  ballon emporté en réserve, pas de remise en jeu, soutiens exigeant des PM,
+  dernier joueur coupé après une case, 9 tours par mi-temps et 2e mi-temps
+  engagée par le dernier marqueur via `halfKickingTeam`). Mesuré : 0,5 →
+  1,5-1,9 TD par match (référence FUMBBL 2,1-4,1), calibrage en suite.
+  Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md).
