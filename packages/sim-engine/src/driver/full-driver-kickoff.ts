@@ -34,6 +34,8 @@ import {
 } from '@bb/game-engine';
 import type { GameState, RNG, TeamId, Position } from '@bb/game-engine';
 
+import { resolveInteractiveKickoffEvent } from './full-driver-kickoff-ai';
+
 /**
  * Pick the kicker's target square : centre of the receiving half.
  * Receiving team A → kicker B → target in A's half (x in 1..12, mid y).
@@ -150,8 +152,12 @@ export function executeHeadlessKickoff(
       ),
     ],
   };
-  if (!INTERACTIVE_KICKOFF_EVENT_IDS.has(event.id)) {
-    next = applyKickoffEvent(next, event, rng, kickingTeam);
+  // Lot 1 « match complet » — les évènements interactifs sont désormais
+  // appliqués (ils posent un `pendingKickoffEvent`) puis résolus par une
+  // décision IA simple via les résolveurs officiels du moteur.
+  next = applyKickoffEvent(next, event, rng, kickingTeam);
+  if (INTERACTIVE_KICKOFF_EVENT_IDS.has(event.id)) {
+    next = resolveInteractiveKickoffEvent(next);
   }
 
   // 4. Landing : pickup roll si un joueur receveur est sur la case,

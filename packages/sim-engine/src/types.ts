@@ -16,12 +16,18 @@ import type { TacticalProfile } from './tactics/tactical-profile';
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
  *
+ *  0.27.0 — Lot 1 « match complet » : remise en jeu après chaque touchdown,
+ *  joueurs à terre qui se relèvent (STAND_UP), choix en attente obligatoires
+ *  et décidés par l'IA (dé de blocage, poussée, suivi, relance, apothicaire,
+ *  remise), évènements de coup d'envoi interactifs, `kickingTeam` posé,
+ *  activation contiguë. Les issues de match changent à graine constante.
+ *
  *  0.26.0 — le resolver de blocage consomme desormais `BLOCK_DIE_FACES` du
  *  `@bb/game-engine` au lieu de sa propre table, qui placait STUMBLE en 5 et
  *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
  *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
  *  le re-snapshot de `bench/bench-baseline.json`. */
-export const ENGINE_VER = '0.26.0';
+export const ENGINE_VER = '0.27.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */

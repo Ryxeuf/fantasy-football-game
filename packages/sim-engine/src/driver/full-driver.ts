@@ -74,7 +74,7 @@ import {
 } from './full-driver-events';
 import { buildGameStateFromRosters } from './full-driver-roster';
 import { executeHeadlessKickoff } from './full-driver-kickoff';
-import { executeHeadlessHalftime } from './full-driver-halftime';
+import { executeHeadlessDrive } from './full-driver-halftime';
 
 /**
  * Plafond d'actions par match. Sécurité contre une boucle d'IA qui
@@ -107,6 +107,19 @@ const MAX_STALE_END_TURNS = 4;
  * sans completer un setup interactif que le full driver ne gere pas.
  */
 const MAX_NON_PLAYING_END_TURNS = 3;
+
+/**
+ * Lot 1 « match complet » — l'état attend une mise en place : mi-temps, ou
+ * terrain vidé par `handlePostTouchdown` (phase `playing`, `preMatch.phase`
+ * à `setup`).
+ */
+function needsHeadlessDrive(state: GameState): boolean {
+  const phase = (state as { preMatch?: { phase?: string } }).preMatch?.phase;
+  return (
+    phase === 'setup' &&
+    (state.gamePhase === 'halftime' || state.gamePhase === 'playing')
+  );
+}
 
 /** Adapte un seed numérique au type RNG `() => number` du game-engine. */
 function adaptRng(rng: ReturnType<typeof createRng>): RNG {
@@ -283,7 +296,7 @@ export function runFullDriver(input: SimInput): SimResult {
   const receivingTeam: TeamId = tossWinner; // gagnant reçoit (heuristique)
   const kickingTeam: TeamId = receivingTeam === 'A' ? 'B' : 'A';
 
-  const builtState: GameState =
+  const builtStateRaw: GameState =
     homeRoster && homeRoster.length > 0 && awayRoster && awayRoster.length > 0
       ? buildGameStateFromRosters({
           homeRoster,
@@ -293,6 +306,11 @@ export function runFullDriver(input: SimInput): SimResult {
           receivingTeam,
         })
       : setup();
+  // Lot 1 « match complet » — `kickingTeam` doit être posé dès l'état
+  // initial : `handleEndTurn` s'en sert pour incrémenter le numéro de tour
+  // (sans lui, une équipe jouait 7 tours au lieu de 8) et
+  // `advanceHalfIfNeeded` pour désigner le botteur de 2e mi-temps.
+  const builtState: GameState = { ...builtStateRaw, kickingTeam };
 
   // BB 2025 : exécute la vraie séquence kickoff (placement balle +
   // scatter D8/D6 + kickoff event 2D6 + landing pickup/bounce/touchback)
@@ -360,7 +378,12 @@ export function runFullDriver(input: SimInput): SimResult {
   let nonPlayingEndTurns = 0;
 
   while (state.gamePhase !== 'ended' && actionsApplied < MAX_ACTIONS_PER_MATCH) {
-    const move = selectMoveForActiveTeam(state, ctx);
+    // Lot 1 « match complet » — après un touchdown (`post-td`), le seul coup
+    // qui fait avancer est END_TURN (il déclenche `handlePostTouchdown`).
+    const move: Move | null =
+      state.gamePhase === 'post-td'
+        ? { type: 'END_TURN' }
+        : selectMoveForActiveTeam(state, ctx);
     if (!move) break;
 
     const prev = state;
@@ -368,6 +391,23 @@ export function runFullDriver(input: SimInput): SimResult {
     let appliedMove: Move = move;
     try {
       next = applyMove(state, move, engineRng);
+      // Lot 1 « match complet » — un coup REFUSÉ par le moteur (même
+      // référence rendue, sans exception) ne doit pas être rejoué à
+      // l'infini : on clôt l'activation du joueur, sinon le tour.
+      if (next === state && move.type !== 'END_TURN') {
+        const pid = 'playerId' in move ? move.playerId : undefined;
+        const endActivation: Move | null =
+          pid && state.playerActions?.[pid] ? { type: 'END_PLAYER_TURN', playerId: pid } : null;
+        const fallback: Move = endActivation ?? { type: 'END_TURN' };
+        const retried = applyMove(state, fallback, engineRng);
+        if (retried !== state) {
+          next = retried;
+          appliedMove = fallback;
+        } else {
+          next = applyMove(state, { type: 'END_TURN' }, engineRng);
+          appliedMove = { type: 'END_TURN' };
+        }
+      }
     } catch {
       // Le coup retourné par l'IA s'avère illégal. On force END_TURN
       // pour avancer.
@@ -439,15 +479,12 @@ export function runFullDriver(input: SimInput): SimResult {
     state = next;
     actionsApplied += 1;
 
-    // Halftime headless : juste après émission des events de transition
-    // (HALFTIME, etc.), on rejoue la séquence BB 2025 officielle pour la
-    // 2e mi-temps : auto-placement des deux équipes + kickoff scatter +
-    // event 2D6 + landing. Le state passe de `halftime` à `playing` et
-    // la boucle peut reprendre. Sans ça, advanceHalfIfNeeded sortait sur
-    // `halftime` et la boucle terminait sur timeout/MAX_NON_PLAYING_END_TURNS,
-    // produisant un match figé en début de H2.
-    if (state.gamePhase === 'halftime') {
-      const resumed = executeHeadlessHalftime(state, engineRng);
+    // Lot 1 « match complet » — remise en jeu headless (mi-temps ET après
+    // un touchdown) : auto-placement des deux équipes + coup d'envoi. Sans
+    // ça, la fin de mi-temps après un TD n'était qu'une suite d'END_TURN sur
+    // un terrain vide (plafond de fait à 1 TD par mi-temps).
+    if (needsHeadlessDrive(state)) {
+      const resumed = executeHeadlessDrive(state, engineRng);
       if (resumed !== state && resumed.gamePhase === 'playing') {
         appliedMoves.push({ type: 'END_TURN' });
         postStates.push(resumed);
