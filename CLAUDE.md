@@ -1914,3 +1914,17 @@ edition du `.json`, `pnpm --filter web typecheck` +
   Sprint après `END_PLAYER_TURN`), toutes les mesures sur de VRAIS rosters
   (`buildEngineSimInput`) et `full-match.invariants.test.ts`. Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md).
+- **2026-10-05** : **Pro League lot 2 « le journal rejouable »** (change
+  OpenSpec `pro-league-replay-journal`, `ENGINE_VER` 0.28.0). Un flux de dés
+  PAR PAS (`${seed}:move:${n}` / `drive:${n}`, l'IA tire à part) ; journal
+  `{ v: 2, seed, initialState sans gameLog, steps[{ move, drive?, dice }] }`
+  dont `replayJournal` re-dérive les états BIT À BIT (13,5 Ko compressés
+  contre 2,27 Mo) ; payload v2 `{ v, events, journal }` avec `fullReplay`
+  DÉRIVÉ côté serveur (contrat de l'API inchangé, v1 lisible) ; feuille de
+  match papier `renderMatchSheet` (`?format=sheet` admin) ; pas par
+  ACTIVATION dans le viewer. Deux pièges : `calculateMatchResult` mutait
+  `matchStats` en place (fuite par le lookahead de l'IA ⇒ rejeu divergent au
+  pas 496 — toute fonction appelée par l'IA en simulation doit être pure), et
+  un TD obtenu par POUSSÉE laissait un `pendingFollowUpChoice` ouvert
+  (`awardTouchdown` l'efface). Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md).
