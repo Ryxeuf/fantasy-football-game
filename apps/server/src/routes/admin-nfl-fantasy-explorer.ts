@@ -441,6 +441,7 @@ router.post(
     try {
       const out = await backfillScoresFromSchedules({
         seasonId: req.params.id,
+        createMissing: true,
       });
       res.json(out);
     } catch (err) {

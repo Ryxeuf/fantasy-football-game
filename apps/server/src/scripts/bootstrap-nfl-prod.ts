@@ -192,10 +192,12 @@ async function step5Scores(seasons: ReadonlyArray<string>): Promise<void> {
   section(`Step 5/5 — Backfill scores nflverse pour ${seasons.join(", ")}`);
   for (const s of seasons) {
     const t0 = Date.now();
-    const r = await backfillScoresFromSchedules({ seasonId: s });
+    // createMissing : matchs a venir crees "scheduled" (verrouillage des
+    // lineups au coup d'envoi) — sans effet sur une saison terminee.
+    const r = await backfillScoresFromSchedules({ seasonId: s, createMissing: true });
     const dt = ((Date.now() - t0) / 1000).toFixed(1);
     console.log(
-      `  ${s} : rows=${r.schedulesRows} scores=${r.scoresUpdated} kickoffs=${r.kickoffsUpdated} notInDb=${r.notInDb} (${dt}s)`,
+      `  ${s} : rows=${r.schedulesRows} scores=${r.scoresUpdated} kickoffs=${r.kickoffsUpdated} created=${r.gamesCreated} notInDb=${r.notInDb} (${dt}s)`,
     );
   }
 }

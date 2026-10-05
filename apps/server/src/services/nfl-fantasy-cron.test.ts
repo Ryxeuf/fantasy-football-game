@@ -9,7 +9,10 @@ vi.mock("../prisma", () => ({
   },
 }));
 
-vi.mock("./nfl-ingest", () => ({ ingestNflverseWeek: vi.fn() }));
+vi.mock("./nfl-ingest", () => ({
+  ingestNflverseWeek: vi.fn(),
+  backfillScoresFromSchedules: vi.fn(),
+}));
 vi.mock("./nfl-ingest-espn", () => ({ ingestEspnGameday: vi.fn() }));
 vi.mock("./nfl-fantasy-lineup", () => ({ lockLineups: vi.fn() }));
 vi.mock("./nfl-fantasy-scoring", () => ({
@@ -19,7 +22,7 @@ vi.mock("./nfl-fantasy-scoring", () => ({
 vi.mock("./nfl-fantasy-draft-session", () => ({ resolveSession: vi.fn() }));
 
 import { prisma } from "../prisma";
-import { ingestNflverseWeek } from "./nfl-ingest";
+import { backfillScoresFromSchedules, ingestNflverseWeek } from "./nfl-ingest";
 import { ingestEspnGameday } from "./nfl-ingest-espn";
 import { lockLineups } from "./nfl-fantasy-lineup";
 import {
@@ -40,6 +43,7 @@ import {
   lockLineupsTick,
   nflFantasyOrchestratorTick,
   nflverseIngestTick,
+  nflverseScheduleTick,
   settleWeekTick,
 } from "./nfl-fantasy-cron";
 
@@ -274,6 +278,41 @@ describe("nflverseIngestTick", () => {
   });
 });
 
+describe("nflverseScheduleTick", () => {
+  it("skip hors fenetre 03h UTC", async () => {
+    const out = await nflverseScheduleTick({ now: new Date("2026-10-05T12:00:00Z") });
+    expect(out.ran).toBe(false);
+    expect(backfillScoresFromSchedules).not.toHaveBeenCalled();
+  });
+
+  it("synchronise la saison courante en creant les matchs a venir", async () => {
+    vi.mocked(backfillScoresFromSchedules).mockResolvedValue({
+      seasonId: "2026",
+      schedulesRows: 272,
+      scoresUpdated: 0,
+      kickoffsUpdated: 0,
+      notInDb: 0,
+      gamesCreated: 208,
+    });
+
+    const out = await nflverseScheduleTick({ now: new Date("2026-10-06T03:05:00Z") });
+
+    expect(out.ran).toBe(true);
+    expect(backfillScoresFromSchedules).toHaveBeenCalledWith({
+      seasonId: "2026",
+      createMissing: true,
+    });
+  });
+
+  it("capture les erreurs sans crasher", async () => {
+    vi.mocked(backfillScoresFromSchedules).mockRejectedValue(new Error("503"));
+
+    const out = await nflverseScheduleTick({ now: new Date("2026-10-06T03:05:00Z") });
+
+    expect(out).toMatchObject({ ran: true, reason: "ingest_failed", detail: "503" });
+  });
+});
+
 describe("espnGamedayTick", () => {
   it("skip hors jour NFL (mardi)", async () => {
     const out = await espnGamedayTick({
@@ -458,6 +497,7 @@ describe("nflFantasyOrchestratorTick", () => {
       now: new Date("2025-11-11T18:00:00Z"), // mardi 18h
     });
     expect(out.nflverse.ran).toBe(false);
+    expect(out.schedule.ran).toBe(false);
     expect(out.espn.ran).toBe(false); // mardi != gameday
     expect(out.lock.ran).toBe(false);
     expect(out.settle.ran).toBe(false);

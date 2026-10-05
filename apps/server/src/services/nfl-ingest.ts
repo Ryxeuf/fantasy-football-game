@@ -113,12 +113,44 @@ export interface ScheduleRow {
   readonly kickoffAt: Date | null;
 }
 
-function parseScheduleDate(gameday: string, gametime: string): Date | null {
-  if (!gameday) return null;
-  // gameday: "YYYY-MM-DD", gametime: "HH:MM" (parfois vide).
-  const time = gametime && /^\d{1,2}:\d{2}/.test(gametime) ? gametime : "13:00";
-  const iso = `${gameday}T${time}:00-05:00`;
-  const d = new Date(iso);
+/**
+ * Decalage UTC de l'heure de New York pour une date "YYYY-MM-DD" :
+ * "-04:00" en heure d'ete (2e dimanche de mars -> 1er dimanche de
+ * novembre, regle US depuis 2007), "-05:00" sinon. Aucun match NFL ne se
+ * joue a 2h du matin, la bascule horaire du jour J est donc sans effet.
+ *
+ * Pur.
+ */
+export function easternUtcOffset(gameday: string): "-04:00" | "-05:00" {
+  const [y, m, d] = gameday.split("-").map(Number) as [number, number, number];
+  const nthSunday = (month: number, n: number): number => {
+    const firstDow = new Date(Date.UTC(y, month - 1, 1)).getUTCDay();
+    return 1 + ((7 - firstDow) % 7) + (n - 1) * 7;
+  };
+  const dstStart = nthSunday(3, 2); // jour de mars
+  const dstEnd = nthSunday(11, 1); // jour de novembre
+  const inDst =
+    (m > 3 && m < 11) || (m === 3 && d >= dstStart) || (m === 11 && d < dstEnd);
+  return inDst ? "-04:00" : "-05:00";
+}
+
+/**
+ * gameday "YYYY-MM-DD" + gametime "HH:MM" (heure de New York, parfois
+ * vide) -> instant UTC. L'offset etait fige a -05:00 : en septembre-octobre
+ * tous les coups d'envoi etaient decales d'une heure trop TARD, ce qui
+ * aurait laisse une heure de match pendant laquelle un lineup restait
+ * modifiable (verrouillage au coup d'envoi).
+ *
+ * Pur.
+ */
+export function parseScheduleDate(gameday: string, gametime: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(gameday)) return null;
+  const time = /^\d{2}:\d{2}$/.test(gametime)
+    ? gametime
+    : /^\d:\d{2}$/.test(gametime)
+      ? `0${gametime}`
+      : "13:00";
+  const d = new Date(`${gameday}T${time}:00${easternUtcOffset(gameday)}`);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -400,6 +432,13 @@ export function parseRow(
 
 export interface BackfillSchedulesScoresOpts {
   readonly seasonId: string;
+  /**
+   * Cree aussi les matchs pas encore en base (statut "scheduled"), avec
+   * leur vrai coup d'envoi. Sans ca, un match n'existe qu'une fois joue
+   * (ingest nflverse le lendemain, ESPN le jour J) et le verrouillage des
+   * lineups au coup d'envoi ne connait pas les matchs a venir.
+   */
+  readonly createMissing?: boolean;
   /** Override fetch pour les tests. */
   readonly fetchSchedulesCsv?: () => Promise<string>;
 }
@@ -410,6 +449,7 @@ export interface BackfillSchedulesScoresResult {
   readonly scoresUpdated: number;
   readonly kickoffsUpdated: number;
   readonly notInDb: number;
+  readonly gamesCreated: number;
 }
 
 /**
@@ -431,6 +471,17 @@ export async function backfillScoresFromSchedules(
   let scoresUpdated = 0;
   let kickoffsUpdated = 0;
   let notInDb = 0;
+  let gamesCreated = 0;
+  const knownWeekIds = opts.createMissing
+    ? new Set(
+        (
+          (await prisma.nflWeek.findMany({
+            where: { seasonId: opts.seasonId },
+            select: { id: true },
+          })) as Array<{ id: string }>
+        ).map((w) => w.id),
+      )
+    : new Set<string>();
 
   for (const sched of rows) {
     if (!sched.gameId) continue;
@@ -445,7 +496,26 @@ export async function backfillScoresFromSchedules(
     } | null;
 
     if (!existing) {
-      notInDb++;
+      const weekId = `${opts.seasonId}:W${sched.week}`;
+      if (opts.createMissing && sched.kickoffAt && knownWeekIds.has(weekId)) {
+        const hasScore = sched.homeScore !== null && sched.awayScore !== null;
+        await prisma.nflGame.create({
+          data: {
+            id: gameId,
+            seasonId: opts.seasonId,
+            weekId,
+            homeTeam: sched.homeTeam,
+            awayTeam: sched.awayTeam,
+            homeScore: sched.homeScore,
+            awayScore: sched.awayScore,
+            kickoffAt: sched.kickoffAt,
+            status: hasScore ? "final" : "scheduled",
+          },
+        });
+        gamesCreated++;
+      } else {
+        notInDb++;
+      }
       continue;
     }
 
@@ -484,6 +554,7 @@ export async function backfillScoresFromSchedules(
     scoresUpdated,
     kickoffsUpdated,
     notInDb,
+    gamesCreated,
   };
 }
 

@@ -5,6 +5,10 @@
  *
  *   nflverseIngestTick     pull nflverse pour la semaine courante ET la
  *                          precedente (post-match data). Tick journalier.
+ *   nflverseScheduleTick   synchronise le calendrier de la saison (matchs
+ *                          a venir crees "scheduled", coups d'envoi
+ *                          recales). Tick journalier. Base du verrouillage
+ *                          des lineups au coup d'envoi.
  *   espnGamedayTick        pull ESPN scoreboard pour aujourd'hui
  *                          (Thu/Fri/Sun/Mon en saison). Tick 5min.
  *   lockLineupsTick        lock toutes les lineups de la semaine
@@ -26,7 +30,7 @@ import {
   settleNflFantasyWeek,
 } from "./nfl-fantasy-scoring";
 import { ingestEspnGameday } from "./nfl-ingest-espn";
-import { ingestNflverseWeek } from "./nfl-ingest";
+import { backfillScoresFromSchedules, ingestNflverseWeek } from "./nfl-ingest";
 import { ingestNflverseRosters } from "./nfl-ingest-rosters";
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
@@ -228,6 +232,41 @@ export async function nflverseIngestTick(opts: {
   return failed
     ? { ran: true, reason: "ingest_failed", detail: results }
     : { ran: true, detail: results };
+}
+
+/**
+ * Synchronise le calendrier nflverse de la saison courante : cree les
+ * matchs a venir (statut "scheduled") et recale les coups d'envoi (matchs
+ * deplaces par la NFL en cours de saison). Le verrouillage des lineups au
+ * coup d'envoi (`setLineup`) lit ces `NflGame.kickoffAt`.
+ *
+ * Tourne dans la fenetre 03:00 UTC.
+ */
+export async function nflverseScheduleTick(opts: {
+  now?: Date;
+  force?: boolean;
+} = {}): Promise<TickResult> {
+  const now = opts.now ?? new Date();
+  if (!opts.force && !isNflverseDailyWindow(now)) {
+    return { ran: false, reason: "out_of_window" };
+  }
+
+  const seasonId = currentSeasonId(now);
+  try {
+    const result = await backfillScoresFromSchedules({
+      seasonId,
+      createMissing: true,
+    });
+    serverLog.info(
+      `[nfl-cron] schedule ${seasonId} : created=${result.gamesCreated} kickoffs=${result.kickoffsUpdated} scores=${result.scoresUpdated}`,
+    );
+    return { ran: true, detail: result };
+  } catch (e) {
+    serverLog.error(
+      `[nfl-cron] schedule ${seasonId} failed: ${(e as Error).message}`,
+    );
+    return { ran: true, reason: "ingest_failed", detail: (e as Error).message };
+  }
 }
 
 /**
@@ -529,6 +568,7 @@ export async function nflFantasyOrchestratorTick(opts: {
   now?: Date;
 } = {}): Promise<{
   nflverse: TickResult;
+  schedule: TickResult;
   rosters: TickResult;
   espn: TickResult;
   lock: TickResult;
@@ -539,10 +579,11 @@ export async function nflFantasyOrchestratorTick(opts: {
   // Sequenced pour eviter pression DB simultanee. Chacun retourne
   // immediatement avec { ran:false } hors de sa fenetre.
   const nflverse = await nflverseIngestTick({ now });
+  const schedule = await nflverseScheduleTick({ now });
   const rosters = await nflverseRostersTick({ now });
   const espn = await espnGamedayTick({ now });
   const lock = await lockLineupsTick({ now });
   const settle = await settleWeekTick({ now });
   const mercato = await mercatoResolveTick({ now });
-  return { nflverse, rosters, espn, lock, settle, mercato };
+  return { nflverse, schedule, rosters, espn, lock, settle, mercato };
 }
