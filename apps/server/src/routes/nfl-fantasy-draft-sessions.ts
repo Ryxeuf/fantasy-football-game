@@ -33,6 +33,7 @@ import {
   BotDraftError,
   placeBotBidsForSession,
 } from "../services/nfl-fantasy-bot-draft";
+import { currentSeasonId } from "../services/nfl-fantasy-cron";
 import { sendNflError } from "../utils/nfl-error-mapper";
 import { serverLog } from "../utils/server-log";
 
@@ -368,7 +369,7 @@ router.get("/:sessionId/my-bids", async (req, res) => {
         ? new Map<string, number>()
         : await computeBasePricesForPlayers({
             playerIds: bids.map((b) => b.playerId),
-            seasonId: league?.seasonId ?? "2025",
+            seasonId: league?.seasonId ?? currentSeasonId(new Date()),
           });
     const draftBudget = league?.draftBudget ?? 5000;
     const budgetRemaining = fullEntry?.budgetRemaining ?? draftBudget;

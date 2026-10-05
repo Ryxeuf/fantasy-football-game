@@ -1,0 +1,1032 @@
+{
+  "name": "Nuffle Arena — 31 thèmes de dés de blocage",
+  "created_at": "2026-09-29",
+  "roster_catalogue": "https://nufflearena.fr/teams",
+  "format": "PNG RGBA",
+  "sizes": [
+    320,
+    128,
+    64
+  ],
+  "outcomes": [
+    {
+      "id": "attacker-down",
+      "name_fr": "Attaquant plaqué",
+      "faces_on_d6": 1
+    },
+    {
+      "id": "both-down",
+      "name_fr": "Les deux plaqués",
+      "faces_on_d6": 1
+    },
+    {
+      "id": "push",
+      "name_fr": "Repoussé",
+      "faces_on_d6": 2
+    },
+    {
+      "id": "defender-stumbles",
+      "name_fr": "Défenseur bousculé",
+      "faces_on_d6": 1
+    },
+    {
+      "id": "defender-down",
+      "name_fr": "Défenseur plaqué",
+      "faces_on_d6": 1
+    }
+  ],
+  "teams": [
+    {
+      "id": "alliance-vieux-monde",
+      "name_fr": "Alliance du Vieux Monde",
+      "palette_direction": {
+        "background": "#172F48",
+        "symbol": "#F2D796",
+        "accent": "#A88045"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/alliance-vieux-monde/320px/attacker-down.png",
+          "both-down": "equipes/alliance-vieux-monde/320px/both-down.png",
+          "push": "equipes/alliance-vieux-monde/320px/push.png",
+          "defender-stumbles": "equipes/alliance-vieux-monde/320px/defender-stumbles.png",
+          "defender-down": "equipes/alliance-vieux-monde/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/alliance-vieux-monde/128px/attacker-down.png",
+          "both-down": "equipes/alliance-vieux-monde/128px/both-down.png",
+          "push": "equipes/alliance-vieux-monde/128px/push.png",
+          "defender-stumbles": "equipes/alliance-vieux-monde/128px/defender-stumbles.png",
+          "defender-down": "equipes/alliance-vieux-monde/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/alliance-vieux-monde/64px/attacker-down.png",
+          "both-down": "equipes/alliance-vieux-monde/64px/both-down.png",
+          "push": "equipes/alliance-vieux-monde/64px/push.png",
+          "defender-stumbles": "equipes/alliance-vieux-monde/64px/defender-stumbles.png",
+          "defender-down": "equipes/alliance-vieux-monde/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "amazones",
+      "name_fr": "Amazones",
+      "palette_direction": {
+        "background": "#163F37",
+        "symbol": "#F5E6B8",
+        "accent": "#D88956"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/amazones/320px/attacker-down.png",
+          "both-down": "equipes/amazones/320px/both-down.png",
+          "push": "equipes/amazones/320px/push.png",
+          "defender-stumbles": "equipes/amazones/320px/defender-stumbles.png",
+          "defender-down": "equipes/amazones/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/amazones/128px/attacker-down.png",
+          "both-down": "equipes/amazones/128px/both-down.png",
+          "push": "equipes/amazones/128px/push.png",
+          "defender-stumbles": "equipes/amazones/128px/defender-stumbles.png",
+          "defender-down": "equipes/amazones/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/amazones/64px/attacker-down.png",
+          "both-down": "equipes/amazones/64px/both-down.png",
+          "push": "equipes/amazones/64px/push.png",
+          "defender-stumbles": "equipes/amazones/64px/defender-stumbles.png",
+          "defender-down": "equipes/amazones/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "bas-fonds",
+      "name_fr": "Bas-Fonds",
+      "palette_direction": {
+        "background": "#30203F",
+        "symbol": "#CAE76E",
+        "accent": "#9C69B8"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/bas-fonds/320px/attacker-down.png",
+          "both-down": "equipes/bas-fonds/320px/both-down.png",
+          "push": "equipes/bas-fonds/320px/push.png",
+          "defender-stumbles": "equipes/bas-fonds/320px/defender-stumbles.png",
+          "defender-down": "equipes/bas-fonds/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/bas-fonds/128px/attacker-down.png",
+          "both-down": "equipes/bas-fonds/128px/both-down.png",
+          "push": "equipes/bas-fonds/128px/push.png",
+          "defender-stumbles": "equipes/bas-fonds/128px/defender-stumbles.png",
+          "defender-down": "equipes/bas-fonds/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/bas-fonds/64px/attacker-down.png",
+          "both-down": "equipes/bas-fonds/64px/both-down.png",
+          "push": "equipes/bas-fonds/64px/push.png",
+          "defender-stumbles": "equipes/bas-fonds/64px/defender-stumbles.png",
+          "defender-down": "equipes/bas-fonds/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "elfes-noirs",
+      "name_fr": "Elfes noirs",
+      "palette_direction": {
+        "background": "#261A3B",
+        "symbol": "#DCCFEF",
+        "accent": "#B44D77"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/elfes-noirs/320px/attacker-down.png",
+          "both-down": "equipes/elfes-noirs/320px/both-down.png",
+          "push": "equipes/elfes-noirs/320px/push.png",
+          "defender-stumbles": "equipes/elfes-noirs/320px/defender-stumbles.png",
+          "defender-down": "equipes/elfes-noirs/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/elfes-noirs/128px/attacker-down.png",
+          "both-down": "equipes/elfes-noirs/128px/both-down.png",
+          "push": "equipes/elfes-noirs/128px/push.png",
+          "defender-stumbles": "equipes/elfes-noirs/128px/defender-stumbles.png",
+          "defender-down": "equipes/elfes-noirs/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/elfes-noirs/64px/attacker-down.png",
+          "both-down": "equipes/elfes-noirs/64px/both-down.png",
+          "push": "equipes/elfes-noirs/64px/push.png",
+          "defender-stumbles": "equipes/elfes-noirs/64px/defender-stumbles.png",
+          "defender-down": "equipes/elfes-noirs/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "elfes-sylvains",
+      "name_fr": "Elfes sylvains",
+      "palette_direction": {
+        "background": "#183E2F",
+        "symbol": "#E9D797",
+        "accent": "#74AB69"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/elfes-sylvains/320px/attacker-down.png",
+          "both-down": "equipes/elfes-sylvains/320px/both-down.png",
+          "push": "equipes/elfes-sylvains/320px/push.png",
+          "defender-stumbles": "equipes/elfes-sylvains/320px/defender-stumbles.png",
+          "defender-down": "equipes/elfes-sylvains/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/elfes-sylvains/128px/attacker-down.png",
+          "both-down": "equipes/elfes-sylvains/128px/both-down.png",
+          "push": "equipes/elfes-sylvains/128px/push.png",
+          "defender-stumbles": "equipes/elfes-sylvains/128px/defender-stumbles.png",
+          "defender-down": "equipes/elfes-sylvains/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/elfes-sylvains/64px/attacker-down.png",
+          "both-down": "equipes/elfes-sylvains/64px/both-down.png",
+          "push": "equipes/elfes-sylvains/64px/push.png",
+          "defender-stumbles": "equipes/elfes-sylvains/64px/defender-stumbles.png",
+          "defender-down": "equipes/elfes-sylvains/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "hauts-elfes",
+      "name_fr": "Hauts elfes",
+      "palette_direction": {
+        "background": "#21466C",
+        "symbol": "#F7EDCF",
+        "accent": "#CFAB54"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/hauts-elfes/320px/attacker-down.png",
+          "both-down": "equipes/hauts-elfes/320px/both-down.png",
+          "push": "equipes/hauts-elfes/320px/push.png",
+          "defender-stumbles": "equipes/hauts-elfes/320px/defender-stumbles.png",
+          "defender-down": "equipes/hauts-elfes/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/hauts-elfes/128px/attacker-down.png",
+          "both-down": "equipes/hauts-elfes/128px/both-down.png",
+          "push": "equipes/hauts-elfes/128px/push.png",
+          "defender-stumbles": "equipes/hauts-elfes/128px/defender-stumbles.png",
+          "defender-down": "equipes/hauts-elfes/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/hauts-elfes/64px/attacker-down.png",
+          "both-down": "equipes/hauts-elfes/64px/both-down.png",
+          "push": "equipes/hauts-elfes/64px/push.png",
+          "defender-stumbles": "equipes/hauts-elfes/64px/defender-stumbles.png",
+          "defender-down": "equipes/hauts-elfes/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "hommes-lezards",
+      "name_fr": "Hommes-Lézards",
+      "palette_direction": {
+        "background": "#123D44",
+        "symbol": "#F6D464",
+        "accent": "#3CB9AD"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/hommes-lezards/320px/attacker-down.png",
+          "both-down": "equipes/hommes-lezards/320px/both-down.png",
+          "push": "equipes/hommes-lezards/320px/push.png",
+          "defender-stumbles": "equipes/hommes-lezards/320px/defender-stumbles.png",
+          "defender-down": "equipes/hommes-lezards/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/hommes-lezards/128px/attacker-down.png",
+          "both-down": "equipes/hommes-lezards/128px/both-down.png",
+          "push": "equipes/hommes-lezards/128px/push.png",
+          "defender-stumbles": "equipes/hommes-lezards/128px/defender-stumbles.png",
+          "defender-down": "equipes/hommes-lezards/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/hommes-lezards/64px/attacker-down.png",
+          "both-down": "equipes/hommes-lezards/64px/both-down.png",
+          "push": "equipes/hommes-lezards/64px/push.png",
+          "defender-stumbles": "equipes/hommes-lezards/64px/defender-stumbles.png",
+          "defender-down": "equipes/hommes-lezards/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "nains",
+      "name_fr": "Nains",
+      "palette_direction": {
+        "background": "#2A3541",
+        "symbol": "#EBD6A6",
+        "accent": "#B88041"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/nains/320px/attacker-down.png",
+          "both-down": "equipes/nains/320px/both-down.png",
+          "push": "equipes/nains/320px/push.png",
+          "defender-stumbles": "equipes/nains/320px/defender-stumbles.png",
+          "defender-down": "equipes/nains/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/nains/128px/attacker-down.png",
+          "both-down": "equipes/nains/128px/both-down.png",
+          "push": "equipes/nains/128px/push.png",
+          "defender-stumbles": "equipes/nains/128px/defender-stumbles.png",
+          "defender-down": "equipes/nains/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/nains/64px/attacker-down.png",
+          "both-down": "equipes/nains/64px/both-down.png",
+          "push": "equipes/nains/64px/push.png",
+          "defender-stumbles": "equipes/nains/64px/defender-stumbles.png",
+          "defender-down": "equipes/nains/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "nains-chaos",
+      "name_fr": "Nains du Chaos",
+      "palette_direction": {
+        "background": "#311D23",
+        "symbol": "#EBC6A0",
+        "accent": "#DD7146"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/nains-chaos/320px/attacker-down.png",
+          "both-down": "equipes/nains-chaos/320px/both-down.png",
+          "push": "equipes/nains-chaos/320px/push.png",
+          "defender-stumbles": "equipes/nains-chaos/320px/defender-stumbles.png",
+          "defender-down": "equipes/nains-chaos/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/nains-chaos/128px/attacker-down.png",
+          "both-down": "equipes/nains-chaos/128px/both-down.png",
+          "push": "equipes/nains-chaos/128px/push.png",
+          "defender-stumbles": "equipes/nains-chaos/128px/defender-stumbles.png",
+          "defender-down": "equipes/nains-chaos/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/nains-chaos/64px/attacker-down.png",
+          "both-down": "equipes/nains-chaos/64px/both-down.png",
+          "push": "equipes/nains-chaos/64px/push.png",
+          "defender-stumbles": "equipes/nains-chaos/64px/defender-stumbles.png",
+          "defender-down": "equipes/nains-chaos/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "nordiques",
+      "name_fr": "Nordiques",
+      "palette_direction": {
+        "background": "#243F50",
+        "symbol": "#F0EEE2",
+        "accent": "#75B2C4"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/nordiques/320px/attacker-down.png",
+          "both-down": "equipes/nordiques/320px/both-down.png",
+          "push": "equipes/nordiques/320px/push.png",
+          "defender-stumbles": "equipes/nordiques/320px/defender-stumbles.png",
+          "defender-down": "equipes/nordiques/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/nordiques/128px/attacker-down.png",
+          "both-down": "equipes/nordiques/128px/both-down.png",
+          "push": "equipes/nordiques/128px/push.png",
+          "defender-stumbles": "equipes/nordiques/128px/defender-stumbles.png",
+          "defender-down": "equipes/nordiques/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/nordiques/64px/attacker-down.png",
+          "both-down": "equipes/nordiques/64px/both-down.png",
+          "push": "equipes/nordiques/64px/push.png",
+          "defender-stumbles": "equipes/nordiques/64px/defender-stumbles.png",
+          "defender-down": "equipes/nordiques/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "bretonniens",
+      "name_fr": "Bretonniens",
+      "palette_direction": {
+        "background": "#253C76",
+        "symbol": "#F2DC9F",
+        "accent": "#AF3D49"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/bretonniens/320px/attacker-down.png",
+          "both-down": "equipes/bretonniens/320px/both-down.png",
+          "push": "equipes/bretonniens/320px/push.png",
+          "defender-stumbles": "equipes/bretonniens/320px/defender-stumbles.png",
+          "defender-down": "equipes/bretonniens/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/bretonniens/128px/attacker-down.png",
+          "both-down": "equipes/bretonniens/128px/both-down.png",
+          "push": "equipes/bretonniens/128px/push.png",
+          "defender-stumbles": "equipes/bretonniens/128px/defender-stumbles.png",
+          "defender-down": "equipes/bretonniens/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/bretonniens/64px/attacker-down.png",
+          "both-down": "equipes/bretonniens/64px/both-down.png",
+          "push": "equipes/bretonniens/64px/push.png",
+          "defender-stumbles": "equipes/bretonniens/64px/defender-stumbles.png",
+          "defender-down": "equipes/bretonniens/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "necromantiques",
+      "name_fr": "Horreurs nécromantiques",
+      "palette_direction": {
+        "background": "#282837",
+        "symbol": "#E1D5B5",
+        "accent": "#CF8646"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/necromantiques/320px/attacker-down.png",
+          "both-down": "equipes/necromantiques/320px/both-down.png",
+          "push": "equipes/necromantiques/320px/push.png",
+          "defender-stumbles": "equipes/necromantiques/320px/defender-stumbles.png",
+          "defender-down": "equipes/necromantiques/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/necromantiques/128px/attacker-down.png",
+          "both-down": "equipes/necromantiques/128px/both-down.png",
+          "push": "equipes/necromantiques/128px/push.png",
+          "defender-stumbles": "equipes/necromantiques/128px/defender-stumbles.png",
+          "defender-down": "equipes/necromantiques/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/necromantiques/64px/attacker-down.png",
+          "both-down": "equipes/necromantiques/64px/both-down.png",
+          "push": "equipes/necromantiques/64px/push.png",
+          "defender-stumbles": "equipes/necromantiques/64px/defender-stumbles.png",
+          "defender-down": "equipes/necromantiques/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "humains",
+      "name_fr": "Humains",
+      "palette_direction": {
+        "background": "#223C69",
+        "symbol": "#F2E3C5",
+        "accent": "#C45343"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/humains/320px/attacker-down.png",
+          "both-down": "equipes/humains/320px/both-down.png",
+          "push": "equipes/humains/320px/push.png",
+          "defender-stumbles": "equipes/humains/320px/defender-stumbles.png",
+          "defender-down": "equipes/humains/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/humains/128px/attacker-down.png",
+          "both-down": "equipes/humains/128px/both-down.png",
+          "push": "equipes/humains/128px/push.png",
+          "defender-stumbles": "equipes/humains/128px/defender-stumbles.png",
+          "defender-down": "equipes/humains/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/humains/64px/attacker-down.png",
+          "both-down": "equipes/humains/64px/both-down.png",
+          "push": "equipes/humains/64px/push.png",
+          "defender-stumbles": "equipes/humains/64px/defender-stumbles.png",
+          "defender-down": "equipes/humains/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "morts-ambulants",
+      "name_fr": "Morts ambulants",
+      "palette_direction": {
+        "background": "#373141",
+        "symbol": "#E8D6AE",
+        "accent": "#9B8D79"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/morts-ambulants/320px/attacker-down.png",
+          "both-down": "equipes/morts-ambulants/320px/both-down.png",
+          "push": "equipes/morts-ambulants/320px/push.png",
+          "defender-stumbles": "equipes/morts-ambulants/320px/defender-stumbles.png",
+          "defender-down": "equipes/morts-ambulants/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/morts-ambulants/128px/attacker-down.png",
+          "both-down": "equipes/morts-ambulants/128px/both-down.png",
+          "push": "equipes/morts-ambulants/128px/push.png",
+          "defender-stumbles": "equipes/morts-ambulants/128px/defender-stumbles.png",
+          "defender-down": "equipes/morts-ambulants/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/morts-ambulants/64px/attacker-down.png",
+          "both-down": "equipes/morts-ambulants/64px/both-down.png",
+          "push": "equipes/morts-ambulants/64px/push.png",
+          "defender-stumbles": "equipes/morts-ambulants/64px/defender-stumbles.png",
+          "defender-down": "equipes/morts-ambulants/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "noblesse-imperiale",
+      "name_fr": "Noblesse impériale",
+      "palette_direction": {
+        "background": "#3C203A",
+        "symbol": "#F0D39A",
+        "accent": "#B781A4"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/noblesse-imperiale/320px/attacker-down.png",
+          "both-down": "equipes/noblesse-imperiale/320px/both-down.png",
+          "push": "equipes/noblesse-imperiale/320px/push.png",
+          "defender-stumbles": "equipes/noblesse-imperiale/320px/defender-stumbles.png",
+          "defender-down": "equipes/noblesse-imperiale/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/noblesse-imperiale/128px/attacker-down.png",
+          "both-down": "equipes/noblesse-imperiale/128px/both-down.png",
+          "push": "equipes/noblesse-imperiale/128px/push.png",
+          "defender-stumbles": "equipes/noblesse-imperiale/128px/defender-stumbles.png",
+          "defender-down": "equipes/noblesse-imperiale/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/noblesse-imperiale/64px/attacker-down.png",
+          "both-down": "equipes/noblesse-imperiale/64px/both-down.png",
+          "push": "equipes/noblesse-imperiale/64px/push.png",
+          "defender-stumbles": "equipes/noblesse-imperiale/64px/defender-stumbles.png",
+          "defender-down": "equipes/noblesse-imperiale/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "orques",
+      "name_fr": "Orques",
+      "palette_direction": {
+        "background": "#354020",
+        "symbol": "#EEDAB0",
+        "accent": "#D77539"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/orques/320px/attacker-down.png",
+          "both-down": "equipes/orques/320px/both-down.png",
+          "push": "equipes/orques/320px/push.png",
+          "defender-stumbles": "equipes/orques/320px/defender-stumbles.png",
+          "defender-down": "equipes/orques/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/orques/128px/attacker-down.png",
+          "both-down": "equipes/orques/128px/both-down.png",
+          "push": "equipes/orques/128px/push.png",
+          "defender-stumbles": "equipes/orques/128px/defender-stumbles.png",
+          "defender-down": "equipes/orques/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/orques/64px/attacker-down.png",
+          "both-down": "equipes/orques/64px/both-down.png",
+          "push": "equipes/orques/64px/push.png",
+          "defender-stumbles": "equipes/orques/64px/defender-stumbles.png",
+          "defender-down": "equipes/orques/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "rois-tombes",
+      "name_fr": "Rois des tombes",
+      "palette_direction": {
+        "background": "#143A50",
+        "symbol": "#EDD183",
+        "accent": "#41A8B7"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/rois-tombes/320px/attacker-down.png",
+          "both-down": "equipes/rois-tombes/320px/both-down.png",
+          "push": "equipes/rois-tombes/320px/push.png",
+          "defender-stumbles": "equipes/rois-tombes/320px/defender-stumbles.png",
+          "defender-down": "equipes/rois-tombes/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/rois-tombes/128px/attacker-down.png",
+          "both-down": "equipes/rois-tombes/128px/both-down.png",
+          "push": "equipes/rois-tombes/128px/push.png",
+          "defender-stumbles": "equipes/rois-tombes/128px/defender-stumbles.png",
+          "defender-down": "equipes/rois-tombes/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/rois-tombes/64px/attacker-down.png",
+          "both-down": "equipes/rois-tombes/64px/both-down.png",
+          "push": "equipes/rois-tombes/64px/push.png",
+          "defender-stumbles": "equipes/rois-tombes/64px/defender-stumbles.png",
+          "defender-down": "equipes/rois-tombes/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "skavens",
+      "name_fr": "Skavens",
+      "palette_direction": {
+        "background": "#182338",
+        "symbol": "#ED9D42",
+        "accent": "#A8BBC7"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/skavens/320px/attacker-down.png",
+          "both-down": "equipes/skavens/320px/both-down.png",
+          "push": "equipes/skavens/320px/push.png",
+          "defender-stumbles": "equipes/skavens/320px/defender-stumbles.png",
+          "defender-down": "equipes/skavens/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/skavens/128px/attacker-down.png",
+          "both-down": "equipes/skavens/128px/both-down.png",
+          "push": "equipes/skavens/128px/push.png",
+          "defender-stumbles": "equipes/skavens/128px/defender-stumbles.png",
+          "defender-down": "equipes/skavens/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/skavens/64px/attacker-down.png",
+          "both-down": "equipes/skavens/64px/both-down.png",
+          "push": "equipes/skavens/64px/push.png",
+          "defender-stumbles": "equipes/skavens/64px/defender-stumbles.png",
+          "defender-down": "equipes/skavens/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "slann",
+      "name_fr": "Slanns",
+      "palette_direction": {
+        "background": "#123F45",
+        "symbol": "#E7EBA6",
+        "accent": "#42B7A7"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/slann/320px/attacker-down.png",
+          "both-down": "equipes/slann/320px/both-down.png",
+          "push": "equipes/slann/320px/push.png",
+          "defender-stumbles": "equipes/slann/320px/defender-stumbles.png",
+          "defender-down": "equipes/slann/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/slann/128px/attacker-down.png",
+          "both-down": "equipes/slann/128px/both-down.png",
+          "push": "equipes/slann/128px/push.png",
+          "defender-stumbles": "equipes/slann/128px/defender-stumbles.png",
+          "defender-down": "equipes/slann/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/slann/64px/attacker-down.png",
+          "both-down": "equipes/slann/64px/both-down.png",
+          "push": "equipes/slann/64px/push.png",
+          "defender-stumbles": "equipes/slann/64px/defender-stumbles.png",
+          "defender-down": "equipes/slann/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "union-elfique",
+      "name_fr": "Union elfique",
+      "palette_direction": {
+        "background": "#3C2851",
+        "symbol": "#F1DFB9",
+        "accent": "#43B5AA"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/union-elfique/320px/attacker-down.png",
+          "both-down": "equipes/union-elfique/320px/both-down.png",
+          "push": "equipes/union-elfique/320px/push.png",
+          "defender-stumbles": "equipes/union-elfique/320px/defender-stumbles.png",
+          "defender-down": "equipes/union-elfique/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/union-elfique/128px/attacker-down.png",
+          "both-down": "equipes/union-elfique/128px/both-down.png",
+          "push": "equipes/union-elfique/128px/push.png",
+          "defender-stumbles": "equipes/union-elfique/128px/defender-stumbles.png",
+          "defender-down": "equipes/union-elfique/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/union-elfique/64px/attacker-down.png",
+          "both-down": "equipes/union-elfique/64px/both-down.png",
+          "push": "equipes/union-elfique/64px/push.png",
+          "defender-stumbles": "equipes/union-elfique/64px/defender-stumbles.png",
+          "defender-down": "equipes/union-elfique/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "vampires",
+      "name_fr": "Vampires",
+      "palette_direction": {
+        "background": "#351922",
+        "symbol": "#E8DCE0",
+        "accent": "#B13551"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/vampires/320px/attacker-down.png",
+          "both-down": "equipes/vampires/320px/both-down.png",
+          "push": "equipes/vampires/320px/push.png",
+          "defender-stumbles": "equipes/vampires/320px/defender-stumbles.png",
+          "defender-down": "equipes/vampires/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/vampires/128px/attacker-down.png",
+          "both-down": "equipes/vampires/128px/both-down.png",
+          "push": "equipes/vampires/128px/push.png",
+          "defender-stumbles": "equipes/vampires/128px/defender-stumbles.png",
+          "defender-down": "equipes/vampires/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/vampires/64px/attacker-down.png",
+          "both-down": "equipes/vampires/64px/both-down.png",
+          "push": "equipes/vampires/64px/push.png",
+          "defender-stumbles": "equipes/vampires/64px/defender-stumbles.png",
+          "defender-down": "equipes/vampires/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "elus-chaos",
+      "name_fr": "Élus du Chaos",
+      "palette_direction": {
+        "background": "#302A2A",
+        "symbol": "#E0C595",
+        "accent": "#BC7245"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/elus-chaos/320px/attacker-down.png",
+          "both-down": "equipes/elus-chaos/320px/both-down.png",
+          "push": "equipes/elus-chaos/320px/push.png",
+          "defender-stumbles": "equipes/elus-chaos/320px/defender-stumbles.png",
+          "defender-down": "equipes/elus-chaos/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/elus-chaos/128px/attacker-down.png",
+          "both-down": "equipes/elus-chaos/128px/both-down.png",
+          "push": "equipes/elus-chaos/128px/push.png",
+          "defender-stumbles": "equipes/elus-chaos/128px/defender-stumbles.png",
+          "defender-down": "equipes/elus-chaos/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/elus-chaos/64px/attacker-down.png",
+          "both-down": "equipes/elus-chaos/64px/both-down.png",
+          "push": "equipes/elus-chaos/64px/push.png",
+          "defender-stumbles": "equipes/elus-chaos/64px/defender-stumbles.png",
+          "defender-down": "equipes/elus-chaos/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "khorne",
+      "name_fr": "Khorne",
+      "palette_direction": {
+        "background": "#501A1A",
+        "symbol": "#F0CC8B",
+        "accent": "#BE7D37"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/khorne/320px/attacker-down.png",
+          "both-down": "equipes/khorne/320px/both-down.png",
+          "push": "equipes/khorne/320px/push.png",
+          "defender-stumbles": "equipes/khorne/320px/defender-stumbles.png",
+          "defender-down": "equipes/khorne/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/khorne/128px/attacker-down.png",
+          "both-down": "equipes/khorne/128px/both-down.png",
+          "push": "equipes/khorne/128px/push.png",
+          "defender-stumbles": "equipes/khorne/128px/defender-stumbles.png",
+          "defender-down": "equipes/khorne/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/khorne/64px/attacker-down.png",
+          "both-down": "equipes/khorne/64px/both-down.png",
+          "push": "equipes/khorne/64px/push.png",
+          "defender-stumbles": "equipes/khorne/64px/defender-stumbles.png",
+          "defender-down": "equipes/khorne/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "nurgle",
+      "name_fr": "Nurgle",
+      "palette_direction": {
+        "background": "#313C23",
+        "symbol": "#DDE19E",
+        "accent": "#AF9D50"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/nurgle/320px/attacker-down.png",
+          "both-down": "equipes/nurgle/320px/both-down.png",
+          "push": "equipes/nurgle/320px/push.png",
+          "defender-stumbles": "equipes/nurgle/320px/defender-stumbles.png",
+          "defender-down": "equipes/nurgle/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/nurgle/128px/attacker-down.png",
+          "both-down": "equipes/nurgle/128px/both-down.png",
+          "push": "equipes/nurgle/128px/push.png",
+          "defender-stumbles": "equipes/nurgle/128px/defender-stumbles.png",
+          "defender-down": "equipes/nurgle/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/nurgle/64px/attacker-down.png",
+          "both-down": "equipes/nurgle/64px/both-down.png",
+          "push": "equipes/nurgle/64px/push.png",
+          "defender-stumbles": "equipes/nurgle/64px/defender-stumbles.png",
+          "defender-down": "equipes/nurgle/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "orques-noirs",
+      "name_fr": "Orques Noirs",
+      "palette_direction": {
+        "background": "#1B2729",
+        "symbol": "#D7DCAC",
+        "accent": "#87A545"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/orques-noirs/320px/attacker-down.png",
+          "both-down": "equipes/orques-noirs/320px/both-down.png",
+          "push": "equipes/orques-noirs/320px/push.png",
+          "defender-stumbles": "equipes/orques-noirs/320px/defender-stumbles.png",
+          "defender-down": "equipes/orques-noirs/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/orques-noirs/128px/attacker-down.png",
+          "both-down": "equipes/orques-noirs/128px/both-down.png",
+          "push": "equipes/orques-noirs/128px/push.png",
+          "defender-stumbles": "equipes/orques-noirs/128px/defender-stumbles.png",
+          "defender-down": "equipes/orques-noirs/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/orques-noirs/64px/attacker-down.png",
+          "both-down": "equipes/orques-noirs/64px/both-down.png",
+          "push": "equipes/orques-noirs/64px/push.png",
+          "defender-stumbles": "equipes/orques-noirs/64px/defender-stumbles.png",
+          "defender-down": "equipes/orques-noirs/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "renegats-chaos",
+      "name_fr": "Renégats du Chaos",
+      "palette_direction": {
+        "background": "#352A31",
+        "symbol": "#E5D5B9",
+        "accent": "#B87A4A"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/renegats-chaos/320px/attacker-down.png",
+          "both-down": "equipes/renegats-chaos/320px/both-down.png",
+          "push": "equipes/renegats-chaos/320px/push.png",
+          "defender-stumbles": "equipes/renegats-chaos/320px/defender-stumbles.png",
+          "defender-down": "equipes/renegats-chaos/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/renegats-chaos/128px/attacker-down.png",
+          "both-down": "equipes/renegats-chaos/128px/both-down.png",
+          "push": "equipes/renegats-chaos/128px/push.png",
+          "defender-stumbles": "equipes/renegats-chaos/128px/defender-stumbles.png",
+          "defender-down": "equipes/renegats-chaos/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/renegats-chaos/64px/attacker-down.png",
+          "both-down": "equipes/renegats-chaos/64px/both-down.png",
+          "push": "equipes/renegats-chaos/64px/push.png",
+          "defender-stumbles": "equipes/renegats-chaos/64px/defender-stumbles.png",
+          "defender-down": "equipes/renegats-chaos/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "gnomes",
+      "name_fr": "Gnomes",
+      "palette_direction": {
+        "background": "#243C38",
+        "symbol": "#F3D8A4",
+        "accent": "#C46F56"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/gnomes/320px/attacker-down.png",
+          "both-down": "equipes/gnomes/320px/both-down.png",
+          "push": "equipes/gnomes/320px/push.png",
+          "defender-stumbles": "equipes/gnomes/320px/defender-stumbles.png",
+          "defender-down": "equipes/gnomes/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/gnomes/128px/attacker-down.png",
+          "both-down": "equipes/gnomes/128px/both-down.png",
+          "push": "equipes/gnomes/128px/push.png",
+          "defender-stumbles": "equipes/gnomes/128px/defender-stumbles.png",
+          "defender-down": "equipes/gnomes/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/gnomes/64px/attacker-down.png",
+          "both-down": "equipes/gnomes/64px/both-down.png",
+          "push": "equipes/gnomes/64px/push.png",
+          "defender-stumbles": "equipes/gnomes/64px/defender-stumbles.png",
+          "defender-down": "equipes/gnomes/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "gobelins",
+      "name_fr": "Gobelins",
+      "palette_direction": {
+        "background": "#23442C",
+        "symbol": "#E4EA91",
+        "accent": "#E4B63D"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/gobelins/320px/attacker-down.png",
+          "both-down": "equipes/gobelins/320px/both-down.png",
+          "push": "equipes/gobelins/320px/push.png",
+          "defender-stumbles": "equipes/gobelins/320px/defender-stumbles.png",
+          "defender-down": "equipes/gobelins/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/gobelins/128px/attacker-down.png",
+          "both-down": "equipes/gobelins/128px/both-down.png",
+          "push": "equipes/gobelins/128px/push.png",
+          "defender-stumbles": "equipes/gobelins/128px/defender-stumbles.png",
+          "defender-down": "equipes/gobelins/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/gobelins/64px/attacker-down.png",
+          "both-down": "equipes/gobelins/64px/both-down.png",
+          "push": "equipes/gobelins/64px/push.png",
+          "defender-stumbles": "equipes/gobelins/64px/defender-stumbles.png",
+          "defender-down": "equipes/gobelins/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "halflings",
+      "name_fr": "Halflings",
+      "palette_direction": {
+        "background": "#513224",
+        "symbol": "#F6DEAE",
+        "accent": "#C78247"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/halflings/320px/attacker-down.png",
+          "both-down": "equipes/halflings/320px/both-down.png",
+          "push": "equipes/halflings/320px/push.png",
+          "defender-stumbles": "equipes/halflings/320px/defender-stumbles.png",
+          "defender-down": "equipes/halflings/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/halflings/128px/attacker-down.png",
+          "both-down": "equipes/halflings/128px/both-down.png",
+          "push": "equipes/halflings/128px/push.png",
+          "defender-stumbles": "equipes/halflings/128px/defender-stumbles.png",
+          "defender-down": "equipes/halflings/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/halflings/64px/attacker-down.png",
+          "both-down": "equipes/halflings/64px/both-down.png",
+          "push": "equipes/halflings/64px/push.png",
+          "defender-stumbles": "equipes/halflings/64px/defender-stumbles.png",
+          "defender-down": "equipes/halflings/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "ogres",
+      "name_fr": "Ogres",
+      "palette_direction": {
+        "background": "#3D3029",
+        "symbol": "#F0D9B1",
+        "accent": "#BA7750"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/ogres/320px/attacker-down.png",
+          "both-down": "equipes/ogres/320px/both-down.png",
+          "push": "equipes/ogres/320px/push.png",
+          "defender-stumbles": "equipes/ogres/320px/defender-stumbles.png",
+          "defender-down": "equipes/ogres/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/ogres/128px/attacker-down.png",
+          "both-down": "equipes/ogres/128px/both-down.png",
+          "push": "equipes/ogres/128px/push.png",
+          "defender-stumbles": "equipes/ogres/128px/defender-stumbles.png",
+          "defender-down": "equipes/ogres/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/ogres/64px/attacker-down.png",
+          "both-down": "equipes/ogres/64px/both-down.png",
+          "push": "equipes/ogres/64px/push.png",
+          "defender-stumbles": "equipes/ogres/64px/defender-stumbles.png",
+          "defender-down": "equipes/ogres/64px/defender-down.png"
+        }
+      }
+    },
+    {
+      "id": "snotlings",
+      "name_fr": "Snotlings",
+      "palette_direction": {
+        "background": "#2B432A",
+        "symbol": "#DBE8A2",
+        "accent": "#CA8150"
+      },
+      "files": {
+        "320": {
+          "attacker-down": "equipes/snotlings/320px/attacker-down.png",
+          "both-down": "equipes/snotlings/320px/both-down.png",
+          "push": "equipes/snotlings/320px/push.png",
+          "defender-stumbles": "equipes/snotlings/320px/defender-stumbles.png",
+          "defender-down": "equipes/snotlings/320px/defender-down.png"
+        },
+        "128": {
+          "attacker-down": "equipes/snotlings/128px/attacker-down.png",
+          "both-down": "equipes/snotlings/128px/both-down.png",
+          "push": "equipes/snotlings/128px/push.png",
+          "defender-stumbles": "equipes/snotlings/128px/defender-stumbles.png",
+          "defender-down": "equipes/snotlings/128px/defender-down.png"
+        },
+        "64": {
+          "attacker-down": "equipes/snotlings/64px/attacker-down.png",
+          "both-down": "equipes/snotlings/64px/both-down.png",
+          "push": "equipes/snotlings/64px/push.png",
+          "defender-stumbles": "equipes/snotlings/64px/defender-stumbles.png",
+          "defender-down": "equipes/snotlings/64px/defender-down.png"
+        }
+      }
+    }
+  ]
+}

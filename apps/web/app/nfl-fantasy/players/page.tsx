@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest, ApiClientError } from "../../lib/api-client";
+import { currentNflSeasonId, nflSeasonOptions } from "../season";
 
 interface PlayerRow {
   readonly id: string;
@@ -50,7 +51,9 @@ export default function NuffleCoachPlayersPage() {
   const [search, setSearch] = useState<string>("");
   const [bbPosition, setBbPosition] = useState<string>("");
   const [teamCode, setTeamCode] = useState<string>("");
-  const [seasonId, setSeasonId] = useState<string>("2025");
+  const [seasonId, setSeasonId] = useState<string>(() =>
+    currentNflSeasonId(new Date()),
+  );
   const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
@@ -175,9 +178,11 @@ export default function NuffleCoachPlayersPage() {
             }}
             className="mt-1 w-full rounded-md border border-nuffle-bronze/30 bg-white px-3 py-1.5 text-sm text-nuffle-anthracite"
           >
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
+            {nflSeasonOptions(new Date()).map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
             <option value="">— (sans agrégat)</option>
           </select>
         </label>

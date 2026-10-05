@@ -16,6 +16,7 @@ vi.mock("../prisma", () => ({
     },
     nflFantasyRoster: { findMany: vi.fn() },
     nflPlayer: { findMany: vi.fn() },
+    nflGame: { findMany: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
@@ -145,6 +146,131 @@ describe("validateLineupStructure", () => {
         captainId: null,
       }),
     ).not.toThrow();
+  });
+});
+
+describe("setLineup — verrouillage au coup d'envoi", () => {
+  // p1 joue le jeudi (match termine), p2..p11 le dimanche.
+  const SAT = new Date("2026-10-10T12:00:00Z");
+
+  function mocks(existing: unknown): void {
+    vi.mocked(prisma.nflFantasyEntry.findUnique).mockResolvedValue({ id: "e1" } as never);
+    vi.mocked(prisma.nflFantasyLineup.findUnique)
+      .mockResolvedValueOnce(existing as never)
+      .mockResolvedValueOnce({ id: "l1", starters: fakeStarters() } as never);
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue(
+      fakeStarters(12).map((s) => ({ playerId: s.playerId })) as never,
+    );
+    // 1er appel : equipes (verrou) ; 2e : postes (composition).
+    vi.mocked(prisma.nflPlayer.findMany)
+      .mockResolvedValueOnce(
+        fakeStarters(12).map((s) => ({
+          id: s.playerId,
+          teamCode: s.playerId === "p1" || s.playerId === "p12" ? "PHI" : "KC",
+        })) as never,
+      )
+      .mockResolvedValueOnce(
+        fakeStarters(12).map((s, i) => ({
+          id: s.playerId,
+          nflPosition: i === 0 ? "QB" : "OL",
+        })) as never,
+      );
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([
+      {
+        homeTeam: "NYG",
+        awayTeam: "PHI",
+        kickoffAt: new Date("2026-10-09T00:15:00Z"),
+        status: "final",
+      },
+      {
+        homeTeam: "KC",
+        awayTeam: "LV",
+        kickoffAt: new Date("2026-10-11T17:00:00Z"),
+        status: "scheduled",
+      },
+    ] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+  }
+
+  const existingLineup = {
+    id: "l1",
+    lockedAt: null,
+    captainId: "p2",
+    viceCaptainId: "p3",
+    starters: fakeStarters().map((s) => ({ playerId: s.playerId })),
+  };
+
+  it("refuse de nommer capitaine un joueur dont le match est joue (PLAYER_GAME_STARTED)", async () => {
+    mocks(existingLineup);
+
+    await expect(
+      setLineup({
+        entryId: "e1",
+        weekId: "2026:W5",
+        starters: fakeStarters(),
+        captainId: "p1",
+        viceCaptainId: "p3",
+        now: SAT,
+      }),
+    ).rejects.toMatchObject({ code: "PLAYER_GAME_STARTED" });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuse de remplacer le joueur du jeudi par un remplacant", async () => {
+    mocks(existingLineup);
+    const starters = [...fakeStarters().slice(1), { playerId: "p12", bbPosition: "Lineman" }];
+
+    await expect(
+      setLineup({
+        entryId: "e1",
+        weekId: "2026:W5",
+        starters,
+        captainId: "p2",
+        viceCaptainId: "p3",
+        now: SAT,
+      }),
+    ).rejects.toThrow(/p1 \(titulaire -> hors lineup\)/);
+  });
+
+  it("accepte les changements qui ne touchent que des joueurs du dimanche", async () => {
+    mocks(existingLineup);
+
+    await setLineup({
+      entryId: "e1",
+      weekId: "2026:W5",
+      starters: fakeStarters(),
+      captainId: "p4", // dimanche
+      viceCaptainId: "p3",
+      now: SAT,
+    });
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.nflGame.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("skipKickoffLock (ecriture systeme) : aucun controle", async () => {
+    mocks(null);
+    vi.mocked(prisma.nflFantasyLineup.create).mockResolvedValue({ id: "l1" } as never);
+    // Sans le verrou, le 1er appel nflPlayer.findMany est la composition.
+    vi.mocked(prisma.nflPlayer.findMany).mockReset().mockResolvedValue(
+      fakeStarters().map((s, i) => ({
+        id: s.playerId,
+        nflPosition: i === 0 ? "QB" : "OL",
+      })) as never,
+    );
+
+    await setLineup({
+      entryId: "e1",
+      weekId: "2026:W5",
+      starters: fakeStarters(),
+      captainId: "p1",
+      viceCaptainId: "p2",
+      now: SAT,
+      skipKickoffLock: true,
+    });
+
+    expect(prisma.nflGame.findMany).not.toHaveBeenCalled();
+    expect(prisma.nflFantasyLineup.create).toHaveBeenCalledTimes(1);
   });
 });
 

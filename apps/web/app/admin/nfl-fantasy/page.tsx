@@ -148,23 +148,28 @@ export default function AdminNflFantasyPage(): JSX.Element {
   const [authorized, setAuthorized] = useState(false);
 
   // States des inputs (groupes par action)
-  const [seedSeasonId, setSeedSeasonId] = useState("2025");
+  const [seedSeasonId, setSeedSeasonId] = useState("2026");
 
-  const [weekSeasonId, setWeekSeasonId] = useState("2025");
-  const [weekNumber, setWeekNumber] = useState(10);
+  const [weekSeasonId, setWeekSeasonId] = useState("2026");
+  const [weekNumber, setWeekNumber] = useState(4);
 
-  const [gamedayDate, setGamedayDate] = useState("20251109");
+  const [gamedayDate, setGamedayDate] = useState("20261004");
 
-  const [rostersSeasonId, setRostersSeasonId] = useState("2025");
+  const [rostersSeasonId, setRostersSeasonId] = useState("2026");
   const [rostersTeamCodes, setRostersTeamCodes] = useState("KC,MIA");
 
-  const [lockWeekId, setLockWeekId] = useState("2025:W10");
+  const [lockWeekId, setLockWeekId] = useState("2026:W5");
 
   const [matchupsLeagueId, setMatchupsLeagueId] = useState("");
-  const [matchupsWeekId, setMatchupsWeekId] = useState("2025:W10");
+  const [matchupsWeekId, setMatchupsWeekId] = useState("2026:W4");
 
   const [settleLeagueId, setSettleLeagueId] = useState("");
-  const [settleWeekId, setSettleWeekId] = useState("2025:W10");
+  const [settleWeekId, setSettleWeekId] = useState("2026:W4");
+  const [settleResettle, setSettleResettle] = useState(false);
+
+  const [resettleSeasonId, setResettleSeasonId] = useState("2026");
+  const [resettleFromWeek, setResettleFromWeek] = useState(1);
+  const [resettleToWeek, setResettleToWeek] = useState(4);
 
   const [seedRerollEntryId, setSeedRerollEntryId] = useState("");
   const [seedRerollCount, setSeedRerollCount] = useState(8);
@@ -459,6 +464,7 @@ export default function AdminNflFantasyPage(): JSX.Element {
             buildBody={() => ({
               leagueId: settleLeagueId,
               weekId: settleWeekId,
+              resettle: settleResettle,
             })}
           >
             <label className="block text-xs font-medium text-gray-700">
@@ -480,6 +486,62 @@ export default function AdminNflFantasyPage(): JSX.Element {
                 required
                 value={settleWeekId}
                 onChange={(e) => setSettleWeekId(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-700">
+              <input
+                type="checkbox"
+                checked={settleResettle}
+                onChange={(e) => setSettleResettle(e.target.checked)}
+                data-testid="settle-resettle"
+              />
+              Re-settle (rejoue les matchups déjà réglés, carrière créditée de l&apos;écart)
+            </label>
+          </ActionCard>
+
+          <ActionCard
+            title="Rattrapage : re-settle d'une plage de semaines"
+            description="Pour toutes les leagues in_progress de la saison, rejoue les matchups existants des semaines choisies sur les stats actuelles (après un ingest tardif). Ne crée aucun matchup. Carrière créditée de l'écart seulement."
+            endpoint="/admin/nfl-fantasy/resettle-season"
+            buildBody={() => ({
+              seasonId: resettleSeasonId,
+              fromWeek: Number(resettleFromWeek),
+              toWeek: Number(resettleToWeek),
+            })}
+          >
+            <label className="block text-xs font-medium text-gray-700">
+              seasonId
+              <input
+                type="text"
+                pattern="\d{4}"
+                required
+                value={resettleSeasonId}
+                onChange={(e) => setResettleSeasonId(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+              />
+            </label>
+            <label className="block text-xs font-medium text-gray-700">
+              de la semaine
+              <input
+                type="number"
+                min={1}
+                max={22}
+                required
+                value={resettleFromWeek}
+                onChange={(e) => setResettleFromWeek(Number(e.target.value))}
+                className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
+              />
+            </label>
+            <label className="block text-xs font-medium text-gray-700">
+              à la semaine
+              <input
+                type="number"
+                min={1}
+                max={22}
+                required
+                value={resettleToWeek}
+                onChange={(e) => setResettleToWeek(Number(e.target.value))}
                 className="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-nuffle-gold focus:ring-nuffle-gold"
               />
             </label>
@@ -542,7 +604,7 @@ export default function AdminNflFantasyPage(): JSX.Element {
           </a>
           . En production, le cron 5min orchestre automatiquement ces actions
           dans leurs fenêtres respectives (03h UTC nflverse, Sun 17h
-          lockLineups, Tue 12h settle). Cette page sert au debug et au
+          lockLineups, Wed 12h settle). Cette page sert au debug et au
           rattrapage manuel.
         </p>
       </footer>

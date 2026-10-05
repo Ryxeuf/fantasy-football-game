@@ -113,12 +113,44 @@ export interface ScheduleRow {
   readonly kickoffAt: Date | null;
 }
 
-function parseScheduleDate(gameday: string, gametime: string): Date | null {
-  if (!gameday) return null;
-  // gameday: "YYYY-MM-DD", gametime: "HH:MM" (parfois vide).
-  const time = gametime && /^\d{1,2}:\d{2}/.test(gametime) ? gametime : "13:00";
-  const iso = `${gameday}T${time}:00-05:00`;
-  const d = new Date(iso);
+/**
+ * Decalage UTC de l'heure de New York pour une date "YYYY-MM-DD" :
+ * "-04:00" en heure d'ete (2e dimanche de mars -> 1er dimanche de
+ * novembre, regle US depuis 2007), "-05:00" sinon. Aucun match NFL ne se
+ * joue a 2h du matin, la bascule horaire du jour J est donc sans effet.
+ *
+ * Pur.
+ */
+export function easternUtcOffset(gameday: string): "-04:00" | "-05:00" {
+  const [y, m, d] = gameday.split("-").map(Number) as [number, number, number];
+  const nthSunday = (month: number, n: number): number => {
+    const firstDow = new Date(Date.UTC(y, month - 1, 1)).getUTCDay();
+    return 1 + ((7 - firstDow) % 7) + (n - 1) * 7;
+  };
+  const dstStart = nthSunday(3, 2); // jour de mars
+  const dstEnd = nthSunday(11, 1); // jour de novembre
+  const inDst =
+    (m > 3 && m < 11) || (m === 3 && d >= dstStart) || (m === 11 && d < dstEnd);
+  return inDst ? "-04:00" : "-05:00";
+}
+
+/**
+ * gameday "YYYY-MM-DD" + gametime "HH:MM" (heure de New York, parfois
+ * vide) -> instant UTC. L'offset etait fige a -05:00 : en septembre-octobre
+ * tous les coups d'envoi etaient decales d'une heure trop TARD, ce qui
+ * aurait laisse une heure de match pendant laquelle un lineup restait
+ * modifiable (verrouillage au coup d'envoi).
+ *
+ * Pur.
+ */
+export function parseScheduleDate(gameday: string, gametime: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(gameday)) return null;
+  const time = /^\d{2}:\d{2}$/.test(gametime)
+    ? gametime
+    : /^\d:\d{2}$/.test(gametime)
+      ? `0${gametime}`
+      : "13:00";
+  const d = new Date(`${gameday}T${time}:00${easternUtcOffset(gameday)}`);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -400,6 +432,13 @@ export function parseRow(
 
 export interface BackfillSchedulesScoresOpts {
   readonly seasonId: string;
+  /**
+   * Cree aussi les matchs pas encore en base (statut "scheduled"), avec
+   * leur vrai coup d'envoi. Sans ca, un match n'existe qu'une fois joue
+   * (ingest nflverse le lendemain, ESPN le jour J) et le verrouillage des
+   * lineups au coup d'envoi ne connait pas les matchs a venir.
+   */
+  readonly createMissing?: boolean;
   /** Override fetch pour les tests. */
   readonly fetchSchedulesCsv?: () => Promise<string>;
 }
@@ -410,6 +449,7 @@ export interface BackfillSchedulesScoresResult {
   readonly scoresUpdated: number;
   readonly kickoffsUpdated: number;
   readonly notInDb: number;
+  readonly gamesCreated: number;
 }
 
 /**
@@ -431,6 +471,17 @@ export async function backfillScoresFromSchedules(
   let scoresUpdated = 0;
   let kickoffsUpdated = 0;
   let notInDb = 0;
+  let gamesCreated = 0;
+  const knownWeekIds = opts.createMissing
+    ? new Set(
+        (
+          (await prisma.nflWeek.findMany({
+            where: { seasonId: opts.seasonId },
+            select: { id: true },
+          })) as Array<{ id: string }>
+        ).map((w) => w.id),
+      )
+    : new Set<string>();
 
   for (const sched of rows) {
     if (!sched.gameId) continue;
@@ -445,7 +496,26 @@ export async function backfillScoresFromSchedules(
     } | null;
 
     if (!existing) {
-      notInDb++;
+      const weekId = `${opts.seasonId}:W${sched.week}`;
+      if (opts.createMissing && sched.kickoffAt && knownWeekIds.has(weekId)) {
+        const hasScore = sched.homeScore !== null && sched.awayScore !== null;
+        await prisma.nflGame.create({
+          data: {
+            id: gameId,
+            seasonId: opts.seasonId,
+            weekId,
+            homeTeam: sched.homeTeam,
+            awayTeam: sched.awayTeam,
+            homeScore: sched.homeScore,
+            awayScore: sched.awayScore,
+            kickoffAt: sched.kickoffAt,
+            status: hasScore ? "final" : "scheduled",
+          },
+        });
+        gamesCreated++;
+      } else {
+        notInDb++;
+      }
       continue;
     }
 
@@ -484,6 +554,7 @@ export async function backfillScoresFromSchedules(
     scoresUpdated,
     kickoffsUpdated,
     notInDb,
+    gamesCreated,
   };
 }
 
@@ -519,8 +590,63 @@ export async function seedNflTeams(): Promise<SeedResult> {
   return { teamsCreated: created, teamsUpdated: updated };
 }
 
+const DAY_MS = 24 * 3600 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+
+/**
+ * Heure UTC de bascule d'une week a la suivante, le mardi. 10h UTC = 6h ET :
+ * le Monday Night (coup d'envoi 00h15 UTC mardi) est termine, aucun match
+ * du mardi n'a commence.
+ */
+const WEEK_ROLLOVER_HOUR_UTC = 10;
+
+export interface NflWeekWindow {
+  readonly weekNumber: number;
+  readonly startDate: Date;
+  readonly endDate: Date;
+  readonly isPlayoffs: boolean;
+}
+
+export interface NflSeasonWindows {
+  readonly seasonStart: Date;
+  readonly seasonEnd: Date;
+  readonly weeks: readonly NflWeekWindow[];
+}
+
+/**
+ * Fenetres des 22 weeks d'une saison NFL (1-18 REG, 19-22 POST). Pur.
+ *
+ * La saison reguliere demarre toujours dans la foulee du Labor Day
+ * (1er lundi de septembre) et chaque week court du jeudi au lundi : on
+ * ancre donc la W1 au mardi qui suit le Labor Day et on enchaine des
+ * fenetres mardi -> mardi. Verifie contre nflverse `games.csv` sur
+ * 2021-2026 : seul le Super Bowl (deux semaines apres les finales de
+ * conference) sort d'une fenetre de 7 jours, d'ou une W22 etiree jusqu'a
+ * la fin de saison.
+ *
+ * Avant : ancrage fixe au 5 septembre, un samedi en 2026 => 247 matchs REG
+ * sur 272 hors de leur fenetre, et le cron visait la mauvaise week.
+ */
+export function computeNflSeasonWindows(year: number): NflSeasonWindows {
+  const laborDayOffset = (8 - new Date(Date.UTC(year, 8, 1)).getUTCDay()) % 7;
+  const seasonStart = new Date(
+    Date.UTC(year, 8, 1 + laborDayOffset + 1, WEEK_ROLLOVER_HOUR_UTC),
+  );
+  const seasonEnd = new Date(Date.UTC(year + 1, 1, 20)); // apres le Super Bowl
+
+  const weeks: NflWeekWindow[] = [];
+  for (let w = 1; w <= 22; w++) {
+    const startDate = new Date(seasonStart.getTime() + (w - 1) * WEEK_MS);
+    const endDate =
+      w === 22 ? seasonEnd : new Date(startDate.getTime() + WEEK_MS);
+    weeks.push({ weekNumber: w, startDate, endDate, isPlayoffs: w >= 19 });
+  }
+  return { seasonStart, seasonEnd, weeks };
+}
+
 /**
  * Cree (idempotent) une NflSeason et ses 22 NflWeek (1-18 REG + 19-22 POST).
+ * Re-executer le seed reecrit les fenetres (cf. `computeNflSeasonWindows`).
  *
  * @param seasonId Format "{yearStart}" ex: "2025" pour la saison 2025-26.
  */
@@ -530,10 +656,7 @@ export async function seedNflSeason(seasonId: string): Promise<void> {
     throw new NflIngestError("SEASON_NOT_FOUND", `seasonId invalide: ${seasonId}`);
   }
 
-  // Approximations dates (kickoff regulier 1er jeudi de septembre).
-  // Phase 2 — affinage via ingestion ESPN schedules a venir.
-  const seasonStart = new Date(Date.UTC(year, 8, 5)); // 5 septembre
-  const seasonEnd = new Date(Date.UTC(year + 1, 1, 15)); // 15 fevrier (post-SB)
+  const { seasonStart, seasonEnd, weeks } = computeNflSeasonWindows(year);
 
   await prisma.nflSeason.upsert({
     where: { id: seasonId },
@@ -546,30 +669,25 @@ export async function seedNflSeason(seasonId: string): Promise<void> {
     },
   });
 
-  // Chaque semaine NFL dure 7 jours (kickoff jeudi -> mercredi suivant).
-  // On etale 22 semaines a partir de seasonStart. Necessaire pour que
-  // findWeekNumberAt (cycles Nuffle Coach) puisse mapper une date a une
+  // Fenetres contigues : necessaire pour que findWeekNumberAt (cycles
+  // Nuffle Coach) et findCurrentNflWeek (cron) mappent une date a une
   // semaine sans ambiguite.
-  const WEEK_MS = 7 * 24 * 3600 * 1000;
-  for (let w = 1; w <= 22; w++) {
+  for (const { weekNumber: w, startDate, endDate, isPlayoffs } of weeks) {
     const weekId = `${seasonId}:W${w}`;
-    const isPlayoffs = w >= 19;
-    const weekStart = new Date(seasonStart.getTime() + (w - 1) * WEEK_MS);
-    const weekEnd = new Date(weekStart.getTime() + WEEK_MS);
     await prisma.nflWeek.upsert({
       where: { id: weekId },
       update: {
         weekNumber: w,
         isPlayoffs,
-        startDate: weekStart,
-        endDate: weekEnd,
+        startDate,
+        endDate,
       },
       create: {
         id: weekId,
         seasonId,
         weekNumber: w,
-        startDate: weekStart,
-        endDate: weekEnd,
+        startDate,
+        endDate,
         isPlayoffs,
       },
     });

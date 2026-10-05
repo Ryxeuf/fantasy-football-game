@@ -74,6 +74,7 @@ async function main(): Promise<void> {
         bbPosition: r.player!.bbPosition,
       }));
       await setLineup({
+        skipKickoffLock: true, // week passee
         entryId,
         weekId: "2025:W10",
         starters,

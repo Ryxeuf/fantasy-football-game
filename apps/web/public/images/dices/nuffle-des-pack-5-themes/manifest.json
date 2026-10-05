@@ -1,0 +1,92 @@
+{
+  "sizes": [
+    320,
+    128,
+    64
+  ],
+  "format": "PNG RGBA",
+  "outcomes": [
+    {
+      "id": "attacker-down",
+      "label_fr": "Attaquant plaqué",
+      "faces_on_d6": 1
+    },
+    {
+      "id": "both-down",
+      "label_fr": "Les deux plaqués",
+      "faces_on_d6": 1
+    },
+    {
+      "id": "push",
+      "label_fr": "Repoussé",
+      "faces_on_d6": 2
+    },
+    {
+      "id": "defender-stumbles",
+      "label_fr": "Défenseur bousculé",
+      "faces_on_d6": 1
+    },
+    {
+      "id": "defender-down",
+      "label_fr": "Défenseur plaqué",
+      "faces_on_d6": 1
+    }
+  ],
+  "themes": [
+    {
+      "id": "original-or",
+      "name": "Original · Or & charbon",
+      "files": {
+        "attacker-down": "original-or/320px/attacker-down.png",
+        "both-down": "original-or/320px/both-down.png",
+        "push": "original-or/320px/push.png",
+        "defender-stumbles": "original-or/320px/defender-stumbles.png",
+        "defender-down": "original-or/320px/defender-down.png"
+      }
+    },
+    {
+      "id": "acier-bleu",
+      "name": "Acier bleu",
+      "files": {
+        "attacker-down": "acier-bleu/320px/attacker-down.png",
+        "both-down": "acier-bleu/320px/both-down.png",
+        "push": "acier-bleu/320px/push.png",
+        "defender-stumbles": "acier-bleu/320px/defender-stumbles.png",
+        "defender-down": "acier-bleu/320px/defender-down.png"
+      }
+    },
+    {
+      "id": "chaos-rouge",
+      "name": "Chaos rouge",
+      "files": {
+        "attacker-down": "chaos-rouge/320px/attacker-down.png",
+        "both-down": "chaos-rouge/320px/both-down.png",
+        "push": "chaos-rouge/320px/push.png",
+        "defender-stumbles": "chaos-rouge/320px/defender-stumbles.png",
+        "defender-down": "chaos-rouge/320px/defender-down.png"
+      }
+    },
+    {
+      "id": "malepierre",
+      "name": "Malepierre",
+      "files": {
+        "attacker-down": "malepierre/320px/attacker-down.png",
+        "both-down": "malepierre/320px/both-down.png",
+        "push": "malepierre/320px/push.png",
+        "defender-stumbles": "malepierre/320px/defender-stumbles.png",
+        "defender-down": "malepierre/320px/defender-down.png"
+      }
+    },
+    {
+      "id": "glace",
+      "name": "Glace",
+      "files": {
+        "attacker-down": "glace/320px/attacker-down.png",
+        "both-down": "glace/320px/both-down.png",
+        "push": "glace/320px/push.png",
+        "defender-stumbles": "glace/320px/defender-stumbles.png",
+        "defender-down": "glace/320px/defender-down.png"
+      }
+    }
+  ]
+}
