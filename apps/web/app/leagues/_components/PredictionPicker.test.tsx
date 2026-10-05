@@ -36,12 +36,13 @@ describe("PredictionPicker", () => {
     );
   });
 
-  it("refuse d'envoyer sans issue, sans appeler l'API", async () => {
+  it("sans issue : ni score ni validation, seulement les trois choix", () => {
     renderPicker();
-    fireEvent.click(screen.getByTestId("prediction-save-pair-1"));
-    expect(screen.getByTestId("prediction-error-pair-1").textContent).toMatch(
-      /issue/,
-    );
+    expect(screen.queryByTestId("prediction-save-pair-1")).toBeNull();
+    expect(screen.queryByTestId("prediction-score-home-pair-1")).toBeNull();
+    fireEvent.click(screen.getByTestId("prediction-pick-pair-1-home"));
+    expect(screen.getByTestId("prediction-save-pair-1")).toBeTruthy();
+    expect(screen.getByTestId("prediction-score-home-pair-1")).toBeTruthy();
     expect(apiRequest).not.toHaveBeenCalled();
   });
 
@@ -61,6 +62,7 @@ describe("PredictionPicker", () => {
 
   it("un score complet coche l'issue qu'il implique", async () => {
     renderPicker();
+    fireEvent.click(screen.getByTestId("prediction-pick-pair-1-home"));
     fireEvent.change(screen.getByTestId("prediction-score-home-pair-1"), {
       target: { value: "0" },
     });
@@ -85,6 +87,7 @@ describe("PredictionPicker", () => {
 
   it("signale un score contradictoire au lieu de l'envoyer", () => {
     renderPicker();
+    fireEvent.click(screen.getByTestId("prediction-pick-pair-1-home"));
     fireEvent.change(screen.getByTestId("prediction-score-home-pair-1"), {
       target: { value: "2" },
     });
@@ -138,5 +141,27 @@ describe("PredictionPicker", () => {
       "/leagues/pairings/pair-1/prediction",
       { method: "DELETE" },
     );
+  });
+
+  it("Annuler ferme la saisie sans rien envoyer", () => {
+    const onCancel = vi.fn();
+    render(
+      <PredictionPicker
+        pairing={makePairing({
+          myPrediction: {
+            pick: "home",
+            homeScore: null,
+            awayScore: null,
+            grade: "pending",
+            points: 0,
+          },
+        })}
+        onChanged={vi.fn()}
+        onCancel={onCancel}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("prediction-cancel-pair-1"));
+    expect(onCancel).toHaveBeenCalled();
+    expect(apiRequest).not.toHaveBeenCalled();
   });
 });

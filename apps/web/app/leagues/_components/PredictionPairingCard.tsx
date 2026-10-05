@@ -18,7 +18,8 @@ import {
 
 /**
  * Une rencontre vue sous l'angle des pronostics : état (ouverte, close,
- * jouée), pronostic du lecteur et sa note, saisie quand elle est permise,
+ * jouée), pronostic du lecteur et sa note, saisie quand elle est permise —
+ * repliée en une ligne « Ton pronostic · Modifier » une fois posé —,
  * et — seulement une fois la rencontre CLOSE — la répartition des choix et,
  * sur la page complète, la liste nominative. Avant la clôture, le serveur
  * n'envoie rien des autres : il n'y a rien à masquer ici.
@@ -79,6 +80,7 @@ export function PredictionPairingCard({
   onChanged,
   showOthers = false,
 }: PredictionPairingCardProps) {
+  const [editing, setEditing] = useState(false);
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState<string | null>(null);
   const { home, away } = pairing;
@@ -97,6 +99,16 @@ export function PredictionPairingCard({
       setClosing(false);
     }
   }, [pairing.id, onChanged]);
+
+  const handleSaved = useCallback(() => {
+    setEditing(false);
+    onChanged();
+  }, [onChanged]);
+
+  const canPredict = pairing.eligibility === "ok";
+  // Un pronostic posé se lit en une ligne ; la saisie ne se rouvre que sur
+  // demande. Sans pronostic, la saisie est d'emblée ouverte.
+  const showPicker = canPredict && (!pairing.myPrediction || editing);
 
   const message =
     pairing.eligibility === "ok" ||
@@ -134,11 +146,25 @@ export function PredictionPairingCard({
               points={pairing.myPrediction.points}
             />
           ) : null}
+          {canPredict && !editing ? (
+            <button
+              type="button"
+              data-testid={`prediction-edit-${pairing.id}`}
+              onClick={() => setEditing(true)}
+              className="text-xs text-nuffle-bronze underline"
+            >
+              Modifier
+            </button>
+          ) : null}
         </div>
       ) : null}
 
-      {pairing.eligibility === "ok" ? (
-        <PredictionPicker pairing={pairing} onChanged={onChanged} />
+      {showPicker ? (
+        <PredictionPicker
+          pairing={pairing}
+          onChanged={handleSaved}
+          onCancel={pairing.myPrediction ? () => setEditing(false) : undefined}
+        />
       ) : null}
 
       {message ? (
@@ -190,22 +216,32 @@ export function PredictionPairingCard({
       ) : null}
 
       {pairing.canClose && !pairing.closed ? (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            data-testid={`prediction-close-${pairing.id}`}
-            disabled={closing}
-            onClick={handleClose}
-            className="text-xs text-gray-600 underline hover:text-gray-800 disabled:opacity-50"
+        // Action d'arbitrage rare : rangée derrière un repli discret pour ne
+        // pas concurrencer la saisie des pronostiqueurs.
+        <details className="text-xs text-gray-500">
+          <summary
+            data-testid={`prediction-admin-${pairing.id}`}
+            className="cursor-pointer select-none"
           >
-            Clore les pronostics de cette rencontre
-          </button>
-          {closeError ? (
-            <span role="alert" className="text-xs text-red-700">
-              {closeError}
-            </span>
-          ) : null}
-        </div>
+            Options du commissaire
+          </summary>
+          <div className="mt-1 flex items-center gap-2">
+            <button
+              type="button"
+              data-testid={`prediction-close-${pairing.id}`}
+              disabled={closing}
+              onClick={handleClose}
+              className="text-xs text-gray-600 underline hover:text-gray-800 disabled:opacity-50"
+            >
+              Clore les pronostics de cette rencontre
+            </button>
+            {closeError ? (
+              <span role="alert" className="text-xs text-red-700">
+                {closeError}
+              </span>
+            ) : null}
+          </div>
+        </details>
       ) : null}
     </li>
   );

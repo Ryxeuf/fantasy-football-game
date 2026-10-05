@@ -1,72 +1,53 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { apiRequest } from "../../../../../lib/api-client";
+import { dynamicRoute } from "../../../../../lib/typed-route";
 import { PredictionPairingCard } from "../../../../_components/PredictionPairingCard";
 import { PredictionLeaderboard } from "../../../../_components/PredictionLeaderboard";
+import { RoundPredictionsCloseButton } from "../../../../_components/RoundPredictionsCloseButton";
+import { useSeasonPredictions } from "../../../../_components/useSeasonPredictions";
+import {
+  roundPredictionLabel,
+  roundPredictionStatus,
+  roundPredictionsPagePath,
+} from "../../../../_components/prediction-rounds";
 import {
   GROUP_LABELS,
   PREDICTION_SCOPE_OPTIONS,
   roundLabel,
-  seasonPredictionLeaderboardPath,
-  seasonPredictionsPath,
   type RoundPredictionsView,
-  type SeasonPredictionLeaderboardView,
-  type SeasonPredictionsView,
 } from "../../../../_components/predictions";
 
 /**
- * Pronostics d'une saison : toutes les journées, les pronostics des autres
- * une fois chaque rencontre CLOSE (jamais avant — le serveur ne les envoie
- * pas), le classement complet en deux onglets et les clôtures manuelles.
+ * Pronostics d'une saison : le classement complet en deux onglets, puis
+ * toutes les journées, chacune avec un lien vers SA page (la saisie au
+ * quotidien se fait journée par journée, depuis le calendrier). Les
+ * pronostics des autres n'apparaissent qu'une fois chaque rencontre CLOSE
+ * (jamais avant — le serveur ne les envoie pas).
  * Lecture ouverte (`optionalAuthUser`) : une ligue publique se consulte sans
  * compte, une ligue privée reste introuvable pour qui ne la voit pas.
  */
 
-function RoundCloseButton({
+function RoundPageLink({
+  leagueId,
+  seasonId,
   round,
-  onChanged,
 }: {
+  leagueId: string;
+  seasonId: string;
   round: RoundPredictionsView;
-  onChanged: () => void;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleClose = useCallback(async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      await apiRequest(`/leagues/rounds/${round.id}/predictions/close`, {
-        method: "POST",
-      });
-      onChanged();
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Clôture impossible");
-    } finally {
-      setBusy(false);
-    }
-  }, [round.id, onChanged]);
-
+  const status = roundPredictionStatus(round);
+  if (!status) return null;
   return (
-    <span className="inline-flex items-center gap-2">
-      <button
-        type="button"
-        data-testid={`prediction-round-close-${round.id}`}
-        disabled={busy}
-        onClick={handleClose}
-        className="text-xs text-gray-600 underline hover:text-gray-800 disabled:opacity-50"
-      >
-        Clore les pronostics de la journée
-      </button>
-      {error ? (
-        <span role="alert" className="text-xs text-red-700">
-          {error}
-        </span>
-      ) : null}
-    </span>
+    <Link
+      href={dynamicRoute(roundPredictionsPagePath(leagueId, seasonId, round.id))}
+      data-testid={`prediction-round-link-${round.id}`}
+      className="text-sm text-nuffle-bronze underline"
+    >
+      {roundPredictionLabel(status)} →
+    </Link>
   );
 }
 
@@ -75,47 +56,8 @@ export default function SeasonPredictionsPage() {
   const leagueId = params?.id ?? "";
   const seasonId = params?.sid ?? "";
 
-  const [view, setView] = useState<SeasonPredictionsView | null>(null);
-  const [board, setBoard] = useState<SeasonPredictionLeaderboardView | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const requestRef = useRef(0);
-
-  const load = useCallback(async () => {
-    if (!seasonId) return;
-    const request = ++requestRef.current;
-    try {
-      const [v, b] = await Promise.all([
-        apiRequest<SeasonPredictionsView>(seasonPredictionsPath(seasonId)),
-        apiRequest<SeasonPredictionLeaderboardView>(
-          seasonPredictionLeaderboardPath(seasonId),
-        ).catch(() => null),
-      ]);
-      if (request !== requestRef.current) return;
-      setView(v);
-      setBoard(b);
-      setError(null);
-    } catch (e: unknown) {
-      if (request !== requestRef.current) return;
-      setError(e instanceof Error ? e.message : "Pronostics indisponibles");
-    } finally {
-      if (request === requestRef.current) setLoading(false);
-    }
-  }, [seasonId]);
-
-  // Changer de saison sans remonter la page (navigation client sur le seul
-  // segment `[sid]`) ne doit jamais laisser la saison précédente à l'écran,
-  // étiquetée comme la nouvelle. `load` seul (rechargement après un
-  // pronostic) garde l'affichage, pour ne pas clignoter.
-  useEffect(() => {
-    setLoading(true);
-    setView(null);
-    setBoard(null);
-    setError(null);
-    load();
-  }, [load]);
+  const { view, board, loading, error, reload: load } =
+    useSeasonPredictions(seasonId);
 
   const scopeLabel = view
     ? PREDICTION_SCOPE_OPTIONS.find((o) => o.value === view.scope)?.label
@@ -214,9 +156,16 @@ export default function SeasonPredictionsPage() {
                   <h2 className="text-md font-semibold text-nuffle-anthracite">
                     {roundLabel(round)}
                   </h2>
-                  {round.canClose && round.pairings.some((p) => !p.closed) ? (
-                    <RoundCloseButton round={round} onChanged={load} />
-                  ) : null}
+                  <span className="flex flex-wrap items-center gap-3">
+                    {round.canClose && round.pairings.some((p) => !p.closed) ? (
+                      <RoundPredictionsCloseButton round={round} onChanged={load} />
+                    ) : null}
+                    <RoundPageLink
+                      leagueId={leagueId}
+                      seasonId={seasonId}
+                      round={round}
+                    />
+                  </span>
                 </div>
                 <ul className="space-y-2">
                   {round.pairings.map((pairing) => (
