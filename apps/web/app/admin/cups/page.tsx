@@ -1,377 +1,471 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { API_BASE } from "../../auth-client";
+/**
+ * Console admin — liste des coupes.
+ *
+ * Lit `GET /admin/cups` (filtres serveur, pagination, compteurs globaux,
+ * email du créateur) au lieu de `GET /cup?publicOnly=false`, qui chargeait
+ * tous les participants de toutes les coupes pour filtrer côté client.
+ *
+ * Actions par coupe : gérer (fiche complète), voir, valider, bascule de
+ * visibilité (`PATCH /cup/:id { isPublic }`, ouvert aux admins) et
+ * suppression définitive (`DELETE /cup/:id`).
+ *
+ * Responsive : cartes sous `md`, tableau au-delà ; filtres empilés sur
+ * mobile.
+ */
 
-type Cup = {
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { apiRequest } from "../../lib/api-client";
+import {
+  CUP_STATUS_META,
+  StatusBadge,
+  VisibilityToggle,
+  errorMessage,
+  useAdminGate,
+} from "../_components/competition-admin";
+
+interface AdminCup {
   id: string;
   name: string;
-  creator: {
-    id: string;
-    coachName: string;
-    email: string;
-  };
-  creatorId: string;
+  description: string | null;
+  ruleset: string;
+  format: string;
+  status: string;
   validated: boolean;
   isPublic: boolean;
-  status: string;
+  creatorId: string;
+  creator: { id: string; coachName: string | null; email: string };
   participantCount: number;
-  participants: Array<{
-    id: string;
-    name: string;
-    roster: string;
-    owner: {
-      id: string;
-      coachName: string;
-      email: string;
-    };
-  }>;
   createdAt: string;
   updatedAt: string;
-};
-
-async function fetchJSON(path: string) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: token ? `Bearer ${token}` : "" },
-  });
-  if (!res.ok)
-    throw new Error(
-      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
-    );
-  return res.json();
 }
 
-async function postJSON(path: string, data: any) {
-  const token = localStorage.getItem("auth_token");
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      Authorization: token ? `Bearer ${token}` : "",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+interface AdminCupsResponse {
+  cups: AdminCup[];
+  counts: {
+    total: number;
+    status: Record<string, number>;
+    public: number;
+    private: number;
+  };
+}
+
+type VisibilityFilter = "" | "public" | "private";
+
+const STATUS_FILTERS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: "", label: "Tous les statuts" },
+  { value: "ouverte", label: "Ouvertes" },
+  { value: "en_cours", label: "En cours" },
+  { value: "terminee", label: "Terminées" },
+  { value: "archivee", label: "Archivées" },
+];
+
+const ACTION_BTN =
+  "inline-flex items-center justify-center gap-1 min-h-[36px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50";
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
-  if (!res.ok)
-    throw new Error(
-      (await res.json().catch(() => ({})))?.error || `Erreur ${res.status}`,
-    );
-  return res.json();
 }
 
 export default function AdminCupsPage() {
-  const router = useRouter();
-  const [cups, setCups] = useState<Cup[]>([]);
+  const isAdmin = useAdminGate();
+  const [cups, setCups] = useState<AdminCup[]>([]);
+  const [counts, setCounts] = useState<AdminCupsResponse["counts"] | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [visibilityFilter, setVisibilityFilter] =
+    useState<VisibilityFilter>("");
+  const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Recherche côté serveur : on attend une courte pause de frappe.
   useEffect(() => {
-    loadCups();
-  }, []);
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
-  const loadCups = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const me = await fetchJSON("/auth/me");
-      const user = me?.user;
-      const roles: string[] | undefined = Array.isArray(user?.roles)
-        ? user.roles
-        : user?.role
-          ? [user.role]
-          : undefined;
-      if (!roles || !roles.includes("admin")) {
-        window.location.href = "/";
-        return;
-      }
-      // Récupérer toutes les coupes (publiques, privées et archivées) pour l'admin
-      const { cups: data } = await fetchJSON("/cup?publicOnly=false");
-      setCups(data);
-    } catch (e: any) {
-      setError(e.message || "Erreur");
+      const params = new URLSearchParams();
+      if (statusFilter) params.set("status", statusFilter);
+      if (visibilityFilter) params.set("visibility", visibilityFilter);
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      params.set("limit", "100");
+      const data = await apiRequest<AdminCupsResponse>(
+        `/admin/cups?${params.toString()}`,
+      );
+      setCups(data.cups ?? []);
+      setCounts(data.counts ?? null);
+    } catch (e: unknown) {
+      setError(errorMessage(e, "Erreur de chargement"));
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, visibilityFilter, debouncedSearch]);
 
-  const handleValidate = async (cupId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir valider cette coupe ? Cela fermera les inscriptions.")) {
+  useEffect(() => {
+    if (isAdmin) load();
+  }, [isAdmin, load]);
+
+  const act = useCallback(
+    async (cupId: string, action: () => Promise<unknown>, failure: string) => {
+      setBusyId(cupId);
+      setError(null);
+      try {
+        await action();
+        await load();
+      } catch (e: unknown) {
+        setError(errorMessage(e, failure));
+      } finally {
+        setBusyId(null);
+      }
+    },
+    [load],
+  );
+
+  const handleToggleVisibility = (cup: AdminCup) =>
+    act(
+      cup.id,
+      () =>
+        apiRequest(`/cup/${cup.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ isPublic: !cup.isPublic }),
+        }),
+      "Échec du changement de visibilité",
+    );
+
+  const handleValidate = (cup: AdminCup) => {
+    if (!confirm(`Valider « ${cup.name} » ? Cela fermera les inscriptions.`)) {
       return;
     }
-    setError(null);
-    try {
-      await postJSON(`/cup/${cupId}/validate`, {});
-      loadCups();
-    } catch (e: any) {
-      setError(e.message || "Erreur lors de la validation");
-    }
+    act(
+      cup.id,
+      () =>
+        apiRequest(`/cup/${cup.id}/validate`, { method: "POST", body: "{}" }),
+      "Échec de la validation",
+    );
   };
 
-  // Filter cups based on search and status
-  const filteredCups = useMemo(() => {
-    return cups.filter((cup) => {
-      // Status filter
-      if (statusFilter === "open" && cup.validated) return false;
-      if (statusFilter === "closed" && !cup.validated) return false;
-      
-      // Search filter
-      if (search) {
-        const searchLower = search.toLowerCase();
-        if (
-          !cup.name.toLowerCase().includes(searchLower) &&
-          !cup.creator.coachName.toLowerCase().includes(searchLower) &&
-          !cup.creator.email.toLowerCase().includes(searchLower) &&
-          !cup.id.toLowerCase().includes(searchLower)
-        ) {
-          return false;
-        }
-      }
-      
-      return true;
-    });
-  }, [cups, statusFilter, search]);
+  const handleDelete = (cup: AdminCup) => {
+    if (
+      !confirm(
+        `Supprimer définitivement « ${cup.name} » ? Inscriptions, rondes et résultats seront perdus. Préférez l'archivage pour garder l'historique.`,
+      )
+    ) {
+      return;
+    }
+    act(
+      cup.id,
+      () => apiRequest(`/cup/${cup.id}`, { method: "DELETE" }),
+      "Échec de la suppression",
+    );
+  };
 
-  if (loading) {
+  const hasFilters = !!(statusFilter || visibilityFilter || search);
+
+  const renderActions = (cup: AdminCup) => (
+    <>
+      <Link
+        href={`/admin/cups/${cup.id}`}
+        data-testid={`admin-cup-manage-${cup.id}`}
+        className={`${ACTION_BTN} bg-blue-50 text-blue-700 hover:bg-blue-100`}
+      >
+        ⚙️ Gérer
+      </Link>
+      <Link
+        href={`/cups/${cup.id}`}
+        className={`${ACTION_BTN} bg-gray-50 text-gray-700 hover:bg-gray-100`}
+      >
+        👁️ Voir
+      </Link>
+      {!cup.validated ? (
+        <button
+          type="button"
+          onClick={() => handleValidate(cup)}
+          disabled={busyId === cup.id}
+          className={`${ACTION_BTN} bg-nuffle-gold/10 text-nuffle-bronze hover:bg-nuffle-gold/20`}
+        >
+          ✓ Valider
+        </button>
+      ) : null}
+      <button
+        type="button"
+        data-testid={`admin-cup-delete-${cup.id}`}
+        onClick={() => handleDelete(cup)}
+        disabled={busyId === cup.id}
+        aria-label={`Supprimer ${cup.name}`}
+        className={`${ACTION_BTN} bg-red-50 text-red-700 hover:bg-red-100`}
+      >
+        🗑️<span className="md:hidden xl:inline">Supprimer</span>
+      </button>
+    </>
+  );
+
+  if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-nuffle-gold mb-4"></div>
-          <p className="text-gray-600">Chargement...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-nuffle-gold" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div data-testid="admin-cups-page" className="space-y-4 sm:space-y-6">
+      {/* En-tête */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite mb-1">
             🏆 Coupes
           </h1>
           <p className="text-sm text-gray-600">
-            Gérez toutes les coupes du système
+            Toutes les coupes, publiques comme privées : statut, visibilité,
+            édition et suppression.
           </p>
         </div>
         <div className="text-sm text-gray-600 bg-white px-4 py-2 rounded-lg border border-gray-200 self-start sm:self-auto">
-          {filteredCups.length} coupe{filteredCups.length !== 1 ? "s" : ""}
+          {cups.length} coupe{cups.length !== 1 ? "s" : ""}
+          {counts && cups.length !== counts.total ? ` / ${counts.total}` : ""}
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
-          <span>⚠️</span>
-          <span>{error}</span>
+      {/* Compteurs */}
+      {counts ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              label: "Total",
+              value: counts.total,
+              tone: "text-nuffle-anthracite",
+            },
+            {
+              label: "Ouvertes",
+              value: counts.status.ouverte ?? 0,
+              tone: "text-green-600",
+            },
+            { label: "Publiques", value: counts.public, tone: "text-blue-600" },
+            { label: "Privées", value: counts.private, tone: "text-gray-700" },
+          ].map((c) => (
+            <div
+              key={c.label}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4"
+            >
+              <div className="text-xs sm:text-sm text-gray-600">{c.label}</div>
+              <div className={`text-2xl sm:text-3xl font-bold ${c.tone}`}>
+                {c.value}
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+      ) : null}
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-3 sm:p-4">
-        <div className="flex gap-3 sm:gap-4 flex-col sm:flex-row">
+      {error ? (
+        <div
+          role="alert"
+          className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
+          ⚠️ {error}
+        </div>
+      ) : null}
+
+      {/* Filtres */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[auto_auto_1fr] gap-3">
           <select
+            data-testid="admin-cups-status-filter"
+            aria-label="Filtrer par statut"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all bg-white"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
           >
-            <option value="">Tous les statuts</option>
-            <option value="open">Ouvertes</option>
-            <option value="closed">Fermées</option>
+            {STATUS_FILTERS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+                {s.value && counts?.status[s.value] !== undefined
+                  ? ` (${counts.status[s.value]})`
+                  : ""}
+              </option>
+            ))}
+          </select>
+          <select
+            data-testid="admin-cups-visibility-filter"
+            aria-label="Filtrer par visibilité"
+            value={visibilityFilter}
+            onChange={(e) =>
+              setVisibilityFilter(e.target.value as VisibilityFilter)
+            }
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
+          >
+            <option value="">Toutes visibilités</option>
+            <option value="public">🌍 Publiques</option>
+            <option value="private">🔒 Privées</option>
           </select>
           <input
-            type="text"
-            placeholder="Rechercher (nom, créateur)..."
+            data-testid="admin-cups-search"
+            type="search"
+            placeholder="Rechercher (nom, créateur, email)…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2.5 flex-1 min-w-0 focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none transition-all"
+            className="w-full min-w-0 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-nuffle-gold focus:border-nuffle-gold outline-none"
           />
         </div>
-        {(statusFilter || search) && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <button
-              onClick={() => {
-                setStatusFilter("");
-                setSearch("");
-              }}
-              className="text-sm text-gray-600 hover:text-gray-800 underline"
-            >
-              Réinitialiser les filtres
-            </button>
-          </div>
-        )}
+        {hasFilters ? (
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter("");
+              setVisibilityFilter("");
+              setSearch("");
+            }}
+            className="text-sm text-gray-600 hover:text-gray-800 underline"
+          >
+            Réinitialiser les filtres
+          </button>
+        ) : null}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5">
-              <tr>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Nom
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Créateur
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Statut
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Visibilité
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Équipes
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Créée le
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-nuffle-anthracite uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredCups.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    Aucune coupe trouvée
-                  </td>
-                </tr>
-              ) : (
-                filteredCups.map((cup) => (
-                  <tr
-                    key={cup.id}
-                    className="hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">{cup.name}</div>
-                      <div className="text-xs text-gray-500 font-mono mt-1">
-                        {cup.id}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900">
-                        {cup.creator.coachName}
-                      </div>
-                      <div className="text-xs text-gray-500 font-mono">
-                        {cup.creator.email}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {cup.status === "ouverte" && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Ouverte
-                        </span>
-                      )}
-                      {cup.status === "en_cours" && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          En cours
-                        </span>
-                      )}
-                      {cup.status === "terminee" && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          Terminée
-                        </span>
-                      )}
-                      {cup.status === "archivee" && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          Archivée
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {cup.isPublic ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Publique
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          🔒 Privée
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-900">
-                          {cup.participantCount}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          équipe{cup.participantCount > 1 ? "s" : ""}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(cup.createdAt).toLocaleDateString("fr-FR", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => router.push(`/admin/cups/${cup.id}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-                          title="Gérer la coupe"
-                        >
-                          <span>⚙️</span>
-                          <span>Gérer</span>
-                        </button>
-                        <button
-                          onClick={() => router.push(`/cups/${cup.id}`)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
-                          title="Voir les détails"
-                        >
-                          <span>👁️</span>
-                          <span>Détails</span>
-                        </button>
-                        {!cup.validated && (
-                          <button
-                            onClick={() => handleValidate(cup.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-nuffle-gold/10 text-nuffle-bronze rounded-lg hover:bg-nuffle-gold/20 transition-colors text-sm font-medium"
-                            title="Valider la coupe"
-                          >
-                            <span>✓</span>
-                            <span>Valider</span>
-                          </button>
-                        )}
-                      </div>
-                    </td>
+      {loading ? (
+        <p className="text-sm text-gray-500">Chargement…</p>
+      ) : cups.length === 0 ? (
+        <p
+          data-testid="admin-cups-empty"
+          className="bg-white rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-500"
+        >
+          Aucune coupe trouvée
+        </p>
+      ) : (
+        <>
+          {/* Mobile : cartes */}
+          <ul className="md:hidden space-y-3" data-testid="admin-cups-cards">
+            {cups.map((cup) => (
+              <li
+                key={cup.id}
+                data-testid={`admin-cup-card-${cup.id}`}
+                className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <Link
+                      href={`/admin/cups/${cup.id}`}
+                      className="font-semibold text-gray-900 hover:underline break-words"
+                    >
+                      {cup.name}
+                    </Link>
+                    <div className="text-xs text-gray-500 break-all">
+                      {cup.creator.coachName ?? "—"} · {cup.creator.email}
+                    </div>
+                  </div>
+                  <StatusBadge status={cup.status} meta={CUP_STATUS_META} />
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
+                  <span>
+                    {cup.participantCount} équipe
+                    {cup.participantCount > 1 ? "s" : ""}
+                  </span>
+                  <span>Créée le {formatDate(cup.createdAt)}</span>
+                </div>
+                <VisibilityToggle
+                  isPublic={cup.isPublic}
+                  onToggle={() => handleToggleVisibility(cup)}
+                  disabled={busyId === cup.id}
+                  testId={`admin-cup-visibility-mobile-${cup.id}`}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  {renderActions(cup)}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop : tableau */}
+          <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full" data-testid="admin-cups-table">
+                <thead className="bg-gradient-to-r from-nuffle-gold/10 to-nuffle-gold/5">
+                  <tr>
+                    {[
+                      "Nom",
+                      "Créateur",
+                      "Statut",
+                      "Visibilité",
+                      "Équipes",
+                      "Actions",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left px-4 py-3 text-xs font-semibold text-nuffle-anthracite uppercase tracking-wider"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <div className="text-sm text-gray-600 mb-1">Total de coupes</div>
-          <div className="text-3xl font-bold text-nuffle-anthracite">
-            {cups.length}
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {cups.map((cup) => (
+                    <tr
+                      key={cup.id}
+                      data-testid={`admin-cup-row-${cup.id}`}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-3 max-w-[16rem]">
+                        <Link
+                          href={`/admin/cups/${cup.id}`}
+                          className="font-medium text-gray-900 hover:underline break-words"
+                        >
+                          {cup.name}
+                        </Link>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {formatDate(cup.createdAt)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 max-w-[14rem]">
+                        <div className="font-medium text-gray-900 truncate">
+                          {cup.creator.coachName ?? "—"}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">
+                          {cup.creator.email}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge
+                          status={cup.status}
+                          meta={CUP_STATUS_META}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <VisibilityToggle
+                          isPublic={cup.isPublic}
+                          onToggle={() => handleToggleVisibility(cup)}
+                          disabled={busyId === cup.id}
+                          testId={`admin-cup-visibility-${cup.id}`}
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">
+                        {cup.participantCount}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {renderActions(cup)}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <div className="text-sm text-gray-600 mb-1">Coupes ouvertes</div>
-          <div className="text-3xl font-bold text-green-600">
-            {cups.filter((c) => !c.validated).length}
-          </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-          <div className="text-sm text-gray-600 mb-1">Coupes fermées</div>
-          <div className="text-3xl font-bold text-red-600">
-            {cups.filter((c) => c.validated).length}
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
-

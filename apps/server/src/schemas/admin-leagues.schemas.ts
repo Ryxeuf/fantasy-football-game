@@ -9,6 +9,7 @@
  */
 
 import { z } from "zod";
+import { createLeagueSchema } from "./league.schemas";
 
 const leagueStatus = z.enum([
   "draft",
@@ -42,3 +43,31 @@ export type AdminLeagueStatusBody = z.infer<typeof adminLeagueStatusSchema>;
 export type AdminLeagueTransferBody = z.infer<
   typeof adminLeagueTransferSchema
 >;
+
+/**
+ * PATCH /admin/leagues/:id — édition d'une ligue par un administrateur.
+ *
+ * Sous-ensemble de `createLeagueSchema` (mêmes bornes) : identité, capacité,
+ * visibilité et barème. L'édition (`ruleset`), le règlement de tournoi et
+ * les rosters autorisés n'y figurent pas : les équipes inscrites ont été
+ * construites POUR eux. Le barème reste soumis au verrou « un match a été
+ * scoré » (cf. route) ; la visibilité, elle, est une règle de LECTURE et se
+ * change à tout moment.
+ */
+export const adminLeagueUpdateSchema = createLeagueSchema
+  .pick({
+    name: true,
+    description: true,
+    isPublic: true,
+    maxParticipants: true,
+    winPoints: true,
+    drawPoints: true,
+    lossPoints: true,
+    forfeitPoints: true,
+  })
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Au moins un champ a modifier est requis",
+  });
+
+export type AdminLeagueUpdateBody = z.infer<typeof adminLeagueUpdateSchema>;
