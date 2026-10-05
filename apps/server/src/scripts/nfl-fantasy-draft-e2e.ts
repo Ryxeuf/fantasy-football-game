@@ -124,6 +124,7 @@ async function main(): Promise<void> {
         bbPosition: r.player!.bbPosition,
       }));
       const out = await setLineup({
+        skipKickoffLock: true, // week passee
         entryId: ownerEntry.id,
         weekId: "2025:W10",
         starters,
@@ -140,6 +141,7 @@ async function main(): Promise<void> {
         bbPosition: r.player!.bbPosition,
       }));
       await setLineup({
+        skipKickoffLock: true, // week passee
         entryId: memberEntry.id,
         weekId: "2025:W10",
         starters,

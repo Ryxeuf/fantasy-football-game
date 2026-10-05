@@ -229,6 +229,8 @@ export async function replaySeason(
           starters,
           captainId: starters[0]!.playerId,
           viceCaptainId: starters[1]!.playerId,
+          // Saison passee : tous les matchs sont joues.
+          skipKickoffLock: true,
         });
       }
 

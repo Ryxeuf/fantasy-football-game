@@ -140,6 +140,9 @@ async function buildAndSetDefaultLineup(
       })),
       captainId: top[0].playerId,
       viceCaptainId: top[1]?.playerId ?? null,
+      // Ecriture systeme (top cote, sans regard aux resultats) : posee au
+      // verrou du dimanche, apres les matchs du jeudi.
+      skipKickoffLock: true,
     });
     return "created";
   } catch (err) {

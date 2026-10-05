@@ -42,6 +42,7 @@ describe("statusForCode", () => {
       "REROLL_ALREADY_USED",
       "INDUCEMENT_LIMIT_REACHED",
       "LINEUP_LOCKED",
+      "PLAYER_GAME_STARTED",
       "WEEK_ALREADY_SETTLED",
     ];
     for (const c of conflicts) {

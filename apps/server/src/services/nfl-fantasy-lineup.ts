@@ -15,6 +15,9 @@
  *     differents l'un de l'autre
  *   - 11 starters obligatoires (taille validee mais configurable via opts)
  *   - Le lineup ne peut etre modifie une fois `lockedAt` set
+ *   - Un joueur dont le match a commence a un role fige pour la week
+ *     (cf. `nfl-fantasy-kickoff-lock`) : ni ajout, ni retrait, ni
+ *     changement capitaine/vice
  *
  * Cote phase 2.E, `settleNflFantasyWeek` lit ces lineups + leurs
  * starters pour calculer le SPP par matchup.
@@ -34,6 +37,11 @@ import {
 } from "@bb/nfl-mapper";
 
 import { prisma } from "../prisma";
+import {
+  describeFrozenChanges,
+  findFrozenLineupChanges,
+  loadPlayerKickoffs,
+} from "./nfl-fantasy-kickoff-lock";
 
 // ────────────────────────────────────────────────────────────────────
 // Erreur typee
@@ -52,6 +60,7 @@ export type NflFantasyLineupErrorCode =
   | "NO_PREVIOUS_LINEUP"
   | "ROSTER_TOO_DIVERGENT"
   | "COMPOSITION_CAP_EXCEEDED"
+  | "PLAYER_GAME_STARTED"
   | "WEEK_NOT_FOUND";
 
 export class NflFantasyLineupError extends Error {
@@ -92,6 +101,15 @@ export interface SetLineupOpts {
    * variantes (ex: 9 vs 13) de modifier sans changer le service.
    */
   readonly startersCount?: number;
+  /**
+   * Desactive le verrouillage au coup d'envoi. Reserve aux ecritures
+   * SYSTEME sans connaissance des resultats : lineup par defaut pose au
+   * verrou du dimanche, replay d'une saison passee, scripts e2e. Jamais
+   * pour une action de coach.
+   */
+  readonly skipKickoffLock?: boolean;
+  /** Horloge injectable (tests). */
+  readonly now?: Date;
 }
 
 export interface LineupWithStarters extends NflFantasyLineup {
@@ -247,6 +265,7 @@ export async function getLineup(opts: {
  *   - Valide structure (taille, doublons, captain/vice presents)
  *   - Verifie que tous les starters sont sur le roster de l'entry
  *   - Refuse si lineup deja locked
+ *   - Refuse tout changement de role d'un joueur dont le match a commence
  *   - Remplace integralement les starters (atomique via transaction)
  *
  * @throws NflFantasyLineupError pour toutes les violations
@@ -268,6 +287,7 @@ export async function setLineup(
 
   const existing = await prisma.nflFantasyLineup.findUnique({
     where: { entryId_weekId: { entryId: opts.entryId, weekId: opts.weekId } },
+    include: { starters: { select: { playerId: true } } },
   });
   if (existing?.lockedAt) {
     throw new NflFantasyLineupError(
@@ -293,6 +313,10 @@ export async function setLineup(
         `Player ${s.playerId} pas sur le roster de l'entry ${opts.entryId}`,
       );
     }
+  }
+
+  if (!opts.skipKickoffLock) {
+    await assertNoFrozenChanges(opts, existing, opts.now ?? new Date());
   }
 
   // Validation composition : plafonds par archetype selon le style de jeu
@@ -361,6 +385,50 @@ export async function setLineup(
     );
   }
   return out;
+}
+
+/**
+ * Refuse un lineup qui change le role d'un joueur dont le match a deja
+ * commence (cf. `nfl-fantasy-kickoff-lock`).
+ *
+ * @throws NflFantasyLineupError(PLAYER_GAME_STARTED)
+ */
+async function assertNoFrozenChanges(
+  opts: SetLineupOpts,
+  existing: {
+    captainId: string | null;
+    viceCaptainId: string | null;
+    starters?: ReadonlyArray<{ playerId: string }>;
+  } | null,
+  now: Date,
+): Promise<void> {
+  const previous = existing
+    ? {
+        starterIds: (existing.starters ?? []).map((s) => s.playerId),
+        captainId: existing.captainId,
+        viceCaptainId: existing.viceCaptainId,
+      }
+    : null;
+  const next = {
+    starterIds: opts.starters.map((s) => s.playerId),
+    captainId: opts.captainId,
+    viceCaptainId: opts.viceCaptainId ?? null,
+  };
+  const kickoffs = await loadPlayerKickoffs({
+    weekId: opts.weekId,
+    playerIds: [...new Set([...(previous?.starterIds ?? []), ...next.starterIds])],
+    now,
+  });
+  const startedPlayerIds = new Set(
+    [...kickoffs].filter(([, k]) => k.started).map(([id]) => id),
+  );
+  const changes = findFrozenLineupChanges({ previous, next, startedPlayerIds });
+  if (changes.length > 0) {
+    throw new NflFantasyLineupError(
+      "PLAYER_GAME_STARTED",
+      describeFrozenChanges(changes),
+    );
+  }
 }
 
 /**

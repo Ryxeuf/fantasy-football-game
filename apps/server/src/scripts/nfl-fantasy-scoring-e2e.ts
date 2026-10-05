@@ -95,6 +95,7 @@ async function main(): Promise<void> {
 
     await step("setLineup owner + member (captain top SPP)", async () => {
       await setLineup({
+        skipKickoffLock: true, // week passee
         entryId: ownerEntry.id,
         weekId: "2025:W10",
         starters: ownerPlayers.map((s) => ({
@@ -105,6 +106,7 @@ async function main(): Promise<void> {
         viceCaptainId: ownerPlayers[1]!.playerId,
       });
       await setLineup({
+        skipKickoffLock: true, // week passee
         entryId: memberEntry.id,
         weekId: "2025:W10",
         starters: memberPlayers.map((s) => ({

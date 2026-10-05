@@ -73,6 +73,7 @@ async function main(): Promise<void> {
 
     await step("setLineup avec captain + vice", async () => {
       const out = await setLineup({
+        skipKickoffLock: true, // week passee
         entryId,
         weekId: "2025:W10",
         starters: players.map((p) => ({
@@ -93,6 +94,7 @@ async function main(): Promise<void> {
 
     await step("setLineup idempotent (re-applique)", async () => {
       const out = await setLineup({
+        skipKickoffLock: true, // week passee
         entryId,
         weekId: "2025:W10",
         starters: players.map((p) => ({
@@ -111,6 +113,7 @@ async function main(): Promise<void> {
     await step("setLineup rejet PLAYER_NOT_ON_ROSTER", async () => {
       try {
         await setLineup({
+          skipKickoffLock: true, // week passee
           entryId,
           weekId: "2025:W10",
           starters: [
@@ -142,6 +145,7 @@ async function main(): Promise<void> {
 
       try {
         await setLineup({
+          skipKickoffLock: true, // week passee
           entryId,
           weekId: "2025:W10",
           starters: players.map((p) => ({
