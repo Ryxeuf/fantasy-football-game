@@ -204,6 +204,7 @@ describe("GET /admin/wallets/:userId", () => {
     expect(res.status).toBe(200);
     expect(res.body.user).toEqual({ id: "u-1", email: "u@u", coachName: "Coach" });
     expect(res.body.wallet.crowns).toBe(1234);
+    expect(res.body.wallet.exists).toBe(true);
     expect(res.body.transactions).toHaveLength(1);
     expect(res.body.transactions[0].type).toBe("WIN");
     expect(res.body.pagination.total).toBe(42);
@@ -239,7 +240,7 @@ describe("GET /admin/wallets/:userId", () => {
     expect(findManyCall.skip).toBe(0); // page=1 (clampe), skip=(1-1)*100
   });
 
-  it("solde 0 si pas de wallet", async () => {
+  it("solde 0 et `exists: false` si pas de wallet", async () => {
     mockedPrisma.user.findUnique.mockResolvedValueOnce({
       id: "u",
       email: "x",
@@ -253,6 +254,7 @@ describe("GET /admin/wallets/:userId", () => {
     const res = await request("GET", "/wallets/u");
     expect(res.status).toBe(200);
     expect(res.body.wallet.crowns).toBe(0);
+    expect(res.body.wallet.exists).toBe(false);
   });
 });
 

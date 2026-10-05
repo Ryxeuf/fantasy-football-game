@@ -40,6 +40,7 @@ import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
 import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import adminWalletRoutes from "./routes/admin-wallet";
+import adminCrownsRoutes from "./routes/admin-crowns";
 import adminTeamJournalRoutes from "./routes/admin-team-journal";
 import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
@@ -470,6 +471,9 @@ app.use("/admin/sim-replays", adminSimReplaysRoutes);
 // Lot P.B.1 — admin wallet (audit financier strict). Mountee sur /admin
 // pour avoir /admin/wallets/* et /admin/bets/*.
 app.use("/admin", adminWalletRoutes);
+// Couronnes : liste des wallets (avec / sans), création d'un wallet manquant,
+// vue d'ensemble de la monnaie et journal global.
+app.use("/admin", adminCrownsRoutes);
 // Thèmes de dés : catalogue (libellés, prix, mise en vente) et cosmétiques de
 // chaque coach (thèmes acquis, thème choisi). Les Crowns s'ajustent par
 // `/admin/wallets/:userId/balance` ci-dessus.
