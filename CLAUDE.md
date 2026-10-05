@@ -1882,3 +1882,20 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (formulaire + panneau verrouillé), panneau de la fiche, page de saison,
   spec e2e ; au passage, `unlockAchievements` rendu portable SQLite. Récit
   [`docs/roadmap/sessions/2026-09-27-league-predictions.md`](./docs/roadmap/sessions/2026-09-27-league-predictions.md).
+- **2026-10-05** : **Exploration « Pro League : un match intégral, un coach
+  qui évolue, un replay rejouable sur plateau »** (`/opsx:explore`, aucun
+  code). Mesuré sur 0.26.0, full driver, rosters de 13 joueurs : 0,5 TD/match,
+  **85 % des blocages jamais résolus** (l'IA n'émet pas `BLOCK_CHOOSE`),
+  **aucun joueur à terre ne se relève** pendant un drive (moteur entier, donc
+  aussi l'entraînement contre l'IA), mi-temps vide après un TD (pas de remise
+  en jeu headless hors mi-temps), 3,9 joueurs activés par tour, replay de
+  1,3-1,8 Mo par match (snapshots + `gameLog` cumulé) là où un journal
+  « état initial + coups + dés » pèse 4 Ko. Sans `roster`, le full driver
+  joue à 2 contre 2 (`setup()`) — c'est ce que mesurent `sim:perf` et
+  `sim:compare`. Architecture retenue : coach (plan de drive collant) →
+  planificateur d'activations (probabilités, relances, rôles, personnalités)
+  → choix → moteur avec RNG forké par coup ; profil tactique PERSISTÉ
+  (`ProCoach`) et adaptation bornée, expliquée, rappelée vers l'ancre raciale,
+  figée dans chaque replay. Cinq lots : match complet → journal rejouable →
+  cerveau du coach → évolution → exploitation. Voir
+  [`docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md`](./docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md).
