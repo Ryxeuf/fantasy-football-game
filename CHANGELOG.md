@@ -1,3 +1,10 @@
+## [1.249.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.248.0...v1.249.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **admin:** feuilles de match et liens croisés équipes ↔ compétitions ([#1050](https://github.com/Ryxeuf/fantasy-football-game/issues/1050)) ([f5dc885](https://github.com/Ryxeuf/fantasy-football-game/commit/f5dc885c1afd8bd8b84a80e2f0b6b10855d285c6))
+
 ## [1.248.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.247.0...v1.248.0) (2026-10-05)
 
 
