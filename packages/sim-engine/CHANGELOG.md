@@ -7,6 +7,54 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.29.0 — 2026-10-05 — **Lot 3 « le cerveau du coach »**
+
+Change OpenSpec `pro-league-coach-brain`. Le full driver ne choisit plus ses
+coups case par case avec un évaluateur glouton : un COACH par équipe
+(`src/coach/`) porte un plan de drive, planifie des activations entières et
+décide les choix selon le plan.
+
+- **Plan de drive collant** (`drive-plan.ts`) : softmax sur les stratégies
+  (celles du driver hybride + `two-turn-score`, `safe-hold`,
+  `mark-receivers` ; `stall` exige de mener, `blitz-train` est un plan de
+  défense), ré-évalué seulement sur évènement (possession, mi-temps, fin de
+  mi-temps, score). Un ballon libre dans notre moitié fait de nous l'attaque.
+- **Modèle de probabilité** (`probability.ts`) : esquive, GFI, ramassage,
+  passe, réception avec les cibles et modificateurs DU MOTEUR, relances de
+  compétence, dés de blocage avec les soutiens tels que le moteur les compte.
+- **Planificateur d'activations** (`activation-planner.ts`) : chemin le plus
+  SÛR vers chaque case (relaxation par couches, esquives, GFI, ramassage,
+  relance d'équipe sur le jet le moins sûr), activations entières (chemin +
+  blocage / blitz / passe / remise / agression / relevé) scorées
+  `P × gain − (1 − P) × coût du turnover` ; un TD vaut toujours 1000 de plus
+  que rester ; blocage à un dé sans Blocage = pari signalé, joué en fin de
+  tour ; blocages qui LIBÈRENT le porteur (marqueurs, couloir, paires
+  d'adversaires quand il est encerclé) boostés.
+- **Fonction de valeur locale** (`evaluate.ts`) : contribution par joueur
+  (progression du porteur au tempo du plan, zones de tacle, menaces,
+  escorte avec géométrie de cage ancrée sur la case VISÉE du porteur,
+  mobilité, ligne de touche ; écran / pression / marquage en défense).
+- **Rôles** dérivés du poste et des compétences, **personnalité** par joueur
+  dérivée de son identifiant (cinq traits), **momentum** branché sur la
+  température du softmax, ordre canonique BB quasi strict (actions sans dés
+  d'abord).
+- **Moteur** (`@bb/game-engine`), bugs trouvés par le bench : le porteur
+  rejouait un ramassage à CHAQUE case ; un porteur KO emportait le ballon en
+  réserve ; le ballon restait coincé sous un joueur au sol (jamais de rebond
+  après un blocage) et « rebondissait » contre la touche (pas de remise en
+  jeu) ; un joueur debout sans PM ne tentait pas la réception ; un soutien
+  de blocage exigeait des PM restants ; le dernier joueur activé était coupé
+  après une case ; le compteur de rounds n'avançait pas après un TD du
+  second joueur (9 tours par mi-temps) et la 2e mi-temps lisait l'engagement
+  du dernier marqueur.
+- **Bench** : `runBench({ driverKind })`, baseline CI sur le FULL driver
+  (20 matchs par duel, tolérance 0,3), `MAX_ACTIONS_PER_MATCH` 3000.
+
+Mesuré (20 matchs par duel, baseline) : Orques–Elfes sylvains 1,9 TD /
+1,45 sorties / 11,9 turnovers par match ; Ogres–Halflings 1,6 / 1,5 / 6,5 ;
+Nains–Vipères 1,5 / 1,15 / 11,8. ~1 s par match. Référence FUMBBL : 4,1 /
+2,1 / 3,7 TD par match — l'écart restant est documenté dans le change.
+
 ## 0.28.0 — 2026-10-05 — **Lot 2 « le journal rejouable »**
 
 Change OpenSpec `pro-league-replay-journal`. Un replay v1 stockait un état

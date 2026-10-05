@@ -19,7 +19,8 @@
  * l'implémentation interne est susceptible de le faire.
  */
 
-import { simulateMatch } from '../simulate-match';
+import { buildEngineRoster, rosterSlugForRace } from '../driver/engine-roster-fixture';
+import { simulateMatch, type SimulateDriverKind as DriverKind } from '../simulate-match';
 import type { ProTeamProfile } from '../tactics/race-profiles';
 import type { SimInput, SimTeamInput } from '../types';
 
@@ -41,6 +42,12 @@ export interface BenchInput {
   runs: number;
   /** Seed of the first match. Subsequent matches get `seedOffset + i`. */
   seedOffset: number;
+  /**
+   * Lot 3 « cerveau du coach » — driver mesuré. `full` joue de vrais matchs
+   * (rosters de 13 joueurs tirés du catalogue par la race du profil) ;
+   * `hybrid` (défaut historique) reste l'abstraction.
+   */
+  driverKind?: DriverKind;
 }
 
 export interface BenchPairing {
@@ -55,6 +62,7 @@ export interface BenchMatrixInput {
   teams: readonly ProTeamProfile[];
   runs: number;
   seedOffset: number;
+  driverKind?: DriverKind;
 }
 
 export interface BenchMatrixResult {
@@ -63,14 +71,17 @@ export interface BenchMatrixResult {
 
 function toSimTeamInput(
   team: ProTeamProfile & { tv?: number },
-  side: 'home' | 'away'
+  side: 'home' | 'away',
+  driverKind: DriverKind
 ): SimTeamInput {
+  const slug = driverKind === 'full' ? rosterSlugForRace(team.race) : undefined;
   return {
     id: team.id,
     name: team.name,
     side,
     tactics: team.tactics,
     tv: team.tv,
+    roster: slug ? buildEngineRoster(side, slug) : undefined,
   };
 }
 
@@ -87,15 +98,16 @@ export function runBench(input: BenchInput): BenchPairing {
     throw new Error('runBench: runs must be a positive integer');
   }
   const favorite = deriveFavorite(input.pairing);
+  const driverKind: DriverKind = input.driverKind ?? 'hybrid';
   const samples: VivacitySample[] = [];
   for (let i = 0; i < input.runs; i += 1) {
     const seed = input.seedOffset + i;
     const sim: SimInput = {
       seed,
-      home: toSimTeamInput(input.pairing.home, 'home'),
-      away: toSimTeamInput(input.pairing.away, 'away'),
+      home: toSimTeamInput(input.pairing.home, 'home', driverKind),
+      away: toSimTeamInput(input.pairing.away, 'away', driverKind),
     };
-    const result = simulateMatch(sim);
+    const result = simulateMatch(sim, { driverKind });
     samples.push(simResultToSample(result, favorite));
   }
   return {
@@ -122,6 +134,7 @@ export function runBenchMatrix(input: BenchMatrixInput): BenchMatrixResult {
         pairing: { home: input.teams[i], away: input.teams[j] },
         runs: input.runs,
         seedOffset: cursor,
+        driverKind: input.driverKind,
       });
       cursor += input.runs;
       pairings.push(out);

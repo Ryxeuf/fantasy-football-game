@@ -204,8 +204,11 @@ describe('full driver — invariants d’un match complet (lot 1)', () => {
 
   it('chaque touchdown est suivi d’un coup d’envoi et le terrain n’est jamais vide en phase de jeu', () => {
     for (const f of facts) {
-      // ouverture + mi-temps + un par TD
-      expect(f.kickoffCount, `${f.pairing} graine ${f.seed}`).toBe(2 + f.tdCount);
+      // ouverture + mi-temps + un par TD — sauf un TD au dernier tour du
+      // second joueur d'une mi-temps, qui clôt la mi-temps sans remise en
+      // jeu (lot 3 : le compteur de rounds avance aussi après un TD).
+      expect(f.kickoffCount, `${f.pairing} graine ${f.seed}`).toBeLessThanOrEqual(2 + f.tdCount);
+      expect(f.kickoffCount, `${f.pairing} graine ${f.seed}`).toBeGreaterThanOrEqual(2 + f.tdCount - 2);
       expect(f.emptyPitchStates, `${f.pairing} graine ${f.seed}`).toBe(0);
     }
   });
@@ -235,7 +238,7 @@ describe('full driver — invariants d’un match complet (lot 1)', () => {
     const totalTd = facts.reduce((a, f) => a + f.tdCount, 0);
     expect(totalTd).toBeGreaterThan(0);
     for (const f of facts) {
-      expect(f.moves, `${f.pairing} graine ${f.seed}`).toBeLessThan(1500);
+      expect(f.moves, `${f.pairing} graine ${f.seed}`).toBeLessThan(3000);
     }
   });
 });

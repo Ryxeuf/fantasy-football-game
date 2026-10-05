@@ -35,6 +35,14 @@ export {
   rosterSlugForRace,
   RACE_TO_ROSTER_SLUG,
 } from './driver/engine-roster-fixture';
+// Lot 3 « cerveau du coach » — le cerveau du full driver, exposé pour les
+// outils (diagnostics, bench, futur lot 4).
+export { createCoach, type Coach, type CoachOptions, type CoachTrace } from './coach/coach';
+export { planActivations, type ActivationCandidate } from './coach/activation-planner';
+export { choosePlan, buildDriveContext, type DrivePlan, type CoachStrategyId } from './coach/drive-plan';
+export { deriveRole, carrierAptitude, type PlayerRole } from './coach/roles';
+export { personalityFor, type PlayerPersonality } from './coach/personality';
+export type { FullDriverOptions } from './driver/full-driver';
 export {
   DEFAULT_TACTICAL_PROFILE,
   TACTICAL_PROFILE_PARAMETERS,

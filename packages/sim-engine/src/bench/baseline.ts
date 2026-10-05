@@ -47,6 +47,12 @@ const baselineEntrySchema = z
     expected: expectedMetricsSchema,
     /** Optional per-pairing tolerance override. */
     tolerance: z.number().positive().lt(1).optional(),
+    /**
+     * Lot 3 « cerveau du coach » — driver mesuré par cette ligne. `full`
+     * joue de vrais matchs (le driver de production) ; absent = `hybrid`
+     * (lignes antérieures).
+     */
+    driverKind: z.enum(['hybrid', 'full']).optional(),
   })
   .strict();
 

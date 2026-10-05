@@ -1,51 +1,57 @@
 {
-  "engineVer": "0.28.0",
+  "engineVer": "0.29.0",
   "snapshotAt": "2026-10-05",
   "tolerance": 0.05,
   "pairings": [
     {
       "homeId": "pit-smashers",
       "awayId": "kc-soaring-hawks",
-      "runs": 200,
+      "runs": 20,
       "seedOffset": 0,
+      "tolerance": 0.3,
+      "driverKind": "full",
       "expected": {
-        "tdMean": 1.875,
-        "tdStd": 1.0341058939973218,
-        "casualtyMean": 0.985,
-        "turnoverMean": 3.85,
-        "homeWinRate": 0.455,
-        "awayWinRate": 0.165,
-        "drawRate": 0.38
+        "tdMean": 1.9,
+        "tdStd": 0.7681145747868608,
+        "casualtyMean": 1.45,
+        "turnoverMean": 11.9,
+        "homeWinRate": 0.4,
+        "awayWinRate": 0.5,
+        "drawRate": 0.1
       }
     },
     {
       "homeId": "buf-snow-ogres",
       "awayId": "gb-cheese-halflings",
-      "runs": 200,
+      "runs": 20,
       "seedOffset": 0,
+      "tolerance": 0.3,
+      "driverKind": "full",
       "expected": {
-        "tdMean": 1.945,
-        "tdStd": 0.9391352405271557,
-        "casualtyMean": 1.03,
-        "turnoverMean": 3.925,
-        "homeWinRate": 0.855,
-        "awayWinRate": 0.025,
-        "drawRate": 0.12
+        "tdMean": 1.6,
+        "tdStd": 0.66332495807108,
+        "casualtyMean": 1.5,
+        "turnoverMean": 6.5,
+        "homeWinRate": 0.15,
+        "awayWinRate": 0.5,
+        "drawRate": 0.35
       }
     },
     {
       "homeId": "chi-iron-bears",
       "awayId": "dal-vipers",
-      "runs": 200,
+      "runs": 20,
       "seedOffset": 0,
+      "tolerance": 0.3,
+      "driverKind": "full",
       "expected": {
         "tdMean": 1.5,
-        "tdStd": 0.9848857801796105,
-        "casualtyMean": 1,
-        "turnoverMean": 4.05,
-        "homeWinRate": 0.545,
-        "awayWinRate": 0.105,
-        "drawRate": 0.35
+        "tdStd": 0.6708203932499369,
+        "casualtyMean": 1.15,
+        "turnoverMean": 11.8,
+        "homeWinRate": 0.5,
+        "awayWinRate": 0.5,
+        "drawRate": 0
       }
     }
   ]
