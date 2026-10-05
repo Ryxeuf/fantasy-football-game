@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { dynamicRoute } from "../../../../../lib/typed-route";
 import { PredictionPairingCard } from "../../../../_components/PredictionPairingCard";
 import { PredictionLeaderboard } from "../../../../_components/PredictionLeaderboard";
 import { RoundPredictionsCloseButton } from "../../../../_components/RoundPredictionsCloseButton";
@@ -41,7 +42,7 @@ function RoundPageLink({
   if (!status) return null;
   return (
     <Link
-      href={roundPredictionsPagePath(leagueId, seasonId, round.id)}
+      href={dynamicRoute(roundPredictionsPagePath(leagueId, seasonId, round.id))}
       data-testid={`prediction-round-link-${round.id}`}
       className="text-sm text-nuffle-bronze underline"
     >

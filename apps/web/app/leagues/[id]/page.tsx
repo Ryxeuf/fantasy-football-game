@@ -8,6 +8,8 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { NextMatchesPanel } from "./NextMatchesPanel";
 import { LeaguePredictionsPanel } from "./LeaguePredictionsPanel";
+import { useSeasonPredictions } from "../_components/useSeasonPredictions";
+import { roundPredictionLinks } from "../_components/prediction-rounds";
 import { InviteCoachModal } from "./InviteCoachModal";
 import { SentInvitationsPanel } from "./SentInvitationsPanel";
 import { TestParticipantButton } from "./TestParticipantButton";
@@ -328,6 +330,14 @@ export default function LeagueDetailPage() {
     if (season.meceneEnabled !== true) return false;
     return season.status === "in_progress";
   }, [myParticipant, season]);
+
+  // Pronostics de la saison affichée : chargés UNE fois pour le résumé de
+  // la fiche et le bouton 🔮 de chaque journée du calendrier.
+  const predictions = useSeasonPredictions(season?.id ?? null);
+  const predictionLinks = useMemo(
+    () => roundPredictionLinks(predictions.view, leagueId),
+    [predictions.view, leagueId],
+  );
 
   if (loading) {
     return (
@@ -686,6 +696,7 @@ export default function LeagueDetailPage() {
                   }}
                   preferredPoolId={myPoolId}
                   isCommissioner={isCreator}
+                  predictionLinks={predictionLinks}
                 />
               </div>
 
