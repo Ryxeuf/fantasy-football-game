@@ -22,6 +22,7 @@ export function getMoveActivePlayerId(
     case "MOVE":
     case "LEAP":
     case "END_PLAYER_TURN":
+    case "STAND_UP":
     case "DODGE":
     case "BLOCK":
     case "MULTI_BLOCK":

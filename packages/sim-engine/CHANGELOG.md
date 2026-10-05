@@ -7,6 +7,55 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.27.0 — 2026-10-05 — **Lot 1 « un match complet »**
+
+Change OpenSpec `pro-league-full-match`. Issu de l'exploration
+`docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md` : un
+match du full driver n'était pas un match (85 % des blocages jamais résolus,
+aucun joueur à terre relevé, mi-temps vide après un TD, 25 tours joués sur 32).
+
+### Moteur (`@bb/game-engine`, partagé avec l'entraînement contre l'IA)
+
+- **Se relever** : nouveau coup `STAND_UP` (3 PM, gratuit avec Jump Up). Un
+  joueur sonné (`state: 'stunned'`) est retourné face visible à la fin du tour
+  de son équipe ; un joueur `stunned` sans cet état est Prone et se relève.
+- **Choix obligatoires** : dès qu'un `pendingBlock` / `pendingPushChoice` /
+  `pendingFollowUpChoice` / `pendingDumpOff` / `pendingOnTheBall` est posé,
+  `getLegalMoves` ne renvoie que les coups qui le résolvent et `applyMove`
+  refuse les autres (END_TURN reste un nettoyage de secours, journalisé).
+  L'évaluateur score chaque choix (dé selon le choisisseur, poussée vers la
+  foule et loin du ballon, suivi hors porteur, relance utile, apothicaire sur
+  blessure, remise).
+- **Activation contiguë** : tant qu'un joueur a une activation ouverte, seuls
+  ses coups sont légaux ; `END_PLAYER_TURN` porte `gfiUsed` au cap réel
+  (Sprint) ; coût d'une case (1,25) et coût attendu d'un GFI dans le scoring.
+- **Charge** (coup d'envoi 10) : seuls les joueurs désignés sont proposés,
+  sans Action de Blocage simple.
+
+### Sim-engine
+
+- Remise en jeu headless après CHAQUE touchdown (`executeHeadlessDrive`, la
+  même séquence qu'à la mi-temps) ; `kickingTeam` posé dès l'état initial.
+- Évènements de coup d'envoi interactifs appliqués et résolus par l'IA
+  (`full-driver-kickoff-ai`).
+- Un coup refusé par le moteur n'est plus rejoué à l'infini (clôture
+  d'activation, sinon fin de tour).
+- Mesures sur de VRAIS rosters (`engine-roster-fixture`, 13 joueurs) :
+  `sim:perf`, `sim:compare`, smoke de perf (p95 < 5 s), comparaison serveur,
+  et `full-match.invariants.test.ts` (20 graines par défaut,
+  `FULL_MATCH_SEEDS=100`).
+
+Mesuré (Orques vs Elfes sylvains, 10 graines) : 100 % des blocages résolus,
+23 relevés par match, 0 état vide persistant, 566 coups et 0,8 s par match.
+La qualité tactique (0,5 TD/match) est l'objet du lot 3.
+
+### Rattrapage 0.14.0 → 0.26.0
+
+Ces versions n'ont pas d'entrée ici ; leurs changements sont documentés dans
+`docs/engine-*.md` (full driver, évènements enrichis, replay terrain,
+corrections) et dans l'en-tête de `src/types.ts` (0.26.0 : faces des dés de
+blocage alignées sur le moteur).
+
 ## 0.13.0 — 2026-05-06 (sprint task 0.E.1 iter #12-16) — **C2 atteint sur Snow Ogres vs Halflings**
 
 ### Headline 🎯

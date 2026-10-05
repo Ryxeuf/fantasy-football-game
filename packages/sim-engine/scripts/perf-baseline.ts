@@ -31,6 +31,7 @@ import { parseArgs } from 'node:util';
 import { measureSimulationPerf } from '../src/perf/perf-baseline';
 import { PRO_LEAGUE_TEAM_BY_ID } from '../src/tactics/race-profiles';
 import type { SimInput } from '../src/types';
+import { buildEngineSimInput } from '../src/driver/engine-roster-fixture';
 
 const HELP = `pnpm sim:perf — perf baseline hybrid + full
 
@@ -97,11 +98,8 @@ function main(argv: readonly string[]): void {
   const runs = Math.min(50, Math.max(1, args.runs ? Number.parseInt(args.runs, 10) : 5));
   const seed = args.seed ? Number.parseInt(args.seed, 10) : 1;
 
-  const input: SimInput = {
-    seed,
-    home: { id: home.id, name: home.name, side: 'home' },
-    away: { id: away.id, name: away.name, side: 'away' },
-  } as SimInput;
+  // Lot 1 « match complet » : profils, VE et rosters réels (13 joueurs).
+  const input: SimInput = buildEngineSimInput(home, away, seed);
 
   const hybrid = measureSimulationPerf({ input, driverKind: 'hybrid', runs });
   const full = measureSimulationPerf({ input, driverKind: 'full', runs });

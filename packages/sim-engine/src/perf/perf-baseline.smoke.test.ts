@@ -8,7 +8,8 @@
  * SLO retenus (mesurés sur 5 runs) :
  *   - hybrid.p95 < 500 ms  (typique 30-60 ms en local, headroom CI)
  *   - full.p95   < 8 s     (typique 1-3 s en local, headroom CI runner)
- *   - full.p95 / hybrid.p95 < 200 (sanity ratio)
+ *   (le ratio full/hybride n'est plus borné : avec de vrais rosters le full
+ *   driver joue 22 joueurs et ~500 coups, l'hybride reste une abstraction)
  *
  * Les seuils sont volontairement larges pour absorber la variance d'un
  * runner CI partagé. L'objectif est de catcher une regression x5/x10,
@@ -23,13 +24,17 @@ import { describe, expect, it } from "vitest";
 
 import { PRO_LEAGUE_TEAM_BY_ID } from "../tactics/race-profiles";
 import { measureSimulationPerf } from "./perf-baseline";
+import { buildEngineRoster } from "../driver/engine-roster-fixture";
 import type { SimInput } from "../types";
 
 const RUNS = 5;
 const HYBRID_P95_BUDGET_MS = 500;
-const FULL_P95_BUDGET_MS = 8000;
-const RATIO_BUDGET = 200;
+// Lot 1 : budget p95 < 5 s sur de vrais matchs à 22 joueurs (typique ~1 s).
+const FULL_P95_BUDGET_MS = 5000;
 
+// Lot 1 « match complet » : rosters de 13 joueurs tirés du catalogue du
+// moteur. Sans roster, le full driver jouait à 2 contre 2 (`setup()`) et ce
+// smoke ne mesurait pas un match.
 function buildSimInput(seed: number): SimInput {
   const home = PRO_LEAGUE_TEAM_BY_ID["pit-smashers"];
   const away = PRO_LEAGUE_TEAM_BY_ID["kc-soaring-hawks"];
@@ -38,9 +43,23 @@ function buildSimInput(seed: number): SimInput {
   }
   return {
     seed,
-    home: { id: home.id, name: home.name, side: "home" },
-    away: { id: away.id, name: away.name, side: "away" },
-  } as SimInput;
+    home: {
+      id: home.id,
+      name: home.name,
+      side: "home",
+      tactics: home.tactics,
+      tv: home.tv,
+      roster: buildEngineRoster("home", "orc"),
+    },
+    away: {
+      id: away.id,
+      name: away.name,
+      side: "away",
+      tactics: away.tactics,
+      tv: away.tv,
+      roster: buildEngineRoster("away", "wood_elf"),
+    },
+  };
 }
 
 describe("perf baseline — smoke @slow (Lot 3.B.3)", () => {
@@ -78,26 +97,4 @@ describe("perf baseline — smoke @slow (Lot 3.B.3)", () => {
     { timeout: 60_000 },
   );
 
-  it(
-    "ratio full.p95 / hybrid.p95 reste sous 200×",
-    () => {
-      const hybrid = measureSimulationPerf({
-        input: buildSimInput(1),
-        driverKind: "hybrid",
-        runs: RUNS,
-      });
-      const full = measureSimulationPerf({
-        input: buildSimInput(1),
-        driverKind: "full",
-        runs: RUNS,
-      });
-      const ratio = full.p95 / Math.max(1, hybrid.p95);
-      // eslint-disable-next-line no-console
-      console.log(
-        `[perf-baseline] ratio full/hybrid = ${ratio.toFixed(1)}× (full.p95=${full.p95.toFixed(0)}ms, hybrid.p95=${hybrid.p95.toFixed(0)}ms)`,
-      );
-      expect(ratio).toBeLessThan(RATIO_BUDGET);
-    },
-    { timeout: 90_000 },
-  );
 });
