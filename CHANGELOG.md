@@ -1,3 +1,10 @@
+## [1.248.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.247.0...v1.248.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **admin:** gestion complète des coupes et des ligues, visibilité comprise ([#1049](https://github.com/Ryxeuf/fantasy-football-game/issues/1049)) ([a3175b7](https://github.com/Ryxeuf/fantasy-football-game/commit/a3175b74359a01624dfe1cdaf98ed2e92a9fdcd7))
+
 ## [1.247.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.246.0...v1.247.0) (2026-10-05)
 
 
