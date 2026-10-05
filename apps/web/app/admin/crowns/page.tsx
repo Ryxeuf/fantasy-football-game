@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CROWNS_TX_TYPES,
@@ -110,6 +110,8 @@ export default function AdminCrownsPage() {
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  // Une réponse du journal plus ancienne que la dernière demandée est ignorée.
+  const ledgerRequest = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,11 +125,13 @@ export default function AdminCrownsPage() {
   }, [days]);
 
   const loadLedger = useCallback(async () => {
+    const id = ++ledgerRequest.current;
     setLedgerError(null);
     try {
-      setLedger(await adminListCrownsLedger({ type: type || undefined, search: query || undefined, page, limit: LEDGER_PAGE_SIZE }));
+      const next = await adminListCrownsLedger({ type: type || undefined, search: query || undefined, page, limit: LEDGER_PAGE_SIZE });
+      if (id === ledgerRequest.current) setLedger(next);
     } catch (e: unknown) {
-      setLedgerError(e instanceof Error ? e.message : "Erreur de chargement");
+      if (id === ledgerRequest.current) setLedgerError(e instanceof Error ? e.message : "Erreur de chargement");
     }
   }, [type, query, page]);
 

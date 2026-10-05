@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   adminCreateMissingWallets,
@@ -38,6 +38,9 @@ export default function AdminWalletsPage() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
+  // Numéro de la dernière requête : une réponse plus ancienne arrivée après
+  // (filtre changé pendant une recherche lente) est ignorée.
+  const requestId = useRef(0);
 
   useEffect(() => {
     setStatus(parseWalletStatus(new URLSearchParams(window.location.search).get("status")));
@@ -45,14 +48,22 @@ export default function AdminWalletsPage() {
 
   const load = useCallback(async () => {
     if (status === null) return;
+    const id = ++requestId.current;
     setLoading(true);
     setError(null);
     try {
-      setData(await adminListWallets({ status, search: query || undefined, page, limit: PAGE_SIZE }));
+      const next = await adminListWallets({ status, search: query || undefined, page, limit: PAGE_SIZE });
+      if (id !== requestId.current) return;
+      setData(next);
+      // Une création vide la dernière page du filtre « sans wallet » : on
+      // recule sur la dernière page qui existe encore.
+      const last = Math.max(1, Math.ceil(next.total / next.limit));
+      if (page > last) setPage(last);
     } catch (e: unknown) {
+      if (id !== requestId.current) return;
       setError(e instanceof Error ? e.message : "Erreur de chargement");
     } finally {
-      setLoading(false);
+      if (id === requestId.current) setLoading(false);
     }
   }, [status, query, page]);
 

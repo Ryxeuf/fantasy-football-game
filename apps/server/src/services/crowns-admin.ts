@@ -34,8 +34,17 @@ export class CrownsAdminError extends Error {
 export const CREATE_MISSING_BATCH = 500;
 export const CREATE_MISSING_MAX_BATCHES = 20;
 
+function prismaCode(e: unknown): unknown {
+  return typeof e === "object" && e !== null ? (e as { code?: unknown }).code : undefined;
+}
+
 function isUniqueViolation(e: unknown): boolean {
-  return typeof e === "object" && e !== null && (e as { code?: unknown }).code === "P2002";
+  return prismaCode(e) === "P2002";
+}
+
+/** P2003 : la clé étrangère `userId` ne vise plus personne (compte supprimé). */
+function isForeignKeyViolation(e: unknown): boolean {
+  return prismaCode(e) === "P2003";
 }
 
 function searchWhere(search: string | undefined): Record<string, unknown> {
@@ -172,6 +181,7 @@ export async function createCoachWallet(userId: string): Promise<CreateWalletRes
   } catch (e: unknown) {
     if (!isUniqueViolation(e)) throw e;
     const raced = await prisma.proWallet.findUnique({ where: { userId }, select });
+    if (!raced) throw e;
     return { created: false, wallet: toWalletView(raced) };
   }
 }
@@ -188,8 +198,9 @@ export interface CreateMissingWalletsResult {
 
 /**
  * Crée le wallet de TOUS les coachs qui n'en ont pas, par lots. Un lot qui
- * croise une création concurrente (P2002) est rejoué ligne à ligne en
- * `upsert` : le lot ne doit pas échouer pour un wallet créé entre-temps.
+ * croise une création concurrente (P2002) ou un compte supprimé entre la
+ * lecture et l'écriture (P2003) est rejoué coach par coach : le lot ne doit
+ * pas échouer pour un seul coach.
  * (`createMany({ skipDuplicates })` n'existe pas sur le miroir SQLite.)
  */
 export async function createMissingWallets(): Promise<CreateMissingWalletsResult> {
@@ -206,7 +217,7 @@ export async function createMissingWallets(): Promise<CreateMissingWalletsResult
       const res = await prisma.proWallet.createMany({ data: missing.map((u) => ({ userId: u.id })) });
       created += res.count as number;
     } catch (e: unknown) {
-      if (!isUniqueViolation(e)) throw e;
+      if (!isUniqueViolation(e) && !isForeignKeyViolation(e)) throw e;
       for (const u of missing) {
         const r = await createCoachWallet(u.id).catch((err: unknown) => {
           // Compte supprimé entre la lecture et l'écriture : rien à créer.

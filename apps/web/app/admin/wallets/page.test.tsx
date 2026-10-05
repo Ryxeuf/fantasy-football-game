@@ -103,4 +103,34 @@ describe("AdminWalletsPage", () => {
     const btn = (await screen.findByText("Tous les coachs ont un wallet")) as HTMLButtonElement;
     expect(btn.disabled).toBe(true);
   });
+
+  it("dernière page vidée par une création : recule sur la dernière page existante", async () => {
+    // Page 2 du filtre « sans wallet », puis la création vide cette page.
+    list
+      .mockResolvedValueOnce({ ...PAGE, total: 30 })
+      .mockResolvedValueOnce({ ...PAGE, total: 30, page: 2 })
+      .mockResolvedValueOnce({ ...PAGE, items: [], total: 25, page: 2 })
+      .mockResolvedValue({ ...PAGE, total: 25 });
+    createOne.mockResolvedValueOnce({ created: true, wallet: { userId: "u2", crowns: 0, createdAt: "x" } });
+    render(<AdminWalletsPage />);
+    await screen.findByTestId("wallet-row-u1");
+    fireEvent.click(screen.getByText("→"));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 })));
+    fireEvent.click(await screen.findByTestId("wallet-create-u2"));
+    await waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 })));
+  });
+
+  it("une réponse plus ancienne arrivée en dernier est ignorée", async () => {
+    let releaseSlow: (v: unknown) => void = () => {};
+    list
+      .mockImplementationOnce(() => new Promise((r) => (releaseSlow = r)))
+      .mockResolvedValueOnce({ ...PAGE, items: [PAGE.items[1]], total: 1, counts: PAGE.counts });
+    render(<AdminWalletsPage />);
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByTestId("wallets-filter-without"));
+    await screen.findByTestId("wallet-row-u2");
+    releaseSlow(PAGE);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(screen.queryByTestId("wallet-row-u1")).toBeNull();
+  });
 });

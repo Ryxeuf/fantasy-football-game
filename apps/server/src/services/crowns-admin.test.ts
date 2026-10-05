@@ -176,6 +176,25 @@ describe("createMissingWallets", () => {
   });
 });
 
+describe("createMissingWallets — compte supprimé en cours de lot", () => {
+  it("P2003 => rejoué coach par coach, le compte disparu est ignoré", async () => {
+    db.user.findMany.mockResolvedValueOnce([{ id: "gone" }, { id: "b" }]);
+    db.proWallet.createMany.mockRejectedValueOnce(Object.assign(new Error("fk"), { code: "P2003" }));
+    db.user.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "b" });
+    db.proWallet.findUnique.mockResolvedValueOnce(null);
+    db.proWallet.create.mockResolvedValueOnce({ userId: "b", crowns: 0, createdAt: D });
+    db.user.count.mockResolvedValueOnce(0);
+
+    expect(await createMissingWallets()).toEqual({ created: 1, remaining: 0 });
+  });
+
+  it("autre erreur Prisma => propagée", async () => {
+    db.user.findMany.mockResolvedValueOnce([{ id: "a" }]);
+    db.proWallet.createMany.mockRejectedValueOnce(Object.assign(new Error("boom"), { code: "P1001" }));
+    await expect(createMissingWallets()).rejects.toThrow("boom");
+  });
+});
+
 describe("summarizeCrownsFlows", () => {
   it("fusionne crédits et débits d'un même type, trie par volume", () => {
     const flows = summarizeCrownsFlows([
