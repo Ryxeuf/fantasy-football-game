@@ -60,6 +60,19 @@ function buildSections(): ReadonlyArray<NavSection> {
       ],
     },
     {
+      id: "cosmetics",
+      title: "Cosmétiques",
+      icon: "👑",
+      items: [
+        { href: "/admin/dice-themes", label: "Thèmes de dés", icon: "🎲" },
+        {
+          href: "/admin/coach-cosmetics",
+          label: "Couronnes & thèmes des coachs",
+          icon: "👑",
+        },
+      ],
+    },
+    {
       id: "competitions",
       title: "Compétitions",
       icon: "⚽",

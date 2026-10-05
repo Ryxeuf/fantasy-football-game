@@ -55,6 +55,8 @@ model User {
   privateProfile              Boolean                     @default(false)
   /// Sprint R lot R.D.3 — NAF opt-in. Mirror PG.
   nafName                     String?
+  /// Mirror PG — thème de dés choisi (null = défaut).
+  diceTheme                   String?
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
   valid                       Boolean                     @default(true)
   /// Lot P.B.4 — moderation. Miroir des colonnes Postgres pour que les
@@ -97,6 +99,8 @@ model User {
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
   proWallet                   ProWallet?
+  /// Mirror PG — thèmes de dés acquis.
+  diceThemes                  UserDiceTheme[]
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
   proHofDedications           ProHallOfFameDedication[]
@@ -1613,8 +1617,60 @@ model ProTeam {
   standings       ProLeagueStandings[]
   followers       ProSpectatorFollow[]
   survivorEntries ProSurvivorEntry[]
+  /// Lot 4 « évolution persistée » — le coach IA de l'équipe (create-if-missing).
+  coach           ProCoach?
 
   @@index([leagueId])
+}
+
+/// Lot 4 « évolution persistée » — le coach IA d'une ProTeam. Son profil
+/// tactique VIVANT évolue entre deux matchs (`adaptCoachProfile`, borné à
+/// `anchorProfile ± bande`) ; l'ancre est le profil de race d'origine, ou
+/// celui posé par l'admin. Créé à la demande (create-if-missing) à partir
+/// de `race-profiles.ts` : aucune ligne n'existe avant le premier match.
+model ProCoach {
+  id            String   @id @default(cuid())
+  team          ProTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId        String   @unique
+  name          String
+  /// Philosophie dérivée du profil (« Cogneur patient », « Aérien »…), figée
+  /// à la création, re-dérivée par l'admin via reset.
+  philosophy    String
+  /// `TacticalProfile` vivant (15 paramètres 0-100).
+  profile       String
+  /// `TacticalProfile` d'ancrage : borne de l'évolution.
+  anchorProfile String
+  /// `CoachMemory` : moyenne mobile par stratégie.
+  memory        String?
+  /// Matchs intégrés dans le profil.
+  experience    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  memories ProCoachMemory[]
+}
+
+/// Lot 4 — journal APPEND-ONLY de l'évolution d'un coach : une ligne par
+/// match intégré, avec le profil avant / après, les drives du match et les
+/// changements expliqués. Jamais d'UPDATE ni de DELETE (hors reset admin).
+model ProCoachMemory {
+  id            String   @id @default(cuid())
+  coach         ProCoach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId       String
+  /// Match intégré (null = reset admin ou ligne synthétique).
+  matchId       String?
+  /// `DriveRecord[]` du match pour cette équipe.
+  drives        String
+  /// `ProfileChange[]` : paramètre, avant, après, raison.
+  changes       String
+  profileBefore String
+  profileAfter  String
+  /// Résumé lisible (Gazette, console admin).
+  summary       String
+  createdAt     DateTime @default(now())
+
+  @@index([coachId, createdAt])
+  @@index([matchId])
 }
 
 model ProTeamRoster {
@@ -2245,4 +2301,47 @@ model TournamentRuleset {
   updatedAt  DateTime @updatedAt
 
   @@index([enabled])
+}
+
+/// Mirror PG — Thème de dés — catalogue « base d'abord » (repli : `DICE_THEME_CATALOGUE`
+/// compilé de `services/dice-theme-catalogue`, source du seed create-if-missing).
+/// Le slug est un CONTRAT de code : il doit exister dans le registre de rendu
+/// web (faces PNG + D6), sinon la ligne est ignorée à la lecture. L'admin en
+/// édite les libellés, le prix, la mise en vente et l'ordre — pas les visuels.
+model DiceTheme {
+  slug          String   @id
+  /// "classic" | "team"
+  collection    String   @default("team")
+  nameFr        String
+  nameEn        String
+  descriptionFr String?
+  descriptionEn String?
+  /// Prix en Crowns ; null = gratuit (possédé d'office).
+  priceCrowns   Int?
+  /// Faux = retiré de la vente ; ses acheteurs le gardent.
+  enabled       Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// Thème de dés ACQUIS par un coach : achat en Crowns (débit `SINK` du
+/// wallet, même transaction) ou cadeau d'un admin. L'unicité (coach, thème)
+/// empêche un double achat ; seule une révocation admin supprime la ligne.
+model UserDiceTheme {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Slug du thème (pas de FK : le catalogue compilé fait repli).
+  themeId     String
+  /// "purchase" | "admin_grant"
+  source      String
+  /// Prix payé en Crowns ; null pour un cadeau.
+  priceCrowns Int?
+  /// Admin auteur d'un cadeau.
+  grantedById String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, themeId])
+  @@index([themeId])
 }

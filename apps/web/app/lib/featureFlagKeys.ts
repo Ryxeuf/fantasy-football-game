@@ -66,11 +66,19 @@ export const HOME_NEWS_TICKER_FLAG = "home_news_ticker" as const;
  * Thèmes de dés (Dé de Blocage + D6) : sélecteur dans le profil et thème
  * choisi appliqué partout où un dé est dessiné.
  *
- * OFF par défaut (2026-09-29) : un seul thème (le défaut) ; les thèmes
- * payants attendent les Crowns. OFF, tout le monde voit le défaut et
- * aucune requête n'est faite. Gate aussi la route serveur `/dice-themes`.
+ * OFF par défaut (2026-09-29) : en recette. 36 thèmes (dé original, 4
+ * déclinaisons, 31 équipes), les payants achetables derrière `CROWNS_FLAG`.
+ * OFF, tout le monde voit le dé ORIGINAL et aucune requête n'est faite.
+ * Gate aussi la route serveur `/dice-themes`.
  *
  * À garder synchronisé avec
  * `apps/server/src/services/featureFlags.ts.DICE_THEMES_FLAG`.
  */
 export const DICE_THEMES_FLAG = "dice_themes" as const;
+
+/**
+ * Couronnes (Crowns) : solde et historique sur le profil coach, achat de
+ * thèmes de dés. Miroir de
+ * `apps/server/src/services/featureFlags.ts.CROWNS_FLAG`.
+ */
+export const CROWNS_FLAG = "crowns" as const;

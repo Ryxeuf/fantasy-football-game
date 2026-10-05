@@ -4,6 +4,8 @@ import {
   blockResultDescriptionFr,
   type BlockResult,
 } from "@bb/game-engine";
+import { SkinnedBlockFace } from "../dice/DieFaces";
+import { OUTCOME_BY_BLOCK_RESULT } from "../dice/skins";
 
 export type { BlockResult };
 
@@ -14,36 +16,31 @@ interface BlockDiceIconProps {
 }
 
 /**
- * Icône d'une face du Dé de Blocage.
+ * Icône d'une face du Dé de Blocage (match en ligne, journal, popups).
  *
- * Les noms de fichiers sont historiques (`pow.png` = Défenseur Plaqué,
- * `player_down.png` = Attaquant Plaqué) ; le libellé affiché vient, lui,
- * de `BLOCK_DIE_FACE_INFO` — les noms officiels du livre.
+ * Dessinée dans le SKIN de dés courant (`DiceSkinProvider`, posé par le site
+ * depuis le thème du coach ; dé original or & charbon sinon). Le libellé
+ * vient de `BLOCK_DIE_FACE_INFO` — les noms officiels du livre.
  */
-const IMAGE_BY_RESULT: Record<BlockResult, string> = {
-  PLAYER_DOWN: "/images/blocking_dice/player_down.png",
-  BOTH_DOWN: "/images/blocking_dice/both_down.png",
-  PUSH_BACK: "/images/blocking_dice/push_back.png",
-  STUMBLE: "/images/blocking_dice/stumble.png",
-  POW: "/images/blocking_dice/pow.png",
-};
-
 export default function BlockDiceIcon({
   result,
   size = 24,
   className = "",
 }: BlockDiceIconProps) {
-  const src = IMAGE_BY_RESULT[result] ?? IMAGE_BY_RESULT.PLAYER_DOWN;
-  const description = BLOCK_DIE_FACE_INFO[result]
+  const known = Boolean(BLOCK_DIE_FACE_INFO[result]);
+  const description = known
     ? blockResultDescriptionFr(result)
     : "Résultat de blocage";
+  const outcome = known
+    ? OUTCOME_BY_BLOCK_RESULT[result]
+    : OUTCOME_BY_BLOCK_RESULT.PLAYER_DOWN;
 
   return (
-    <img
-      src={src}
-      alt={description}
-      title={description}
-      style={{ width: size, height: size, objectFit: "contain" }}
+    <SkinnedBlockFace
+      outcome={outcome}
+      label={description}
+      px={size}
+      style={{ objectFit: "contain" }}
       className={`inline-block ${className}`}
     />
   );

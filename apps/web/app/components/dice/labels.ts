@@ -24,3 +24,9 @@ export const BLOCK_DIE_FACE_ARIA: Record<"fr" | "en", Record<BlockDieFace, strin
 export function d6AriaLabel(value: D6Value, lang: "fr" | "en"): string {
   return lang === "en" ? `D6: ${value}` : `D6 : ${value}`;
 }
+
+/** « D8 : 7 » / « D8: 7 » ; sans nombre de faces, « Jet : 7 » / « Roll: 7 ». */
+export function numberDieAriaLabel(value: number, sides: number | undefined, lang: "fr" | "en"): string {
+  const die = sides ? `D${sides}` : lang === "en" ? "Roll" : "Jet";
+  return lang === "en" ? `${die}: ${value}` : `${die} : ${value}`;
+}

@@ -32,6 +32,7 @@ import {
   COMPETITION_PDF_EXPORTS_FLAG,
   HOME_NEWS_TICKER_FLAG,
   DICE_THEMES_FLAG,
+  CROWNS_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -41,6 +42,7 @@ import { syncCatalogueColumns } from "./seeders/sync-catalogue-columns";
 import { syncTeamRules } from "./seeders/sync-team-rules";
 import { syncInducements } from "./seeders/sync-inducements";
 import { syncAdvancementCosts } from "./seeders/sync-advancement-costs";
+import { syncDiceThemes } from "./seeders/sync-dice-themes";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -343,6 +345,14 @@ async function main() {
   serverLog.log(
     `✅ Coups de pouce: ${inducementsRes.created.length} créés, ` +
       `${inducementsRes.skipped.length} déjà présents\n`,
+  );
+
+  // Catalogue des thèmes de dés : libellés, prix et mise en vente servis par
+  // la base (create-only, cf. sync-dice-themes.ts).
+  const diceThemesRes = await syncDiceThemes({ write: true });
+  serverLog.log(
+    `✅ Thèmes de dés: ${diceThemesRes.created.length} créés, ` +
+      `${diceThemesRes.skipped.length} déjà présents\n`,
   );
 
   // Barème d'avancement par édition (create-only). Saison 3 seulement : les
@@ -1200,23 +1210,42 @@ async function main() {
     `   ✅ Flag '${HOME_NEWS_TICKER_FLAG}' ${newsTickerFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
   );
 
-  // Thèmes de dés — OFF : un seul thème (le défaut), les payants attendent
-  // les Crowns. `update` ne touche PAS `enabled`.
+  // Thèmes de dés — OFF : en recette (le dé ORIGINAL est servi à tous).
+  // `update` ne touche PAS `enabled`.
   const diceThemesFlag = await prisma.featureFlag.upsert({
     where: { key: DICE_THEMES_FLAG },
     update: {
       description:
-        "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : thème par défaut pour tous.",
+        "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : dé original pour tous.",
     },
     create: {
       key: DICE_THEMES_FLAG,
       description:
-        "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : thème par défaut pour tous.",
+        "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : dé original pour tous.",
       enabled: false,
     },
   });
   serverLog.log(
     `   ✅ Flag '${DICE_THEMES_FLAG}' ${diceThemesFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
+  );
+
+  // Couronnes (Crowns) hors Pro League — OFF : solde invisible, thèmes payants
+  // verrouillés. `update` ne touche PAS `enabled`.
+  const crownsFlag = await prisma.featureFlag.upsert({
+    where: { key: CROWNS_FLAG },
+    update: {
+      description:
+        "Couronnes (Crowns) — solde et historique sur le profil coach, achat de thèmes de dés. OFF : invisible, thèmes payants verrouillés.",
+    },
+    create: {
+      key: CROWNS_FLAG,
+      description:
+        "Couronnes (Crowns) — solde et historique sur le profil coach, achat de thèmes de dés. OFF : invisible, thèmes payants verrouillés.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${CROWNS_FLAG}' ${crownsFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
   );
 
   // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav

@@ -88,6 +88,9 @@ import pushRoutes from "./routes/push";
 import notificationRoutes from "./routes/notifications";
 import emailDigestRoutes from "./routes/email-digest";
 import diceThemeRoutes from "./routes/dice-theme";
+import crownsRoutes from "./routes/crowns";
+import adminDiceThemesRoutes from "./routes/admin-dice-themes";
+import { invalidateDiceThemeCache } from "./services/dice-theme-repository";
 import adminDigestRoutes from "./routes/admin-digest";
 import friendsRoutes from "./routes/friends";
 import careerStatsRoutes from "./routes/career-stats";
@@ -118,6 +121,7 @@ import {
   COMPETITION_PDF_EXPORTS_FLAG,
   HOME_NEWS_TICKER_FLAG,
   DICE_THEMES_FLAG,
+  CROWNS_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -416,6 +420,9 @@ app.use("/notifications", notificationRoutes);
 app.use("/email", emailDigestRoutes);
 // Thème de dés du coach : gaté en entier (flag OFF => défaut pour tous).
 app.use("/dice-themes", requireFeatureFlag(DICE_THEMES_FLAG), diceThemeRoutes);
+// Couronnes (Crowns) du coach hors Pro League : solde + historique. L'achat de
+// thème (`POST /dice-themes/:id/purchase`) est gaté en plus par ce flag.
+app.use("/crowns", requireFeatureFlag(CROWNS_FLAG), crownsRoutes);
 app.use("/admin/digest", adminDigestRoutes);
 app.use("/friends", friendsRoutes);
 app.use("/career-stats", careerStatsRoutes);
@@ -463,6 +470,10 @@ app.use("/admin/sim-replays", adminSimReplaysRoutes);
 // Lot P.B.1 — admin wallet (audit financier strict). Mountee sur /admin
 // pour avoir /admin/wallets/* et /admin/bets/*.
 app.use("/admin", adminWalletRoutes);
+// Thèmes de dés : catalogue (libellés, prix, mise en vente) et cosmétiques de
+// chaque coach (thèmes acquis, thème choisi). Les Crowns s'ajustent par
+// `/admin/wallets/:userId/balance` ci-dessus.
+app.use("/admin", adminDiceThemesRoutes);
 // Utilitaires admin (seed, etc.) — endpoints idempotents avec audit log.
 app.use("/admin/utilities", adminUtilitiesRoutes);
 
@@ -660,6 +671,18 @@ if (process.env.TEST_SQLITE === "1") {
         "feedback",
         () => (prisma as any).feedback?.deleteMany?.({}) ?? Promise.resolve(),
       );
+      // Thèmes de dés : acquisitions (cascade avec l'utilisateur, explicite
+      // ici) et catalogue édité en admin, qui fuirait sinon d'une spec à
+      // l'autre (prix, mise en vente).
+      await safe(
+        "userDiceTheme",
+        () => (prisma as any).userDiceTheme?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      await safe(
+        "diceTheme",
+        () => (prisma as any).diceTheme?.deleteMany?.({}) ?? Promise.resolve(),
+      );
+      invalidateDiceThemeCache();
       await safe("user", () => prisma.user.deleteMany({}));
       // Reference data caches (memoizeAsync) survive the DB wipe and would
       // otherwise serve stale `[]` lists to the next test. Drop everything.
@@ -1353,9 +1376,14 @@ if (process.env.TEST_SQLITE === "1") {
             "Bandeau « À la une » de la home (résultats, dernier article, inscriptions ouvertes).",
         },
         {
-          // OFF en prod (un seul thème), ON pour les suites.
+          // OFF en prod (recette), ON pour les suites.
           key: DICE_THEMES_FLAG,
           description: "Thèmes de dés (Dé de Blocage + D6).",
+        },
+        {
+          // OFF en prod (recette), ON pour les suites.
+          key: CROWNS_FLAG,
+          description: "Couronnes (Crowns) — solde coach, achat de thèmes de dés.",
         },
       ];
       for (const flag of flagSeeds) {

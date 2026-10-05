@@ -2,6 +2,8 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { BLOCK_DIE_FACE_INFO, type BlockResult } from "@bb/game-engine";
 import BlockDiceIcon from "../components/BlockDiceIcon";
+import { DiceSkinProvider } from "../dice/DiceSkinContext";
+import { getDiceSkin } from "../dice/skins";
 
 /**
  * Le libellé de l'icône vient de `BLOCK_DIE_FACE_INFO` (les noms du
@@ -15,21 +17,14 @@ function altFor(result: BlockResult): string {
 }
 
 describe("BlockDiceIcon", () => {
+  // Dé ORIGINAL (or & charbon) hors provider ; 64 px pour une icône ≤ 32 px.
+  const base = "/images/dices/nuffle-des-originaux/original-or/64px";
   const testCases = [
-    {
-      result: "PLAYER_DOWN",
-      expectedImage: "/images/blocking_dice/player_down.png",
-    },
-    {
-      result: "BOTH_DOWN",
-      expectedImage: "/images/blocking_dice/both_down.png",
-    },
-    {
-      result: "PUSH_BACK",
-      expectedImage: "/images/blocking_dice/push_back.png",
-    },
-    { result: "STUMBLE", expectedImage: "/images/blocking_dice/stumble.png" },
-    { result: "POW", expectedImage: "/images/blocking_dice/pow.png" },
+    { result: "PLAYER_DOWN", expectedImage: `${base}/attacker-down.png` },
+    { result: "BOTH_DOWN", expectedImage: `${base}/both-down.png` },
+    { result: "PUSH_BACK", expectedImage: `${base}/push.png` },
+    { result: "STUMBLE", expectedImage: `${base}/defender-stumbles.png` },
+    { result: "POW", expectedImage: `${base}/defender-down.png` },
   ] as const;
 
   testCases.forEach(({ result, expectedImage }) => {
@@ -80,5 +75,27 @@ describe("BlockDiceIcon", () => {
     expect(img).toHaveStyle({
       objectFit: "contain",
     });
+  });
+
+  it("charge le PNG 128 px pour une grande icône (popup de choix)", () => {
+    render(<BlockDiceIcon result="POW" size={48} />);
+    expect(screen.getByAltText(altFor("POW"))).toHaveAttribute(
+      "src",
+      "/images/dices/nuffle-des-originaux/original-or/128px/defender-down.png",
+    );
+  });
+
+  it("dessine dans le skin du contexte (thème du coach)", () => {
+    render(
+      <DiceSkinProvider skin={getDiceSkin("orques")}>
+        <BlockDiceIcon result="BOTH_DOWN" />
+      </DiceSkinProvider>,
+    );
+    const img = screen.getByAltText(altFor("BOTH_DOWN"));
+    expect(img).toHaveAttribute(
+      "src",
+      "/images/dices/nuffle-des-31-equipes/equipes/orques/64px/both-down.png",
+    );
+    expect(img).toHaveAttribute("data-dice-theme", "orques");
   });
 });

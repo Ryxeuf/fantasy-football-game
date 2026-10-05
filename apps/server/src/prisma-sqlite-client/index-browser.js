@@ -136,6 +136,7 @@ exports.Prisma.UserScalarFieldEnum = {
   totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
   privateProfile: 'privateProfile',
   nafName: 'nafName',
+  diceTheme: 'diceTheme',
   valid: 'valid',
   bannedAt: 'bannedAt',
   bannedUntil: 'bannedUntil',
@@ -1037,6 +1038,31 @@ exports.Prisma.ProTeamScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProCoachScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  name: 'name',
+  philosophy: 'philosophy',
+  profile: 'profile',
+  anchorProfile: 'anchorProfile',
+  memory: 'memory',
+  experience: 'experience',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProCoachMemoryScalarFieldEnum = {
+  id: 'id',
+  coachId: 'coachId',
+  matchId: 'matchId',
+  drives: 'drives',
+  changes: 'changes',
+  profileBefore: 'profileBefore',
+  profileAfter: 'profileAfter',
+  summary: 'summary',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.ProTeamRosterScalarFieldEnum = {
   id: 'id',
   teamId: 'teamId',
@@ -1455,6 +1481,30 @@ exports.Prisma.TournamentRulesetScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.DiceThemeScalarFieldEnum = {
+  slug: 'slug',
+  collection: 'collection',
+  nameFr: 'nameFr',
+  nameEn: 'nameEn',
+  descriptionFr: 'descriptionFr',
+  descriptionEn: 'descriptionEn',
+  priceCrowns: 'priceCrowns',
+  enabled: 'enabled',
+  sortOrder: 'sortOrder',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UserDiceThemeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  themeId: 'themeId',
+  source: 'source',
+  priceCrowns: 'priceCrowns',
+  grantedById: 'grantedById',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1562,6 +1612,8 @@ exports.Prisma.ModelName = {
   Feedback: 'Feedback',
   ProLeague: 'ProLeague',
   ProTeam: 'ProTeam',
+  ProCoach: 'ProCoach',
+  ProCoachMemory: 'ProCoachMemory',
   ProTeamRoster: 'ProTeamRoster',
   ProLeagueSeason: 'ProLeagueSeason',
   ProLeagueRound: 'ProLeagueRound',
@@ -1591,7 +1643,9 @@ exports.Prisma.ModelName = {
   ProPlayerOfMatchVote: 'ProPlayerOfMatchVote',
   ProGazetteComment: 'ProGazetteComment',
   ProMatchPrediction: 'ProMatchPrediction',
-  TournamentRuleset: 'TournamentRuleset'
+  TournamentRuleset: 'TournamentRuleset',
+  DiceTheme: 'DiceTheme',
+  UserDiceTheme: 'UserDiceTheme'
 };
 
 /**

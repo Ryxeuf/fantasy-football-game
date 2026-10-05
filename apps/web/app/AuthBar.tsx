@@ -4,6 +4,8 @@ import { API_BASE } from "./auth-client";
 import { useLanguage } from "./contexts/LanguageContext";
 import { useNotifications } from "./contexts/NotificationsContext";
 import { useFeatureFlag } from "./hooks/useFeatureFlag";
+import { useDiceTheme } from "./contexts/DiceThemeContext";
+import { CrownsBalance } from "./components/crowns/CrownsBalance";
 import { ONLINE_PLAY_FLAG } from "./lib/featureFlagKeys";
 import { syncAuthCookie, clearAuthCookie } from "./lib/auth-cookie";
 import {
@@ -27,6 +29,8 @@ interface AuthBarProps {
 export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
   const { t } = useLanguage();
   const onlinePlayEnabled = useFeatureFlag(ONLINE_PLAY_FLAG);
+  // Boutique de dés (flag `dice_themes`) + solde de Couronnes (flag `crowns`).
+  const diceThemesEnabled = useDiceTheme().enabled;
   // Compteur de non lus partagé (no-op hors provider, ex. tests isolés).
   const { unreadCount } = useNotifications();
   const [hasToken, setHasToken] = useState(false);
@@ -246,6 +250,16 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
             🔔 {t.auth.notifications}
             {unreadBadge}
           </a>
+          {diceThemesEnabled && (
+            <a
+              href="/me/dice-themes"
+              data-testid="mobile-user-menu-dice-themes"
+              className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <span>🎲 Thèmes de dés</span>
+              <CrownsBalance />
+            </a>
+          )}
         </div>
 
         {/* Mes parties */}
@@ -329,6 +343,17 @@ export default function AuthBar({ isMobileMenu = false }: AuthBarProps) {
                   🔔 {t.auth.notifications}
                   {unreadBadge}
                 </a>
+                {diceThemesEnabled && (
+                  <a
+                    href="/me/dice-themes"
+                    data-testid="user-menu-dice-themes"
+                    className="flex items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span>🎲 Thèmes de dés</span>
+                    <CrownsBalance />
+                  </a>
+                )}
               </div>
 
               {/* Mes parties */}

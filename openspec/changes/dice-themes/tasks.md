@@ -12,4 +12,5 @@
 - [x] 5. Branchements : lanceur de dés et tuiles de la home, jets de Haine (X)
       de l'après-match.
 - [x] 6. Sélecteur `/me/profile` (actif, possédé, verrouillé) — testé.
-- [ ] 7. Suites : achat en Crowns, nouveaux thèmes, dés du plateau en ligne.
+- [x] 7. Suites : achat en Crowns, nouveaux thèmes, dés du plateau en ligne
+      — livrées par le change `dice-theme-shop-and-crowns`.
