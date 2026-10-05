@@ -3,6 +3,7 @@
  *
  * Endpoints :
  *  - GET   /admin/wallets/:userId           — snapshot wallet + transactions paginees
+ *    (`wallet.exists` = faux si le coach n'a pas de wallet)
  *  - PATCH /admin/wallets/:userId/balance   — ajustement manuel { delta, reason }
  *  - POST  /admin/bets/:betId/refund        — refund d'un pari { reason }
  *
@@ -110,6 +111,9 @@ router.get("/wallets/:userId", async (req, res) => {
       user,
       wallet: {
         userId,
+        // Faux = le coach n'a pas de wallet (solde lu 0). L'admin peut le
+        // créer (`POST /admin/wallets/:userId`) ; un crédit le crée aussi.
+        exists: wallet !== null,
         crowns: wallet?.crowns ?? 0,
         createdAt: wallet?.createdAt ?? null,
         updatedAt: wallet?.updatedAt ?? null,

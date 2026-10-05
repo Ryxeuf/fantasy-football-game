@@ -1336,6 +1336,22 @@ passe par `{ increment }` ou par le décrément conditionnel
 La raison d'un ajustement admin (`ADMIN_ADJUST`, réf. = raison) est VISIBLE du
 coach dans son historique (`GET /crowns/me`) : la modale le rappelle.
 
+Un coach SANS wallet est le cas silencieux : `getBalance` rend 0, le wallet
+ne naît qu'au premier crédit, rien ne le signale. D'où l'admin
+(`services/crowns-admin`, change `shop-and-crowns-admin`) : `/admin/wallets`
+filtre « avec / sans wallet » et crée le manquant (unitaire idempotent, P2002
+= déjà créé ; en masse par lots `createMany` SANS `skipDuplicates`, rejoué
+ligne à ligne sur conflit), la fiche annonce `wallet.exists = false`.
+`/admin/crowns` montre masse, flux par type (débit/crédit séparés : un même
+type, `ADMIN_ADJUST`, fait les deux), journal global, et l'état du flag en
+distinguant la ligne ABSENTE (seed jamais joué en prod) du flag éteint — la
+cause réelle d'un « Bientôt disponible » qu'aucun override ne levait.
+
+La page coach est une **Boutique** (`/me/shop`) : registre PUR de catégories
+(`app/me/shop/categories.ts`, une entrée = id + page + flag), en-tête commun
+(solde) et onglets ; les thèmes de dés sont `/me/shop/dice-themes`,
+`/me/dice-themes` redirige. Le menu suit le registre, pas un flag en dur.
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :
@@ -1931,6 +1947,12 @@ edition du `.json`, `pnpm --filter web typecheck` +
   boutique `/me/dice-themes`, admin `/admin/dice-themes` +
   `/admin/coach-cosmetics`. Flags `dice_themes` + `crowns` (OFF). Change
   OpenSpec `dice-theme-shop-and-crowns`.
+- **2026-10-05** : **Boutique, admin des Couronnes et des wallets** — page
+  coach « Thèmes de dés » devenue la première catégorie d'une Boutique
+  (`/me/shop`, registre de catégories, redirection de l'ancienne adresse) ;
+  `/admin/wallets` (coachs avec / sans wallet, création unitaire et en masse)
+  et `/admin/crowns` (état du flag dont « ligne absente », masse, flux, top,
+  journal global). Change OpenSpec `shop-and-crowns-admin`.
 - **2026-10-05** : **Exploration « Pro League : un match intégral, un coach
   qui évolue, un replay rejouable sur plateau »** (`/opsx:explore`, aucun
   code). Mesuré sur 0.26.0, full driver, rosters de 13 joueurs : 0,5 TD/match,
