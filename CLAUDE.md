@@ -1899,3 +1899,18 @@ edition du `.json`, `pnpm --filter web typecheck` +
   figée dans chaque replay. Cinq lots : match complet → journal rejouable →
   cerveau du coach → évolution → exploitation. Voir
   [`docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md`](./docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md).
+- **2026-10-05** : **Pro League lot 1 « un match complet »** (change
+  OpenSpec `pro-league-full-match`, `ENGINE_VER` 0.27.0). Moteur : coup
+  `STAND_UP` (Prone = `stunned` sans `state: 'stunned'`, sonné retourné face
+  visible en fin de tour de son équipe, aucun champ nouveau) ; un `pending*`
+  FERME la liste des coups légaux et `applyMove` refuse le reste (END_TURN =
+  secours journalisé) ; six choix scorés par l'évaluateur ; activation
+  CONTIGUË (seuls les coups du joueur à l'activation ouverte sont légaux,
+  `END_PLAYER_TURN` = −0,5 > END_TURN, coût d'une case 1,25, coût attendu du
+  GFI) ; « Charge » restreinte aux joueurs désignés. Sim-engine : remise en
+  jeu headless après CHAQUE TD (`executeHeadlessDrive`), `kickingTeam` posé,
+  évènements de coup d'envoi interactifs résolus par l'IA, garde « coup
+  refusé » (deux boucles infinies trouvées : BLITZ refusé pendant Charge,
+  Sprint après `END_PLAYER_TURN`), toutes les mesures sur de VRAIS rosters
+  (`buildEngineSimInput`) et `full-match.invariants.test.ts`. Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md).
