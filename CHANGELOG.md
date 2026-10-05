@@ -1,3 +1,10 @@
+## [1.251.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.250.0...v1.251.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **pro-league:** lot 2 « le journal rejouable » — un flux de dés par coup, replay v2, feuille de match papier (engine 0.28.0) ([#1055](https://github.com/Ryxeuf/fantasy-football-game/issues/1055)) ([25cc460](https://github.com/Ryxeuf/fantasy-football-game/commit/25cc460ffb3b28192d7334c48f621518226da685))
+
 ## [1.250.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.249.0...v1.250.0) (2026-10-05)
 
 
