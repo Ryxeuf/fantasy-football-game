@@ -120,7 +120,11 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
   // 'B' (= comportement legacy) quand `kickingTeam` est undefined, pour
   // préserver la compat des tests qui ne définissent pas explicitement
   // l'équipe kickeuse.
-  const bumpingTeam: TeamId = state.kickingTeam ?? 'B';
+  // Lot 3 « cerveau du coach » : l'ordre d'alternance est celui du premier
+  // engagement de la mi-temps (`halfKickingTeam`), pas de l'engagement
+  // courant — après un touchdown, le marqueur engage mais l'ordre des tours
+  // ne change pas (sinon une équipe rejouait le même numéro de tour).
+  const bumpingTeam: TeamId = state.halfKickingTeam ?? state.kickingTeam ?? 'B';
   // Lot 1 « match complet » — un choix en attente effacé par END_TURN est
   // un nettoyage de SECOURS, pas un chemin normal : on le journalise.
   const clearedPending = [

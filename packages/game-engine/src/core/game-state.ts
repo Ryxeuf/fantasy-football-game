@@ -638,7 +638,11 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       newState = recoverKOPlayers(newState, rng);
 
       // L'équipe qui a frappé en 1ère mi-temps reçoit en 2e, et vice versa
-      const newKickingTeam: TeamId = state.kickingTeam === 'A' ? 'B' : 'A';
+      // L'équipe qui a engagé en 1re mi-temps reçoit en 2e : on lit le
+      // premier engagement de la mi-temps, pas l'engagement courant (qui
+      // suit les touchdowns).
+      const firstHalfKicker: TeamId = state.halfKickingTeam ?? state.kickingTeam ?? 'A';
+      const newKickingTeam: TeamId = firstHalfKicker === 'A' ? 'B' : 'A';
       const receivingTeam: TeamId = newKickingTeam === 'A' ? 'B' : 'A';
 
       // Reset positions pour la 2e mi-temps (tous les joueurs actifs vont en réserves)
@@ -678,6 +682,7 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
         turn: 1,
         currentPlayer: receivingTeam,
         kickingTeam: newKickingTeam,
+        halfKickingTeam: newKickingTeam,
         isTurnover: false,
         ball: undefined,
         selectedPlayerId: null,
@@ -978,8 +983,17 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   // Fin de Phase : les malus limites au drive (coup d'envoi « En-cas
   // suspect ») et le bonus « Fans en folie » expirent.
   const clearedState = restoreDriveStatModifiers(clearAllPendingStates(newState));
+  // Lot 3 « cerveau du coach » : si le marqueur jouait en SECOND dans le
+  // round (c'est l'équipe dont la fin de tour fait avancer le compteur),
+  // le round est complet et le receveur entame le suivant — sans ce bump,
+  // le receveur rejouait le même numéro de tour (9 tours dans la mi-temps,
+  // trouvé par les invariants du lot 1). S'il jouait en premier, l'autre
+  // équipe joue encore son tour du round en cours.
+  const bumpingTeam: TeamId = state.halfKickingTeam ?? state.kickingTeam ?? 'B';
+  const roundComplete = state.currentPlayer === bumpingTeam;
   const resultState = {
     ...clearedState,
+    turn: roundComplete ? state.turn + 1 : state.turn,
     cheeringFansAssist: undefined,
     kickoffBlitzPlayerIds: undefined,
     gamePhase: 'playing' as const,
@@ -1014,7 +1028,10 @@ export function handlePostTouchdown(state: GameState, rng: RNG): GameState {
   // Audit 2026-05-19 QW ST4 : verifier qu'aucun pendingX n'a survecu
   // au reset post-TD (bug B1 historique : pendingPushChoice persistait).
   assertSinglePending(resultState, 'handlePostTouchdown');
-  return resultState;
+  // Le round qui s'achève sur ce touchdown peut être le dernier de la
+  // mi-temps : la remise en jeu cède alors la place à la mi-temps (ou à la
+  // fin du match).
+  return advanceHalfIfNeeded(resultState, rng);
 }
 
 /**
@@ -1307,9 +1324,14 @@ export function shouldAutoEndTurn(state: GameState): boolean {
   // Vérifier si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir.
   // Lot 1 « match complet » : un joueur À TERRE (Prone, pas sonné) peut
   // encore se relever — il ne compte pas comme « ne peut plus agir ».
+  // Lot 3 « cerveau du coach » (bug trouvé par le bench) : le DERNIER joueur
+  // activé était coupé après une case — tous ayant « agi », le tour se
+  // fermait alors que son activation (déplacement entamé, PM restants)
+  // était ouverte. Un joueur qui peut continuer son déplacement n'a pas
+  // fini d'agir.
   return teamPlayers.every(
     player =>
-      hasPlayerActed(state, player.id) ||
+      (hasPlayerActed(state, player.id) && !canPlayerContinueMoving(state, player.id)) ||
       (player.stunned && !isProne(player)) ||
       player.pm <= 0
   );
@@ -1703,6 +1725,7 @@ export function startMatchFromKickoff(state: ExtendedGameState, rng?: RNG): Game
     ...matchState,
     gamePhase: 'playing' as const,
     kickingTeam: state.preMatch.kickingTeam,
+    halfKickingTeam: state.preMatch.kickingTeam,
     half: nextHalf,
     turn: nextTurn,
     currentPlayer: state.preMatch.receivingTeam, // L'équipe qui reçoit commence

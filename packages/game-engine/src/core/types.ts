@@ -249,6 +249,14 @@ export interface GameState {
   // Informations de match
   gamePhase: 'playing' | 'post-td' | 'halftime' | 'ended';
   kickingTeam?: TeamId; // Équipe qui frappe (kick)
+  /**
+   * Lot 3 « cerveau du coach » — équipe qui a engagé au DÉBUT de la
+   * mi-temps. `kickingTeam` change après chaque touchdown (le marqueur
+   * engage), mais l'ORDRE d'alternance des tours et le compteur de rounds
+   * sont fixés pour toute la mi-temps par ce premier engagement. Optionnel :
+   * les états antérieurs retombent sur `kickingTeam`.
+   */
+  halfKickingTeam?: TeamId;
   half: number; // 1 ou 2
   score: {
     teamA: number;
