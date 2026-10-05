@@ -1325,6 +1325,16 @@ zéro), ligne `UserDiceTheme` (unique coach × thème : P2002 = déjà possédé
 débit `SINK` réf. `dice-theme:<id>`, thème équipé. Pas d'achat pendant une
 impersonation admin. Retiré de la vente ≠ retiré à l'acheteur.
 
+Piège associé : l'atomicité ne vaut que si TOUS les écrivains la
+respectent. `pro-wallet` (`credit`/`debit`/`creditInTx`/`debitInTx`) écrivait
+`crowns: current ± amount` après une lecture — un ajustement admin concurrent
+d'un achat aurait ressuscité les Crowns dépensées. Tout écrivain du solde
+passe par `{ increment }` ou par le décrément conditionnel
+(`where: { userId, crowns: { gte } }`, P2025 ⇒ `InsufficientFundsError`).
+
+La raison d'un ajustement admin (`ADMIN_ADJUST`, réf. = raison) est VISIBLE du
+coach dans son historique (`GET /crowns/me`) : la modale le rappelle.
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :

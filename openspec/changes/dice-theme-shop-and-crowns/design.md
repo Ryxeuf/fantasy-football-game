@@ -41,6 +41,18 @@ renderers web) et `skins.test.ts` (chaque PNG référencé existe en 3 tailles).
   instruction SQL que l'écriture — deux achats simultanés ne passent pas sous
   zéro — + unicité (coach, thème) contre le double achat (P2002 → 409). Le
   thème acheté est équipé dans la même transaction.
+- **Tous les écrivains du wallet deviennent atomiques** (`pro-wallet` :
+  `debit`/`debitInTx` en décrément conditionnel, `credit`/`creditInTx` en
+  incrément). Un seul écrivain en lire-puis-écrire suffit à perdre la mise à
+  jour d'un autre : un ajustement ou un remboursement admin concurrent d'un
+  achat aurait réécrit le solde calculé sur un état périmé.
+- **États honnêtes en boutique** : solde en chargement ou en erreur ≠
+  « bientôt disponible » (action `pending`, bandeaux avec « Réessayer ») ;
+  un aperçu de thème est UNE image nommée pour un lecteur d'écran.
+- **Un total de 2D6 n'est jamais pointé** (`isSingleD6Roll` : cible > 6+ ⇒
+  dé chiffré), dans le journal, la popup, les toasts et le plateau.
+- **Cache du catalogue** : le repli d'une erreur n'est pas mis en cache, et
+  une lecture partie avant une invalidation n'écrit pas le cache.
 - **Retiré de la vente ≠ retiré à l'acheteur** : `enabled = false` masque le
   thème de la boutique des non-possédants ; un acheteur le garde. Un thème
   gratuit retiré n'est plus possédé d'office.
