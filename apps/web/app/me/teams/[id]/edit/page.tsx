@@ -78,6 +78,7 @@ interface EditSkillCatalogItem {
   excludedFromSelection?: boolean;
 }
 import { useLanguage } from "../../../../contexts/LanguageContext";
+import { NumberDieIcon } from "../../../../components/dice/NumberDieIcon";
 import RosterBadge from "../../../../components/RosterBadge";
 
 // Compteur pour générer des ids temporaires uniques côté client. Les joueurs
@@ -1654,7 +1655,13 @@ export default function TeamEditPage() {
                           <span className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Amélioration de caractéristique</span>
                         </div>
                         <div className="flex flex-col items-center justify-center py-8 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border-2 border-dashed border-amber-300">
-                          <div className="text-4xl mb-4">🎲</div>
+                          {/* Le D8 dans le thème de dés du coach (estompé avant le jet). */}
+                          <NumberDieIcon
+                            value={d8Roll ?? 8}
+                            sides={8}
+                            label={d8Roll != null ? `D8 : ${d8Roll}` : "D8"}
+                            className={`mb-4 h-16 w-16 drop-shadow-md ${d8Roll != null ? "" : "opacity-60"}`}
+                          />
                           <p className="text-gray-700 mb-4 text-center max-w-md">
                             Lancez le D8 pour déterminer quelles caractéristiques peuvent être améliorées (règle Blood Bowl 2025), puis choisissez-en une.
                           </p>

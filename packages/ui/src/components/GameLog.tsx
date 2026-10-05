@@ -1,6 +1,7 @@
 import React from "react";
 import { BLOCK_DIE_FACE_INFO, type GameLogEntry, type BlockResult } from "@bb/game-engine";
 import BlockDiceIcon from "./BlockDiceIcon";
+import { SkinnedPipFace } from "../dice/DieFaces";
 
 interface GameLogProps {
   logEntries: GameLogEntry[];
@@ -111,6 +112,15 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
                 {entry.details && (
                   <div className="mt-1 text-xs text-gray-500">
                     {entry.type === "dice" &&
+                      typeof (entry as any).details?.diceRoll === "number" &&
+                      !(entry as any).details?.result && (
+                        <SkinnedPipFace
+                          value={(entry as any).details.diceRoll}
+                          label={`Jet : ${(entry as any).details.diceRoll}`}
+                          className="mr-1 inline-block h-5 w-5 align-middle"
+                        />
+                      )}
+                    {entry.type === "dice" &&
                       (entry as any).details?.diceRoll && (
                         <span>
                           Détails: {(entry as any).details.diceRoll} sur{" "}
@@ -144,6 +154,23 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
                               (entry as any).details.result as BlockResult
                             ]?.nameFr ?? (entry as any).details.result}
                           </span>
+                        </div>
+                      )}
+                    {entry.type === "dice" &&
+                      Array.isArray((entry as any).details?.results) &&
+                      (entry as any).details.results.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <span>Dés :</span>
+                          {((entry as any).details.results as BlockResult[]).map(
+                            (r, i) => (
+                              <BlockDiceIcon
+                                key={`${r}-${i}`}
+                                result={r}
+                                size={20}
+                                className="rounded"
+                              />
+                            ),
+                          )}
                         </div>
                       )}
                     {entry.type === "score" &&

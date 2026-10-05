@@ -11,6 +11,7 @@ import { apiRequest } from "../lib/api-client";
 import { FeatureFlagProvider } from "./FeatureFlagContext";
 import { DiceThemeProvider, useDiceTheme, type DiceThemeContextValue } from "./DiceThemeContext";
 import { DICE_THEMES_FLAG } from "../lib/featureFlagKeys";
+import { useDiceSkin } from "@bb/ui/dice";
 
 const mockedApi = apiRequest as unknown as ReturnType<typeof vi.fn>;
 
@@ -30,10 +31,22 @@ function renderWithProviders() {
   );
 }
 
+function option(id: string, owned: boolean, priceCrowns: number | null = null) {
+  return {
+    id,
+    collection: "classic",
+    name: { fr: id, en: id },
+    description: { fr: "d", en: "d" },
+    priceCrowns,
+    owned,
+    forSale: !owned && priceCrowns !== null,
+  };
+}
+
 const PREF = {
   themeId: "nuffle",
   defaultThemeId: "nuffle",
-  themes: [{ id: "nuffle", priceCrowns: null, owned: true }],
+  themes: [option("nuffle", true), option("orques", false, 400)],
 };
 
 async function flush() {
@@ -112,5 +125,46 @@ describe("DiceThemeContext", () => {
       method: "PUT",
       body: JSON.stringify({ themeId: "nuffle" }),
     });
+  });
+
+  it("sert la boutique et la possession du serveur", async () => {
+    mockedApi.mockResolvedValue(PREF);
+    renderWithProviders();
+    await waitFor(() => expect(captured!.themes).toHaveLength(2));
+    expect(captured!.ownedThemeIds.has("orques")).toBe(false);
+  });
+
+  it("purchaseTheme : POST, applique la préférence, renvoie le solde", async () => {
+    mockedApi.mockResolvedValueOnce(PREF).mockResolvedValueOnce({
+      ...PREF,
+      themeId: "orques",
+      themes: [option("nuffle", true), option("orques", true, 400)],
+      balance: 600,
+    });
+    renderWithProviders();
+    await waitFor(() => expect(mockedApi).toHaveBeenCalledTimes(1));
+    let balance = 0;
+    await act(async () => {
+      balance = await captured!.purchaseTheme("orques");
+    });
+    expect(balance).toBe(600);
+    expect(mockedApi).toHaveBeenLastCalledWith("/dice-themes/orques/purchase", { method: "POST" });
+    expect(screen.getByTestId("theme").textContent).toBe("true:orques");
+    expect(captured!.renderer.id).toBe("orques");
+  });
+
+  it("le thème du coach habille aussi les dés de @bb/ui (skin)", async () => {
+    mockedApi.mockResolvedValue({ ...PREF, themeId: "orques", themes: [option("nuffle", true), option("orques", true, 400)] });
+    function SkinProbe() {
+      return <span data-testid="skin">{useDiceSkin().id}</span>;
+    }
+    render(
+      <FeatureFlagProvider>
+        <DiceThemeProvider>
+          <SkinProbe />
+        </DiceThemeProvider>
+      </FeatureFlagProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("skin").textContent).toBe("orques"));
   });
 });

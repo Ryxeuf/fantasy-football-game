@@ -1,0 +1,134 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+
+const { state } = vi.hoisted(() => ({
+  state: {
+    dice: {} as Record<string, unknown>,
+    crowns: {} as Record<string, unknown>,
+  },
+}));
+
+vi.mock("../../contexts/DiceThemeContext", () => ({
+  useDiceTheme: () => state.dice,
+}));
+vi.mock("../../contexts/CrownsContext", () => ({
+  useCrowns: () => state.crowns,
+}));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+
+import DiceThemeShop from "./DiceThemeShop";
+
+function option(id: string, over: Record<string, unknown> = {}) {
+  return {
+    id,
+    collection: "team",
+    name: { fr: `Thème ${id}`, en: id },
+    description: { fr: "desc", en: "desc" },
+    priceCrowns: 400,
+    owned: false,
+    forSale: true,
+    ...over,
+  };
+}
+
+const THEMES = [
+  option("nuffle", { collection: "classic", priceCrowns: null, owned: true, forSale: false }),
+  option("glace", { collection: "classic", priceCrowns: 250 }),
+  option("orques", { owned: true, forSale: false }),
+  option("nains", { priceCrowns: 900 }),
+];
+
+beforeEach(() => {
+  state.dice = {
+    enabled: true,
+    loading: false,
+    themeId: "nuffle",
+    themes: THEMES,
+    selectTheme: vi.fn(async () => {}),
+    purchaseTheme: vi.fn(async () => 50),
+  };
+  state.crowns = {
+    enabled: true,
+    balance: 300,
+    applyBalance: vi.fn(),
+    refresh: vi.fn(async () => {}),
+  };
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+});
+
+describe("DiceThemeShop", () => {
+  it("flag OFF : message d'indisponibilité, pas de boutique", () => {
+    state.dice = { ...state.dice, enabled: false };
+    render(<DiceThemeShop />);
+    expect(screen.getByTestId("dice-shop-disabled")).toBeTruthy();
+    expect(screen.queryByTestId("dice-theme-shop")).toBeNull();
+  });
+
+  it("une carte par thème, 11 faces d'aperçu, thème actif marqué", () => {
+    render(<DiceThemeShop />);
+    const card = screen.getByTestId("dice-theme-nuffle");
+    expect(card.getAttribute("data-selected")).toBe("true");
+    expect(card.textContent).toContain("Thème actif");
+    expect(card.querySelectorAll("[role='img'], img")).toHaveLength(11);
+    expect(screen.getByTestId("crowns-balance").textContent).toContain("300");
+  });
+
+  it("filtre « Mes thèmes » et « Classiques »", () => {
+    render(<DiceThemeShop />);
+    fireEvent.click(screen.getByTestId("dice-shop-filter-owned"));
+    expect(screen.queryByTestId("dice-theme-glace")).toBeNull();
+    expect(screen.getByTestId("dice-theme-orques")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("dice-shop-filter-classic"));
+    expect(screen.queryByTestId("dice-theme-orques")).toBeNull();
+    expect(screen.getByTestId("dice-theme-glace")).toBeTruthy();
+  });
+
+  it("un thème possédé se choisit", async () => {
+    render(<DiceThemeShop />);
+    fireEvent.click(screen.getByTestId("dice-theme-orques").querySelector("button")!);
+    await waitFor(() => expect(state.dice.selectTheme).toHaveBeenCalledWith("orques"));
+  });
+
+  it("achat confirmé : POST, solde appliqué", async () => {
+    render(<DiceThemeShop />);
+    fireEvent.click(screen.getByTestId("dice-theme-buy-glace"));
+    await waitFor(() => expect(state.dice.purchaseTheme).toHaveBeenCalledWith("glace"));
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining("250 Crowns"));
+    await waitFor(() => expect(state.crowns.applyBalance).toHaveBeenCalledWith(50));
+  });
+
+  it("achat annulé : rien n'est envoyé", () => {
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<DiceThemeShop />);
+    fireEvent.click(screen.getByTestId("dice-theme-buy-glace"));
+    expect(state.dice.purchaseTheme).not.toHaveBeenCalled();
+  });
+
+  it("solde insuffisant : bouton désactivé", () => {
+    render(<DiceThemeShop />);
+    const btn = screen.getByTestId("dice-theme-nains").querySelector("button")!;
+    expect(btn.disabled).toBe(true);
+    expect(btn.textContent).toContain("Solde insuffisant");
+  });
+
+  it("Crowns fermées (flag OFF) : thème payant verrouillé, pas de solde", () => {
+    state.crowns = { ...state.crowns, enabled: false, balance: null };
+    render(<DiceThemeShop />);
+    const btn = screen.getByTestId("dice-theme-glace").querySelector("button")!;
+    expect(btn.disabled).toBe(true);
+    expect(btn.textContent).toContain("Bientôt disponible");
+    expect(screen.queryByTestId("crowns-balance")).toBeNull();
+  });
+
+  it("affiche l'erreur d'un achat refusé", async () => {
+    state.dice = {
+      ...state.dice,
+      purchaseTheme: vi.fn(async () => {
+        throw new Error("Solde de Crowns insuffisant");
+      }),
+    };
+    render(<DiceThemeShop />);
+    fireEvent.click(screen.getByTestId("dice-theme-buy-glace"));
+    expect((await screen.findByRole("alert")).textContent).toContain("insuffisant");
+  });
+});

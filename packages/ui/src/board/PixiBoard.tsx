@@ -19,6 +19,14 @@ import { useSpriteTextures } from "./useSpriteTextures";
 import { resolvePlayerSpriteFrame } from "./sprite-frame-resolver";
 import { resolveTeamSpriteManifest } from "./team-color-resolver";
 import { getTerrainSkin, type TerrainSkinId } from "./terrain-skins";
+import { getBlockDisplayFace } from "./diceEffects";
+import { useDiceSkin } from "../dice/DiceSkinContext";
+import {
+  OUTCOME_BY_BLOCK_RESULT,
+  blockFaceSrc,
+  hexColorToNumber,
+  isPipValue,
+} from "../dice/skins";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
 function getInitials(player: Player): string {
@@ -156,6 +164,11 @@ export default function PixiBoard({
   const tdFx = useTouchdownEffects(state.gameLog ?? [], safeWidth, safeHeight);
   const injuryFx = useInjuryEffects(state.players ?? [], state.casualtyResults ?? {});
   const diceFx = useDiceEffects(state.gameLog ?? []);
+  // Dé animé dessiné dans le thème de dés du coach (dé original sinon).
+  const diceSkin = useDiceSkin();
+  const diceBodyColor = hexColorToNumber(diceSkin.palette.background);
+  const diceSymbolColor = hexColorToNumber(diceSkin.palette.symbol);
+  const diceAccentColor = hexColorToNumber(diceSkin.palette.accent);
 
   /* ── H.6 sub-task 5/5: sprite textures ───────────────────────────── */
   const spriteTextures = useSpriteTextures(teamRosters);
@@ -703,7 +716,12 @@ export default function PixiBoard({
             const dieY = cs * 1.5;
             const cornerRadius = dieSize * 0.15;
             const pipRadius = dieSize * 0.08;
-            const borderColor = die.success === true ? 0x00cc44 : die.success === false ? 0xff3333 : 0xffffff;
+            const borderColor = die.success === true ? 0x00cc44 : die.success === false ? 0xff3333 : diceAccentColor;
+            const v = die.displayValue;
+            // Face du Dé de Blocage : l'image du thème (défile pendant le roulé).
+            const blockFace = die.blockResult
+              ? getBlockDisplayFace(die.blockResult, v, die.isTumbling)
+              : null;
 
             return (
               <React.Fragment key={`dice-${idx}`}>
@@ -715,20 +733,23 @@ export default function PixiBoard({
                     g.beginFill(0x000000, die.alpha * 0.3);
                     g.drawRoundedRect(dieX + 2, dieY + 2, dieSize, dieSize, cornerRadius);
                     g.endFill();
-                    // Die body
-                    g.beginFill(0xffffff, die.alpha);
+                    if (blockFace) return;
+                    // Die body (fond du thème)
+                    g.beginFill(diceBodyColor, die.alpha);
                     g.drawRoundedRect(dieX, dieY, dieSize, dieSize, cornerRadius);
                     g.endFill();
-                    // Border (success = green, fail = red, neutral = white)
+                    // Border (success = green, fail = red, neutral = liseré du thème)
                     g.lineStyle(2, borderColor, die.alpha);
                     g.drawRoundedRect(dieX, dieY, dieSize, dieSize, cornerRadius);
+                    // Au-delà de 6 (total de 2D6) : la valeur est écrite, pas pointée.
+                    if (!isPipValue(v)) return;
 
                     // Draw pips based on display value
-                    g.beginFill(0x111111, die.alpha);
+                    g.lineStyle(0);
+                    g.beginFill(diceSymbolColor, die.alpha);
                     const cx = dieX + dieSize / 2;
                     const cy = dieY + dieSize / 2;
                     const off = dieSize * 0.25; // offset from center for pip placement
-                    const v = die.displayValue;
 
                     // Center pip (1, 3, 5)
                     if (v === 1 || v === 3 || v === 5) {
@@ -753,6 +774,34 @@ export default function PixiBoard({
                     g.endFill();
                   }}
                 />
+                {blockFace && (
+                  <Sprite
+                    image={blockFaceSrc(diceSkin, OUTCOME_BY_BLOCK_RESULT[blockFace], 128)}
+                    x={dieX}
+                    y={dieY}
+                    width={dieSize}
+                    height={dieSize}
+                    alpha={die.alpha}
+                  />
+                )}
+                {!blockFace && !isPipValue(v) && (
+                  <Text
+                    x={dieX + dieSize / 2}
+                    y={dieY + dieSize / 2}
+                    text={String(v)}
+                    anchor={{ x: 0.5, y: 0.5 }}
+                    alpha={die.alpha}
+                    style={
+                      {
+                        align: "center",
+                        fill: diceSymbolColor,
+                        fontFamily: "Arial",
+                        fontSize: Math.max(12, dieSize * 0.5),
+                        fontWeight: "bold",
+                      } as any
+                    }
+                  />
+                )}
                 {/* Roll description text below die */}
                 {!die.isTumbling && (
                   <Text

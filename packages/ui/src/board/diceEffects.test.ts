@@ -6,6 +6,8 @@ import {
   updateDiceAnimation,
   getDiceDisplayValue,
   getDiceAlpha,
+  getBlockDisplayFace,
+  toBlockResult,
   DICE_ANIMATION_DURATION_MS,
   TUMBLE_PHASE_MS,
   HOLD_PHASE_MS,
@@ -252,5 +254,34 @@ describe("diceEffects — getDiceAlpha", () => {
   it("returns 0 at or beyond total duration", () => {
     expect(getDiceAlpha(DICE_ANIMATION_DURATION_MS)).toBeCloseTo(0);
     expect(getDiceAlpha(DICE_ANIMATION_DURATION_MS + 100)).toBe(0);
+  });
+});
+
+/* ── Dé de Blocage ───────────────────────────────────────────────── */
+
+describe("diceEffects — Dé de Blocage", () => {
+  it("détecte la face de blocage d'une entrée de journal", () => {
+    const entry = makeLogEntry({
+      type: "dice",
+      message: "Blocage: POW",
+      details: { diceRoll: 5, result: "POW" },
+    });
+    const [event] = detectDiceRollEvents([], [entry]);
+    expect(event.blockResult).toBe("POW");
+    expect(createDiceAnimation(event).blockResult).toBe("POW");
+  });
+
+  it("ignore un `result` qui n'est pas une face de blocage", () => {
+    expect(toBlockResult("SUCCESS")).toBeUndefined();
+    expect(toBlockResult(3)).toBeUndefined();
+    expect(toBlockResult("BOTH_DOWN")).toBe("BOTH_DOWN");
+  });
+
+  it("fait défiler les six faces pendant le roulé, puis montre la face tirée", () => {
+    expect(getBlockDisplayFace("POW", 1, true)).toBe("PLAYER_DOWN");
+    expect(getBlockDisplayFace("POW", 3, true)).toBe("PUSH_BACK");
+    expect(getBlockDisplayFace("POW", 6, true)).toBe("PUSH_BACK");
+    expect(getBlockDisplayFace("POW", 7, true)).toBe("PLAYER_DOWN");
+    expect(getBlockDisplayFace("STUMBLE", 2, false)).toBe("STUMBLE");
   });
 });

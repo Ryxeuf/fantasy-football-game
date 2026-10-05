@@ -1091,6 +1091,22 @@ export default function AdminUsersPage() {
                 </a>
               </div>
 
+              {/* Couronnes & thèmes de dés du coach */}
+              <div className="p-4 rounded-lg border bg-amber-50 border-amber-200">
+                <h3 className="font-semibold mb-2">Couronnes &amp; thèmes de dés</h3>
+                <p className="text-sm text-gray-700 mb-2">
+                  Solde de Crowns, thèmes de dés acquis (cadeau, retrait,
+                  remboursement) et thème choisi par le coach.
+                </p>
+                <a
+                  href={`/admin/coach-cosmetics/${userDetails.id}`}
+                  data-testid="link-admin-coach-cosmetics"
+                  className="inline-block px-3 py-1.5 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-lg"
+                >
+                  Gérer les cosmétiques
+                </a>
+              </div>
+
               <div>
                 <h3 className="font-semibold mb-2">Statistiques</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 text-sm">

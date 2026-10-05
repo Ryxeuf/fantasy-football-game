@@ -8,7 +8,7 @@
  * - Fade in → hold → fade out alpha math
  */
 
-import type { GameLogEntry, TeamId } from "@bb/game-engine";
+import { BLOCK_DIE_FACES, type BlockResult, type GameLogEntry, type TeamId } from "@bb/game-engine";
 
 /* ── Constants ─────────────────────────────────────────────────────── */
 
@@ -45,6 +45,8 @@ export interface DiceRollEvent {
   team?: TeamId;
   /** Player who rolled */
   playerId?: string;
+  /** Face du Dé de Blocage quand le jet en est un (dessinée en image, pas en points) */
+  blockResult?: BlockResult;
 }
 
 export interface DiceAnimation {
@@ -56,6 +58,8 @@ export interface DiceAnimation {
   team?: TeamId;
   /** Log message */
   message: string;
+  /** Face du Dé de Blocage, le cas échéant */
+  blockResult?: BlockResult;
   /** Elapsed time in ms */
   elapsed: number;
   /** Total duration in ms */
@@ -84,7 +88,29 @@ export function detectDiceRollEvents(
     message: entry.message,
     team: entry.team,
     playerId: entry.playerId,
+    blockResult: toBlockResult(entry.details?.result),
   }));
+}
+
+/** `details.result` d'une entrée de journal, s'il désigne une face du Dé de Blocage. */
+export function toBlockResult(raw: unknown): BlockResult | undefined {
+  return typeof raw === "string" && (BLOCK_DIE_FACES as readonly string[]).includes(raw)
+    ? (raw as BlockResult)
+    : undefined;
+}
+
+/**
+ * Face de blocage affichée : pendant le roulé, on fait défiler les six faces
+ * du dé (dans l'ordre du moteur, `Repoussé` deux fois) ; ensuite, la face tirée.
+ */
+export function getBlockDisplayFace(
+  blockResult: BlockResult,
+  displayValue: number,
+  isTumbling: boolean,
+): BlockResult {
+  if (!isTumbling) return blockResult;
+  const index = (((Math.trunc(displayValue) - 1) % 6) + 6) % 6;
+  return BLOCK_DIE_FACES[index];
 }
 
 /* ── Animation creation ────────────────────────────────────────────── */
@@ -98,6 +124,7 @@ export function createDiceAnimation(event: DiceRollEvent): DiceAnimation {
     success: event.success,
     team: event.team,
     message: event.message,
+    blockResult: event.blockResult,
     elapsed: 0,
     duration: DICE_ANIMATION_DURATION_MS,
   };
