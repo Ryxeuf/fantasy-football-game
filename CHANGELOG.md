@@ -1,3 +1,15 @@
+## [1.247.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.246.0...v1.247.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **league-predictions:** pronostics par journée, fiche de ligue allégée ([#1048](https://github.com/Ryxeuf/fantasy-football-game/issues/1048)) ([c969aaf](https://github.com/Ryxeuf/fantasy-football-game/commit/c969aaff594c7b71a3b9e41c421eb7e1ded91eb3))
+
+
+### 📝 Documentation
+
+* **legal:** CGU — publicité des résultats des compétitions et matchs publics ([#1045](https://github.com/Ryxeuf/fantasy-football-game/issues/1045)) ([c7c4e6a](https://github.com/Ryxeuf/fantasy-football-game/commit/c7c4e6a22e9b1ab1dd88e17d17c42f98ae25edd5))
+
 ## [1.246.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.245.0...v1.246.0) (2026-09-30)
 
 
