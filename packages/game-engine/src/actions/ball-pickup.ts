@@ -52,6 +52,15 @@ export function handleBallPickup(
   rng: RNG,
   idx: number,
 ): GameState {
+  // Lot 3 « cerveau du coach » (bug trouvé par le bench) : `state.ball`
+  // SUIT le porteur (invariant des handlers de mouvement), et chaque
+  // handler testait ensuite « le joueur atterrit sur le ballon » — le
+  // porteur rejouait donc un ramassage À CHAQUE CASE (40 jets par match,
+  // un turnover sur six). Un joueur qui porte déjà le ballon n'a rien à
+  // ramasser.
+  if (state.players[idx]?.hasBall || player.hasBall) {
+    return state;
+  }
   // No Hands: player cannot pick up the ball at all (no roll)
   if (hasSkill(player, 'no-hands')) {
     const noHandsLog = createLogEntry(

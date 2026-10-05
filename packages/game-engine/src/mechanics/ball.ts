@@ -6,7 +6,7 @@
 import { GameState, Player, Position, TeamId, RNG } from '../core/types';
 import { cloneGameState } from '../core/clone-state';
 import { samePos, calculatePickupModifiers } from './movement';
-import { performPickupRoll } from '../utils/dice';
+import { performPickupRoll, roll2D6 } from '../utils/dice';
 import { createLogEntry, addLogEntry } from '../utils/logging';
 import { hasSkill } from '../skills/skill-effects';
 
@@ -187,23 +187,86 @@ function bounceBallStep(state: GameState, rng: RNG): BounceStepResult {
 
   // Calculer la nouvelle position après rebond
   const direction = getRandomDirection(rng);
-  const newBallPos: Position = {
-    x: Math.max(0, Math.min(state.width - 1, currentBallPos.x + direction.x)),
-    y: Math.max(0, Math.min(state.height - 1, currentBallPos.y + direction.y)),
+  const rawBallPos: Position = {
+    x: currentBallPos.x + direction.x,
+    y: currentBallPos.y + direction.y,
   };
+  let newBallPos: Position = rawBallPos;
 
-  // Log du rebond
-  const bounceLogEntry = createLogEntry(
-    'action',
-    `Ballon rebondit vers (${newBallPos.x}, ${newBallPos.y})`,
-    undefined,
-    undefined
+  if (
+    rawBallPos.x < 0 ||
+    rawBallPos.y < 0 ||
+    rawBallPos.x >= state.width ||
+    rawBallPos.y >= state.height
+  ) {
+    // Lot 3 « cerveau du coach » (bug trouvé par le bench) : le ballon
+    // « rebondissait » contre la touche (position bornée) au lieu d'être
+    // REMIS EN JEU par le public. Remise en jeu : depuis la case de sortie,
+    // 2D6 cases vers l'intérieur dans une direction tirée au D3.
+    const exit: Position = {
+      x: Math.max(0, Math.min(state.width - 1, rawBallPos.x)),
+      y: Math.max(0, Math.min(state.height - 1, rawBallPos.y)),
+    };
+    const inwardX = rawBallPos.x < 0 ? 1 : rawBallPos.x >= state.width ? -1 : 0;
+    const inwardY = rawBallPos.y < 0 ? 1 : rawBallPos.y >= state.height ? -1 : 0;
+    const d3 = Math.min(3, Math.floor(rng() * 3) + 1);
+    const distance = roll2D6(rng);
+    // Trois directions vers l'intérieur : tout droit, et les deux diagonales.
+    let dir: Position;
+    if (inwardX !== 0 && inwardY !== 0) {
+      dir = { x: inwardX, y: inwardY };
+    } else if (inwardX !== 0) {
+      dir = { x: inwardX, y: d3 === 1 ? -1 : d3 === 2 ? 0 : 1 };
+    } else {
+      dir = { x: d3 === 1 ? -1 : d3 === 2 ? 0 : 1, y: inwardY };
+    }
+    newBallPos = {
+      x: Math.max(0, Math.min(state.width - 1, exit.x + dir.x * distance)),
+      y: Math.max(0, Math.min(state.height - 1, exit.y + dir.y * distance)),
+    };
+    const throwInLog = createLogEntry(
+      'action',
+      `Ballon en touche : le public le remet en jeu vers (${newBallPos.x}, ${newBallPos.y}) (2D6 = ${distance})`,
+      undefined,
+      undefined,
+      { throwIn: true, distance, direction: dir }
+    );
+    newState.gameLog = [...newState.gameLog, throwInLog];
+  } else {
+    // Log du rebond
+    const bounceLogEntry = createLogEntry(
+      'action',
+      `Ballon rebondit vers (${newBallPos.x}, ${newBallPos.y})`,
+      undefined,
+      undefined
+    );
+    newState.gameLog = [...newState.gameLog, bounceLogEntry];
+  }
+
+  // Lot 3 « cerveau du coach » (bug trouvé par le bench) : un ballon qui
+  // atterrit sur un joueur AU SOL rebondit à nouveau — il s'arrêtait sous
+  // lui, inaccessible (case occupée) jusqu'à ce qu'il se relève.
+  const proneAtNewPos = newState.players.find(
+    p => samePos(p.pos, newBallPos) && p.stunned && p.pos.x >= 0
   );
-  newState.gameLog = [...newState.gameLog, bounceLogEntry];
+  if (proneAtNewPos) {
+    const proneLog = createLogEntry(
+      'action',
+      `Le ballon rebondit sur ${proneAtNewPos.name}, au sol`,
+      proneAtNewPos.id,
+      proneAtNewPos.team
+    );
+    newState.gameLog = [...newState.gameLog, proneLog];
+    newState.ball = newBallPos;
+    return { kind: 'bounce_again', state: newState };
+  }
 
   // Vérifier si la balle atterrit sur un joueur debout avec sa Zone de Tackle
+  // Un joueur DEBOUT sur la case doit tenter la réception, qu'il lui reste
+  // des PM ou non (le critère « pm > 0 » laissait le ballon s'arrêter SOUS
+  // un joueur qui avait fini son déplacement, inaccessible ensuite).
   const playerAtNewPos = newState.players.find(
-    p => samePos(p.pos, newBallPos) && !p.stunned && p.pm > 0 // Zone de Tackle = joueur non étourdi avec des PM
+    p => samePos(p.pos, newBallPos) && !p.stunned && p.pos.x >= 0
   );
 
   if (playerAtNewPos) {
@@ -301,6 +364,21 @@ function bounceBallStep(state: GameState, rng: RNG): BounceStepResult {
   }
 
   return { kind: 'final', state: checkTouchdowns(newState) };
+}
+
+/**
+ * Lot 3 « cerveau du coach » — un ballon LIBRE ne repose jamais sous un
+ * joueur au sol. Les résolutions de blocage posent le ballon sur la case
+ * du porteur renversé « en attendant le rebond de l'appelant » — que
+ * personne n'appelait : le ballon restait coincé sous lui, inaccessible,
+ * parfois plusieurs tours. Appelé après chaque coup par `applyMove`.
+ */
+export function settleLooseBall(state: GameState, rng: RNG): GameState {
+  if (!state.ball) return state;
+  const ball = state.ball;
+  const occupant = state.players.find(p => p.pos.x >= 0 && samePos(p.pos, ball) && !p.hasBall);
+  if (!occupant) return state;
+  return bounceBall(state, rng);
 }
 
 /**
