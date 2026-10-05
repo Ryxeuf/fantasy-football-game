@@ -162,7 +162,17 @@ export { performInjuryRoll, rollLastingInjuryType } from './mechanics/injury';
 export { applyApothecaryChoice, isApothecaryAvailable } from './mechanics/apothecary';
 
 // Export des fonctions de passe et remise
-export { executePass, executeHandoff, getPassRange, getDistance, findInterceptors } from './mechanics/passing';
+export {
+  executePass,
+  executeHandoff,
+  getPassRange,
+  getDistance,
+  findInterceptors,
+  canAttemptPassForRange,
+  getPassRangeModifier,
+  calculatePassModifiers,
+  calculateCatchModifiers,
+} from './mechanics/passing';
 
 // Export du Lancer de Coéquipier (Throw Team-Mate)
 export { canThrowTeamMate, getThrowRange, executeThrowTeamMate } from './mechanics/throw-team-mate';

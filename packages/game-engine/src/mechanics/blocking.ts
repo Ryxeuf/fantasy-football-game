@@ -316,9 +316,13 @@ export function calculateOffensiveAssists(
 ): number {
   let assists = 0;
 
-  // Trouver tous les coéquipiers de l'attaquant qui marquent la cible
+  // Trouver tous les coéquipiers de l'attaquant qui marquent la cible.
+  // Lot 3 « cerveau du coach » : un soutien n'exige pas de PM restants
+  // (BB2020 : « adjacent à la cible, non marqué par un autre adversaire ») —
+  // le critère `pm > 0` privait de soutien tout joueur ayant fini son
+  // déplacement, donc tout blocage joué après les déplacements.
   const teammates = state.players.filter(
-    p => p.team === attacker.team && p.id !== attacker.id && !p.stunned && p.pm > 0
+    p => p.team === attacker.team && p.id !== attacker.id && !p.stunned && p.pos.x >= 0
   );
 
   for (const teammate of teammates) {
@@ -361,8 +365,9 @@ export function calculateDefensiveAssists(
   let assists = 0;
 
   // Trouver tous les coéquipiers de la cible qui marquent l'attaquant
+  // (même règle : debout et sur le terrain, pas de condition de PM).
   const teammates = state.players.filter(
-    p => p.team === target.team && p.id !== target.id && !p.stunned && p.pm > 0
+    p => p.team === target.team && p.id !== target.id && !p.stunned && p.pos.x >= 0
   );
 
   for (const teammate of teammates) {
@@ -958,6 +963,17 @@ function handleBothDown(state: GameState, attacker: Player, target: Player, rng:
     state.players = state.players.map(p => (p.id === attacker.id ? { ...p, hasBall: false } : p));
     state.ball = { ...attacker.pos };
     // Note: bounceBall sera appelé par la fonction appelante
+  }
+
+  // Lot 3 « cerveau du coach » (bug trouvé par le bench) : la CIBLE qui
+  // tombe sur Les Deux Plaqués perdait son ballon seulement si elle était
+  // sortie du terrain… où le ballon la suivait (`ball` indéfini, porteur
+  // KO en réserve avec `hasBall`). Un porteur mis au sol lâche le ballon
+  // sur sa case, qu'il y reste ou non.
+  const targetNow = state.players.find(p => p.id === target.id);
+  if (targetFalls && targetNow?.hasBall) {
+    state.players = state.players.map(p => (p.id === target.id ? { ...p, hasBall: false } : p));
+    state.ball = { ...target.pos };
   }
 
   return state;

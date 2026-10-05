@@ -112,6 +112,7 @@ function main(argv: readonly string[]): number {
       pairing: { home, away },
       runs,
       seedOffset: entry.seedOffset,
+      driverKind: entry.driverKind,
     });
     const result = compareToBaseline(out.metrics, entry, baseline.tolerance);
     items.push({ entry, result });

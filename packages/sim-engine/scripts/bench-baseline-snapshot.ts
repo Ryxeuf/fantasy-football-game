@@ -41,6 +41,7 @@ function snapshotEntry(entry: BenchBaselineEntry): BenchBaselineEntry {
     pairing: { home, away },
     runs: entry.runs,
     seedOffset: entry.seedOffset,
+    driverKind: entry.driverKind,
   });
   const m = result.metrics;
   const total = m.outcomes.home + m.outcomes.away + m.outcomes.draw;
@@ -49,6 +50,8 @@ function snapshotEntry(entry: BenchBaselineEntry): BenchBaselineEntry {
     awayId: entry.awayId,
     runs: entry.runs,
     seedOffset: entry.seedOffset,
+    ...(entry.tolerance !== undefined ? { tolerance: entry.tolerance } : {}),
+    ...(entry.driverKind !== undefined ? { driverKind: entry.driverKind } : {}),
     expected: {
       tdMean: m.td.mean,
       tdStd: m.td.std,

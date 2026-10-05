@@ -132,6 +132,12 @@ export function movePlayerToDugoutZone(
 
     // Si le joueur n'est pas en réserves, le retirer du terrain
     if (zoneType !== 'reserves') {
+      // Un joueur sorti du terrain (KO, blessé, expulsé) ne peut pas
+      // emporter le ballon en réserve : il reste sur sa dernière case.
+      if (player.hasBall && player.pos.x >= 0 && player.pos.y >= 0) {
+        newState.ball = { x: player.pos.x, y: player.pos.y };
+        player.hasBall = false;
+      }
       player.pos = { x: -1, y: -1 }; // Position hors terrain
     }
   }

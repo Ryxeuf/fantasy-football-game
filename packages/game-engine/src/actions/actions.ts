@@ -17,7 +17,7 @@
 //  - tous les `handle*` extraits dans des modules dedies.
 import { GameState, Move, RNG } from '../core/types';
 import { truncateGameLog } from '../utils/logging';
-import { checkTouchdowns } from '../mechanics/ball';
+import { checkTouchdowns, settleLooseBall } from '../mechanics/ball';
 import { hasPlayerActed } from '../core/game-state';
 import { applyApothecaryChoice } from '../mechanics/apothecary';
 // S27.8.1 — Handlers d'actions speciales (gaze/vomit/stab/chainsaw/
@@ -137,6 +137,14 @@ export { getLegalMoves };
  * @returns Nouvel état du jeu
  */
 export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
+  const next = applyMoveInner(state, move, rng);
+  if (next === state) return next;
+  // Lot 3 « cerveau du coach » : un ballon libre sous un joueur au sol
+  // rebondit (cf. `settleLooseBall`).
+  return settleLooseBall(next, rng);
+}
+
+function applyMoveInner(state: GameState, move: Move, rng: RNG): GameState {
   // Si un pendingKickoffEvent est en attente, seules les actions kickoff sont acceptées
   if (state.pendingKickoffEvent) {
     const kickoffMoves = ['KICKOFF_SOLID_DEFENCE', 'KICKOFF_HIGH_KICK', 'KICKOFF_QUICK_SNAP', 'KICKOFF_BLITZ_RESOLVE'];

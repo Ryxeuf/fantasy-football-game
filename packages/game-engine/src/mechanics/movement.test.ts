@@ -1512,12 +1512,32 @@ describe('Gestion des actions par joueur', () => {
       let newState = state;
       const teamPlayers = state.players.filter(p => p.team === state.currentPlayer);
 
-      // Faire agir tous les joueurs de l'équipe
+      // Faire agir tous les joueurs de l'équipe (un blocage clôt l'activation)
       for (const player of teamPlayers) {
-        newState = setPlayerAction(newState, player.id, 'MOVE');
+        newState = setPlayerAction(newState, player.id, 'BLOCK');
       }
 
       expect(shouldAutoEndTurn(newState)).toBe(true);
+    });
+
+    it("ne clôt pas le tour tant que le dernier joueur activé peut continuer son déplacement", () => {
+      // Lot 3 « cerveau du coach » : le dernier joueur activé était coupé
+      // après une case — tous ayant « agi », le tour se fermait alors que
+      // son activation (déplacement entamé, PM restants) était ouverte.
+      let newState = state;
+      const teamPlayers = state.players.filter(p => p.team === state.currentPlayer);
+      for (const player of teamPlayers) {
+        newState = setPlayerAction(newState, player.id, 'MOVE');
+      }
+      expect(shouldAutoEndTurn(newState)).toBe(false);
+
+      const exhausted = {
+        ...newState,
+        players: newState.players.map(p =>
+          p.team === newState.currentPlayer ? { ...p, pm: 0, gfiUsed: 2 } : p
+        ),
+      };
+      expect(shouldAutoEndTurn(exhausted)).toBe(true);
     });
   });
 

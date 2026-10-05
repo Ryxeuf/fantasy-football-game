@@ -17,6 +17,11 @@ import type { ReplayJournal } from './replay/journal';
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
  *
+ *  0.29.0 — Lot 3 « cerveau du coach » : plan de drive collant, activations
+ *           entières scorées en espérance, choix selon le plan, corrections
+ *           du moteur (ballon sous un joueur au sol, ramassage du porteur,
+ *           soutiens sans PM, compteur de rounds après un TD). Le bench CI
+ *           mesure désormais le full driver (20 matchs par duel).
  *  0.28.0 — Lot 2 « journal d'actions rejouable » : chaque coup du full
  *  driver reçoit son propre flux de dés (`seed:move:n`), le replay persiste
  *  un journal (état initial + coups + dés) au lieu des snapshots, et les
@@ -33,7 +38,7 @@ import type { ReplayJournal } from './replay/journal';
  *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
  *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
  *  le re-snapshot de `bench/bench-baseline.json`. */
-export const ENGINE_VER = '0.28.0';
+export const ENGINE_VER = '0.29.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */

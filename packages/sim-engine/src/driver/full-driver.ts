@@ -38,8 +38,6 @@
 
 import {
   applyMove,
-  getLegalMoves,
-  pickBestMove2Ply,
   setup,
   type GameState,
   type Move,
@@ -57,8 +55,7 @@ import {
   type SimResult,
 } from '../types';
 
-import { weightsFromProfile } from '../tactics/ai-weights';
-import { openingBookBonusForRace } from '../tactics/opening-book';
+import { createCoach, type CoachTrace } from '../coach/coach';
 import { PRO_LEAGUE_TEAM_BY_ID } from '../tactics/race-profiles';
 import {
   DEFAULT_TACTICAL_PROFILE,
@@ -88,7 +85,10 @@ import {
  * Un match BB normal fait ~150-300 actions au max ; 1500 laisse une
  * marge de 5×.
  */
-const MAX_ACTIONS_PER_MATCH = 1500;
+// Lot 3 « cerveau du coach » : un coach qui active ses onze joueurs chaque
+// tour joue ~1 400 coups par match (16 tours × 2 équipes × ~45 coups) —
+// la borne de 1 500 coupait des matchs réels en seconde mi-temps.
+const MAX_ACTIONS_PER_MATCH = 3000;
 
 /**
  * Si l'IA produit N END_TURN consécutifs sur le même état (no-op),
@@ -144,69 +144,13 @@ function resolveContext(
   return { id: side, profile, race };
 }
 
-interface PickContext {
-  readonly home: TeamRuntimeContext;
-  readonly away: TeamRuntimeContext;
-}
-
 /**
- * Choisit le meilleur coup pour l'équipe active en composant :
- *  - 2-ply minimax (`pickBestMove2Ply`) avec les weights dérivés du
- *    profil tactique (Lot 3.A.0.a / .b)
- *  - Bonus opening book per-race (Lot 3.A.0.c) appliqué après coup
- *    sur les top candidats — ici on ré-évalue les coups légaux et
- *    on rerank si l'opening book change l'ordre.
+ * Lot 3 « cerveau du coach » — le choix des coups est délégué au coach
+ * (`coach/coach.ts`) : plan de drive collant, activations entières scorées
+ * en espérance, choix résolus selon le plan, softmax tempéré par le profil,
+ * le momentum et le score. Le driver ne fait plus qu'appliquer et
+ * journaliser.
  */
-function selectMoveForActiveTeam(
-  state: GameState,
-  ctx: PickContext
-): Move | null {
-  const team = state.currentPlayer;
-  const teamCtx = team === 'A' ? ctx.home : ctx.away;
-  const weights = weightsFromProfile(teamCtx.profile);
-
-  // 1-ply candidate from 2-ply scoring (lots 3.A.0.a + 0.b).
-  const baselineMove = pickBestMove2Ply(state, team, weights);
-  if (!baselineMove) return null;
-
-  // Apply opening book : ré-évalue tous les coups légaux avec le
-  // bonus per-race et garde le meilleur. Si l'opening book ne change
-  // rien, on garde le baseline.
-  const legal = getLegalMoves(state);
-  if (legal.length === 0) return null;
-
-  let bestMove = baselineMove;
-  let bestComposite = openingBookBonusForRace(
-    teamCtx.race,
-    state.turn,
-    baselineMove.type
-  );
-  // On compare les top-K coups en évaluant chacun avec le bonus opening.
-  // Comme `pickBestMove2Ply` ne retourne que le top-1, on doit refaire
-  // une petite recherche locale ici.
-  for (const candidate of legal) {
-    if (candidate === baselineMove) continue;
-    // Score relatif à baseline : on additionne juste le bonus opening
-    // book pour les comparer. Si le candidat n'est pas baselineMove,
-    // il a un score baseline inférieur ; on n'override que si le
-    // bonus opening dépasse l'écart de scoring.
-    const candidateBonus = openingBookBonusForRace(
-      teamCtx.race,
-      state.turn,
-      candidate.type
-    );
-    if (candidateBonus > bestComposite + 10) {
-      // Heuristique simple : on n'override le top-1 que si le candidat
-      // a un bonus opening significativement plus grand. Évite de
-      // rerank toute la liste, garde le 2-ply utile.
-      bestMove = candidate;
-      bestComposite = candidateBonus;
-    }
-  }
-
-  return bestMove;
-}
-
 function deriveOutcome(score: MatchScore): MatchOutcome {
   if (score.home > score.away) return 'home';
   if (score.away > score.home) return 'away';
@@ -272,10 +216,20 @@ function buildCasualties(state: GameState): Casualty[] {
  * Idempotent : ne mute pas l'input. RNG seedé donc deterministe pour
  * une même entrée.
  */
-export function runFullDriver(input: SimInput): SimResult {
+export interface FullDriverOptions {
+  /** Diagnostic (scripts, tests) : trace de chaque activation choisie par le coach. */
+  readonly trace?: (t: CoachTrace) => void;
+}
+
+export function runFullDriver(input: SimInput, options: FullDriverOptions = {}): SimResult {
   const homeCtx = resolveContext('A', input.home);
   const awayCtx = resolveContext('B', input.away);
-  const ctx: PickContext = { home: homeCtx, away: awayCtx };
+  const coach = createCoach({
+    seed: input.seed,
+    home: { profile: homeCtx.profile },
+    away: { profile: awayCtx.profile },
+    trace: options.trace,
+  });
 
   // Lot 2 « journal rejouable » — plus de flux unique : le pré-match, puis
   // chaque coup, reçoivent leur propre flux `makeRNG(`${seed}:…`)`, ce qui
@@ -314,7 +268,7 @@ export function runFullDriver(input: SimInput): SimResult {
   // initial : `handleEndTurn` s'en sert pour incrémenter le numéro de tour
   // (sans lui, une équipe jouait 7 tours au lieu de 8) et
   // `advanceHalfIfNeeded` pour désigner le botteur de 2e mi-temps.
-  const builtState: GameState = { ...builtStateRaw, kickingTeam };
+  const builtState: GameState = { ...builtStateRaw, kickingTeam, halfKickingTeam: kickingTeam };
 
   // BB 2025 : exécute la vraie séquence kickoff (placement balle +
   // scatter D8/D6 + kickoff event 2D6 + landing pickup/bounce/touchback)
@@ -388,7 +342,7 @@ export function runFullDriver(input: SimInput): SimResult {
     const move: Move | null =
       state.gamePhase === 'post-td'
         ? { type: 'END_TURN' }
-        : selectMoveForActiveTeam(state, ctx);
+        : coach.nextMove(state);
     if (!move) break;
 
     const prev = state;
@@ -430,6 +384,7 @@ export function runFullDriver(input: SimInput): SimResult {
     }
     appliedMoves.push(appliedMove);
     postStates.push(next);
+    coach.onApplied(prev, appliedMove, next);
     journalSteps.push({ move: appliedMove, dice: extractDiceRecords(prev, next) });
 
     // Stale-detection : si N END_TURN consécutifs n'ont *vraiment* rien
@@ -579,7 +534,7 @@ export function runFullDriver(input: SimInput): SimResult {
     turnoverCount,
     nuffleCount: 0,
     underdogBoostCount: 0,
-    momentum: [],
+    momentum: coach.momentumSnapshot(),
   };
 
   return {

@@ -1554,12 +1554,24 @@ describe("Gestion des actions par joueur", () => {
         (p) => p.team === state.currentPlayer,
       );
 
-      // Faire agir tous les joueurs de l'équipe
+      // Faire agir tous les joueurs de l'équipe (un blocage clôt l'activation ;
+      // lot 3 : un déplacement avec des PM restants laisse l'activation ouverte)
       for (const player of teamPlayers) {
-        newState = setPlayerAction(newState, player.id, "MOVE");
+        newState = setPlayerAction(newState, player.id, "BLOCK");
       }
 
       expect(shouldAutoEndTurn(newState)).toBe(true);
+    });
+
+    it("ne clôt pas le tour tant qu'un joueur en déplacement a des PM", () => {
+      let newState = state;
+      const teamPlayers = state.players.filter(
+        (p) => p.team === state.currentPlayer,
+      );
+      for (const player of teamPlayers) {
+        newState = setPlayerAction(newState, player.id, "MOVE");
+      }
+      expect(shouldAutoEndTurn(newState)).toBe(false);
     });
   });
 

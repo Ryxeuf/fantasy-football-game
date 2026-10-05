@@ -24,7 +24,11 @@ import type { GameState, Move, TeamId } from '../core/types';
 
 import { pickAIMove, AI_DIFFICULTY_LEVELS } from './difficulty';
 
-const MAX_MOVES_PER_RUN = 200;
+// Lot 3 « cerveau du coach » : le dernier joueur activé n'est plus coupé
+// après une case (`shouldAutoEndTurn` respecte une activation ouverte), un
+// tour peut donc compter MA + 2 coups de plus — la borne reste une garde
+// contre une boucle infinie, pas une mesure de rythme.
+const MAX_MOVES_PER_RUN = 400;
 const SEEDS = ['seed-1', 'seed-2', 'seed-3'];
 
 function applyAILoop(
