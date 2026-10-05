@@ -12,9 +12,15 @@ import type { MatchEvent } from '@bb/shared-types';
 
 import type { PlayerMomentum } from './tactics/momentum';
 import type { TacticalProfile } from './tactics/tactical-profile';
+import type { ReplayJournal } from './replay/journal';
 
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
+ *
+ *  0.28.0 — Lot 2 « journal d'actions rejouable » : chaque coup du full
+ *  driver reçoit son propre flux de dés (`seed:move:n`), le replay persiste
+ *  un journal (état initial + coups + dés) au lieu des snapshots, et les
+ *  états se re-dérivent bit à bit. Les issues changent à graine constante.
  *
  *  0.27.0 — Lot 1 « match complet » : remise en jeu après chaque touchdown,
  *  joueurs à terre qui se relèvent (STAND_UP), choix en attente obligatoires
@@ -27,7 +33,7 @@ import type { TacticalProfile } from './tactics/tactical-profile';
  *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
  *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
  *  le re-snapshot de `bench/bench-baseline.json`. */
-export const ENGINE_VER = '0.27.0';
+export const ENGINE_VER = '0.28.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */
@@ -172,4 +178,11 @@ export interface SimResult {
     readonly moves: readonly Move[];
     readonly states: readonly GameState[];
   };
+  /**
+   * Lot 2 « journal d'actions rejouable » — la forme PERSISTÉE du re-jeu :
+   * état initial (sans log) + coups + dés. `replayJournal` en re-dérive
+   * `fullReplay.states` bit à bit. ~4 Ko compressés contre ~2 Mo pour
+   * les snapshots. Présent uniquement en full driver.
+   */
+  journal?: ReplayJournal;
 }

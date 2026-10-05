@@ -26,6 +26,7 @@ import { gunzip, gzip } from 'node:zlib';
 import { decode as cborDecode, encode as cborEncode } from 'cbor-x';
 
 import type { GameState, Move } from '@bb/game-engine';
+import type { ReplayJournal } from './journal';
 import type { MatchEvent } from '@bb/shared-types';
 
 const gzipAsync = promisify(gzip);
@@ -50,6 +51,13 @@ export interface ReplayWrapper {
     readonly moves: readonly Move[];
     readonly states: readonly GameState[];
   };
+  /**
+   * Lot 2 « journal rejouable » — format v2 : le journal (état initial +
+   * coups + dés) REMPLACE les snapshots dans le payload. Un lecteur qui a
+   * besoin des états appelle `replayJournal`. Un payload v1 (snapshots)
+   * reste décodable tel quel.
+   */
+  readonly journal?: ReplayJournal;
 }
 
 /**
@@ -74,6 +82,15 @@ export async function compressEvents(
 export async function compressReplay(
   wrapper: ReplayWrapper
 ): Promise<Buffer> {
+  if (wrapper.journal) {
+    // v2 : journal seul, jamais les snapshots (400× plus petit).
+    const cbor = cborEncode({
+      v: 2,
+      events: wrapper.events,
+      journal: wrapper.journal,
+    });
+    return gzipAsync(cbor);
+  }
   if (!wrapper.fullReplay) {
     return compressEvents(wrapper.events);
   }
@@ -134,8 +151,13 @@ export async function decompressReplay(
     const obj = decoded as {
       events: MatchEvent[];
       fullReplay?: ReplayWrapper['fullReplay'];
+      journal?: ReplayJournal;
     };
-    return { events: obj.events, fullReplay: obj.fullReplay };
+    return {
+      events: obj.events,
+      ...(obj.fullReplay ? { fullReplay: obj.fullReplay } : {}),
+      ...(obj.journal ? { journal: obj.journal } : {}),
+    };
   }
   throw new Error(
     'decompressReplay: payload did not decode to a known format (array | wrapper)',

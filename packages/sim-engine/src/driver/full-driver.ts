@@ -47,7 +47,6 @@ import {
   type TeamId,
 } from '@bb/game-engine';
 
-import { createRng } from '../rng/seeded';
 import {
   ENGINE_VER,
   type Casualty,
@@ -75,6 +74,13 @@ import {
 import { buildGameStateFromRosters } from './full-driver-roster';
 import { executeHeadlessKickoff } from './full-driver-kickoff';
 import { executeHeadlessDrive } from './full-driver-halftime';
+import {
+  REPLAY_JOURNAL_VERSION,
+  extractDiceRecords,
+  journalOpeningRng,
+  journalStepRng,
+  type ReplayJournalStep,
+} from '../replay/journal';
 
 /**
  * Plafond d'actions par match. Sécurité contre une boucle d'IA qui
@@ -119,11 +125,6 @@ function needsHeadlessDrive(state: GameState): boolean {
     phase === 'setup' &&
     (state.gamePhase === 'halftime' || state.gamePhase === 'playing')
   );
-}
-
-/** Adapte un seed numérique au type RNG `() => number` du game-engine. */
-function adaptRng(rng: ReturnType<typeof createRng>): RNG {
-  return () => rng.next();
 }
 
 interface TeamRuntimeContext {
@@ -276,8 +277,11 @@ export function runFullDriver(input: SimInput): SimResult {
   const awayCtx = resolveContext('B', input.away);
   const ctx: PickContext = { home: homeCtx, away: awayCtx };
 
-  const rng = createRng(input.seed);
-  const engineRng = adaptRng(rng);
+  // Lot 2 « journal rejouable » — plus de flux unique : le pré-match, puis
+  // chaque coup, reçoivent leur propre flux `makeRNG(`${seed}:…`)`, ce qui
+  // rend chaque pas rejouable isolément (`replayJournal`).
+  const tossRng = journalOpeningRng(input.seed, 'toss');
+  const kickoffRng = journalOpeningRng(input.seed, 'kickoff');
 
   // Lot 3.A.2.c — quand des rosters complets sont fournis dans
   // SimInput, on construit le GameState depuis eux pour que les
@@ -292,7 +296,7 @@ export function runFullDriver(input: SimInput): SimResult {
   //    (avantage d'avoir 2 chances de scorer au premier drive). Si
   //    plus tard on modélise des coachs préférant kick (defensive
   //    style), ce sera surchargeable via `input.coinTossStrategy`.
-  const tossWinner: TeamId = engineRng() < 0.5 ? 'A' : 'B';
+  const tossWinner: TeamId = tossRng() < 0.5 ? 'A' : 'B';
   const receivingTeam: TeamId = tossWinner; // gagnant reçoit (heuristique)
   const kickingTeam: TeamId = receivingTeam === 'A' ? 'B' : 'A';
 
@@ -320,7 +324,7 @@ export function runFullDriver(input: SimInput): SimResult {
   // mécanisme officiel.
   const initialState: GameState =
     builtState.players.length > 0
-      ? executeHeadlessKickoff(builtState, kickingTeam, engineRng)
+      ? executeHeadlessKickoff(builtState, kickingTeam, kickoffRng)
       : builtState;
   let state: GameState = initialState;
 
@@ -332,6 +336,7 @@ export function runFullDriver(input: SimInput): SimResult {
   // `selectMoveForActiveTeam` (IA). Stocker `states[]` directement
   // évite d'avoir à mocker le RNG côté browser.
   const appliedMoves: Move[] = [];
+  const journalSteps: ReplayJournalStep[] = [];
   const postStates: GameState[] = [];
 
   // Lot 3.A.2.b — collect MatchEvent[] via state diff après chaque
@@ -389,8 +394,13 @@ export function runFullDriver(input: SimInput): SimResult {
     const prev = state;
     let next: GameState;
     let appliedMove: Move = move;
+    // Lot 2 — le flux de dés de CE pas. Un coup refusé ou illégal est
+    // rejoué par son repli avec un flux NEUF de la même clé : c'est ce que
+    // `replayJournal` fera aussi, le journal reste donc exact.
+    const stepIndex = appliedMoves.length;
+    const stepKey = (): RNG => journalStepRng(input.seed, 'move', stepIndex);
     try {
-      next = applyMove(state, move, engineRng);
+      next = applyMove(state, move, stepKey());
       // Lot 1 « match complet » — un coup REFUSÉ par le moteur (même
       // référence rendue, sans exception) ne doit pas être rejoué à
       // l'infini : on clôt l'activation du joueur, sinon le tour.
@@ -399,12 +409,12 @@ export function runFullDriver(input: SimInput): SimResult {
         const endActivation: Move | null =
           pid && state.playerActions?.[pid] ? { type: 'END_PLAYER_TURN', playerId: pid } : null;
         const fallback: Move = endActivation ?? { type: 'END_TURN' };
-        const retried = applyMove(state, fallback, engineRng);
+        const retried = applyMove(state, fallback, stepKey());
         if (retried !== state) {
           next = retried;
           appliedMove = fallback;
         } else {
-          next = applyMove(state, { type: 'END_TURN' }, engineRng);
+          next = applyMove(state, { type: 'END_TURN' }, stepKey());
           appliedMove = { type: 'END_TURN' };
         }
       }
@@ -412,7 +422,7 @@ export function runFullDriver(input: SimInput): SimResult {
       // Le coup retourné par l'IA s'avère illégal. On force END_TURN
       // pour avancer.
       try {
-        next = applyMove(state, { type: 'END_TURN' }, engineRng);
+        next = applyMove(state, { type: 'END_TURN' }, stepKey());
         appliedMove = { type: 'END_TURN' };
       } catch {
         break;
@@ -420,6 +430,7 @@ export function runFullDriver(input: SimInput): SimResult {
     }
     appliedMoves.push(appliedMove);
     postStates.push(next);
+    journalSteps.push({ move: appliedMove, dice: extractDiceRecords(prev, next) });
 
     // Stale-detection : si N END_TURN consécutifs n'ont *vraiment* rien
     // changé (turn + half + currentPlayer identiques entre prev et next),
@@ -484,10 +495,19 @@ export function runFullDriver(input: SimInput): SimResult {
     // ça, la fin de mi-temps après un TD n'était qu'une suite d'END_TURN sur
     // un terrain vide (plafond de fait à 1 TD par mi-temps).
     if (needsHeadlessDrive(state)) {
-      const resumed = executeHeadlessDrive(state, engineRng);
+      const driveIndex = appliedMoves.length;
+      const resumed = executeHeadlessDrive(
+        state,
+        journalStepRng(input.seed, 'drive', driveIndex),
+      );
       if (resumed !== state && resumed.gamePhase === 'playing') {
         appliedMoves.push({ type: 'END_TURN' });
         postStates.push(resumed);
+        journalSteps.push({
+          move: { type: 'END_TURN' },
+          drive: true,
+          dice: extractDiceRecords(state, resumed),
+        });
         const htDisplayAtMs = (actionsApplied + 1) * MS_PER_ACTION;
         events.push({
           type: 'KICKOFF',
@@ -572,6 +592,12 @@ export function runFullDriver(input: SimInput): SimResult {
       initialState,
       moves: appliedMoves,
       states: postStates,
+    },
+    journal: {
+      v: REPLAY_JOURNAL_VERSION,
+      seed: input.seed,
+      initialState,
+      steps: journalSteps,
     },
   };
 }
