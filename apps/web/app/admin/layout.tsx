@@ -60,15 +60,24 @@ function buildSections(): ReadonlyArray<NavSection> {
       ],
     },
     {
-      id: "cosmetics",
-      title: "Cosmétiques",
+      id: "crowns",
+      title: "Couronnes",
       icon: "👑",
+      items: [
+        { href: "/admin/crowns", label: "Vue d'ensemble", icon: "👑" },
+        { href: "/admin/wallets", label: "Wallets", icon: "👛" },
+      ],
+    },
+    {
+      id: "cosmetics",
+      title: "Boutique",
+      icon: "🛒",
       items: [
         { href: "/admin/dice-themes", label: "Thèmes de dés", icon: "🎲" },
         {
           href: "/admin/coach-cosmetics",
-          label: "Couronnes & thèmes des coachs",
-          icon: "👑",
+          label: "Thèmes des coachs",
+          icon: "🎨",
         },
       ],
     },
