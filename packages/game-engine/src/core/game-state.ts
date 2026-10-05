@@ -1294,9 +1294,46 @@ export function shouldAutoEndTurn(state: GameState): boolean {
   
   const teamPlayers = state.players.filter(p => p.team === team);
 
-  // Vérifier si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir
+  // Vérifier si tous les joueurs de l'équipe ont agi ou ne peuvent plus agir.
+  // Lot 1 « match complet » : un joueur À TERRE (Prone, pas sonné) peut
+  // encore se relever — il ne compte pas comme « ne peut plus agir ».
   return teamPlayers.every(
-    player => hasPlayerActed(state, player.id) || player.stunned || player.pm <= 0
+    player =>
+      hasPlayerActed(state, player.id) ||
+      (player.stunned && !isProne(player)) ||
+      player.pm <= 0
+  );
+}
+
+/**
+ * Lot 1 « match complet » — Prone vs Stunned.
+ *
+ * Le moteur ne porte qu'un booléen `stunned` (= « au sol ») et l'état
+ * `state: 'stunned'` posé par un résultat Sonné du jet de blessure. La
+ * distinction officielle en découle sans nouveau champ :
+ *   - `stunned && state !== 'stunned'` : À TERRE (Prone) — se relève à sa
+ *     prochaine activation (3 PM, gratuit avec Jump Up) ;
+ *   - `state === 'stunned'` : SONNÉ — retourné face visible (Prone) à la
+ *     fin du tour de son équipe, se relève le tour suivant.
+ * Un état sérialisé avant ce lot reste lisible : un joueur `stunned` sans
+ * `state: 'stunned'` est simplement Prone.
+ */
+export function isProne(player: Player): boolean {
+  return !!player.stunned && player.state !== 'stunned' && player.pos.x >= 0;
+}
+
+/**
+ * Un joueur peut se relever s'il est Prone, que c'est le tour de son
+ * équipe, qu'il n'a pas encore agi et qu'il dispose de ses PM.
+ */
+export function canPlayerStandUp(state: GameState, playerId: string): boolean {
+  const player = state.players.find(p => p.id === playerId);
+  if (!player) return false;
+  return (
+    isProne(player) &&
+    player.team === state.currentPlayer &&
+    !hasPlayerActed(state, playerId) &&
+    player.pm > 0
   );
 }
 

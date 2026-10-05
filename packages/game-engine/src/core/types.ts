@@ -480,6 +480,11 @@ export type Move =
   | { type: 'LEAP'; playerId: string; to: Position }
   | { type: 'END_TURN' }
   | { type: 'END_PLAYER_TURN'; playerId: string }
+  /**
+   * Lot 1 « match complet » — un joueur À TERRE (Prone) se relève au début
+   * de son activation pour 3 PM (gratuit avec Jump Up).
+   */
+  | { type: 'STAND_UP'; playerId: string }
   | { type: 'DODGE'; playerId: string; from: Position; to: Position }
   | { type: 'BLOCK'; playerId: string; targetId: string }
   | { type: 'MULTI_BLOCK'; playerId: string; firstTargetId: string; secondTargetId: string }
