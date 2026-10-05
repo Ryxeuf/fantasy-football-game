@@ -449,9 +449,13 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   // + moves), on persiste le tout via le format wrapper. Sinon (hybrid
   // driver, ou full driver pré-3.D.1), on garde l'ancien format array.
   // `compressReplay` choisit automatiquement le bon encodage.
+  // Lot 2 « journal rejouable » — avec un `journal`, `compressReplay`
+  // émet le format v2 (état initial + coups + dés, ~4 Ko) et n'écrit plus
+  // les snapshots.
   const compressed = await compressReplay({
     events: result.events,
     fullReplay: result.fullReplay,
+    journal: result.journal,
   });
   const stats = computeCompressionStats(result.events, compressed);
   const highlights = extractHighlights(result.events);

@@ -63,10 +63,16 @@ export function awardTouchdown(state: GameState, scoringTeam: TeamId, scorer?: P
 
   next = addLogEntry(next, logEntry);
 
+  // Un TD obtenu par une poussée (porteur repoussé dans son en-but adverse)
+  // clôt le drive AVANT que l'attaquant choisisse de suivre : un choix de
+  // poussée ou de suivi encore ouvert n'a plus de sens et bloquerait les
+  // coups légaux jusqu'au END_TURN de la remise en jeu.
   return {
     ...next,
     score: newScore,
     gamePhase: 'post-td' as const,
+    pendingPushChoice: undefined,
+    pendingFollowUpChoice: undefined,
   };
 }
 

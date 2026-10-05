@@ -729,10 +729,11 @@ export function advanceHalfIfNeeded(state: GameState, rng: RNG): GameState {
       );
 
       // Calculer les résultats finaux (SPP + MVP)
-      const matchResult = calculateMatchResult(stateAfterExpulsion, rng);
+      const { matchStats, ...matchResult } = calculateMatchResult(stateAfterExpulsion, rng);
 
       return {
         ...stateAfterExpulsion,
+        matchStats,
         gamePhase: 'ended' as const,
         isTurnover: true,
         matchResult,
@@ -750,6 +751,8 @@ function calculateMatchResult(state: GameState, rng: RNG): {
   spp: Record<string, number>;
   winnings?: { teamA: number; teamB: number };
   dedicatedFansChange?: { teamA: number; teamB: number };
+  /** Lot 2 — copie des stats avec le MVP posé (jamais mutée en place). */
+  matchStats: GameState['matchStats'];
 } {
   // Déterminer le vainqueur
   let winner: TeamId | undefined;
@@ -758,7 +761,14 @@ function calculateMatchResult(state: GameState, rng: RNG): {
 
   // Calculer les SPP pour chaque joueur
   const spp: Record<string, number> = {};
-  const stats = state.matchStats;
+  // Lot 2 « journal rejouable » — BUG : `stats` était l'objet du state et
+  // le MVP y était posé EN PLACE. Comme `expelSecretWeapons` ne fait qu'une
+  // copie superficielle, la mutation remontait jusqu'aux états antérieurs
+  // (et jusqu'au lookahead de l'IA, qui simule END_TURN sur l'état réel) :
+  // un replay re-dérivé ne pouvait pas être identique. Copie profonde.
+  const stats: GameState['matchStats'] = Object.fromEntries(
+    Object.entries(state.matchStats).map(([id, ps]) => [id, { ...ps }])
+  );
 
   for (const [playerId, playerStats] of Object.entries(stats)) {
     spp[playerId] =
@@ -814,7 +824,7 @@ function calculateMatchResult(state: GameState, rng: RNG): {
     }
   }
 
-  return { winner, spp, winnings, dedicatedFansChange };
+  return { winner, spp, winnings, dedicatedFansChange, matchStats: stats };
 }
 
 /**

@@ -26,7 +26,13 @@
  *   - `REPLAY_NOT_FOUND` (404) — pas de replay associé
  */
 
-import { decompressEvents, narrateMatch } from "@bb/sim-engine";
+import {
+  decompressEvents,
+  decompressReplay,
+  narrateMatch,
+  renderMatchSheet,
+  replayJournal,
+} from "@bb/sim-engine";
 import type { SimRosterPlayer, SimResult } from "@bb/sim-engine";
 import type { MatchEvent } from "@bb/shared-types";
 
@@ -219,4 +225,61 @@ export async function getMatchNarration(
     eventCount: events.length,
     rosterCount: { home: homeRoster.length, away: awayRoster.length },
   };
+}
+
+export interface MatchSheetText {
+  readonly matchId: string;
+  readonly sheet: string;
+  readonly steps: number;
+}
+
+/**
+ * Lot 2 « journal rejouable » — feuille de match papier (procès-verbal)
+ * d'un match `completed` dont le replay est au format v2 (journal). Les
+ * états sont re-dérivés par `replayJournal`, la feuille rendue par
+ * `renderMatchSheet` (pur).
+ *
+ * Erreurs : `MATCH_NOT_FOUND`, `MATCH_NOT_REPLAYABLE`, `REPLAY_NOT_FOUND`
+ * (comme la narration) et `SHEET_NOT_AVAILABLE` (replay sans journal :
+ * hybride ou antérieur au lot 2).
+ */
+export async function getMatchSheetText(matchId: string): Promise<MatchSheetText> {
+  const match = await prisma.proLeagueMatch.findUnique({
+    where: { id: matchId },
+    select: {
+      id: true,
+      status: true,
+      homeTeam: { select: { name: true } },
+      awayTeam: { select: { name: true } },
+    },
+  });
+  if (!match) {
+    throw new NarrationError("MATCH_NOT_FOUND", `ProLeagueMatch '${matchId}' introuvable`);
+  }
+  if (match.status !== "completed") {
+    throw new NarrationError(
+      "MATCH_NOT_REPLAYABLE",
+      `ProLeagueMatch '${matchId}' status='${match.status}' n'est pas rejouable (attendu 'completed')`,
+    );
+  }
+  const replay = await prisma.replay.findUnique({
+    where: { matchId },
+    select: { payload: true },
+  });
+  if (!replay) {
+    throw new NarrationError("REPLAY_NOT_FOUND", `Replay pour match '${matchId}' introuvable`);
+  }
+  const wrapper = await decompressReplay(replay.payload as Buffer);
+  if (!wrapper.journal) {
+    throw new NarrationError(
+      "SHEET_NOT_AVAILABLE",
+      `Replay '${matchId}' sans journal rejouable (driver hybride ou antérieur au lot 2)`,
+    );
+  }
+  const { states } = replayJournal(wrapper.journal);
+  const sheet = renderMatchSheet(wrapper.journal, states, {
+    homeName: (match.homeTeam?.name as string | undefined) ?? undefined,
+    awayName: (match.awayTeam?.name as string | undefined) ?? undefined,
+  });
+  return { matchId, sheet, steps: wrapper.journal.steps.length };
 }

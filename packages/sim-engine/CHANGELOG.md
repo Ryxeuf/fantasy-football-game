@@ -7,6 +7,28 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.28.0 — 2026-10-05 — **Lot 2 « le journal rejouable »**
+
+Change OpenSpec `pro-league-replay-journal`. Un replay v1 stockait un état
+complet après chaque coup (2,3 Mo compressés par match) et rien n'y était
+rejouable.
+
+- **Un flux de dés par coup** : le pas `n` reçoit `makeRNG(`${seed}:move:${n}`)`
+  (`drive:${n}` pour une remise en jeu headless, `toss` / `kickoff` au
+  pré-match). Les issues changent à graine constante ⇒ bump.
+- **`replay/journal.ts`** : `ReplayJournal` (état initial sans `gameLog`,
+  coups, dés consommés), `replayJournal` re-dérive tous les états bit à bit
+  (test sur 5 graines), `journalMoves`.
+- **Payload v2** `{ v: 2, events, journal }` : 13,5 Ko compressés (max
+  15,5 Ko sur 10 graines) contre 2,27 Mo ; le v1 reste décodable.
+- **`renderMatchSheet`** : feuille de match papier (une ligne par activation,
+  chemin, action, dés ; mi-temps, tours, touchdowns, turnovers, remises en
+  jeu).
+- Moteur : `calculateMatchResult` ne mute plus `matchStats` (fuite via le
+  lookahead de l'IA qui rendait le rejeu non reproductible) ; un touchdown
+  par poussée efface le choix de suivi en attente.
+- Baseline de bench re-snapshotée (bench hybride, valeurs inchangées).
+
 ## 0.27.0 — 2026-10-05 — **Lot 1 « un match complet »**
 
 Change OpenSpec `pro-league-full-match`. Issu de l'exploration

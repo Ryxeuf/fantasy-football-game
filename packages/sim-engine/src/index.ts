@@ -14,6 +14,21 @@ export {
 export { runHybridDriver, type DriverOptions } from './driver/hybrid-driver';
 export { runFullDriver } from './driver/full-driver';
 export { buildGameStateFromRosters } from './driver/full-driver-roster';
+export { renderMatchSheet, type MatchSheetOptions } from './replay/match-sheet';
+export {
+  REPLAY_JOURNAL_VERSION,
+  journalStepRng,
+  journalOpeningRng,
+  stripGameLog,
+  extractNewLogEntries,
+  extractDiceRecords,
+  replayJournal,
+  journalMoves,
+  type DiceRecord,
+  type ReplayJournal,
+  type ReplayJournalStep,
+  type ReplayedJournal,
+} from './replay/journal';
 export {
   buildEngineRoster,
   buildEngineSimInput,
