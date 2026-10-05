@@ -20,6 +20,13 @@
 
 export const DEFAULT_DICE_THEME_ID = "nuffle" as const;
 
+/**
+ * Préfixe de la référence d'un achat / remboursement de thème dans le journal
+ * des Crowns (`ProTransaction.ref = "dice-theme:<id>"`). Miroir web
+ * (`apps/web/app/lib/crowns.ts`) verrouillé par `catalogue-consistency.test.ts`.
+ */
+export const DICE_THEME_TX_REF_PREFIX = "dice-theme:";
+
 /** `classic` = déclinaisons du dé original ; `team` = aux couleurs d'un roster. */
 export type DiceThemeCollection = "classic" | "team";
 

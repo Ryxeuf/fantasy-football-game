@@ -453,7 +453,11 @@ export async function revokeDiceTheme(
 
   if (refunded > 0) await ensureWalletExists(userId);
   await prisma.$transaction(async (tx: typeof prisma) => {
-    await tx.userDiceTheme.delete({ where: { id: row.id } });
+    // `deleteMany` + compte : une révocation concurrente (double clic, deux
+    // admins) trouve la ligne déjà partie => 404 métier, et la transaction
+    // annule le remboursement — jamais de double remboursement ni de 500.
+    const { count } = await tx.userDiceTheme.deleteMany({ where: { id: row.id } });
+    if (count !== 1) throw adminError("theme-not-acquired");
     if (refunded > 0) {
       await creditInTx(tx, userId, refunded, "ADMIN_REFUND", `${DICE_THEME_TX_REF_PREFIX}${themeId}`);
     }

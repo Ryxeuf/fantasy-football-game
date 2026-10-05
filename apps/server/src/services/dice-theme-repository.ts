@@ -28,10 +28,17 @@ import {
 const TTL_MS = process.env.NODE_ENV === "production" ? 5 * 60 * 1000 : 0;
 
 let cache: { value: DiceThemeCatalogue; expiresAt: number } | null = null;
+/**
+ * Génération du cache : une lecture partie AVANT une invalidation ne doit pas
+ * réécrire le cache après elle (sinon une édition admin resterait invisible
+ * pendant tout le TTL).
+ */
+let generation = 0;
 
 /** À appeler après toute écriture admin sur `DiceTheme`. */
 export function invalidateDiceThemeCache(): void {
   cache = null;
+  generation += 1;
 }
 
 /** Ligne de la table, telle que sélectionnée ci-dessous. */
@@ -126,17 +133,23 @@ const SELECT = {
  */
 export async function loadDiceThemeCatalogue(): Promise<DiceThemeCatalogue> {
   if (cache && cache.expiresAt > Date.now()) return cache.value;
-  let value: DiceThemeCatalogue = DICE_THEME_CATALOGUE;
+  const startedAt = generation;
   try {
     const rows = (await prisma.diceTheme.findMany({ select: SELECT })) as DiceThemeRow[];
-    value = mergeDiceThemeRows(rows, DICE_THEME_CATALOGUE, (slug, reason) =>
+    const value = mergeDiceThemeRows(rows, DICE_THEME_CATALOGUE, (slug, reason) =>
       serverLog.error(`[dice-theme] ligne DiceTheme '${slug}' ignorée : ${reason}`),
     );
+    if (startedAt === generation) {
+      cache = { value, expiresAt: Date.now() + TTL_MS };
+    }
+    return value;
   } catch (e: unknown) {
+    // Repli NON mis en cache : une base momentanément indisponible ne doit
+    // pas servir le compilé (prix et mises en vente admin ignorés) pendant
+    // tout le TTL.
     serverLog.error("[dice-theme] lecture du catalogue en base échouée, repli compilé", e);
+    return DICE_THEME_CATALOGUE;
   }
-  cache = { value, expiresAt: Date.now() + TTL_MS };
-  return value;
 }
 
 /** Colonnes d'une entrée compilée (seed, réinitialisation admin). */

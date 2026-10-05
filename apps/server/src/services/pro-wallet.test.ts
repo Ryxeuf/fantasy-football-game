@@ -118,8 +118,9 @@ describe("debit — sprint 1.D.1", () => {
     expect(newBalance).toBe(750);
     expect(mocked.proWallet.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { userId: USER },
-        data: { crowns: 750 },
+        // Décrément ATOMIQUE et conditionnel : pas de lire-puis-écrire.
+        where: { userId: USER, crowns: { gte: 250 } },
+        data: { crowns: { decrement: 250 } },
       }),
     );
     expect(mocked.proTransaction.create).toHaveBeenCalledWith(
@@ -132,6 +133,17 @@ describe("debit — sprint 1.D.1", () => {
         }),
       }),
     );
+  });
+
+  it("debit concurrent : solde fondu entre la lecture et l'écriture => InsufficientFundsError, rien journalisé", async () => {
+    mocked.proWallet.upsert.mockResolvedValue({ userId: USER, crowns: 300 });
+    mocked.proWallet.findUnique.mockResolvedValue({ crowns: 300 });
+    mocked.proWallet.update.mockRejectedValue(
+      Object.assign(new Error("Record to update not found"), { code: "P2025" }),
+    );
+
+    await expect(debit(USER, 250, "BET")).rejects.toThrow(InsufficientFundsError);
+    expect(mocked.proTransaction.create).not.toHaveBeenCalled();
   });
 
   it("debit sans ref : ref=null en DB", async () => {
@@ -165,6 +177,12 @@ describe("credit — sprint 1.D.1", () => {
     const newBalance = await credit(USER, 500, "WIN", "bet_xyz");
 
     expect(newBalance).toBe(700);
+    // Incrément ATOMIQUE : un débit concurrent n'est jamais écrasé.
+    expect(mocked.proWallet.update).toHaveBeenCalledWith({
+      where: { userId: USER },
+      data: { crowns: { increment: 500 } },
+      select: { crowns: true },
+    });
     expect(mocked.proTransaction.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({

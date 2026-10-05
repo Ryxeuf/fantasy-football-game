@@ -89,4 +89,11 @@ describe("loadDiceThemeCatalogue", () => {
     await expect(loadDiceThemeCatalogue()).resolves.toEqual(DICE_THEME_CATALOGUE);
     expect(serverLog.error).toHaveBeenCalled();
   });
+
+  it("le repli d'une erreur n'est pas mis en cache : la base revenue est relue", async () => {
+    findMany.mockRejectedValueOnce(new Error("down")).mockResolvedValueOnce([row("glace", { priceCrowns: 10 })]);
+    await loadDiceThemeCatalogue();
+    const catalogue = await loadDiceThemeCatalogue();
+    expect(catalogue.find((t) => t.id === "glace")!.priceCrowns).toBe(10);
+  });
 });

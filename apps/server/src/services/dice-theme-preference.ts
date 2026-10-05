@@ -18,6 +18,7 @@ import { prisma } from "../prisma";
 import { getBalance, ensureWalletExists } from "./pro-wallet";
 import {
   DEFAULT_DICE_THEME_ID,
+  DICE_THEME_TX_REF_PREFIX,
   diceThemePurchaseRefusal,
   diceThemeSelectionRefusal,
   effectiveDiceThemeId,
@@ -61,7 +62,7 @@ export function diceThemeError(code: DiceThemeErrorCode): DiceThemeError {
 }
 
 /** Préfixe de la référence d'un achat dans le journal des Crowns. */
-export const DICE_THEME_TX_REF_PREFIX = "dice-theme:";
+export { DICE_THEME_TX_REF_PREFIX };
 
 export interface DiceThemeOptionView {
   readonly id: string;

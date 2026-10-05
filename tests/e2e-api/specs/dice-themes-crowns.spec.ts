@@ -135,6 +135,22 @@ describe("E2E API — thèmes de dés et Couronnes", () => {
     expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000);
   });
 
+  it("deux achats simultanés ne font jamais passer le solde sous zéro", async () => {
+    await send("PATCH", `/admin/wallets/${coach.userId}/balance`, admin.token, {
+      delta: 600,
+      reason: "Lot e2e",
+    });
+    const results = await Promise.all([
+      send("POST", "/dice-themes/orques/purchase", coach.token),
+      send("POST", "/dice-themes/nains/purchase", coach.token),
+    ]);
+    const statuses = results.map((r) => r.status).sort();
+    expect(statuses).toEqual([200, 402]);
+    const crowns = await get<Crowns>("/crowns/me", coach.token);
+    expect(crowns.balance).toBe(200);
+    expect(crowns.transactions.filter((t) => t.type === "SINK")).toHaveLength(1);
+  });
+
   it("un payant non acquis ne se choisit pas", async () => {
     const res = await fetch(`${API_BASE}/dice-themes/me`, {
       method: "PUT",

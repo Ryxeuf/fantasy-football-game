@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => {
   const prisma: Record<string, any> = {
     user: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn(), update: vi.fn(), groupBy: vi.fn() },
-    userDiceTheme: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), delete: vi.fn(), groupBy: vi.fn() },
+    userDiceTheme: { findMany: vi.fn(), findUnique: vi.fn(), create: vi.fn(), deleteMany: vi.fn(), groupBy: vi.fn() },
     diceTheme: { findMany: vi.fn(), upsert: vi.fn() },
     proWallet: { upsert: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     proTransaction: { create: vi.fn(), findMany: vi.fn() },
@@ -45,6 +45,7 @@ beforeEach(() => {
   db.proTransaction.findMany.mockResolvedValue([]);
   db.proWallet.findUnique.mockResolvedValue({ crowns: 0 });
   db.user.findUnique.mockResolvedValue(USER);
+  db.userDiceTheme.deleteMany.mockResolvedValue({ count: 1 });
 });
 
 /** Ligne d'acquisition complète (servie à la fois à la possession et au détail). */
@@ -168,7 +169,7 @@ describe("coachs", () => {
     db.proWallet.update.mockResolvedValue({ crowns: 400 });
     const { refunded } = await revokeDiceTheme("u1", "orques", { refund: true });
     expect(refunded).toBe(400);
-    expect(db.userDiceTheme.delete).toHaveBeenCalledWith({ where: { id: "r1" } });
+    expect(db.userDiceTheme.deleteMany).toHaveBeenCalledWith({ where: { id: "r1" } });
     expect(db.proTransaction.create).toHaveBeenCalledWith({
       data: { walletId: "u1", type: "ADMIN_REFUND", amount: 400, ref: "dice-theme:orques" },
     });
@@ -181,6 +182,15 @@ describe("coachs", () => {
     expect(refunded).toBe(0);
     expect(db.proTransaction.create).not.toHaveBeenCalled();
     expect(db.user.update).not.toHaveBeenCalled();
+  });
+
+  it("révocation concurrente : la ligne déjà partie => theme-not-acquired, pas de remboursement", async () => {
+    db.userDiceTheme.findUnique.mockResolvedValue({ id: "r1", source: "purchase", priceCrowns: 400 });
+    db.userDiceTheme.findMany.mockResolvedValue([acquired("orques")]);
+    db.proWallet.upsert.mockResolvedValue({ userId: "u1", crowns: 0 });
+    db.userDiceTheme.deleteMany.mockResolvedValue({ count: 0 });
+    await expectCode(revokeDiceTheme("u1", "orques", { refund: true }), "theme-not-acquired");
+    expect(db.proTransaction.create).not.toHaveBeenCalled();
   });
 
   it("retrait d'un thème non acquis : theme-not-acquired", async () => {

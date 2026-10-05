@@ -126,6 +126,42 @@ function ensureValidType(type: ProTxType): void {
   }
 }
 
+/** Erreur Prisma « enregistrement introuvable » (P2025). */
+function isRecordNotFound(e: unknown): boolean {
+  return (
+    typeof e === "object" &&
+    e !== null &&
+    (e as { code?: unknown }).code === "P2025"
+  );
+}
+
+/**
+ * Décrément ATOMIQUE et conditionnel du solde (`crowns >= amount` rejoué
+ * dans la même instruction que l'écriture). Un lire-puis-écrire perdait la
+ * mise à jour d'un écrivain concurrent (achat de thème de dés, ajustement
+ * admin) : le second écrasait le solde avec une valeur calculée sur un état
+ * périmé. `current` ne sert qu'au message d'erreur.
+ */
+async function decrementOrThrow(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tx: any,
+  userId: string,
+  amount: number,
+  current: number,
+): Promise<number> {
+  try {
+    const updated = await tx.proWallet.update({
+      where: { userId, crowns: { gte: amount } },
+      data: { crowns: { decrement: amount } },
+      select: { crowns: true },
+    });
+    return updated.crowns as number;
+  } catch (e: unknown) {
+    if (isRecordNotFound(e)) throw new InsufficientFundsError(current, amount);
+    throw e;
+  }
+}
+
 /**
  * Crée le wallet de l'user s'il n'existe pas, sinon le renvoie tel
  * quel. Idempotent : 2 appels successifs ne dupliquent pas le wallet.
@@ -186,11 +222,9 @@ export async function debit(
     if (current < amount) {
       throw new InsufficientFundsError(current, amount);
     }
-    const updated = await tx.proWallet.update({
-      where: { userId },
-      data: { crowns: current - amount },
-      select: { crowns: true },
-    });
+    const updated = {
+      crowns: await decrementOrThrow(tx, userId, amount, current),
+    };
     await tx.proTransaction.create({
       data: {
         walletId: userId,
@@ -224,14 +258,9 @@ export async function credit(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = (await prisma.$transaction(async (tx: any) => {
-    const w = await tx.proWallet.findUnique({
-      where: { userId },
-      select: { crowns: true },
-    });
-    const current = (w?.crowns as number | undefined) ?? 0;
     const updated = await tx.proWallet.update({
       where: { userId },
-      data: { crowns: current + amount },
+      data: { crowns: { increment: amount } },
       select: { crowns: true },
     });
     await tx.proTransaction.create({
@@ -287,11 +316,9 @@ export async function debitInTx(
   if (current < amount) {
     throw new InsufficientFundsError(current, amount);
   }
-  const updated = await tx.proWallet.update({
-    where: { userId },
-    data: { crowns: current - amount },
-    select: { crowns: true },
-  });
+  const updated = {
+    crowns: await decrementOrThrow(tx, userId, amount, current),
+  };
   await tx.proTransaction.create({
     data: {
       walletId: userId,
@@ -318,14 +345,9 @@ export async function creditInTx(
 ): Promise<number> {
   ensureValidAmount(amount);
   ensureValidType(type);
-  const w = await tx.proWallet.findUnique({
-    where: { userId },
-    select: { crowns: true },
-  });
-  const current = (w?.crowns as number | undefined) ?? 0;
   const updated = await tx.proWallet.update({
     where: { userId },
-    data: { crowns: current + amount },
+    data: { crowns: { increment: amount } },
     select: { crowns: true },
   });
   await tx.proTransaction.create({
