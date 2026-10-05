@@ -111,6 +111,13 @@ describe("SeasonPredictionsPage", () => {
         .getAttribute("aria-selected"),
     ).toBe("true");
     expect(screen.getByTestId("prediction-board-row-s1")).toBeTruthy();
+    // Chaque journée mène à SA page.
+    expect(
+      screen.getByTestId("prediction-round-link-r2").getAttribute("href"),
+    ).toBe("/leagues/lg-1/seasons/season-1/predictions/r2");
+    expect(screen.getByTestId("prediction-round-link-r1").textContent).toBe(
+      "Résultats des pronos →",
+    );
   });
 
   it("le commissaire clôt une journée entière", async () => {
