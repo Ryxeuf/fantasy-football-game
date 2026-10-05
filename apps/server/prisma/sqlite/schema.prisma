@@ -1613,8 +1613,60 @@ model ProTeam {
   standings       ProLeagueStandings[]
   followers       ProSpectatorFollow[]
   survivorEntries ProSurvivorEntry[]
+  /// Lot 4 « évolution persistée » — le coach IA de l'équipe (create-if-missing).
+  coach           ProCoach?
 
   @@index([leagueId])
+}
+
+/// Lot 4 « évolution persistée » — le coach IA d'une ProTeam. Son profil
+/// tactique VIVANT évolue entre deux matchs (`adaptCoachProfile`, borné à
+/// `anchorProfile ± bande`) ; l'ancre est le profil de race d'origine, ou
+/// celui posé par l'admin. Créé à la demande (create-if-missing) à partir
+/// de `race-profiles.ts` : aucune ligne n'existe avant le premier match.
+model ProCoach {
+  id            String   @id @default(cuid())
+  team          ProTeam  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId        String   @unique
+  name          String
+  /// Philosophie dérivée du profil (« Cogneur patient », « Aérien »…), figée
+  /// à la création, re-dérivée par l'admin via reset.
+  philosophy    String
+  /// `TacticalProfile` vivant (15 paramètres 0-100).
+  profile       String
+  /// `TacticalProfile` d'ancrage : borne de l'évolution.
+  anchorProfile String
+  /// `CoachMemory` : moyenne mobile par stratégie.
+  memory        String?
+  /// Matchs intégrés dans le profil.
+  experience    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  memories ProCoachMemory[]
+}
+
+/// Lot 4 — journal APPEND-ONLY de l'évolution d'un coach : une ligne par
+/// match intégré, avec le profil avant / après, les drives du match et les
+/// changements expliqués. Jamais d'UPDATE ni de DELETE (hors reset admin).
+model ProCoachMemory {
+  id            String   @id @default(cuid())
+  coach         ProCoach @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId       String
+  /// Match intégré (null = reset admin ou ligne synthétique).
+  matchId       String?
+  /// `DriveRecord[]` du match pour cette équipe.
+  drives        String
+  /// `ProfileChange[]` : paramètre, avant, après, raison.
+  changes       String
+  profileBefore String
+  profileAfter  String
+  /// Résumé lisible (Gazette, console admin).
+  summary       String
+  createdAt     DateTime @default(now())
+
+  @@index([coachId, createdAt])
+  @@index([matchId])
 }
 
 model ProTeamRoster {

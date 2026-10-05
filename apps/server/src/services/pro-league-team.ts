@@ -12,6 +12,8 @@
  */
 
 import { prisma } from "../prisma";
+import { serverLog } from "../utils/server-log";
+import { getProCoachByTeamId, listCoachMemory } from "./pro-coach";
 
 import { OLD_WORLD_LEAGUE_SLUG } from "./pro-league-hub";
 import {
@@ -123,6 +125,19 @@ export interface ProTeamTopEarner {
   readonly status: string;
 }
 
+/** Lot 4 « évolution persistée » — le coach IA, tel que la fiche publique le montre. */
+export interface ProTeamCoachSummary {
+  readonly name: string;
+  readonly philosophy: string;
+  readonly experience: number;
+  readonly profile: Record<string, number>;
+  readonly recentEvolutions: readonly {
+    readonly matchId: string | null;
+    readonly summary: string;
+    readonly createdAt: Date;
+  }[];
+}
+
 export interface ProTeamDetail {
   readonly slug: string;
   readonly city: string;
@@ -146,6 +161,8 @@ export interface ProTeamDetail {
   readonly totalRosterTv: number;
   readonly upcomingMatches: readonly ProTeamDetailMatch[];
   readonly recentMatches: readonly ProTeamDetailMatch[];
+  /** Lot 4 — `null` tant que l'équipe n'a pas joué (coach créé au premier match). */
+  readonly coach: ProTeamCoachSummary | null;
 }
 
 export class ProTeamNotFoundError extends Error {
@@ -393,6 +410,7 @@ export async function getProTeamDetail(
   });
 
   const meta = (team.meta as { motto?: string } | null | undefined) ?? null;
+  const coach = await loadCoachSummary(team.id as string);
 
   // Lot M — top 5 joueurs actifs par TV desc, sans appel DB additionnel.
   const activeRoster = roster.filter((p) => p.status === "active");
@@ -430,7 +448,34 @@ export async function getProTeamDetail(
     totalRosterTv,
     upcomingMatches,
     recentMatches,
+    coach,
   };
+}
+
+/**
+ * Lot 4 — section optionnelle : un échec de lecture du coach ne bloque
+ * jamais la fiche (patron `Promise.all([detail, optional])`).
+ */
+async function loadCoachSummary(teamId: string): Promise<ProTeamCoachSummary | null> {
+  try {
+    const coach = await getProCoachByTeamId(teamId);
+    if (!coach) return null;
+    const memory = await listCoachMemory(coach.id, 3);
+    return {
+      name: coach.name,
+      philosophy: coach.philosophy,
+      experience: coach.experience,
+      profile: coach.profile,
+      recentEvolutions: memory.map((m) => ({
+        matchId: m.matchId,
+        summary: m.summary,
+        createdAt: m.createdAt,
+      })),
+    };
+  } catch (e) {
+    serverLog.warn(`[pro-league-team] coach summary unavailable for team ${teamId}`, e);
+    return null;
+  }
 }
 
 function matchSelect() {

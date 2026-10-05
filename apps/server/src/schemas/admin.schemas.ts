@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { tacticalProfileSchema } from "@bb/sim-engine";
 
 // ── Query schemas ──
 
@@ -234,3 +235,23 @@ export const adminProTeamBrandingSchema = z
     (data) => Object.keys(data).length > 0,
     { message: "Au moins un champ doit etre fourni" },
   );
+
+/**
+ * Lot 4 « évolution persistée » — réglage admin du coach IA d'une ProTeam.
+ * `profile` est PARTIEL : les paramètres fournis redéfinissent l'ancre.
+ */
+export const adminProCoachPatchSchema = z
+  .object({
+    name: z.string().min(1).max(80).optional(),
+    philosophy: z.string().min(1).max(120).optional(),
+    profile: tacticalProfileSchema.partial().optional(),
+  })
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Au moins un champ doit etre fourni",
+  });
+export type AdminProCoachPatchInput = z.infer<typeof adminProCoachPatchSchema>;
+
+export const adminProCoachMemoryQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+});

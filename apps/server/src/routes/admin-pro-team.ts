@@ -7,6 +7,12 @@
  *  - PATCH /admin/pro-league/teams/:id       — update branding (couleurs,
  *                                              motto, headline, nflFlavor,
  *                                              city, name)
+ *  Lot 4 « évolution persistée » — le coach IA de l'équipe :
+ *  - GET   /admin/pro-league/teams/:id/coach         — profil vivant + ancre
+ *  - PATCH /admin/pro-league/teams/:id/coach         — pose l'ancre (nom,
+ *                                                      philosophie, profil)
+ *  - POST  /admin/pro-league/teams/:id/coach/reset   — retour au profil de race
+ *  - GET   /admin/pro-league/teams/:id/coach/memory  — journal des évolutions
  *
  * Toutes les mutations tracent un audit log strict (oldValue / newValue
  * limites aux champs branding).
@@ -16,8 +22,13 @@ import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
-import { validate } from "../middleware/validate";
-import { adminProTeamBrandingSchema } from "../schemas/admin.schemas";
+import { validate, validateQuery } from "../middleware/validate";
+import {
+  adminProCoachMemoryQuerySchema,
+  adminProCoachPatchSchema,
+  adminProTeamBrandingSchema,
+  type AdminProCoachPatchInput,
+} from "../schemas/admin.schemas";
 import { serverLog } from "../utils/server-log";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import type { AuthenticatedRequest } from "../middleware/authUser";
@@ -25,6 +36,14 @@ import {
   parseProTeamMeta,
   applyBrandingMeta,
 } from "../services/pro-team-branding";
+import {
+  ProCoachError,
+  ensureProCoach,
+  listCoachMemory,
+  resetCoach,
+  updateCoachByAdmin,
+  type ProCoachView,
+} from "../services/pro-coach";
 
 const router = Router();
 
@@ -204,6 +223,101 @@ router.patch(
     } catch (e) {
       serverLog.error(e);
       res.status(500).json({ error: "Erreur lors de la mise a jour" });
+    }
+  },
+);
+
+function serializeCoach(coach: ProCoachView) {
+  return {
+    id: coach.id,
+    teamId: coach.teamId,
+    name: coach.name,
+    philosophy: coach.philosophy,
+    profile: coach.profile,
+    anchorProfile: coach.anchorProfile,
+    memory: coach.memory,
+    experience: coach.experience,
+    updatedAt: coach.updatedAt,
+  };
+}
+
+function handleCoachError(res: import("express").Response, e: unknown, fallback: string): void {
+  if (e instanceof ProCoachError && e.code === "team-not-found") {
+    res.status(404).json({ error: "Team introuvable" });
+    return;
+  }
+  serverLog.error(e);
+  res.status(500).json({ error: fallback });
+}
+
+/** GET /admin/pro-league/teams/:id/coach — le coach IA (créé à la demande). */
+router.get("/teams/:id/coach", async (req, res) => {
+  try {
+    const coach = await ensureProCoach(req.params.id);
+    res.json({ coach: serializeCoach(coach) });
+  } catch (e) {
+    handleCoachError(res, e, "Erreur lors de la lecture du coach");
+  }
+});
+
+/**
+ * PATCH /admin/pro-league/teams/:id/coach — réglage admin.
+ *
+ * Un `profile` partiel redéfinit l'ANCRE (et y ramène le profil vivant) :
+ * c'est la base autour de laquelle le coach évolue ensuite, bornée.
+ */
+router.patch(
+  "/teams/:id/coach",
+  validate(adminProCoachPatchSchema),
+  async (req, res) => {
+    try {
+      const body: AdminProCoachPatchInput = req.body;
+      const before = await ensureProCoach(req.params.id);
+      const coach = await updateCoachByAdmin(req.params.id, body);
+      await safeRecordAdminActionFromRequest(prisma, req as AuthenticatedRequest, {
+        action: "pro-team.coach.update",
+        entity: "ProCoach",
+        entityId: coach.id,
+        oldValue: { name: before.name, philosophy: before.philosophy, anchorProfile: before.anchorProfile },
+        newValue: { name: coach.name, philosophy: coach.philosophy, anchorProfile: coach.anchorProfile },
+      });
+      res.json({ coach: serializeCoach(coach) });
+    } catch (e) {
+      handleCoachError(res, e, "Erreur lors de la mise a jour du coach");
+    }
+  },
+);
+
+/** POST /admin/pro-league/teams/:id/coach/reset — retour au profil de race. */
+router.post("/teams/:id/coach/reset", async (req, res) => {
+  try {
+    const before = await ensureProCoach(req.params.id);
+    const coach = await resetCoach(req.params.id);
+    await safeRecordAdminActionFromRequest(prisma, req as AuthenticatedRequest, {
+      action: "pro-team.coach.reset",
+      entity: "ProCoach",
+      entityId: coach.id,
+      oldValue: { profile: before.profile, anchorProfile: before.anchorProfile, experience: before.experience },
+      newValue: { profile: coach.profile, anchorProfile: coach.anchorProfile, experience: coach.experience },
+    });
+    res.json({ coach: serializeCoach(coach) });
+  } catch (e) {
+    handleCoachError(res, e, "Erreur lors de la reinitialisation du coach");
+  }
+});
+
+/** GET /admin/pro-league/teams/:id/coach/memory?limit=20 — journal des évolutions. */
+router.get(
+  "/teams/:id/coach/memory",
+  validateQuery(adminProCoachMemoryQuerySchema),
+  async (req, res) => {
+    try {
+      const coach = await ensureProCoach(req.params.id);
+      const limit = (req.query as { limit?: number }).limit ?? 20;
+      const memory = await listCoachMemory(coach.id, limit);
+      res.json({ memory });
+    } catch (e) {
+      handleCoachError(res, e, "Erreur lors de la lecture de la memoire du coach");
     }
   },
 );

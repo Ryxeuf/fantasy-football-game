@@ -10,7 +10,13 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("./pro-coach", () => ({
+  getProCoachByTeamId: vi.fn(async () => null),
+  listCoachMemory: vi.fn(async () => []),
+}));
+
 import { prisma } from "../prisma";
+import { getProCoachByTeamId, listCoachMemory } from "./pro-coach";
 import {
   ProTeamNotFoundError,
   getProTeamDetail,
@@ -549,5 +555,45 @@ describe("nextLevelSpp — Lot E", () => {
   it("retourne null pour un legend (>= 176 SPP)", () => {
     expect(nextLevelSpp(176)).toBeNull();
     expect(nextLevelSpp(500)).toBeNull();
+  });
+});
+
+describe("getProTeamDetail — coach IA (lot 4)", () => {
+  it("coach: null tant que l'équipe n'a pas de coach", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.coach).toBeNull();
+  });
+
+  it("expose nom, philosophie, expérience, profil et les 3 dernières évolutions", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    vi.mocked(getProCoachByTeamId).mockResolvedValueOnce({
+      id: "coach-1",
+      teamId: TEAM_ID,
+      name: "Thrud Bonecrusher",
+      philosophy: "Cogneur, posé",
+      profile: { bashIndex: 90 } as never,
+      anchorProfile: { bashIndex: 85 } as never,
+      memory: { strategies: {} },
+      experience: 4,
+      updatedAt: new Date(),
+    });
+    vi.mocked(listCoachMemory).mockResolvedValueOnce([
+      { id: "m1", matchId: "match-1", summary: "3 drives…", changes: [], createdAt: new Date("2026-10-01") },
+    ]);
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.coach).toMatchObject({ name: "Thrud Bonecrusher", philosophy: "Cogneur, posé", experience: 4 });
+    expect(out.coach?.recentEvolutions).toEqual([
+      { matchId: "match-1", summary: "3 drives…", createdAt: new Date("2026-10-01") },
+    ]);
+    expect(vi.mocked(listCoachMemory)).toHaveBeenCalledWith("coach-1", 3);
+  });
+
+  it("une lecture du coach qui échoue ne bloque pas la fiche", async () => {
+    mocked.proTeam.findUnique.mockResolvedValue(fakeTeam());
+    vi.mocked(getProCoachByTeamId).mockRejectedValueOnce(new Error("db down"));
+    const out = await getProTeamDetail("buf-snow-ogres");
+    expect(out.coach).toBeNull();
+    expect(out.slug).toBe("buf-snow-ogres");
   });
 });

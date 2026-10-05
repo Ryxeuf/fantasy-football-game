@@ -32,11 +32,38 @@ vi.mock("../services/audit-log", () => ({
   safeRecordAdminActionFromRequest: vi.fn(async () => {}),
 }));
 
+vi.mock("../services/pro-coach", () => {
+  class ProCoachError extends Error {
+    constructor(
+      public readonly code: string,
+      message: string,
+    ) {
+      super(message);
+      this.name = "ProCoachError";
+    }
+  }
+  return {
+    ProCoachError,
+    ensureProCoach: vi.fn(),
+    listCoachMemory: vi.fn(),
+    resetCoach: vi.fn(),
+    updateCoachByAdmin: vi.fn(),
+  };
+});
+
 import express from "express";
 import http from "http";
 import teamRouter from "./admin-pro-team";
 import { prisma } from "../prisma";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
+import {
+  ProCoachError,
+  ensureProCoach,
+  listCoachMemory,
+  resetCoach,
+  updateCoachByAdmin,
+} from "../services/pro-coach";
+import { DEFAULT_TACTICAL_PROFILE } from "@bb/sim-engine";
 
 const mockedAudit = vi.mocked(safeRecordAdminActionFromRequest);
 
@@ -319,5 +346,73 @@ describe("PATCH /admin/pro-league/teams/:id", () => {
 
     const updateCall = mockedPrisma.proTeam.update.mock.calls[0][0];
     expect(updateCall.data.nflFlavor).toBeNull();
+  });
+});
+
+describe("coach IA (lot 4)", () => {
+  const coachFixture = {
+    id: "coach-1",
+    teamId: "t1",
+    name: "Grishnak Ironjaw",
+    philosophy: "Cogneur, patient",
+    profile: { ...DEFAULT_TACTICAL_PROFILE, bashIndex: 80 },
+    anchorProfile: { ...DEFAULT_TACTICAL_PROFILE, bashIndex: 75 },
+    memory: { strategies: {} },
+    experience: 3,
+    updatedAt: new Date("2026-10-05T00:00:00Z"),
+  };
+
+  it("GET /teams/:id/coach rend le coach (créé à la demande)", async () => {
+    vi.mocked(ensureProCoach).mockResolvedValue(coachFixture);
+    const res = await request("GET", "/teams/t1/coach");
+    expect(res.status).toBe(200);
+    expect(res.body.coach).toMatchObject({ id: "coach-1", name: "Grishnak Ironjaw", experience: 3 });
+    expect(res.body.coach.profile.bashIndex).toBe(80);
+    expect(res.body.coach.anchorProfile.bashIndex).toBe(75);
+  });
+
+  it("GET /teams/:id/coach → 404 si l'équipe n'existe pas", async () => {
+    vi.mocked(ensureProCoach).mockRejectedValue(new ProCoachError("team-not-found", "nope"));
+    const res = await request("GET", "/teams/nope/coach");
+    expect(res.status).toBe(404);
+  });
+
+  it("PATCH /teams/:id/coach valide le profil partiel et journalise", async () => {
+    vi.mocked(ensureProCoach).mockResolvedValue(coachFixture);
+    vi.mocked(updateCoachByAdmin).mockResolvedValue({ ...coachFixture, name: "Ugluk" });
+    const res = await request("PATCH", "/teams/t1/coach", { name: "Ugluk", profile: { bashIndex: 90 } });
+    expect(res.status).toBe(200);
+    expect(res.body.coach.name).toBe("Ugluk");
+    expect(vi.mocked(updateCoachByAdmin)).toHaveBeenCalledWith("t1", { name: "Ugluk", profile: { bashIndex: 90 } });
+    expect(mockedAudit).toHaveBeenCalledTimes(1);
+    expect(mockedAudit.mock.calls[0][2]).toMatchObject({ action: "pro-team.coach.update", entity: "ProCoach" });
+  });
+
+  it("PATCH /teams/:id/coach refuse un paramètre hors bornes, une clé inconnue ou un corps vide", async () => {
+    expect((await request("PATCH", "/teams/t1/coach", { profile: { bashIndex: 101 } })).status).toBe(400);
+    expect((await request("PATCH", "/teams/t1/coach", { profile: { foo: 10 } })).status).toBe(400);
+    expect((await request("PATCH", "/teams/t1/coach", {})).status).toBe(400);
+    expect(vi.mocked(updateCoachByAdmin)).not.toHaveBeenCalled();
+  });
+
+  it("POST /teams/:id/coach/reset réinitialise et journalise", async () => {
+    vi.mocked(ensureProCoach).mockResolvedValue(coachFixture);
+    vi.mocked(resetCoach).mockResolvedValue({ ...coachFixture, experience: 0 });
+    const res = await request("POST", "/teams/t1/coach/reset");
+    expect(res.status).toBe(200);
+    expect(res.body.coach.experience).toBe(0);
+    expect(mockedAudit.mock.calls[0][2]).toMatchObject({ action: "pro-team.coach.reset" });
+  });
+
+  it("GET /teams/:id/coach/memory passe la limite et rend le journal", async () => {
+    vi.mocked(ensureProCoach).mockResolvedValue(coachFixture);
+    vi.mocked(listCoachMemory).mockResolvedValue([
+      { id: "m1", matchId: "match-1", summary: "3 drives…", changes: [], createdAt: new Date() },
+    ]);
+    const res = await request("GET", "/teams/t1/coach/memory?limit=5");
+    expect(res.status).toBe(200);
+    expect(res.body.memory).toHaveLength(1);
+    expect(vi.mocked(listCoachMemory)).toHaveBeenCalledWith("coach-1", 5);
+    expect((await request("GET", "/teams/t1/coach/memory?limit=0")).status).toBe(400);
   });
 });
