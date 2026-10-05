@@ -1,7 +1,8 @@
 import React from "react";
 import { BLOCK_DIE_FACE_INFO, type GameLogEntry, type BlockResult } from "@bb/game-engine";
 import BlockDiceIcon from "./BlockDiceIcon";
-import { SkinnedPipFace } from "../dice/DieFaces";
+import { SkinnedNumberFace, SkinnedPipFace } from "../dice/DieFaces";
+import { isSingleD6Roll } from "../dice/skins";
 
 interface GameLogProps {
   logEntries: GameLogEntry[];
@@ -114,11 +115,23 @@ export default function GameLog({ logEntries, maxEntries = 50 }: GameLogProps) {
                     {entry.type === "dice" &&
                       typeof (entry as any).details?.diceRoll === "number" &&
                       !(entry as any).details?.result && (
-                        <SkinnedPipFace
-                          value={(entry as any).details.diceRoll}
-                          label={`Jet : ${(entry as any).details.diceRoll}`}
-                          className="mr-1 inline-block h-5 w-5 align-middle"
-                        />
+                        isSingleD6Roll(
+                          (entry as any).details.diceRoll,
+                          (entry as any).details.targetNumber,
+                        ) ? (
+                          <SkinnedPipFace
+                            value={(entry as any).details.diceRoll}
+                            label={`Jet : ${(entry as any).details.diceRoll}`}
+                            className="mr-1 inline-block h-5 w-5 align-middle"
+                          />
+                        ) : (
+                          // Total de 2D6 (armure, blessure) : chiffré.
+                          <SkinnedNumberFace
+                            value={(entry as any).details.diceRoll}
+                            label={`Jet : ${(entry as any).details.diceRoll}`}
+                            className="mr-1 inline-block h-5 w-5 align-middle"
+                          />
+                        )
                       )}
                     {entry.type === "dice" &&
                       (entry as any).details?.diceRoll && (

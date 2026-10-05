@@ -60,6 +60,8 @@ export interface DiceAnimation {
   message: string;
   /** Face du Dé de Blocage, le cas échéant */
   blockResult?: BlockResult;
+  /** Cible du jet : au-delà de 6+, c'est un total de 2D6 (affiché chiffré) */
+  targetNumber?: number;
   /** Elapsed time in ms */
   elapsed: number;
   /** Total duration in ms */
@@ -125,6 +127,7 @@ export function createDiceAnimation(event: DiceRollEvent): DiceAnimation {
     team: event.team,
     message: event.message,
     blockResult: event.blockResult,
+    targetNumber: event.targetNumber,
     elapsed: 0,
     duration: DICE_ANIMATION_DURATION_MS,
   };

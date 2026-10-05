@@ -69,7 +69,9 @@ describe("DiceThemeShop", () => {
     const card = screen.getByTestId("dice-theme-nuffle");
     expect(card.getAttribute("data-selected")).toBe("true");
     expect(card.textContent).toContain("Thème actif");
-    expect(card.querySelectorAll("[role='img'], img")).toHaveLength(11);
+    // 11 faces masquées aux lecteurs d'écran derrière UN aperçu nommé.
+    expect(card.querySelectorAll("img, svg[role='img']")).toHaveLength(11);
+    expect(screen.getByRole("img", { name: "Aperçu du thème Thème nuffle" })).toBeTruthy();
     expect(screen.getByTestId("crowns-balance").textContent).toContain("300");
   });
 
@@ -118,6 +120,39 @@ describe("DiceThemeShop", () => {
     expect(btn.disabled).toBe(true);
     expect(btn.textContent).toContain("Bientôt disponible");
     expect(screen.queryByTestId("crowns-balance")).toBeNull();
+  });
+
+  it("solde en chargement : jamais « Bientôt disponible »", () => {
+    state.crowns = { ...state.crowns, balance: null, loading: true, error: false };
+    render(<DiceThemeShop />);
+    const btn = screen.getByTestId("dice-theme-glace").querySelector("button")!;
+    expect(btn.disabled).toBe(true);
+    expect(btn.textContent).toContain("Chargement du solde");
+  });
+
+  it("solde en erreur : bandeau + Réessayer", () => {
+    const refresh = vi.fn(async () => {});
+    state.crowns = { ...state.crowns, balance: null, loading: false, error: true, refresh };
+    render(<DiceThemeShop />);
+    expect(screen.getByTestId("dice-theme-glace").querySelector("button")!.textContent).toContain("Solde indisponible");
+    fireEvent.click(screen.getByTestId("dice-shop-crowns-error").querySelector("button")!);
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("boutique en erreur : bandeau + Réessayer, pas de « aucun thème »", () => {
+    const refresh = vi.fn(async () => {});
+    state.dice = { ...state.dice, themes: [], error: true, refresh };
+    render(<DiceThemeShop />);
+    expect(screen.queryByTestId("dice-shop-empty")).toBeNull();
+    fireEvent.click(screen.getByTestId("dice-shop-load-error").querySelector("button")!);
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("filtres : boutons à état pressé", () => {
+    render(<DiceThemeShop />);
+    expect(screen.getByTestId("dice-shop-filter-all").getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(screen.getByTestId("dice-shop-filter-team"));
+    expect(screen.getByTestId("dice-shop-filter-team").getAttribute("aria-pressed")).toBe("true");
   });
 
   it("affiche l'erreur d'un achat refusé", async () => {

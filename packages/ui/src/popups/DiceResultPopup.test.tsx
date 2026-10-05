@@ -33,4 +33,12 @@ describe("DiceResultPopup", () => {
     expect(screen.getByRole("img", { name: "Jet : 1" })).toHaveAttribute("data-dice-theme", "skavens");
     expect(screen.getByText("TURNOVER !")).toBeInTheDocument();
   });
+
+  it("un jet d'armure (2D6) s'affiche chiffré, même sous 7", () => {
+    const { container } = render(
+      <DiceResultPopup result={{ ...result, type: "armor", diceRoll: 5, targetNumber: 9 }} onClose={vi.fn()} />,
+    );
+    expect(container.querySelectorAll("[data-pip]")).toHaveLength(0);
+    expect(container.querySelector("[data-die-value]")?.textContent).toBe("5");
+  });
 });

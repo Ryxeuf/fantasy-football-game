@@ -78,6 +78,14 @@ describe("AdminDiceThemesPage", () => {
     await waitFor(() => expect(screen.queryByTestId("dice-theme-edit-modal")).toBeNull());
   });
 
+  it("modale nommée, fermée par Échap", async () => {
+    render(<AdminDiceThemesPage />);
+    fireEvent.click(await screen.findByTestId("admin-dice-edit-orques"));
+    expect(screen.getByRole("dialog", { name: /Modifier « Thème orques »/ })).toBeTruthy();
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(screen.queryByTestId("dice-theme-edit-modal")).toBeNull());
+  });
+
   it("prix invalide : enregistrement désactivé", async () => {
     render(<AdminDiceThemesPage />);
     fireEvent.click(await screen.findByTestId("admin-dice-edit-orques"));

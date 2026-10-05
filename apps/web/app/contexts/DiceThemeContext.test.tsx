@@ -106,12 +106,18 @@ describe("DiceThemeContext", () => {
     expect(captured!.renderer.id).toBe("nuffle");
   });
 
-  it("erreur réseau : thème par défaut", async () => {
-    mockedApi.mockRejectedValue(new Error("boom"));
+  it("erreur réseau : thème par défaut, erreur exposée, refresh relance", async () => {
+    mockedApi.mockRejectedValueOnce(new Error("boom")).mockResolvedValueOnce(PREF);
     renderWithProviders();
     await waitFor(() => expect(mockedApi).toHaveBeenCalled());
     await flush();
     expect(screen.getByTestId("theme").textContent).toBe("true:nuffle");
+    expect(captured!.error).toBe(true);
+    await act(async () => {
+      await captured!.refresh();
+    });
+    expect(captured!.error).toBe(false);
+    expect(captured!.themes).toHaveLength(2);
   });
 
   it("selectTheme envoie un PUT et applique la réponse", async () => {

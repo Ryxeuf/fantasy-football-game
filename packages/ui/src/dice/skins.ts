@@ -191,3 +191,12 @@ export const D6_PIPS: Readonly<Record<1 | 2 | 3 | 4 | 5 | 6, ReadonlyArray<reado
 export function isPipValue(n: number): n is 1 | 2 | 3 | 4 | 5 | 6 {
   return Number.isInteger(n) && n >= 1 && n <= 6;
 }
+
+/**
+ * Vrai si un jet se lit sur UN D6 (faces à points) : valeur 1 à 6 ET cible
+ * d'un D6 (au plus 6+). Une cible au-delà (armure 9+, blessure) trahit un
+ * total de 2D6 : même un 4 s'affiche alors chiffré, jamais en 4 points.
+ */
+export function isSingleD6Roll(value: number, targetNumber?: number | null): boolean {
+  return isPipValue(value) && !(typeof targetNumber === "number" && targetNumber > 6);
+}

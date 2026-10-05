@@ -89,5 +89,12 @@ describe("CrownsContext", () => {
     await waitFor(() => expect(mockedApi).toHaveBeenCalled());
     await flush();
     expect(screen.getByTestId("crowns").textContent).toBe("true:null");
+    expect(captured!.error).toBe(true);
+    mockedApi.mockResolvedValueOnce({ balance: 20, transactions: [] });
+    await act(async () => {
+      await captured!.refresh();
+    });
+    expect(captured!.error).toBe(false);
+    expect(screen.getByTestId("crowns").textContent).toBe("true:20");
   });
 });

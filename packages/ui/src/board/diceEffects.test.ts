@@ -271,6 +271,16 @@ describe("diceEffects — Dé de Blocage", () => {
     expect(createDiceAnimation(event).blockResult).toBe("POW");
   });
 
+  it("garde la cible du jet (un 2D6 d'armure s'affichera chiffré)", () => {
+    const entry = makeLogEntry({
+      type: "dice",
+      message: "Armure: 5 (9+)",
+      details: { diceRoll: 5, targetNumber: 9 },
+    });
+    const [event] = detectDiceRollEvents([], [entry]);
+    expect(createDiceAnimation(event).targetNumber).toBe(9);
+  });
+
   it("ignore un `result` qui n'est pas une face de blocage", () => {
     expect(toBlockResult("SUCCESS")).toBeUndefined();
     expect(toBlockResult(3)).toBeUndefined();

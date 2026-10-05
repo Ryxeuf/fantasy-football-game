@@ -19,6 +19,12 @@ export interface DiceThemePreviewProps {
   readonly size?: keyof typeof SIZES;
   /** Ajoute un D8 chiffré à la ligne des D6 (aperçu des dés numériques). */
   readonly withNumberDie?: boolean;
+  /**
+   * Nom accessible de l'aperçu ENTIER (« Aperçu du thème Orques »). Fourni,
+   * l'aperçu est une seule image pour un lecteur d'écran — au lieu de 11 ou
+   * 12 faces annoncées une à une, par carte, sur une page de 36 thèmes.
+   */
+  readonly label?: string;
 }
 
 /**
@@ -26,17 +32,21 @@ export interface DiceThemePreviewProps {
  * faces du D6 et, au besoin, un dé chiffré. Images en chargement différé
  * (boutique et admin listent 36 thèmes).
  */
-export function DiceThemePreview({ themeId, size = "sm", withNumberDie = false }: DiceThemePreviewProps) {
+export function DiceThemePreview({ themeId, size = "sm", withNumberDie = false, label }: DiceThemePreviewProps) {
   const theme = getDiceThemeRenderer(themeId);
   const s = SIZES[size];
   return (
-    <div className="space-y-1" data-testid={`dice-preview-${themeId}`}>
-      <div className="flex flex-wrap gap-1">
+    <div
+      className="space-y-1"
+      data-testid={`dice-preview-${themeId}`}
+      {...(label ? { role: "img", "aria-label": label } : {})}
+    >
+      <div className="flex flex-wrap gap-1" aria-hidden={label ? true : undefined}>
         {PREVIEW_BLOCK_FACES.map((f) => (
           <BlockDieIcon key={f} face={f} theme={theme} px={s.px} loading="lazy" className={s.block} />
         ))}
       </div>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1" aria-hidden={label ? true : undefined}>
         {D6_VALUES.map((v) => (
           <D6Icon key={v} value={v} theme={theme} className={s.number} />
         ))}

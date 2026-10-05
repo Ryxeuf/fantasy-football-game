@@ -32,7 +32,7 @@ describe("boutique de dés", () => {
     expect(shopAction(THEMES[1], ctx)).toBe("buy");
     expect(shopAction(THEMES[3], ctx)).toBe("insufficient");
     expect(shopAction(THEMES[3], { ...ctx, crownsEnabled: false })).toBe("locked");
-    expect(shopAction(THEMES[3], { ...ctx, balance: null })).toBe("locked");
+    expect(shopAction(THEMES[3], { ...ctx, balance: null })).toBe("pending");
     expect(shopAction(T("retired", { forSale: false }), ctx)).toBe("unavailable");
   });
 });

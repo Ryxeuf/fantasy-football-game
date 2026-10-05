@@ -1,6 +1,7 @@
 import React from "react";
 import { DiceResult } from "@bb/game-engine";
-import { SkinnedPipFace } from "../dice/DieFaces";
+import { SkinnedNumberFace, SkinnedPipFace } from "../dice/DieFaces";
+import { isSingleD6Roll } from "../dice/skins";
 
 interface DiceResultPopupProps {
   result: DiceResult;
@@ -61,12 +62,22 @@ export default function DiceResultPopup({
           </h3>
 
           <div className="mb-4">
-            {/* Le dé dans le thème du coach (points de 1 à 6, chiffré au-delà). */}
-            <SkinnedPipFace
-              value={result.diceRoll}
-              label={`Jet : ${result.diceRoll}`}
-              className="mx-auto mb-2 h-20 w-20 drop-shadow-lg"
-            />
+            {/* Le dé dans le thème du coach : points pour un D6, chiffré pour
+                un total de 2D6 (armure). */}
+            {result.type !== "armor" &&
+            isSingleD6Roll(result.diceRoll, result.targetNumber) ? (
+              <SkinnedPipFace
+                value={result.diceRoll}
+                label={`Jet : ${result.diceRoll}`}
+                className="mx-auto mb-2 h-20 w-20 drop-shadow-lg"
+              />
+            ) : (
+              <SkinnedNumberFace
+                value={result.diceRoll}
+                label={`Jet : ${result.diceRoll}`}
+                className="mx-auto mb-2 h-20 w-20 drop-shadow-lg"
+              />
+            )}
             <div className="text-sm text-gray-600">
               Jet: {result.diceRoll} / Cible: {result.targetNumber}+ (AG du
               joueur)

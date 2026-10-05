@@ -29,6 +29,8 @@ export interface DiceOverlay {
   message: string;
   /** Face du Dé de Blocage, quand le jet en est un */
   blockResult?: BlockResult;
+  /** Cible du jet (au-delà de 6+ : total de 2D6, affiché chiffré) */
+  targetNumber?: number;
 }
 
 export interface DiceEffects {
@@ -104,6 +106,7 @@ export function useDiceEffects(
                 alpha: getDiceAlpha(a.elapsed),
                 message: a.message,
                 blockResult: a.blockResult,
+                targetNumber: a.targetNumber,
               };
             });
 

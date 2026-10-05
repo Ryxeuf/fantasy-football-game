@@ -14,6 +14,7 @@ import {
   getDiceSkin,
   hexColorToNumber,
   isPipValue,
+  isSingleD6Roll,
   type DiceAssetSize,
 } from "./skins";
 
@@ -80,5 +81,13 @@ describe("skins de dés", () => {
     expect(isPipValue(0)).toBe(false);
     expect(isPipValue(7)).toBe(false);
     expect(isPipValue(2.5)).toBe(false);
+  });
+
+  it("isSingleD6Roll : un total de 2D6 (cible > 6) n'est jamais pointé", () => {
+    expect(isSingleD6Roll(4)).toBe(true);
+    expect(isSingleD6Roll(4, 3)).toBe(true);
+    expect(isSingleD6Roll(4, 9)).toBe(false);
+    expect(isSingleD6Roll(9)).toBe(false);
+    expect(isSingleD6Roll(6, null)).toBe(true);
   });
 });

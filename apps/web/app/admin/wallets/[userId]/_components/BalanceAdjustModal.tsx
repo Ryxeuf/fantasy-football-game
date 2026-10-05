@@ -121,6 +121,10 @@ export default function BalanceAdjustModal({
             <span className="text-sm font-medium text-gray-700">
               Raison ({MIN_REASON_LENGTH}–{MAX_REASON_LENGTH} caracteres)
             </span>
+            <span className="block text-xs text-amber-700" data-testid="balance-reason-visibility">
+              Visible du coach dans l&apos;historique de ses Couronnes : pas de
+              note interne ici (le journal d&apos;audit garde la trace admin).
+            </span>
             <textarea
               data-testid="balance-reason"
               value={reason}

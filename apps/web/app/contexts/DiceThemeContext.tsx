@@ -47,6 +47,10 @@ export interface DiceThemeContextValue {
   /** Faux quand le flag est OFF : sélecteur masqué, dé original. */
   readonly enabled: boolean;
   readonly loading: boolean;
+  /** Vrai si le dernier chargement de la boutique a échoué (dé original servi). */
+  readonly error: boolean;
+  /** Recharge la préférence et la boutique (après une erreur). */
+  readonly refresh: () => Promise<void>;
   /** Thème EFFECTIF (toujours un thème rendable). */
   readonly themeId: string;
   readonly renderer: DiceThemeRenderer;
@@ -62,6 +66,8 @@ export interface DiceThemeContextValue {
 const DEFAULT_VALUE: DiceThemeContextValue = {
   enabled: false,
   loading: false,
+  error: false,
+  refresh: async () => {},
   themeId: DEFAULT_DICE_THEME_ID,
   renderer: getDiceThemeRenderer(DEFAULT_DICE_THEME_ID),
   themes: [],
@@ -86,28 +92,43 @@ export function DiceThemeProvider({ children }: { children: ReactNode }) {
   const enabled = useFeatureFlagOrOff(DICE_THEMES_FLAG);
   const [pref, setPref] = useState<DiceThemePreferenceResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(
+    async (isCancelled: () => boolean = () => false) => {
+      if (!enabled || !getAuthToken()) {
+        setPref(null);
+        setError(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const res = await apiRequest<DiceThemePreferenceResponse>("/dice-themes/me");
+        if (!isCancelled()) {
+          setPref(res);
+          setError(false);
+        }
+      } catch {
+        if (!isCancelled()) {
+          setPref(null);
+          setError(true);
+        }
+      } finally {
+        if (!isCancelled()) setLoading(false);
+      }
+    },
+    [enabled],
+  );
 
   useEffect(() => {
-    if (!enabled || !getAuthToken()) {
-      setPref(null);
-      return;
-    }
     let cancelled = false;
-    setLoading(true);
-    apiRequest<DiceThemePreferenceResponse>("/dice-themes/me")
-      .then((res) => {
-        if (!cancelled) setPref(res);
-      })
-      .catch(() => {
-        if (!cancelled) setPref(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    void load(() => cancelled);
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [load]);
+
+  const refresh = useCallback(() => load(), [load]);
 
   const selectTheme = useCallback(
     async (themeId: string) => {
@@ -146,6 +167,8 @@ export function DiceThemeProvider({ children }: { children: ReactNode }) {
     return {
       enabled,
       loading,
+      error: enabled && error,
+      refresh,
       // L'id annoncé est celui qu'on DESSINE : un id servi mais inconnu du
       // web (déploiement serveur en avance) retombe sur le rendu par défaut.
       themeId: renderer.id,
@@ -155,7 +178,7 @@ export function DiceThemeProvider({ children }: { children: ReactNode }) {
       selectTheme,
       purchaseTheme,
     };
-  }, [enabled, loading, pref, selectTheme, purchaseTheme]);
+  }, [enabled, loading, error, refresh, pref, selectTheme, purchaseTheme]);
 
   return (
     <DiceThemeContext.Provider value={value}>

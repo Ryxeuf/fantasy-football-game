@@ -24,11 +24,15 @@ export default function DiceThemeSummaryCard() {
         L&apos;apparence de vos dés de blocage et de vos dés chiffrés, partout sur le site.
       </p>
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex gap-1" aria-label="Aperçu de votre thème de dés">
+        <div className="flex gap-1" role="img" aria-label={`Aperçu de votre thème de dés ${active?.name.fr ?? ""}`.trim()}>
           {PREVIEW_BLOCK_FACES.map((f) => (
-            <BlockDieIcon key={f} face={f} px={40} className="h-10 w-10" />
+            <span key={f} aria-hidden="true">
+              <BlockDieIcon face={f} px={40} className="h-10 w-10" />
+            </span>
           ))}
-          <D6Icon value={6} className="h-10 w-10" />
+          <span aria-hidden="true">
+            <D6Icon value={6} className="h-10 w-10" />
+          </span>
         </div>
         <div>
           <p className="font-semibold" data-testid="dice-theme-summary-name">

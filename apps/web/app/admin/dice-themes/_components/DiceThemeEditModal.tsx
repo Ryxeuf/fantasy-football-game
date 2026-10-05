@@ -25,6 +25,16 @@ export default function DiceThemeEditModal({ theme, saving, onClose, onSave }: P
   const [enabled, setEnabled] = useState(true);
   const [sortOrder, setSortOrder] = useState("0");
 
+  // Échap ferme la modale (comme le bouton Annuler).
+  useEffect(() => {
+    if (!theme) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [theme, onClose]);
+
   useEffect(() => {
     if (!theme) return;
     setNameFr(theme.name.fr);
@@ -60,20 +70,34 @@ export default function DiceThemeEditModal({ theme, saving, onClose, onSave }: P
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dice-theme-edit-title"
+    >
       <form
         onSubmit={submit}
         className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
         data-testid="dice-theme-edit-modal"
       >
-        <h2 className="text-xl font-heading font-bold text-nuffle-anthracite">Modifier « {theme.name.fr} »</h2>
+        <h2 id="dice-theme-edit-title" className="text-xl font-heading font-bold text-nuffle-anthracite">
+          Modifier « {theme.name.fr} »
+        </h2>
         <p className="mb-4 font-mono text-xs text-gray-500">{theme.id}</p>
         <DiceThemePreview themeId={theme.id} withNumberDie />
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
             Nom (FR)
-            <input className="mt-1 w-full rounded border px-2 py-1" value={nameFr} onChange={(e) => setNameFr(e.target.value)} maxLength={80} data-testid="edit-name-fr" />
+            <input
+              className="mt-1 w-full rounded border px-2 py-1"
+              value={nameFr}
+              onChange={(e) => setNameFr(e.target.value)}
+              maxLength={80}
+              data-testid="edit-name-fr"
+              autoFocus
+            />
           </label>
           <label className="text-sm">
             Nom (EN)

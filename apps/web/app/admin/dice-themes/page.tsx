@@ -176,7 +176,7 @@ export default function AdminDiceThemesPage() {
                     </div>
                   </td>
                   <td className="px-3 py-2 align-top">
-                    <DiceThemePreview themeId={t.id} withNumberDie />
+                    <DiceThemePreview themeId={t.id} withNumberDie label={`Aperçu du thème ${t.name.fr}`} />
                   </td>
                   <td className="px-3 py-2 align-top whitespace-nowrap">
                     {t.priceCrowns === null ? "Gratuit" : `👑 ${formatCrowns(t.priceCrowns)}`}

@@ -18,7 +18,8 @@ import { DICE_SHOP_FILTERS, filterShopThemes, shopAction, type DiceShopFilter } 
  * payant reste verrouillé avec son prix.
  */
 export default function DiceThemeShop() {
-  const { enabled, loading, themeId, themes, selectTheme, purchaseTheme } = useDiceTheme();
+  const { enabled, loading, error: loadError, refresh, themeId, themes, selectTheme, purchaseTheme } =
+    useDiceTheme();
   const crowns = useCrowns();
   const [filter, setFilter] = useState<DiceShopFilter>("all");
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -69,13 +70,12 @@ export default function DiceThemeShop() {
   return (
     <div className="space-y-4" data-testid="dice-theme-shop">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Filtrer les thèmes">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filtrer les thèmes">
           {DICE_SHOP_FILTERS.map((f) => (
             <button
               key={f.id}
               type="button"
-              role="tab"
-              aria-selected={filter === f.id}
+              aria-pressed={filter === f.id}
               onClick={() => setFilter(f.id)}
               className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
                 filter === f.id
@@ -97,9 +97,27 @@ export default function DiceThemeShop() {
         </p>
       )}
 
+      {loadError && (
+        <div className="flex flex-wrap items-center gap-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert" data-testid="dice-shop-load-error">
+          Impossible de charger vos thèmes de dés.
+          <button type="button" onClick={() => void refresh()} className="rounded bg-white px-3 py-1 font-medium ring-1 ring-red-200">
+            Réessayer
+          </button>
+        </div>
+      )}
+
+      {crowns.enabled && crowns.error && (
+        <div className="flex flex-wrap items-center gap-3 rounded border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="alert" data-testid="dice-shop-crowns-error">
+          Votre solde de Couronnes est momentanément indisponible : les achats sont suspendus.
+          <button type="button" onClick={() => void crowns.refresh()} className="rounded bg-white px-3 py-1 font-medium ring-1 ring-amber-200">
+            Réessayer
+          </button>
+        </div>
+      )}
+
       {loading && themes.length === 0 ? (
         <p className="text-sm text-gray-500">Chargement des thèmes…</p>
-      ) : visible.length === 0 ? (
+      ) : visible.length === 0 && !loadError ? (
         <p className="text-sm text-gray-500" data-testid="dice-shop-empty">
           Aucun thème dans cette sélection.
         </p>
@@ -131,8 +149,8 @@ export default function DiceThemeShop() {
                 </div>
                 <p className="text-xs text-gray-500">{t.description.fr}</p>
 
-                <div className="mt-2" aria-label={`Aperçu du thème ${t.name.fr}`}>
-                  <DiceThemePreview themeId={t.id} />
+                <div className="mt-2">
+                  <DiceThemePreview themeId={t.id} label={`Aperçu du thème ${t.name.fr}`} />
                 </div>
 
                 <div className="mt-auto pt-3">
@@ -163,6 +181,11 @@ export default function DiceThemeShop() {
                   {action === "insufficient" && (
                     <button type="button" disabled className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-500">
                       Solde insuffisant
+                    </button>
+                  )}
+                  {action === "pending" && (
+                    <button type="button" disabled className="rounded border border-gray-300 px-3 py-1 text-sm text-gray-500">
+                      {crowns.loading ? "Chargement du solde…" : "Solde indisponible"}
                     </button>
                   )}
                   {action === "locked" && (

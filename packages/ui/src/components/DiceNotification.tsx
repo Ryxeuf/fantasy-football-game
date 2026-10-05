@@ -2,11 +2,28 @@ import React from "react";
 import { useToast, Toast } from "./Toaster";
 import { BLOCK_DIE_FACE_INFO, DiceResult, BlockResult } from "@bb/game-engine";
 import BlockDiceIcon from "./BlockDiceIcon";
-import { SkinnedPipFace } from "../dice/DieFaces";
+import { SkinnedNumberFace, SkinnedPipFace } from "../dice/DieFaces";
+import { isSingleD6Roll } from "../dice/skins";
 
-/** Le jet, dessiné dans le thème de dés courant (points, chiffré au-delà de 6). */
-function RollIcon({ value }: { readonly value: number }) {
-  return <SkinnedPipFace value={value} label={`Jet : ${value}`} className="h-7 w-7" />;
+/**
+ * Le jet, dessiné dans le thème de dés courant : points pour un D6, chiffré
+ * pour un total de 2D6 (armure, ou cible au-delà de 6+).
+ */
+function RollIcon({
+  value,
+  targetNumber,
+  twoDice = false,
+}: {
+  readonly value: number;
+  readonly targetNumber?: number;
+  readonly twoDice?: boolean;
+}) {
+  const label = `Jet : ${value}`;
+  return !twoDice && isSingleD6Roll(value, targetNumber) ? (
+    <SkinnedPipFace value={value} label={label} className="h-7 w-7" />
+  ) : (
+    <SkinnedNumberFace value={value} label={label} className="h-7 w-7" />
+  );
 }
 
 /** La face du Dé de Blocage, dans le thème de dés courant. */
@@ -49,7 +66,7 @@ function createDiceToast(
         type: diceResult.success ? "success" : "error",
         title: `Jet d'esquive - ${playerName}`,
         message: `Résultat: ${diceResult.diceRoll} (cible: ${diceResult.targetNumber}) ${diceResult.success ? "✅ Réussi" : "❌ Échoué"}`,
-        icon: <RollIcon value={diceResult.diceRoll} />,
+        icon: <RollIcon value={diceResult.diceRoll} targetNumber={diceResult.targetNumber} />,
         duration: 3000,
       };
 
@@ -58,7 +75,7 @@ function createDiceToast(
         type: diceResult.success ? "success" : "error",
         title: `Jet de ramassage - ${playerName}`,
         message: `Résultat: ${diceResult.diceRoll} (cible: ${diceResult.targetNumber}) ${diceResult.success ? "✅ Réussi" : "❌ Échoué"}`,
-        icon: <RollIcon value={diceResult.diceRoll} />,
+        icon: <RollIcon value={diceResult.diceRoll} targetNumber={diceResult.targetNumber} />,
         duration: 3000,
       };
 
@@ -67,7 +84,7 @@ function createDiceToast(
         type: diceResult.success ? "success" : "error",
         title: `Jet d'armure - ${playerName}`,
         message: `Résultat: ${diceResult.diceRoll} (cible: ${diceResult.targetNumber}) ${diceResult.success ? "✅ Réussi" : "❌ Échoué"}`,
-        icon: <RollIcon value={diceResult.diceRoll} />,
+        icon: <RollIcon value={diceResult.diceRoll} twoDice />,
         duration: 3000,
       };
 
@@ -76,7 +93,7 @@ function createDiceToast(
         type: "info",
         title: `Dé de blocage - ${playerName}`,
         message: `Résultat: ${diceResult.diceRoll} (cible: ${diceResult.targetNumber}) ${diceResult.success ? "✅ Réussi" : "❌ Échoué"}`,
-        icon: <RollIcon value={diceResult.diceRoll} />,
+        icon: <RollIcon value={diceResult.diceRoll} targetNumber={diceResult.targetNumber} />,
         duration: 3000,
       };
 
@@ -85,7 +102,7 @@ function createDiceToast(
         type: "info",
         title: `Jet de dé - ${playerName}`,
         message: `Résultat: ${diceResult.diceRoll}`,
-        icon: <RollIcon value={diceResult.diceRoll} />,
+        icon: <RollIcon value={diceResult.diceRoll} targetNumber={diceResult.targetNumber} />,
         duration: 2000,
       };
   }
@@ -176,7 +193,7 @@ export const useDiceNotifications = () => {
       type: success ? "success" : "error",
       title: `Jet de dé - ${playerName}`,
       message: `Résultat: ${diceRoll} (cible: ${targetNumber}) ${success ? "✅ Réussi" : "❌ Échoué"}`,
-      icon: <RollIcon value={diceRoll} />,
+      icon: <RollIcon value={diceRoll} targetNumber={targetNumber} />,
       duration: 3000,
     };
     addToast(toast);

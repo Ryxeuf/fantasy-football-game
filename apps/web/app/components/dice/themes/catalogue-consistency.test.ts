@@ -14,7 +14,9 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DICE_THEME_ID as SERVER_DEFAULT,
   DICE_THEME_CATALOGUE as SERVER_CATALOGUE,
+  DICE_THEME_TX_REF_PREFIX as SERVER_TX_REF_PREFIX,
 } from "../../../../../server/src/services/dice-theme-catalogue";
+import { DICE_THEME_TX_REF_PREFIX } from "../../../lib/crowns";
 import { DEFAULT_DICE_THEME_ID, DICE_THEME_RENDERERS, getDiceThemeRenderer } from "./registry";
 
 describe("catalogue des thèmes de dés", () => {
@@ -40,5 +42,9 @@ describe("catalogue des thèmes de dés", () => {
     expect(getDiceThemeRenderer("ghost").id).toBe(DEFAULT_DICE_THEME_ID);
     expect(getDiceThemeRenderer(null).id).toBe(DEFAULT_DICE_THEME_ID);
     expect(getDiceThemeRenderer(undefined).id).toBe(DEFAULT_DICE_THEME_ID);
+  });
+
+  it("même préfixe de référence d'achat que le serveur (historique des Crowns)", () => {
+    expect(DICE_THEME_TX_REF_PREFIX).toBe(SERVER_TX_REF_PREFIX);
   });
 });

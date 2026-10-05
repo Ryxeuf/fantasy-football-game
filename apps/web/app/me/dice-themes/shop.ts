@@ -37,10 +37,12 @@ export function filterShopThemes<T extends ShopTheme>(themes: readonly T[], filt
  *  - `select`       : possédé, à équiper ;
  *  - `buy`          : en vente, Crowns ouvertes et solde suffisant ;
  *  - `insufficient` : en vente, solde trop bas ;
- *  - `locked`       : en vente mais Crowns fermées (flag OFF) ou solde inconnu ;
+ *  - `pending`      : en vente, Crowns ouvertes mais solde pas (encore) connu
+ *                     (chargement ou erreur — jamais « bientôt disponible ») ;
+ *  - `locked`       : en vente mais Crowns fermées (flag OFF) ;
  *  - `unavailable`  : ni possédé ni en vente.
  */
-export type ShopAction = "active" | "select" | "buy" | "insufficient" | "locked" | "unavailable";
+export type ShopAction = "active" | "select" | "buy" | "insufficient" | "pending" | "locked" | "unavailable";
 
 export function shopAction(
   theme: ShopTheme,
@@ -49,6 +51,7 @@ export function shopAction(
   if (theme.id === ctx.activeThemeId) return "active";
   if (theme.owned) return "select";
   if (!theme.forSale || theme.priceCrowns === null) return "unavailable";
-  if (!ctx.crownsEnabled || ctx.balance === null) return "locked";
+  if (!ctx.crownsEnabled) return "locked";
+  if (ctx.balance === null) return "pending";
   return ctx.balance >= theme.priceCrowns ? "buy" : "insufficient";
 }

@@ -72,8 +72,10 @@ describe("DiceThemeSummaryCard (profil)", () => {
     expect(screen.getByText("2 thèmes possédés")).toBeTruthy();
     expect(screen.getByTestId("dice-theme-summary-link").getAttribute("href")).toBe("/me/dice-themes");
     // L'aperçu dessine le thème ACTIF du coach.
+    // Un seul nom accessible pour l'aperçu, les faces sont masquées aux lecteurs d'écran.
+    expect(screen.getByRole("img", { name: "Aperçu de votre thème de dés Orques" })).toBeTruthy();
     expect(
-      screen.getByRole("img", { name: "Défenseur Plaqué" }).getAttribute("src"),
+      document.querySelector('img[alt="Défenseur Plaqué"]')?.getAttribute("src"),
     ).toBe("/images/dices/nuffle-des-31-equipes/equipes/orques/128px/defender-down.png");
   });
 });

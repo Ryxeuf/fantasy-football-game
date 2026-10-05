@@ -21,11 +21,13 @@ import { resolveTeamSpriteManifest } from "./team-color-resolver";
 import { getTerrainSkin, type TerrainSkinId } from "./terrain-skins";
 import { getBlockDisplayFace } from "./diceEffects";
 import { useDiceSkin } from "../dice/DiceSkinContext";
+import { Texture } from "@pixi/core";
 import {
+  DICE_FACE_OUTCOMES,
   OUTCOME_BY_BLOCK_RESULT,
   blockFaceSrc,
   hexColorToNumber,
-  isPipValue,
+  isSingleD6Roll,
 } from "../dice/skins";
 
 /** Extract up to 2 initials from a player's name (e.g. "Grim Ironjaw" -> "GI") */
@@ -169,6 +171,13 @@ export default function PixiBoard({
   const diceBodyColor = hexColorToNumber(diceSkin.palette.background);
   const diceSymbolColor = hexColorToNumber(diceSkin.palette.symbol);
   const diceAccentColor = hexColorToNumber(diceSkin.palette.accent);
+  // Précharge les 5 faces de blocage du thème : sans quoi le premier blocage
+  // d'un match défile sur des textures pas encore chargées.
+  React.useEffect(() => {
+    for (const outcome of DICE_FACE_OUTCOMES) {
+      Texture.from(blockFaceSrc(diceSkin, outcome, 128));
+    }
+  }, [diceSkin]);
 
   /* ── H.6 sub-task 5/5: sprite textures ───────────────────────────── */
   const spriteTextures = useSpriteTextures(teamRosters);
@@ -733,16 +742,17 @@ export default function PixiBoard({
                     g.beginFill(0x000000, die.alpha * 0.3);
                     g.drawRoundedRect(dieX + 2, dieY + 2, dieSize, dieSize, cornerRadius);
                     g.endFill();
-                    if (blockFace) return;
-                    // Die body (fond du thème)
+                    // Die body (fond du thème) — aussi sous une face de blocage,
+                    // qui le recouvre une fois sa texture chargée.
                     g.beginFill(diceBodyColor, die.alpha);
                     g.drawRoundedRect(dieX, dieY, dieSize, dieSize, cornerRadius);
                     g.endFill();
                     // Border (success = green, fail = red, neutral = liseré du thème)
                     g.lineStyle(2, borderColor, die.alpha);
                     g.drawRoundedRect(dieX, dieY, dieSize, dieSize, cornerRadius);
-                    // Au-delà de 6 (total de 2D6) : la valeur est écrite, pas pointée.
-                    if (!isPipValue(v)) return;
+                    if (blockFace) return;
+                    // Total de 2D6 (cible > 6+, ou valeur > 6) : écrit, pas pointé.
+                    if (!isSingleD6Roll(v, die.targetNumber)) return;
 
                     // Draw pips based on display value
                     g.lineStyle(0);
@@ -784,7 +794,7 @@ export default function PixiBoard({
                     alpha={die.alpha}
                   />
                 )}
-                {!blockFace && !isPipValue(v) && (
+                {!blockFace && !isSingleD6Roll(v, die.targetNumber) && (
                   <Text
                     x={dieX + dieSize / 2}
                     y={dieY + dieSize / 2}

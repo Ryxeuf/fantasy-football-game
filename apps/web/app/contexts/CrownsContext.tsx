@@ -34,6 +34,8 @@ export interface CrownsContextValue {
   /** Faux quand le flag `crowns` est OFF : rien ne s'affiche, rien ne s'achète. */
   readonly enabled: boolean;
   readonly loading: boolean;
+  /** Vrai si le dernier chargement du solde a échoué. */
+  readonly error: boolean;
   /** `null` tant que non chargé (ou visiteur anonyme). */
   readonly balance: number | null;
   readonly transactions: readonly CrownsTransaction[];
@@ -45,6 +47,7 @@ export interface CrownsContextValue {
 const DEFAULT_VALUE: CrownsContextValue = {
   enabled: false,
   loading: false,
+  error: false,
   balance: null,
   transactions: [],
   refresh: async () => {},
@@ -63,17 +66,21 @@ export function CrownsProvider({ children }: { children: ReactNode }) {
   const enabled = useFeatureFlagOrOff(CROWNS_FLAG);
   const [data, setData] = useState<CrownsResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
     if (!enabled || !getAuthToken()) {
       setData(null);
+      setError(false);
       return;
     }
     setLoading(true);
     try {
       setData(await apiRequest<CrownsResponse>("/crowns/me"));
+      setError(false);
     } catch {
       setData(null);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -91,12 +98,13 @@ export function CrownsProvider({ children }: { children: ReactNode }) {
     () => ({
       enabled,
       loading,
+      error: enabled && error,
       balance: enabled ? data?.balance ?? null : null,
       transactions: enabled ? data?.transactions ?? [] : [],
       refresh: load,
       applyBalance,
     }),
-    [enabled, loading, data, load, applyBalance],
+    [enabled, loading, error, data, load, applyBalance],
   );
 
   return <CrownsContext.Provider value={value}>{children}</CrownsContext.Provider>;
