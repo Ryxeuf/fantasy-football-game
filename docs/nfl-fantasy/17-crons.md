@@ -2,7 +2,7 @@
 
 > Orchestrateur unique qui pilote toute la mecanique recurrente du
 > module : ingestion nflverse/ESPN + lockLineups Sunday + settle
-> Tuesday.
+> Wednesday (mardi jusqu'au 2026-10 : cf. [`32`](./32-saison-2026-point-de-situation.md)).
 
 ## Architecture
 
@@ -20,7 +20,7 @@ setInterval(5min)
               ├─ nflverseIngestTick   (fenetre 03:00 UTC)
               ├─ espnGamedayTick      (Thu/Fri/Sat/Sun/Mon UTC)
               ├─ lockLineupsTick      (Sunday 17:00 UTC)
-              └─ settleWeekTick       (Tuesday 12:00 UTC)
+              └─ settleWeekTick       (Wednesday 12:00 UTC)
 ```
 
 `runOnceAtATime` (cf. `utils/cron-overlap-guard.ts`) garantit qu'un
@@ -37,7 +37,7 @@ Tous testables sans Prisma :
 | `currentSeasonId(now)` | "2025" en oct-dec 2025 et jan-jui 2026 ; "2026" en jul 2026+ |
 | `isNflGameday(now)` | true pour Thu/Fri/Sat/Sun/Mon UTC |
 | `isLockLineupsWindow(now)` | true Sunday 17:00-17:59 UTC |
-| `isSettleWindow(now)` | true Tuesday 12:00-12:59 UTC |
+| `isSettleWindow(now)` | true Wednesday 12:00-12:59 UTC (stats du MNF publiees mardi ~12h30 UTC) |
 | `isNflverseDailyWindow(now)` | true 03:00-03:59 UTC (tous jours) |
 
 Fenetre 1 heure (pas exactes 17:00:00) pour absorber le tick toutes
@@ -50,6 +50,11 @@ les 5 min sans rater le creneau.
   pour briser les ex-aequo du seed Phase 2.A.
 - `findPreviousNflWeek(now)` : la 2e plus recente — utilisee par
   `settleWeekTick`.
+- `findWeeksToIngest(now)` : precedente + courante, ordre chronologique
+  — utilisee par `nflverseIngestTick`.
+
+Les fenetres de week viennent de `computeNflSeasonWindows` (seed) :
+mardi 10h UTC -> mardi 10h UTC, W1 = mardi qui suit le Labor Day.
 
 ## Ticks
 
@@ -58,10 +63,10 @@ fenetre (pratique pour tests + scripts admin).
 
 | Tick | Quand | Service appele |
 |---|---|---|
-| `nflverseIngestTick` | 03:00 UTC daily | `ingestNflverseWeek` sur la week courante |
+| `nflverseIngestTick` | 03:00 UTC daily | `ingestNflverseWeek` sur la week precedente PUIS la courante (erreurs isolees par week) |
 | `espnGamedayTick` | Thu/Fri/Sat/Sun/Mon | `ingestEspnGameday(dateYmd(now))` |
 | `lockLineupsTick` | Sunday 17:00 UTC | `lockLineups(currentWeekId)` |
-| `settleWeekTick` | Tuesday 12:00 UTC | pour chaque league `in_progress` : `generateMatchups` + `settleNflFantasyWeek` sur la previous week |
+| `settleWeekTick` | Wednesday 12:00 UTC | `ingestNflverseWeek` de la previous week (sauf ingest reussi < 90 min ; echec => pas de settle, le tick suivant retente), puis pour chaque league `in_progress` : `generateMatchups` + `settleNflFantasyWeek` |
 
 Chaque tick :
 - est idempotent (heritage des services 2.A-2.E)

@@ -542,7 +542,7 @@ export default function AdminNflFantasyPage(): JSX.Element {
           </a>
           . En production, le cron 5min orchestre automatiquement ces actions
           dans leurs fenêtres respectives (03h UTC nflverse, Sun 17h
-          lockLineups, Tue 12h settle). Cette page sert au debug et au
+          lockLineups, Wed 12h settle). Cette page sert au debug et au
           rattrapage manuel.
         </p>
       </footer>

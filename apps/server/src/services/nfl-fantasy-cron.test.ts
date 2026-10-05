@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     nflWeek: { findFirst: vi.fn(), findMany: vi.fn() },
+    nflIngestRun: { findFirst: vi.fn() },
     nflFantasyLeague: { findMany: vi.fn() },
     nflFantasyDraftSession: { findMany: vi.fn() },
   },
@@ -31,6 +32,7 @@ import {
   espnGamedayTick,
   findCurrentNflWeek,
   findPreviousNflWeek,
+  findWeeksToIngest,
   isLockLineupsWindow,
   isNflGameday,
   isNflverseDailyWindow,
@@ -104,15 +106,19 @@ describe("isLockLineupsWindow", () => {
 });
 
 describe("isSettleWindow", () => {
-  it("true mardi 12:00-12:59 UTC", () => {
-    expect(isSettleWindow(new Date("2025-11-11T12:00:00Z"))).toBe(true);
-    expect(isSettleWindow(new Date("2025-11-11T12:45:00Z"))).toBe(true);
+  it("true mercredi 12:00-12:59 UTC", () => {
+    expect(isSettleWindow(new Date("2025-11-12T12:00:00Z"))).toBe(true);
+    expect(isSettleWindow(new Date("2025-11-12T12:45:00Z"))).toBe(true);
   });
 
   it("false hors fenetre", () => {
-    expect(isSettleWindow(new Date("2025-11-11T11:59:00Z"))).toBe(false);
-    expect(isSettleWindow(new Date("2025-11-11T13:00:00Z"))).toBe(false);
-    expect(isSettleWindow(new Date("2025-11-12T12:00:00Z"))).toBe(false); // mer
+    expect(isSettleWindow(new Date("2025-11-12T11:59:00Z"))).toBe(false);
+    expect(isSettleWindow(new Date("2025-11-12T13:00:00Z"))).toBe(false);
+  });
+
+  it("false le mardi : les stats du Monday Night ne sont pas encore publiees", () => {
+    // nflverse republie vers 12h30 UTC le lendemain du match.
+    expect(isSettleWindow(new Date("2025-11-11T12:00:00Z"))).toBe(false);
   });
 });
 
@@ -178,7 +184,26 @@ describe("findPreviousNflWeek", () => {
 // Ticks (avec mock des services)
 // ────────────────────────────────────────────────────────────────────
 
+describe("findWeeksToIngest", () => {
+  it("retourne la precedente puis la courante (ordre chronologique)", async () => {
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([
+      { id: "2026:W5", seasonId: "2026", weekNumber: 5 },
+      { id: "2026:W4", seasonId: "2026", weekNumber: 4 },
+    ] as never);
+
+    const weeks = await findWeeksToIngest(new Date("2026-10-07T03:00:00Z"));
+    expect(weeks.map((w) => w.id)).toEqual(["2026:W4", "2026:W5"]);
+    const args = vi.mocked(prisma.nflWeek.findMany).mock.calls[0]?.[0];
+    expect(args?.take).toBe(2);
+    expect(args?.where).toMatchObject({ seasonId: "2026" });
+  });
+});
+
 describe("nflverseIngestTick", () => {
+  const W4 = { id: "2026:W4", seasonId: "2026", weekNumber: 4 };
+  const W5 = { id: "2026:W5", seasonId: "2026", weekNumber: 5 };
+  const OK = { playersUpdated: 100, statsUpdated: 100, gamesUpdated: 14, errors: [] };
+
   it("skip hors fenetre 03h UTC", async () => {
     const out = await nflverseIngestTick({
       now: new Date("2025-11-09T12:00:00Z"),
@@ -188,32 +213,40 @@ describe("nflverseIngestTick", () => {
     expect(ingestNflverseWeek).not.toHaveBeenCalled();
   });
 
-  it("force=true bypass la fenetre", async () => {
-    vi.mocked(prisma.nflWeek.findFirst).mockResolvedValue({
-      id: "2025:W10",
-      seasonId: "2025",
-      weekNumber: 10,
-    } as never);
-    vi.mocked(ingestNflverseWeek).mockResolvedValue({
-      playersUpdated: 100,
-      statsUpdated: 100,
-      gamesUpdated: 14,
-      errors: [],
-    } as never);
+  it("ingere la week precedente PUIS la courante", async () => {
+    // Mercredi 03h : les stats du Monday Night (week precedente) viennent
+    // d'etre publiees, la week courante a deja bascule.
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([W5, W4] as never);
+    vi.mocked(ingestNflverseWeek).mockResolvedValue(OK as never);
 
     const out = await nflverseIngestTick({
-      now: new Date("2025-11-09T12:00:00Z"),
+      now: new Date("2026-10-07T03:00:00Z"),
+    });
+    expect(out.ran).toBe(true);
+    expect(out.reason).toBeUndefined();
+    expect(vi.mocked(ingestNflverseWeek).mock.calls.map((c) => c[0])).toEqual([
+      { seasonId: "2026", weekNumber: 4 },
+      { seasonId: "2026", weekNumber: 5 },
+    ]);
+  });
+
+  it("force=true bypass la fenetre", async () => {
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([W4] as never);
+    vi.mocked(ingestNflverseWeek).mockResolvedValue(OK as never);
+
+    const out = await nflverseIngestTick({
+      now: new Date("2026-10-05T12:00:00Z"),
       force: true,
     });
     expect(out.ran).toBe(true);
     expect(ingestNflverseWeek).toHaveBeenCalledWith({
-      seasonId: "2025",
-      weekNumber: 10,
+      seasonId: "2026",
+      weekNumber: 4,
     });
   });
 
   it("skip si pas de week courante", async () => {
-    vi.mocked(prisma.nflWeek.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([] as never);
 
     const out = await nflverseIngestTick({
       now: new Date("2025-11-09T03:30:00Z"),
@@ -222,19 +255,22 @@ describe("nflverseIngestTick", () => {
     expect(out.reason).toBe("no_current_week");
   });
 
-  it("capture les erreurs ingest sans crasher", async () => {
-    vi.mocked(prisma.nflWeek.findFirst).mockResolvedValue({
-      id: "2025:W10",
-      seasonId: "2025",
-      weekNumber: 10,
-    } as never);
-    vi.mocked(ingestNflverseWeek).mockRejectedValue(new Error("network"));
+  it("isole les erreurs par week sans crasher", async () => {
+    vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([W5, W4] as never);
+    vi.mocked(ingestNflverseWeek)
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce(OK as never);
 
     const out = await nflverseIngestTick({
-      now: new Date("2025-11-09T03:00:00Z"),
+      now: new Date("2026-10-07T03:00:00Z"),
     });
     expect(out.ran).toBe(true);
     expect(out.reason).toBe("ingest_failed");
+    expect(ingestNflverseWeek).toHaveBeenCalledTimes(2);
+    expect(out.detail).toEqual([
+      { weekId: "2026:W4", error: "network" },
+      { weekId: "2026:W5", result: OK },
+    ]);
   });
 });
 
@@ -288,15 +324,9 @@ describe("lockLineupsTick", () => {
 });
 
 describe("settleWeekTick", () => {
-  it("skip hors fenetre mardi 12h", async () => {
-    const out = await settleWeekTick({
-      now: new Date("2025-11-10T18:00:00Z"),
-    });
-    expect(out.ran).toBe(false);
-    expect(settleNflFantasyWeek).not.toHaveBeenCalled();
-  });
+  const WED_NOON = new Date("2025-11-12T12:00:00Z");
 
-  it("genere + settle pour chaque league in_progress", async () => {
+  function mockTwoLeaguesAndWeeks(): void {
     vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([
       { id: "2025:W11", seasonId: "2025", weekNumber: 11 },
       { id: "2025:W10", seasonId: "2025", weekNumber: 10 },
@@ -305,6 +335,20 @@ describe("settleWeekTick", () => {
       { id: "lg1" },
       { id: "lg2" },
     ] as never);
+  }
+
+  it("skip hors fenetre mercredi 12h", async () => {
+    const out = await settleWeekTick({
+      now: new Date("2025-11-11T12:00:00Z"), // mardi
+    });
+    expect(out.ran).toBe(false);
+    expect(settleNflFantasyWeek).not.toHaveBeenCalled();
+  });
+
+  it("ingere la week puis genere + settle pour chaque league in_progress", async () => {
+    mockTwoLeaguesAndWeeks();
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue(null);
+    vi.mocked(ingestNflverseWeek).mockResolvedValue({ statsUpdated: 900 } as never);
     vi.mocked(generateMatchups).mockResolvedValue({
       matchupsCreated: 0,
       matchupsExisting: 5,
@@ -316,11 +360,16 @@ describe("settleWeekTick", () => {
       startersScored: 110,
     } as never);
 
-    const out = await settleWeekTick({
-      now: new Date("2025-11-11T12:00:00Z"),
-    });
+    const out = await settleWeekTick({ now: WED_NOON });
 
     expect(out.ran).toBe(true);
+    expect(ingestNflverseWeek).toHaveBeenCalledWith({
+      seasonId: "2025",
+      weekNumber: 10,
+    });
+    expect(
+      vi.mocked(ingestNflverseWeek).mock.invocationCallOrder[0],
+    ).toBeLessThan(vi.mocked(settleNflFantasyWeek).mock.invocationCallOrder[0]!);
     expect(generateMatchups).toHaveBeenCalledTimes(2);
     expect(settleNflFantasyWeek).toHaveBeenCalledTimes(2);
     const detail = out.detail as { matchupsSettled: number; leaguesProcessed: number };
@@ -328,15 +377,56 @@ describe("settleWeekTick", () => {
     expect(detail.matchupsSettled).toBe(10);
   });
 
-  it("isole les erreurs par league", async () => {
+  it("ne re-telecharge pas si un ingest reussi a tourne il y a < 90 min", async () => {
+    mockTwoLeaguesAndWeeks();
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue({ id: "run1" } as never);
+    vi.mocked(generateMatchups).mockResolvedValue({} as never);
+    vi.mocked(settleNflFantasyWeek).mockResolvedValue({
+      matchupsSettled: 1,
+      matchupsSkipped: 0,
+      startersScored: 0,
+    } as never);
+
+    await settleWeekTick({ now: WED_NOON });
+
+    expect(ingestNflverseWeek).not.toHaveBeenCalled();
+    expect(settleNflFantasyWeek).toHaveBeenCalledTimes(2);
+    const where = vi.mocked(prisma.nflIngestRun.findFirst).mock.calls[0]?.[0]?.where;
+    expect(where).toMatchObject({
+      source: "nflverse",
+      weekId: "2025:W10",
+      startedAt: { gte: new Date("2025-11-12T10:30:00Z") },
+    });
+  });
+
+  it("ne settle PAS si l'ingest prealable echoue (le tick suivant retente)", async () => {
+    mockTwoLeaguesAndWeeks();
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue(null);
+    vi.mocked(ingestNflverseWeek).mockRejectedValue(new Error("github 503"));
+
+    const out = await settleWeekTick({ now: WED_NOON });
+
+    expect(out.ran).toBe(true);
+    expect(out.reason).toBe("ingest_failed");
+    expect(generateMatchups).not.toHaveBeenCalled();
+    expect(settleNflFantasyWeek).not.toHaveBeenCalled();
+  });
+
+  it("sans league en cours, n'ingere rien", async () => {
     vi.mocked(prisma.nflWeek.findMany).mockResolvedValue([
-      { id: "2025:W11" },
-      { id: "2025:W10", seasonId: "2025" },
+      { id: "2025:W11", seasonId: "2025", weekNumber: 11 },
+      { id: "2025:W10", seasonId: "2025", weekNumber: 10 },
     ] as never);
-    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValue([
-      { id: "lg1" },
-      { id: "lg2" },
-    ] as never);
+    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValue([] as never);
+
+    await settleWeekTick({ now: WED_NOON });
+
+    expect(ingestNflverseWeek).not.toHaveBeenCalled();
+  });
+
+  it("isole les erreurs par league", async () => {
+    mockTwoLeaguesAndWeeks();
+    vi.mocked(prisma.nflIngestRun.findFirst).mockResolvedValue({ id: "run1" } as never);
     vi.mocked(generateMatchups)
       .mockResolvedValueOnce({} as never)
       .mockRejectedValueOnce(new Error("boom"));

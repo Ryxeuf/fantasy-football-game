@@ -1936,7 +1936,7 @@ if (
 // =============================================================================
 // Orchestrateur unique tick toutes les 5 min : verifie chaque fenetre
 // (03h UTC nflverse, gameday ESPN Thu/Fri/Sat/Sun/Mon, Sun 17h UTC
-// lockLineups, Tue 12h UTC settle) et appelle le tick correspondant.
+// lockLineups, Wed 12h UTC settle) et appelle le tick correspondant.
 //
 // Tous les ticks sont idempotents (services 2.A-2.E). runOnceAtATime
 // evite l'empilement si le tick precedent depasse 5 min.
