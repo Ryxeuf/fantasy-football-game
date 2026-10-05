@@ -259,6 +259,13 @@ export async function generateMatchups(
 export interface SettleWeekOpts {
   readonly leagueId: string;
   readonly weekId: string;
+  /**
+   * Rejoue AUSSI les matchups deja settles (rattrapage apres un ingest
+   * tardif : stats absentes au premier settle). Les SPP de carriere ne
+   * recoivent que l'ecart avec ce qui a deja ete credite
+   * (cf. `careerSppDelta`), jamais un second credit complet.
+   */
+  readonly resettle?: boolean;
 }
 
 export interface SettleWeekResult {
@@ -267,9 +274,25 @@ export interface SettleWeekResult {
   readonly startersScored: number;
 }
 
+/**
+ * SPP de carriere a crediter pour un starter. Le settle ne credite que les
+ * rawSpp POSITIFS ; sur un re-settle, on retire ce qui l'a deja ete.
+ * Pur.
+ */
+export function careerSppDelta(opts: {
+  readonly rawSpp: number;
+  readonly previousRawSpp: number | null;
+  readonly alreadySettled: boolean;
+}): number {
+  const credited = (v: number): number => Math.max(v, 0);
+  const already = opts.alreadySettled ? credited(opts.previousRawSpp ?? 0) : 0;
+  return credited(opts.rawSpp) - already;
+}
+
 interface StarterRow {
   readonly id: string;
   readonly playerId: string;
+  readonly rawSpp?: number | null;
   readonly isCaptain: boolean;
   readonly isViceCaptain: boolean;
   readonly lineupId: string;
@@ -289,17 +312,18 @@ interface StarterRow {
  *   - Persiste matchup.homeScore / awayScore / winnerId / settledAt
  *
  * Idempotent : skip les matchups deja settles (settledAt non null).
- * Le caller peut repasser sans risque.
+ * Le caller peut repasser sans risque. `resettle: true` les rejoue
+ * (rattrapage), sans double credit de carriere.
  */
 export async function settleNflFantasyWeek(
   opts: SettleWeekOpts,
 ): Promise<SettleWeekResult> {
-  // 1. Charger les matchups non-settles
+  // 1. Charger les matchups non-settles (tous, en re-settle)
   const matchups = await prisma.nflFantasyMatchup.findMany({
     where: {
       leagueId: opts.leagueId,
       weekId: opts.weekId,
-      settledAt: null,
+      ...(opts.resettle ? {} : { settledAt: null }),
     },
   });
 
@@ -458,6 +482,7 @@ export async function settleNflFantasyWeek(
       sppDelta: number;
     }> = [];
 
+    const alreadySettled = m.settledAt !== null && m.settledAt !== undefined;
     const scoreStarter = (s: StarterRow, entryId: string): number => {
       const stat = sppByPlayer.get(s.playerId);
       const computedSpp = stat?.computedSpp ?? 0;
@@ -479,8 +504,13 @@ export async function settleNflFantasyWeek(
         finalSpp,
         sppBreakdown: enrichBreakdown(stat?.sppBreakdown, bonusEvents),
       });
-      if (rawSpp > 0) {
-        careerUpdates.push({ entryId, playerId: s.playerId, sppDelta: rawSpp });
+      const sppDelta = careerSppDelta({
+        rawSpp,
+        previousRawSpp: s.rawSpp ?? null,
+        alreadySettled,
+      });
+      if (sppDelta !== 0) {
+        careerUpdates.push({ entryId, playerId: s.playerId, sppDelta });
       }
       startersScored++;
       return finalSpp;
@@ -552,6 +582,58 @@ export async function settleNflFantasyWeek(
     matchupsSkipped: allMatchups - matchupsSettled,
     startersScored,
   };
+}
+
+// ────────────────────────────────────────────────────────────────────
+// resettleSeasonWeeks (rattrapage)
+// ────────────────────────────────────────────────────────────────────
+
+export interface ResettleSeasonWeeksOpts {
+  readonly seasonId: string;
+  readonly fromWeek: number;
+  readonly toWeek: number;
+}
+
+export interface ResettleSeasonWeeksResult {
+  readonly leaguesProcessed: number;
+  readonly matchupsSettled: number;
+  readonly errors: ReadonlyArray<{ leagueId: string; weekId: string; error: string }>;
+}
+
+/**
+ * Re-settle les weeks [fromWeek, toWeek] de toutes les leagues
+ * `in_progress` d'une saison, apres un ingest tardif. Ne CREE aucun
+ * matchup : seules les weeks deja jouees par une league sont rejouees
+ * (une league du cycle 2 n'a rien en W1-W6). Erreurs isolees par
+ * (league, week). Ordre chronologique, pour que la carriere suive.
+ */
+export async function resettleSeasonWeeks(
+  opts: ResettleSeasonWeeksOpts,
+): Promise<ResettleSeasonWeeksResult> {
+  const leagues: ReadonlyArray<{ id: string }> =
+    await prisma.nflFantasyLeague.findMany({
+      where: { status: "in_progress", seasonId: opts.seasonId },
+      select: { id: true },
+    });
+
+  let matchupsSettled = 0;
+  const errors: Array<{ leagueId: string; weekId: string; error: string }> = [];
+  for (const lg of leagues) {
+    for (let w = opts.fromWeek; w <= opts.toWeek; w++) {
+      const weekId = `${opts.seasonId}:W${w}`;
+      try {
+        const out = await settleNflFantasyWeek({
+          leagueId: lg.id,
+          weekId,
+          resettle: true,
+        });
+        matchupsSettled += out.matchupsSettled;
+      } catch (e) {
+        errors.push({ leagueId: lg.id, weekId, error: (e as Error).message });
+      }
+    }
+  }
+  return { leaguesProcessed: leagues.length, matchupsSettled, errors };
 }
 
 // ────────────────────────────────────────────────────────────────────
