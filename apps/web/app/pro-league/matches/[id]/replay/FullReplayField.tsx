@@ -190,6 +190,33 @@ export default function FullReplayField({
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <div
+            className="flex items-center gap-1"
+            role="group"
+            aria-label="Activation"
+            data-testid="full-replay-activation-nav"
+          >
+            <button
+              type="button"
+              onClick={() => replay.controls.stepActivationBackward()}
+              className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-100 hover:bg-slate-600"
+              aria-label="Previous activation"
+              title="Activation précédente"
+              data-testid="full-replay-prev-activation"
+            >
+              ⏮ act.
+            </button>
+            <button
+              type="button"
+              onClick={() => replay.controls.stepActivationForward()}
+              className="rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-100 hover:bg-slate-600"
+              aria-label="Next activation"
+              title="Activation suivante"
+              data-testid="full-replay-next-activation"
+            >
+              act. ⏭
+            </button>
+          </div>
           {!hasExternalClock && (
             <label className="flex items-center gap-1 text-xs text-slate-400">
               <input

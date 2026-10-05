@@ -98,6 +98,40 @@ describe("useFullReplay — Lot 3.D.3", () => {
     expect(result.current.currentMoveIndex).toBe(-1);
   });
 
+  it("stepActivationForward / Backward naviguent par activation (lot 2)", async () => {
+    const st = (n: number) => ({ ...(fakeInitialState as object), turn: n }) as unknown;
+    mockedApi.mockResolvedValue({
+      ...fakeDump,
+      durationMs: 5000,
+      moves: [
+        { type: "MOVE", playerId: "A1", to: { x: 1, y: 1 } },
+        { type: "MOVE", playerId: "A1", to: { x: 2, y: 1 } },
+        { type: "MOVE", playerId: "A2", to: { x: 3, y: 1 } },
+        { type: "END_TURN" },
+        { type: "MOVE", playerId: "B1", to: { x: 4, y: 1 } },
+      ],
+      states: [st(1), st(2), st(3), st(4), st(5)],
+    });
+    const { result } = renderHook(() => useFullReplay("m1", { compact: false }));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    act(() => result.current.controls.stepActivationForward());
+    expect(result.current.currentMoveIndex).toBe(0);
+    act(() => result.current.controls.stepActivationForward());
+    expect(result.current.currentMoveIndex).toBe(2);
+    act(() => result.current.controls.stepForward());
+    expect(result.current.currentMoveIndex).toBe(3);
+    act(() => result.current.controls.stepActivationForward());
+    expect(result.current.currentMoveIndex).toBe(4);
+    act(() => result.current.controls.stepActivationBackward());
+    expect(result.current.currentMoveIndex).toBe(3);
+    act(() => result.current.controls.stepActivationBackward());
+    expect(result.current.currentMoveIndex).toBe(2);
+    act(() => result.current.controls.stepActivationBackward());
+    expect(result.current.currentMoveIndex).toBe(0);
+    act(() => result.current.controls.stepActivationBackward());
+    expect(result.current.currentMoveIndex).toBe(-1);
+  });
+
   it("skipToEnd → currentMoveIndex = totalMoves - 1", async () => {
     mockedApi.mockResolvedValue(fakeDump);
     const { result } = renderHook(() => useFullReplay("m1"));

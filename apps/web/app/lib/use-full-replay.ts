@@ -33,6 +33,10 @@ import type { GameState, Move } from "@bb/game-engine";
 import { apiRequest } from "./api-client";
 import { compactReplaySequence } from "./compact-replay";
 import {
+  nextActivationIndex,
+  previousActivationIndex,
+} from "./replay-activations";
+import {
   type PlaybackSpeed,
   type ReplayClockControls,
   type ReplayClockState,
@@ -110,6 +114,10 @@ export interface UseFullReplayResult {
   readonly controls: ReplayClockControls & {
     readonly stepForward: () => void;
     readonly stepBackward: () => void;
+    /** Lot 2 — saute au premier coup de l'activation suivante. */
+    readonly stepActivationForward: () => void;
+    /** Lot 2 — revient au début de l'activation courante, puis à la précédente. */
+    readonly stepActivationBackward: () => void;
   };
   readonly clockLabel: string;
   /** Lot 3.E.2 — true si la séquence visionnée est la version compacte. */
@@ -242,6 +250,24 @@ export function useFullReplay(
     [clock, currentMoveIndex, sequence],
   );
 
+  const stepActivationForward = useMemo(
+    () => () => {
+      if (!sequence) return;
+      const idx = nextActivationIndex(sequence.moves, currentMoveIndex);
+      clock.seek((idx + 1) * MS_PER_MOVE);
+    },
+    [clock, currentMoveIndex, sequence],
+  );
+
+  const stepActivationBackward = useMemo(
+    () => () => {
+      if (!sequence) return;
+      const idx = previousActivationIndex(sequence.moves, currentMoveIndex);
+      clock.seek((idx + 1) * MS_PER_MOVE);
+    },
+    [clock, currentMoveIndex, sequence],
+  );
+
   return {
     loading,
     error,
@@ -266,6 +292,8 @@ export function useFullReplay(
       restart: clock.restart,
       stepForward,
       stepBackward,
+      stepActivationForward,
+      stepActivationBackward,
     },
     clockLabel: formatReplayClock(clock.currentMs),
     compact,
