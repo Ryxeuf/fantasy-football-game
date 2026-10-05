@@ -155,6 +155,7 @@ const JOURNAL_ENTRIES = [
 function mockApi(options: {
   team?: unknown;
   ownerTeams?: unknown;
+  competitions?: unknown;
   adminStatus?: number;
   journal?: unknown;
 } = {}) {
@@ -170,6 +171,7 @@ function mockApi(options: {
             ? {
                 team: options.team ?? TEAM,
                 ownerTeams: options.ownerTeams ?? OWNER_TEAMS,
+                competitions: options.competitions,
               }
             : { error: "Équipe non trouvée" },
       } as unknown as Response;
@@ -376,5 +378,58 @@ describe("AdminTeamDetailPage — accès à l'édition", () => {
 
     const link = await screen.findByTestId("admin-team-edit-link");
     expect(link.getAttribute("href")).toBe("/admin/teams/team-1/edit");
+  });
+});
+
+describe("AdminTeamDetailPage — compétitions", () => {
+  it("lie chaque ligue et chaque coupe à sa fiche admin", async () => {
+    mockApi({
+      competitions: {
+        leagues: [
+          {
+            leagueId: "l1",
+            leagueName: "Ligue du Chaudron",
+            leagueStatus: "in_progress",
+            isPublic: false,
+            seasonId: "s1",
+            seasonName: "Saison 1",
+            seasonNumber: 1,
+            seasonStatus: "in_progress",
+            participantStatus: "active",
+          },
+        ],
+        cups: [
+          {
+            cupId: "c1",
+            cupName: "Coupe du Chaos",
+            cupStatus: "ouverte",
+            isPublic: true,
+          },
+        ],
+      },
+    });
+    renderPage();
+
+    const league = await screen.findByTestId("admin-team-league-link-l1");
+    expect(league.getAttribute("href")).toBe("/admin/leagues/l1");
+    expect(league.textContent).toContain("Ligue du Chaudron");
+    expect(
+      screen.getByTestId("admin-team-cup-link-c1").getAttribute("href"),
+    ).toBe("/admin/cups/c1");
+  });
+
+  it("signale une équipe engagée nulle part", async () => {
+    mockApi({ competitions: { leagues: [], cups: [] } });
+    renderPage();
+    expect(
+      await screen.findByTestId("admin-team-competitions-empty"),
+    ).toBeTruthy();
+  });
+
+  it("masque le panneau face à une API antérieure (champ absent)", async () => {
+    mockApi();
+    renderPage();
+    await screen.findByTestId("admin-team-detail");
+    expect(screen.queryByTestId("admin-team-competitions")).toBeNull();
   });
 });

@@ -34,6 +34,7 @@ import { revertPlayerStatusesBySource } from "../services/player-status";
 import {
   enrichTeamStarPlayers,
   listOwnerTeams,
+  listTeamCompetitions,
 } from "../services/admin-team-detail";
 import {
   buildAdminTeamsWhere,
@@ -1650,12 +1651,17 @@ router.get("/teams/:id", async (req, res) => {
       return res.status(404).json({ error: "Équipe non trouvée" });
     }
 
-    const [starPlayers, ownerTeams] = await Promise.all([
+    const [starPlayers, ownerTeams, competitions] = await Promise.all([
       enrichTeamStarPlayers(team.starPlayers, team.ruleset as Ruleset),
       listOwnerTeams(team.ownerId),
+      // Optionnel : un échec ne doit pas masquer la fiche (liens seulement).
+      listTeamCompetitions(team.id).catch((e: unknown) => {
+        serverLog.error("[admin] team competitions failed:", e);
+        return { leagues: [], cups: [] };
+      }),
     ]);
 
-    res.json({ team: { ...team, starPlayers }, ownerTeams });
+    res.json({ team: { ...team, starPlayers }, ownerTeams, competitions });
   } catch (e) {
     serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de l'équipe" });

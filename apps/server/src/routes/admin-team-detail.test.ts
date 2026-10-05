@@ -18,6 +18,8 @@ vi.mock("../prisma", () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
     },
+    leagueParticipant: { findMany: vi.fn() },
+    cupParticipant: { findMany: vi.fn() },
   },
 }));
 
@@ -52,6 +54,8 @@ import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 
 const mockedPrisma = prisma as unknown as {
   team: { findUnique: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
+  leagueParticipant: { findMany: ReturnType<typeof vi.fn> };
+  cupParticipant: { findMany: ReturnType<typeof vi.fn> };
 };
 const mockedStarPlayer = vi.mocked(getStarPlayerBySlugDb);
 
@@ -230,5 +234,62 @@ describe("GET /admin/teams/:id", () => {
 
     expect(res.status).toBe(404);
     expect(mockedPrisma.team.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("GET /admin/teams/:id — compétitions", () => {
+  it("liste les saisons de ligue et les coupes de l'équipe", async () => {
+    mockedPrisma.team.findUnique.mockResolvedValue({ ...TEAM, starPlayers: [] });
+    mockedPrisma.team.findMany.mockResolvedValue([]);
+    mockedPrisma.leagueParticipant.findMany.mockResolvedValue([
+      {
+        status: "active",
+        season: {
+          id: "s2",
+          name: "Saison 2",
+          seasonNumber: 2,
+          status: "in_progress",
+          league: { id: "l1", name: "Ligue du Chaudron", status: "in_progress", isPublic: false },
+        },
+      },
+    ]);
+    mockedPrisma.cupParticipant.findMany.mockResolvedValue([
+      { cup: { id: "c1", name: "Coupe du Chaos", status: "ouverte", isPublic: true } },
+    ]);
+
+    const res = await get("/teams/team-1");
+
+    expect(res.status).toBe(200);
+    expect(mockedPrisma.leagueParticipant.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { teamId: "team-1" } }),
+    );
+    expect(res.body.competitions).toEqual({
+      leagues: [
+        {
+          leagueId: "l1",
+          leagueName: "Ligue du Chaudron",
+          leagueStatus: "in_progress",
+          isPublic: false,
+          seasonId: "s2",
+          seasonName: "Saison 2",
+          seasonNumber: 2,
+          seasonStatus: "in_progress",
+          participantStatus: "active",
+        },
+      ],
+      cups: [{ cupId: "c1", cupName: "Coupe du Chaos", cupStatus: "ouverte", isPublic: true }],
+    });
+  });
+
+  it("un échec de lecture des compétitions ne masque pas la fiche", async () => {
+    mockedPrisma.team.findUnique.mockResolvedValue({ ...TEAM, starPlayers: [] });
+    mockedPrisma.team.findMany.mockResolvedValue([]);
+    mockedPrisma.leagueParticipant.findMany.mockRejectedValue(new Error("db"));
+    mockedPrisma.cupParticipant.findMany.mockResolvedValue([]);
+
+    const res = await get("/teams/team-1");
+
+    expect(res.status).toBe(200);
+    expect(res.body.competitions).toEqual({ leagues: [], cups: [] });
   });
 });

@@ -19,6 +19,7 @@
  */
 
 import { prisma } from "../prisma";
+import { hasRole, normalizeRoles } from "../utils/roles";
 import {
   CASUALTY_RULE_VERSION,
   summarizeMatchSheet,
@@ -631,8 +632,38 @@ function coachSide(ctx: PairingContext, userId: string): CoachSide | null {
   return null;
 }
 
-function isCommissioner(ctx: PairingContext, userId: string): boolean {
-  return userId === ctx.creatorId;
+/**
+ * Droit « commissaire » sur une feuille : le créateur de la compétition, ou
+ * un ADMINISTRATEUR — c'est ce qui permet la gestion des feuilles depuis la
+ * console admin (`/admin/match-sheets`) avec l'éditeur standard.
+ *
+ * Un admin qui JOUE la rencontre (propriétaire d'une des deux équipes) n'en
+ * hérite pas : il resterait seul juge de son propre match. Il garde alors
+ * son rôle de coach, comme n'importe qui.
+ *
+ * Le rôle est relu en base (comme `adminOnly`), jamais dans le JWT. Lookup
+ * best-effort : une erreur vaut « pas admin ».
+ */
+async function isCommissioner(
+  ctx: PairingContext,
+  userId: string,
+): Promise<boolean> {
+  if (userId === ctx.creatorId) return true;
+  if (coachSide(ctx, userId)) return false;
+  return isAdminUser(userId);
+}
+
+async function isAdminUser(userId: string): Promise<boolean> {
+  try {
+    const user = (await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true, roles: true },
+    })) as { role?: string | null; roles?: string[] | null } | null;
+    if (!user) return false;
+    return hasRole(normalizeRoles(user.roles ?? user.role), "admin");
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -836,7 +867,7 @@ export async function createMatchSheet(input: {
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  if (!side && !isCommissioner(ctx, input.userId)) {
+  if (!side && !(await isCommissioner(ctx, input.userId))) {
     throw new MatchSheetError(
       "not_a_participant",
       "Seuls les 2 coachs et le commissaire peuvent ouvrir la feuille",
@@ -906,7 +937,7 @@ export async function addEvent(input: {
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  if (!side && !isCommissioner(ctx, input.userId)) {
+  if (!side && !(await isCommissioner(ctx, input.userId))) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   if (!isMatchEventKind(input.event.kind)) {
@@ -956,7 +987,7 @@ export async function removeEvent(input: {
   eventId: string;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (!coachSide(ctx, input.userId) && !isCommissioner(ctx, input.userId)) {
+  if (!coachSide(ctx, input.userId) && !(await isCommissioner(ctx, input.userId))) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(ctx);
@@ -1008,7 +1039,7 @@ export async function updatePreMatch(input: {
   payload: PreMatchPayload;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (!coachSide(ctx, input.userId) && !isCommissioner(ctx, input.userId)) {
+  if (!coachSide(ctx, input.userId) && !(await isCommissioner(ctx, input.userId))) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(ctx);
@@ -1283,7 +1314,7 @@ export async function updateHateChoices(input: {
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  const commissioner = isCommissioner(ctx, input.userId);
+  const commissioner = await isCommissioner(ctx, input.userId);
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
@@ -1360,7 +1391,7 @@ export async function updateRaisedDead(input: {
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  const commissioner = isCommissioner(ctx, input.userId);
+  const commissioner = await isCommissioner(ctx, input.userId);
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
@@ -1474,7 +1505,7 @@ export async function updatePostMatch(input: {
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  const commissioner = isCommissioner(ctx, input.userId);
+  const commissioner = await isCommissioner(ctx, input.userId);
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
@@ -1619,7 +1650,7 @@ export async function rollJourneymanRandomPrimary(input: {
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  const commissioner = isCommissioner(ctx, input.userId);
+  const commissioner = await isCommissioner(ctx, input.userId);
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
@@ -2482,7 +2513,7 @@ export async function validateByCommissioner(input: {
   hateRolls: readonly HateRoll[];
 }> {
   const ctx = await loadPairingContext(input.pairingId);
-  if (!isCommissioner(ctx, input.userId)) {
+  if (!(await isCommissioner(ctx, input.userId))) {
     throw new MatchSheetError(
       "forbidden",
       "Seul le commissaire peut valider la feuille",
@@ -3103,7 +3134,7 @@ export async function invalidateMatchSheet(input: {
   removeConsumedAdvancements?: boolean;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (!isCommissioner(ctx, input.userId)) {
+  if (!(await isCommissioner(ctx, input.userId))) {
     throw new MatchSheetError(
       "forbidden",
       "Seul le commissaire peut invalider la feuille",
@@ -4571,7 +4602,7 @@ export async function getMatchSheet(input: {
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  const commissioner = isCommissioner(ctx, input.userId);
+  const commissioner = await isCommissioner(ctx, input.userId);
   const sheet = await prisma.leagueMatchSheet.findUnique({
     where: sheetWhere(ctx),
     include: { events: { orderBy: { occurredAt: "asc" } } },

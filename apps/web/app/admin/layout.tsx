@@ -29,6 +29,7 @@ function buildSections(): ReadonlyArray<NavSection> {
     { href: "/admin/local-matches", label: "Matchs locaux", icon: "🎯" },
     { href: "/admin/leagues", label: "Ligues", icon: "🏅" },
     { href: "/admin/cups", label: "Coupes", icon: "🏆" },
+    { href: "/admin/match-sheets", label: "Feuilles de match", icon: "📋" },
     {
       href: "/admin/competition-documents",
       label: "Documents officiels",

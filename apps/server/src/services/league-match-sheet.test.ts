@@ -30,6 +30,9 @@ vi.mock("../prisma", () => ({
     // E30 — `loadLeagueSPPContext` lit la règle « Bagarreurs Brutaux » du
     // roster. Non renseigné (undefined) ⇒ contexte neutre, comme avant.
     roster: { findMany: vi.fn() },
+    // Droit admin sur les feuilles : le rôle est relu en base. Non
+    // renseigné (undefined) ⇒ pas admin, comme avant.
+    user: { findUnique: vi.fn() },
   },
 }));
 
@@ -179,6 +182,54 @@ describe("Lot G — league-match-sheet", () => {
         Promise.resolve(getSpecialRulesForTeam(rosterSlug, ruleset as never)),
     );
     mockPairing();
+  });
+
+  describe("droit administrateur", () => {
+    it("un admin tiers agit comme commissaire", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        role: "user",
+        roles: ["admin"],
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      // Passe le contrôle de rôle : l'erreur est celle de l'état, pas un 403.
+      await expect(
+        validateByCommissioner({ pairingId: "pair-1", userId: "admin-1" }),
+      ).rejects.toMatchObject({ code: "already_validated" });
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { id: "admin-1" },
+        select: { role: true, roles: true },
+      });
+    });
+
+    it("un compte non admin reste refusé", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ role: "user", roles: [] });
+      await expect(
+        validateByCommissioner({ pairingId: "pair-1", userId: "stranger" }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("un admin qui joue la rencontre n'est pas juge de son match", async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ roles: ["admin"] });
+      await expect(
+        validateByCommissioner({ pairingId: "pair-1", userId: HOME }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+      // Coach du match : le rôle n'est même pas consulté.
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    });
+
+    it("le créateur n'entraîne aucune lecture de rôle", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      await expect(
+        validateByCommissioner({ pairingId: "pair-1", userId: COMMISH }),
+      ).rejects.toMatchObject({ code: "already_validated" });
+      expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    });
   });
 
   describe("createMatchSheet", () => {

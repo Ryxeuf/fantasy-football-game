@@ -1,16 +1,18 @@
 "use client";
 /**
- * Console admin — fiche complète d'une coupe.
+ * Console admin — fiche complète d'une ligue.
  *
- *   - identité, barème (résultats + actions) et taille du bracket :
- *     `PATCH /cup/:id` (ouvert aux admins, même sur une coupe archivée)
- *   - visibilité : bascule immédiate (même route, `{ isPublic }`)
- *   - statut forcé (`POST /cup/:id/status`, sans règles de transition pour
- *     un admin), archivage, suppression définitive
- *   - équipes inscrites : retrait forcé
+ * Un administrateur y gère une ligue sans en être le commissaire :
+ *   - identité (nom, description) et capacité : `PATCH /admin/leagues/:id`
+ *   - visibilité : bascule immédiate, hors verrou d'édition (règle de
+ *     lecture, rien de persisté n'en dépend)
+ *   - barème : même route, mais figé (409) dès qu'un match a été scoré —
+ *     le champ est alors grisé et le verrou expliqué
+ *   - statut forcé, archivage, suppression définitive
+ *   - saisons : lecture seule (nombre d'inscrits, dates)
  *
- * Responsive : sections empilées, grilles 1 → 2 → 4 colonnes, barre
- * d'enregistrement collée en bas de l'écran sur mobile.
+ * Responsive : sections empilées, grilles qui passent d'une à deux/quatre
+ * colonnes, barre d'enregistrement pleine largeur sur mobile.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -18,7 +20,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { apiRequest } from "../../../lib/api-client";
 import {
-  CUP_STATUS_META,
+  LEAGUE_STATUS_META,
   NumberFieldsGrid,
   Section,
   StatusBadge,
@@ -27,33 +29,45 @@ import {
   useAdminGate,
 } from "../../_components/competition-admin";
 import {
-  CUP_ACTION_FIELDS,
-  CUP_RESULT_FIELDS,
-  PLAYOFF_SIZES,
-  buildCupPatch,
-  toCupForm,
-  type AdminCupDetail,
-  type CupFormState,
-  type CupScoringKey,
-} from "./cup-form";
+  SCORING_FIELDS,
+  buildLeaguePatch,
+  toForm,
+  type AdminLeagueDetail,
+  type FormState,
+} from "./league-form";
 
-const STATUS_VALUES = ["ouverte", "en_cours", "terminee", "archivee"] as const;
+const STATUS_VALUES = [
+  "draft",
+  "open",
+  "in_progress",
+  "completed",
+  "archived",
+] as const;
 
-const PLAYOFF_LABELS: Record<number, string> = {
-  0: "Aucun (classement)",
-  2: "Finale (2)",
-  4: "Demi-finales (4)",
-  8: "Quarts (8)",
+const SEASON_STATUS_LABELS: Record<string, string> = {
+  draft: "Brouillon",
+  scheduled: "Programmée",
+  in_progress: "En cours",
+  completed: "Terminée",
 };
 
-export default function AdminCupManagePage() {
+function formatDate(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export default function AdminLeagueManagePage() {
   const router = useRouter();
   const params = useParams();
-  const cupId = params.id as string;
+  const leagueId = params.id as string;
   const isAdmin = useAdminGate();
 
-  const [cup, setCup] = useState<AdminCupDetail | null>(null);
-  const [form, setForm] = useState<CupFormState | null>(null);
+  const [league, setLeague] = useState<AdminLeagueDetail | null>(null);
+  const [form, setForm] = useState<FormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,25 +77,25 @@ export default function AdminCupManagePage() {
     setLoading(true);
     setError(null);
     try {
-      const { cup: data } = await apiRequest<{ cup: AdminCupDetail }>(
-        `/cup/${cupId}`,
+      const data = await apiRequest<AdminLeagueDetail>(
+        `/admin/leagues/${leagueId}`,
       );
-      setCup(data);
-      setForm(toCupForm(data));
+      setLeague(data);
+      setForm(toForm(data));
     } catch (e: unknown) {
       setError(errorMessage(e, "Erreur de chargement"));
     } finally {
       setLoading(false);
     }
-  }, [cupId]);
+  }, [leagueId]);
 
   useEffect(() => {
-    if (isAdmin && cupId) load();
-  }, [isAdmin, cupId, load]);
+    if (isAdmin && leagueId) load();
+  }, [isAdmin, leagueId, load]);
 
   const draft = useMemo(
-    () => (cup && form ? buildCupPatch(cup, form) : null),
-    [cup, form],
+    () => (league && form ? buildLeaguePatch(league, form) : null),
+    [league, form],
   );
   const dirty = !!draft && Object.keys(draft.patch).length > 0;
 
@@ -103,32 +117,37 @@ export default function AdminCupManagePage() {
     [load],
   );
 
-  const patchCup = (body: Record<string, unknown>) =>
-    apiRequest(`/cup/${cupId}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-
   const handleSave = () => {
     if (!draft || draft.error || !dirty) return;
-    run(() => patchCup(draft.patch), "Modifications enregistrées");
+    run(
+      () =>
+        apiRequest(`/admin/leagues/${leagueId}`, {
+          method: "PATCH",
+          body: JSON.stringify(draft.patch),
+        }),
+      "Modifications enregistrées",
+    );
   };
 
   const handleToggleVisibility = () => {
-    if (!cup) return;
-    const next = !cup.isPublic;
+    if (!league) return;
+    const next = !league.isPublic;
     run(
-      () => patchCup({ isPublic: next }),
-      next ? "Coupe rendue publique" : "Coupe rendue privée",
+      () =>
+        apiRequest(`/admin/leagues/${leagueId}`, {
+          method: "PATCH",
+          body: JSON.stringify({ isPublic: next }),
+        }),
+      next ? "Ligue rendue publique" : "Ligue rendue privée",
     );
   };
 
   const handleStatus = (status: string) => {
-    if (!cup || status === cup.status) return;
+    if (!league || status === league.status) return;
     run(
       () =>
-        apiRequest(`/cup/${cupId}/status`, {
-          method: "POST",
+        apiRequest(`/admin/leagues/${leagueId}/status`, {
+          method: "PATCH",
           body: JSON.stringify({ status }),
         }),
       "Statut mis à jour",
@@ -136,51 +155,35 @@ export default function AdminCupManagePage() {
   };
 
   const handleArchive = () => {
-    if (!confirm("Archiver cette coupe ? Les coachs inscrits sont notifiés.")) {
+    if (!confirm("Archiver cette ligue ? Les coachs inscrits sont notifiés.")) {
       return;
     }
     run(
-      () => apiRequest(`/cup/${cupId}/archive`, { method: "POST" }),
-      "Coupe archivée",
-    );
-  };
-
-  const handleRemoveTeam = (teamId: string, teamName: string) => {
-    if (!confirm(`Retirer l'équipe « ${teamName} » de cette coupe ?`)) return;
-    run(
       () =>
-        apiRequest(`/cup/${cupId}/unregister`, {
-          method: "POST",
-          body: JSON.stringify({ teamId, force: true }),
-        }),
-      `Équipe « ${teamName} » retirée`,
+        apiRequest(`/admin/leagues/${leagueId}/archive`, { method: "POST" }),
+      "Ligue archivée",
     );
   };
 
   const handleDelete = async () => {
-    if (!cup) return;
+    if (!league) return;
     const typed = prompt(
-      `Suppression DÉFINITIVE : inscriptions, rondes et résultats seront perdus.\nTapez le nom de la coupe pour confirmer :\n${cup.name}`,
+      `Suppression DÉFINITIVE : saisons, calendrier et résultats seront perdus.\nTapez le nom de la ligue pour confirmer :\n${league.name}`,
     );
     if (typed === null) return;
-    if (typed.trim() !== cup.name) {
+    if (typed.trim() !== league.name) {
       setError("Nom saisi incorrect : suppression annulée");
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      await apiRequest(`/cup/${cupId}`, { method: "DELETE" });
-      router.push("/admin/cups");
+      await apiRequest(`/leagues/${leagueId}`, { method: "DELETE" });
+      router.push("/admin/leagues");
     } catch (e: unknown) {
       setError(errorMessage(e, "Échec de la suppression"));
       setBusy(false);
     }
-  };
-
-  const setScoring = (key: CupScoringKey, value: string) => {
-    if (!form) return;
-    setForm({ ...form, scoring: { ...form.scoring, [key]: value } });
   };
 
   if (!isAdmin || loading) {
@@ -191,14 +194,14 @@ export default function AdminCupManagePage() {
     );
   }
 
-  if (!cup || !form) {
+  if (!league || !form) {
     return (
       <div className="w-full max-w-4xl mx-auto space-y-4">
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          ⚠️ {error ?? "Coupe introuvable"}
+          ⚠️ {error ?? "Ligue introuvable"}
         </div>
         <Link
-          href="/admin/cups"
+          href="/admin/leagues"
           className="inline-block text-sm text-gray-600 hover:text-gray-800"
         >
           ← Retour à la liste
@@ -209,49 +212,40 @@ export default function AdminCupManagePage() {
 
   return (
     <div
-      data-testid="admin-cup-manage-page"
+      data-testid="admin-league-manage-page"
       className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 pb-24 sm:pb-0"
     >
       {/* En-tête */}
       <div className="space-y-2">
         <Link
-          href="/admin/cups"
+          href="/admin/leagues"
           className="text-sm text-gray-600 hover:text-gray-800"
         >
-          ← Coupes
+          ← Console ligues
         </Link>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
           <div className="min-w-0">
             <h1 className="text-xl sm:text-3xl font-heading font-bold text-nuffle-anthracite break-words">
-              {cup.name}
+              {league.name}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-              <StatusBadge status={cup.status} meta={CUP_STATUS_META} />
-              {cup.validated ? (
-                <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                  Inscriptions closes
-                </span>
-              ) : null}
-              <span>{cup.format === "sevens" ? "Sevens" : "BB11"}</span>
-              <span>·</span>
-              <span>
-                {cup.ruleset === "season_2" ? "Saison 2" : "Saison 3"}
-              </span>
+              <StatusBadge status={league.status} meta={LEAGUE_STATUS_META} />
+              <span>{league.ruleset === "season_2" ? "Saison 2" : "Saison 3"}</span>
               <span>·</span>
               <span className="break-all">
-                Créée par {cup.creator.coachName ?? "—"}
+                {league.creator.coachName ?? "—"} ({league.creator.email})
               </span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <VisibilityToggle
-              isPublic={cup.isPublic}
+              isPublic={league.isPublic}
               onToggle={handleToggleVisibility}
               disabled={busy}
-              testId="admin-cup-visibility"
+              testId="admin-league-visibility"
             />
             <Link
-              href={`/cups/${cup.id}`}
+              href={`/leagues/${league.id}`}
               className="inline-flex items-center min-h-[36px] px-3 py-1.5 rounded-full border border-gray-300 bg-white text-xs font-medium hover:bg-gray-50"
             >
               👁️ Page publique
@@ -278,11 +272,11 @@ export default function AdminCupManagePage() {
       ) : null}
 
       <Section title="Informations">
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_14rem] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_10rem] gap-3">
           <label className="block">
             <span className="text-xs font-medium text-gray-700">Nom</span>
             <input
-              data-testid="admin-cup-name"
+              data-testid="admin-league-name"
               type="text"
               maxLength={100}
               value={form.name}
@@ -291,29 +285,29 @@ export default function AdminCupManagePage() {
             />
           </label>
           <label className="block">
-            <span className="text-xs font-medium text-gray-700">Play-offs</span>
-            <select
-              data-testid="admin-cup-playoff-size"
-              value={form.playoffSize}
+            <span className="text-xs font-medium text-gray-700">
+              Équipes max
+            </span>
+            <input
+              data-testid="admin-league-max"
+              type="number"
+              inputMode="numeric"
+              min={2}
+              max={128}
+              value={form.maxParticipants}
               onChange={(e) =>
-                setForm({ ...form, playoffSize: Number(e.target.value) })
+                setForm({ ...form, maxParticipants: e.target.value })
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
-            >
-              {PLAYOFF_SIZES.map((n) => (
-                <option key={n} value={n}>
-                  {PLAYOFF_LABELS[n]}
-                </option>
-              ))}
-            </select>
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+            />
           </label>
         </div>
         <label className="block">
           <span className="text-xs font-medium text-gray-700">Description</span>
           <textarea
-            data-testid="admin-cup-description"
+            data-testid="admin-league-description"
             rows={3}
-            maxLength={1000}
+            maxLength={500}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
@@ -323,32 +317,21 @@ export default function AdminCupManagePage() {
 
       <Section
         title="Barème"
-        description="Le classement est dérivé des matchs : un barème modifié s'applique dès le prochain affichage, y compris en cours de coupe."
+        description={
+          league.scoringLocked
+            ? "🔒 Verrouillé : un match a déjà été scoré, changer les points réécrirait des résultats acquis."
+            : "Points attribués par résultat. Modifiable tant qu'aucun match n'a été scoré."
+        }
       >
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-              Résultats
-            </h3>
-            <NumberFieldsGrid
-              fields={CUP_RESULT_FIELDS}
-              values={form.scoring}
-              onChange={setScoring}
-              testIdPrefix="admin-cup-scoring"
-            />
-          </div>
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-              Actions
-            </h3>
-            <NumberFieldsGrid
-              fields={CUP_ACTION_FIELDS}
-              values={form.scoring}
-              onChange={setScoring}
-              testIdPrefix="admin-cup-scoring"
-            />
-          </div>
-        </div>
+        <NumberFieldsGrid
+          fields={SCORING_FIELDS}
+          values={form.scoring}
+          disabled={league.scoringLocked}
+          testIdPrefix="admin-league-scoring"
+          onChange={(key, value) =>
+            setForm({ ...form, scoring: { ...form.scoring, [key]: value } })
+          }
+        />
       </Section>
 
       {/* Barre d'enregistrement : sur mobile, collée en bas de l'écran dès
@@ -363,7 +346,7 @@ export default function AdminCupManagePage() {
         ) : null}
         <button
           type="button"
-          data-testid="admin-cup-save"
+          data-testid="admin-league-save"
           onClick={handleSave}
           disabled={busy || !dirty || !!draft?.error}
           className="w-full sm:w-auto min-h-[44px] px-5 py-2 rounded-lg bg-nuffle-gold text-white font-medium hover:bg-nuffle-gold/90 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -373,7 +356,7 @@ export default function AdminCupManagePage() {
         {dirty ? (
           <button
             type="button"
-            onClick={() => setForm(toCupForm(cup))}
+            onClick={() => setForm(toForm(league))}
             disabled={busy}
             className="w-full sm:w-auto min-h-[44px] px-4 py-2 rounded-lg text-sm text-gray-600 hover:text-gray-800"
           >
@@ -384,57 +367,81 @@ export default function AdminCupManagePage() {
 
       <Section
         title="Statut"
-        description="En tant qu'administrateur, le statut se force sans règles de transition."
+        description="Forçage administrateur, sans les règles de transition du commissaire."
       >
         <select
-          data-testid="admin-cup-status"
-          aria-label="Statut de la coupe"
-          value={cup.status}
+          data-testid="admin-league-status"
+          aria-label="Statut de la ligue"
+          value={league.status}
           disabled={busy}
           onChange={(e) => handleStatus(e.target.value)}
           className="block w-full sm:w-64 min-h-[40px] rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
         >
           {STATUS_VALUES.map((s) => (
             <option key={s} value={s}>
-              {CUP_STATUS_META[s]?.label ?? s}
+              {LEAGUE_STATUS_META[s]?.label ?? s}
             </option>
           ))}
         </select>
       </Section>
 
-      <Section title={`Équipes inscrites (${cup.participants.length})`}>
-        {cup.participants.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            Aucune équipe inscrite pour le moment.
-          </p>
+      <Section title={`Saisons (${league.seasons.length})`}>
+        {league.seasons.length === 0 ? (
+          <p className="text-sm text-gray-500">Aucune saison créée.</p>
         ) : (
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {cup.participants.map((p) => (
+          <ul className="divide-y divide-gray-100 -my-3">
+            {league.seasons.map((s) => (
               <li
-                key={p.id}
-                data-testid={`admin-cup-participant-${p.id}`}
-                className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex flex-col gap-2"
+                key={s.id}
+                data-testid={`admin-league-season-${s.id}`}
+                className="py-3 space-y-2"
               >
-                <div className="min-w-0">
-                  <Link
-                    href={`/admin/teams/${p.id}`}
-                    data-testid={`admin-cup-team-link-${p.id}`}
-                    className="font-medium text-blue-700 hover:underline break-words"
-                  >
-                    {p.name}
-                  </Link>
-                  <div className="text-xs text-gray-500 break-words">
-                    {p.roster} · {p.owner.coachName ?? "—"}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm text-gray-900 break-words">
+                      #{s.seasonNumber} · {s.name}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {formatDate(s.startDate)} → {formatDate(s.endDate)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="px-2 py-0.5 rounded-full bg-gray-100">
+                      {SEASON_STATUS_LABELS[s.status] ?? s.status}
+                    </span>
+                    <span>
+                      {s.participantsCount} équipe
+                      {s.participantsCount > 1 ? "s" : ""}
+                    </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTeam(p.id, p.name)}
-                  disabled={busy}
-                  className="mt-auto min-h-[36px] w-full px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 disabled:opacity-50"
-                >
-                  Retirer l&apos;équipe
-                </button>
+                {s.participants && s.participants.length > 0 ? (
+                  <ul className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {s.participants.map((p) => (
+                      <li key={p.teamId}>
+                        <Link
+                          href={`/admin/teams/${p.teamId}`}
+                          data-testid={`admin-league-team-${s.id}-${p.teamId}`}
+                          className={`block h-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 hover:bg-gray-100 hover:border-gray-300 transition-colors ${
+                            p.deleted || p.status !== "active" ? "opacity-60" : ""
+                          }`}
+                        >
+                          <span
+                            className={`block text-sm font-medium text-blue-700 break-words ${
+                              p.deleted ? "line-through" : ""
+                            }`}
+                          >
+                            {p.teamName}
+                          </span>
+                          <span className="block text-xs text-gray-500 break-words">
+                            {p.roster} · {p.coachName ?? "—"}
+                            {p.status !== "active" ? ` · ${p.status}` : ""}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -447,10 +454,10 @@ export default function AdminCupManagePage() {
         description="L'archivage garde l'historique ; la suppression efface tout et ne peut pas être annulée."
       >
         <div className="grid grid-cols-1 sm:flex gap-2">
-          {cup.status !== "archivee" ? (
+          {league.status !== "archived" ? (
             <button
               type="button"
-              data-testid="admin-cup-archive"
+              data-testid="admin-league-archive"
               onClick={handleArchive}
               disabled={busy}
               className="min-h-[44px] px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
@@ -460,7 +467,7 @@ export default function AdminCupManagePage() {
           ) : null}
           <button
             type="button"
-            data-testid="admin-cup-delete"
+            data-testid="admin-league-delete"
             onClick={handleDelete}
             disabled={busy}
             className="min-h-[44px] px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50"
