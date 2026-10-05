@@ -458,15 +458,20 @@ disparaît : deux implémentations des mêmes règles (ses `resolvers/` contre l
 - Bench : le `sim-bench` CI par PR ne peut plus faire 200 runs × 3 duels en
   full driver ; smoke de 20 runs par PR, matrice complète en nocturne.
 
-## 8. Décisions à prendre
+## 8. Décisions prises (2026-10-05, coach)
 
-| # | Question | Recommandation |
+Tranchées le jour même, à l'issue de l'exploration. Elles s'imposent aux
+lots 1 à 5 et à leurs changes OpenSpec.
+
+| # | Question | Décision |
 |---|---|---|
-| 1 | Un seul driver (full) en prod, hybride relégué aux cotes ou supprimé ? | **Oui** : une seule vérité des règles |
-| 2 | Niveau d'évolution : adaptation **bornée et expliquée** (§4.6) ou apprentissage libre ? | bornée ; le self-play reste un outil de calibrage hors ligne |
-| 3 | Le coach : persona IA par équipe seulement, ou prévoir dès maintenant l'influence d'un coach humain (consignes, pep talk — backlog MPG) ? | persona IA, avec `ProCoach` comme point d'accroche futur ; rien d'humain avant le gate produit |
-| 4 | Replay : dés **enregistrés** dans le journal en plus du RNG forké, ou rejoués seulement ? | enregistrés : audit, feuille papier, lecture sans moteur |
-| 5 | Budget de calcul accepté par match et place des sims (worker in-process vs file de jobs) ? | ≤ 30 s, pool de `worker_threads` ; pas de BullMQ tant que 8 matchs/semaine |
+| 1 | Driver en prod | **Full driver seul.** L'hybride ne sert plus qu'aux cotes (Monte-Carlo) jusqu'à un estimateur, puis disparaît. Bench CI en full : smoke de 20 runs par PR, matrice complète en nocturne. |
+| 2 | Niveau d'évolution du profil | **Adaptation bornée et expliquée** (§4.6) : règle déterministe après chaque match, bande ±15 autour de l'ancre raciale avec rappel, chaque changement journalisé avec sa raison. Pas de self-play en prod. |
+| 3 | Le coach | **Persona IA par équipe** (`ProCoach`). Point d'accroche futur pour une influence humaine, rien d'humain avant le gate produit. |
+| 4 | Replay | **RNG forké par coup ET dés enregistrés** dans le journal : audit, feuille papier lisible sans moteur. |
+| 5 | Calcul et exploitation | **≤ 30 s par match, pool de `worker_threads`**, cotes sur 50 runs. Pas de file de jobs tant que 8 matchs par semaine. |
+| 6 | Découpage | **Un lot = une PR, séquentiel.** Le bench de chaque lot sert de gate au suivant. |
+| 7 | Gate du lot 3 | **Bench FUMBBL + 3 à 5 coachs sur 20 replays Terrain** : critères statistiques automatiques et le panel humain jamais tenu de la Phase 0. |
 
 ## 9. Risques
 
