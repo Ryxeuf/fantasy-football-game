@@ -102,11 +102,12 @@ psql $PROD_URL -c "SELECT \"seasonId\", COUNT(*) FROM \"NflGame\" GROUP BY \"sea
 
 Le `nflFantasyOrchestratorTick` (voir `nfl-fantasy-cron.ts`) tourne
 deja en boucle (planifie cote app au demarrage). Fenetres :
-- **03:00-03:59 UTC** : nflverse stats + rosters (quotidien)
+- **03:00-03:59 UTC** : nflverse stats (week precedente + courante) + rosters (quotidien)
 - **Sunday / Monday / Thursday 03:00 UTC** : ESPN gameday (jour de
   game)
 - **Sunday 17:00 UTC** : lock lineups
-- **Sunday 21:00 UTC** : settle week
+- **Wednesday 12:00 UTC** : settle de la week precedente, apres un ingest
+  nflverse frais (cf. [`17-crons.md`](./17-crons.md))
 
 Donc apres bootstrap, **rien a faire** : la DB se met a jour seule.
 
@@ -123,7 +124,16 @@ pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts --skip-stats --skip-rosters
 
 # Skip ce qui est lent
 pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts --skip-stats
+
+# Rattrapage d'une saison EN COURS : stats re-ingerees meme si la week
+# est deja marquee ingeree, puis re-settle des weeks deja reglees.
+# Cible : make nfl-catchup-prod-2026 (cf. doc 32 § 5)
+pnpm exec tsx src/scripts/bootstrap-nfl-prod.ts \
+  --season 2026 --refresh-stats --resettle-weeks 1-4
 ```
+
+Un argument inconnu fait echouer le script (une faute de frappe sur
+`--refresh-stats` lancerait sinon un rattrapage incomplet sans le dire).
 
 ## Bootstrap via container (recommande en prod)
 

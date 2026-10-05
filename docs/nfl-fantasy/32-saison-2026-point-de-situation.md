@@ -98,7 +98,7 @@ Observation de calibrage (cf. statut « À calibrer sur saison entière » du
 scoring) : 7 QB dans le top 15. Le barème favorise nettement les Throwers,
 à surveiller sur la saison avant d'y toucher.
 
-## 4. Bloquants à corriger AVANT le rattrapage
+## 4. Bloquants identifiés — corrigés le 05/10/2026
 
 ### 4.1 Les fenêtres de week 2026 sont décalées (bloquant)
 
@@ -120,14 +120,16 @@ Effets sur l'orchestrateur (`nfl-fantasy-cron.ts`, `findCurrentNflWeek`) :
   absentes ⇒ scores à 0, et le settle est idempotent (skip si déjà settlé),
   donc jamais corrigé.
 
-Correctif proposé (pur, testable) : ancrer la W1 sur le **mardi qui suit le
-Labor Day** (1er lundi de septembre), le kickoff étant toujours dans la
+**Corrigé** (`computeNflSeasonWindows`, pur, appelé par `seedNflSeason`) :
+fenêtres **mardi 10h UTC → mardi 10h UTC** (MNF terminé), W1 ancrée sur le
+**mardi qui suit le Labor Day** (1er lundi de septembre), le kickoff étant toujours dans la
 foulée (2026 : mar. 08/09, kickoff mer. 09/09). Vérifié contre
 `games.csv` sur 2021-2026 : **0 match mal placé en 2026**, et sur les
 saisons passées seul le Super Bowl sort de sa fenêtre (il se joue deux
 semaines après les finales de conférence), plus deux matchs du mardi
-reportés pour cause de Covid en 2021. Le Super Bowl reste à traiter à part
-(fin de la W22 = fin de saison).
+reportés pour cause de Covid en 2021. La W22 est étirée jusqu'au 20 février
+pour couvrir le Super Bowl. Test de non-régression : tous les coups d'envoi
+réels 2025-2026 (fixture tirée de `games.csv`) tombent dans leur fenêtre.
 
 ### 4.2 Le settle passe avant les stats du Monday Night (bloquant)
 
@@ -136,13 +138,14 @@ publication nflverse des stats du MNF (**mardi ~12h30 UTC**), et l'ingest
 quotidien de 03h n'a pas encore les stats du dimanche le lundi. Tout joueur
 aligné sur un match du lundi compterait 0, définitivement.
 
-Correctif proposé :
-1. l'ingest quotidien traite la week **courante ET la précédente** (les deux
-   sont idempotents) ;
+**Corrigé** :
+1. l'ingest quotidien traite la week **précédente puis la courante**
+   (`findWeeksToIngest`, erreurs isolées par week) ;
 2. le settle passe au **mercredi 12h UTC** et rejoue l'ingest nflverse de la
-   week visée juste avant de settler.
+   week visée juste avant (sauf ingest réussi depuis moins de 90 min). Si
+   cet ingest échoue, pas de settle : le tick suivant de la fenêtre retente.
 
-### 4.3 Saison « 2025 » codée en dur (non bloquant)
+### 4.3 Saison « 2025 » codée en dur (non bloquant) — corrigé
 
 | Où | Effet |
 |---|---|
@@ -151,24 +154,57 @@ Correctif proposé :
 | `apps/server/src/routes/nfl-fantasy-draft-sessions.ts` (`?? "2025"`) | Prix de base calculés sur 2025 si la ligue n'a pas de saison |
 | `apps/web/app/admin/nfl-fantasy/page.tsx` | Valeurs par défaut des formulaires admin sur 2025 / `2025:W10` |
 
-Pour le draft, utiliser 2025 comme référence se défendait AVANT le kickoff
-(aucune stat 2026). Maintenant, la saison de la ligue (avec repli sur la
-précédente tant qu'elle n'a pas de stats) est la bonne référence.
+Le catalogue du draft agrège désormais sur la saison de la ligue, la page
+joueurs propose de la saison courante à 2023 (module pur
+`apps/web/app/nfl-fantasy/season.ts`), le prix de base retombe sur la
+saison courante, et la console admin part sur 2026.
 
-## 5. Procédure de rattrapage (après les correctifs)
+Limite assumée : une ligue créée AVANT le kickoff d'une saison verra un
+catalogue à 0 SPP tant qu'aucune stat n'existe. Un repli sur la saison
+précédente sera à ajouter avant l'offseason 2027.
 
-Tout est idempotent ; ordre conseillé :
+### 4.4 Re-settle d'une semaine déjà réglée — ajouté
 
-1. Re-seed de la saison 2026 (`seedNflSeason("2026")`) pour réécrire les
-   fenêtres de week avec le nouvel ancrage. Les cycles sont rejoués en upsert.
-2. `ingestNflverseRosters({ seasonId: "2026" })` : rosters post-cutdown.
-3. `backfillNflSeason("2026")` (W1-W4) puis
-   `backfillScoresFromSchedules({ seasonId: "2026" })` : stats, SPP et scores.
-4. Contrôle : `NflGameStat` par week ≈ 1 040-1 120, 16 matchs scorés par week.
-5. Ligues 2026 `in_progress` existantes : regarder les matchups déjà settlés
-   sur des stats vides. Le settle étant « skip si déjà settlé », il faudra un
-   re-settle explicite (à décider : remise à zéro du `settledAt` des weeks
-   concernées, ou nouvelle option `force`).
+Le settle était définitif (skip si `settledAt`). Option `resettle` sur
+`settleNflFantasyWeek` : rejoue aussi les matchups réglés ; la carrière ne
+reçoit que l'**écart** avec le `rawSpp` déjà crédité (`careerSppDelta`),
+jamais un second crédit complet. En masse : `resettleSeasonWeeks` (toutes
+les ligues `in_progress` d'une saison, plage de weeks, aucun matchup créé).
+Exposé par `POST /admin/nfl-fantasy/settle-week { resettle: true }`,
+`POST /admin/nfl-fantasy/resettle-season` et deux cartes de la console.
 
-Le plus simple en prod reste la cible bootstrap existante avec la saison
-2026 complète (sans `--skip-stats`), après le déploiement des correctifs.
+Non rejoué par le re-settle : la Gazette déjà générée d'un matchup
+(« Régénérer (force) » depuis l'admin) et les lineups modifiés pendant les
+matchs à cause du verrouillage sur la mauvaise week (irréparable).
+
+## 5. Procédure de rattrapage
+
+**Quand** : après le déploiement des correctifs, et **après mardi 06/10
+~13h UTC** (publication nflverse des stats du MNF de la W4). Lancé plus tôt,
+la W4 serait re-réglée sans le lundi, et le settle du mercredi la sauterait
+(déjà réglée) — il faudrait alors relancer le re-settle de la W4.
+
+Attention au déploiement : tant que l'ancien code tourne, le settle du
+**mardi 06/10 12h UTC** règle la W4 sans le MNF. Ce n'est pas grave (la
+plage de re-settle par défaut couvre la W4), mais ça impose bien de lancer
+le rattrapage après la publication du MNF.
+
+```bash
+make nfl-catchup-prod-2026                      # re-settle W1-W4
+NFL_RESETTLE_WEEKS=1-5 make nfl-catchup-prod-2026  # si lancé après la W5
+```
+
+Ce que fait la cible (`bootstrap-nfl-prod.ts --season 2026 --refresh-stats
+--resettle-weeks 1-4`), tout idempotent :
+
+1. re-seed 2026 : réécrit les fenêtres de week (et rejoue les cycles en upsert) ;
+2. rosters 2026 post-cutdown ;
+3. stats W1-W22 **ré-ingérées** (`--refresh-stats` : une week ingérée
+   partiellement par le cron est marquée `success` et serait sinon sautée) ;
+4. scores et coups d'envoi depuis `games.csv` ;
+5. re-settle W1-W4 de toutes les ligues 2026 `in_progress`.
+
+Contrôles après coup : `NflGameStat` ≈ 1 040-1 120 par week, 16 matchs
+scorés par week (`/admin/nfl-fantasy/weeks?season=2026`), et les fenêtres
+de week affichées du mardi au mardi. Le cron prend ensuite le relais :
+lock de la W5 dimanche 11/10 17h UTC, settle de la W5 mercredi 14/10 12h UTC.
