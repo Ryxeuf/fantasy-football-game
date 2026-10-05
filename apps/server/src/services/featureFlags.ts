@@ -95,12 +95,27 @@ export const HOME_NEWS_TICKER_FLAG = "home_news_ticker" as const;
  * Thèmes de dés (Dé de Blocage + D6) : choix du thème dans le profil et
  * application du thème choisi partout où un dé est dessiné.
  *
- * DESACTIVE par defaut (2026-09-29) : un seul thème existe (le défaut), les
- * thèmes payants attendent les Crowns. Gate NORMAL (pas un kill-switch) :
+ * DESACTIVE par defaut (2026-09-29) : en recette. Depuis 2026-10-05, 36
+ * thèmes (le dé original or & charbon, 4 déclinaisons, 31 équipes) ; les
+ * payants s'achètent en Crowns derrière `CROWNS_FLAG`. Le dé ORIGINAL est
+ * servi à tout le monde, flag ON ou OFF. Gate NORMAL (pas un kill-switch) :
  * admins et `FEATURE_FLAGS_FORCE_ENABLED` le voient. Gate la route
  * `/dice-themes/*` ET le sélecteur web ; OFF, tout le monde voit le défaut.
  */
 export const DICE_THEMES_FLAG = "dice_themes" as const;
+
+/**
+ * Couronnes (Crowns) hors Pro League : solde et historique sur le profil du
+ * coach, achat de thèmes de dés en Crowns.
+ *
+ * DESACTIVE par defaut (2026-10-05) : la monnaie est celle du wallet Pro
+ * League (`ProWallet` / `ProTransaction`), dont les routes coach sont gelées ;
+ * ce flag ouvre `GET /crowns/me` et `POST /dice-themes/:id/purchase`, et
+ * affiche le solde côté web. Gate NORMAL (pas un kill-switch) : admins et
+ * `FEATURE_FLAGS_FORCE_ENABLED` le voient. OFF : aucun solde affiché, les
+ * thèmes payants restent verrouillés.
+ */
+export const CROWNS_FLAG = "crowns" as const;
 
 /**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
@@ -192,7 +207,12 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
   {
     key: DICE_THEMES_FLAG,
     description:
-      "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : thème par défaut pour tous.",
+      "Thèmes de dés (Dé de Blocage + D6) — choix dans le profil, appliqué partout où un dé est dessiné. OFF : dé original pour tous.",
+  },
+  {
+    key: CROWNS_FLAG,
+    description:
+      "Couronnes (Crowns) — solde et historique sur le profil coach, achat de thèmes de dés. OFF : invisible, thèmes payants verrouillés.",
   },
   {
     key: MAINTENANCE_MODE_FLAG,

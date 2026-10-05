@@ -20,6 +20,23 @@ const nextConfig = {
     };
     return config;
   },
+  // Faces de dés (`public/images/dices/`, ~33 Mo de PNG) : la boutique et
+  // l'admin en affichent des centaines. Sans en-tête, `public/` est servi en
+  // `max-age=0` et chaque visite les revalide une à une. Une semaine (pas
+  // `immutable` : les noms de fichiers ne sont pas versionnés).
+  async headers() {
+    return [
+      {
+        source: "/images/dices/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+    ];
+  },
   // Optimisations SEO
   compress: true,
   poweredByHeader: false,

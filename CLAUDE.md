@@ -1284,18 +1284,56 @@ suppression qui a echoue.
 
 ### Thèmes de dés : le thème DESSINE, le contexte RÉSOUT
 
-Toute face de Dé de Blocage ou de D6 passe par `BlockDieIcon` / `D6Icon`
-(`apps/web/app/components/dice/`), jamais par un SVG ou un chiffre posé à la
-main : c'est ce qui applique le thème choisi par le coach (`User.diceTheme`,
-flag `dice_themes`). Un thème (`DiceThemeRenderer`) n'a que deux composants
-à écrire (`BlockFace`, `D6Face`) ; le libellé accessible et la préférence
-lui sont passés. Ajouter un thème = un fichier dans `themes/` + une entrée
-dans le registre + une entrée au catalogue web ET serveur
-(`services/dice-theme-catalogue`, verrouillé par
-`catalogue-consistency.test.ts`). Un id inconnu, non possédé ou `null`
-retombe sur le défaut à la LECTURE ; seule l'écriture refuse. L'achat en
-Crowns se branchera sur `loadOwnedPaidThemeIds`. Change OpenSpec
-`dice-themes`.
+Toute face de dé passe par `BlockDieIcon` / `D6Icon` / `NumberDieIcon`
+(`apps/web/app/components/dice/`) côté site, et par `BlockDiceIcon` /
+`SkinnedPipFace` côté match en ligne (`@bb/ui`) — jamais par un SVG, un
+emoji 🎲 ou un chiffre posé à la main : c'est ce qui applique le thème du
+coach (`User.diceTheme`, flag `dice_themes`). Hors flag, anonyme ou en
+erreur : le dé ORIGINAL or & charbon (PNG de `public/images/dices/`).
+
+- **Un seul registre de RENDU, dans `@bb/ui/dice`** (`DICE_SKINS` : dossier des
+  PNG + palette). Le site en dérive ses renderers (`themes/registry.ts`) ; le
+  `DiceThemeProvider` pose aussi le `DiceSkinProvider` pour que la popup de
+  choix de blocage, le journal, la popup de résultat et le dé animé Pixi
+  suivent le thème. Le site importe `@bb/ui/dice` (alias dédié du tsconfig
+  de base), JAMAIS le barrel `@bb/ui` pour un dé : il tirerait Pixi.
+- **Les dés numériques n'ont pas de PNG** : D6 à points et dés chiffrés
+  (D3/D8/D16/2D6) sont dessinés dans la palette du skin. Au-delà de 6, chiffré.
+- **Taille d'image** : passer `px` (taille affichée) — 64/128/320 px chargé en
+  conséquence ; `loading="lazy"` dès qu'on liste les 36 thèmes.
+- **Ajouter un thème** = ses PNG (3 tailles × 5 faces) + un skin + une entrée
+  du catalogue serveur (`services/dice-theme-catalogue`). Verrous :
+  `catalogue-consistency.test.ts` (ids serveur == renderers) et
+  `packages/ui/src/dice/skins.test.ts` (chaque PNG existe).
+- **Catalogue « base d'abord »** (`DiceTheme`, `dice-theme-repository`) : prix,
+  vente, libellés, ordre ; le slug et les visuels restent un contrat de code.
+  Le défaut reste gratuit et en service quoi qu'en dise la base.
+
+Un id inconnu, non possédé ou `null` retombe sur le défaut à la LECTURE ;
+seule l'écriture refuse. Changes OpenSpec `dice-themes` puis
+`dice-theme-shop-and-crowns`.
+
+### Couronnes (Crowns) : UNE monnaie, celle du wallet Pro League
+
+Pas de seconde monnaie : le solde est `ProWallet.crowns`, le journal
+`ProTransaction`. Les routes coach du wallet sont gelées avec la Pro League,
+d'où `GET /crowns/me` (flag `crowns`) ; l'admin ajuste par la route existante
+`PATCH /admin/wallets/:id/balance`. Un achat de thème (`purchaseDiceTheme`)
+écrit en UNE transaction : décrément CONDITIONNEL (`updateMany where crowns
+>= prix` — jamais lire-puis-écrire, deux achats simultanés passeraient sous
+zéro), ligne `UserDiceTheme` (unique coach × thème : P2002 = déjà possédé),
+débit `SINK` réf. `dice-theme:<id>`, thème équipé. Pas d'achat pendant une
+impersonation admin. Retiré de la vente ≠ retiré à l'acheteur.
+
+Piège associé : l'atomicité ne vaut que si TOUS les écrivains la
+respectent. `pro-wallet` (`credit`/`debit`/`creditInTx`/`debitInTx`) écrivait
+`crowns: current ± amount` après une lecture — un ajustement admin concurrent
+d'un achat aurait ressuscité les Crowns dépensées. Tout écrivain du solde
+passe par `{ increment }` ou par le décrément conditionnel
+(`where: { userId, crowns: { gte } }`, P2025 ⇒ `InsufficientFundsError`).
+
+La raison d'un ajustement admin (`ADMIN_ADJUST`, réf. = raison) est VISIBLE du
+coach dans son historique (`GET /crowns/me`) : la modale le rappelle.
 
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
@@ -1882,6 +1920,16 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (formulaire + panneau verrouillé), panneau de la fiche, page de saison,
   spec e2e ; au passage, `unlockAchievements` rendu portable SQLite. Récit
   [`docs/roadmap/sessions/2026-09-27-league-predictions.md`](./docs/roadmap/sessions/2026-09-27-league-predictions.md).
+- **2026-10-05** : **Dés originaux partout, 36 thèmes, boutique en Couronnes**
+  — les PNG du commit `32b1b11` (dé original or & charbon, pack 5 thèmes, 31
+  équipes) remplacent les dés SVG / anciens PNG sur tout le site et dans tous
+  les simulateurs (home, D8, feuille, match en ligne : choix de blocage,
+  journal, popup de résultat, dé animé Pixi). Registre de rendu unique
+  `@bb/ui/dice`, catalogue « base d'abord » (`DiceTheme`), acquisitions
+  `UserDiceTheme`, achat atomique sur le wallet existant, `GET /crowns/me`,
+  boutique `/me/dice-themes`, admin `/admin/dice-themes` +
+  `/admin/coach-cosmetics`. Flags `dice_themes` + `crowns` (OFF). Change
+  OpenSpec `dice-theme-shop-and-crowns`.
 - **2026-10-05** : **Exploration « Pro League : un match intégral, un coach
   qui évolue, un replay rejouable sur plateau »** (`/opsx:explore`, aucun
   code). Mesuré sur 0.26.0, full driver, rosters de 13 joueurs : 0,5 TD/match,

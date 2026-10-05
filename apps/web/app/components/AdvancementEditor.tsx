@@ -20,6 +20,7 @@ import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { getSkillEliteHint, getSkillEliteLabel } from "../lib/skill-elite";
 import { getSkillAccessPalette } from "../lib/skill-category-colors";
+import { NumberDieIcon } from "./dice/NumberDieIcon";
 
 export type AdvancementType =
   | "primary"
@@ -910,9 +911,12 @@ export function PlayerRow({
                 </button>
                 {d8Roll != null ? (
                   <div className="flex flex-col gap-1.5">
-                    <div className="text-xs text-amber-800">
-                      Jet D8 : <strong>{d8Roll}</strong> → caractéristiques
-                      possibles :
+                    <div className="flex items-center gap-2 text-xs text-amber-800">
+                      <NumberDieIcon value={d8Roll} sides={8} className="h-8 w-8 shrink-0" />
+                      <span>
+                        Jet D8 : <strong>{d8Roll}</strong> → caractéristiques
+                        possibles :
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {d8AllowedStats.map((code) => (

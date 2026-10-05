@@ -12,7 +12,8 @@
       "@bb/nfl-mapper": ["../nfl-mapper/src"],
       "@bb/shared-types": ["../shared-types/src"],
       "@bb/sim-engine": ["../sim-engine/src"],
-      "@bb/ui": ["../ui/src"]
+      "@bb/ui": ["../ui/src"],
+      "@bb/ui/dice": ["../ui/src/dice/index.ts"]
     },
     "esModuleInterop": true,
     "skipLibCheck": true,

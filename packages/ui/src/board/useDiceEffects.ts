@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { GameLogEntry, TeamId } from "@bb/game-engine";
+import type { BlockResult, GameLogEntry, TeamId } from "@bb/game-engine";
 import {
   type DiceAnimation,
   detectDiceRollEvents,
@@ -27,6 +27,10 @@ export interface DiceOverlay {
   alpha: number;
   /** Roll description message */
   message: string;
+  /** Face du Dé de Blocage, quand le jet en est un */
+  blockResult?: BlockResult;
+  /** Cible du jet (au-delà de 6+ : total de 2D6, affiché chiffré) */
+  targetNumber?: number;
 }
 
 export interface DiceEffects {
@@ -101,6 +105,8 @@ export function useDiceEffects(
                 team: a.team,
                 alpha: getDiceAlpha(a.elapsed),
                 message: a.message,
+                blockResult: a.blockResult,
+                targetNumber: a.targetNumber,
               };
             });
 

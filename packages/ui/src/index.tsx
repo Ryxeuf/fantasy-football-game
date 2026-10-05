@@ -40,6 +40,9 @@ export function Board({
   return <div className="inline-block">{rows}</div>;
 }
 
+// Dés : skins (thèmes), contexte et faces partagés avec le site
+export * from "./dice";
+
 // Board components
 export { default as PixiBoard } from "./board/PixiBoard";
 export { TERRAIN_SKINS, getTerrainSkin, resolveTerrainSkinFromWeather } from "./board/terrain-skins";

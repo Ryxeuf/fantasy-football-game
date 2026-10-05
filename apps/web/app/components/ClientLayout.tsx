@@ -3,6 +3,7 @@ import { LanguageProvider } from "../contexts/LanguageContext";
 import { FeatureFlagProvider } from "../contexts/FeatureFlagContext";
 import { NotificationsProvider } from "../contexts/NotificationsContext";
 import { DiceThemeProvider } from "../contexts/DiceThemeContext";
+import { CrownsProvider } from "../contexts/CrownsContext";
 import { ReactNode } from "react";
 import { Toaster } from "sonner";
 
@@ -13,8 +14,12 @@ export function ClientLayout({ children }: { children: ReactNode }) {
         {/* Compteur de notifications non lues partagé par la cloche de
             l'en-tête, le menu utilisateur et la page /me/notifications. */}
         <NotificationsProvider>
-          {/* Thème de dés du coach (flag `dice_themes`, défaut sinon). */}
-          <DiceThemeProvider>{children}</DiceThemeProvider>
+          {/* Couronnes du coach (flag `crowns`) et thème de dés (flag
+              `dice_themes`, dé original sinon — y compris pour le match en
+              ligne, via le skin de `@bb/ui`). */}
+          <CrownsProvider>
+            <DiceThemeProvider>{children}</DiceThemeProvider>
+          </CrownsProvider>
           <Toaster
             position="top-right"
             richColors
