@@ -133,6 +133,14 @@ interface TeamRuntimeContext {
   readonly race: string;
 }
 
+/** Lot 4 — forme persistée des joueurs du roster, par id (absente = neutre). */
+function rosterForms(roster: SimInput['home']['roster']): Readonly<Record<string, number>> | undefined {
+  if (!roster) return undefined;
+  const forms: Record<string, number> = {};
+  for (const p of roster) if (typeof p.form === 'number') forms[p.id] = p.form;
+  return Object.keys(forms).length > 0 ? forms : undefined;
+}
+
 function resolveContext(
   side: TeamId,
   input: SimInput['home'] | SimInput['away']
@@ -226,8 +234,8 @@ export function runFullDriver(input: SimInput, options: FullDriverOptions = {}):
   const awayCtx = resolveContext('B', input.away);
   const coach = createCoach({
     seed: input.seed,
-    home: { profile: homeCtx.profile },
-    away: { profile: awayCtx.profile },
+    home: { profile: homeCtx.profile, forms: rosterForms(input.home.roster) },
+    away: { profile: awayCtx.profile, forms: rosterForms(input.away.roster) },
     trace: options.trace,
   });
 
@@ -553,6 +561,8 @@ export function runFullDriver(input: SimInput, options: FullDriverOptions = {}):
       seed: input.seed,
       initialState,
       steps: journalSteps,
+      profiles: { home: homeCtx.profile, away: awayCtx.profile },
     },
+    coachReport: coach.report(),
   };
 }

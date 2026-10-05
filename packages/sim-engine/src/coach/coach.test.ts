@@ -75,3 +75,56 @@ describe('coach (lot 3)', () => {
     expect(coach.momentumSnapshot().find((m) => m.playerId === 'A1')?.touchdowns).toBe(1);
   });
 });
+
+describe('coach — rapport de drives et forme (lot 4)', () => {
+  it('le full driver rend un rapport : chaque équipe a des drives, un TD clôt un drive des deux côtés', async () => {
+    const { simulateMatch } = await import('../simulate-match');
+    const { PRO_LEAGUE_TEAM_BY_ID } = await import('../tactics/race-profiles');
+    const { buildEngineSimInput } = await import('../driver/engine-roster-fixture');
+    const input = buildEngineSimInput(PRO_LEAGUE_TEAM_BY_ID['pit-smashers'], PRO_LEAGUE_TEAM_BY_ID['kc-soaring-hawks'], 11);
+    const result = simulateMatch(input, { driverKind: 'full' });
+    const report = result.coachReport;
+    expect(report).toBeDefined();
+    const drives = report!.drives;
+    expect(drives.some((d) => d.team === 'A')).toBe(true);
+    expect(drives.some((d) => d.team === 'B')).toBe(true);
+    const tds = result.summary.score.home + result.summary.score.away;
+    expect(drives.filter((d) => d.outcome === 'td')).toHaveLength(tds);
+    expect(drives.filter((d) => d.outcome === 'conceded')).toHaveLength(tds);
+    for (const d of drives) {
+      expect(d.turns).toBeGreaterThan(0);
+      expect(d.turnovers).toBeGreaterThanOrEqual(0);
+      expect([1, 2]).toContain(d.half);
+    }
+    expect(drives.filter((d) => d.half === 1).length).toBeGreaterThan(0);
+    expect(drives.filter((d) => d.half === 2).length).toBeGreaterThan(0);
+    // Le journal fige les profils des deux coachs.
+    expect(result.journal?.profiles?.home).toEqual(PRO_LEAGUE_TEAM_BY_ID['pit-smashers'].tactics);
+    expect(result.journal?.profiles?.away).toEqual(PRO_LEAGUE_TEAM_BY_ID['kc-soaring-hawks'].tactics);
+  });
+
+  it('formPenalty : la méforme recule les actions à dés, la forme les avance, le neutre ne change rien', async () => {
+    const { formPenalty } = await import('./coach');
+    expect(formPenalty(2, undefined)).toBe(0);
+    expect(formPenalty(2, 50)).toBe(0);
+    expect(formPenalty(0, 10)).toBe(0);
+    expect(formPenalty(2, 10)).toBeGreaterThan(0);
+    expect(formPenalty(2, 90)).toBeLessThan(0);
+    expect(formPenalty(3, 10)).toBeGreaterThan(formPenalty(2, 10));
+  });
+
+  it('la forme change le match à graine constante, sans changer sa structure', async () => {
+    const { simulateMatch } = await import('../simulate-match');
+    const { PRO_LEAGUE_TEAM_BY_ID } = await import('../tactics/race-profiles');
+    const { buildEngineSimInput } = await import('../driver/engine-roster-fixture');
+    const base = buildEngineSimInput(PRO_LEAGUE_TEAM_BY_ID['pit-smashers'], PRO_LEAGUE_TEAM_BY_ID['kc-soaring-hawks'], 5);
+    const cold = {
+      ...base,
+      home: { ...base.home, roster: base.home.roster!.map((p) => ({ ...p, form: 5 })) },
+    };
+    const a = simulateMatch(base, { driverKind: 'full' });
+    const b = simulateMatch(cold, { driverKind: 'full' });
+    expect(simulateMatch(cold, { driverKind: 'full' }).journal!.steps.length).toBe(b.journal!.steps.length);
+    expect(a.journal!.steps.length).not.toBe(b.journal!.steps.length);
+  });
+});

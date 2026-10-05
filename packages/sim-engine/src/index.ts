@@ -43,6 +43,25 @@ export { choosePlan, buildDriveContext, type DrivePlan, type CoachStrategyId } f
 export { deriveRole, carrierAptitude, type PlayerRole } from './coach/roles';
 export { personalityFor, type PlayerPersonality } from './coach/personality';
 export type { FullDriverOptions } from './driver/full-driver';
+// Lot 4 « évolution persistée » — adaptation bornée et expliquée du coach.
+export {
+  EMPTY_COACH_MEMORY,
+  STRATEGY_INFLUENCE,
+  adaptCoachProfile,
+  driveReward,
+  isWithinBand,
+  updateCoachMemory,
+  type AdaptCoachInput,
+  type AdaptCoachResult,
+  type AdaptationOptions,
+  type CoachMatchReport,
+  type CoachMemory,
+  type DriveOutcome,
+  type DriveRecord,
+  type ProfileChange,
+  type StrategyMemory,
+} from './coach/adaptation';
+export { formPenalty, type CoachTeamInput } from './coach/coach';
 export {
   DEFAULT_TACTICAL_PROFILE,
   TACTICAL_PROFILE_PARAMETERS,

@@ -36,11 +36,18 @@ import { DEFAULT_TACTICAL_PROFILE, type TacticalProfile } from '../tactics/tacti
 import { riskAppetiteToTemperature, softmaxSample } from '../tactics/temperature';
 
 import { carrierIntent, planActivations, wantsTeamReroll, type ActivationCandidate } from './activation-planner';
-import { choosePlan, shouldReplan, type DrivePlan } from './drive-plan';
+import type { CoachMatchReport, DriveOutcome, DriveRecord } from './adaptation';
+import { choosePlan, shouldReplan, type CoachStrategyId, type DrivePlan } from './drive-plan';
 import { personalityFor } from './personality';
 
 export interface CoachTeamInput {
   readonly profile?: TacticalProfile;
+  /**
+   * Lot 4 — forme persistée des joueurs (0..100, 50 = neutre), par id.
+   * Un joueur en méforme voit ses actions risquées repoussées dans
+   * l'ordre du tour ; un joueur en forme les tente plus volontiers.
+   */
+  readonly forms?: Readonly<Record<string, number>>;
 }
 
 export interface CoachTrace {
@@ -72,6 +79,35 @@ export interface Coach {
   onApplied(prev: GameState, move: Move, next: GameState): void;
   planFor(team: TeamId): DrivePlan | null;
   momentumSnapshot(): readonly PlayerMomentum[];
+  /** Lot 4 — drives joués par chaque équipe, pour l'adaptation d'après-match. */
+  report(): CoachMatchReport;
+}
+
+/** Drive en cours d'une équipe (lot 4) : tours par stratégie, turnovers, possession. */
+interface OpenDrive {
+  half: number;
+  turns: number;
+  turnovers: number;
+  possessionTurns: number;
+  strategyTurns: Map<CoachStrategyId, number>;
+  /** L'équipe a-t-elle tenu le ballon pendant le tour en cours ? */
+  hadBallThisTurn: boolean;
+}
+
+function newDrive(half: number): OpenDrive {
+  return { half, turns: 0, turnovers: 0, possessionTurns: 0, strategyTurns: new Map(), hadBallThisTurn: false };
+}
+
+function dominantStrategy(drive: OpenDrive): CoachStrategyId {
+  let best: CoachStrategyId = 'cage-build';
+  let bestTurns = -1;
+  for (const [strategy, turns] of drive.strategyTurns) {
+    if (turns > bestTurns) {
+      best = strategy;
+      bestTurns = turns;
+    }
+  }
+  return best;
 }
 
 interface TeamState {
@@ -82,6 +118,8 @@ interface TeamState {
   activePlayerId: string | null;
   /** Case visée par le porteur, figée pour le tour (`half:turn`). */
   carrierTarget: { key: string; pos: Position | undefined } | null;
+  readonly forms: Readonly<Record<string, number>>;
+  drive: OpenDrive;
 }
 
 const PENDING_KEYS = [
@@ -132,17 +170,67 @@ function orderPenalty(riskClass: number, profile: TacticalProfile): number {
   return riskClass * (15 + profile.patience / 5);
 }
 
+/**
+ * Lot 4 — la forme module l'appétit pour le risque d'un joueur : en méforme
+ * (< 35) ses actions à dés reculent dans l'ordre du tour, en forme (> 65)
+ * elles avancent un peu. Neutre entre les deux.
+ */
+export function formPenalty(riskClass: number, form: number | undefined): number {
+  if (form === undefined || riskClass === 0) return 0;
+  if (form < 35) return riskClass * ((35 - form) / 35) * 8;
+  if (form > 65) return -riskClass * ((form - 65) / 35) * 4;
+  return 0;
+}
+
 export function createCoach(options: CoachOptions): Coach {
   const rng: RNG = makeRNG(`${options.seed}:ai`);
   const momentum: MomentumTracker = createMomentumTracker();
   const teams: Record<TeamId, TeamState> = {
-    A: makeTeam(options.home.profile),
-    B: makeTeam(options.away.profile),
+    A: makeTeam(options.home),
+    B: makeTeam(options.away),
   };
+  const drives: DriveRecord[] = [];
 
-  function makeTeam(profile: TacticalProfile | undefined): TeamState {
-    const p = profile ?? DEFAULT_TACTICAL_PROFILE;
-    return { profile: p, weights: weightsFromProfile(p), plan: null, queue: [], activePlayerId: null, carrierTarget: null };
+  function makeTeam(input: CoachTeamInput): TeamState {
+    const p = input.profile ?? DEFAULT_TACTICAL_PROFILE;
+    return {
+      profile: p,
+      weights: weightsFromProfile(p),
+      plan: null,
+      queue: [],
+      activePlayerId: null,
+      carrierTarget: null,
+      forms: input.forms ?? {},
+      drive: newDrive(1),
+    };
+  }
+
+  function closeDrive(team: TeamId, outcome: DriveOutcome, nextHalf: number): void {
+    const t = teams[team];
+    const d = t.drive;
+    if (d.turns > 0) {
+      drives.push({
+        team,
+        half: d.half,
+        strategy: dominantStrategy(d),
+        possession: d.possessionTurns * 2 >= d.turns,
+        outcome,
+        turnovers: d.turnovers,
+        turns: d.turns,
+      });
+    }
+    t.drive = newDrive(nextHalf);
+  }
+
+  /** Fin du tour de `team` : un tour de plus au drive, sous la stratégie du plan. */
+  function recordTurn(team: TeamId): void {
+    const t = teams[team];
+    const d = t.drive;
+    d.turns += 1;
+    if (d.hadBallThisTurn) d.possessionTurns += 1;
+    d.hadBallThisTurn = false;
+    const strategy = t.plan?.strategy ?? 'cage-build';
+    d.strategyTurns.set(strategy, (d.strategyTurns.get(strategy) ?? 0) + 1);
   }
 
   function ensurePlan(state: GameState, team: TeamId): DrivePlan {
@@ -173,6 +261,8 @@ export function createCoach(options: CoachOptions): Coach {
     const opp = team === 'A' ? state.score.teamB : state.score.teamA;
     if (own < opp && state.turn >= 6) temp *= 1.4;
     if (state.turn >= 7) temp *= 1 - (personalityFor(playerId).clutch - 50) / 200;
+    const form = t.forms[playerId];
+    if (form !== undefined) temp *= form < 35 ? 0.85 : form > 65 ? 1.1 : 1;
     // Les EV sont de l'ordre de la dizaine : la température est mise à l'échelle.
     return Math.max(0, temp * 10);
   }
@@ -199,7 +289,10 @@ export function createCoach(options: CoachOptions): Coach {
     }).filter((c) => c.ev > 0);
     if (candidates.length === 0) return null;
     const scored = candidates
-      .map((c) => ({ value: c, score: c.ev - orderPenalty(c.riskClass, t.profile) }))
+      .map((c) => ({
+        value: c,
+        score: c.ev - orderPenalty(c.riskClass, t.profile) - formPenalty(c.riskClass, t.forms[c.playerId]),
+      }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 4);
     const chosen = softmaxSample({ next: () => rng() }, scored, temperatureFor(state, team, scored[0].value.playerId));
@@ -255,6 +348,21 @@ export function createCoach(options: CoachOptions): Coach {
     onApplied(prev: GameState, move: Move, next: GameState): void {
       const team = prev.currentPlayer;
       const t = teams[team];
+      // Lot 4 — suivi des drives : possession, tours, turnovers, issue.
+      if (prev.players.some((p) => p.team === team && p.hasBall)) t.drive.hadBallThisTurn = true;
+      if (next.isTurnover && !prev.isTurnover) t.drive.turnovers += 1;
+      const turnEnded = next.currentPlayer !== prev.currentPlayer || next.turn !== prev.turn || next.half !== prev.half;
+      const scored = next.score.teamA + next.score.teamB > prev.score.teamA + prev.score.teamB;
+      const ended = next.gamePhase !== 'playing' && prev.gamePhase === 'playing';
+      if (turnEnded || scored || ended) recordTurn(team);
+      if (scored) {
+        const scorer: TeamId = next.score.teamA > prev.score.teamA ? 'A' : 'B';
+        closeDrive(scorer, 'td', next.half);
+        closeDrive(scorer === 'A' ? 'B' : 'A', 'conceded', next.half);
+      } else if (next.half !== prev.half || ended) {
+        closeDrive('A', 'half-end', next.half);
+        closeDrive('B', 'half-end', next.half);
+      }
       if (next.currentPlayer !== prev.currentPlayer || next.gamePhase !== 'playing') {
         t.queue = [];
         t.activePlayerId = null;
@@ -294,6 +402,27 @@ export function createCoach(options: CoachOptions): Coach {
 
     momentumSnapshot(): readonly PlayerMomentum[] {
       return momentum.snapshot();
+    },
+
+    report(): CoachMatchReport {
+      // Les drives encore ouverts (match arrêté par le driver) comptent
+      // comme terminés sans score.
+      const open: DriveRecord[] = [];
+      for (const team of ['A', 'B'] as const) {
+        const d = teams[team].drive;
+        if (d.turns > 0) {
+          open.push({
+            team,
+            half: d.half,
+            strategy: dominantStrategy(d),
+            possession: d.possessionTurns * 2 >= d.turns,
+            outcome: 'half-end',
+            turnovers: d.turnovers,
+            turns: d.turns,
+          });
+        }
+      }
+      return { drives: [...drives, ...open] };
     },
   };
 }
