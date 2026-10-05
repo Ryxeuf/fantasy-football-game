@@ -1947,3 +1947,19 @@ edition du `.json`, `pnpm --filter web typecheck` +
   1,5-1,9 TD par match (référence FUMBBL 2,1-4,1), calibrage en suite.
   Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md).
+- **2026-10-05** : **Pro League lot 4 « l'évolution persistée »** (change
+  OpenSpec `pro-league-coach-evolution`, `ENGINE_VER` 0.30.0). Le coach
+  d'une équipe devient une PERSONA persistée (`ProCoach` : nom, philosophie,
+  profil VIVANT, ANCRE, mémoire, expérience ; `ProCoachMemory` append-only
+  avec les raisons). Adaptation BORNÉE et EXPLIQUÉE, sans self-play
+  (`coach/adaptation.ts`, pur) : récompense par drive, EMA par stratégie,
+  pas de 2 points max par match vers ce que les stratégies qui rapportent
+  tirent (`STRATEGY_INFLUENCE`), dans `ancre ± 15`, rappel vers l'ancre
+  sans signal. Trois règles à retenir : un réglage admin POSE L'ANCRE (et y
+  ramène le vivant), sinon l'évolution défait le curseur ; l'évolution se
+  joue APRÈS le commit du match, par côté isolé, jamais pour un match de
+  test ; la forme (`ProTeamRoster.form`, enfin écrite : hot +15 / cold −15 /
+  retour vers 50) module l'ORDRE des actions à dés, jamais les dés — sans
+  forme, le bench se re-tamponne à l'identique. Les profils sont FIGÉS dans
+  le journal du replay. Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md).
