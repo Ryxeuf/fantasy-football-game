@@ -6,7 +6,8 @@
  *
  *   POST /lock-lineups               body { weekId } -> lockLineups
  *   POST /generate-matchups          body { leagueId, weekId } -> generateMatchups
- *   POST /settle-week                body { leagueId, weekId } -> settleNflFantasyWeek
+ *   POST /settle-week                body { leagueId, weekId, resettle? } -> settleNflFantasyWeek
+ *   POST /resettle-season            body { seasonId, fromWeek, toWeek } -> resettleSeasonWeeks
  *   POST /seed-rerolls               body { entryId, count? } -> seedStartingRerolls
  */
 
@@ -19,6 +20,7 @@ import { validate } from "../middleware/validate";
 import { lockLineups } from "../services/nfl-fantasy-lineup";
 import {
   generateMatchups,
+  resettleSeasonWeeks,
   settleNflFantasyWeek,
 } from "../services/nfl-fantasy-scoring";
 import { seedStartingRerolls } from "../services/nfl-fantasy-mercato";
@@ -40,7 +42,20 @@ const matchupsSchema = z.object({
   leagueId: z.string().min(1),
   weekId: z.string().min(1),
 });
-const settleSchema = matchupsSchema;
+const settleSchema = matchupsSchema.extend({
+  /** Rejoue aussi les matchups deja settles (rattrapage apres ingest tardif). */
+  resettle: z.boolean().optional(),
+});
+const resettleSeasonSchema = z
+  .object({
+    seasonId: z.string().regex(/^\d{4}$/),
+    fromWeek: z.number().int().min(1).max(22),
+    toWeek: z.number().int().min(1).max(22),
+  })
+  .refine((b) => b.fromWeek <= b.toWeek, {
+    message: "fromWeek doit etre <= toWeek",
+    path: ["toWeek"],
+  });
 const seedRerollsSchema = z.object({
   entryId: z.string().min(1),
   count: z.number().int().min(1).max(50).optional(),
@@ -103,6 +118,23 @@ router.post("/settle-week", validate(settleSchema), async (req, res) => {
     }
   }
 });
+
+router.post(
+  "/resettle-season",
+  validate(resettleSeasonSchema),
+  async (req, res) => {
+    try {
+      const body: z.infer<typeof resettleSeasonSchema> = req.body;
+      const out = await resettleSeasonWeeks(body);
+      res.json(out);
+    } catch (err) {
+      if (!sendNflError(res, err)) {
+        serverLog.error("[admin-nfl-fantasy] resettle-season failed", err);
+        res.status(500).json({ error: "Erreur serveur" });
+      }
+    }
+  },
+);
 
 router.post(
   "/seed-rerolls",

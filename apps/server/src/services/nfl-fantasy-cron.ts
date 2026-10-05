@@ -3,15 +3,19 @@
  *
  * Orchestre les jobs periodiques :
  *
- *   nflverseIngestTick     pull nflverse pour la semaine courante
- *                          (post-match data). Tick journalier.
+ *   nflverseIngestTick     pull nflverse pour la semaine courante ET la
+ *                          precedente (post-match data). Tick journalier.
+ *   nflverseScheduleTick   synchronise le calendrier de la saison (matchs
+ *                          a venir crees "scheduled", coups d'envoi
+ *                          recales). Tick journalier. Base du verrouillage
+ *                          des lineups au coup d'envoi.
  *   espnGamedayTick        pull ESPN scoreboard pour aujourd'hui
  *                          (Thu/Fri/Sun/Mon en saison). Tick 5min.
  *   lockLineupsTick        lock toutes les lineups de la semaine
  *                          courante (Sunday 17:00 UTC ~= 12:00 ET).
  *   settleWeekTick         pour chaque league in_progress, generate
  *                          matchups + settle la semaine precedente
- *                          (Tuesday 12:00 UTC).
+ *                          (Wednesday 12:00 UTC, apres un ingest frais).
  *
  * Pattern : chaque tick est idempotent (Q.D.1, herite des services
  * 2.A-2.E). Les `shouldRun*` purs sont exportes + testes en unit.
@@ -26,7 +30,7 @@ import {
   settleNflFantasyWeek,
 } from "./nfl-fantasy-scoring";
 import { ingestEspnGameday } from "./nfl-ingest-espn";
-import { ingestNflverseWeek } from "./nfl-ingest";
+import { backfillScoresFromSchedules, ingestNflverseWeek } from "./nfl-ingest";
 import { ingestNflverseRosters } from "./nfl-ingest-rosters";
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
@@ -86,13 +90,18 @@ export function isLockLineupsWindow(now: Date): boolean {
 }
 
 /**
- * True dans la fenetre Tuesday 12:00-12:59 UTC. Settlement post
- * Monday Night Football (qui se termine vers 06:00 UTC mardi).
+ * True dans la fenetre Wednesday 12:00-12:59 UTC.
+ *
+ * nflverse publie les stats d'un match le LENDEMAIN vers 12h30 UTC : celles
+ * du Monday Night arrivent donc le mardi ~12h30 UTC. Le settle du mardi
+ * 12h passait avant, et les joueurs du lundi comptaient 0 pour de bon (le
+ * settle est idempotent : skip si deja settle). Le mercredi laisse 24h de
+ * marge ; `settleWeekTick` rejoue en plus l'ingest de la week juste avant.
  *
  * Pur.
  */
 export function isSettleWindow(now: Date): boolean {
-  return now.getUTCDay() === 2 && now.getUTCHours() === 12;
+  return now.getUTCDay() === 3 && now.getUTCHours() === 12;
 }
 
 /**
@@ -128,6 +137,27 @@ export async function findCurrentNflWeek(now: Date): Promise<{
     select: { id: true, seasonId: true, weekNumber: true },
   });
   return w;
+}
+
+/**
+ * Weeks a ingerer par le pull nflverse quotidien : la courante ET la
+ * precedente (ordre chronologique). Les stats d'un match ne sont publiees
+ * que le lendemain ~12h30 UTC : quand le tick de 03h tourne le mardi ou le
+ * mercredi, les matchs du dimanche/lundi appartiennent deja a la week
+ * precedente. N'ingerer que la courante les perdait. Les deux ingests sont
+ * idempotents.
+ */
+export async function findWeeksToIngest(now: Date): Promise<
+  ReadonlyArray<{ id: string; seasonId: string; weekNumber: number }>
+> {
+  const seasonId = currentSeasonId(now);
+  const weeks = await prisma.nflWeek.findMany({
+    where: { seasonId, startDate: { lte: now } },
+    orderBy: [{ startDate: "desc" }, { weekNumber: "desc" }],
+    take: 2,
+    select: { id: true, seasonId: true, weekNumber: true },
+  });
+  return [...weeks].reverse();
 }
 
 /**
@@ -174,23 +204,66 @@ export async function nflverseIngestTick(opts: {
     return { ran: false, reason: "out_of_window" };
   }
 
-  const week = await findCurrentNflWeek(now);
-  if (!week) {
+  const weeks = await findWeeksToIngest(now);
+  if (weeks.length === 0) {
     return { ran: false, reason: "no_current_week" };
   }
 
+  const results: Array<{ weekId: string; result?: unknown; error?: string }> = [];
+  for (const week of weeks) {
+    try {
+      const result = await ingestNflverseWeek({
+        seasonId: week.seasonId,
+        weekNumber: week.weekNumber,
+      });
+      serverLog.info(
+        `[nfl-cron] nflverse ${week.id} : players=${result.playersUpdated} stats=${result.statsUpdated} games=${result.gamesUpdated}`,
+      );
+      results.push({ weekId: week.id, result });
+    } catch (e) {
+      // Isole par week : un echec sur la precedente ne prive pas la courante.
+      serverLog.error(
+        `[nfl-cron] nflverse ${week.id} failed: ${(e as Error).message}`,
+      );
+      results.push({ weekId: week.id, error: (e as Error).message });
+    }
+  }
+  const failed = results.some((r) => r.error !== undefined);
+  return failed
+    ? { ran: true, reason: "ingest_failed", detail: results }
+    : { ran: true, detail: results };
+}
+
+/**
+ * Synchronise le calendrier nflverse de la saison courante : cree les
+ * matchs a venir (statut "scheduled") et recale les coups d'envoi (matchs
+ * deplaces par la NFL en cours de saison). Le verrouillage des lineups au
+ * coup d'envoi (`setLineup`) lit ces `NflGame.kickoffAt`.
+ *
+ * Tourne dans la fenetre 03:00 UTC.
+ */
+export async function nflverseScheduleTick(opts: {
+  now?: Date;
+  force?: boolean;
+} = {}): Promise<TickResult> {
+  const now = opts.now ?? new Date();
+  if (!opts.force && !isNflverseDailyWindow(now)) {
+    return { ran: false, reason: "out_of_window" };
+  }
+
+  const seasonId = currentSeasonId(now);
   try {
-    const result = await ingestNflverseWeek({
-      seasonId: week.seasonId,
-      weekNumber: week.weekNumber,
+    const result = await backfillScoresFromSchedules({
+      seasonId,
+      createMissing: true,
     });
     serverLog.info(
-      `[nfl-cron] nflverse ${week.id} : players=${result.playersUpdated} stats=${result.statsUpdated} games=${result.gamesUpdated}`,
+      `[nfl-cron] schedule ${seasonId} : created=${result.gamesCreated} kickoffs=${result.kickoffsUpdated} scores=${result.scoresUpdated}`,
     );
     return { ran: true, detail: result };
   } catch (e) {
     serverLog.error(
-      `[nfl-cron] nflverse ${week.id} failed: ${(e as Error).message}`,
+      `[nfl-cron] schedule ${seasonId} failed: ${(e as Error).message}`,
     );
     return { ran: true, reason: "ingest_failed", detail: (e as Error).message };
   }
@@ -292,11 +365,52 @@ export async function lockLineupsTick(opts: {
   }
 }
 
+/** Fenetre pendant laquelle un ingest reussi dispense d'en relancer un. */
+const PRE_SETTLE_INGEST_FRESHNESS_MS = 90 * 60 * 1000;
+
+/**
+ * Rejoue l'ingest nflverse de la week a settler, sauf si un ingest reussi
+ * a deja tourne il y a moins de 90 min (le tick passe toutes les 5 min
+ * dans la fenetre de settle : sans ce garde-fou on retelechargerait le
+ * CSV a chaque passage).
+ */
+async function refreshWeekStatsBeforeSettle(
+  week: { id: string; seasonId: string; weekNumber: number },
+  now: Date,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const recent = await prisma.nflIngestRun.findFirst({
+    where: {
+      source: "nflverse",
+      weekId: week.id,
+      status: { in: ["success", "partial"] },
+      startedAt: { gte: new Date(now.getTime() - PRE_SETTLE_INGEST_FRESHNESS_MS) },
+    },
+    select: { id: true },
+  });
+  if (recent) return { ok: true };
+
+  try {
+    const result = await ingestNflverseWeek({
+      seasonId: week.seasonId,
+      weekNumber: week.weekNumber,
+    });
+    serverLog.info(
+      `[nfl-cron] pre-settle nflverse ${week.id} : stats=${result.statsUpdated}`,
+    );
+    return { ok: true };
+  } catch (e) {
+    const error = (e as Error).message;
+    serverLog.error(`[nfl-cron] pre-settle nflverse ${week.id} failed: ${error}`);
+    return { ok: false, error };
+  }
+}
+
 /**
  * Pour chaque league in_progress, genere les matchups de la semaine
  * precedente (idempotent) puis settle. Idempotent end-to-end.
  *
- * Tourne uniquement dans la fenetre Tuesday 12:00 UTC.
+ * Tourne uniquement dans la fenetre Wednesday 12:00 UTC, apres un ingest
+ * nflverse de la week (cf. `refreshWeekStatsBeforeSettle`).
  */
 export async function settleWeekTick(opts: {
   now?: Date;
@@ -316,6 +430,16 @@ export async function settleWeekTick(opts: {
     where: { status: "in_progress", seasonId: week.seasonId },
     select: { id: true },
   });
+
+  // Un settle est definitif : on ne settle que sur des stats fraiches.
+  // Echec de l'ingest => pas de settle, le tick suivant de la fenetre
+  // retente.
+  if (leagues.length > 0) {
+    const ingest = await refreshWeekStatsBeforeSettle(week, now);
+    if (!ingest.ok) {
+      return { ran: true, reason: "ingest_failed", detail: ingest.error };
+    }
+  }
 
   let totalSettled = 0;
   let totalSkipped = 0;
@@ -444,6 +568,7 @@ export async function nflFantasyOrchestratorTick(opts: {
   now?: Date;
 } = {}): Promise<{
   nflverse: TickResult;
+  schedule: TickResult;
   rosters: TickResult;
   espn: TickResult;
   lock: TickResult;
@@ -454,10 +579,11 @@ export async function nflFantasyOrchestratorTick(opts: {
   // Sequenced pour eviter pression DB simultanee. Chacun retourne
   // immediatement avec { ran:false } hors de sa fenetre.
   const nflverse = await nflverseIngestTick({ now });
+  const schedule = await nflverseScheduleTick({ now });
   const rosters = await nflverseRostersTick({ now });
   const espn = await espnGamedayTick({ now });
   const lock = await lockLineupsTick({ now });
   const settle = await settleWeekTick({ now });
   const mercato = await mercatoResolveTick({ now });
-  return { nflverse, rosters, espn, lock, settle, mercato };
+  return { nflverse, schedule, rosters, espn, lock, settle, mercato };
 }

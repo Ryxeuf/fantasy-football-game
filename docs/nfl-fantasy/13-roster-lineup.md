@@ -83,6 +83,31 @@ Cote DB :
 - Entry existe
 - Tous les `starters[].playerId` sont dans le NflFantasyRoster de l'entry
 - Lineup pas deja `lockedAt`
+- Verrouillage au coup d'envoi (cf. ci-dessous)
+
+### Verrouillage au coup d'envoi (2026-10)
+
+Le seul verrou etait global (`lockLineups`, dimanche 17h UTC) : un coach
+pouvait aligner — ou nommer capitaine — un joueur du jeudi apres son match,
+ou retirer un joueur qui avait mal joue.
+
+`services/nfl-fantasy-kickoff-lock` : un joueur dont le match a commence
+(`NflGame.kickoffAt` passe, ou match vu `in_progress`/`final`) a un ROLE fige
+pour la week — capitaine, vice, titulaire ou hors lineup. `setLineup` refuse
+tout changement qui le touche (`PLAYER_GAME_STARTED`, 409). Les autres
+joueurs restent libres jusqu'a leur propre coup d'envoi ; le verrou du
+dimanche reste en filet. Joueur sans match (bye) : jamais fige.
+
+- Le coup d'envoi suit l'EQUIPE actuelle du joueur (`NflPlayer.teamCode`).
+- Les matchs a venir existent en base grace au calendrier nflverse
+  (`nflverseScheduleTick`, 03h UTC, cf. [`17-crons.md`](./17-crons.md)).
+- `skipKickoffLock` : reserve aux ecritures SYSTEME sans connaissance des
+  resultats (lineup par defaut pose au verrou, replay, scripts e2e). Le
+  schema Zod du PUT le retire (test de garde). Le carry-over, action de
+  coach, y est soumis.
+- `GET /entries/:id/lineup` sert `kickoffs` (coup d'envoi + gel par joueur
+  du roster) ; l'ecran affiche l'heure du match, « 🔒 Match commence » et
+  masque les boutons d'un joueur fige.
 
 ### Multipliers Q3
 
@@ -96,7 +121,7 @@ Constantes exportees, utilisees par Phase 2.E `settleNflFantasyWeek`.
 `ENTRY_NOT_FOUND` / `LINEUP_LOCKED` / `INVALID_STARTERS` /
 `PLAYER_NOT_ON_ROSTER` / `DUPLICATE_PLAYER` /
 `CAPTAIN_NOT_IN_STARTERS` / `VICE_NOT_IN_STARTERS` /
-`CAPTAIN_EQUALS_VICE` / `INVALID_LINEUP_SIZE`.
+`CAPTAIN_EQUALS_VICE` / `INVALID_LINEUP_SIZE` / `PLAYER_GAME_STARTED`.
 
 ## Tests + E2E
 

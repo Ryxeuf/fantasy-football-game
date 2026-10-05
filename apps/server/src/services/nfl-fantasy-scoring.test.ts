@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    nflFantasyLeague: { findUnique: vi.fn() },
+    nflFantasyLeague: { findUnique: vi.fn(), findMany: vi.fn() },
     nflWeek: { findUnique: vi.fn() },
     nflFantasyEntry: { findMany: vi.fn() },
     nflFantasyMatchup: {
@@ -24,6 +24,7 @@ vi.mock("../prisma", () => ({
 import { prisma } from "../prisma";
 import {
   applyCaptainMultiplier,
+  careerSppDelta,
   computeStandings,
   determineWinner,
   generateMatchups,
@@ -31,6 +32,7 @@ import {
   listMatchupsForWeek,
   NflFantasyScoringError,
   pairEntriesForWeek,
+  resettleSeasonWeeks,
   settleNflFantasyWeek,
 } from "./nfl-fantasy-scoring";
 
@@ -665,6 +667,84 @@ describe("settleNflFantasyWeek", () => {
     expect(byPlayer.get("pBye")).toBeUndefined();
   });
 
+  it("resettle : rejoue un matchup deja settle, carriere creditee de l'ECART seulement", async () => {
+    // Premier settle passe AVANT l'ingest : p1 avait 0, p2 avait 4.
+    // Les stats arrivent ensuite : p1 = 7, p2 = 4 (inchange), p3 = 2 -> 0.
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
+      {
+        id: "m1",
+        homeEntryId: "eHome",
+        awayEntryId: "eAway",
+        settledAt: new Date("2026-09-29T12:00:00Z"),
+      },
+    ] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(1);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([{ id: "g1" }] as never);
+    vi.mocked(prisma.nflFantasyLineup.findMany).mockResolvedValue([
+      {
+        id: "lHome",
+        entryId: "eHome",
+        starters: [
+          { id: "sH1", playerId: "p1", isCaptain: false, isViceCaptain: false, rawSpp: 0 },
+          { id: "sH2", playerId: "p3", isCaptain: false, isViceCaptain: false, rawSpp: 2 },
+        ],
+      },
+      {
+        id: "lAway",
+        entryId: "eAway",
+        starters: [
+          { id: "sA1", playerId: "p2", isCaptain: false, isViceCaptain: false, rawSpp: 4 },
+        ],
+      },
+    ] as never);
+    vi.mocked(prisma.nflGameStat.findMany).mockResolvedValue([
+      { playerId: "p1", computedSpp: 7, sppBreakdown: null },
+      { playerId: "p2", computedSpp: 4, sppBreakdown: null },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockResolvedValue([] as never);
+
+    const result = await settleNflFantasyWeek({
+      leagueId: "lg1",
+      weekId: "2026:W3",
+      resettle: true,
+    });
+
+    expect(result.matchupsSettled).toBe(1);
+    // Le filtre settledAt: null saute en re-settle.
+    const where = vi.mocked(prisma.nflFantasyMatchup.findMany).mock.calls[0]?.[0]?.where;
+    expect(where).toEqual({ leagueId: "lg1", weekId: "2026:W3" });
+
+    const increments = new Map(
+      vi.mocked(prisma.nflFantasyPlayerCareer.upsert).mock.calls.map((c) => {
+        const arg = c[0] as {
+          create: { playerId: string };
+          update: { sppCareer: { increment: number } };
+        };
+        return [arg.create.playerId, arg.update.sppCareer.increment];
+      }),
+    );
+    expect(increments.get("p1")).toBe(7); // 7 - 0
+    expect(increments.get("p3")).toBe(-2); // 0 - 2 : l'ancien credit est repris
+    expect(increments.has("p2")).toBe(false); // ecart nul : pas d'upsert
+    expect(prisma.nflFantasyMatchup.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "m1" },
+        data: expect.objectContaining({ homeScore: 7, awayScore: 4 }),
+      }),
+    );
+  });
+
+  it("sans resettle, ne charge que les matchups non settles", async () => {
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([] as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(3);
+
+    await settleNflFantasyWeek({ leagueId: "lg1", weekId: "2026:W3" });
+
+    const where = vi.mocked(prisma.nflFantasyMatchup.findMany).mock.calls[0]?.[0]?.where;
+    expect(where).toEqual({ leagueId: "lg1", weekId: "2026:W3", settledAt: null });
+  });
+
   it("la carrière utilise rawSpp (pas finalSpp), donc captain n'inflige pas l'XP", async () => {
     vi.mocked(prisma.nflFantasyMatchup.findMany).mockResolvedValue([
       { id: "m1", homeEntryId: "eHome", awayEntryId: "eAway", settledAt: null },
@@ -756,6 +836,61 @@ describe("settleNflFantasyWeek", () => {
 // ────────────────────────────────────────────────────────────────────
 // listMatchupsForWeek
 // ────────────────────────────────────────────────────────────────────
+
+describe("careerSppDelta", () => {
+  it("premier settle : credite les rawSpp positifs, ignore les negatifs", () => {
+    expect(careerSppDelta({ rawSpp: 7, previousRawSpp: null, alreadySettled: false })).toBe(7);
+    expect(careerSppDelta({ rawSpp: -3, previousRawSpp: null, alreadySettled: false })).toBe(0);
+    // Hors re-settle, un rawSpp residuel en base est ignore.
+    expect(careerSppDelta({ rawSpp: 7, previousRawSpp: 5, alreadySettled: false })).toBe(7);
+  });
+
+  it("re-settle : ecart avec le credit precedent", () => {
+    expect(careerSppDelta({ rawSpp: 7, previousRawSpp: 0, alreadySettled: true })).toBe(7);
+    expect(careerSppDelta({ rawSpp: 4, previousRawSpp: 4, alreadySettled: true })).toBe(0);
+    expect(careerSppDelta({ rawSpp: 0, previousRawSpp: 2, alreadySettled: true })).toBe(-2);
+    // Un negatif n'avait rien credite : rien a reprendre.
+    expect(careerSppDelta({ rawSpp: 3, previousRawSpp: -1, alreadySettled: true })).toBe(3);
+    expect(careerSppDelta({ rawSpp: 3, previousRawSpp: null, alreadySettled: true })).toBe(3);
+  });
+});
+
+describe("resettleSeasonWeeks", () => {
+  it("rejoue chaque week de chaque league in_progress, erreurs isolees", async () => {
+    vi.mocked(prisma.nflFantasyLeague.findMany).mockResolvedValue([
+      { id: "lg1" },
+      { id: "lg2" },
+    ] as never);
+    const settled: string[] = [];
+    vi.mocked(prisma.nflFantasyMatchup.findMany).mockImplementation((async (
+      args: { where: { leagueId: string; weekId: string } },
+    ) => {
+      settled.push(`${args.where.leagueId}/${args.where.weekId}`);
+      if (args.where.leagueId === "lg2" && args.where.weekId === "2026:W2") {
+        throw new Error("boom");
+      }
+      return [];
+    }) as never);
+    vi.mocked(prisma.nflFantasyMatchup.count).mockResolvedValue(0);
+
+    const out = await resettleSeasonWeeks({ seasonId: "2026", fromWeek: 1, toWeek: 2 });
+
+    expect(settled).toEqual([
+      "lg1/2026:W1",
+      "lg1/2026:W2",
+      "lg2/2026:W1",
+      "lg2/2026:W2",
+    ]);
+    expect(out.leaguesProcessed).toBe(2);
+    expect(out.errors).toEqual([{ leagueId: "lg2", weekId: "2026:W2", error: "boom" }]);
+    expect(prisma.nflFantasyLeague.findMany).toHaveBeenCalledWith({
+      where: { status: "in_progress", seasonId: "2026" },
+      select: { id: true },
+    });
+    // Aucun matchup cree.
+    expect(prisma.nflFantasyMatchup.createMany).not.toHaveBeenCalled();
+  });
+});
 
 describe("listMatchupsForWeek", () => {
   it("filtre par leagueId + weekId, tri createdAt asc", async () => {
