@@ -151,4 +151,58 @@ describe("PredictionPairingCard", () => {
     renderCard({ canClose: true, closed: true, eligibility: "closed" });
     expect(screen.queryByTestId("prediction-close-pair-1")).toBeNull();
   });
+
+  it("pronostic posé : une ligne, « Modifier » rouvre la saisie", () => {
+    renderCard({
+      myPrediction: {
+        pick: "home",
+        homeScore: 2,
+        awayScore: 1,
+        grade: "pending",
+        points: 0,
+      },
+    });
+    expect(screen.getByTestId("prediction-mine-pair-1").textContent).toContain(
+      "Victoire Orques (2-1)",
+    );
+    expect(screen.queryByTestId("prediction-picker-pair-1")).toBeNull();
+    fireEvent.click(screen.getByTestId("prediction-edit-pair-1"));
+    expect(screen.getByTestId("prediction-picker-pair-1")).toBeTruthy();
+    expect(screen.queryByTestId("prediction-edit-pair-1")).toBeNull();
+    fireEvent.click(screen.getByTestId("prediction-cancel-pair-1"));
+    expect(screen.queryByTestId("prediction-picker-pair-1")).toBeNull();
+  });
+
+  it("enregistrer une modification referme la saisie et recharge", async () => {
+    const { onChanged } = renderCard({
+      myPrediction: {
+        pick: "home",
+        homeScore: null,
+        awayScore: null,
+        grade: "pending",
+        points: 0,
+      },
+    });
+    fireEvent.click(screen.getByTestId("prediction-edit-pair-1"));
+    fireEvent.click(screen.getByTestId("prediction-pick-pair-1-draw"));
+    fireEvent.click(screen.getByTestId("prediction-save-pair-1"));
+    await waitFor(() => {
+      expect(onChanged).toHaveBeenCalled();
+    });
+    expect(screen.queryByTestId("prediction-picker-pair-1")).toBeNull();
+  });
+
+  it("pas de « Modifier » sur une rencontre close", () => {
+    renderCard(CLOSED_WITH_OTHERS);
+    expect(screen.queryByTestId("prediction-edit-pair-1")).toBeNull();
+  });
+
+  it("la clôture d'une rencontre est rangée dans les options du commissaire", () => {
+    renderCard({ canClose: true });
+    const close = screen.getByTestId("prediction-close-pair-1");
+    expect(close.closest("details")).toBeTruthy();
+    expect(screen.getByTestId("prediction-admin-pair-1").textContent).toBe(
+      "Options du commissaire",
+    );
+  });
 });

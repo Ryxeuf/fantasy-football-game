@@ -14,14 +14,17 @@ import {
 
 /**
  * Saisie d'un pronostic sur une rencontre OUVERTE : l'issue (obligatoire),
- * le score (facultatif, +2 pts s'il est exact). Le serveur revalide tout —
- * clôture comprise — et le parent recharge la vue après chaque écriture,
- * plutôt que de deviner l'état obtenu.
+ * puis — une fois l'issue choisie — le score (facultatif, +2 pts s'il est
+ * exact) et la validation. Une carte vierge ne montre donc que trois
+ * boutons. Le serveur revalide tout — clôture comprise — et le parent
+ * recharge la vue après chaque écriture, plutôt que de deviner l'état obtenu.
  */
 
 interface PredictionPickerProps {
   pairing: PairingPredictionsView;
   onChanged: () => void;
+  /** Ferme la saisie sans rien envoyer (modification d'un pronostic posé). */
+  onCancel?: () => void;
 }
 
 const PICKS: readonly PredictionPick[] = ["home", "draw", "away"];
@@ -31,7 +34,11 @@ function scoreOutcome(home: string, away: string): PredictionPick | null {
   return outcomeOf(Number(home), Number(away));
 }
 
-export function PredictionPicker({ pairing, onChanged }: PredictionPickerProps) {
+export function PredictionPicker({
+  pairing,
+  onChanged,
+  onCancel,
+}: PredictionPickerProps) {
   const [draft, setDraft] = useState<PredictionDraft>(() =>
     draftFromPrediction(pairing.myPrediction),
   );
@@ -40,17 +47,20 @@ export function PredictionPicker({ pairing, onChanged }: PredictionPickerProps) 
   const [saved, setSaved] = useState(false);
   const id = pairing.id;
 
-  const updateScore = useCallback((side: "homeScore" | "awayScore", raw: string) => {
-    setSaved(false);
-    setError(null);
-    setDraft((prev) => {
-      const next = { ...prev, [side]: raw };
-      // Un score complet dit déjà l'issue : on la coche plutôt que de
-      // laisser le coach saisir une contradiction.
-      const implied = scoreOutcome(next.homeScore, next.awayScore);
-      return implied ? { ...next, pick: implied } : next;
-    });
-  }, []);
+  const updateScore = useCallback(
+    (side: "homeScore" | "awayScore", raw: string) => {
+      setSaved(false);
+      setError(null);
+      setDraft((prev) => {
+        const next = { ...prev, [side]: raw };
+        // Un score complet dit déjà l'issue : on la coche plutôt que de
+        // laisser le coach saisir une contradiction.
+        const implied = scoreOutcome(next.homeScore, next.awayScore);
+        return implied ? { ...next, pick: implied } : next;
+      });
+    },
+    [],
+  );
 
   const handleSave = useCallback(async () => {
     const checked = validatePredictionDraft(draft);
@@ -117,54 +127,67 @@ export function PredictionPicker({ pairing, onChanged }: PredictionPickerProps) 
           );
         })}
       </div>
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-xs text-gray-500">
-          Score exact (facultatif, +2 pts) :
-        </span>
-        <input
-          type="text"
-          inputMode="numeric"
-          aria-label={`Score ${pairing.home.name}`}
-          data-testid={`prediction-score-home-${id}`}
-          value={draft.homeScore}
-          disabled={busy}
-          onChange={(e) => updateScore("homeScore", e.target.value)}
-          className="w-12 rounded-md border border-gray-300 px-2 py-1 text-center"
-          placeholder="–"
-        />
-        <span aria-hidden>-</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          aria-label={`Score ${pairing.away.name}`}
-          data-testid={`prediction-score-away-${id}`}
-          value={draft.awayScore}
-          disabled={busy}
-          onChange={(e) => updateScore("awayScore", e.target.value)}
-          className="w-12 rounded-md border border-gray-300 px-2 py-1 text-center"
-          placeholder="–"
-        />
-        <button
-          type="button"
-          data-testid={`prediction-save-${id}`}
-          disabled={busy}
-          onClick={handleSave}
-          className="px-3 py-1.5 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
-        >
-          {pairing.myPrediction ? "Modifier" : "Valider"}
-        </button>
-        {pairing.myPrediction ? (
+      {draft.pick ? (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-xs text-gray-500">
+            Score exact (facultatif, +2 pts) :
+          </span>
+          <input
+            type="text"
+            inputMode="numeric"
+            aria-label={`Score ${pairing.home.name}`}
+            data-testid={`prediction-score-home-${id}`}
+            value={draft.homeScore}
+            disabled={busy}
+            onChange={(e) => updateScore("homeScore", e.target.value)}
+            className="w-12 rounded-md border border-gray-300 px-2 py-1 text-center"
+            placeholder="–"
+          />
+          <span aria-hidden>-</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            aria-label={`Score ${pairing.away.name}`}
+            data-testid={`prediction-score-away-${id}`}
+            value={draft.awayScore}
+            disabled={busy}
+            onChange={(e) => updateScore("awayScore", e.target.value)}
+            className="w-12 rounded-md border border-gray-300 px-2 py-1 text-center"
+            placeholder="–"
+          />
           <button
             type="button"
-            data-testid={`prediction-delete-${id}`}
+            data-testid={`prediction-save-${id}`}
             disabled={busy}
-            onClick={handleDelete}
-            className="text-sm text-gray-600 hover:text-red-700 underline disabled:opacity-50"
+            onClick={handleSave}
+            className="px-3 py-1.5 rounded-md bg-nuffle-gold text-white text-sm font-medium disabled:opacity-50"
           >
-            Retirer
+            {pairing.myPrediction ? "Modifier" : "Valider"}
           </button>
-        ) : null}
-      </div>
+          {pairing.myPrediction ? (
+            <button
+              type="button"
+              data-testid={`prediction-delete-${id}`}
+              disabled={busy}
+              onClick={handleDelete}
+              className="text-sm text-gray-600 hover:text-red-700 underline disabled:opacity-50"
+            >
+              Retirer
+            </button>
+          ) : null}
+          {onCancel ? (
+            <button
+              type="button"
+              data-testid={`prediction-cancel-${id}`}
+              disabled={busy}
+              onClick={onCancel}
+              className="text-sm text-gray-600 hover:text-gray-800 underline disabled:opacity-50"
+            >
+              Annuler
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       {error ? (
         <p
           data-testid={`prediction-error-${id}`}
@@ -175,7 +198,10 @@ export function PredictionPicker({ pairing, onChanged }: PredictionPickerProps) 
         </p>
       ) : null}
       {saved && !error ? (
-        <p data-testid={`prediction-saved-${id}`} className="text-sm text-green-700">
+        <p
+          data-testid={`prediction-saved-${id}`}
+          className="text-sm text-green-700"
+        >
           Pronostic enregistré.
         </p>
       ) : null}
