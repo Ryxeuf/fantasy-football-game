@@ -26,6 +26,11 @@ import { apiRequest, ApiClientError } from "../../../../lib/api-client";
 import { WeekPicker, type WeekPickerOption } from "../WeekPicker";
 import { OpponentBanner } from "./OpponentBanner";
 import { PlayerCard } from "./PlayerCard";
+import {
+  isFrozen,
+  roleChangeBlockedReason,
+  type RosterKickoffs,
+} from "./kickoff-lock";
 import { PlayStyleSelector } from "./PlayStyleSelector";
 import type {
   LeagueWithEntries,
@@ -97,6 +102,8 @@ interface LineupResponse {
     starters: LineupStarter[];
   } | null;
   previousLineup: PreviousLineupSummary | null;
+  /** Coups d'envoi du roster. Optionnel : retro-compat API anterieure. */
+  kickoffs?: RosterKickoffs;
 }
 
 interface MeResponse {
@@ -164,6 +171,7 @@ export default function LineupBuilderPage(): JSX.Element {
   const [matchup, setMatchup] = useState<NflFantasyMatchup | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [kickoffs, setKickoffs] = useState<RosterKickoffs>({});
   const [captainId, setCaptainId] = useState<string | null>(null);
   const [viceCaptainId, setViceCaptainId] = useState<string | null>(null);
 
@@ -248,6 +256,7 @@ export default function LineupBuilderPage(): JSX.Element {
       ]);
       setLineup(lineupRes.lineup);
       setPreviousLineup(lineupRes.previousLineup ?? null);
+      setKickoffs(lineupRes.kickoffs ?? {});
       if (lineupRes.lineup) {
         const next = new Set<string>(
           lineupRes.lineup.starters.map((s) => s.playerId),
@@ -282,6 +291,10 @@ export default function LineupBuilderPage(): JSX.Element {
   const toggleStarter = useCallback(
     (playerId: string) => {
       setActionError(null);
+      if (isFrozen(kickoffs, playerId)) {
+        setActionError("Match déjà commencé : ce joueur est figé pour la semaine.");
+        return;
+      }
       setSelected((prev) => {
         const next = new Set(prev);
         if (next.has(playerId)) {
@@ -298,17 +311,26 @@ export default function LineupBuilderPage(): JSX.Element {
         return next;
       });
     },
-    [captainId, viceCaptainId],
+    [captainId, viceCaptainId, kickoffs],
   );
 
   const setCaptain = useCallback(
     (playerId: string | null) => {
       setActionError(null);
       if (playerId && !selected.has(playerId)) return;
+      const blocked =
+        roleChangeBlockedReason({ kickoffs, role: "captain", currentId: captainId, nextId: playerId }) ??
+        (playerId && viceCaptainId === playerId
+          ? roleChangeBlockedReason({ kickoffs, role: "vice", currentId: viceCaptainId, nextId: null })
+          : null);
+      if (blocked) {
+        setActionError(blocked);
+        return;
+      }
       setCaptainId(playerId);
       if (playerId && viceCaptainId === playerId) setViceCaptainId(null);
     },
-    [selected, viceCaptainId],
+    [selected, captainId, viceCaptainId, kickoffs],
   );
 
   const setVice = useCallback(
@@ -319,9 +341,19 @@ export default function LineupBuilderPage(): JSX.Element {
         setActionError("Captain et vice doivent être différents.");
         return;
       }
+      const blocked = roleChangeBlockedReason({
+        kickoffs,
+        role: "vice",
+        currentId: viceCaptainId,
+        nextId: playerId,
+      });
+      if (blocked) {
+        setActionError(blocked);
+        return;
+      }
       setViceCaptainId(playerId);
     },
-    [selected, captainId],
+    [selected, captainId, viceCaptainId, kickoffs],
   );
 
   // ────────── Submit ──────────
@@ -722,6 +754,7 @@ export default function LineupBuilderPage(): JSX.Element {
                       isCaptain={captainId === pid}
                       isVice={viceCaptainId === pid}
                       locked={locked}
+                      kickoff={kickoffs[pid]}
                       canAddMore={canAddMore}
                       onToggle={() => toggleStarter(pid)}
                       onCaptain={() =>
@@ -814,6 +847,7 @@ export default function LineupBuilderPage(): JSX.Element {
                         isCaptain={false}
                         isVice={false}
                         locked={locked}
+                        kickoff={kickoffs[pid]}
                         canAddMore={canAddMore}
                         onToggle={() => toggleStarter(pid)}
                         onCaptain={() => {}}

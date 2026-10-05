@@ -4,6 +4,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     nflPlayer: { findMany: vi.fn() },
     nflGame: { findMany: vi.fn() },
+    nflFantasyRoster: { findMany: vi.fn() },
   },
 }));
 
@@ -11,6 +12,7 @@ import { prisma } from "../prisma";
 import {
   describeFrozenChanges,
   findFrozenLineupChanges,
+  getRosterKickoffs,
   hasGameStarted,
   lineupRole,
   loadPlayerKickoffs,
@@ -169,5 +171,30 @@ describe("loadPlayerKickoffs", () => {
     const out = await loadPlayerKickoffs({ weekId: "2026:W5", playerIds: [], now: SAT_NOON });
     expect(out.size).toBe(0);
     expect(prisma.nflPlayer.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("getRosterKickoffs", () => {
+  it("serialise coup d'envoi + gel pour chaque joueur du roster ayant un match", async () => {
+    vi.mocked(prisma.nflFantasyRoster.findMany).mockResolvedValue([
+      { playerId: "thu" },
+      { playerId: "bye" },
+    ] as never);
+    vi.mocked(prisma.nflPlayer.findMany).mockResolvedValue([
+      { id: "thu", teamCode: "PHI" },
+      { id: "bye", teamCode: "DAL" },
+    ] as never);
+    vi.mocked(prisma.nflGame.findMany).mockResolvedValue([
+      { homeTeam: "NYG", awayTeam: "PHI", kickoffAt: THU_KICKOFF, status: "final" },
+    ] as never);
+
+    const out = await getRosterKickoffs({ entryId: "e1", weekId: "2026:W5", now: SAT_NOON });
+
+    expect(out).toEqual({
+      thu: { kickoffAt: "2026-10-09T00:15:00.000Z", started: true },
+    });
+    expect(vi.mocked(prisma.nflFantasyRoster.findMany).mock.calls[0]?.[0]?.where).toEqual({
+      entryId: "e1",
+    });
   });
 });

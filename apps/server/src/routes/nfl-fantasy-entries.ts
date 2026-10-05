@@ -7,7 +7,7 @@
  *   POST /:entryId/roster                       addPlayerToRoster
  *   DELETE /:entryId/roster/:playerId           removePlayerFromRoster
  *
- *   GET  /:entryId/lineup?weekId=...            getLineup
+ *   GET  /:entryId/lineup?weekId=...            getLineup (+ coups d'envoi du roster)
  *   PUT  /:entryId/lineup                       setLineup
  *
  *   GET  /:entryId/rerolls?used=...             listRerolls
@@ -43,6 +43,7 @@ import {
   carryOverLineupFromPreviousWeek,
   findPreviousLineupSummary,
 } from "../services/nfl-fantasy-lineup-carryover";
+import { getRosterKickoffs } from "../services/nfl-fantasy-kickoff-lock";
 import {
   consumeInducement,
   consumeReroll,
@@ -201,7 +202,7 @@ const lineupQuerySchema = z.object({
   weekId: z.string().min(1),
 });
 
-const setLineupSchema = z.object({
+export const setLineupSchema = z.object({
   weekId: z.string().min(1),
   starters: z
     .array(
@@ -231,15 +232,21 @@ router.get(
       const { weekId } = req.query as unknown as z.infer<
         typeof lineupQuerySchema
       >;
-      // Parallelisable : lineup courante + suggestion carry-over
-      const [lineup, previousLineup] = await Promise.all([
+      // Parallelisable : lineup courante + suggestion carry-over +
+      // coups d'envoi du roster (joueurs geles grises cote UI).
+      const [lineup, previousLineup, kickoffs] = await Promise.all([
         getLineup({ entryId: req.params.entryId, weekId }),
         findPreviousLineupSummary({
           entryId: req.params.entryId,
           currentWeekId: weekId,
         }),
+        getRosterKickoffs({
+          entryId: req.params.entryId,
+          weekId,
+          now: new Date(),
+        }),
       ]);
-      res.json({ lineup, previousLineup });
+      res.json({ lineup, previousLineup, kickoffs });
     } catch (err) {
       if (!sendNflError(res, err)) {
         serverLog.error("[nfl-fantasy-entries] getLineup failed", err);

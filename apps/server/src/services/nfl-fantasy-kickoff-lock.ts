@@ -167,3 +167,32 @@ export async function loadPlayerKickoffs(opts: {
   }
   return out;
 }
+
+/** Vue API : coup d'envoi ISO + gel, par joueur du roster. */
+export type RosterKickoffs = Record<string, { kickoffAt: string; started: boolean }>;
+
+/**
+ * Coups d'envoi des joueurs du roster d'une entry pour une week, pour que
+ * l'ecran de lineup grise les joueurs geles AVANT que l'API ne refuse.
+ */
+export async function getRosterKickoffs(opts: {
+  readonly entryId: string;
+  readonly weekId: string;
+  readonly now: Date;
+}): Promise<RosterKickoffs> {
+  const roster: ReadonlyArray<{ playerId: string }> =
+    await prisma.nflFantasyRoster.findMany({
+      where: { entryId: opts.entryId },
+      select: { playerId: true },
+    });
+  const kickoffs = await loadPlayerKickoffs({
+    weekId: opts.weekId,
+    playerIds: roster.map((r) => r.playerId),
+    now: opts.now,
+  });
+  const out: RosterKickoffs = {};
+  for (const [playerId, k] of kickoffs) {
+    out[playerId] = { kickoffAt: k.kickoffAt.toISOString(), started: k.started };
+  }
+  return out;
+}

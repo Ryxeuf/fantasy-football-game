@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { RaceIcon } from "../../../RaceIcon";
+import { formatKickoff, type PlayerKickoffView } from "./kickoff-lock";
 
 export interface PlayerCardData {
   rosterId: string;
@@ -30,6 +31,8 @@ interface PlayerCardProps {
   isCaptain: boolean;
   isVice: boolean;
   locked: boolean;
+  /** Coup d'envoi du match de la semaine (absent : bye / inconnu). */
+  kickoff?: PlayerKickoffView;
   canAddMore: boolean;
   onToggle: () => void;
   onCaptain: () => void;
@@ -56,6 +59,7 @@ export function PlayerCard({
   isCaptain,
   isVice,
   locked,
+  kickoff,
   canAddMore,
   onToggle,
   onCaptain,
@@ -77,6 +81,8 @@ export function PlayerCard({
       : isStarter
         ? "border-nuffle-gold/40 bg-nuffle-gold/5"
         : "border-nuffle-bronze/20 bg-white";
+  // Match commence : role fige pour la semaine (verrou au coup d'envoi).
+  const frozen = kickoff?.started === true;
 
   return (
     <div
@@ -127,6 +133,19 @@ export function PlayerCard({
           <span>{player.teamCode ?? "FA"}</span>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
+          {kickoff && !locked && (
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                frozen
+                  ? "bg-nuffle-anthracite/10 text-nuffle-anthracite/70"
+                  : "bg-sky-100 text-sky-800"
+              }`}
+              title={frozen ? "Match commencé : rôle figé pour la semaine" : "Coup d'envoi"}
+              data-testid={`card-kickoff-${player.id}`}
+            >
+              {frozen ? "🔒 Match commencé" : `⏱ ${formatKickoff(kickoff.kickoffAt)}`}
+            </span>
+          )}
           <span className="font-mono font-semibold text-nuffle-anthracite">
             {player.currentValue != null ? `${player.currentValue} TV` : "—"}
           </span>
@@ -143,8 +162,8 @@ export function PlayerCard({
         </div>
       </div>
 
-      {/* Rangée 3 : actions (masquees si lineup lockee) */}
-      {!locked && (
+      {/* Rangée 3 : actions (masquees si lineup lockee ou joueur fige) */}
+      {!locked && !frozen && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {isStarter ? (
             <>
