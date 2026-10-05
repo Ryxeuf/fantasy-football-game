@@ -1,3 +1,23 @@
+## [1.252.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.251.0...v1.252.0) (2026-10-05)
+
+
+### ✨ Features
+
+* **dice-themes:** 36 thèmes, achat en Couronnes et admin (serveur) ([c4b6d32](https://github.com/Ryxeuf/fantasy-football-game/commit/c4b6d32549ec78232ff47dd60221058389a4f2b6))
+* **dice-themes:** dé original partout, boutique et Couronnes (web + @bb/ui) ([f25a2df](https://github.com/Ryxeuf/fantasy-football-game/commit/f25a2df6bf649c059adb70b516def500a052bc29))
+
+
+### 🐛 Bug Fixes
+
+* **crowns:** écritures du wallet atomiques, révocation et cache sûrs ([0ebf785](https://github.com/Ryxeuf/fantasy-football-game/commit/0ebf7856622248cce484511ed2c092e8aad0ebb6))
+* **dice-themes:** états honnêtes en boutique, accessibilité, 2D6 chiffrés ([dcbbf3f](https://github.com/Ryxeuf/fantasy-football-game/commit/dcbbf3f821dd46c031f097bc10021fd9174974c4))
+
+
+### 📝 Documentation
+
+* **dice-themes:** atomicité du wallet, changeset ([eb4d4a2](https://github.com/Ryxeuf/fantasy-football-game/commit/eb4d4a2114a2576ba310ce01cea9dcc1cf23d5c9))
+* **dice-themes:** change OpenSpec dice-theme-shop-and-crowns + mémoire CLAUDE.md ([bbd261f](https://github.com/Ryxeuf/fantasy-football-game/commit/bbd261f1b5b082c47aa0123ec5fa34bae7a54da7))
+
 ## [1.251.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.250.0...v1.251.0) (2026-10-05)
 
 
