@@ -271,6 +271,31 @@ describe("simulateProMatch — sprint 1.A.4", () => {
     expect(mocked.proLeagueMatch.update).not.toHaveBeenCalled();
   });
 
+  it("bac à sable : simule sur le moteur courant malgré une saison hôte pinnée", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({ isTest: true, season: { id: "s1", engineVer: "0.21.0" } }),
+    );
+    mocked.replay.upsert.mockResolvedValue({});
+    mocked.proLeagueMatch.update.mockResolvedValue({});
+
+    await expect(simulateProMatch(MATCH_ID, { sandbox: true })).resolves.toBe(true);
+
+    const update = mocked.proLeagueMatch.update.mock.calls[0][0];
+    expect(update.data.engineVer).toBe(CURRENT_ENGINE_VER);
+    expect(mocked.replay.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("bac à sable : sans effet sur un match de compétition (isTest=false)", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({ isTest: false, season: { id: "s1", engineVer: "0.21.0" } }),
+    );
+
+    await expect(simulateProMatch(MATCH_ID, { sandbox: true })).rejects.toThrow(
+      /Engine version mismatch/,
+    );
+    expect(mocked.replay.upsert).not.toHaveBeenCalled();
+  });
+
   it("refuse de re-simuler un match déjà sim avec un autre engineVer", async () => {
     mocked.proLeagueMatch.findUnique.mockResolvedValue(
       makeMatch({

@@ -188,12 +188,14 @@ export async function createTestMatch(
   // Simulate immediately. Le sim-runner observe les métriques
   // Prometheus comme un match prod (Lot 2.A.3). Les guards (Lot
   // 2.C.3) excluent ces matchs des agrégateurs.
-  await simulateProMatch(matchId);
+  // Bac à sable : la saison n'est qu'un hôte, le match tourne sur le
+  // moteur COURANT même si elle est pinnée à une version antérieure.
+  await simulateProMatch(matchId, { sandbox: true });
 
   return {
     matchId,
     seasonId: season.id,
-    engineVer: season.engineVer || CURRENT_ENGINE_VER,
+    engineVer: CURRENT_ENGINE_VER,
   };
 }
 
@@ -283,7 +285,7 @@ export async function resimulateTestMatch(
 ): Promise<ResimulateTestMatchResult> {
   const match = await prisma.proLeagueMatch.findUnique({
     where: { id: input.matchId },
-    select: { id: true, isTest: true, season: { select: { engineVer: true } } },
+    select: { id: true, isTest: true },
   });
   if (!match) {
     throw new Error(`ProLeagueMatch '${input.matchId}' introuvable`);
@@ -322,11 +324,11 @@ export async function resimulateTestMatch(
     });
   });
 
-  await simulateProMatch(input.matchId);
+  await simulateProMatch(input.matchId, { sandbox: true });
 
   return {
     matchId: input.matchId,
-    engineVer: (match.season.engineVer as string) || CURRENT_ENGINE_VER,
+    engineVer: CURRENT_ENGINE_VER,
     driverKind: driverKindOverride,
   };
 }
