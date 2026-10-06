@@ -238,7 +238,11 @@ et Couronnes (flag `crowns`) sont en recette. Restent :
 - **Sources de Couronnes hors Pro League** : aujourd'hui seul l'admin en
   crédite (`PATCH /admin/wallets/:id/balance`). Bonus quotidien, récompenses
   de ligue ou d'Oracle des pronostics (cf. la suite « conversion rétroactive »
-  ci-dessus) sont à décider avant d'ouvrir `crowns` à tous.
+  ci-dessus) sont à décider avant d'ouvrir `crowns` à tous. Direction retenue
+  le 2026-10-06 (feuilles validées + succès + plafond, pas de bonus
+  quotidien) et catalogue des prochains puits dans
+  [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](../explorations/2026-10-06-boutique-couronnes.md).
+  Le joker de pronostic du 2026-09-27 y est enterré.
 - **App mobile (Expo)** : le choix de blocage y reste textuel, aucun dé
   dessiné ; brancher `@bb/ui/dice` (skins) côté React Native.
 - **Upload de nouvelles faces depuis l'admin** : un thème reste un contrat de

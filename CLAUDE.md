@@ -1996,3 +1996,16 @@ edition du `.json`, `pnpm --filter web typecheck` +
   1,5-1,9 TD par match (référence FUMBBL 2,1-4,1), calibrage en suite.
   Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md).
+- **2026-10-06** : **Exploration « que vendre en Couronnes après les dés ? »**
+  (`/opsx:explore`, aucun code). Constat : hors Pro League, UN puits (thèmes
+  de dés) et AUCUN robinet (seul l'admin crédite ; le type `BADGE` n'est
+  jamais écrit). Décisions : Couronnes 100 % gagnées (pas d'euros, pas assez
+  de matière ni d'utilisateurs), couleurs d'équipe débloquées par COACH,
+  joker de pronostic enterré, plateau en ligne hors périmètre (jeu sur table,
+  feuille saisie après coup). Sources : la feuille validée (participation,
+  pas victoire — donc insensible à l'invalidation), les succès, un plafond ;
+  pas de bonus quotidien. Puits retenus, par ordre : couleurs + blason
+  d'équipe, Gazette de la rencontre (coût réel), impression (planche de
+  cartes, cadres, thèmes PDF), épitaphe. Un habillage qui signale un statut
+  est dérivé et gratuit ; seul un style se vend. Voir
+  [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](./docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).
