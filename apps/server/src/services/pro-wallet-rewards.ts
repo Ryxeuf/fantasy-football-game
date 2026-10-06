@@ -95,15 +95,12 @@ export async function grantFirstTimeBonus(
         nextEligibleAt: null,
       };
     }
-    // Credit dans la meme transaction.
-    const w = await tx.proWallet.findUnique({
-      where: { userId },
-      select: { crowns: true },
-    });
-    const current = (w?.crowns as number | undefined) ?? 0;
+    // Credit dans la meme transaction, par INCRÉMENT : une valeur calculée
+    // sur une lecture préalable écraserait l'écriture d'un autre écrivain
+    // concurrent (exigence « écritures atomiques » de la capacité `crowns`).
     const updated = await tx.proWallet.update({
       where: { userId },
-      data: { crowns: current + FIRST_TIME_BONUS_AMOUNT },
+      data: { crowns: { increment: FIRST_TIME_BONUS_AMOUNT } },
       select: { crowns: true },
     });
     await tx.proTransaction.create({
@@ -166,16 +163,10 @@ export async function claimDailyBonus(
       }
     }
 
-    // Credit dans la meme transaction. La lecture suivante est garantie
-    // de voir nos writes intermediaires (snapshot isolation).
-    const w = await tx.proWallet.findUnique({
-      where: { userId },
-      select: { crowns: true },
-    });
-    const current = (w?.crowns as number | undefined) ?? 0;
+    // Credit dans la meme transaction, par INCRÉMENT (cf. grantFirstTimeBonus).
     const updated = await tx.proWallet.update({
       where: { userId },
-      data: { crowns: current + DAILY_BONUS_AMOUNT },
+      data: { crowns: { increment: DAILY_BONUS_AMOUNT } },
       select: { crowns: true },
     });
     await tx.proTransaction.create({

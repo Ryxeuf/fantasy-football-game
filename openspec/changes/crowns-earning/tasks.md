@@ -26,8 +26,8 @@
 
 ## 5. Dette des écrivains du wallet
 
-- [ ] 5.1 Passer `grantFirstTimeBonus` et `claimDailyBonus` (`pro-wallet-rewards.ts`) à `{ increment }` dans leurs transactions ; vérifier que leurs tests passent et qu'un test asserte l'incrément (plus d'écriture « solde lu + montant »).
-- [ ] 5.2 Passer `pro-hall-of-fame-dedicate.ts` et `pro-tournament-entry.ts` au décrément conditionnel (`updateMany where crowns >= montant`, 0 ligne ⇒ `InsufficientFundsError`) ; vérifier par tests : solde insuffisant refusé, jamais de solde négatif.
+- [x] 5.1 Passer `grantFirstTimeBonus` et `claimDailyBonus` (`pro-wallet-rewards.ts`) à `{ increment }` dans leurs transactions ; vérifier que leurs tests passent et qu'un test asserte l'incrément (plus d'écriture « solde lu + montant »).
+- [x] 5.2 Passer `pro-hall-of-fame-dedicate.ts` et `pro-tournament-entry.ts` au décrément conditionnel (`updateMany where crowns >= montant`, 0 ligne ⇒ `InsufficientFundsError`) ; vérifier par tests : solde insuffisant refusé, jamais de solde négatif.
 
 ## 6. Intégration
 

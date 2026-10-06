@@ -115,6 +115,26 @@ describe("dedicateHallOfFame — Lot P.B.2", () => {
     ).rejects.toThrow(InsufficientFundsError);
   });
 
+  it("solde vidé entre la lecture et l'écriture (P2025) : InsufficientFundsError, rien d'écrit", async () => {
+    mocked.proHallOfFameDedication.findUnique.mockResolvedValueOnce(null);
+    const txCreate = vi.fn();
+    const dedCreate = vi.fn();
+    mocked.$transaction.mockImplementationOnce(async (cb) => {
+      const tx = {
+        proWallet: {
+          findUnique: vi.fn().mockResolvedValue({ crowns: 1000 }),
+          update: vi.fn().mockRejectedValue(Object.assign(new Error("gone"), { code: "P2025" })),
+        },
+        proTransaction: { create: txCreate },
+        proHallOfFameDedication: { create: dedCreate },
+      };
+      return cb(tx);
+    });
+    await expect(dedicateHallOfFame("u1", "hof_1", "Hello")).rejects.toThrow(InsufficientFundsError);
+    expect(txCreate).not.toHaveBeenCalled();
+    expect(dedCreate).not.toHaveBeenCalled();
+  });
+
   it("happy path : granted=true + debit + ref + dedication cree", async () => {
     mocked.proHallOfFameDedication.findUnique.mockResolvedValueOnce(null);
     const txCreate = vi.fn().mockResolvedValue({ id: "tx_1" });
@@ -141,9 +161,10 @@ describe("dedicateHallOfFame — Lot P.B.2", () => {
     expect(out.message).toBe("Pour Grom, le meilleur");
     expect(out.costCrowns).toBe(DEDICATE_COST_CROWNS);
     expect(out.balance).toBe(500);
+    // Décrément conditionnel, jamais « solde lu − coût ».
     expect(walletUpdate).toHaveBeenCalledWith({
-      where: { userId: "u1" },
-      data: { crowns: 500 },
+      where: { userId: "u1", crowns: { gte: DEDICATE_COST_CROWNS } },
+      data: { crowns: { decrement: DEDICATE_COST_CROWNS } },
       select: { crowns: true },
     });
     expect(txCreate).toHaveBeenCalledWith({

@@ -21,7 +21,11 @@
  */
 
 import { prisma } from "../prisma";
-import { InsufficientFundsError, getOrCreateWallet } from "./pro-wallet";
+import {
+  InsufficientFundsError,
+  decrementOrThrow,
+  getOrCreateWallet,
+} from "./pro-wallet";
 
 export const DEFAULT_ENTRY_FEE_CROWNS = 100;
 
@@ -139,11 +143,11 @@ export async function enterTournament(
     if (current < fee) {
       throw new InsufficientFundsError(current, fee);
     }
-    const updated = await tx.proWallet.update({
-      where: { userId },
-      data: { crowns: current - fee },
-      select: { crowns: true },
-    });
+    // Décrément CONDITIONNEL (`crowns >= coût` rejoué dans l'écriture) : la
+    // lecture ci-dessus n'est qu'un refus rapide, jamais la valeur écrite.
+    const updated = {
+      crowns: await decrementOrThrow(tx, userId, fee, current),
+    };
     await tx.proTransaction.create({
       data: {
         walletId: userId,

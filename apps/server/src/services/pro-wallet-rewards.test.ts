@@ -90,6 +90,13 @@ describe("grantFirstTimeBonus — sprint 1.D.6", () => {
     expect(out.granted).toBe(true);
     expect(out.amount).toBe(FIRST_TIME_BONUS_AMOUNT);
     expect(out.balance).toBe(1000);
+    // Écriture atomique : incrément, jamais « solde lu + montant ».
+    expect(mocked.proWallet.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: USER },
+        data: { crowns: { increment: FIRST_TIME_BONUS_AMOUNT } },
+      }),
+    );
     expect(out.nextEligibleAt).toBeNull();
     expect(mocked.$transaction).toHaveBeenCalledTimes(1);
     expect(mocked.proTransaction.create).toHaveBeenCalledWith(
@@ -150,7 +157,7 @@ describe("claimDailyBonus — sprint 1.D.6", () => {
     expect(mocked.proWallet.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: USER },
-        data: { crowns: 50 },
+        data: { crowns: { increment: DAILY_BONUS_AMOUNT } },
       }),
     );
     expect(mocked.proTransaction.create).toHaveBeenCalledWith(

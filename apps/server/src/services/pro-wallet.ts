@@ -141,8 +141,12 @@ function isRecordNotFound(e: unknown): boolean {
  * mise à jour d'un écrivain concurrent (achat de thème de dés, ajustement
  * admin) : le second écrasait le solde avec une valeur calculée sur un état
  * périmé. `current` ne sert qu'au message d'erreur.
+ *
+ * Exporté pour les débits qui vivent dans leur propre transaction métier
+ * (dédicace au Hall of Fame, entrée de tournoi) : à appeler DANS la
+ * transaction, avec le `tx` reçu.
  */
-async function decrementOrThrow(
+export async function decrementOrThrow(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   tx: any,
   userId: string,
