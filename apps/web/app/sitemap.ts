@@ -58,6 +58,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.6,
     }),
+    sitemapEntryWithAlternates('/aide', {
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    }),
     sitemapEntryWithAlternates('/support', {
       lastModified: now,
       changeFrequency: 'monthly',

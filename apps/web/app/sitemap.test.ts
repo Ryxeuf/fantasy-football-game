@@ -62,6 +62,9 @@ describe("sitemap — positions de roster", () => {
     const entries = await sitemap();
     const urls = entries.map((e) => e.url);
 
+    // Page d'aide : toutes les fonctionnalites du site.
+    expect(urls.some((u) => u.endsWith("/aide"))).toBe(true);
+
     // Pages d'etudes/comparateur de positions (entrees statiques).
     expect(urls.some((u) => u.endsWith("/teams/positions"))).toBe(true);
     expect(urls.some((u) => u.endsWith("/teams/positions/comparer"))).toBe(
