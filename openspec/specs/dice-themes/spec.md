@@ -57,10 +57,11 @@ d'équipe ; chaque id du catalogue serveur DOIT avoir un skin dans
 - THEN la popup de choix de blocage, le journal et le dé animé DOIVENT être dessinés dans ce thème
 
 ### Requirement: Le coach choisit son thème dans la boutique
-Quand le flag est actif, la boutique (`/me/dice-themes`) DOIT lister les
-thèmes en vente et ceux que le coach possède, avec un aperçu de leurs faces,
-marquer le thème actif et permettre de choisir un thème possédé. Le profil
-DOIT montrer le thème actif et mener à la boutique.
+Quand le flag est actif, la catégorie « Thèmes de dés » de la boutique
+(`/me/shop/dice-themes`) DOIT lister les thèmes en vente et ceux que le
+coach possède, avec un aperçu de leurs faces, marquer le thème actif et
+permettre de choisir un thème possédé. Le profil DOIT montrer le thème actif
+et mener à cette catégorie.
 
 #### Scenario: Choix d'un thème possédé
 - WHEN le coach choisit un thème possédé

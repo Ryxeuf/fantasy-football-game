@@ -67,3 +67,61 @@ etre conditionnes par le feature flag `online_play`.
 - WHEN le flag `online_play` est actif pour l'utilisateur
 - THEN les points d'entree "Jouer en ligne" DOIVENT etre affiches
 - AND la route `/me/matches` DOIT etre accessible
+
+### Requirement: Valeur principale dans les premiers écrans de l'accueil
+La home publique DOIT présenter les compétitions (ligue et coupes)
+immédiatement après le hero, avant le catalogue de référence et la vitrine
+des factions.
+
+#### Scenario: Ordre des sections
+- WHEN un visiteur ouvre `/`
+- THEN la section des compétitions DOIT suivre directement le hero
+- AND le catalogue de référence DOIT précéder la vitrine des factions
+
+### Requirement: Appel principal selon l'état du visiteur
+Le hero DOIT proposer l'inscription (avec retour à `/me/teams`) à un
+visiteur non reconnu, accompagnée d'un lien de connexion, et l'accès direct
+à `/me/teams` à un coach connecté.
+
+#### Scenario: Visiteur déconnecté
+- WHEN un visiteur sans `auth_token` ouvre `/`
+- THEN l'appel principal DOIT pointer vers `/register?redirect=%2Fme%2Fteams`
+- AND un lien DOIT pointer vers `/login?redirect=%2Fme%2Fteams`
+
+#### Scenario: Coach connecté
+- WHEN un coach avec un `auth_token` valide ouvre `/`
+- THEN l'appel principal DOIT pointer vers `/me/teams`
+- AND aucun lien de connexion NE DOIT être affiché
+
+### Requirement: Catalogue de référence entièrement lié
+Chaque tuile du catalogue de la home DOIT mener à une page, sans doublon de
+lien, et le catalogue DOIT inclure les règles (`/compendium`), l'aide de jeu
+(`/aide-de-jeu`) et la tier-list (`/teams/tier-list`).
+
+#### Scenario: Tuiles
+- WHEN la home est rendue
+- THEN chaque tuile DOIT être un lien
+- AND aucune rangée d'accès rapide dupliquant ces liens NE DOIT être affichée
+
+### Requirement: Bandeau « À la une » lisible sans texte en mouvement
+Quand le flag `home_news_ticker` est actif et que l'API sert des éléments, la
+home DOIT présenter les résultats de ligue et de coupe en cartes fixes et les
+autres actualités (Gazette, inscriptions ouvertes) sur une ligne affichant un
+seul élément à la fois. Aucun texte NE DOIT défiler en continu.
+
+#### Scenario: Résultat en carte
+- WHEN l'API sert un résultat de ligue « Rats 2 – 1 Nains »
+- THEN une carte liée à la page de la compétition DOIT afficher les deux
+  équipes, leur score et marquer « Rats » comme vainqueur
+- AND l'âge de l'évènement DOIT être affiché en temps relatif
+
+#### Scenario: Plusieurs actualités
+- WHEN l'API sert plus d'une actualité hors résultats
+- THEN la ligne DOIT en afficher une seule, avec des commandes
+  « précédente », « suivante » et « pause »
+- AND la rotation automatique NE DOIT PAS démarrer si l'utilisateur préfère
+  réduire les animations
+
+#### Scenario: Zone vide
+- WHEN l'API ne sert que des résultats (ou que des actualités)
+- THEN seule la zone concernée DOIT être rendue
