@@ -17,7 +17,13 @@ export type CompendiumBlock =
       variant: "info" | "warning" | "example";
       title?: string;
       text: string;
-    };
+    }
+  /**
+   * Illustration : les faces d'un dé, dessinées dans le thème de dés du
+   * coach (`BlockDieIcon`). Bloc PUREMENT visuel — aucun texte de règle,
+   * donc rien à reformuler ni à transcrire côté `.md`.
+   */
+  | { type: "dice"; die: "block"; caption?: string };
 
 export interface CompendiumChapter {
   /** Identifiant d'URL, ex. "coup-d-envoi". */

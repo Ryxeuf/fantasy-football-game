@@ -23,6 +23,8 @@ function blockText(block: CompendiumBlock): string {
       return [block.caption ?? "", ...block.columns, ...block.rows.flat()].join(
         " ",
       );
+    case "dice":
+      return block.caption ?? "";
     default:
       return "";
   }

@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-09-01a",
+    "version": "2026-10-06a",
     "disclaimer": "Résumés de règles rédigés par Nuffle Arena à des fins d'aide de jeu (projet de fans indépendant, sans affiliation à Games Workshop). Ne remplace pas le livre de règles officiel."
   },
   "chapters": [
@@ -176,6 +176,11 @@
         {
           "type": "paragraph",
           "text": "Le Dé de Blocage est un dé à six faces décorées de **cinq icônes** au lieu des chiffres 1 à 6. Chaque icône décrit une issue différente de l'Action de Blocage, du blocage réussi à la contre-attaque de la cible. **Repoussé** occupe deux faces ; les quatre autres résultats une seule chacun."
+        },
+        {
+          "type": "dice",
+          "die": "block",
+          "caption": "Les six faces du Dé de Blocage, de la pire à la meilleure pour l'attaquant"
         },
         {
           "type": "table",

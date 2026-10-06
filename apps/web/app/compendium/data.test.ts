@@ -21,6 +21,8 @@ function blockText(b: CompendiumBlock): string {
       return b.items.join(" ");
     case "table":
       return [b.caption ?? "", ...b.columns, ...b.rows.flat()].join(" ");
+    case "dice":
+      return b.caption ?? "";
   }
 }
 
@@ -47,7 +49,7 @@ describe("compendium data integrity", () => {
   });
 
   it("ne contient que des blocs au schéma valide", () => {
-    const allowed = new Set(["heading", "paragraph", "list", "table", "callout"]);
+    const allowed = new Set(["heading", "paragraph", "list", "table", "callout", "dice"]);
     for (const c of chapters) {
       c.blocks.forEach((b, i) => {
         const ctx = `${c.slug}#${i}`;
@@ -56,6 +58,7 @@ describe("compendium data integrity", () => {
         if (b.type === "callout")
           expect(["info", "warning", "example"]).toContain(b.variant);
         if (b.type === "list") expect(b.items.length).toBeGreaterThan(0);
+        if (b.type === "dice") expect(["block"]).toContain(b.die);
         if (b.type === "table") {
           expect(b.columns.length).toBeGreaterThan(0);
           b.rows.forEach((row, r) =>
