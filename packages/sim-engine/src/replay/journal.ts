@@ -20,6 +20,7 @@ import { applyMove, makeRNG } from '@bb/game-engine';
 import type { GameLogEntry, GameState, Move, RNG } from '@bb/game-engine';
 
 import { executeHeadlessDrive } from '../driver/full-driver-halftime';
+import type { TacticalProfile } from '../tactics/tactical-profile';
 
 /** Version du format de journal (sérialisée dans le payload compressé). */
 export const REPLAY_JOURNAL_VERSION = 2 as const;
@@ -50,6 +51,15 @@ export interface ReplayJournal {
   /** État après le coup d'envoi d'ouverture, `gameLog` vidé. */
   readonly initialState: GameState;
   readonly steps: readonly ReplayJournalStep[];
+  /**
+   * Lot 4 — profils tactiques des deux coachs AU MOMENT du match, figés
+   * avec le journal : le profil vivant évolue ensuite, le replay doit
+   * rester lisible tel qu'il a été joué.
+   */
+  readonly profiles?: {
+    readonly home: TacticalProfile;
+    readonly away: TacticalProfile;
+  };
 }
 
 /** Flux de dés d'un pas du journal. */

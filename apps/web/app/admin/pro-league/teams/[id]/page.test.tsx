@@ -13,6 +13,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
+// Lot 4 — le panneau coach charge ses propres données (testé à part dans
+// `_components/CoachPanel.test.tsx`) ; on l'isole pour que l'ordre des
+// appels `fetch` du formulaire de branding reste celui asserté ici.
+vi.mock("./_components/CoachPanel", () => ({
+  default: ({ teamId }: { teamId: string }) => (
+    <div data-testid="coach-panel-stub">coach:{teamId}</div>
+  ),
+}));
+
 import AdminProLeagueTeamEditPage from "./page";
 
 const originalFetch = global.fetch;
@@ -78,6 +87,14 @@ describe("AdminProLeagueTeamEditPage", () => {
     expect((screen.getByTestId("input-motto") as HTMLInputElement).value).toBe(
       "Smash hour",
     );
+  });
+
+  it("monte le panneau coach pour l'équipe chargée", async () => {
+    global.fetch = mockGetTeam() as unknown as typeof fetch;
+    render(<AdminProLeagueTeamEditPage />);
+    await waitFor(() => {
+      expect(screen.getByTestId("coach-panel-stub").textContent).toBe("coach:t1");
+    });
   });
 
   it("dirty count = 0 a l'initial", async () => {

@@ -1038,6 +1038,31 @@ exports.Prisma.ProTeamScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ProCoachScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  name: 'name',
+  philosophy: 'philosophy',
+  profile: 'profile',
+  anchorProfile: 'anchorProfile',
+  memory: 'memory',
+  experience: 'experience',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProCoachMemoryScalarFieldEnum = {
+  id: 'id',
+  coachId: 'coachId',
+  matchId: 'matchId',
+  drives: 'drives',
+  changes: 'changes',
+  profileBefore: 'profileBefore',
+  profileAfter: 'profileAfter',
+  summary: 'summary',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.ProTeamRosterScalarFieldEnum = {
   id: 'id',
   teamId: 'teamId',
@@ -1587,6 +1612,8 @@ exports.Prisma.ModelName = {
   Feedback: 'Feedback',
   ProLeague: 'ProLeague',
   ProTeam: 'ProTeam',
+  ProCoach: 'ProCoach',
+  ProCoachMemory: 'ProCoachMemory',
   ProTeamRoster: 'ProTeamRoster',
   ProLeagueSeason: 'ProLeagueSeason',
   ProLeagueRound: 'ProLeagueRound',

@@ -7,6 +7,44 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.30.0 (sans bump) — 2026-10-05 — **Lot 5 « exploitation »**
+
+Change OpenSpec `pro-league-exploitation`. Les issues de match ne changent
+pas : pas de nouvelle version du moteur.
+
+- **Pool de `worker_threads`** (`src/pool/`) : `createSimPool({ size })` →
+  `simulate` / `simulateMany` / `stats` / `close`, file FIFO, worker remplacé
+  s'il meurt, `stripFullReplay` pour ne transférer que le journal. Le worker
+  s'amorce par `sim-worker-boot.mjs` (register tsx depuis le thread) ; tsx
+  passe en dépendance de production.
+- **Bench asynchrone** : `runBenchAsync` / `runBenchMatrixAsync` (mêmes
+  graines que les versions synchrones) et `pnpm sim:bench:nightly` (matrice
+  complète sur le pool, JSON `bench/nightly/<engineVer>.json`).
+
+## 0.30.0 — 2026-10-05 — **Lot 4 « évolution persistée »**
+
+Change OpenSpec `pro-league-coach-evolution`. Le coach d'une équipe n'est
+plus un profil de race figé : il ÉVOLUE entre deux matchs, de façon bornée
+et expliquée, et les joueurs portent une forme qui pèse sur ses choix.
+
+- **Adaptation bornée et expliquée** (`coach/adaptation.ts`, pur) : le
+  rapport des drives du match (stratégie dominante, possession, issue,
+  turnovers) alimente une mémoire par stratégie (moyenne mobile
+  exponentielle de la récompense), puis chaque paramètre du profil bouge
+  d'au plus `learningRate` points vers ce que les stratégies qui rapportent
+  « tirent » (`STRATEGY_INFLUENCE`), dans `ancre ± bande` (15 par défaut),
+  avec un rappel lent vers l'ancre sans signal. Chaque changement porte sa
+  raison en français. Aucun self-play.
+- **Rapport de drives** (`SimResult.coachReport`) : le coach suit les
+  drives des deux équipes (un TD clôt le drive des deux côtés, la mi-temps
+  aussi) et les rend au driver.
+- **Forme persistée** (`SimRosterPlayer.form`) : la méforme recule les
+  actions à dés d'un joueur dans l'ordre du tour, la forme les avance
+  (`formPenalty`) et module la température. Sans forme, rien ne change :
+  le bench est re-snapshotté à l'identique sous `0.30.0`.
+- **Profils figés dans le journal** (`ReplayJournal.profiles`) : un replay
+  reste lisible tel qu'il a été joué, le profil vivant évoluant ensuite.
+
 ## 0.29.0 — 2026-10-05 — **Lot 3 « le cerveau du coach »**
 
 Change OpenSpec `pro-league-coach-brain`. Le full driver ne choisit plus ses

@@ -12,6 +12,7 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { API_BASE } from "../../../../auth-client";
+import CoachPanel from "./_components/CoachPanel";
 
 interface ProTeamDetail {
   readonly id: string;
@@ -520,6 +521,11 @@ export default function AdminProLeagueTeamEditPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Lot 4 « évolution persistée » — le coach IA de l'équipe. */}
+      <div className="mt-6">
+        <CoachPanel teamId={team.id} />
       </div>
     </div>
   );

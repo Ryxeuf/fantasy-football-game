@@ -32,7 +32,6 @@ import {
   PRO_LEAGUE_TEAM_BY_ID,
   compressReplay,
   computeCompressionStats,
-  simulateMatch,
   type MatchEvent,
   type SimInput,
   type SimResult,
@@ -41,6 +40,9 @@ import {
 
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
+import { applyPostMatchEvolution, getCoachProfile } from "./pro-coach";
+import { simulateMatchOffLoop } from "./pro-league-sim-pool";
+import { applyMatchFormToRosters } from "./pro-roster-form";
 import { appMetrics, type SimDriver, type SimOutcome } from "../utils/metrics";
 import { resolveDriverKind } from "./pro-league-driver-resolver";
 import {
@@ -118,6 +120,8 @@ export interface RawProRoster {
   readonly st: number;
   readonly ag: number;
   readonly pa: number | null;
+  /// Lot 4 — forme persistée (0-100), optionnelle pour les lectures anciennes.
+  readonly form?: number | null;
   readonly av: number;
   readonly skills: unknown;
 }
@@ -159,6 +163,8 @@ export function mapToSimRoster(
     pa: r.pa ?? 0,
     av: r.av,
     skills: parseRosterSkills(r.skills),
+    // Lot 4 — la forme persistée module l'appétit pour le risque du coach.
+    form: typeof r.form === "number" ? r.form : undefined,
   }));
 }
 
@@ -253,6 +259,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
         pa: true,
         av: true,
         skills: true,
+        form: true,
       },
       orderBy: { name: "asc" },
     }),
@@ -268,6 +275,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
         pa: true,
         av: true,
         skills: true,
+        form: true,
       },
       orderBy: { name: "asc" },
     }),
@@ -276,13 +284,21 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   const homeRoster = mapToSimRoster(homeRosterRaw);
   const awayRoster = mapToSimRoster(awayRosterRaw);
 
+  // Lot 4 « évolution persistée » — le profil tactique vient du COACH de
+  // l'équipe (profil vivant, borné autour du profil de race), créé à la
+  // demande au premier match. Le journal du replay le fige.
+  const [homeTactics, awayTactics] = await Promise.all([
+    getCoachProfile(match.homeTeam.id as string),
+    getCoachProfile(match.awayTeam.id as string),
+  ]);
+
   const input: SimInput = {
     seed,
     home: {
       id: homeProfile.id,
       name: homeProfile.name,
       side: "home",
-      tactics: homeProfile.tactics,
+      tactics: homeTactics,
       tv: homeProfile.tv,
       roster: homeRoster.length > 0 ? homeRoster : undefined,
     },
@@ -290,7 +306,7 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
       id: awayProfile.id,
       name: awayProfile.name,
       side: "away",
-      tactics: awayProfile.tactics,
+      tactics: awayTactics,
       tv: awayProfile.tv,
       roster: awayRoster.length > 0 ? awayRoster : undefined,
     },
@@ -331,7 +347,9 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   let result: SimResult;
   const simStart = process.hrtime.bigint();
   try {
-    result = simulateMatch(input, { driverKind: driver });
+    // Lot 5 « exploitation » — hors de l'event loop (pool de worker_threads),
+    // inline en test ou avec PRO_LEAGUE_SIM_WORKERS=0.
+    result = await simulateMatchOffLoop(input, { driverKind: driver });
   } catch (err: unknown) {
     const elapsedSec = Number(process.hrtime.bigint() - simStart) / 1e9;
     appMetrics.observeSimMatchDuration(
@@ -508,7 +526,39 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
     });
   });
 
+  // Lot 4 « évolution persistée » — APRÈS le commit du match : les deux
+  // coachs intègrent leurs drives, la forme des joueurs suit le momentum.
+  // Best-effort : un match persisté ne redevient jamais `failed` pour une
+  // évolution ratée. Les matchs de test (bac à sable admin) n'évoluent pas.
+  if (match.isTest !== true) {
+    await runPostMatchEvolution(matchId, match.homeTeam.id as string, match.awayTeam.id as string, result);
+  }
+
   return true;
+}
+
+async function runPostMatchEvolution(
+  matchId: string,
+  homeTeamId: string,
+  awayTeamId: string,
+  result: SimResult,
+): Promise<void> {
+  if (result.coachReport) {
+    await applyPostMatchEvolution({
+      matchId,
+      homeTeamId,
+      awayTeamId,
+      drives: result.coachReport.drives,
+    });
+  }
+  try {
+    await applyMatchFormToRosters({
+      teamIds: [homeTeamId, awayTeamId],
+      momentum: result.summary.momentum,
+    });
+  } catch (e) {
+    serverLog.error(`[pro-roster-form] form update failed for match ${matchId}`, e);
+  }
 }
 
 /**

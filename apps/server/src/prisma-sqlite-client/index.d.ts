@@ -322,6 +322,22 @@ export type ProLeague = $Result.DefaultSelection<Prisma.$ProLeaguePayload>
  */
 export type ProTeam = $Result.DefaultSelection<Prisma.$ProTeamPayload>
 /**
+ * Model ProCoach
+ * Lot 4 « évolution persistée » — le coach IA d'une ProTeam. Son profil
+ * tactique VIVANT évolue entre deux matchs (`adaptCoachProfile`, borné à
+ * `anchorProfile ± bande`) ; l'ancre est le profil de race d'origine, ou
+ * celui posé par l'admin. Créé à la demande (create-if-missing) à partir
+ * de `race-profiles.ts` : aucune ligne n'existe avant le premier match.
+ */
+export type ProCoach = $Result.DefaultSelection<Prisma.$ProCoachPayload>
+/**
+ * Model ProCoachMemory
+ * Lot 4 — journal APPEND-ONLY de l'évolution d'un coach : une ligne par
+ * match intégré, avec le profil avant / après, les drives du match et les
+ * changements expliqués. Jamais d'UPDATE ni de DELETE (hors reset admin).
+ */
+export type ProCoachMemory = $Result.DefaultSelection<Prisma.$ProCoachMemoryPayload>
+/**
  * Model ProTeamRoster
  * 
  */
@@ -1256,6 +1272,26 @@ export class PrismaClient<
   get proTeam(): Prisma.ProTeamDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.proCoach`: Exposes CRUD operations for the **ProCoach** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProCoaches
+    * const proCoaches = await prisma.proCoach.findMany()
+    * ```
+    */
+  get proCoach(): Prisma.ProCoachDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.proCoachMemory`: Exposes CRUD operations for the **ProCoachMemory** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ProCoachMemories
+    * const proCoachMemories = await prisma.proCoachMemory.findMany()
+    * ```
+    */
+  get proCoachMemory(): Prisma.ProCoachMemoryDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.proTeamRoster`: Exposes CRUD operations for the **ProTeamRoster** model.
     * Example usage:
     * ```ts
@@ -2073,6 +2109,8 @@ export namespace Prisma {
     Feedback: 'Feedback',
     ProLeague: 'ProLeague',
     ProTeam: 'ProTeam',
+    ProCoach: 'ProCoach',
+    ProCoachMemory: 'ProCoachMemory',
     ProTeamRoster: 'ProTeamRoster',
     ProLeagueSeason: 'ProLeagueSeason',
     ProLeagueRound: 'ProLeagueRound',
@@ -2123,7 +2161,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -6493,6 +6531,154 @@ export namespace Prisma {
           }
         }
       }
+      ProCoach: {
+        payload: Prisma.$ProCoachPayload<ExtArgs>
+        fields: Prisma.ProCoachFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProCoachFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProCoachFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>
+          }
+          findFirst: {
+            args: Prisma.ProCoachFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProCoachFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>
+          }
+          findMany: {
+            args: Prisma.ProCoachFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>[]
+          }
+          create: {
+            args: Prisma.ProCoachCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>
+          }
+          createMany: {
+            args: Prisma.ProCoachCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProCoachCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>[]
+          }
+          delete: {
+            args: Prisma.ProCoachDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>
+          }
+          update: {
+            args: Prisma.ProCoachUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProCoachDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProCoachUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProCoachUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProCoachUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachPayload>
+          }
+          aggregate: {
+            args: Prisma.ProCoachAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProCoach>
+          }
+          groupBy: {
+            args: Prisma.ProCoachGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProCoachGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProCoachCountArgs<ExtArgs>
+            result: $Utils.Optional<ProCoachCountAggregateOutputType> | number
+          }
+        }
+      }
+      ProCoachMemory: {
+        payload: Prisma.$ProCoachMemoryPayload<ExtArgs>
+        fields: Prisma.ProCoachMemoryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ProCoachMemoryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ProCoachMemoryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>
+          }
+          findFirst: {
+            args: Prisma.ProCoachMemoryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ProCoachMemoryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>
+          }
+          findMany: {
+            args: Prisma.ProCoachMemoryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>[]
+          }
+          create: {
+            args: Prisma.ProCoachMemoryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>
+          }
+          createMany: {
+            args: Prisma.ProCoachMemoryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ProCoachMemoryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>[]
+          }
+          delete: {
+            args: Prisma.ProCoachMemoryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>
+          }
+          update: {
+            args: Prisma.ProCoachMemoryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>
+          }
+          deleteMany: {
+            args: Prisma.ProCoachMemoryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ProCoachMemoryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ProCoachMemoryUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>[]
+          }
+          upsert: {
+            args: Prisma.ProCoachMemoryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ProCoachMemoryPayload>
+          }
+          aggregate: {
+            args: Prisma.ProCoachMemoryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateProCoachMemory>
+          }
+          groupBy: {
+            args: Prisma.ProCoachMemoryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ProCoachMemoryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ProCoachMemoryCountArgs<ExtArgs>
+            result: $Utils.Optional<ProCoachMemoryCountAggregateOutputType> | number
+          }
+        }
+      }
       ProTeamRoster: {
         payload: Prisma.$ProTeamRosterPayload<ExtArgs>
         fields: Prisma.ProTeamRosterFieldRefs
@@ -9016,6 +9202,8 @@ export namespace Prisma {
     feedback?: FeedbackOmit
     proLeague?: ProLeagueOmit
     proTeam?: ProTeamOmit
+    proCoach?: ProCoachOmit
+    proCoachMemory?: ProCoachMemoryOmit
     proTeamRoster?: ProTeamRosterOmit
     proLeagueSeason?: ProLeagueSeasonOmit
     proLeagueRound?: ProLeagueRoundOmit
@@ -10441,6 +10629,37 @@ export namespace Prisma {
    */
   export type ProTeamCountOutputTypeCountSurvivorEntriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ProSurvivorEntryWhereInput
+  }
+
+
+  /**
+   * Count Type ProCoachCountOutputType
+   */
+
+  export type ProCoachCountOutputType = {
+    memories: number
+  }
+
+  export type ProCoachCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    memories?: boolean | ProCoachCountOutputTypeCountMemoriesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ProCoachCountOutputType without action
+   */
+  export type ProCoachCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachCountOutputType
+     */
+    select?: ProCoachCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ProCoachCountOutputType without action
+   */
+  export type ProCoachCountOutputTypeCountMemoriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProCoachMemoryWhereInput
   }
 
 
@@ -82362,6 +82581,7 @@ export namespace Prisma {
     standings?: boolean | ProTeam$standingsArgs<ExtArgs>
     followers?: boolean | ProTeam$followersArgs<ExtArgs>
     survivorEntries?: boolean | ProTeam$survivorEntriesArgs<ExtArgs>
+    coach?: boolean | ProTeam$coachArgs<ExtArgs>
     _count?: boolean | ProTeamCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["proTeam"]>
 
@@ -82424,6 +82644,7 @@ export namespace Prisma {
     standings?: boolean | ProTeam$standingsArgs<ExtArgs>
     followers?: boolean | ProTeam$followersArgs<ExtArgs>
     survivorEntries?: boolean | ProTeam$survivorEntriesArgs<ExtArgs>
+    coach?: boolean | ProTeam$coachArgs<ExtArgs>
     _count?: boolean | ProTeamCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ProTeamIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -82443,6 +82664,10 @@ export namespace Prisma {
       standings: Prisma.$ProLeagueStandingsPayload<ExtArgs>[]
       followers: Prisma.$ProSpectatorFollowPayload<ExtArgs>[]
       survivorEntries: Prisma.$ProSurvivorEntryPayload<ExtArgs>[]
+      /**
+       * Lot 4 « évolution persistée » — le coach IA de l'équipe (create-if-missing).
+       */
+      coach: Prisma.$ProCoachPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -82859,6 +83084,7 @@ export namespace Prisma {
     standings<T extends ProTeam$standingsArgs<ExtArgs> = {}>(args?: Subset<T, ProTeam$standingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProLeagueStandingsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     followers<T extends ProTeam$followersArgs<ExtArgs> = {}>(args?: Subset<T, ProTeam$followersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProSpectatorFollowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     survivorEntries<T extends ProTeam$survivorEntriesArgs<ExtArgs> = {}>(args?: Subset<T, ProTeam$survivorEntriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProSurvivorEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    coach<T extends ProTeam$coachArgs<ExtArgs> = {}>(args?: Subset<T, ProTeam$coachArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -83439,6 +83665,25 @@ export namespace Prisma {
   }
 
   /**
+   * ProTeam.coach
+   */
+  export type ProTeam$coachArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    where?: ProCoachWhereInput
+  }
+
+  /**
    * ProTeam without action
    */
   export type ProTeamDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -83454,6 +83699,2327 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ProTeamInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProCoach
+   */
+
+  export type AggregateProCoach = {
+    _count: ProCoachCountAggregateOutputType | null
+    _avg: ProCoachAvgAggregateOutputType | null
+    _sum: ProCoachSumAggregateOutputType | null
+    _min: ProCoachMinAggregateOutputType | null
+    _max: ProCoachMaxAggregateOutputType | null
+  }
+
+  export type ProCoachAvgAggregateOutputType = {
+    experience: number | null
+  }
+
+  export type ProCoachSumAggregateOutputType = {
+    experience: number | null
+  }
+
+  export type ProCoachMinAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    name: string | null
+    philosophy: string | null
+    profile: string | null
+    anchorProfile: string | null
+    memory: string | null
+    experience: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProCoachMaxAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    name: string | null
+    philosophy: string | null
+    profile: string | null
+    anchorProfile: string | null
+    memory: string | null
+    experience: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ProCoachCountAggregateOutputType = {
+    id: number
+    teamId: number
+    name: number
+    philosophy: number
+    profile: number
+    anchorProfile: number
+    memory: number
+    experience: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ProCoachAvgAggregateInputType = {
+    experience?: true
+  }
+
+  export type ProCoachSumAggregateInputType = {
+    experience?: true
+  }
+
+  export type ProCoachMinAggregateInputType = {
+    id?: true
+    teamId?: true
+    name?: true
+    philosophy?: true
+    profile?: true
+    anchorProfile?: true
+    memory?: true
+    experience?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProCoachMaxAggregateInputType = {
+    id?: true
+    teamId?: true
+    name?: true
+    philosophy?: true
+    profile?: true
+    anchorProfile?: true
+    memory?: true
+    experience?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ProCoachCountAggregateInputType = {
+    id?: true
+    teamId?: true
+    name?: true
+    philosophy?: true
+    profile?: true
+    anchorProfile?: true
+    memory?: true
+    experience?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ProCoachAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProCoach to aggregate.
+     */
+    where?: ProCoachWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoaches to fetch.
+     */
+    orderBy?: ProCoachOrderByWithRelationInput | ProCoachOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProCoachWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoaches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoaches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProCoaches
+    **/
+    _count?: true | ProCoachCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ProCoachAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ProCoachSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProCoachMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProCoachMaxAggregateInputType
+  }
+
+  export type GetProCoachAggregateType<T extends ProCoachAggregateArgs> = {
+        [P in keyof T & keyof AggregateProCoach]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProCoach[P]>
+      : GetScalarType<T[P], AggregateProCoach[P]>
+  }
+
+
+
+
+  export type ProCoachGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProCoachWhereInput
+    orderBy?: ProCoachOrderByWithAggregationInput | ProCoachOrderByWithAggregationInput[]
+    by: ProCoachScalarFieldEnum[] | ProCoachScalarFieldEnum
+    having?: ProCoachScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProCoachCountAggregateInputType | true
+    _avg?: ProCoachAvgAggregateInputType
+    _sum?: ProCoachSumAggregateInputType
+    _min?: ProCoachMinAggregateInputType
+    _max?: ProCoachMaxAggregateInputType
+  }
+
+  export type ProCoachGroupByOutputType = {
+    id: string
+    teamId: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory: string | null
+    experience: number
+    createdAt: Date
+    updatedAt: Date
+    _count: ProCoachCountAggregateOutputType | null
+    _avg: ProCoachAvgAggregateOutputType | null
+    _sum: ProCoachSumAggregateOutputType | null
+    _min: ProCoachMinAggregateOutputType | null
+    _max: ProCoachMaxAggregateOutputType | null
+  }
+
+  type GetProCoachGroupByPayload<T extends ProCoachGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProCoachGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProCoachGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProCoachGroupByOutputType[P]>
+            : GetScalarType<T[P], ProCoachGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProCoachSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    name?: boolean
+    philosophy?: boolean
+    profile?: boolean
+    anchorProfile?: boolean
+    memory?: boolean
+    experience?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    team?: boolean | ProTeamDefaultArgs<ExtArgs>
+    memories?: boolean | ProCoach$memoriesArgs<ExtArgs>
+    _count?: boolean | ProCoachCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proCoach"]>
+
+  export type ProCoachSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    name?: boolean
+    philosophy?: boolean
+    profile?: boolean
+    anchorProfile?: boolean
+    memory?: boolean
+    experience?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    team?: boolean | ProTeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proCoach"]>
+
+  export type ProCoachSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    name?: boolean
+    philosophy?: boolean
+    profile?: boolean
+    anchorProfile?: boolean
+    memory?: boolean
+    experience?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    team?: boolean | ProTeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proCoach"]>
+
+  export type ProCoachSelectScalar = {
+    id?: boolean
+    teamId?: boolean
+    name?: boolean
+    philosophy?: boolean
+    profile?: boolean
+    anchorProfile?: boolean
+    memory?: boolean
+    experience?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ProCoachOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "name" | "philosophy" | "profile" | "anchorProfile" | "memory" | "experience" | "createdAt" | "updatedAt", ExtArgs["result"]["proCoach"]>
+  export type ProCoachInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | ProTeamDefaultArgs<ExtArgs>
+    memories?: boolean | ProCoach$memoriesArgs<ExtArgs>
+    _count?: boolean | ProCoachCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ProCoachIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | ProTeamDefaultArgs<ExtArgs>
+  }
+  export type ProCoachIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | ProTeamDefaultArgs<ExtArgs>
+  }
+
+  export type $ProCoachPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProCoach"
+    objects: {
+      team: Prisma.$ProTeamPayload<ExtArgs>
+      memories: Prisma.$ProCoachMemoryPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      teamId: string
+      name: string
+      /**
+       * Philosophie dérivée du profil (« Cogneur patient », « Aérien »…), figée
+       * à la création, re-dérivée par l'admin via reset.
+       */
+      philosophy: string
+      /**
+       * `TacticalProfile` vivant (15 paramètres 0-100).
+       */
+      profile: string
+      /**
+       * `TacticalProfile` d'ancrage : borne de l'évolution.
+       */
+      anchorProfile: string
+      /**
+       * `CoachMemory` : moyenne mobile par stratégie.
+       */
+      memory: string | null
+      /**
+       * Matchs intégrés dans le profil.
+       */
+      experience: number
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["proCoach"]>
+    composites: {}
+  }
+
+  type ProCoachGetPayload<S extends boolean | null | undefined | ProCoachDefaultArgs> = $Result.GetResult<Prisma.$ProCoachPayload, S>
+
+  type ProCoachCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProCoachFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProCoachCountAggregateInputType | true
+    }
+
+  export interface ProCoachDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProCoach'], meta: { name: 'ProCoach' } }
+    /**
+     * Find zero or one ProCoach that matches the filter.
+     * @param {ProCoachFindUniqueArgs} args - Arguments to find a ProCoach
+     * @example
+     * // Get one ProCoach
+     * const proCoach = await prisma.proCoach.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProCoachFindUniqueArgs>(args: SelectSubset<T, ProCoachFindUniqueArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProCoach that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProCoachFindUniqueOrThrowArgs} args - Arguments to find a ProCoach
+     * @example
+     * // Get one ProCoach
+     * const proCoach = await prisma.proCoach.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProCoachFindUniqueOrThrowArgs>(args: SelectSubset<T, ProCoachFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProCoach that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachFindFirstArgs} args - Arguments to find a ProCoach
+     * @example
+     * // Get one ProCoach
+     * const proCoach = await prisma.proCoach.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProCoachFindFirstArgs>(args?: SelectSubset<T, ProCoachFindFirstArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProCoach that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachFindFirstOrThrowArgs} args - Arguments to find a ProCoach
+     * @example
+     * // Get one ProCoach
+     * const proCoach = await prisma.proCoach.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProCoachFindFirstOrThrowArgs>(args?: SelectSubset<T, ProCoachFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProCoaches that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProCoaches
+     * const proCoaches = await prisma.proCoach.findMany()
+     * 
+     * // Get first 10 ProCoaches
+     * const proCoaches = await prisma.proCoach.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const proCoachWithIdOnly = await prisma.proCoach.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProCoachFindManyArgs>(args?: SelectSubset<T, ProCoachFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProCoach.
+     * @param {ProCoachCreateArgs} args - Arguments to create a ProCoach.
+     * @example
+     * // Create one ProCoach
+     * const ProCoach = await prisma.proCoach.create({
+     *   data: {
+     *     // ... data to create a ProCoach
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProCoachCreateArgs>(args: SelectSubset<T, ProCoachCreateArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProCoaches.
+     * @param {ProCoachCreateManyArgs} args - Arguments to create many ProCoaches.
+     * @example
+     * // Create many ProCoaches
+     * const proCoach = await prisma.proCoach.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProCoachCreateManyArgs>(args?: SelectSubset<T, ProCoachCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProCoaches and returns the data saved in the database.
+     * @param {ProCoachCreateManyAndReturnArgs} args - Arguments to create many ProCoaches.
+     * @example
+     * // Create many ProCoaches
+     * const proCoach = await prisma.proCoach.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProCoaches and only return the `id`
+     * const proCoachWithIdOnly = await prisma.proCoach.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProCoachCreateManyAndReturnArgs>(args?: SelectSubset<T, ProCoachCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProCoach.
+     * @param {ProCoachDeleteArgs} args - Arguments to delete one ProCoach.
+     * @example
+     * // Delete one ProCoach
+     * const ProCoach = await prisma.proCoach.delete({
+     *   where: {
+     *     // ... filter to delete one ProCoach
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProCoachDeleteArgs>(args: SelectSubset<T, ProCoachDeleteArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProCoach.
+     * @param {ProCoachUpdateArgs} args - Arguments to update one ProCoach.
+     * @example
+     * // Update one ProCoach
+     * const proCoach = await prisma.proCoach.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProCoachUpdateArgs>(args: SelectSubset<T, ProCoachUpdateArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProCoaches.
+     * @param {ProCoachDeleteManyArgs} args - Arguments to filter ProCoaches to delete.
+     * @example
+     * // Delete a few ProCoaches
+     * const { count } = await prisma.proCoach.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProCoachDeleteManyArgs>(args?: SelectSubset<T, ProCoachDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProCoaches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProCoaches
+     * const proCoach = await prisma.proCoach.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProCoachUpdateManyArgs>(args: SelectSubset<T, ProCoachUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProCoaches and returns the data updated in the database.
+     * @param {ProCoachUpdateManyAndReturnArgs} args - Arguments to update many ProCoaches.
+     * @example
+     * // Update many ProCoaches
+     * const proCoach = await prisma.proCoach.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProCoaches and only return the `id`
+     * const proCoachWithIdOnly = await prisma.proCoach.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProCoachUpdateManyAndReturnArgs>(args: SelectSubset<T, ProCoachUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProCoach.
+     * @param {ProCoachUpsertArgs} args - Arguments to update or create a ProCoach.
+     * @example
+     * // Update or create a ProCoach
+     * const proCoach = await prisma.proCoach.upsert({
+     *   create: {
+     *     // ... data to create a ProCoach
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProCoach we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProCoachUpsertArgs>(args: SelectSubset<T, ProCoachUpsertArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProCoaches.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachCountArgs} args - Arguments to filter ProCoaches to count.
+     * @example
+     * // Count the number of ProCoaches
+     * const count = await prisma.proCoach.count({
+     *   where: {
+     *     // ... the filter for the ProCoaches we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProCoachCountArgs>(
+      args?: Subset<T, ProCoachCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProCoachCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProCoach.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProCoachAggregateArgs>(args: Subset<T, ProCoachAggregateArgs>): Prisma.PrismaPromise<GetProCoachAggregateType<T>>
+
+    /**
+     * Group by ProCoach.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProCoachGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProCoachGroupByArgs['orderBy'] }
+        : { orderBy?: ProCoachGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProCoachGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProCoachGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProCoach model
+   */
+  readonly fields: ProCoachFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProCoach.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProCoachClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    team<T extends ProTeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProTeamDefaultArgs<ExtArgs>>): Prisma__ProTeamClient<$Result.GetResult<Prisma.$ProTeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    memories<T extends ProCoach$memoriesArgs<ExtArgs> = {}>(args?: Subset<T, ProCoach$memoriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProCoach model
+   */
+  interface ProCoachFieldRefs {
+    readonly id: FieldRef<"ProCoach", 'String'>
+    readonly teamId: FieldRef<"ProCoach", 'String'>
+    readonly name: FieldRef<"ProCoach", 'String'>
+    readonly philosophy: FieldRef<"ProCoach", 'String'>
+    readonly profile: FieldRef<"ProCoach", 'String'>
+    readonly anchorProfile: FieldRef<"ProCoach", 'String'>
+    readonly memory: FieldRef<"ProCoach", 'String'>
+    readonly experience: FieldRef<"ProCoach", 'Int'>
+    readonly createdAt: FieldRef<"ProCoach", 'DateTime'>
+    readonly updatedAt: FieldRef<"ProCoach", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProCoach findUnique
+   */
+  export type ProCoachFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoach to fetch.
+     */
+    where: ProCoachWhereUniqueInput
+  }
+
+  /**
+   * ProCoach findUniqueOrThrow
+   */
+  export type ProCoachFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoach to fetch.
+     */
+    where: ProCoachWhereUniqueInput
+  }
+
+  /**
+   * ProCoach findFirst
+   */
+  export type ProCoachFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoach to fetch.
+     */
+    where?: ProCoachWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoaches to fetch.
+     */
+    orderBy?: ProCoachOrderByWithRelationInput | ProCoachOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProCoaches.
+     */
+    cursor?: ProCoachWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoaches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoaches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProCoaches.
+     */
+    distinct?: ProCoachScalarFieldEnum | ProCoachScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoach findFirstOrThrow
+   */
+  export type ProCoachFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoach to fetch.
+     */
+    where?: ProCoachWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoaches to fetch.
+     */
+    orderBy?: ProCoachOrderByWithRelationInput | ProCoachOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProCoaches.
+     */
+    cursor?: ProCoachWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoaches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoaches.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProCoaches.
+     */
+    distinct?: ProCoachScalarFieldEnum | ProCoachScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoach findMany
+   */
+  export type ProCoachFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoaches to fetch.
+     */
+    where?: ProCoachWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoaches to fetch.
+     */
+    orderBy?: ProCoachOrderByWithRelationInput | ProCoachOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProCoaches.
+     */
+    cursor?: ProCoachWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoaches from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoaches.
+     */
+    skip?: number
+    distinct?: ProCoachScalarFieldEnum | ProCoachScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoach create
+   */
+  export type ProCoachCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProCoach.
+     */
+    data: XOR<ProCoachCreateInput, ProCoachUncheckedCreateInput>
+  }
+
+  /**
+   * ProCoach createMany
+   */
+  export type ProCoachCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProCoaches.
+     */
+    data: ProCoachCreateManyInput | ProCoachCreateManyInput[]
+  }
+
+  /**
+   * ProCoach createManyAndReturn
+   */
+  export type ProCoachCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProCoaches.
+     */
+    data: ProCoachCreateManyInput | ProCoachCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProCoach update
+   */
+  export type ProCoachUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProCoach.
+     */
+    data: XOR<ProCoachUpdateInput, ProCoachUncheckedUpdateInput>
+    /**
+     * Choose, which ProCoach to update.
+     */
+    where: ProCoachWhereUniqueInput
+  }
+
+  /**
+   * ProCoach updateMany
+   */
+  export type ProCoachUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProCoaches.
+     */
+    data: XOR<ProCoachUpdateManyMutationInput, ProCoachUncheckedUpdateManyInput>
+    /**
+     * Filter which ProCoaches to update
+     */
+    where?: ProCoachWhereInput
+    /**
+     * Limit how many ProCoaches to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProCoach updateManyAndReturn
+   */
+  export type ProCoachUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * The data used to update ProCoaches.
+     */
+    data: XOR<ProCoachUpdateManyMutationInput, ProCoachUncheckedUpdateManyInput>
+    /**
+     * Filter which ProCoaches to update
+     */
+    where?: ProCoachWhereInput
+    /**
+     * Limit how many ProCoaches to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProCoach upsert
+   */
+  export type ProCoachUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProCoach to update in case it exists.
+     */
+    where: ProCoachWhereUniqueInput
+    /**
+     * In case the ProCoach found by the `where` argument doesn't exist, create a new ProCoach with this data.
+     */
+    create: XOR<ProCoachCreateInput, ProCoachUncheckedCreateInput>
+    /**
+     * In case the ProCoach was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProCoachUpdateInput, ProCoachUncheckedUpdateInput>
+  }
+
+  /**
+   * ProCoach delete
+   */
+  export type ProCoachDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+    /**
+     * Filter which ProCoach to delete.
+     */
+    where: ProCoachWhereUniqueInput
+  }
+
+  /**
+   * ProCoach deleteMany
+   */
+  export type ProCoachDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProCoaches to delete
+     */
+    where?: ProCoachWhereInput
+    /**
+     * Limit how many ProCoaches to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProCoach.memories
+   */
+  export type ProCoach$memoriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    where?: ProCoachMemoryWhereInput
+    orderBy?: ProCoachMemoryOrderByWithRelationInput | ProCoachMemoryOrderByWithRelationInput[]
+    cursor?: ProCoachMemoryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ProCoachMemoryScalarFieldEnum | ProCoachMemoryScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoach without action
+   */
+  export type ProCoachDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoach
+     */
+    select?: ProCoachSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoach
+     */
+    omit?: ProCoachOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ProCoachMemory
+   */
+
+  export type AggregateProCoachMemory = {
+    _count: ProCoachMemoryCountAggregateOutputType | null
+    _min: ProCoachMemoryMinAggregateOutputType | null
+    _max: ProCoachMemoryMaxAggregateOutputType | null
+  }
+
+  export type ProCoachMemoryMinAggregateOutputType = {
+    id: string | null
+    coachId: string | null
+    matchId: string | null
+    drives: string | null
+    changes: string | null
+    profileBefore: string | null
+    profileAfter: string | null
+    summary: string | null
+    createdAt: Date | null
+  }
+
+  export type ProCoachMemoryMaxAggregateOutputType = {
+    id: string | null
+    coachId: string | null
+    matchId: string | null
+    drives: string | null
+    changes: string | null
+    profileBefore: string | null
+    profileAfter: string | null
+    summary: string | null
+    createdAt: Date | null
+  }
+
+  export type ProCoachMemoryCountAggregateOutputType = {
+    id: number
+    coachId: number
+    matchId: number
+    drives: number
+    changes: number
+    profileBefore: number
+    profileAfter: number
+    summary: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ProCoachMemoryMinAggregateInputType = {
+    id?: true
+    coachId?: true
+    matchId?: true
+    drives?: true
+    changes?: true
+    profileBefore?: true
+    profileAfter?: true
+    summary?: true
+    createdAt?: true
+  }
+
+  export type ProCoachMemoryMaxAggregateInputType = {
+    id?: true
+    coachId?: true
+    matchId?: true
+    drives?: true
+    changes?: true
+    profileBefore?: true
+    profileAfter?: true
+    summary?: true
+    createdAt?: true
+  }
+
+  export type ProCoachMemoryCountAggregateInputType = {
+    id?: true
+    coachId?: true
+    matchId?: true
+    drives?: true
+    changes?: true
+    profileBefore?: true
+    profileAfter?: true
+    summary?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ProCoachMemoryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProCoachMemory to aggregate.
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoachMemories to fetch.
+     */
+    orderBy?: ProCoachMemoryOrderByWithRelationInput | ProCoachMemoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ProCoachMemoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoachMemories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoachMemories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ProCoachMemories
+    **/
+    _count?: true | ProCoachMemoryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ProCoachMemoryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ProCoachMemoryMaxAggregateInputType
+  }
+
+  export type GetProCoachMemoryAggregateType<T extends ProCoachMemoryAggregateArgs> = {
+        [P in keyof T & keyof AggregateProCoachMemory]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateProCoachMemory[P]>
+      : GetScalarType<T[P], AggregateProCoachMemory[P]>
+  }
+
+
+
+
+  export type ProCoachMemoryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ProCoachMemoryWhereInput
+    orderBy?: ProCoachMemoryOrderByWithAggregationInput | ProCoachMemoryOrderByWithAggregationInput[]
+    by: ProCoachMemoryScalarFieldEnum[] | ProCoachMemoryScalarFieldEnum
+    having?: ProCoachMemoryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ProCoachMemoryCountAggregateInputType | true
+    _min?: ProCoachMemoryMinAggregateInputType
+    _max?: ProCoachMemoryMaxAggregateInputType
+  }
+
+  export type ProCoachMemoryGroupByOutputType = {
+    id: string
+    coachId: string
+    matchId: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt: Date
+    _count: ProCoachMemoryCountAggregateOutputType | null
+    _min: ProCoachMemoryMinAggregateOutputType | null
+    _max: ProCoachMemoryMaxAggregateOutputType | null
+  }
+
+  type GetProCoachMemoryGroupByPayload<T extends ProCoachMemoryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ProCoachMemoryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ProCoachMemoryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ProCoachMemoryGroupByOutputType[P]>
+            : GetScalarType<T[P], ProCoachMemoryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ProCoachMemorySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    coachId?: boolean
+    matchId?: boolean
+    drives?: boolean
+    changes?: boolean
+    profileBefore?: boolean
+    profileAfter?: boolean
+    summary?: boolean
+    createdAt?: boolean
+    coach?: boolean | ProCoachDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proCoachMemory"]>
+
+  export type ProCoachMemorySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    coachId?: boolean
+    matchId?: boolean
+    drives?: boolean
+    changes?: boolean
+    profileBefore?: boolean
+    profileAfter?: boolean
+    summary?: boolean
+    createdAt?: boolean
+    coach?: boolean | ProCoachDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proCoachMemory"]>
+
+  export type ProCoachMemorySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    coachId?: boolean
+    matchId?: boolean
+    drives?: boolean
+    changes?: boolean
+    profileBefore?: boolean
+    profileAfter?: boolean
+    summary?: boolean
+    createdAt?: boolean
+    coach?: boolean | ProCoachDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["proCoachMemory"]>
+
+  export type ProCoachMemorySelectScalar = {
+    id?: boolean
+    coachId?: boolean
+    matchId?: boolean
+    drives?: boolean
+    changes?: boolean
+    profileBefore?: boolean
+    profileAfter?: boolean
+    summary?: boolean
+    createdAt?: boolean
+  }
+
+  export type ProCoachMemoryOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "coachId" | "matchId" | "drives" | "changes" | "profileBefore" | "profileAfter" | "summary" | "createdAt", ExtArgs["result"]["proCoachMemory"]>
+  export type ProCoachMemoryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    coach?: boolean | ProCoachDefaultArgs<ExtArgs>
+  }
+  export type ProCoachMemoryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    coach?: boolean | ProCoachDefaultArgs<ExtArgs>
+  }
+  export type ProCoachMemoryIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    coach?: boolean | ProCoachDefaultArgs<ExtArgs>
+  }
+
+  export type $ProCoachMemoryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ProCoachMemory"
+    objects: {
+      coach: Prisma.$ProCoachPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      coachId: string
+      /**
+       * Match intégré (null = reset admin ou ligne synthétique).
+       */
+      matchId: string | null
+      /**
+       * `DriveRecord[]` du match pour cette équipe.
+       */
+      drives: string
+      /**
+       * `ProfileChange[]` : paramètre, avant, après, raison.
+       */
+      changes: string
+      profileBefore: string
+      profileAfter: string
+      /**
+       * Résumé lisible (Gazette, console admin).
+       */
+      summary: string
+      createdAt: Date
+    }, ExtArgs["result"]["proCoachMemory"]>
+    composites: {}
+  }
+
+  type ProCoachMemoryGetPayload<S extends boolean | null | undefined | ProCoachMemoryDefaultArgs> = $Result.GetResult<Prisma.$ProCoachMemoryPayload, S>
+
+  type ProCoachMemoryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ProCoachMemoryFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ProCoachMemoryCountAggregateInputType | true
+    }
+
+  export interface ProCoachMemoryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ProCoachMemory'], meta: { name: 'ProCoachMemory' } }
+    /**
+     * Find zero or one ProCoachMemory that matches the filter.
+     * @param {ProCoachMemoryFindUniqueArgs} args - Arguments to find a ProCoachMemory
+     * @example
+     * // Get one ProCoachMemory
+     * const proCoachMemory = await prisma.proCoachMemory.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ProCoachMemoryFindUniqueArgs>(args: SelectSubset<T, ProCoachMemoryFindUniqueArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ProCoachMemory that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ProCoachMemoryFindUniqueOrThrowArgs} args - Arguments to find a ProCoachMemory
+     * @example
+     * // Get one ProCoachMemory
+     * const proCoachMemory = await prisma.proCoachMemory.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ProCoachMemoryFindUniqueOrThrowArgs>(args: SelectSubset<T, ProCoachMemoryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProCoachMemory that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryFindFirstArgs} args - Arguments to find a ProCoachMemory
+     * @example
+     * // Get one ProCoachMemory
+     * const proCoachMemory = await prisma.proCoachMemory.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ProCoachMemoryFindFirstArgs>(args?: SelectSubset<T, ProCoachMemoryFindFirstArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ProCoachMemory that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryFindFirstOrThrowArgs} args - Arguments to find a ProCoachMemory
+     * @example
+     * // Get one ProCoachMemory
+     * const proCoachMemory = await prisma.proCoachMemory.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ProCoachMemoryFindFirstOrThrowArgs>(args?: SelectSubset<T, ProCoachMemoryFindFirstOrThrowArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ProCoachMemories that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ProCoachMemories
+     * const proCoachMemories = await prisma.proCoachMemory.findMany()
+     * 
+     * // Get first 10 ProCoachMemories
+     * const proCoachMemories = await prisma.proCoachMemory.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const proCoachMemoryWithIdOnly = await prisma.proCoachMemory.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ProCoachMemoryFindManyArgs>(args?: SelectSubset<T, ProCoachMemoryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ProCoachMemory.
+     * @param {ProCoachMemoryCreateArgs} args - Arguments to create a ProCoachMemory.
+     * @example
+     * // Create one ProCoachMemory
+     * const ProCoachMemory = await prisma.proCoachMemory.create({
+     *   data: {
+     *     // ... data to create a ProCoachMemory
+     *   }
+     * })
+     * 
+     */
+    create<T extends ProCoachMemoryCreateArgs>(args: SelectSubset<T, ProCoachMemoryCreateArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ProCoachMemories.
+     * @param {ProCoachMemoryCreateManyArgs} args - Arguments to create many ProCoachMemories.
+     * @example
+     * // Create many ProCoachMemories
+     * const proCoachMemory = await prisma.proCoachMemory.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ProCoachMemoryCreateManyArgs>(args?: SelectSubset<T, ProCoachMemoryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ProCoachMemories and returns the data saved in the database.
+     * @param {ProCoachMemoryCreateManyAndReturnArgs} args - Arguments to create many ProCoachMemories.
+     * @example
+     * // Create many ProCoachMemories
+     * const proCoachMemory = await prisma.proCoachMemory.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ProCoachMemories and only return the `id`
+     * const proCoachMemoryWithIdOnly = await prisma.proCoachMemory.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ProCoachMemoryCreateManyAndReturnArgs>(args?: SelectSubset<T, ProCoachMemoryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ProCoachMemory.
+     * @param {ProCoachMemoryDeleteArgs} args - Arguments to delete one ProCoachMemory.
+     * @example
+     * // Delete one ProCoachMemory
+     * const ProCoachMemory = await prisma.proCoachMemory.delete({
+     *   where: {
+     *     // ... filter to delete one ProCoachMemory
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ProCoachMemoryDeleteArgs>(args: SelectSubset<T, ProCoachMemoryDeleteArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ProCoachMemory.
+     * @param {ProCoachMemoryUpdateArgs} args - Arguments to update one ProCoachMemory.
+     * @example
+     * // Update one ProCoachMemory
+     * const proCoachMemory = await prisma.proCoachMemory.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ProCoachMemoryUpdateArgs>(args: SelectSubset<T, ProCoachMemoryUpdateArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ProCoachMemories.
+     * @param {ProCoachMemoryDeleteManyArgs} args - Arguments to filter ProCoachMemories to delete.
+     * @example
+     * // Delete a few ProCoachMemories
+     * const { count } = await prisma.proCoachMemory.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ProCoachMemoryDeleteManyArgs>(args?: SelectSubset<T, ProCoachMemoryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProCoachMemories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ProCoachMemories
+     * const proCoachMemory = await prisma.proCoachMemory.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ProCoachMemoryUpdateManyArgs>(args: SelectSubset<T, ProCoachMemoryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ProCoachMemories and returns the data updated in the database.
+     * @param {ProCoachMemoryUpdateManyAndReturnArgs} args - Arguments to update many ProCoachMemories.
+     * @example
+     * // Update many ProCoachMemories
+     * const proCoachMemory = await prisma.proCoachMemory.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ProCoachMemories and only return the `id`
+     * const proCoachMemoryWithIdOnly = await prisma.proCoachMemory.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ProCoachMemoryUpdateManyAndReturnArgs>(args: SelectSubset<T, ProCoachMemoryUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ProCoachMemory.
+     * @param {ProCoachMemoryUpsertArgs} args - Arguments to update or create a ProCoachMemory.
+     * @example
+     * // Update or create a ProCoachMemory
+     * const proCoachMemory = await prisma.proCoachMemory.upsert({
+     *   create: {
+     *     // ... data to create a ProCoachMemory
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ProCoachMemory we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ProCoachMemoryUpsertArgs>(args: SelectSubset<T, ProCoachMemoryUpsertArgs<ExtArgs>>): Prisma__ProCoachMemoryClient<$Result.GetResult<Prisma.$ProCoachMemoryPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ProCoachMemories.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryCountArgs} args - Arguments to filter ProCoachMemories to count.
+     * @example
+     * // Count the number of ProCoachMemories
+     * const count = await prisma.proCoachMemory.count({
+     *   where: {
+     *     // ... the filter for the ProCoachMemories we want to count
+     *   }
+     * })
+    **/
+    count<T extends ProCoachMemoryCountArgs>(
+      args?: Subset<T, ProCoachMemoryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ProCoachMemoryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ProCoachMemory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ProCoachMemoryAggregateArgs>(args: Subset<T, ProCoachMemoryAggregateArgs>): Prisma.PrismaPromise<GetProCoachMemoryAggregateType<T>>
+
+    /**
+     * Group by ProCoachMemory.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ProCoachMemoryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ProCoachMemoryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ProCoachMemoryGroupByArgs['orderBy'] }
+        : { orderBy?: ProCoachMemoryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ProCoachMemoryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetProCoachMemoryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ProCoachMemory model
+   */
+  readonly fields: ProCoachMemoryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ProCoachMemory.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ProCoachMemoryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    coach<T extends ProCoachDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProCoachDefaultArgs<ExtArgs>>): Prisma__ProCoachClient<$Result.GetResult<Prisma.$ProCoachPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ProCoachMemory model
+   */
+  interface ProCoachMemoryFieldRefs {
+    readonly id: FieldRef<"ProCoachMemory", 'String'>
+    readonly coachId: FieldRef<"ProCoachMemory", 'String'>
+    readonly matchId: FieldRef<"ProCoachMemory", 'String'>
+    readonly drives: FieldRef<"ProCoachMemory", 'String'>
+    readonly changes: FieldRef<"ProCoachMemory", 'String'>
+    readonly profileBefore: FieldRef<"ProCoachMemory", 'String'>
+    readonly profileAfter: FieldRef<"ProCoachMemory", 'String'>
+    readonly summary: FieldRef<"ProCoachMemory", 'String'>
+    readonly createdAt: FieldRef<"ProCoachMemory", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ProCoachMemory findUnique
+   */
+  export type ProCoachMemoryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoachMemory to fetch.
+     */
+    where: ProCoachMemoryWhereUniqueInput
+  }
+
+  /**
+   * ProCoachMemory findUniqueOrThrow
+   */
+  export type ProCoachMemoryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoachMemory to fetch.
+     */
+    where: ProCoachMemoryWhereUniqueInput
+  }
+
+  /**
+   * ProCoachMemory findFirst
+   */
+  export type ProCoachMemoryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoachMemory to fetch.
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoachMemories to fetch.
+     */
+    orderBy?: ProCoachMemoryOrderByWithRelationInput | ProCoachMemoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProCoachMemories.
+     */
+    cursor?: ProCoachMemoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoachMemories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoachMemories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProCoachMemories.
+     */
+    distinct?: ProCoachMemoryScalarFieldEnum | ProCoachMemoryScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoachMemory findFirstOrThrow
+   */
+  export type ProCoachMemoryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoachMemory to fetch.
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoachMemories to fetch.
+     */
+    orderBy?: ProCoachMemoryOrderByWithRelationInput | ProCoachMemoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ProCoachMemories.
+     */
+    cursor?: ProCoachMemoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoachMemories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoachMemories.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ProCoachMemories.
+     */
+    distinct?: ProCoachMemoryScalarFieldEnum | ProCoachMemoryScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoachMemory findMany
+   */
+  export type ProCoachMemoryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * Filter, which ProCoachMemories to fetch.
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ProCoachMemories to fetch.
+     */
+    orderBy?: ProCoachMemoryOrderByWithRelationInput | ProCoachMemoryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ProCoachMemories.
+     */
+    cursor?: ProCoachMemoryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ProCoachMemories from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ProCoachMemories.
+     */
+    skip?: number
+    distinct?: ProCoachMemoryScalarFieldEnum | ProCoachMemoryScalarFieldEnum[]
+  }
+
+  /**
+   * ProCoachMemory create
+   */
+  export type ProCoachMemoryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ProCoachMemory.
+     */
+    data: XOR<ProCoachMemoryCreateInput, ProCoachMemoryUncheckedCreateInput>
+  }
+
+  /**
+   * ProCoachMemory createMany
+   */
+  export type ProCoachMemoryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ProCoachMemories.
+     */
+    data: ProCoachMemoryCreateManyInput | ProCoachMemoryCreateManyInput[]
+  }
+
+  /**
+   * ProCoachMemory createManyAndReturn
+   */
+  export type ProCoachMemoryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * The data used to create many ProCoachMemories.
+     */
+    data: ProCoachMemoryCreateManyInput | ProCoachMemoryCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProCoachMemory update
+   */
+  export type ProCoachMemoryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ProCoachMemory.
+     */
+    data: XOR<ProCoachMemoryUpdateInput, ProCoachMemoryUncheckedUpdateInput>
+    /**
+     * Choose, which ProCoachMemory to update.
+     */
+    where: ProCoachMemoryWhereUniqueInput
+  }
+
+  /**
+   * ProCoachMemory updateMany
+   */
+  export type ProCoachMemoryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ProCoachMemories.
+     */
+    data: XOR<ProCoachMemoryUpdateManyMutationInput, ProCoachMemoryUncheckedUpdateManyInput>
+    /**
+     * Filter which ProCoachMemories to update
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * Limit how many ProCoachMemories to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProCoachMemory updateManyAndReturn
+   */
+  export type ProCoachMemoryUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * The data used to update ProCoachMemories.
+     */
+    data: XOR<ProCoachMemoryUpdateManyMutationInput, ProCoachMemoryUncheckedUpdateManyInput>
+    /**
+     * Filter which ProCoachMemories to update
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * Limit how many ProCoachMemories to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ProCoachMemory upsert
+   */
+  export type ProCoachMemoryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ProCoachMemory to update in case it exists.
+     */
+    where: ProCoachMemoryWhereUniqueInput
+    /**
+     * In case the ProCoachMemory found by the `where` argument doesn't exist, create a new ProCoachMemory with this data.
+     */
+    create: XOR<ProCoachMemoryCreateInput, ProCoachMemoryUncheckedCreateInput>
+    /**
+     * In case the ProCoachMemory was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ProCoachMemoryUpdateInput, ProCoachMemoryUncheckedUpdateInput>
+  }
+
+  /**
+   * ProCoachMemory delete
+   */
+  export type ProCoachMemoryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
+    /**
+     * Filter which ProCoachMemory to delete.
+     */
+    where: ProCoachMemoryWhereUniqueInput
+  }
+
+  /**
+   * ProCoachMemory deleteMany
+   */
+  export type ProCoachMemoryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ProCoachMemories to delete
+     */
+    where?: ProCoachMemoryWhereInput
+    /**
+     * Limit how many ProCoachMemories to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ProCoachMemory without action
+   */
+  export type ProCoachMemoryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ProCoachMemory
+     */
+    select?: ProCoachMemorySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ProCoachMemory
+     */
+    omit?: ProCoachMemoryOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ProCoachMemoryInclude<ExtArgs> | null
   }
 
 
@@ -122057,6 +124623,37 @@ export namespace Prisma {
   export type ProTeamScalarFieldEnum = (typeof ProTeamScalarFieldEnum)[keyof typeof ProTeamScalarFieldEnum]
 
 
+  export const ProCoachScalarFieldEnum: {
+    id: 'id',
+    teamId: 'teamId',
+    name: 'name',
+    philosophy: 'philosophy',
+    profile: 'profile',
+    anchorProfile: 'anchorProfile',
+    memory: 'memory',
+    experience: 'experience',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ProCoachScalarFieldEnum = (typeof ProCoachScalarFieldEnum)[keyof typeof ProCoachScalarFieldEnum]
+
+
+  export const ProCoachMemoryScalarFieldEnum: {
+    id: 'id',
+    coachId: 'coachId',
+    matchId: 'matchId',
+    drives: 'drives',
+    changes: 'changes',
+    profileBefore: 'profileBefore',
+    profileAfter: 'profileAfter',
+    summary: 'summary',
+    createdAt: 'createdAt'
+  };
+
+  export type ProCoachMemoryScalarFieldEnum = (typeof ProCoachMemoryScalarFieldEnum)[keyof typeof ProCoachMemoryScalarFieldEnum]
+
+
   export const ProTeamRosterScalarFieldEnum: {
     id: 'id',
     teamId: 'teamId',
@@ -128592,6 +131189,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsListRelationFilter
     followers?: ProSpectatorFollowListRelationFilter
     survivorEntries?: ProSurvivorEntryListRelationFilter
+    coach?: XOR<ProCoachNullableScalarRelationFilter, ProCoachWhereInput> | null
   }
 
   export type ProTeamOrderByWithRelationInput = {
@@ -128615,6 +131213,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsOrderByRelationAggregateInput
     followers?: ProSpectatorFollowOrderByRelationAggregateInput
     survivorEntries?: ProSurvivorEntryOrderByRelationAggregateInput
+    coach?: ProCoachOrderByWithRelationInput
   }
 
   export type ProTeamWhereUniqueInput = Prisma.AtLeast<{
@@ -128641,6 +131240,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsListRelationFilter
     followers?: ProSpectatorFollowListRelationFilter
     survivorEntries?: ProSurvivorEntryListRelationFilter
+    coach?: XOR<ProCoachNullableScalarRelationFilter, ProCoachWhereInput> | null
   }, "id" | "slug">
 
   export type ProTeamOrderByWithAggregationInput = {
@@ -128681,6 +131281,166 @@ export namespace Prisma {
     meta?: StringNullableWithAggregatesFilter<"ProTeam"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ProTeam"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ProTeam"> | Date | string
+  }
+
+  export type ProCoachWhereInput = {
+    AND?: ProCoachWhereInput | ProCoachWhereInput[]
+    OR?: ProCoachWhereInput[]
+    NOT?: ProCoachWhereInput | ProCoachWhereInput[]
+    id?: StringFilter<"ProCoach"> | string
+    teamId?: StringFilter<"ProCoach"> | string
+    name?: StringFilter<"ProCoach"> | string
+    philosophy?: StringFilter<"ProCoach"> | string
+    profile?: StringFilter<"ProCoach"> | string
+    anchorProfile?: StringFilter<"ProCoach"> | string
+    memory?: StringNullableFilter<"ProCoach"> | string | null
+    experience?: IntFilter<"ProCoach"> | number
+    createdAt?: DateTimeFilter<"ProCoach"> | Date | string
+    updatedAt?: DateTimeFilter<"ProCoach"> | Date | string
+    team?: XOR<ProTeamScalarRelationFilter, ProTeamWhereInput>
+    memories?: ProCoachMemoryListRelationFilter
+  }
+
+  export type ProCoachOrderByWithRelationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    name?: SortOrder
+    philosophy?: SortOrder
+    profile?: SortOrder
+    anchorProfile?: SortOrder
+    memory?: SortOrderInput | SortOrder
+    experience?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    team?: ProTeamOrderByWithRelationInput
+    memories?: ProCoachMemoryOrderByRelationAggregateInput
+  }
+
+  export type ProCoachWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    teamId?: string
+    AND?: ProCoachWhereInput | ProCoachWhereInput[]
+    OR?: ProCoachWhereInput[]
+    NOT?: ProCoachWhereInput | ProCoachWhereInput[]
+    name?: StringFilter<"ProCoach"> | string
+    philosophy?: StringFilter<"ProCoach"> | string
+    profile?: StringFilter<"ProCoach"> | string
+    anchorProfile?: StringFilter<"ProCoach"> | string
+    memory?: StringNullableFilter<"ProCoach"> | string | null
+    experience?: IntFilter<"ProCoach"> | number
+    createdAt?: DateTimeFilter<"ProCoach"> | Date | string
+    updatedAt?: DateTimeFilter<"ProCoach"> | Date | string
+    team?: XOR<ProTeamScalarRelationFilter, ProTeamWhereInput>
+    memories?: ProCoachMemoryListRelationFilter
+  }, "id" | "teamId">
+
+  export type ProCoachOrderByWithAggregationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    name?: SortOrder
+    philosophy?: SortOrder
+    profile?: SortOrder
+    anchorProfile?: SortOrder
+    memory?: SortOrderInput | SortOrder
+    experience?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ProCoachCountOrderByAggregateInput
+    _avg?: ProCoachAvgOrderByAggregateInput
+    _max?: ProCoachMaxOrderByAggregateInput
+    _min?: ProCoachMinOrderByAggregateInput
+    _sum?: ProCoachSumOrderByAggregateInput
+  }
+
+  export type ProCoachScalarWhereWithAggregatesInput = {
+    AND?: ProCoachScalarWhereWithAggregatesInput | ProCoachScalarWhereWithAggregatesInput[]
+    OR?: ProCoachScalarWhereWithAggregatesInput[]
+    NOT?: ProCoachScalarWhereWithAggregatesInput | ProCoachScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProCoach"> | string
+    teamId?: StringWithAggregatesFilter<"ProCoach"> | string
+    name?: StringWithAggregatesFilter<"ProCoach"> | string
+    philosophy?: StringWithAggregatesFilter<"ProCoach"> | string
+    profile?: StringWithAggregatesFilter<"ProCoach"> | string
+    anchorProfile?: StringWithAggregatesFilter<"ProCoach"> | string
+    memory?: StringNullableWithAggregatesFilter<"ProCoach"> | string | null
+    experience?: IntWithAggregatesFilter<"ProCoach"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"ProCoach"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ProCoach"> | Date | string
+  }
+
+  export type ProCoachMemoryWhereInput = {
+    AND?: ProCoachMemoryWhereInput | ProCoachMemoryWhereInput[]
+    OR?: ProCoachMemoryWhereInput[]
+    NOT?: ProCoachMemoryWhereInput | ProCoachMemoryWhereInput[]
+    id?: StringFilter<"ProCoachMemory"> | string
+    coachId?: StringFilter<"ProCoachMemory"> | string
+    matchId?: StringNullableFilter<"ProCoachMemory"> | string | null
+    drives?: StringFilter<"ProCoachMemory"> | string
+    changes?: StringFilter<"ProCoachMemory"> | string
+    profileBefore?: StringFilter<"ProCoachMemory"> | string
+    profileAfter?: StringFilter<"ProCoachMemory"> | string
+    summary?: StringFilter<"ProCoachMemory"> | string
+    createdAt?: DateTimeFilter<"ProCoachMemory"> | Date | string
+    coach?: XOR<ProCoachScalarRelationFilter, ProCoachWhereInput>
+  }
+
+  export type ProCoachMemoryOrderByWithRelationInput = {
+    id?: SortOrder
+    coachId?: SortOrder
+    matchId?: SortOrderInput | SortOrder
+    drives?: SortOrder
+    changes?: SortOrder
+    profileBefore?: SortOrder
+    profileAfter?: SortOrder
+    summary?: SortOrder
+    createdAt?: SortOrder
+    coach?: ProCoachOrderByWithRelationInput
+  }
+
+  export type ProCoachMemoryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ProCoachMemoryWhereInput | ProCoachMemoryWhereInput[]
+    OR?: ProCoachMemoryWhereInput[]
+    NOT?: ProCoachMemoryWhereInput | ProCoachMemoryWhereInput[]
+    coachId?: StringFilter<"ProCoachMemory"> | string
+    matchId?: StringNullableFilter<"ProCoachMemory"> | string | null
+    drives?: StringFilter<"ProCoachMemory"> | string
+    changes?: StringFilter<"ProCoachMemory"> | string
+    profileBefore?: StringFilter<"ProCoachMemory"> | string
+    profileAfter?: StringFilter<"ProCoachMemory"> | string
+    summary?: StringFilter<"ProCoachMemory"> | string
+    createdAt?: DateTimeFilter<"ProCoachMemory"> | Date | string
+    coach?: XOR<ProCoachScalarRelationFilter, ProCoachWhereInput>
+  }, "id">
+
+  export type ProCoachMemoryOrderByWithAggregationInput = {
+    id?: SortOrder
+    coachId?: SortOrder
+    matchId?: SortOrderInput | SortOrder
+    drives?: SortOrder
+    changes?: SortOrder
+    profileBefore?: SortOrder
+    profileAfter?: SortOrder
+    summary?: SortOrder
+    createdAt?: SortOrder
+    _count?: ProCoachMemoryCountOrderByAggregateInput
+    _max?: ProCoachMemoryMaxOrderByAggregateInput
+    _min?: ProCoachMemoryMinOrderByAggregateInput
+  }
+
+  export type ProCoachMemoryScalarWhereWithAggregatesInput = {
+    AND?: ProCoachMemoryScalarWhereWithAggregatesInput | ProCoachMemoryScalarWhereWithAggregatesInput[]
+    OR?: ProCoachMemoryScalarWhereWithAggregatesInput[]
+    NOT?: ProCoachMemoryScalarWhereWithAggregatesInput | ProCoachMemoryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    coachId?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    matchId?: StringNullableWithAggregatesFilter<"ProCoachMemory"> | string | null
+    drives?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    changes?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    profileBefore?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    profileAfter?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    summary?: StringWithAggregatesFilter<"ProCoachMemory"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ProCoachMemory"> | Date | string
   }
 
   export type ProTeamRosterWhereInput = {
@@ -138174,6 +140934,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateInput = {
@@ -138196,6 +140957,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUpdateInput = {
@@ -138218,6 +140980,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateInput = {
@@ -138240,6 +141003,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamCreateManyInput = {
@@ -138287,6 +141051,183 @@ export namespace Prisma {
     meta?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachCreateInput = {
+    id?: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    team: ProTeamCreateNestedOneWithoutCoachInput
+    memories?: ProCoachMemoryCreateNestedManyWithoutCoachInput
+  }
+
+  export type ProCoachUncheckedCreateInput = {
+    id?: string
+    teamId: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memories?: ProCoachMemoryUncheckedCreateNestedManyWithoutCoachInput
+  }
+
+  export type ProCoachUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    team?: ProTeamUpdateOneRequiredWithoutCoachNestedInput
+    memories?: ProCoachMemoryUpdateManyWithoutCoachNestedInput
+  }
+
+  export type ProCoachUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memories?: ProCoachMemoryUncheckedUpdateManyWithoutCoachNestedInput
+  }
+
+  export type ProCoachCreateManyInput = {
+    id?: string
+    teamId: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProCoachUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachMemoryCreateInput = {
+    id?: string
+    matchId?: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt?: Date | string
+    coach: ProCoachCreateNestedOneWithoutMemoriesInput
+  }
+
+  export type ProCoachMemoryUncheckedCreateInput = {
+    id?: string
+    coachId: string
+    matchId?: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt?: Date | string
+  }
+
+  export type ProCoachMemoryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    coach?: ProCoachUpdateOneRequiredWithoutMemoriesNestedInput
+  }
+
+  export type ProCoachMemoryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    coachId?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachMemoryCreateManyInput = {
+    id?: string
+    coachId: string
+    matchId?: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt?: Date | string
+  }
+
+  export type ProCoachMemoryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachMemoryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    coachId?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProTeamRosterCreateInput = {
@@ -145784,6 +148725,11 @@ export namespace Prisma {
     none?: ProLeagueStandingsWhereInput
   }
 
+  export type ProCoachNullableScalarRelationFilter = {
+    is?: ProCoachWhereInput | null
+    isNot?: ProCoachWhereInput | null
+  }
+
   export type ProTeamRosterOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -145855,6 +148801,104 @@ export namespace Prisma {
   export type ProTeamScalarRelationFilter = {
     is?: ProTeamWhereInput
     isNot?: ProTeamWhereInput
+  }
+
+  export type ProCoachMemoryListRelationFilter = {
+    every?: ProCoachMemoryWhereInput
+    some?: ProCoachMemoryWhereInput
+    none?: ProCoachMemoryWhereInput
+  }
+
+  export type ProCoachMemoryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ProCoachCountOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    name?: SortOrder
+    philosophy?: SortOrder
+    profile?: SortOrder
+    anchorProfile?: SortOrder
+    memory?: SortOrder
+    experience?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProCoachAvgOrderByAggregateInput = {
+    experience?: SortOrder
+  }
+
+  export type ProCoachMaxOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    name?: SortOrder
+    philosophy?: SortOrder
+    profile?: SortOrder
+    anchorProfile?: SortOrder
+    memory?: SortOrder
+    experience?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProCoachMinOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    name?: SortOrder
+    philosophy?: SortOrder
+    profile?: SortOrder
+    anchorProfile?: SortOrder
+    memory?: SortOrder
+    experience?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ProCoachSumOrderByAggregateInput = {
+    experience?: SortOrder
+  }
+
+  export type ProCoachScalarRelationFilter = {
+    is?: ProCoachWhereInput
+    isNot?: ProCoachWhereInput
+  }
+
+  export type ProCoachMemoryCountOrderByAggregateInput = {
+    id?: SortOrder
+    coachId?: SortOrder
+    matchId?: SortOrder
+    drives?: SortOrder
+    changes?: SortOrder
+    profileBefore?: SortOrder
+    profileAfter?: SortOrder
+    summary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProCoachMemoryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    coachId?: SortOrder
+    matchId?: SortOrder
+    drives?: SortOrder
+    changes?: SortOrder
+    profileBefore?: SortOrder
+    profileAfter?: SortOrder
+    summary?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ProCoachMemoryMinOrderByAggregateInput = {
+    id?: SortOrder
+    coachId?: SortOrder
+    matchId?: SortOrder
+    drives?: SortOrder
+    changes?: SortOrder
+    profileBefore?: SortOrder
+    profileAfter?: SortOrder
+    summary?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type ProPlayerCareerSnapshotNullableScalarRelationFilter = {
@@ -152849,6 +155893,12 @@ export namespace Prisma {
     connect?: ProSurvivorEntryWhereUniqueInput | ProSurvivorEntryWhereUniqueInput[]
   }
 
+  export type ProCoachCreateNestedOneWithoutTeamInput = {
+    create?: XOR<ProCoachCreateWithoutTeamInput, ProCoachUncheckedCreateWithoutTeamInput>
+    connectOrCreate?: ProCoachCreateOrConnectWithoutTeamInput
+    connect?: ProCoachWhereUniqueInput
+  }
+
   export type ProTeamRosterUncheckedCreateNestedManyWithoutTeamInput = {
     create?: XOR<ProTeamRosterCreateWithoutTeamInput, ProTeamRosterUncheckedCreateWithoutTeamInput> | ProTeamRosterCreateWithoutTeamInput[] | ProTeamRosterUncheckedCreateWithoutTeamInput[]
     connectOrCreate?: ProTeamRosterCreateOrConnectWithoutTeamInput | ProTeamRosterCreateOrConnectWithoutTeamInput[]
@@ -152889,6 +155939,12 @@ export namespace Prisma {
     connectOrCreate?: ProSurvivorEntryCreateOrConnectWithoutPickedTeamInput | ProSurvivorEntryCreateOrConnectWithoutPickedTeamInput[]
     createMany?: ProSurvivorEntryCreateManyPickedTeamInputEnvelope
     connect?: ProSurvivorEntryWhereUniqueInput | ProSurvivorEntryWhereUniqueInput[]
+  }
+
+  export type ProCoachUncheckedCreateNestedOneWithoutTeamInput = {
+    create?: XOR<ProCoachCreateWithoutTeamInput, ProCoachUncheckedCreateWithoutTeamInput>
+    connectOrCreate?: ProCoachCreateOrConnectWithoutTeamInput
+    connect?: ProCoachWhereUniqueInput
   }
 
   export type ProLeagueUpdateOneRequiredWithoutTeamsNestedInput = {
@@ -152983,6 +156039,16 @@ export namespace Prisma {
     deleteMany?: ProSurvivorEntryScalarWhereInput | ProSurvivorEntryScalarWhereInput[]
   }
 
+  export type ProCoachUpdateOneWithoutTeamNestedInput = {
+    create?: XOR<ProCoachCreateWithoutTeamInput, ProCoachUncheckedCreateWithoutTeamInput>
+    connectOrCreate?: ProCoachCreateOrConnectWithoutTeamInput
+    upsert?: ProCoachUpsertWithoutTeamInput
+    disconnect?: ProCoachWhereInput | boolean
+    delete?: ProCoachWhereInput | boolean
+    connect?: ProCoachWhereUniqueInput
+    update?: XOR<XOR<ProCoachUpdateToOneWithWhereWithoutTeamInput, ProCoachUpdateWithoutTeamInput>, ProCoachUncheckedUpdateWithoutTeamInput>
+  }
+
   export type ProTeamRosterUncheckedUpdateManyWithoutTeamNestedInput = {
     create?: XOR<ProTeamRosterCreateWithoutTeamInput, ProTeamRosterUncheckedCreateWithoutTeamInput> | ProTeamRosterCreateWithoutTeamInput[] | ProTeamRosterUncheckedCreateWithoutTeamInput[]
     connectOrCreate?: ProTeamRosterCreateOrConnectWithoutTeamInput | ProTeamRosterCreateOrConnectWithoutTeamInput[]
@@ -153065,6 +156131,86 @@ export namespace Prisma {
     update?: ProSurvivorEntryUpdateWithWhereUniqueWithoutPickedTeamInput | ProSurvivorEntryUpdateWithWhereUniqueWithoutPickedTeamInput[]
     updateMany?: ProSurvivorEntryUpdateManyWithWhereWithoutPickedTeamInput | ProSurvivorEntryUpdateManyWithWhereWithoutPickedTeamInput[]
     deleteMany?: ProSurvivorEntryScalarWhereInput | ProSurvivorEntryScalarWhereInput[]
+  }
+
+  export type ProCoachUncheckedUpdateOneWithoutTeamNestedInput = {
+    create?: XOR<ProCoachCreateWithoutTeamInput, ProCoachUncheckedCreateWithoutTeamInput>
+    connectOrCreate?: ProCoachCreateOrConnectWithoutTeamInput
+    upsert?: ProCoachUpsertWithoutTeamInput
+    disconnect?: ProCoachWhereInput | boolean
+    delete?: ProCoachWhereInput | boolean
+    connect?: ProCoachWhereUniqueInput
+    update?: XOR<XOR<ProCoachUpdateToOneWithWhereWithoutTeamInput, ProCoachUpdateWithoutTeamInput>, ProCoachUncheckedUpdateWithoutTeamInput>
+  }
+
+  export type ProTeamCreateNestedOneWithoutCoachInput = {
+    create?: XOR<ProTeamCreateWithoutCoachInput, ProTeamUncheckedCreateWithoutCoachInput>
+    connectOrCreate?: ProTeamCreateOrConnectWithoutCoachInput
+    connect?: ProTeamWhereUniqueInput
+  }
+
+  export type ProCoachMemoryCreateNestedManyWithoutCoachInput = {
+    create?: XOR<ProCoachMemoryCreateWithoutCoachInput, ProCoachMemoryUncheckedCreateWithoutCoachInput> | ProCoachMemoryCreateWithoutCoachInput[] | ProCoachMemoryUncheckedCreateWithoutCoachInput[]
+    connectOrCreate?: ProCoachMemoryCreateOrConnectWithoutCoachInput | ProCoachMemoryCreateOrConnectWithoutCoachInput[]
+    createMany?: ProCoachMemoryCreateManyCoachInputEnvelope
+    connect?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+  }
+
+  export type ProCoachMemoryUncheckedCreateNestedManyWithoutCoachInput = {
+    create?: XOR<ProCoachMemoryCreateWithoutCoachInput, ProCoachMemoryUncheckedCreateWithoutCoachInput> | ProCoachMemoryCreateWithoutCoachInput[] | ProCoachMemoryUncheckedCreateWithoutCoachInput[]
+    connectOrCreate?: ProCoachMemoryCreateOrConnectWithoutCoachInput | ProCoachMemoryCreateOrConnectWithoutCoachInput[]
+    createMany?: ProCoachMemoryCreateManyCoachInputEnvelope
+    connect?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+  }
+
+  export type ProTeamUpdateOneRequiredWithoutCoachNestedInput = {
+    create?: XOR<ProTeamCreateWithoutCoachInput, ProTeamUncheckedCreateWithoutCoachInput>
+    connectOrCreate?: ProTeamCreateOrConnectWithoutCoachInput
+    upsert?: ProTeamUpsertWithoutCoachInput
+    connect?: ProTeamWhereUniqueInput
+    update?: XOR<XOR<ProTeamUpdateToOneWithWhereWithoutCoachInput, ProTeamUpdateWithoutCoachInput>, ProTeamUncheckedUpdateWithoutCoachInput>
+  }
+
+  export type ProCoachMemoryUpdateManyWithoutCoachNestedInput = {
+    create?: XOR<ProCoachMemoryCreateWithoutCoachInput, ProCoachMemoryUncheckedCreateWithoutCoachInput> | ProCoachMemoryCreateWithoutCoachInput[] | ProCoachMemoryUncheckedCreateWithoutCoachInput[]
+    connectOrCreate?: ProCoachMemoryCreateOrConnectWithoutCoachInput | ProCoachMemoryCreateOrConnectWithoutCoachInput[]
+    upsert?: ProCoachMemoryUpsertWithWhereUniqueWithoutCoachInput | ProCoachMemoryUpsertWithWhereUniqueWithoutCoachInput[]
+    createMany?: ProCoachMemoryCreateManyCoachInputEnvelope
+    set?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    disconnect?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    delete?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    connect?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    update?: ProCoachMemoryUpdateWithWhereUniqueWithoutCoachInput | ProCoachMemoryUpdateWithWhereUniqueWithoutCoachInput[]
+    updateMany?: ProCoachMemoryUpdateManyWithWhereWithoutCoachInput | ProCoachMemoryUpdateManyWithWhereWithoutCoachInput[]
+    deleteMany?: ProCoachMemoryScalarWhereInput | ProCoachMemoryScalarWhereInput[]
+  }
+
+  export type ProCoachMemoryUncheckedUpdateManyWithoutCoachNestedInput = {
+    create?: XOR<ProCoachMemoryCreateWithoutCoachInput, ProCoachMemoryUncheckedCreateWithoutCoachInput> | ProCoachMemoryCreateWithoutCoachInput[] | ProCoachMemoryUncheckedCreateWithoutCoachInput[]
+    connectOrCreate?: ProCoachMemoryCreateOrConnectWithoutCoachInput | ProCoachMemoryCreateOrConnectWithoutCoachInput[]
+    upsert?: ProCoachMemoryUpsertWithWhereUniqueWithoutCoachInput | ProCoachMemoryUpsertWithWhereUniqueWithoutCoachInput[]
+    createMany?: ProCoachMemoryCreateManyCoachInputEnvelope
+    set?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    disconnect?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    delete?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    connect?: ProCoachMemoryWhereUniqueInput | ProCoachMemoryWhereUniqueInput[]
+    update?: ProCoachMemoryUpdateWithWhereUniqueWithoutCoachInput | ProCoachMemoryUpdateWithWhereUniqueWithoutCoachInput[]
+    updateMany?: ProCoachMemoryUpdateManyWithWhereWithoutCoachInput | ProCoachMemoryUpdateManyWithWhereWithoutCoachInput[]
+    deleteMany?: ProCoachMemoryScalarWhereInput | ProCoachMemoryScalarWhereInput[]
+  }
+
+  export type ProCoachCreateNestedOneWithoutMemoriesInput = {
+    create?: XOR<ProCoachCreateWithoutMemoriesInput, ProCoachUncheckedCreateWithoutMemoriesInput>
+    connectOrCreate?: ProCoachCreateOrConnectWithoutMemoriesInput
+    connect?: ProCoachWhereUniqueInput
+  }
+
+  export type ProCoachUpdateOneRequiredWithoutMemoriesNestedInput = {
+    create?: XOR<ProCoachCreateWithoutMemoriesInput, ProCoachUncheckedCreateWithoutMemoriesInput>
+    connectOrCreate?: ProCoachCreateOrConnectWithoutMemoriesInput
+    upsert?: ProCoachUpsertWithoutMemoriesInput
+    connect?: ProCoachWhereUniqueInput
+    update?: XOR<XOR<ProCoachUpdateToOneWithWhereWithoutMemoriesInput, ProCoachUpdateWithoutMemoriesInput>, ProCoachUncheckedUpdateWithoutMemoriesInput>
   }
 
   export type ProTeamCreateNestedOneWithoutRosterInput = {
@@ -174974,6 +178120,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutLeagueInput = {
@@ -174995,6 +178142,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutLeagueInput = {
@@ -175469,6 +178617,37 @@ export namespace Prisma {
     data: ProSurvivorEntryCreateManyPickedTeamInput | ProSurvivorEntryCreateManyPickedTeamInput[]
   }
 
+  export type ProCoachCreateWithoutTeamInput = {
+    id?: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memories?: ProCoachMemoryCreateNestedManyWithoutCoachInput
+  }
+
+  export type ProCoachUncheckedCreateWithoutTeamInput = {
+    id?: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    memories?: ProCoachMemoryUncheckedCreateNestedManyWithoutCoachInput
+  }
+
+  export type ProCoachCreateOrConnectWithoutTeamInput = {
+    where: ProCoachWhereUniqueInput
+    create: XOR<ProCoachCreateWithoutTeamInput, ProCoachUncheckedCreateWithoutTeamInput>
+  }
+
   export type ProLeagueUpsertWithoutTeamsInput = {
     update: XOR<ProLeagueUpdateWithoutTeamsInput, ProLeagueUncheckedUpdateWithoutTeamsInput>
     create: XOR<ProLeagueCreateWithoutTeamsInput, ProLeagueUncheckedCreateWithoutTeamsInput>
@@ -175687,6 +178866,277 @@ export namespace Prisma {
     data: XOR<ProSurvivorEntryUpdateManyMutationInput, ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamInput>
   }
 
+  export type ProCoachUpsertWithoutTeamInput = {
+    update: XOR<ProCoachUpdateWithoutTeamInput, ProCoachUncheckedUpdateWithoutTeamInput>
+    create: XOR<ProCoachCreateWithoutTeamInput, ProCoachUncheckedCreateWithoutTeamInput>
+    where?: ProCoachWhereInput
+  }
+
+  export type ProCoachUpdateToOneWithWhereWithoutTeamInput = {
+    where?: ProCoachWhereInput
+    data: XOR<ProCoachUpdateWithoutTeamInput, ProCoachUncheckedUpdateWithoutTeamInput>
+  }
+
+  export type ProCoachUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memories?: ProCoachMemoryUpdateManyWithoutCoachNestedInput
+  }
+
+  export type ProCoachUncheckedUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    memories?: ProCoachMemoryUncheckedUpdateManyWithoutCoachNestedInput
+  }
+
+  export type ProTeamCreateWithoutCoachInput = {
+    id?: string
+    slug: string
+    city: string
+    name: string
+    race: string
+    nflFlavor?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
+    baseTv?: number
+    meta?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league: ProLeagueCreateNestedOneWithoutTeamsInput
+    roster?: ProTeamRosterCreateNestedManyWithoutTeamInput
+    homeMatches?: ProLeagueMatchCreateNestedManyWithoutHomeTeamInput
+    awayMatches?: ProLeagueMatchCreateNestedManyWithoutAwayTeamInput
+    standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
+    followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
+    survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+  }
+
+  export type ProTeamUncheckedCreateWithoutCoachInput = {
+    id?: string
+    leagueId: string
+    slug: string
+    city: string
+    name: string
+    race: string
+    nflFlavor?: string | null
+    primaryColor?: string | null
+    secondaryColor?: string | null
+    baseTv?: number
+    meta?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    roster?: ProTeamRosterUncheckedCreateNestedManyWithoutTeamInput
+    homeMatches?: ProLeagueMatchUncheckedCreateNestedManyWithoutHomeTeamInput
+    awayMatches?: ProLeagueMatchUncheckedCreateNestedManyWithoutAwayTeamInput
+    standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
+    followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
+    survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+  }
+
+  export type ProTeamCreateOrConnectWithoutCoachInput = {
+    where: ProTeamWhereUniqueInput
+    create: XOR<ProTeamCreateWithoutCoachInput, ProTeamUncheckedCreateWithoutCoachInput>
+  }
+
+  export type ProCoachMemoryCreateWithoutCoachInput = {
+    id?: string
+    matchId?: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt?: Date | string
+  }
+
+  export type ProCoachMemoryUncheckedCreateWithoutCoachInput = {
+    id?: string
+    matchId?: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt?: Date | string
+  }
+
+  export type ProCoachMemoryCreateOrConnectWithoutCoachInput = {
+    where: ProCoachMemoryWhereUniqueInput
+    create: XOR<ProCoachMemoryCreateWithoutCoachInput, ProCoachMemoryUncheckedCreateWithoutCoachInput>
+  }
+
+  export type ProCoachMemoryCreateManyCoachInputEnvelope = {
+    data: ProCoachMemoryCreateManyCoachInput | ProCoachMemoryCreateManyCoachInput[]
+  }
+
+  export type ProTeamUpsertWithoutCoachInput = {
+    update: XOR<ProTeamUpdateWithoutCoachInput, ProTeamUncheckedUpdateWithoutCoachInput>
+    create: XOR<ProTeamCreateWithoutCoachInput, ProTeamUncheckedCreateWithoutCoachInput>
+    where?: ProTeamWhereInput
+  }
+
+  export type ProTeamUpdateToOneWithWhereWithoutCoachInput = {
+    where?: ProTeamWhereInput
+    data: XOR<ProTeamUpdateWithoutCoachInput, ProTeamUncheckedUpdateWithoutCoachInput>
+  }
+
+  export type ProTeamUpdateWithoutCoachInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    city?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    race?: StringFieldUpdateOperationsInput | string
+    nflFlavor?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    baseTv?: IntFieldUpdateOperationsInput | number
+    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: ProLeagueUpdateOneRequiredWithoutTeamsNestedInput
+    roster?: ProTeamRosterUpdateManyWithoutTeamNestedInput
+    homeMatches?: ProLeagueMatchUpdateManyWithoutHomeTeamNestedInput
+    awayMatches?: ProLeagueMatchUpdateManyWithoutAwayTeamNestedInput
+    standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
+    followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
+    survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+  }
+
+  export type ProTeamUncheckedUpdateWithoutCoachInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    city?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    race?: StringFieldUpdateOperationsInput | string
+    nflFlavor?: NullableStringFieldUpdateOperationsInput | string | null
+    primaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    secondaryColor?: NullableStringFieldUpdateOperationsInput | string | null
+    baseTv?: IntFieldUpdateOperationsInput | number
+    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    roster?: ProTeamRosterUncheckedUpdateManyWithoutTeamNestedInput
+    homeMatches?: ProLeagueMatchUncheckedUpdateManyWithoutHomeTeamNestedInput
+    awayMatches?: ProLeagueMatchUncheckedUpdateManyWithoutAwayTeamNestedInput
+    standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
+    followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
+    survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+  }
+
+  export type ProCoachMemoryUpsertWithWhereUniqueWithoutCoachInput = {
+    where: ProCoachMemoryWhereUniqueInput
+    update: XOR<ProCoachMemoryUpdateWithoutCoachInput, ProCoachMemoryUncheckedUpdateWithoutCoachInput>
+    create: XOR<ProCoachMemoryCreateWithoutCoachInput, ProCoachMemoryUncheckedCreateWithoutCoachInput>
+  }
+
+  export type ProCoachMemoryUpdateWithWhereUniqueWithoutCoachInput = {
+    where: ProCoachMemoryWhereUniqueInput
+    data: XOR<ProCoachMemoryUpdateWithoutCoachInput, ProCoachMemoryUncheckedUpdateWithoutCoachInput>
+  }
+
+  export type ProCoachMemoryUpdateManyWithWhereWithoutCoachInput = {
+    where: ProCoachMemoryScalarWhereInput
+    data: XOR<ProCoachMemoryUpdateManyMutationInput, ProCoachMemoryUncheckedUpdateManyWithoutCoachInput>
+  }
+
+  export type ProCoachMemoryScalarWhereInput = {
+    AND?: ProCoachMemoryScalarWhereInput | ProCoachMemoryScalarWhereInput[]
+    OR?: ProCoachMemoryScalarWhereInput[]
+    NOT?: ProCoachMemoryScalarWhereInput | ProCoachMemoryScalarWhereInput[]
+    id?: StringFilter<"ProCoachMemory"> | string
+    coachId?: StringFilter<"ProCoachMemory"> | string
+    matchId?: StringNullableFilter<"ProCoachMemory"> | string | null
+    drives?: StringFilter<"ProCoachMemory"> | string
+    changes?: StringFilter<"ProCoachMemory"> | string
+    profileBefore?: StringFilter<"ProCoachMemory"> | string
+    profileAfter?: StringFilter<"ProCoachMemory"> | string
+    summary?: StringFilter<"ProCoachMemory"> | string
+    createdAt?: DateTimeFilter<"ProCoachMemory"> | Date | string
+  }
+
+  export type ProCoachCreateWithoutMemoriesInput = {
+    id?: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    team: ProTeamCreateNestedOneWithoutCoachInput
+  }
+
+  export type ProCoachUncheckedCreateWithoutMemoriesInput = {
+    id?: string
+    teamId: string
+    name: string
+    philosophy: string
+    profile: string
+    anchorProfile: string
+    memory?: string | null
+    experience?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ProCoachCreateOrConnectWithoutMemoriesInput = {
+    where: ProCoachWhereUniqueInput
+    create: XOR<ProCoachCreateWithoutMemoriesInput, ProCoachUncheckedCreateWithoutMemoriesInput>
+  }
+
+  export type ProCoachUpsertWithoutMemoriesInput = {
+    update: XOR<ProCoachUpdateWithoutMemoriesInput, ProCoachUncheckedUpdateWithoutMemoriesInput>
+    create: XOR<ProCoachCreateWithoutMemoriesInput, ProCoachUncheckedCreateWithoutMemoriesInput>
+    where?: ProCoachWhereInput
+  }
+
+  export type ProCoachUpdateToOneWithWhereWithoutMemoriesInput = {
+    where?: ProCoachWhereInput
+    data: XOR<ProCoachUpdateWithoutMemoriesInput, ProCoachUncheckedUpdateWithoutMemoriesInput>
+  }
+
+  export type ProCoachUpdateWithoutMemoriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    team?: ProTeamUpdateOneRequiredWithoutCoachNestedInput
+  }
+
+  export type ProCoachUncheckedUpdateWithoutMemoriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    philosophy?: StringFieldUpdateOperationsInput | string
+    profile?: StringFieldUpdateOperationsInput | string
+    anchorProfile?: StringFieldUpdateOperationsInput | string
+    memory?: NullableStringFieldUpdateOperationsInput | string | null
+    experience?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ProTeamCreateWithoutRosterInput = {
     id?: string
     slug: string
@@ -175706,6 +179156,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutRosterInput = {
@@ -175727,6 +179178,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutRosterInput = {
@@ -175844,6 +179296,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutRosterInput = {
@@ -175865,6 +179318,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type ProPlayerCareerSnapshotUpsertWithoutPlayerInput = {
@@ -176584,6 +180038,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutHomeMatchesInput = {
@@ -176605,6 +180060,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutHomeMatchesInput = {
@@ -176631,6 +180087,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutAwayMatchesInput = {
@@ -176652,6 +180109,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutAwayMatchesInput = {
@@ -176889,6 +180347,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutHomeMatchesInput = {
@@ -176910,6 +180369,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUpsertWithoutAwayMatchesInput = {
@@ -176942,6 +180402,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutAwayMatchesInput = {
@@ -176963,6 +180424,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type ProBetMarketUpsertWithWhereUniqueWithoutMatchInput = {
@@ -177103,6 +180565,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchCreateNestedManyWithoutAwayTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutStandingsInput = {
@@ -177124,6 +180587,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUncheckedCreateNestedManyWithoutAwayTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutStandingsInput = {
@@ -177208,6 +180672,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUpdateManyWithoutAwayTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutStandingsInput = {
@@ -177229,6 +180694,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUncheckedUpdateManyWithoutAwayTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type UserCreateWithoutProSpectatorFollowsInput = {
@@ -177401,6 +180867,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchCreateNestedManyWithoutAwayTeamInput
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutFollowersInput = {
@@ -177422,6 +180889,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUncheckedCreateNestedManyWithoutAwayTeamInput
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     survivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutPickedTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutFollowersInput = {
@@ -177616,6 +181084,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUpdateManyWithoutAwayTeamNestedInput
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutFollowersInput = {
@@ -177637,6 +181106,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUncheckedUpdateManyWithoutAwayTeamNestedInput
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type UserCreateWithoutProWalletInput = {
@@ -181452,6 +184922,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchCreateNestedManyWithoutAwayTeamInput
     standings?: ProLeagueStandingsCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowCreateNestedManyWithoutTeamInput
+    coach?: ProCoachCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamUncheckedCreateWithoutSurvivorEntriesInput = {
@@ -181473,6 +184944,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUncheckedCreateNestedManyWithoutAwayTeamInput
     standings?: ProLeagueStandingsUncheckedCreateNestedManyWithoutTeamInput
     followers?: ProSpectatorFollowUncheckedCreateNestedManyWithoutTeamInput
+    coach?: ProCoachUncheckedCreateNestedOneWithoutTeamInput
   }
 
   export type ProTeamCreateOrConnectWithoutSurvivorEntriesInput = {
@@ -181751,6 +185223,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUpdateManyWithoutAwayTeamNestedInput
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutSurvivorEntriesInput = {
@@ -181772,6 +185245,7 @@ export namespace Prisma {
     awayMatches?: ProLeagueMatchUncheckedUpdateManyWithoutAwayTeamNestedInput
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamRosterCreateWithoutCareerSnapshotInput = {
@@ -188696,6 +192170,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateWithoutLeagueInput = {
@@ -188717,6 +192192,7 @@ export namespace Prisma {
     standings?: ProLeagueStandingsUncheckedUpdateManyWithoutTeamNestedInput
     followers?: ProSpectatorFollowUncheckedUpdateManyWithoutTeamNestedInput
     survivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutPickedTeamNestedInput
+    coach?: ProCoachUncheckedUpdateOneWithoutTeamNestedInput
   }
 
   export type ProTeamUncheckedUpdateManyWithoutLeagueInput = {
@@ -189298,6 +192774,50 @@ export namespace Prisma {
     matchId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachMemoryCreateManyCoachInput = {
+    id?: string
+    matchId?: string | null
+    drives: string
+    changes: string
+    profileBefore: string
+    profileAfter: string
+    summary: string
+    createdAt?: Date | string
+  }
+
+  export type ProCoachMemoryUpdateWithoutCoachInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachMemoryUncheckedUpdateWithoutCoachInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ProCoachMemoryUncheckedUpdateManyWithoutCoachInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    matchId?: NullableStringFieldUpdateOperationsInput | string | null
+    drives?: StringFieldUpdateOperationsInput | string
+    changes?: StringFieldUpdateOperationsInput | string
+    profileBefore?: StringFieldUpdateOperationsInput | string
+    profileAfter?: StringFieldUpdateOperationsInput | string
+    summary?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ProPlayerOfMatchVoteCreateManyVotedRosterInput = {

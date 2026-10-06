@@ -2018,3 +2018,33 @@ edition du `.json`, `pnpm --filter web typecheck` +
   1,5-1,9 TD par match (référence FUMBBL 2,1-4,1), calibrage en suite.
   Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md).
+- **2026-10-05** : **Pro League lot 4 « l'évolution persistée »** (change
+  OpenSpec `pro-league-coach-evolution`, `ENGINE_VER` 0.30.0). Le coach
+  d'une équipe devient une PERSONA persistée (`ProCoach` : nom, philosophie,
+  profil VIVANT, ANCRE, mémoire, expérience ; `ProCoachMemory` append-only
+  avec les raisons). Adaptation BORNÉE et EXPLIQUÉE, sans self-play
+  (`coach/adaptation.ts`, pur) : récompense par drive, EMA par stratégie,
+  pas de 2 points max par match vers ce que les stratégies qui rapportent
+  tirent (`STRATEGY_INFLUENCE`), dans `ancre ± 15`, rappel vers l'ancre
+  sans signal. Trois règles à retenir : un réglage admin POSE L'ANCRE (et y
+  ramène le vivant), sinon l'évolution défait le curseur ; l'évolution se
+  joue APRÈS le commit du match, par côté isolé, jamais pour un match de
+  test ; la forme (`ProTeamRoster.form`, enfin écrite : hot +15 / cold −15 /
+  retour vers 50) module l'ORDRE des actions à dés, jamais les dés — sans
+  forme, le bench se re-tamponne à l'identique. Les profils sont FIGÉS dans
+  le journal du replay. Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md).
+- **2026-10-05** : **Pro League lot 5 « l'exploitation »** (change OpenSpec
+  `pro-league-exploitation`, pas de bump : les issues ne changent pas). Les
+  simulations sortent de l'event loop : pool de `worker_threads` dans le
+  sim-engine (`createSimPool`), pool unique côté serveur
+  (`services/pro-league-sim-pool`, `PRO_LEAGUE_SIM_WORKERS`, inline en test),
+  cotes sur 50 runs parallèles. Transition `ready → completed` enfin écrite
+  (`completedAt` = `scheduledAt + durée du replay`, UPDATE conditionné au
+  statut), rétention des replays (365 j, hors saison en cours), bench
+  nocturne sur la matrice complète, healthcheck `simPool` + `liveCompletion`.
+  Piège : un worker `.ts` ne résout pas ses imports sans extension avec les
+  hooks tsx hérités par `execArgv` — il s'amorce par un `.mjs` qui appelle
+  `register()` de `tsx/esm/api` (tsx est dépendance de production du
+  sim-engine). Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md).
