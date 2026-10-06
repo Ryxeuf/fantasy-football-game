@@ -55,6 +55,14 @@ deux puits, dont un à coût réel, et un plafond d'émission.
    match sur le site.
 5. **La feuille est saisie APRÈS COUP**, pas pendant le match : elle n'est pas
    une vitrine « en direct » posée sur la table.
+6. **Les coachs n'impriment pas.** Le kit d'impression (planche de cartes,
+   cadres de cartes à imprimer, thèmes PDF, planche de jetons) passe en
+   attente (§6.C).
+7. **Un support nouveau a une version de base GRATUITE** ; seuls ses styles se
+   paient (§3).
+8. **Les couleurs d'équipe sont des PALETTES NOMMÉES**, pas un nuancier libre
+   (§6.A).
+9. **Le plafond d'émission se compte par SAISON DE LIGUE** (§5).
 
 ## 3. Les garde-fous de la boutique
 
@@ -66,6 +74,11 @@ deux puits, dont un à coût réel, et un plafond d'émission.
   avoir à refermer le jour où la question du paiement reviendrait (loot box).
 - **Ne jamais faire payer ce qui est gratuit aujourd'hui** : upload de logo,
   photo de joueur, description d'équipe restent gratuits.
+- **Un support NOUVEAU naît avec une version de base gratuite** (décision du
+  2026-10-06) : la boutique vend l'HABILLAGE, pas l'accès. Les couleurs
+  canoniques du roster sont la base gratuite des palettes ; un cimetière
+  d'équipe serait gratuit, l'épitaphe payante. Seule exception assumée : un
+  consommable à coût réel (la Gazette), qui est un service, pas un support.
 - **Un titre ne s'achète pas** (Oracle, Champion…), et un habillage qui
   SIGNALE un statut (cadre « vétéran » selon le niveau, « légende » selon la
   carrière) est DÉRIVÉ et gratuit. Ce qui se vend, c'est un STYLE ; un statut
@@ -77,18 +90,18 @@ deux puits, dont un à coût réel, et un plafond d'émission.
    AVANT le match              PENDANT (sur table)           APRÈS (feuille saisie)
  ┌───────────────────┐    ┌───────────────────────┐    ┌───────────────────────────┐
  │ roster, achats    │    │ vrais dés             │    │ feuille validée           │
- │ impressions PDF   │───▶│ vraies figurines      │───▶│ séquence p.68 (D8, achats)│
- │ cartes joueurs    │    │ (le site est fermé)   │    │ classement, pronostics    │
+ │ (rien d'imprimé)  │───▶│ vraies figurines      │───▶│ séquence p.68 (D8, achats)│
+ │                   │    │ (le site est fermé)   │    │ classement, pronostics    │
  └───────────────────┘    └───────────────────────┘    └───────────────────────────┘
-        ▲                                                        ▲
-     IMPRIMÉ                                              PAGES DE LIGUE
+                                                                 ▲
+                                                          PAGES DE LIGUE
 ```
 
 | Qui le voit ? | Exemples |
 |---|---|
 | moi seul | thème de dés (l'adversaire voit les siens) |
 | toute la ligue | couleurs et emblème au classement / calendrier / feuille, Gazette, épitaphe |
-| la table | PDF imprimés, cartes joueurs, jetons |
+| la table | rien : les coachs n'impriment pas (décision 6) |
 | internet | page de partage `/r/[token]` et son image OG, carte joueur exportée |
 
 Un cosmétique se vend parce qu'on le MONTRE. Or le thème de dés est surtout
@@ -96,7 +109,8 @@ dans la case « moi seul » — et sur table on lance de vrais dés : les dés
 numériques n'apparaissent qu'au lanceur de la home, au D8 d'amélioration
 (`AdvancementEditor`) et au récapitulatif des jets de Haine de la feuille.
 Ce n'est pas une raison de le retirer, mais les prochains articles doivent
-viser les cases « ligue », « table » et « internet ».
+viser les cases « ligue » et « internet » — la case « table » est vide, et
+c'est la page de LIGUE qui porte presque tout.
 
 Piste mineure pour le puits existant : afficher sur la feuille le **tirage
 d'amélioration** dans le thème du coach qui l'a lancé, visible de l'adversaire.
@@ -127,8 +141,12 @@ Propriétés qui vont avec :
 - **Des sources rattrapables rendent la date d'ouverture indifférente** : on
   n'a pas besoin de créditer pendant la recette, un premier passage idempotent
   à l'ouverture crédite l'historique (effet « vos Couronnes vous attendent »).
-- **Plafond d'émission** par coach et par période, calculé depuis le registre
-  des récompenses au moment du crédit.
+- **Plafond d'émission par coach et par SAISON DE LIGUE** (décision 9),
+  calculé depuis le registre des récompenses au moment du crédit. Un coach
+  inscrit dans deux ligues a deux plafonds : c'est voulu, il joue deux fois
+  plus. Une COUPE n'a pas de saison : la coupe elle-même tient lieu de
+  période (clé `season:<seasonId>` ou `cup:<cupId>`). Les succès, uniques par
+  nature, restent hors plafond ; feuilles, pronostics et palmarès y entrent.
 
 Ordre de grandeur, **chiffres à calibrer** (hypothèses pour fixer les idées) :
 
@@ -153,34 +171,48 @@ Deux sources existantes à NE PAS rebrancher telles quelles :
 
 ### A. L'identité d'équipe — un achat, visible partout (priorité)
 
-**Couleurs d'équipe, débloquées par coach.** C'est le seul article qui se voit
-à la fois au classement, au calendrier, dans l'en-tête de la feuille, sur la
-page de partage et son image OG, dans les PDF et sur les cartes joueurs.
+**Palettes d'équipe, achetées par le coach.** C'est le seul article qui se
+voit à la fois au classement, au calendrier, dans l'en-tête de la feuille, sur
+la page de partage et son image OG, et sur les cartes joueurs exportées.
 
-- **Propriété = le coach, valeur = l'équipe.** Le déblocage est acheté une
-  fois ; chacune de ses équipes peut alors porter ses couleurs. Les valeurs
-  vivent sur `Team` (deux colonnes nullables, `null` = couleurs canoniques du
-  roster, `ROSTER_COLORS`) — lisibles sans backfill, sur le modèle de
-  `ProTeam.primaryColor`.
-- **Une seule résolution** : `getTeamColors(slug, override?)` accepte déjà une
-  surcharge (`packages/game-engine/src/rosters/team-colors.ts`). Tout
-  consommateur en part, comme `effectiveRegionalRules` pour les Ligues.
-- **Contrôle à l'écriture, pas à la lecture** : le classement lit N équipes,
-  il ne doit pas joindre les déblocages de N coachs. Un retrait admin du
-  déblocage remet explicitement à `null` les couleurs des équipes du coach.
-- **Argument propre au jeu sur table** : les couleurs d'une équipe sont celles
-  de ses FIGURINES PEINTES. C'est un argument fort pour un nuancier libre (avec
-  contrôle de contraste) plutôt que des palettes nommées — à trancher (§10).
+- **Des palettes NOMMÉES** (décision 8), pas un nuancier libre : un catalogue
+  (« Rouge sang & or », « Vert marais & os »…) dont chaque entrée porte une
+  couleur principale et une secondaire. Le contraste est garanti par la
+  curation, et chaque palette est un article — un vrai puits, là où un
+  nuancier libre ne se vendait qu'une fois. Les coachs peignent leurs
+  figurines : le catalogue doit couvrir les schémas classiques pour qu'une
+  équipe retrouve SES couleurs.
+- **La base est gratuite** (décision 7) : les couleurs canoniques du roster
+  (`ROSTER_COLORS`) restent le défaut de toute équipe.
+- **Propriété = le coach, choix = l'équipe** (décision 2). Une palette achetée
+  sert à TOUTES ses équipes ; chacune choisit la sienne parmi celles que son
+  coach possède. Le choix vit sur `Team` (une colonne nullable portant le slug
+  de la palette, `null` = couleurs du roster) — lisible sans backfill.
+- **On stocke le slug, pas les couleurs** : corriger une teinte en admin
+  corrige toutes les équipes qui la portent. Une palette n'a AUCUN fichier
+  (contrairement aux PNG des dés) : elle peut être entièrement « base
+  d'abord », créée et modifiée en admin sans déploiement, avec un contrôle de
+  contraste À L'ÉCRITURE (une palette illisible n'est jamais servie).
+- **Une seule résolution** : slug → couleurs via le catalogue caché, puis
+  `getTeamColors(slug, override?)`, qui accepte déjà une surcharge
+  (`packages/game-engine/src/rosters/team-colors.ts`). Tout consommateur en
+  part, comme `effectiveRegionalRules` pour les Ligues.
+- **Possession contrôlée à l'écriture, pas à la lecture** : le classement lit
+  N équipes, il ne joint pas les acquisitions de N coachs. À la lecture, un
+  slug inconnu (palette supprimée) retombe sur les couleurs du roster — même
+  posture que les thèmes de dés. Retirée de la vente ≠ retirée à l'acheteur ;
+  un retrait admin d'une palette à un coach remet à `null` les équipes de ce
+  coach qui la portaient.
 
 **Blasons et cadre d'emblème.** `renderTeamLogoSvg` dessine 4 formes
 (`TEAM_LOGO_SHAPES` : écu, cercle, losange, hexagone) et un glyphe par roster
 pour les équipes sans logo : formes et glyphes supplémentaires à vendre. Un
 **cadre** (lauriers, chaînes, crânes) habille aussi un logo uploadé.
 
-**Correctif gratuit au passage** : l'export PDF du roster laisse une cellule
-vide « pour le logo qui n'est pas inclus » (`apps/web/app/me/teams/utils/exportPDF.ts`).
-Mettre le logo dans le PDF est une correction de base — gratuite, et livrable
-seule dès maintenant.
+**Correctif gratuit, faible priorité** : l'export PDF du roster laisse une
+cellule vide « pour le logo qui n'est pas inclus »
+(`apps/web/app/me/teams/utils/exportPDF.ts`). Correction de base, gratuite —
+mais les coachs n'impriment pas : à faire en passant, pas pour elle-même.
 
 ### B. La Gazette de MA rencontre — le puits à coût réel
 
@@ -204,18 +236,20 @@ Points à trancher dans la proposition :
 - **Modération** : noms d'équipes et de joueurs saisis par les coachs ⇒
   sortie passée au filtre de mots interdits (Q.B.2).
 
-### C. Ce qui va sur la table — l'impression (si les coachs impriment, §10)
+### C. L'impression — en attente (les coachs n'impriment pas)
+
+Décision 6. Pistes gardées pour le jour où l'usage changerait :
 
 - **Cartes joueurs** : `card-art.tsx` est déjà au format carte poker
-  (750 × 1050 px = 63,5 × 88,9 mm à 300 dpi). Il manque une **planche A4 de
-  9 cartes** (3 × 3 tient sur une A4) et des **familles de cadres** payantes
-  (parchemin, acier, Chaos…). Le cadre de statut, lui, reste dérivé (§3).
-- **Thèmes d'impression** : feuille d'équipe, fiche de compétences, feuille de
-  rencontre papier de 5 pages. Coût faible : `competition-pdf/theme.ts` repose
-  sur une seule palette (`PDF_COLORS`).
-- **Planche de jetons** aux couleurs et au blason de l'équipe : pastilles
-  numérotées pour socles de 32 mm, marqueur de tour, compteur de relances,
-  dugout. Support NOUVEAU : base gratuite ou non, à trancher (§10).
+  (750 × 1050 px = 63,5 × 88,9 mm à 300 dpi) ; une planche A4 de 9 cartes
+  (3 × 3) suffirait. Les **familles de cadres** de la carte gardent un intérêt
+  hors impression : la carte exportée se PARTAGE (case « internet » du §4) —
+  le cadre de statut restant dérivé (§3).
+- **Thèmes d'impression** (feuille d'équipe, fiche de compétences, feuille
+  papier de 5 pages) : `competition-pdf/theme.ts` repose sur une seule
+  palette (`PDF_COLORS`).
+- **Planche de jetons** (pastilles pour socles de 32 mm, marqueur de tour,
+  relances, dugout) : support nouveau, donc base gratuite (décision 7).
 
 ### D. Le récit de ligue
 
@@ -258,6 +292,8 @@ le serveur sans liste ni contrôle de propriété.
 | Bonus quotidien | récompense la connexion, hyperinflation vécue en Pro League |
 | Season Pass en euros (R.B.2) | pas assez de matière ni d'utilisateurs — décision du 2026-10-06 |
 | Plateau en ligne | jeu en ligne fermé (FF) et bugué — en attente |
+| Kit d'impression | les coachs n'impriment pas — en attente (§6.C) |
+| Nuancier de couleurs libre | palettes nommées retenues (contraste garanti, plusieurs articles) |
 
 ## 8. Esquisse technique (pour la proposition, pas pour coder ici)
 
@@ -277,8 +313,10 @@ Trois natures d'achat, qui ne se modélisent pas pareil :
   enabled, ordre, libellés }` + `UserCosmetic { userId, kind, slug, source }`,
   unique `(userId, kind, slug)`) pour tout nouvel article. `DiceTheme` /
   `UserDiceTheme` RESTENT : sous `db push`, un renommage est un DROP + CREATE.
-  La boutique fusionne les deux. Les couleurs d'équipe sont un article
-  `kind = team_colors` sans catalogue de variantes.
+  La boutique fusionne les deux. Les palettes d'équipe sont le premier
+  `kind` (`team_palette`) : leurs couleurs sont des DONNÉES de la ligne
+  (pas un contrat de code), validées (format, contraste) à l'écriture et à la
+  lecture — une ligne invalide n'est jamais servie.
 - **Consommables** : chacun sa table (article de Gazette, épitaphe), avec la
   référence de son débit. Ils ne partagent que le débit conditionnel et le
   remboursement.
@@ -294,31 +332,30 @@ Trois natures d'achat, qui ne se modélisent pas pareil :
 ## 9. Découpage proposé
 
 ```
- 0. logo dans le PDF du roster ───── correctif gratuit, indépendant, tout de suite
- 1. crowns-earning ───────────────── feuilles validées + succès + plafond + registre
+ 1. crowns-earning ───────────────── feuilles validées + succès + plafond par saison
+        │                            + registre des récompenses
         │                            (prérequis à l'ouverture de `crowns`)
-        ├── 2. team-colors ───────── déblocage par coach, colonnes Team, résolution unique,
-        │                            propagation (classement, feuille, PDF, cartes, OG)
+        ├── 2. team-palettes ─────── catalogue de palettes nommées, achat par coach,
+        │                            choix par équipe, résolution unique, propagation
+        │                            (classement, calendrier, feuille, OG, cartes)
         ├── 3. match-gazette ──────── article payant, remboursement système
-        ├── 4. print-kit ─────────── planche de cartes, cadres, thèmes PDF (si impression)
-        └── 5. player-memorial ───── épitaphe
+        └── 4. player-memorial ───── épitaphe (cimetière gratuit)
 ```
 
-Les lots 2 à 5 sont indépendants entre eux ; ils supposent seulement que les
-Couronnes se gagnent (lot 1).
+Les lots 2 à 4 sont indépendants entre eux ; ils supposent seulement que les
+Couronnes se gagnent (lot 1). Le lot 2 pose au passage la table générique des
+possessions (§8), que les blasons et cadres d'emblème réutiliseront.
 
 ## 10. Questions ouvertes
 
-- **Les coachs impriment-ils** leurs rosters et leurs cartes ? Si oui, le lot 4
-  monte juste après les couleurs.
-- **Un support nouveau** (planche de jetons, planche de cartes) : base
-  gratuite et styles payants, ou entièrement payant ?
-- **Couleurs** : nuancier libre (les couleurs de peinture des figurines) ou
-  palettes nommées ? Penchant : nuancier libre avec contrôle de contraste.
-- **Plafond** : par saison de ligue, ou par mois calendaire (un coach peut
-  jouer dans plusieurs ligues) ?
+Tranchées le 2026-10-06 : impression (non), base gratuite (oui), palettes
+nommées (oui), plafond par saison de ligue (oui). Restent :
+
 - **Bonus d'inscription** : réduire (un thème classique, 250 ?) ou supprimer ?
-- **Montants** des sources et prix des nouveaux articles, à calibrer sur le
-  rythme réel de feuilles validées en prod.
+- **Montants** des sources, valeur du plafond et prix des nouveaux articles,
+  à calibrer sur le rythme réel de feuilles validées en prod.
+- **Palettes** : combien au lancement, à quel prix (plus bas qu'un thème de
+  dés, puisqu'on en achète plusieurs ?), et faut-il des palettes « de roster »
+  réservées à un roster donné ?
 - **Gazette** : seul un coach de la rencontre paie, ou aussi le commissaire,
   voire un spectateur d'une ligue ouverte ?

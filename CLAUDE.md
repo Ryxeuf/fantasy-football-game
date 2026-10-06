@@ -2004,8 +2004,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   joker de pronostic enterré, plateau en ligne hors périmètre (jeu sur table,
   feuille saisie après coup). Sources : la feuille validée (participation,
   pas victoire — donc insensible à l'invalidation), les succès, un plafond ;
-  pas de bonus quotidien. Puits retenus, par ordre : couleurs + blason
-  d'équipe, Gazette de la rencontre (coût réel), impression (planche de
-  cartes, cadres, thèmes PDF), épitaphe. Un habillage qui signale un statut
-  est dérivé et gratuit ; seul un style se vend. Voir
+  pas de bonus quotidien ; plafond par SAISON DE LIGUE (la coupe tient lieu
+  de saison). Puits retenus, par ordre : PALETTES NOMMÉES d'équipe (achetées
+  par le coach, choisies par équipe, slug stocké sur `Team`, couleurs en
+  données éditables en admin), Gazette de la rencontre (coût réel), épitaphe.
+  Impression en attente (les coachs n'impriment pas). Un support nouveau naît
+  avec une base gratuite, seuls ses styles se paient ; un habillage qui
+  signale un statut est dérivé et gratuit. Voir
   [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](./docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).
