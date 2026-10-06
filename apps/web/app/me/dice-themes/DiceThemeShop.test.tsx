@@ -50,6 +50,7 @@ beforeEach(() => {
   state.crowns = {
     enabled: true,
     balance: 300,
+    schedule: { sheet: 25, achievement: 50, signup: 250, seasonSheetCap: 500 },
     applyBalance: vi.fn(),
     refresh: vi.fn(async () => {}),
   };
@@ -111,6 +112,17 @@ describe("DiceThemeShop", () => {
     const btn = screen.getByTestId("dice-theme-nains").querySelector("button")!;
     expect(btn.disabled).toBe(true);
     expect(btn.textContent).toContain("Solde insuffisant");
+  });
+
+  it("explique comment gagner des Couronnes", () => {
+    render(<DiceThemeShop />);
+    expect(screen.getByTestId("crowns-how-to-earn").textContent).toContain("+25 par coach");
+  });
+
+  it("Crowns fermées : pas d'explication des gains", () => {
+    state.crowns = { ...state.crowns, enabled: false, balance: null };
+    render(<DiceThemeShop />);
+    expect(screen.queryByTestId("crowns-how-to-earn")).toBeNull();
   });
 
   it("Crowns fermées (flag OFF) : thème payant verrouillé, pas de solde", () => {

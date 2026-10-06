@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiRequest } from "../lib/api-client";
+import type { CrownsRewardBreakdown, CrownsRewardSchedule } from "../lib/crowns";
 import { getAuthToken } from "../lib/auth-storage";
 import { CROWNS_FLAG } from "../lib/featureFlagKeys";
 import { useFeatureFlagOrOff } from "../hooks/useFeatureFlag";
@@ -22,12 +23,16 @@ export interface CrownsTransaction {
   readonly amount: number;
   readonly ref: string | null;
   readonly createdAt: string;
+  /** Détail d'un passage de récompenses (`crowns-earning`) — optionnel. */
+  readonly rewards?: CrownsRewardBreakdown;
 }
 
 /** Réponse de `GET /crowns/me`. */
 export interface CrownsResponse {
   readonly balance: number;
   readonly transactions: readonly CrownsTransaction[];
+  /** Barème des récompenses (`crowns-earning`) — optionnel (API antérieure). */
+  readonly schedule?: CrownsRewardSchedule;
 }
 
 export interface CrownsContextValue {
@@ -39,6 +44,8 @@ export interface CrownsContextValue {
   /** `null` tant que non chargé (ou visiteur anonyme). */
   readonly balance: number | null;
   readonly transactions: readonly CrownsTransaction[];
+  /** Barème des récompenses ; `null` tant que non chargé. */
+  readonly schedule: CrownsRewardSchedule | null;
   readonly refresh: () => Promise<void>;
   /** Applique un solde connu (réponse d'un achat) sans requête. */
   readonly applyBalance: (balance: number) => void;
@@ -50,6 +57,7 @@ const DEFAULT_VALUE: CrownsContextValue = {
   error: false,
   balance: null,
   transactions: [],
+  schedule: null,
   refresh: async () => {},
   applyBalance: () => {},
 };
@@ -91,7 +99,11 @@ export function CrownsProvider({ children }: { children: ReactNode }) {
   }, [load]);
 
   const applyBalance = useCallback((balance: number) => {
-    setData((prev) => ({ balance, transactions: prev?.transactions ?? [] }));
+    setData((prev) => ({
+      balance,
+      transactions: prev?.transactions ?? [],
+      schedule: prev?.schedule,
+    }));
   }, []);
 
   const value = useMemo<CrownsContextValue>(
@@ -101,6 +113,7 @@ export function CrownsProvider({ children }: { children: ReactNode }) {
       error: enabled && error,
       balance: enabled ? data?.balance ?? null : null,
       transactions: enabled ? data?.transactions ?? [] : [],
+      schedule: enabled ? data?.schedule ?? null : null,
       refresh: load,
       applyBalance,
     }),

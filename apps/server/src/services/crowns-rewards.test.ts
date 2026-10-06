@@ -36,6 +36,7 @@ import { getOrCreateWallet } from "./pro-wallet";
 import { DEFAULT_CROWNS_REWARD_SCHEDULE as S } from "./crowns-rewards-rules";
 import {
   loadAchievementRewardCandidates,
+  loadRewardBreakdowns,
   loadSheetRewardCandidates,
   reconcileCrownsRewards,
   resetCrownsRewardsDebounce,
@@ -249,5 +250,34 @@ describe("reconcileCrownsRewards", () => {
       const second = await reconcileCrownsRewards(ME, 1_001);
       expect(second.skipped).toBe(false);
     });
+  });
+});
+
+describe("loadRewardBreakdowns", () => {
+  it("ne lit le registre que pour les opérations de passage", async () => {
+    const out = await loadRewardBreakdowns([
+      { id: "t1", type: "SINK", ref: "dice-theme:glace" },
+      { id: "t2", type: "REWARD", ref: "first_signup" },
+    ]);
+    expect(out.size).toBe(0);
+    expect(db.crownsReward.findMany).not.toHaveBeenCalled();
+  });
+
+  it("détaille chaque passage, plafonnées comprises", async () => {
+    db.crownsReward.findMany.mockResolvedValue([
+      { transactionId: "t-a", kind: "sheet", amount: 25, baseAmount: 25 },
+      { transactionId: "t-a", kind: "sheet", amount: 0, baseAmount: 25 },
+      { transactionId: "t-a", kind: "achievement", amount: 50, baseAmount: 50 },
+      { transactionId: "t-b", kind: "signup", amount: 250, baseAmount: 250 },
+    ]);
+    const out = await loadRewardBreakdowns([
+      { id: "t-a", type: "REWARD", ref: "rewards:1" },
+      { id: "t-b", type: "REWARD", ref: "rewards:2" },
+    ]);
+    expect(db.crownsReward.findMany.mock.calls[0][0].where).toEqual({
+      transactionId: { in: ["t-a", "t-b"] },
+    });
+    expect(out.get("t-a")).toEqual({ sheets: 1, achievements: 1, signup: false, capped: 1 });
+    expect(out.get("t-b")).toEqual({ sheets: 0, achievements: 0, signup: true, capped: 0 });
   });
 });

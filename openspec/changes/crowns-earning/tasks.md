@@ -15,9 +15,9 @@
 
 ## 3. Route et journal
 
-- [ ] 3.1 Brancher le rattrapage dans `GET /crowns/me` (`apps/server/src/routes/crowns.ts`) en best-effort avant la lecture, et servir le champ optionnel `rewards { sheets, achievements, signup, capped }` sur les opérations `rewards:` (une requête sur le registre) ; vérifier par test de route : rattrapage en échec ⇒ 200 avec le solde, détail servi, flag fermé ⇒ 403 inchangé.
-- [ ] 3.2 Libeller les passages dans `apps/web/app/lib/crowns.ts` (`describeCrownsTransaction` : « Récompenses : 2 feuilles de match, 1 succès », mention des plafonnées ; une `REWARD` sans réf. `rewards:` reste « Bonus de bienvenue ») avec le champ `rewards` optionnel dans les types ; vérifier par `crowns.test.ts`.
-- [ ] 3.3 Ajouter le bloc « Comment gagner des Couronnes » (feuille validée, succès, bonus de bienvenue, plafond par saison) à la carte Couronnes du profil et à la boutique `/me/dice-themes` ; vérifier par tests de rendu (bloc présent flag actif, absent flag inactif).
+- [x] 3.1 Brancher le rattrapage dans `GET /crowns/me` (`apps/server/src/routes/crowns.ts`) en best-effort avant la lecture, et servir le champ optionnel `rewards { sheets, achievements, signup, capped }` sur les opérations `rewards:` (une requête sur le registre) ; vérifier par test de route : rattrapage en échec ⇒ 200 avec le solde, détail servi, flag fermé ⇒ 403 inchangé.
+- [x] 3.2 Libeller les passages dans `apps/web/app/lib/crowns.ts` (`describeCrownsTransaction` : « Récompenses : 2 feuilles de match, 1 succès », mention des plafonnées ; une `REWARD` sans réf. `rewards:` reste « Bonus de bienvenue ») avec le champ `rewards` optionnel dans les types ; vérifier par `crowns.test.ts`.
+- [x] 3.3 Ajouter le bloc « Comment gagner des Couronnes » (feuille validée, succès, bonus de bienvenue, plafond par saison) à la carte Couronnes du profil et à la boutique `/me/dice-themes` ; vérifier par tests de rendu (bloc présent flag actif, absent flag inactif).
 
 ## 4. Admin
 

@@ -8,6 +8,30 @@
 /** Préfixe de la référence d'un achat / remboursement de thème de dés. */
 export const DICE_THEME_TX_REF_PREFIX = "dice-theme:";
 
+/**
+ * Préfixe de la référence d'un passage de récompenses (`crowns-earning`) :
+ * une opération `REWARD` réf. `rewards:<id>` regroupe tout ce qu'un passage
+ * de rattrapage a versé. Miroir de `crowns-rewards-rules` côté serveur.
+ */
+export const REWARDS_TX_REF_PREFIX = "rewards:";
+
+/** Barème des récompenses, servi par `GET /crowns/me` (miroir serveur). */
+export interface CrownsRewardSchedule {
+  readonly sheet: number;
+  readonly achievement: number;
+  readonly signup: number;
+  readonly seasonSheetCap: number;
+}
+
+/** Détail d'un passage de récompenses, servi par `GET /crowns/me`. */
+export interface CrownsRewardBreakdown {
+  readonly sheets: number;
+  readonly achievements: number;
+  readonly signup: boolean;
+  /** Feuilles tronquées ou annulées par le plafond de saison. */
+  readonly capped: number;
+}
+
 /** « 1 250 » (espace fine insécable, comme le reste du site). */
 export function formatCrowns(amount: number, locale: "fr" | "en" = "fr"): string {
   return new Intl.NumberFormat(locale === "en" ? "en-GB" : "fr-FR").format(amount);
@@ -30,6 +54,30 @@ export interface CrownsTransactionLike {
   readonly type: string;
   readonly amount: number;
   readonly ref: string | null;
+  /** Passage de récompenses uniquement — optionnel (API antérieure). */
+  readonly rewards?: CrownsRewardBreakdown;
+}
+
+function plural(count: number, singular: string, pluralForm: string): string {
+  return `${count} ${count > 1 ? pluralForm : singular}`;
+}
+
+/**
+ * « Récompenses : 2 feuilles de match, 1 succès, bonus de bienvenue — 1
+ * feuille plafonnée ». Sans détail (API antérieure, lecture admin) :
+ * « Récompenses ».
+ */
+export function describeRewardPass(rewards: CrownsRewardBreakdown | undefined): string {
+  if (!rewards) return "Récompenses";
+  const parts: string[] = [];
+  if (rewards.sheets > 0) parts.push(plural(rewards.sheets, "feuille de match", "feuilles de match"));
+  if (rewards.achievements > 0) parts.push(plural(rewards.achievements, "succès", "succès"));
+  if (rewards.signup) parts.push("bonus de bienvenue");
+  let label = parts.length > 0 ? `Récompenses : ${parts.join(", ")}` : "Récompenses";
+  if (rewards.capped > 0) {
+    label += ` — ${plural(rewards.capped, "feuille plafonnée", "feuilles plafonnées")}`;
+  }
+  return label;
 }
 
 /**
@@ -50,7 +98,9 @@ export function describeCrownsTransaction(
     case "ADMIN_ADJUST":
       return tx.ref ? `Ajustement de l'équipe Nuffle Arena — ${tx.ref}` : "Ajustement de l'équipe Nuffle Arena";
     case "REWARD":
-      return "Bonus de bienvenue";
+      return tx.ref?.startsWith(REWARDS_TX_REF_PREFIX)
+        ? describeRewardPass(tx.rewards)
+        : "Bonus de bienvenue";
     case "DAILY":
       return "Bonus quotidien";
     case "BADGE":

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useDiceTheme, type DiceThemeOption } from "../../contexts/DiceThemeContext";
 import { useCrowns } from "../../contexts/CrownsContext";
 import { CrownsBalance } from "../../components/crowns/CrownsBalance";
+import { HowToEarnCrowns } from "../../components/crowns/HowToEarnCrowns";
 import { DiceThemePreview } from "../../components/dice/DiceThemePreview";
 import { formatCrowns } from "../../lib/crowns";
 import { DICE_SHOP_FILTERS, filterShopThemes, shopAction, type DiceShopFilter } from "./shop";
@@ -90,6 +91,8 @@ export default function DiceThemeShop() {
         </div>
         <CrownsBalance className="text-sm" />
       </div>
+
+      {crowns.enabled && <HowToEarnCrowns schedule={crowns.schedule ?? null} />}
 
       {error && (
         <p className="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-800" role="alert">

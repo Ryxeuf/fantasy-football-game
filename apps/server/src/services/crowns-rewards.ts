@@ -36,7 +36,9 @@ import {
   seasonPeriodKey,
   sheetRewardKey,
   signupRewardKey,
+  summarizeCrownsRewards,
   type AchievementRewardCandidate,
+  type CrownsRewardBreakdown,
   type CrownsRewardCandidate,
   type SheetRewardCandidate,
 } from "./crowns-rewards-rules";
@@ -281,7 +283,9 @@ export async function reconcileCrownsRewards(
             periodKey: r.periodKey,
             amount: r.amount,
             baseAmount: r.baseAmount,
-            transactionId: r.amount > 0 ? transactionId : null,
+            // Toutes les lignes du passage, plafonnées comprises : le détail
+            // servi au journal les compte (`summarizeCrownsRewards`).
+            transactionId,
           },
         });
       }
@@ -311,4 +315,35 @@ export async function reconcileCrownsRewards(
     conflict: false,
     skipped: false,
   };
+}
+
+/**
+ * Détail des passages de rattrapage parmi des opérations du journal : pour
+ * chaque opération `REWARD` réf. `rewards:<id>`, ce qu'elle contient (feuilles,
+ * succès, bonus, plafonnées). Une seule requête sur le registre.
+ */
+export async function loadRewardBreakdowns(
+  transactions: ReadonlyArray<{ id: string; type: string; ref: string | null }>,
+): Promise<Map<string, CrownsRewardBreakdown>> {
+  const ids = transactions
+    .filter((t) => t.type === "REWARD" && t.ref?.startsWith(REWARDS_TX_REF_PREFIX))
+    .map((t) => t.id);
+  const breakdowns = new Map<string, CrownsRewardBreakdown>();
+  if (ids.length === 0) return breakdowns;
+  const rows: Array<{
+    transactionId: string | null;
+    kind: string;
+    amount: number;
+    baseAmount: number;
+  }> = await prisma.crownsReward.findMany({
+    where: { transactionId: { in: ids } },
+    select: { transactionId: true, kind: true, amount: true, baseAmount: true },
+  });
+  const byTx = new Map<string, typeof rows>();
+  for (const row of rows) {
+    if (!row.transactionId) continue;
+    byTx.set(row.transactionId, [...(byTx.get(row.transactionId) ?? []), row]);
+  }
+  for (const [id, group] of byTx) breakdowns.set(id, summarizeCrownsRewards(group));
+  return breakdowns;
 }

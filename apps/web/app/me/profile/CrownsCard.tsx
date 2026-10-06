@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCrowns } from "../../contexts/CrownsContext";
 import { useDiceTheme } from "../../contexts/DiceThemeContext";
 import { describeCrownsTransaction, formatCrowns, formatCrownsDelta } from "../../lib/crowns";
+import { HowToEarnCrowns } from "../../components/crowns/HowToEarnCrowns";
 
 /** Nombre d'opérations montrées sur le profil (le serveur en sert 20). */
 const RECENT_COUNT = 5;
@@ -13,7 +14,7 @@ const RECENT_COUNT = 5;
  * Masquée quand le flag `crowns` est OFF.
  */
 export default function CrownsCard() {
-  const { enabled, loading, balance, transactions } = useCrowns();
+  const { enabled, loading, balance, transactions, schedule } = useCrowns();
   const { enabled: diceThemesEnabled, themes } = useDiceTheme();
   if (!enabled) return null;
 
@@ -29,8 +30,9 @@ export default function CrownsCard() {
         </span>
       </div>
       <p className="mt-1 text-sm text-gray-600">
-        La monnaie de Nuffle Arena : elle sert à acheter des thèmes de dés.
+        La monnaie de Nuffle Arena : elle se gagne en jouant et sert à acheter des thèmes de dés.
       </p>
+      <HowToEarnCrowns schedule={schedule ?? null} className="mt-4" />
 
       {recent.length > 0 ? (
         <ul className="mt-4 divide-y divide-gray-100" data-testid="crowns-card-history">
