@@ -32,6 +32,7 @@ export {
 export {
   buildEngineRoster,
   buildEngineSimInput,
+  buildSimInputForDriver,
   rosterSlugForRace,
   RACE_TO_ROSTER_SLUG,
 } from './driver/engine-roster-fixture';
