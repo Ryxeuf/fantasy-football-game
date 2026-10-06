@@ -1,3 +1,10 @@
+## [1.256.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.256.0...v1.256.1) (2026-10-06)
+
+
+### 🐛 Bug Fixes
+
+* **pro-league:** bac à sable sur le moteur courant + `pnpm sim:match` ([#1065](https://github.com/Ryxeuf/fantasy-football-game/issues/1065)) ([4ee1cb9](https://github.com/Ryxeuf/fantasy-football-game/commit/4ee1cb99ed3ad6757f24806505f8a52464ab72e1))
+
 ## [1.256.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.255.0...v1.256.0) (2026-10-06)
 
 
