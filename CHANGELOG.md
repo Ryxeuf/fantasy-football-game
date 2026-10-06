@@ -1,3 +1,17 @@
+## [1.256.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.255.0...v1.256.0) (2026-10-06)
+
+
+### ✨ Features
+
+* dés et faces dans le compendium + page d'aide de toutes les fonctionnalités ([#1064](https://github.com/Ryxeuf/fantasy-football-game/issues/1064)) ([b3c50bc](https://github.com/Ryxeuf/fantasy-football-game/commit/b3c50bc945b85cb4f68476ce94cf3e5e0b83cd58))
+
+
+### 📝 Documentation
+
+* **openspec:** sync et archive de dix changes fusionnés en septembre ([#1063](https://github.com/Ryxeuf/fantasy-football-game/issues/1063)) ([a9a8605](https://github.com/Ryxeuf/fantasy-football-game/commit/a9a860555999dc4c7eb0c1403f6bc86f4f8a2791))
+* **openspec:** sync et archive des changes des lots 1 à 3 de la Pro League ([#1062](https://github.com/Ryxeuf/fantasy-football-game/issues/1062)) ([b97ed31](https://github.com/Ryxeuf/fantasy-football-game/commit/b97ed319e08f2e5767506184cd9db3811898a14c)), closes [#1053](https://github.com/Ryxeuf/fantasy-football-game/issues/1053) [#1055](https://github.com/Ryxeuf/fantasy-football-game/issues/1055) [#1056](https://github.com/Ryxeuf/fantasy-football-game/issues/1056)
+* **openspec:** sync et archive des changes des lots 4 et 5 de la Pro League ([#1061](https://github.com/Ryxeuf/fantasy-football-game/issues/1061)) ([db7053a](https://github.com/Ryxeuf/fantasy-football-game/commit/db7053a54930e85d579809e667af76142ffec38b)), closes [#1057](https://github.com/Ryxeuf/fantasy-football-game/issues/1057)
+
 ## [1.255.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.254.0...v1.255.0) (2026-10-06)
 
 
