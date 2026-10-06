@@ -1547,6 +1547,76 @@ if (!inTestSimRunnerEnv && simRunnerTickMs > 0 && proLeagueEnabled) {
   );
 }
 
+// =============================================================================
+// Lot 5 « exploitation » — cloture des matchs en direct (ready → completed).
+// =============================================================================
+// Un match pre-simule reste `ready` et vit « en direct » des `scheduledAt`.
+// Ce balayage le passe `completed` une fois `scheduledAt + duree du replay`
+// ecoule (`completedAt` = cette echeance). Aucun code ne le faisait avant.
+//
+// Tick par defaut : 5 min. Configurable via PRO_LEAGUE_COMPLETION_TICK_MS
+// (0 = desactive). Desactive en test.
+const completionTickMsEnv = Number(process.env.PRO_LEAGUE_COMPLETION_TICK_MS);
+const completionTickMs = Number.isFinite(completionTickMsEnv)
+  ? completionTickMsEnv
+  : 5 * 60 * 1000;
+if (!inTestSimRunnerEnv && completionTickMs > 0 && proLeagueEnabled) {
+  void import("./services/pro-league-match-completion").then(
+    ({ completeBroadcastMatches }) => {
+      const tick = runOnceAtATime("pro-league-completion", async () => {
+        try {
+          const out = await completeBroadcastMatches();
+          if (out.completed > 0) {
+            serverLog.info(
+              `[pro-league-completion] tick: completed=${out.completed} pending=${out.pending} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-league-completion] tick failed: ${msg}`);
+        }
+      });
+      setInterval(() => {
+        void tick();
+      }, completionTickMs).unref();
+    },
+  );
+}
+
+// =============================================================================
+// Lot 5 « exploitation » — retention des replays.
+// =============================================================================
+// Purge quotidienne des replays des matchs termines depuis plus de
+// PRO_LEAGUE_REPLAY_RETENTION_DAYS jours (defaut 365, 0 = jamais), hors
+// saison en cours. Tick : 24h, configurable via
+// PRO_LEAGUE_REPLAY_RETENTION_TICK_MS (0 = desactive). Desactive en test.
+const retentionTickMsEnv = Number(process.env.PRO_LEAGUE_REPLAY_RETENTION_TICK_MS);
+const retentionTickMs = Number.isFinite(retentionTickMsEnv)
+  ? retentionTickMsEnv
+  : 24 * 60 * 60 * 1000;
+if (!inTestSimRunnerEnv && retentionTickMs > 0 && proLeagueEnabled) {
+  void import("./services/pro-league-replay-retention").then(
+    ({ pruneExpiredReplays }) => {
+      const tick = runOnceAtATime("pro-league-replay-retention", async () => {
+        try {
+          const out = await pruneExpiredReplays();
+          if (out.pruned > 0) {
+            serverLog.info(
+              `[pro-league-replay-retention] tick: pruned=${out.pruned} (inspected=${out.inspected})`,
+            );
+          }
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : "unknown";
+          serverLog.error(`[pro-league-replay-retention] tick failed: ${msg}`);
+        }
+      });
+      setInterval(() => {
+        void tick();
+      }, retentionTickMs).unref();
+    },
+  );
+}
+
 // Lot 2.A.5 — engine drift watcher. Calcule chaque heure la drift
 // observée (rolling 7j) vs FUMBBL et pousse `nuffle_engine_drift`
 // pour Grafana. Désactivable via PRO_LEAGUE_DRIFT_WATCHER_TICK_MS=0.

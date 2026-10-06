@@ -12,6 +12,12 @@
  *                        48h. degraded sinon.
  *   - `bettingMarkets` : up si au moins 1 ProBetMarket open existe sur
  *                        un match a venir.
+ *   Lot 5 « exploitation » :
+ *   - `simPool`        : up si le pool de workers sert (ou mode inline) ;
+ *                        degraded si la file d'attente deborde ou si un
+ *                        worker a du etre remplace.
+ *   - `liveCompletion` : up si aucun match en direct n'attend sa cloture
+ *                        depuis plus de 3h (transition ready → completed).
  *
  * Le statut global = pire des sous-statuts (down > degraded > up).
  *
@@ -20,6 +26,8 @@
  */
 
 import { prisma } from "../prisma";
+import { countStaleLiveMatches } from "./pro-league-match-completion";
+import { getSimPoolStats } from "./pro-league-sim-pool";
 
 export type CheckStatus = "up" | "degraded" | "down";
 
@@ -168,12 +176,50 @@ async function checkBettingMarkets(): Promise<CheckResult> {
 /**
  * Aggrege tous les checks Pro League. Run en parallele pour latency.
  */
+const LIVE_COMPLETION_STALE_MS = 3 * HOUR_MS;
+/** File d'attente du pool au-dela de laquelle on degrade (par worker). */
+const SIM_POOL_QUEUE_PER_WORKER = 25;
+
+export function checkSimPool(stats = getSimPoolStats()): CheckResult {
+  if (stats.mode === "inline") {
+    return { name: "simPool", status: "up", detail: "inline (event loop)" };
+  }
+  const detail = `${stats.size} worker(s), ${stats.busy} busy, ${stats.queued} queued, ${stats.completed} done, ${stats.failed} failed, ${stats.respawned} respawned`;
+  if (stats.size === 0) return { name: "simPool", status: "down", detail };
+  if (stats.queued > stats.size * SIM_POOL_QUEUE_PER_WORKER || stats.respawned > 0) {
+    return { name: "simPool", status: "degraded", detail };
+  }
+  return { name: "simPool", status: "up", detail };
+}
+
+async function checkLiveCompletion(): Promise<CheckResult> {
+  try {
+    const stale = await countStaleLiveMatches(new Date(), LIVE_COMPLETION_STALE_MS);
+    if (stale > 0) {
+      return {
+        name: "liveCompletion",
+        status: "degraded",
+        detail: `${stale} match(s) en direct attendent leur cloture depuis plus de 3h`,
+      };
+    }
+    return { name: "liveCompletion", status: "up", detail: "no stale live match" };
+  } catch (e: unknown) {
+    return {
+      name: "liveCompletion",
+      status: "down",
+      detail: e instanceof Error ? e.message : "unknown",
+    };
+  }
+}
+
 export async function getProLeagueHealth(): Promise<ProLeagueHealth> {
   const checks = await Promise.all([
     checkSeason(),
     checkSimRunner(),
     checkGazette(),
     checkBettingMarkets(),
+    Promise.resolve(checkSimPool()),
+    checkLiveCompletion(),
   ]);
   return {
     status: worstStatus(checks),

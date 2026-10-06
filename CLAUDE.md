@@ -2002,3 +2002,17 @@ edition du `.json`, `pnpm --filter web typecheck` +
   forme, le bench se re-tamponne à l'identique. Les profils sont FIGÉS dans
   le journal du replay. Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md).
+- **2026-10-05** : **Pro League lot 5 « l'exploitation »** (change OpenSpec
+  `pro-league-exploitation`, pas de bump : les issues ne changent pas). Les
+  simulations sortent de l'event loop : pool de `worker_threads` dans le
+  sim-engine (`createSimPool`), pool unique côté serveur
+  (`services/pro-league-sim-pool`, `PRO_LEAGUE_SIM_WORKERS`, inline en test),
+  cotes sur 50 runs parallèles. Transition `ready → completed` enfin écrite
+  (`completedAt` = `scheduledAt + durée du replay`, UPDATE conditionné au
+  statut), rétention des replays (365 j, hors saison en cours), bench
+  nocturne sur la matrice complète, healthcheck `simPool` + `liveCompletion`.
+  Piège : un worker `.ts` ne résout pas ses imports sans extension avec les
+  hooks tsx hérités par `execArgv` — il s'amorce par un `.mjs` qui appelle
+  `register()` de `tsx/esm/api` (tsx est dépendance de production du
+  sim-engine). Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md).

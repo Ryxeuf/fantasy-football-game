@@ -26,7 +26,6 @@
 
 import {
   PRO_LEAGUE_TEAM_BY_ID,
-  simulateMatch,
   type SimInput,
   type SimResult,
 } from "@bb/sim-engine";
@@ -41,6 +40,7 @@ import {
   probabilityToDecimalOdds,
 } from "./pro-bet-odds-math";
 import { resolveDriverKind } from "./pro-league-driver-resolver";
+import { simulateManyOffLoop } from "./pro-league-sim-pool";
 import {
   mapToSimRoster,
   type RawProRoster,
@@ -59,8 +59,15 @@ export type ProMarketType =
 export const DEFAULT_TD_LINE = 2.5;
 export const DEFAULT_CAS_LINE = 0.5;
 
-/** Nombre de simulations par défaut pour estimer les probas. */
-export const DEFAULT_RUNS = 200;
+/**
+ * Nombre de simulations par défaut pour estimer les probas.
+ *
+ * Lot 5 « exploitation » (décision 5 de l'exploration) : 50 runs en full
+ * driver, hors de l'event loop. À ~1 s par match, 200 runs coûtaient plus de
+ * trois minutes de CPU par rencontre ; 50 suffisent pour un écart-type de
+ * ±7 points sur le 1X2, que la marge maison (5 %) absorbe.
+ */
+export const DEFAULT_RUNS = 50;
 
 interface OneXTwoConfig {
   readonly homeOdds: number;
@@ -202,9 +209,10 @@ async function gatherSamples(
   const casCounts: number[] = [];
   const nuffleCounts: number[] = [];
 
+  const sims: SimInput[] = [];
   for (let i = 0; i < runs; i += 1) {
     const seed = (baseSeed + i) >>> 0;
-    const sim: SimInput = {
+    sims.push({
       seed,
       home: {
         id: homeProfile.id,
@@ -222,8 +230,15 @@ async function gatherSamples(
         tv: awayProfile.tv,
         roster: awayRoster,
       },
-    };
-    const result: SimResult = simulateMatch(sim, { driverKind });
+    });
+  }
+  // Lot 5 « exploitation » — les N simulations partent en parallèle sur le
+  // pool de workers ; les résultats reviennent dans l'ordre des graines.
+  const results: readonly SimResult[] = await simulateManyOffLoop(sims, {
+    driverKind,
+    stripFullReplay: true,
+  });
+  for (const result of results) {
     if (result.summary.outcome === "home") oneXTwoCounts.home += 1;
     else if (result.summary.outcome === "away") oneXTwoCounts.away += 1;
     else oneXTwoCounts.draws += 1;

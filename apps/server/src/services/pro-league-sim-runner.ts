@@ -32,7 +32,6 @@ import {
   PRO_LEAGUE_TEAM_BY_ID,
   compressReplay,
   computeCompressionStats,
-  simulateMatch,
   type MatchEvent,
   type SimInput,
   type SimResult,
@@ -42,6 +41,7 @@ import {
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
 import { applyPostMatchEvolution, getCoachProfile } from "./pro-coach";
+import { simulateMatchOffLoop } from "./pro-league-sim-pool";
 import { applyMatchFormToRosters } from "./pro-roster-form";
 import { appMetrics, type SimDriver, type SimOutcome } from "../utils/metrics";
 import { resolveDriverKind } from "./pro-league-driver-resolver";
@@ -347,7 +347,9 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   let result: SimResult;
   const simStart = process.hrtime.bigint();
   try {
-    result = simulateMatch(input, { driverKind: driver });
+    // Lot 5 « exploitation » — hors de l'event loop (pool de worker_threads),
+    // inline en test ou avec PRO_LEAGUE_SIM_WORKERS=0.
+    result = await simulateMatchOffLoop(input, { driverKind: driver });
   } catch (err: unknown) {
     const elapsedSec = Number(process.hrtime.bigint() - simStart) / 1e9;
     appMetrics.observeSimMatchDuration(
