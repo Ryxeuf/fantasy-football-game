@@ -38,6 +38,12 @@ décider avant d'ouvrir `crowns` à tous ») et la gate du §5 de
 [l'exploration des pronostics](./2026-09-27-pronostics-de-ligue.md) : au moins
 deux puits, dont un à coût réel, et un plafond d'émission.
 
+> **Gate révisée le 2026-10-06 (proposée)** : la Gazette — le puits « à coût
+> réel » visé par cette gate — n'est pas activée (décision 11). Les deux puits
+> à l'ouverture sont donc les thèmes de dés et les palettes d'équipe, tous
+> deux sans coût réel. C'est le PLAFOND par saison (§5) qui tient le rôle de
+> frein à l'inflation que la gate confiait au coût réel.
+
 ## 2. Décisions prises (2026-10-06)
 
 1. **Les Couronnes restent 100 % gagnées.** Pas de passage en euros : il n'y a
@@ -63,6 +69,9 @@ deux puits, dont un à coût réel, et un plafond d'émission.
 8. **Les couleurs d'équipe sont des PALETTES NOMMÉES**, pas un nuancier libre
    (§6.A).
 9. **Le plafond d'émission se compte par SAISON DE LIGUE** (§5).
+10. **Le bonus d'inscription est RÉDUIT** (§5), pas supprimé.
+11. **La Gazette n'est pas activée pour le moment** (§6.B) : elle reste
+    décrite ici, hors du découpage.
 
 ## 3. Les garde-fous de la boutique
 
@@ -78,7 +87,8 @@ deux puits, dont un à coût réel, et un plafond d'émission.
   2026-10-06) : la boutique vend l'HABILLAGE, pas l'accès. Les couleurs
   canoniques du roster sont la base gratuite des palettes ; un cimetière
   d'équipe serait gratuit, l'épitaphe payante. Seule exception assumée : un
-  consommable à coût réel (la Gazette), qui est un service, pas un support.
+  consommable à coût réel (la Gazette, en attente), qui est un service, pas
+  un support.
 - **Un titre ne s'achète pas** (Oracle, Champion…), et un habillage qui
   SIGNALE un statut (cadre « vétéran » selon le niveau, « légende » selon la
   carrière) est DÉRIVÉ et gratuit. Ce qui se vend, c'est un STYLE ; un statut
@@ -100,7 +110,7 @@ deux puits, dont un à coût réel, et un plafond d'émission.
 | Qui le voit ? | Exemples |
 |---|---|
 | moi seul | thème de dés (l'adversaire voit les siens) |
-| toute la ligue | couleurs et emblème au classement / calendrier / feuille, Gazette, épitaphe |
+| toute la ligue | couleurs et emblème au classement / calendrier / feuille, épitaphe (et la Gazette, en attente) |
 | la table | rien : les coachs n'impriment pas (décision 6) |
 | internet | page de partage `/r/[token]` et son image OG, carte joueur exportée |
 
@@ -156,7 +166,7 @@ Ordre de grandeur, **chiffres à calibrer** (hypothèses pour fixer les idées) 
    3-4 succès × 50                  ≈ 175
    pronostics (plafonnés)           ≈ 100
    ───────────────────────────────────────
-   ≈ 500 Couronnes / saison  →  1 thème d'équipe + 1 article de Gazette
+   ≈ 500 Couronnes / saison  →  1 thème d'équipe + 1 ou 2 palettes
 ```
 
 Deux sources existantes à NE PAS rebrancher telles quelles :
@@ -165,7 +175,12 @@ Deux sources existantes à NE PAS rebrancher telles quelles :
   League a dû inventer les dédicaces pour freiner l'hyperinflation qu'il
   créait.
 - **Bonus d'inscription de 1000** : à lui seul deux thèmes et demi face à un
-  rythme d'environ 500 par saison. À réduire ou à supprimer.
+  rythme d'environ 500 par saison. **Réduit** (décision 10) ; proposition :
+  250, de quoi s'offrir un thème classique ou une palette dès l'arrivée — à
+  calibrer avec le reste. Il garde sa référence `first_signup` : un coach qui
+  l'a déjà touché du temps de la Pro League (1000) ne le reçoit pas une
+  seconde fois. Il quitte la route gelée et devient une récompense du
+  registre, créditée à l'ouverture comme les autres.
 
 ## 6. Le catalogue retenu
 
@@ -214,7 +229,10 @@ cellule vide « pour le logo qui n'est pas inclus »
 (`apps/web/app/me/teams/utils/exportPDF.ts`). Correction de base, gratuite —
 mais les coachs n'impriment pas : à faire en passant, pas pour elle-même.
 
-### B. La Gazette de MA rencontre — le puits à coût réel
+### B. La Gazette de MA rencontre — en attente (décision 11)
+
+Pas activée pour le moment. L'analyse reste ici pour le jour où on la
+reprendra.
 
 Un « journaliste » écrit le récit d'une rencontre validée. La feuille est une
 matière première très riche : coup d'envoi, météo, prières, sorties, morts,
@@ -293,6 +311,7 @@ le serveur sans liste ni contrôle de propriété.
 | Season Pass en euros (R.B.2) | pas assez de matière ni d'utilisateurs — décision du 2026-10-06 |
 | Plateau en ligne | jeu en ligne fermé (FF) et bugué — en attente |
 | Kit d'impression | les coachs n'impriment pas — en attente (§6.C) |
+| Gazette de la rencontre | pas activée pour le moment — en attente (§6.B) |
 | Nuancier de couleurs libre | palettes nommées retenues (contraste garanti, plusieurs articles) |
 
 ## 8. Esquisse technique (pour la proposition, pas pour coder ici)
@@ -338,24 +357,27 @@ Trois natures d'achat, qui ne se modélisent pas pareil :
         ├── 2. team-palettes ─────── catalogue de palettes nommées, achat par coach,
         │                            choix par équipe, résolution unique, propagation
         │                            (classement, calendrier, feuille, OG, cartes)
-        ├── 3. match-gazette ──────── article payant, remboursement système
-        └── 4. player-memorial ───── épitaphe (cimetière gratuit)
+        └── 3. player-memorial ───── épitaphe (cimetière gratuit)
+
+ (en attente : match-gazette, kit d'impression)
 ```
 
-Les lots 2 à 4 sont indépendants entre eux ; ils supposent seulement que les
-Couronnes se gagnent (lot 1). Le lot 2 pose au passage la table générique des
+Les lots 2 et 3 sont indépendants entre eux ; ils supposent seulement que les
+Couronnes se gagnent (lot 1). Le bonus d'inscription réduit fait partie du
+lot 1. Le lot 2 pose au passage la table générique des
 possessions (§8), que les blasons et cadres d'emblème réutiliseront.
 
 ## 10. Questions ouvertes
 
 Tranchées le 2026-10-06 : impression (non), base gratuite (oui), palettes
-nommées (oui), plafond par saison de ligue (oui). Restent :
+nommées (oui), plafond par saison de ligue (oui), bonus d'inscription
+(réduit), Gazette (pas pour le moment). Restent :
 
-- **Bonus d'inscription** : réduire (un thème classique, 250 ?) ou supprimer ?
-- **Montants** des sources, valeur du plafond et prix des nouveaux articles,
-  à calibrer sur le rythme réel de feuilles validées en prod.
+- **Montants** : gains par feuille et par succès, valeur du plafond, montant
+  exact du bonus d'inscription (250 proposé), prix des palettes — à calibrer
+  sur le rythme réel de feuilles validées en prod.
 - **Palettes** : combien au lancement, à quel prix (plus bas qu'un thème de
   dés, puisqu'on en achète plusieurs ?), et faut-il des palettes « de roster »
   réservées à un roster donné ?
-- **Gazette** : seul un coach de la rencontre paie, ou aussi le commissaire,
-  voire un spectateur d'une ligue ouverte ?
+- **Gate révisée** (§1) : ouvrir `crowns` avec deux puits sans coût réel,
+  le plafond servant de frein — à confirmer.

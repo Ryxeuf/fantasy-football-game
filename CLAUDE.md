@@ -2007,8 +2007,9 @@ edition du `.json`, `pnpm --filter web typecheck` +
   pas de bonus quotidien ; plafond par SAISON DE LIGUE (la coupe tient lieu
   de saison). Puits retenus, par ordre : PALETTES NOMMÉES d'équipe (achetées
   par le coach, choisies par équipe, slug stocké sur `Team`, couleurs en
-  données éditables en admin), Gazette de la rencontre (coût réel), épitaphe.
-  Impression en attente (les coachs n'impriment pas). Un support nouveau naît
+  données éditables en admin), épitaphe. Bonus d'inscription RÉDUIT (250
+  proposé). En attente : Gazette de la rencontre, impression (les coachs
+  n'impriment pas). Un support nouveau naît
   avec une base gratuite, seuls ses styles se paient ; un habillage qui
   signale un statut est dérivé et gratuit. Voir
   [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](./docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).
