@@ -7,6 +7,19 @@ sim engine. Used as the audit trail for sprint Pro League lots 0.D
 Each version bump matches `ENGINE_VER` in `src/types.ts` and is
 reflected in `bench/bench-baseline.json`.
 
+## 0.30.0 (sans bump) — 2026-10-06 — **Outillage : `sim:match`**
+
+Les issues de match ne changent pas : pas de nouvelle version du moteur.
+
+- **`pnpm sim:match`** (`src/match/single-match.ts`, pur) : joue UN match,
+  full driver et rosters du catalogue par défaut, et le rend en résumé,
+  feuille de match papier (`--sheet`, re-dérivée du journal comme côté
+  serveur), narration (`--narration`) ou JSON compatible `sim:diff-replays`
+  (`--json`, sans les snapshots `fullReplay`).
+- **`buildSimInputForDriver`** : full ⇒ rosters du catalogue, hybrid ⇒ sans
+  roster. `scripts/debug-match.ts --full` s'en sert : il jouait à 2 contre 2
+  (`setup()` du moteur) faute de roster.
+
 ## 0.30.0 (sans bump) — 2026-10-05 — **Lot 5 « exploitation »**
 
 Change OpenSpec `pro-league-exploitation`. Les issues de match ne changent

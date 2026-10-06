@@ -4,10 +4,15 @@
  *
  * Dump les events d'un match unique pour debug. Affiche le breakdown
  * des events par type + scores + raisons des non-TDs.
+ *
+ * `--full` joue sur les rosters du catalogue (13 joueurs par équipe) : sans
+ * roster, le full driver retombe sur `setup()` du moteur, soit 2 contre 2.
+ * Pour lire le match lui-même (feuille, narration), voir `pnpm sim:match`.
  */
 
 import { parseArgs } from "node:util";
 
+import { buildSimInputForDriver } from "../src/driver/engine-roster-fixture";
 import { PRO_LEAGUE_TEAM_BY_ID } from "../src/tactics/race-profiles";
 import { simulateMatch } from "../src/simulate-match";
 
@@ -32,17 +37,16 @@ if (!teamA || !teamB) {
 const seed = Number.parseInt(opts.seed ?? "42", 10);
 const driverKind = opts.full ? "full" : "hybrid";
 
-const result = simulateMatch(
-  {
-    seed,
-    home: { id: teamA.id, name: teamA.name, side: "home", tactics: teamA.tactics, tv: teamA.tv },
-    away: { id: teamB.id, name: teamB.name, side: "away", tactics: teamB.tactics, tv: teamB.tv },
-  },
-  { driverKind },
-);
+const input = buildSimInputForDriver(teamA, teamB, seed, driverKind);
+const result = simulateMatch(input, { driverKind });
 
 console.log(`Match : ${teamA.name} (home) vs ${teamB.name} (away)`);
 console.log(`Seed: ${seed} · Driver: ${driverKind} · EngineVer: ${result.engineVer}`);
+console.log(
+  input.home.roster && input.away.roster
+    ? `Rosters: ${input.home.roster.length} vs ${input.away.roster.length} joueurs`
+    : "Rosters: aucun (driver abstrait)",
+);
 console.log(
   `Score: ${result.summary.score.home}-${result.summary.score.away} · Outcome: ${result.summary.outcome}`,
 );

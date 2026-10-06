@@ -21,6 +21,7 @@
     "sim:compare": "tsx scripts/compare-drivers.ts",
     "sim:compare-versions": "tsx scripts/compare-versions.ts",
     "sim:diff-replays": "tsx scripts/diff-replays.ts",
+    "sim:match": "tsx scripts/match.ts",
     "sim:perf": "tsx scripts/perf-baseline.ts",
     "sim:replay": "tsx scripts/replay.ts",
     "sim:bench:nightly": "tsx scripts/bench-nightly.ts"

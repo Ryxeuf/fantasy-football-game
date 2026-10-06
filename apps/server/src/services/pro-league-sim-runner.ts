@@ -24,7 +24,8 @@
  *  - Le seed est dérivé du `matchId` (cuid) via un hash FNV1a 32-bit
  *    pour rester déterministe et reproductible.
  *  - `engineVer` est lu de `season.engineVer` (pinné lot 1.A.5) ou,
- *    en fallback, de la version courante du sim-engine.
+ *    en fallback, de la version courante du sim-engine. Un match de bac à
+ *    sable (`{ sandbox: true }`) tourne toujours sur la version courante.
  */
 
 import {
@@ -198,11 +199,24 @@ function extractHighlights(events: readonly MatchEvent[]): ReplayHighlight[] {
   return out;
 }
 
+export interface SimulateProMatchOptions {
+  /**
+   * Simulation de BAC À SABLE : le pin de la saison hôte est ignoré et le
+   * match tourne sur le moteur courant (cf. `MatchVersionRef.sandbox`). Sans
+   * effet sur un match qui n'est pas `isTest` : un match de compétition
+   * reste gouverné par sa saison.
+   */
+  readonly sandbox?: boolean;
+}
+
 /**
  * Simule un seul match Pro League et persiste le résultat. Idempotent
  * si le match est déjà `ready` ou plus avancé — renvoie alors `false`.
  */
-export async function simulateProMatch(matchId: string): Promise<boolean> {
+export async function simulateProMatch(
+  matchId: string,
+  options: SimulateProMatchOptions = {},
+): Promise<boolean> {
   const match = await prisma.proLeagueMatch.findUnique({
     where: { id: matchId },
     include: {
@@ -222,12 +236,14 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   // Lot 1.A.5 — gating engineVer : refuse de simuler si la version
   // courante ne match pas la version pinnée sur la saison ou (en cas
   // de re-simulation) sur le match. Lève EngineVersionMismatchError.
+  const sandbox = options.sandbox === true && match.isTest === true;
   assertSimulationAllowed({
     engineVer: (match.engineVer as string | null) ?? null,
     season: {
       id: match.season.id as string,
       engineVer: match.season.engineVer as string,
     },
+    sandbox,
   });
 
   const homeProfile = PRO_LEAGUE_TEAM_BY_ID[match.homeTeam.slug as string];
@@ -239,7 +255,10 @@ export async function simulateProMatch(matchId: string): Promise<boolean> {
   }
 
   const seed = hashSeed(matchId);
-  const engineVer = (match.season.engineVer as string) || CURRENT_ENGINE_VER;
+  // Hors bac à sable, l'assertion garantit `season.engineVer === ENGINE_VER`.
+  const engineVer = sandbox
+    ? CURRENT_ENGINE_VER
+    : (match.season.engineVer as string) || CURRENT_ENGINE_VER;
 
   // Lot 3.E.4 — charge les rosters actifs des deux équipes pour
   // alimenter le full driver. Sans ça, les events portent des ids

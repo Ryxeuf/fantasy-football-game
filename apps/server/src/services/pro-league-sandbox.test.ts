@@ -10,6 +10,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ENGINE_VER as CURRENT_ENGINE_VER } from "@bb/sim-engine";
+
 vi.mock("../prisma", () => ({
   prisma: {
     proLeagueSeason: { findFirst: vi.fn() },
@@ -118,11 +120,13 @@ describe("createTestMatch — Lot 2.C.2", () => {
         }),
       }),
     );
-    expect(mockedSim).toHaveBeenCalledWith("match-abc");
+    // Bac à sable : la saison hôte est pinnée à 0.16.0, le match tourne
+    // pourtant sur le moteur courant.
+    expect(mockedSim).toHaveBeenCalledWith("match-abc", { sandbox: true });
     expect(result).toEqual({
       matchId: "match-abc",
       seasonId: "season-2026",
-      engineVer: "0.16.0",
+      engineVer: CURRENT_ENGINE_VER,
     });
   });
 
@@ -349,7 +353,7 @@ describe("resimulateTestMatch", () => {
         }),
       }),
     );
-    expect(mockedSim).toHaveBeenCalledWith("m1");
+    expect(mockedSim).toHaveBeenCalledWith("m1", { sandbox: true });
   });
 
   it("driverKind invalide → driverKindOverride: null (inherit saison)", async () => {

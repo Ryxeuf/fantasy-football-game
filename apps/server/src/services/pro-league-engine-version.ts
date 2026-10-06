@@ -15,6 +15,8 @@
  *     cours de saison, les nouveaux matchs sont bloqués → lever une
  *     `EngineVersionMismatchError`. L'admin doit alors soit créer une
  *     nouvelle saison, soit déployer le pinned engine en production.
+ *     Exception : un match de BAC À SABLE (`sandbox`, cf. `MatchVersionRef`)
+ *     n'est qu'hébergé par la saison et tourne sur le moteur courant.
  *
  *  2. **Replay read-only** : un Replay produit avec `engineVer = X`
  *     reste read-only pour `ENGINE_VER ≠ X`. Permet de re-jouer le
@@ -67,6 +69,13 @@ export interface MatchVersionRef {
   /** `null` si le match n'a jamais été simulé (status `scheduled`). */
   readonly engineVer: string | null;
   readonly season: SeasonVersionRef;
+  /**
+   * Match de BAC À SABLE (`/admin/sim/test-match`) : la saison ne fait que
+   * l'héberger (FK), il n'entre pas dans sa compétition et sert à essayer le
+   * moteur COURANT. Le pin de la saison ne le gouverne donc pas — sinon le
+   * bac à sable devient inutilisable au premier bump du moteur.
+   */
+  readonly sandbox?: boolean;
 }
 
 export interface ReplayVersionRef {
@@ -77,7 +86,8 @@ export interface ReplayVersionRef {
 /**
  * Vérifie qu'on peut simuler ce match avec l'engine courant.
  * - Si `season.engineVer ≠ ENGINE_VER` : refuse (saison pinnée à une
- *   autre version, on ne peut pas garantir la cohérence du replay).
+ *   autre version, on ne peut pas garantir la cohérence du replay), sauf
+ *   pour un match de bac à sable.
  * - Si `match.engineVer ≠ null` ET `≠ ENGINE_VER` : refuse aussi
  *   (re-simulation avec une autre version produirait un replay
  *   incohérent avec l'engineVer stocké).
@@ -85,7 +95,7 @@ export interface ReplayVersionRef {
  * Utilisé par `simulateProMatch` (sim-runner 1.A.4) avant chaque sim.
  */
 export function assertSimulationAllowed(match: MatchVersionRef): void {
-  if (match.season.engineVer !== CURRENT_ENGINE_VER) {
+  if (match.sandbox !== true && match.season.engineVer !== CURRENT_ENGINE_VER) {
     throw new EngineVersionMismatchError(
       match.season.engineVer,
       CURRENT_ENGINE_VER,
