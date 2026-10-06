@@ -295,6 +295,35 @@ replays anciens sont purgés. La Pro League reste gelée
 - **Décision de dégel** (`PRO_LEAGUE_ENABLED`) : produit, après le panel
   humain de la gate du lot 3.
 
+## Changes de septembre clôturés le 2026-10-06
+
+Dix changes dont le code était fusionné depuis des semaines ont été
+synchronisés et archivés d'un coup. Leurs suites « hors périmètre » :
+
+- **Exports PDF (`competition-pdf-exports`, #1036)** : recette à valider par
+  le coach du projet, puis retrait du flag `competition_pdf_exports` du code
+  (constante, `KNOWN_FLAGS`, miroir web, gates, seeds, `matchday-legacy-pdf` ;
+  la ligne en base se supprime depuis l'admin) ; version anglaise des PDF.
+- **Contagieux (`contagious-plague-ridden`, #1027)** : blessures durables
+  subies par le relevé pendant le match, non reportées s'il est recruté (même
+  limite que le journalier) ; deux relevés sur le même côté quand les deux
+  règles jouent dans le même match (un seul choix par côté, la victime
+  gratuite préférée).
+- **Notifications et cycle de vie (`notifications-and-competition-lifecycle`)** :
+  préférences par type de notification interne, purge des notifications lues
+  anciennes ; cloche et page notifications dans l'application mobile Expo ;
+  corbeille / restauration d'une compétition supprimée.
+- **Rondes suisses et calendrier (`swiss-cups-and-matchday-calendar`, #1013)** :
+  départages propres à la ronde suisse (Buchholz, adversaires battus) et
+  affichage du score de départage ; appariement manuel d'une ronde de coupe
+  (`system: "manual"`, livré depuis par `cups-managed-like-leagues`) ; rondes
+  suisses en ligue (le moteur pur est déjà indépendant de la coupe) ; rappel
+  de rencontre (push) à l'approche de la date prévisionnelle.
+
+Sans suite : `add-competition-official-documents`, `private-league-visibility`,
+`invalidate-sheet-after-sheet-player-hire`, `home-compact-layout`,
+`home-news-ticker-readability`, `shop-and-crowns-admin`.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
