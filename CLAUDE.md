@@ -1971,7 +1971,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   cerveau du coach → évolution → exploitation. Voir
   [`docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md`](./docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md).
 - **2026-10-05** : **Pro League lot 1 « un match complet »** (change
-  OpenSpec `pro-league-full-match`, `ENGINE_VER` 0.27.0). Moteur : coup
+  OpenSpec `pro-league-full-match`, archivé le 2026-10-06, `ENGINE_VER` 0.27.0). Moteur : coup
   `STAND_UP` (Prone = `stunned` sans `state: 'stunned'`, sonné retourné face
   visible en fin de tour de son équipe, aucun champ nouveau) ; un `pending*`
   FERME la liste des coups légaux et `applyMove` refuse le reste (END_TURN =
@@ -1986,7 +1986,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (`buildEngineSimInput`) et `full-match.invariants.test.ts`. Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md).
 - **2026-10-05** : **Pro League lot 2 « le journal rejouable »** (change
-  OpenSpec `pro-league-replay-journal`, `ENGINE_VER` 0.28.0). Un flux de dés
+  OpenSpec `pro-league-replay-journal`, archivé le 2026-10-06, `ENGINE_VER` 0.28.0). Un flux de dés
   PAR PAS (`${seed}:move:${n}` / `drive:${n}`, l'IA tire à part) ; journal
   `{ v: 2, seed, initialState sans gameLog, steps[{ move, drive?, dice }] }`
   dont `replayJournal` re-dérive les états BIT À BIT (13,5 Ko compressés
@@ -2000,7 +2000,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (`awardTouchdown` l'efface). Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md).
 - **2026-10-05** : **Pro League lot 3 « le cerveau du coach »** (change
-  OpenSpec `pro-league-coach-brain`, `ENGINE_VER` 0.29.0). Un COACH par
+  OpenSpec `pro-league-coach-brain`, archivé le 2026-10-06, `ENGINE_VER` 0.29.0). Un COACH par
   équipe (`packages/sim-engine/src/coach/`) remplace l'évaluateur glouton du
   full driver : plan de drive COLLANT (ré-évalué sur évènement seulement),
   activations ENTIÈRES scorées `P × gain − (1 − P) × coût du turnover` avec
