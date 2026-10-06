@@ -7,11 +7,11 @@
 
 ## 2. Rattrapage
 
-- [ ] 2.1 Charger les candidats « feuille » (D5) dans `apps/server/src/services/crowns-rewards.ts` : feuilles `validated` de ligue et de coupe où le coach possède un côté, autre côté d'un autre compte, période de la saison ou de la coupe ; vérifier par test (Prisma mocké) : feuille invalidée exclue, brouillon exclu, même compte des deux côtés exclu, coupe rattachée à `cup:<id>`, ligue à `season:<id>`.
-- [ ] 2.2 Charger les candidats « succès » (lignes `UserAchievement` ∩ `ACHIEVEMENTS_CATALOG`) et « bonus » (marqueur à 0 si une opération `REWARD` réf. `first_signup` existe) ; vérifier par test : slug hors catalogue ignoré, bonus Pro League ⇒ marqueur sans opération.
-- [ ] 2.3 Écrire `reconcileCrownsRewards(userId)` (D3, D8) : plan pur, puis UNE transaction (opération `REWARD` réf. `rewards:<cuid>` si total > 0, lignes du registre rattachées, incrément du wallet), lignes à 0 écrites sans opération, P2002 ⇒ passage annulé sans erreur, débounce par coach (60 s prod, 0 test) ; vérifier par test : second appel sans écriture, P2002 ⇒ aucun crédit et pas d'exception, total = somme des lignes, wallet créé s'il manque.
-- [ ] 2.4 Faire refuser `grantFirstTimeBonus` quand le registre porte un bonus de bienvenue versé (D7) ; vérifier par test qu'un coach crédité par le rattrapage ne reçoit pas les 1000 de la route Pro League.
-- [ ] 2.5 Documenter le patron dans `CLAUDE.md` (section « Couronnes (Crowns) » : sources, rattrapage à la lecture, registre à clé globale, plafond par saison, lignes à 0 jamais retentées) ; vérifier que les chemins cités existent.
+- [x] 2.1 Charger les candidats « feuille » (D5) dans `apps/server/src/services/crowns-rewards.ts` : feuilles `validated` de ligue et de coupe où le coach possède un côté, autre côté d'un autre compte, période de la saison ou de la coupe ; vérifier par test (Prisma mocké) : feuille invalidée exclue, brouillon exclu, même compte des deux côtés exclu, coupe rattachée à `cup:<id>`, ligue à `season:<id>`.
+- [x] 2.2 Charger les candidats « succès » (lignes `UserAchievement` ∩ `ACHIEVEMENTS_CATALOG`) et « bonus » (marqueur à 0 si une opération `REWARD` réf. `first_signup` existe) ; vérifier par test : slug hors catalogue ignoré, bonus Pro League ⇒ marqueur sans opération.
+- [x] 2.3 Écrire `reconcileCrownsRewards(userId)` (D3, D8) : plan pur, puis UNE transaction (opération `REWARD` réf. `rewards:<cuid>` si total > 0, lignes du registre rattachées, incrément du wallet), lignes à 0 écrites sans opération, P2002 ⇒ passage annulé sans erreur, débounce par coach (60 s prod, 0 test) ; vérifier par test : second appel sans écriture, P2002 ⇒ aucun crédit et pas d'exception, total = somme des lignes, wallet créé s'il manque.
+- [x] 2.4 Faire refuser `grantFirstTimeBonus` quand le registre porte un bonus de bienvenue versé (D7) ; vérifier par test qu'un coach crédité par le rattrapage ne reçoit pas les 1000 de la route Pro League.
+- [x] 2.5 Documenter le patron dans `CLAUDE.md` (section « Couronnes (Crowns) » : sources, rattrapage à la lecture, registre à clé globale, plafond par saison, lignes à 0 jamais retentées) ; vérifier que les chemins cités existent.
 
 ## 3. Route et journal
 

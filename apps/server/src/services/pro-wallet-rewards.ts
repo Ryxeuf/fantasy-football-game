@@ -13,6 +13,7 @@
 import { prisma } from "../prisma";
 
 import { credit, getOrCreateWallet } from "./pro-wallet";
+import { signupRewardKey } from "./crowns-rewards-rules";
 
 export const FIRST_TIME_BONUS_AMOUNT = 1000;
 export const FIRST_TIME_BONUS_REF = "first_signup";
@@ -73,7 +74,16 @@ export async function grantFirstTimeBonus(
       },
       select: { id: true },
     });
-    if (existing) {
+    // `crowns-earning` : le bonus de bienvenue hors Pro League est versé par
+    // le rattrapage de `GET /crowns/me` (registre `CrownsReward`). Un coach qui
+    // l'a déjà touché là ne reçoit pas EN PLUS celui de la Pro League.
+    const registered = existing
+      ? null
+      : await tx.crownsReward.findFirst({
+          where: { sourceKey: signupRewardKey(userId), amount: { gt: 0 } },
+          select: { id: true },
+        });
+    if (existing || registered) {
       const w = await tx.proWallet.findUnique({
         where: { userId },
         select: { crowns: true },

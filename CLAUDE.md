@@ -1336,6 +1336,34 @@ passe par `{ increment }` ou par le décrément conditionnel
 La raison d'un ajustement admin (`ADMIN_ADJUST`, réf. = raison) est VISIBLE du
 coach dans son historique (`GET /crowns/me`) : la modale le rappelle.
 
+**Les Couronnes se GAGNENT en jouant** (change `crowns-earning`) : chaque côté
+d'une feuille de match validée (ligue ET coupe) rapporte au propriétaire de
+l'équipe, chaque succès du catalogue rapporte une fois, le bonus de bienvenue
+(250) est versé une fois. C'est la PARTICIPATION qui paie, jamais la victoire —
+donc une invalidation ne reprend rien et il n'y a aucune reversion à écrire.
+Quatre règles qui ne se voient pas en lisant un seul fichier :
+
+- **Rattrapage à la LECTURE**, pas crédit à la validation :
+  `reconcileCrownsRewards` (`services/crowns-rewards`) tourne dans
+  `GET /crowns/me` avant de servir le solde, en best-effort (le solde se sert
+  toujours). Un seul chemin pour l'historique, les succès débloqués ailleurs et
+  le présent, aucune dépendance vers le service de feuille de match, et le
+  flag `crowns` de la route ferme tout. Débounce 60 s par coach en prod.
+- **Registre `CrownsReward` à clé de source UNIQUE et GLOBALE** :
+  `sheet:<sheetId>:home|away` (sans l'utilisateur — un côté ne paie qu'une
+  fois, même si l'équipe change de propriétaire), `achievement:<userId>:<slug>`,
+  `signup:<userId>`. Deux passages simultanés : le second lève P2002 et sa
+  transaction (opération + lignes + incrément) est annulée en entier.
+- **Une ligne à 0 n'est jamais retentée** : récompense plafonnée, ou bonus déjà
+  perçu en Pro League (marqueur). Même posture que les refus définitifs du
+  rattrapage des sorties.
+- **Plafond par SAISON DE LIGUE** sur les seuls gains de feuilles (une coupe
+  tient lieu de saison : `season:<id>` / `cup:<id>`), appliqué dans l'ordre de
+  validation par le module PUR `crowns-rewards-rules` (barème, clés, plan,
+  détail servi au journal). Un passage = UNE opération `REWARD` réf.
+  `rewards:<uuid>`, détaillée à la lecture par le registre. Le bonus de la
+  Pro League (`grantFirstTimeBonus`) refuse si le registre l'a déjà versé.
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :
