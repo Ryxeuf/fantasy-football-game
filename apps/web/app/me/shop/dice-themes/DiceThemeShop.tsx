@@ -2,20 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useDiceTheme, type DiceThemeOption } from "../../contexts/DiceThemeContext";
-import { useCrowns } from "../../contexts/CrownsContext";
-import { CrownsBalance } from "../../components/crowns/CrownsBalance";
-import { DiceThemePreview } from "../../components/dice/DiceThemePreview";
-import { formatCrowns } from "../../lib/crowns";
+import { useDiceTheme, type DiceThemeOption } from "../../../contexts/DiceThemeContext";
+import { useCrowns } from "../../../contexts/CrownsContext";
+import { DiceThemePreview } from "../../../components/dice/DiceThemePreview";
+import { formatCrowns } from "../../../lib/crowns";
 import { DICE_SHOP_FILTERS, filterShopThemes, shopAction, type DiceShopFilter } from "./shop";
 
 /**
- * Boutique des thèmes de dés : aperçu des 11 faces de chaque thème, choix
+ * Catégorie « Thèmes de dés » de la boutique (`/me/shop/dice-themes`) : aperçu des 11 faces de chaque thème, choix
  * d'un thème possédé, achat en Crowns d'un thème en vente.
  *
  * Masquée quand le flag `dice_themes` est OFF. Les Crowns (solde, bouton
  * d'achat) n'apparaissent qu'avec le flag `crowns` ; sans lui, un thème
- * payant reste verrouillé avec son prix.
+ * payant reste verrouillé avec son prix. Le solde est affiché par l'en-tête
+ * de la boutique (`app/me/shop/layout.tsx`), commun à toutes les catégories.
  */
 export default function DiceThemeShop() {
   const { enabled, loading, error: loadError, refresh, themeId, themes, selectTheme, purchaseTheme } =
@@ -88,7 +88,6 @@ export default function DiceThemeShop() {
             </button>
           ))}
         </div>
-        <CrownsBalance className="text-sm" />
       </div>
 
       {error && (

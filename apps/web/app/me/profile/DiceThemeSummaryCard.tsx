@@ -44,7 +44,7 @@ export default function DiceThemeSummaryCard() {
         </div>
       </div>
       <Link
-        href="/me/dice-themes"
+        href="/me/shop/dice-themes"
         className="mt-4 inline-block rounded bg-nuffle-bronze px-4 py-2 text-sm font-medium text-white hover:bg-nuffle-gold"
         data-testid="dice-theme-summary-link"
       >

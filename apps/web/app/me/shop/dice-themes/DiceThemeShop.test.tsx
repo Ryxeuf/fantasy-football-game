@@ -8,10 +8,10 @@ const { state } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../../contexts/DiceThemeContext", () => ({
+vi.mock("../../../contexts/DiceThemeContext", () => ({
   useDiceTheme: () => state.dice,
 }));
-vi.mock("../../contexts/CrownsContext", () => ({
+vi.mock("../../../contexts/CrownsContext", () => ({
   useCrowns: () => state.crowns,
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -72,7 +72,6 @@ describe("DiceThemeShop", () => {
     // 11 faces masquées aux lecteurs d'écran derrière UN aperçu nommé.
     expect(card.querySelectorAll("img, svg[role='img']")).toHaveLength(11);
     expect(screen.getByRole("img", { name: "Aperçu du thème Thème nuffle" })).toBeTruthy();
-    expect(screen.getByTestId("crowns-balance").textContent).toContain("300");
   });
 
   it("filtre « Mes thèmes » et « Classiques »", () => {
@@ -113,13 +112,12 @@ describe("DiceThemeShop", () => {
     expect(btn.textContent).toContain("Solde insuffisant");
   });
 
-  it("Crowns fermées (flag OFF) : thème payant verrouillé, pas de solde", () => {
+  it("Crowns fermées (flag OFF) : thème payant verrouillé", () => {
     state.crowns = { ...state.crowns, enabled: false, balance: null };
     render(<DiceThemeShop />);
     const btn = screen.getByTestId("dice-theme-glace").querySelector("button")!;
     expect(btn.disabled).toBe(true);
     expect(btn.textContent).toContain("Bientôt disponible");
-    expect(screen.queryByTestId("crowns-balance")).toBeNull();
   });
 
   it("solde en chargement : jamais « Bientôt disponible »", () => {
