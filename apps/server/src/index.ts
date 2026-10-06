@@ -683,6 +683,12 @@ if (process.env.TEST_SQLITE === "1") {
         () => (prisma as any).diceTheme?.deleteMany?.({}) ?? Promise.resolve(),
       );
       invalidateDiceThemeCache();
+      // Registre des récompenses en Couronnes (`crowns-earning`) : cascade
+      // avec l'utilisateur, explicite ici comme les thèmes de dés.
+      await safe(
+        "crownsReward",
+        () => (prisma as any).crownsReward?.deleteMany?.({}) ?? Promise.resolve(),
+      );
       await safe("user", () => prisma.user.deleteMany({}));
       // Reference data caches (memoizeAsync) survive the DB wipe and would
       // otherwise serve stale `[]` lists to the next test. Drop everything.

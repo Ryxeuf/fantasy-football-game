@@ -78,7 +78,7 @@ Nouvelle table `CrownsReward` :
 | `periodKey` | `season:<id>` \| `cup:<id>` pour une feuille, `null` hors plafond |
 | `amount` | versé (≥ 0 ; 0 = plafonné ou marqueur « déjà perçu ») |
 | `baseAmount` | barème avant plafond |
-| `transactionId` | opération du passage (`null` si rien n'a été versé) |
+| `transactionId` | opération du passage, lignes plafonnées comprises (`null` si le passage n'a rien versé) |
 | `createdAt` | — |
 
 Index `(userId, periodKey)` (plafond) et `(userId, createdAt)` (admin).
@@ -102,9 +102,11 @@ Index `(userId, periodKey)` (plafond) et `(userId, createdAt)` (admin).
 4. P2002 sur une clé ⇒ un passage concurrent l'a déjà écrite ⇒ la
    transaction entière est annulée et la lecture sert le solde courant.
 
-Les lignes à 0 (plafonnée, bonus déjà perçu) s'écrivent aussi, sans
-opération : elles ne sont plus jamais réévaluées. Même règle que les refus
-définitifs du rattrapage des sorties.
+Les lignes à 0 (plafonnée, bonus déjà perçu) s'écrivent aussi : elles ne
+sont plus jamais réévaluées (même règle que les refus définitifs du
+rattrapage des sorties). Elles sont rattachées à l'opération du passage
+quand il en existe une, pour que le détail servi au journal compte les
+plafonnées ; un passage qui ne verse rien n'écrit pas d'opération.
 
 ### D4 — Règles PURES dans `services/crowns-rewards-rules`
 
@@ -167,6 +169,10 @@ lu en UNE requête sur le registre (`transactionId in [...]`). Champ
 optionnel côté web (patron « backwards-compat » K). `describeCrownsTransaction`
 reconnaît la réf. ; une opération `REWARD` sans cette réf. reste « Bonus de
 bienvenue » (historique Pro League).
+
+La réponse porte aussi le barème en vigueur (`schedule`) : le bloc « Comment
+gagner des Couronnes » l'affiche tel quel au lieu de recopier des montants qui
+divergeraient au premier calibrage.
 
 ### D10 — Lecture admin
 

@@ -31,9 +31,9 @@
 
 ## 6. Intégration
 
-- [ ] 6.1 Écrire `tests/e2e-api/specs/crowns-earning.spec.ts` : deux coachs, une feuille de ligue validée ⇒ `GET /crowns/me` crédite à chacun bonus + feuille ; seconde lecture inchangée ; invalidation puis revalidation ⇒ solde inchangé ; journal détaillé ; vérifier que la spec passe dans la suite e2e-api.
-- [ ] 6.2 Remonter les suites dans `docs/roadmap/backlog/openspec-suites.md` (pronostics et palmarès à la clôture de saison, succès comptant les feuilles, barème éditable, notification de gain) ; vérifier que le lien vers l'exploration du 2026-10-06 résout.
-- [ ] 6.3 Vérifier l'ensemble : typecheck serveur et web, tests unitaires serveur et web verts.
+- [x] 6.1 Écrire `tests/e2e-api/specs/crowns-earning.spec.ts` : deux coachs, une feuille de ligue validée ⇒ `GET /crowns/me` crédite à chacun bonus + feuille ; seconde lecture inchangée ; invalidation puis revalidation ⇒ solde inchangé ; journal détaillé ; vérifier que la spec passe dans la suite e2e-api.
+- [x] 6.2 Remonter les suites dans `docs/roadmap/backlog/openspec-suites.md` (pronostics et palmarès à la clôture de saison, succès comptant les feuilles, barème éditable, notification de gain) ; vérifier que le lien vers l'exploration du 2026-10-06 résout.
+- [x] 6.3 Vérifier l'ensemble : typecheck serveur et web, tests unitaires serveur et web verts.
 
 ## Workflow follow-up
 

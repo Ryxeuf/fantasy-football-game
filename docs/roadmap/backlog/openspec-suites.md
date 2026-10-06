@@ -235,14 +235,33 @@ Source : `dice-themes` puis `dice-theme-shop-and-crowns` (archivés
 2026-10-05). Le dé original est servi partout ; boutique (flag `dice_themes`)
 et Couronnes (flag `crowns`) sont en recette. Restent :
 
-- **Sources de Couronnes hors Pro League** : aujourd'hui seul l'admin en
-  crédite (`PATCH /admin/wallets/:id/balance`). Bonus quotidien, récompenses
-  de ligue ou d'Oracle des pronostics (cf. la suite « conversion rétroactive »
-  ci-dessus) sont à décider avant d'ouvrir `crowns` à tous. Direction retenue
-  le 2026-10-06 (feuilles validées + succès + plafond, pas de bonus
-  quotidien) et catalogue des prochains puits dans
-  [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](../explorations/2026-10-06-boutique-couronnes.md).
-  Le joker de pronostic du 2026-09-27 y est enterré.
+- **Sources de Couronnes hors Pro League** : livrées par le change
+  `crowns-earning` (feuilles validées de ligue et de coupe, succès, bonus de
+  bienvenue réduit, plafond par saison de ligue, rattrapage à la lecture de
+  `GET /crowns/me`). Catalogue des prochains puits dans
+  [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](../explorations/2026-10-06-boutique-couronnes.md) ;
+  le joker de pronostic du 2026-09-27 y est enterré.
+
+## Couronnes gagnées en jouant
+
+Source : `crowns-earning` (2026-10-06). Laissé hors du lot :
+
+- **Pronostics et palmarès à la clôture de saison** : conversion des points de
+  pronostic (plafonnée, cf. « Les Crowns (phase 2) » ci-dessus) et récompenses
+  de champion / d'Oracle. Mêmes clés de registre (`predictions:<seasonId>`,
+  `honour:<seasonId>:<kind>`), même rattrapage — `closeSeason` n'a rien à
+  appeler.
+- **Succès comptant les feuilles de match** : les succès de matchs (joués,
+  victoires, TD, sorties) ne lisent que le jeu en ligne ; un coach qui joue
+  sur table n'en débloque presque aucun.
+- **Barème éditable en admin** : aujourd'hui des constantes
+  (`DEFAULT_CROWNS_REWARD_SCHEDULE`), à calibrer en recette par une ligne de
+  code. Aucune table de configuration générique n'existe.
+- **Notification de gain** (« +25 Couronnes ») : le journal suffit en v1.
+- **Une ligne plafonnée à 0 n'est pas reprise** si le plafond augmente plus
+  tard — un ajustement admin compense.
+- **Calibrage** : barème de départ 25 / 50 / 250, plafond 500 par saison, à
+  revoir sur le rythme réel de feuilles validées avant d'ouvrir `crowns`.
 - **App mobile (Expo)** : le choix de blocage y reste textuel, aucun dé
   dessiné ; brancher `@bb/ui/dice` (skins) côté React Native.
 - **Upload de nouvelles faces depuis l'admin** : un thème reste un contrat de
@@ -268,4 +287,5 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `raise-the-dead-masters-of-undeath` | `prisma db push` (colonnes `LeagueMatchSheet.raisedDeadHome/Away`, nullables, aucun backfill). |
 | `casualty-count-and-hate-keyword-choice` | `prisma db push` (colonnes `LeagueMatchSheet.casualtyRuleVersion` et `hateChoices`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh` (étape 3/5). Puis ouvrir une fois le classement de chaque ligue active pour déclencher le rattrapage. |
 | `dice-theme-shop-and-crowns` | `prisma db push` (tables `DiceTheme`, `UserDiceTheme`), joué par `scripts/deploy.sh`. Le catalogue sert le compilé tant que la table est vide ; le seed (`syncDiceThemes`, create-if-missing) la remplit pour l'éditer en admin. Créer la ligne du flag `crowns` (seed ou « Synchroniser depuis le code » dans `/admin/feature-flags`) pour pouvoir l'allumer. |
+| `crowns-earning` | `prisma db push` (table `CrownsReward`), joué par `scripts/deploy.sh`. Rien n'est crédité tant que le flag `crowns` est fermé ; à son ouverture, chaque coach reçoit l'historique de ses feuilles validées et de ses succès (plafonné par saison) plus le bonus de bienvenue, à sa première lecture du solde. |
 | `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
