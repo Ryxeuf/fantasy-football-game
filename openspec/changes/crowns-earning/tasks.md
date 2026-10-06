@@ -2,8 +2,8 @@
 
 ## 1. Registre et règles pures
 
-- [ ] 1.1 Ajouter le modèle `CrownsReward` (D2 : `sourceKey` unique, `userId`, `kind`, `periodKey`, `amount`, `baseAmount`, `transactionId`, `createdAt`, index `(userId, periodKey)` et `(userId, createdAt)`) et sa back-relation sur `User` dans `prisma/schema.prisma` ; vérifier que le client Prisma se génère et que le miroir SQLite des tests crée la table.
-- [ ] 1.2 Créer `apps/server/src/services/crowns-rewards-rules.ts` (pur) : barème D4, constructeurs de clés (`sheet:<id>:home|away`, `achievement:<userId>:<slug>`, `signup:<userId>`), clés de période (`season:<id>`, `cup:<id>`) et `planCrownsRewards` ; vérifier par `crowns-rewards-rules.test.ts` : montants du barème, plafond tronqué au reliquat puis nul, ordre déterministe (date de validation puis id), saisons indépendantes, succès et bonus hors plafond, plan identique à entrée identique.
+- [x] 1.1 Ajouter le modèle `CrownsReward` (D2 : `sourceKey` unique, `userId`, `kind`, `periodKey`, `amount`, `baseAmount`, `transactionId`, `createdAt`, index `(userId, periodKey)` et `(userId, createdAt)`) et sa back-relation sur `User` dans `prisma/schema.prisma` ; vérifier que le client Prisma se génère et que le miroir SQLite des tests crée la table.
+- [x] 1.2 Créer `apps/server/src/services/crowns-rewards-rules.ts` (pur) : barème D4, constructeurs de clés (`sheet:<id>:home|away`, `achievement:<userId>:<slug>`, `signup:<userId>`), clés de période (`season:<id>`, `cup:<id>`) et `planCrownsRewards` ; vérifier par `crowns-rewards-rules.test.ts` : montants du barème, plafond tronqué au reliquat puis nul, ordre déterministe (date de validation puis id), saisons indépendantes, succès et bonus hors plafond, plan identique à entrée identique.
 
 ## 2. Rattrapage
 

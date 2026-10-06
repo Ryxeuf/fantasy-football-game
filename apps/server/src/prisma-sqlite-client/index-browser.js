@@ -1480,6 +1480,18 @@ exports.Prisma.UserDiceThemeScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.CrownsRewardScalarFieldEnum = {
+  id: 'id',
+  sourceKey: 'sourceKey',
+  userId: 'userId',
+  kind: 'kind',
+  periodKey: 'periodKey',
+  amount: 'amount',
+  baseAmount: 'baseAmount',
+  transactionId: 'transactionId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1618,7 +1630,8 @@ exports.Prisma.ModelName = {
   ProMatchPrediction: 'ProMatchPrediction',
   TournamentRuleset: 'TournamentRuleset',
   DiceTheme: 'DiceTheme',
-  UserDiceTheme: 'UserDiceTheme'
+  UserDiceTheme: 'UserDiceTheme',
+  CrownsReward: 'CrownsReward'
 };
 
 /**

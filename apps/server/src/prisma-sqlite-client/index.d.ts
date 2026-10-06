@@ -502,6 +502,17 @@ export type DiceTheme = $Result.DefaultSelection<Prisma.$DiceThemePayload>
  * empêche un double achat ; seule une révocation admin supprime la ligne.
  */
 export type UserDiceTheme = $Result.DefaultSelection<Prisma.$UserDiceThemePayload>
+/**
+ * Model CrownsReward
+ * Registre des RÉCOMPENSES en Couronnes (change `crowns-earning`) : une ligne
+ * par récompense due, écrite par le rattrapage de `GET /crowns/me`
+ * (`services/crowns-rewards`). `sourceKey` est UNIQUE et GLOBAL — c'est lui
+ * qui rend le versement idempotent (deux lectures simultanées : P2002) et qui
+ * empêche un côté de feuille d'être payé deux fois si l'équipe change de
+ * propriétaire. Une ligne à 0 (plafonnée, bonus déjà perçu) n'est jamais
+ * réévaluée. Append-only.
+ */
+export type CrownsReward = $Result.DefaultSelection<Prisma.$CrownsRewardPayload>
 
 /**
  * Enums
@@ -1574,6 +1585,16 @@ export class PrismaClient<
     * ```
     */
   get userDiceTheme(): Prisma.UserDiceThemeDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.crownsReward`: Exposes CRUD operations for the **CrownsReward** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CrownsRewards
+    * const crownsRewards = await prisma.crownsReward.findMany()
+    * ```
+    */
+  get crownsReward(): Prisma.CrownsRewardDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -2104,7 +2125,8 @@ export namespace Prisma {
     ProMatchPrediction: 'ProMatchPrediction',
     TournamentRuleset: 'TournamentRuleset',
     DiceTheme: 'DiceTheme',
-    UserDiceTheme: 'UserDiceTheme'
+    UserDiceTheme: 'UserDiceTheme',
+    CrownsReward: 'CrownsReward'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -2123,7 +2145,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -8861,6 +8883,80 @@ export namespace Prisma {
           }
         }
       }
+      CrownsReward: {
+        payload: Prisma.$CrownsRewardPayload<ExtArgs>
+        fields: Prisma.CrownsRewardFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CrownsRewardFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CrownsRewardFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>
+          }
+          findFirst: {
+            args: Prisma.CrownsRewardFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CrownsRewardFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>
+          }
+          findMany: {
+            args: Prisma.CrownsRewardFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>[]
+          }
+          create: {
+            args: Prisma.CrownsRewardCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>
+          }
+          createMany: {
+            args: Prisma.CrownsRewardCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CrownsRewardCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>[]
+          }
+          delete: {
+            args: Prisma.CrownsRewardDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>
+          }
+          update: {
+            args: Prisma.CrownsRewardUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>
+          }
+          deleteMany: {
+            args: Prisma.CrownsRewardDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CrownsRewardUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CrownsRewardUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>[]
+          }
+          upsert: {
+            args: Prisma.CrownsRewardUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CrownsRewardPayload>
+          }
+          aggregate: {
+            args: Prisma.CrownsRewardAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCrownsReward>
+          }
+          groupBy: {
+            args: Prisma.CrownsRewardGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CrownsRewardGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CrownsRewardCountArgs<ExtArgs>
+            result: $Utils.Optional<CrownsRewardCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -9048,6 +9144,7 @@ export namespace Prisma {
     tournamentRuleset?: TournamentRulesetOmit
     diceTheme?: DiceThemeOmit
     userDiceTheme?: UserDiceThemeOmit
+    crownsReward?: CrownsRewardOmit
   }
 
   /* Types for Logging */
@@ -9147,6 +9244,7 @@ export namespace Prisma {
     tutorialCompletions: number
     proSpectatorFollows: number
     diceThemes: number
+    crownsRewards: number
     proBets: number
     proUserBadges: number
     proHofDedications: number
@@ -9185,6 +9283,7 @@ export namespace Prisma {
     tutorialCompletions?: boolean | UserCountOutputTypeCountTutorialCompletionsArgs
     proSpectatorFollows?: boolean | UserCountOutputTypeCountProSpectatorFollowsArgs
     diceThemes?: boolean | UserCountOutputTypeCountDiceThemesArgs
+    crownsRewards?: boolean | UserCountOutputTypeCountCrownsRewardsArgs
     proBets?: boolean | UserCountOutputTypeCountProBetsArgs
     proUserBadges?: boolean | UserCountOutputTypeCountProUserBadgesArgs
     proHofDedications?: boolean | UserCountOutputTypeCountProHofDedicationsArgs
@@ -9345,6 +9444,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountDiceThemesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserDiceThemeWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCrownsRewardsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrownsRewardWhereInput
   }
 
   /**
@@ -11281,6 +11387,7 @@ export namespace Prisma {
     proSpectatorFollows?: boolean | User$proSpectatorFollowsArgs<ExtArgs>
     proWallet?: boolean | User$proWalletArgs<ExtArgs>
     diceThemes?: boolean | User$diceThemesArgs<ExtArgs>
+    crownsRewards?: boolean | User$crownsRewardsArgs<ExtArgs>
     proBets?: boolean | User$proBetsArgs<ExtArgs>
     proUserBadges?: boolean | User$proUserBadgesArgs<ExtArgs>
     proHofDedications?: boolean | User$proHofDedicationsArgs<ExtArgs>
@@ -11434,6 +11541,7 @@ export namespace Prisma {
     proSpectatorFollows?: boolean | User$proSpectatorFollowsArgs<ExtArgs>
     proWallet?: boolean | User$proWalletArgs<ExtArgs>
     diceThemes?: boolean | User$diceThemesArgs<ExtArgs>
+    crownsRewards?: boolean | User$crownsRewardsArgs<ExtArgs>
     proBets?: boolean | User$proBetsArgs<ExtArgs>
     proUserBadges?: boolean | User$proUserBadgesArgs<ExtArgs>
     proHofDedications?: boolean | User$proHofDedicationsArgs<ExtArgs>
@@ -11482,6 +11590,10 @@ export namespace Prisma {
        * Mirror PG — thèmes de dés acquis.
        */
       diceThemes: Prisma.$UserDiceThemePayload<ExtArgs>[]
+      /**
+       * Récompenses en Couronnes (registre du rattrapage, `crowns-earning`).
+       */
+      crownsRewards: Prisma.$CrownsRewardPayload<ExtArgs>[]
       proBets: Prisma.$ProBetPayload<ExtArgs>[]
       proUserBadges: Prisma.$ProUserBadgePayload<ExtArgs>[]
       proHofDedications: Prisma.$ProHallOfFameDedicationPayload<ExtArgs>[]
@@ -12007,6 +12119,7 @@ export namespace Prisma {
     proSpectatorFollows<T extends User$proSpectatorFollowsArgs<ExtArgs> = {}>(args?: Subset<T, User$proSpectatorFollowsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProSpectatorFollowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proWallet<T extends User$proWalletArgs<ExtArgs> = {}>(args?: Subset<T, User$proWalletArgs<ExtArgs>>): Prisma__ProWalletClient<$Result.GetResult<Prisma.$ProWalletPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     diceThemes<T extends User$diceThemesArgs<ExtArgs> = {}>(args?: Subset<T, User$diceThemesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserDiceThemePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    crownsRewards<T extends User$crownsRewardsArgs<ExtArgs> = {}>(args?: Subset<T, User$crownsRewardsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proBets<T extends User$proBetsArgs<ExtArgs> = {}>(args?: Subset<T, User$proBetsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProBetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proUserBadges<T extends User$proUserBadgesArgs<ExtArgs> = {}>(args?: Subset<T, User$proUserBadgesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProUserBadgePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proHofDedications<T extends User$proHofDedicationsArgs<ExtArgs> = {}>(args?: Subset<T, User$proHofDedicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProHallOfFameDedicationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -12963,6 +13076,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UserDiceThemeScalarFieldEnum | UserDiceThemeScalarFieldEnum[]
+  }
+
+  /**
+   * User.crownsRewards
+   */
+  export type User$crownsRewardsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    where?: CrownsRewardWhereInput
+    orderBy?: CrownsRewardOrderByWithRelationInput | CrownsRewardOrderByWithRelationInput[]
+    cursor?: CrownsRewardWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CrownsRewardScalarFieldEnum | CrownsRewardScalarFieldEnum[]
   }
 
   /**
@@ -120949,6 +121086,1170 @@ export namespace Prisma {
 
 
   /**
+   * Model CrownsReward
+   */
+
+  export type AggregateCrownsReward = {
+    _count: CrownsRewardCountAggregateOutputType | null
+    _avg: CrownsRewardAvgAggregateOutputType | null
+    _sum: CrownsRewardSumAggregateOutputType | null
+    _min: CrownsRewardMinAggregateOutputType | null
+    _max: CrownsRewardMaxAggregateOutputType | null
+  }
+
+  export type CrownsRewardAvgAggregateOutputType = {
+    amount: number | null
+    baseAmount: number | null
+  }
+
+  export type CrownsRewardSumAggregateOutputType = {
+    amount: number | null
+    baseAmount: number | null
+  }
+
+  export type CrownsRewardMinAggregateOutputType = {
+    id: string | null
+    sourceKey: string | null
+    userId: string | null
+    kind: string | null
+    periodKey: string | null
+    amount: number | null
+    baseAmount: number | null
+    transactionId: string | null
+    createdAt: Date | null
+  }
+
+  export type CrownsRewardMaxAggregateOutputType = {
+    id: string | null
+    sourceKey: string | null
+    userId: string | null
+    kind: string | null
+    periodKey: string | null
+    amount: number | null
+    baseAmount: number | null
+    transactionId: string | null
+    createdAt: Date | null
+  }
+
+  export type CrownsRewardCountAggregateOutputType = {
+    id: number
+    sourceKey: number
+    userId: number
+    kind: number
+    periodKey: number
+    amount: number
+    baseAmount: number
+    transactionId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type CrownsRewardAvgAggregateInputType = {
+    amount?: true
+    baseAmount?: true
+  }
+
+  export type CrownsRewardSumAggregateInputType = {
+    amount?: true
+    baseAmount?: true
+  }
+
+  export type CrownsRewardMinAggregateInputType = {
+    id?: true
+    sourceKey?: true
+    userId?: true
+    kind?: true
+    periodKey?: true
+    amount?: true
+    baseAmount?: true
+    transactionId?: true
+    createdAt?: true
+  }
+
+  export type CrownsRewardMaxAggregateInputType = {
+    id?: true
+    sourceKey?: true
+    userId?: true
+    kind?: true
+    periodKey?: true
+    amount?: true
+    baseAmount?: true
+    transactionId?: true
+    createdAt?: true
+  }
+
+  export type CrownsRewardCountAggregateInputType = {
+    id?: true
+    sourceKey?: true
+    userId?: true
+    kind?: true
+    periodKey?: true
+    amount?: true
+    baseAmount?: true
+    transactionId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type CrownsRewardAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrownsReward to aggregate.
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrownsRewards to fetch.
+     */
+    orderBy?: CrownsRewardOrderByWithRelationInput | CrownsRewardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CrownsRewardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrownsRewards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrownsRewards.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CrownsRewards
+    **/
+    _count?: true | CrownsRewardCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: CrownsRewardAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: CrownsRewardSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CrownsRewardMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CrownsRewardMaxAggregateInputType
+  }
+
+  export type GetCrownsRewardAggregateType<T extends CrownsRewardAggregateArgs> = {
+        [P in keyof T & keyof AggregateCrownsReward]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCrownsReward[P]>
+      : GetScalarType<T[P], AggregateCrownsReward[P]>
+  }
+
+
+
+
+  export type CrownsRewardGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CrownsRewardWhereInput
+    orderBy?: CrownsRewardOrderByWithAggregationInput | CrownsRewardOrderByWithAggregationInput[]
+    by: CrownsRewardScalarFieldEnum[] | CrownsRewardScalarFieldEnum
+    having?: CrownsRewardScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CrownsRewardCountAggregateInputType | true
+    _avg?: CrownsRewardAvgAggregateInputType
+    _sum?: CrownsRewardSumAggregateInputType
+    _min?: CrownsRewardMinAggregateInputType
+    _max?: CrownsRewardMaxAggregateInputType
+  }
+
+  export type CrownsRewardGroupByOutputType = {
+    id: string
+    sourceKey: string
+    userId: string
+    kind: string
+    periodKey: string | null
+    amount: number
+    baseAmount: number
+    transactionId: string | null
+    createdAt: Date
+    _count: CrownsRewardCountAggregateOutputType | null
+    _avg: CrownsRewardAvgAggregateOutputType | null
+    _sum: CrownsRewardSumAggregateOutputType | null
+    _min: CrownsRewardMinAggregateOutputType | null
+    _max: CrownsRewardMaxAggregateOutputType | null
+  }
+
+  type GetCrownsRewardGroupByPayload<T extends CrownsRewardGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CrownsRewardGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CrownsRewardGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CrownsRewardGroupByOutputType[P]>
+            : GetScalarType<T[P], CrownsRewardGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CrownsRewardSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sourceKey?: boolean
+    userId?: boolean
+    kind?: boolean
+    periodKey?: boolean
+    amount?: boolean
+    baseAmount?: boolean
+    transactionId?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crownsReward"]>
+
+  export type CrownsRewardSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sourceKey?: boolean
+    userId?: boolean
+    kind?: boolean
+    periodKey?: boolean
+    amount?: boolean
+    baseAmount?: boolean
+    transactionId?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crownsReward"]>
+
+  export type CrownsRewardSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    sourceKey?: boolean
+    userId?: boolean
+    kind?: boolean
+    periodKey?: boolean
+    amount?: boolean
+    baseAmount?: boolean
+    transactionId?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["crownsReward"]>
+
+  export type CrownsRewardSelectScalar = {
+    id?: boolean
+    sourceKey?: boolean
+    userId?: boolean
+    kind?: boolean
+    periodKey?: boolean
+    amount?: boolean
+    baseAmount?: boolean
+    transactionId?: boolean
+    createdAt?: boolean
+  }
+
+  export type CrownsRewardOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "sourceKey" | "userId" | "kind" | "periodKey" | "amount" | "baseAmount" | "transactionId" | "createdAt", ExtArgs["result"]["crownsReward"]>
+  export type CrownsRewardInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CrownsRewardIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CrownsRewardIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $CrownsRewardPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CrownsReward"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      /**
+       * `sheet:<sheetId>:home|away` | `achievement:<userId>:<slug>` | `signup:<userId>`
+       */
+      sourceKey: string
+      userId: string
+      /**
+       * "sheet" | "achievement" | "signup"
+       */
+      kind: string
+      /**
+       * `season:<seasonId>` | `cup:<cupId>` pour une feuille (plafond) ; null sinon.
+       */
+      periodKey: string | null
+      /**
+       * Couronnes versées (>= 0 ; 0 = plafonnée ou marqueur « déjà perçu »).
+       */
+      amount: number
+      /**
+       * Barème avant plafond.
+       */
+      baseAmount: number
+      /**
+       * Opération `ProTransaction` du passage ; null si rien n'a été versé.
+       */
+      transactionId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["crownsReward"]>
+    composites: {}
+  }
+
+  type CrownsRewardGetPayload<S extends boolean | null | undefined | CrownsRewardDefaultArgs> = $Result.GetResult<Prisma.$CrownsRewardPayload, S>
+
+  type CrownsRewardCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CrownsRewardFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CrownsRewardCountAggregateInputType | true
+    }
+
+  export interface CrownsRewardDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CrownsReward'], meta: { name: 'CrownsReward' } }
+    /**
+     * Find zero or one CrownsReward that matches the filter.
+     * @param {CrownsRewardFindUniqueArgs} args - Arguments to find a CrownsReward
+     * @example
+     * // Get one CrownsReward
+     * const crownsReward = await prisma.crownsReward.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CrownsRewardFindUniqueArgs>(args: SelectSubset<T, CrownsRewardFindUniqueArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CrownsReward that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CrownsRewardFindUniqueOrThrowArgs} args - Arguments to find a CrownsReward
+     * @example
+     * // Get one CrownsReward
+     * const crownsReward = await prisma.crownsReward.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CrownsRewardFindUniqueOrThrowArgs>(args: SelectSubset<T, CrownsRewardFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CrownsReward that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardFindFirstArgs} args - Arguments to find a CrownsReward
+     * @example
+     * // Get one CrownsReward
+     * const crownsReward = await prisma.crownsReward.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CrownsRewardFindFirstArgs>(args?: SelectSubset<T, CrownsRewardFindFirstArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CrownsReward that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardFindFirstOrThrowArgs} args - Arguments to find a CrownsReward
+     * @example
+     * // Get one CrownsReward
+     * const crownsReward = await prisma.crownsReward.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CrownsRewardFindFirstOrThrowArgs>(args?: SelectSubset<T, CrownsRewardFindFirstOrThrowArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CrownsRewards that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CrownsRewards
+     * const crownsRewards = await prisma.crownsReward.findMany()
+     * 
+     * // Get first 10 CrownsRewards
+     * const crownsRewards = await prisma.crownsReward.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const crownsRewardWithIdOnly = await prisma.crownsReward.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CrownsRewardFindManyArgs>(args?: SelectSubset<T, CrownsRewardFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CrownsReward.
+     * @param {CrownsRewardCreateArgs} args - Arguments to create a CrownsReward.
+     * @example
+     * // Create one CrownsReward
+     * const CrownsReward = await prisma.crownsReward.create({
+     *   data: {
+     *     // ... data to create a CrownsReward
+     *   }
+     * })
+     * 
+     */
+    create<T extends CrownsRewardCreateArgs>(args: SelectSubset<T, CrownsRewardCreateArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CrownsRewards.
+     * @param {CrownsRewardCreateManyArgs} args - Arguments to create many CrownsRewards.
+     * @example
+     * // Create many CrownsRewards
+     * const crownsReward = await prisma.crownsReward.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CrownsRewardCreateManyArgs>(args?: SelectSubset<T, CrownsRewardCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CrownsRewards and returns the data saved in the database.
+     * @param {CrownsRewardCreateManyAndReturnArgs} args - Arguments to create many CrownsRewards.
+     * @example
+     * // Create many CrownsRewards
+     * const crownsReward = await prisma.crownsReward.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CrownsRewards and only return the `id`
+     * const crownsRewardWithIdOnly = await prisma.crownsReward.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CrownsRewardCreateManyAndReturnArgs>(args?: SelectSubset<T, CrownsRewardCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CrownsReward.
+     * @param {CrownsRewardDeleteArgs} args - Arguments to delete one CrownsReward.
+     * @example
+     * // Delete one CrownsReward
+     * const CrownsReward = await prisma.crownsReward.delete({
+     *   where: {
+     *     // ... filter to delete one CrownsReward
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CrownsRewardDeleteArgs>(args: SelectSubset<T, CrownsRewardDeleteArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CrownsReward.
+     * @param {CrownsRewardUpdateArgs} args - Arguments to update one CrownsReward.
+     * @example
+     * // Update one CrownsReward
+     * const crownsReward = await prisma.crownsReward.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CrownsRewardUpdateArgs>(args: SelectSubset<T, CrownsRewardUpdateArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CrownsRewards.
+     * @param {CrownsRewardDeleteManyArgs} args - Arguments to filter CrownsRewards to delete.
+     * @example
+     * // Delete a few CrownsRewards
+     * const { count } = await prisma.crownsReward.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CrownsRewardDeleteManyArgs>(args?: SelectSubset<T, CrownsRewardDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CrownsRewards.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CrownsRewards
+     * const crownsReward = await prisma.crownsReward.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CrownsRewardUpdateManyArgs>(args: SelectSubset<T, CrownsRewardUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CrownsRewards and returns the data updated in the database.
+     * @param {CrownsRewardUpdateManyAndReturnArgs} args - Arguments to update many CrownsRewards.
+     * @example
+     * // Update many CrownsRewards
+     * const crownsReward = await prisma.crownsReward.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CrownsRewards and only return the `id`
+     * const crownsRewardWithIdOnly = await prisma.crownsReward.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CrownsRewardUpdateManyAndReturnArgs>(args: SelectSubset<T, CrownsRewardUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CrownsReward.
+     * @param {CrownsRewardUpsertArgs} args - Arguments to update or create a CrownsReward.
+     * @example
+     * // Update or create a CrownsReward
+     * const crownsReward = await prisma.crownsReward.upsert({
+     *   create: {
+     *     // ... data to create a CrownsReward
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CrownsReward we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CrownsRewardUpsertArgs>(args: SelectSubset<T, CrownsRewardUpsertArgs<ExtArgs>>): Prisma__CrownsRewardClient<$Result.GetResult<Prisma.$CrownsRewardPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CrownsRewards.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardCountArgs} args - Arguments to filter CrownsRewards to count.
+     * @example
+     * // Count the number of CrownsRewards
+     * const count = await prisma.crownsReward.count({
+     *   where: {
+     *     // ... the filter for the CrownsRewards we want to count
+     *   }
+     * })
+    **/
+    count<T extends CrownsRewardCountArgs>(
+      args?: Subset<T, CrownsRewardCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CrownsRewardCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CrownsReward.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CrownsRewardAggregateArgs>(args: Subset<T, CrownsRewardAggregateArgs>): Prisma.PrismaPromise<GetCrownsRewardAggregateType<T>>
+
+    /**
+     * Group by CrownsReward.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CrownsRewardGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CrownsRewardGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CrownsRewardGroupByArgs['orderBy'] }
+        : { orderBy?: CrownsRewardGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CrownsRewardGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCrownsRewardGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CrownsReward model
+   */
+  readonly fields: CrownsRewardFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CrownsReward.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CrownsRewardClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CrownsReward model
+   */
+  interface CrownsRewardFieldRefs {
+    readonly id: FieldRef<"CrownsReward", 'String'>
+    readonly sourceKey: FieldRef<"CrownsReward", 'String'>
+    readonly userId: FieldRef<"CrownsReward", 'String'>
+    readonly kind: FieldRef<"CrownsReward", 'String'>
+    readonly periodKey: FieldRef<"CrownsReward", 'String'>
+    readonly amount: FieldRef<"CrownsReward", 'Int'>
+    readonly baseAmount: FieldRef<"CrownsReward", 'Int'>
+    readonly transactionId: FieldRef<"CrownsReward", 'String'>
+    readonly createdAt: FieldRef<"CrownsReward", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CrownsReward findUnique
+   */
+  export type CrownsRewardFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * Filter, which CrownsReward to fetch.
+     */
+    where: CrownsRewardWhereUniqueInput
+  }
+
+  /**
+   * CrownsReward findUniqueOrThrow
+   */
+  export type CrownsRewardFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * Filter, which CrownsReward to fetch.
+     */
+    where: CrownsRewardWhereUniqueInput
+  }
+
+  /**
+   * CrownsReward findFirst
+   */
+  export type CrownsRewardFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * Filter, which CrownsReward to fetch.
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrownsRewards to fetch.
+     */
+    orderBy?: CrownsRewardOrderByWithRelationInput | CrownsRewardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrownsRewards.
+     */
+    cursor?: CrownsRewardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrownsRewards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrownsRewards.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrownsRewards.
+     */
+    distinct?: CrownsRewardScalarFieldEnum | CrownsRewardScalarFieldEnum[]
+  }
+
+  /**
+   * CrownsReward findFirstOrThrow
+   */
+  export type CrownsRewardFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * Filter, which CrownsReward to fetch.
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrownsRewards to fetch.
+     */
+    orderBy?: CrownsRewardOrderByWithRelationInput | CrownsRewardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CrownsRewards.
+     */
+    cursor?: CrownsRewardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrownsRewards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrownsRewards.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CrownsRewards.
+     */
+    distinct?: CrownsRewardScalarFieldEnum | CrownsRewardScalarFieldEnum[]
+  }
+
+  /**
+   * CrownsReward findMany
+   */
+  export type CrownsRewardFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * Filter, which CrownsRewards to fetch.
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CrownsRewards to fetch.
+     */
+    orderBy?: CrownsRewardOrderByWithRelationInput | CrownsRewardOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CrownsRewards.
+     */
+    cursor?: CrownsRewardWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CrownsRewards from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CrownsRewards.
+     */
+    skip?: number
+    distinct?: CrownsRewardScalarFieldEnum | CrownsRewardScalarFieldEnum[]
+  }
+
+  /**
+   * CrownsReward create
+   */
+  export type CrownsRewardCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CrownsReward.
+     */
+    data: XOR<CrownsRewardCreateInput, CrownsRewardUncheckedCreateInput>
+  }
+
+  /**
+   * CrownsReward createMany
+   */
+  export type CrownsRewardCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CrownsRewards.
+     */
+    data: CrownsRewardCreateManyInput | CrownsRewardCreateManyInput[]
+  }
+
+  /**
+   * CrownsReward createManyAndReturn
+   */
+  export type CrownsRewardCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * The data used to create many CrownsRewards.
+     */
+    data: CrownsRewardCreateManyInput | CrownsRewardCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CrownsReward update
+   */
+  export type CrownsRewardUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CrownsReward.
+     */
+    data: XOR<CrownsRewardUpdateInput, CrownsRewardUncheckedUpdateInput>
+    /**
+     * Choose, which CrownsReward to update.
+     */
+    where: CrownsRewardWhereUniqueInput
+  }
+
+  /**
+   * CrownsReward updateMany
+   */
+  export type CrownsRewardUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CrownsRewards.
+     */
+    data: XOR<CrownsRewardUpdateManyMutationInput, CrownsRewardUncheckedUpdateManyInput>
+    /**
+     * Filter which CrownsRewards to update
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * Limit how many CrownsRewards to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CrownsReward updateManyAndReturn
+   */
+  export type CrownsRewardUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * The data used to update CrownsRewards.
+     */
+    data: XOR<CrownsRewardUpdateManyMutationInput, CrownsRewardUncheckedUpdateManyInput>
+    /**
+     * Filter which CrownsRewards to update
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * Limit how many CrownsRewards to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CrownsReward upsert
+   */
+  export type CrownsRewardUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CrownsReward to update in case it exists.
+     */
+    where: CrownsRewardWhereUniqueInput
+    /**
+     * In case the CrownsReward found by the `where` argument doesn't exist, create a new CrownsReward with this data.
+     */
+    create: XOR<CrownsRewardCreateInput, CrownsRewardUncheckedCreateInput>
+    /**
+     * In case the CrownsReward was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CrownsRewardUpdateInput, CrownsRewardUncheckedUpdateInput>
+  }
+
+  /**
+   * CrownsReward delete
+   */
+  export type CrownsRewardDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+    /**
+     * Filter which CrownsReward to delete.
+     */
+    where: CrownsRewardWhereUniqueInput
+  }
+
+  /**
+   * CrownsReward deleteMany
+   */
+  export type CrownsRewardDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CrownsRewards to delete
+     */
+    where?: CrownsRewardWhereInput
+    /**
+     * Limit how many CrownsRewards to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CrownsReward without action
+   */
+  export type CrownsRewardDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CrownsReward
+     */
+    select?: CrownsRewardSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CrownsReward
+     */
+    omit?: CrownsRewardOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CrownsRewardInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -122595,6 +123896,21 @@ export namespace Prisma {
   export type UserDiceThemeScalarFieldEnum = (typeof UserDiceThemeScalarFieldEnum)[keyof typeof UserDiceThemeScalarFieldEnum]
 
 
+  export const CrownsRewardScalarFieldEnum: {
+    id: 'id',
+    sourceKey: 'sourceKey',
+    userId: 'userId',
+    kind: 'kind',
+    periodKey: 'periodKey',
+    amount: 'amount',
+    baseAmount: 'baseAmount',
+    transactionId: 'transactionId',
+    createdAt: 'createdAt'
+  };
+
+  export type CrownsRewardScalarFieldEnum = (typeof CrownsRewardScalarFieldEnum)[keyof typeof CrownsRewardScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -122794,6 +124110,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowListRelationFilter
     proWallet?: XOR<ProWalletNullableScalarRelationFilter, ProWalletWhereInput> | null
     diceThemes?: UserDiceThemeListRelationFilter
+    crownsRewards?: CrownsRewardListRelationFilter
     proBets?: ProBetListRelationFilter
     proUserBadges?: ProUserBadgeListRelationFilter
     proHofDedications?: ProHallOfFameDedicationListRelationFilter
@@ -122868,6 +124185,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowOrderByRelationAggregateInput
     proWallet?: ProWalletOrderByWithRelationInput
     diceThemes?: UserDiceThemeOrderByRelationAggregateInput
+    crownsRewards?: CrownsRewardOrderByRelationAggregateInput
     proBets?: ProBetOrderByRelationAggregateInput
     proUserBadges?: ProUserBadgeOrderByRelationAggregateInput
     proHofDedications?: ProHallOfFameDedicationOrderByRelationAggregateInput
@@ -122945,6 +124263,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowListRelationFilter
     proWallet?: XOR<ProWalletNullableScalarRelationFilter, ProWalletWhereInput> | null
     diceThemes?: UserDiceThemeListRelationFilter
+    crownsRewards?: CrownsRewardListRelationFilter
     proBets?: ProBetListRelationFilter
     proUserBadges?: ProUserBadgeListRelationFilter
     proHofDedications?: ProHallOfFameDedicationListRelationFilter
@@ -131516,6 +132835,83 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"UserDiceTheme"> | Date | string
   }
 
+  export type CrownsRewardWhereInput = {
+    AND?: CrownsRewardWhereInput | CrownsRewardWhereInput[]
+    OR?: CrownsRewardWhereInput[]
+    NOT?: CrownsRewardWhereInput | CrownsRewardWhereInput[]
+    id?: StringFilter<"CrownsReward"> | string
+    sourceKey?: StringFilter<"CrownsReward"> | string
+    userId?: StringFilter<"CrownsReward"> | string
+    kind?: StringFilter<"CrownsReward"> | string
+    periodKey?: StringNullableFilter<"CrownsReward"> | string | null
+    amount?: IntFilter<"CrownsReward"> | number
+    baseAmount?: IntFilter<"CrownsReward"> | number
+    transactionId?: StringNullableFilter<"CrownsReward"> | string | null
+    createdAt?: DateTimeFilter<"CrownsReward"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type CrownsRewardOrderByWithRelationInput = {
+    id?: SortOrder
+    sourceKey?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    periodKey?: SortOrderInput | SortOrder
+    amount?: SortOrder
+    baseAmount?: SortOrder
+    transactionId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type CrownsRewardWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    sourceKey?: string
+    AND?: CrownsRewardWhereInput | CrownsRewardWhereInput[]
+    OR?: CrownsRewardWhereInput[]
+    NOT?: CrownsRewardWhereInput | CrownsRewardWhereInput[]
+    userId?: StringFilter<"CrownsReward"> | string
+    kind?: StringFilter<"CrownsReward"> | string
+    periodKey?: StringNullableFilter<"CrownsReward"> | string | null
+    amount?: IntFilter<"CrownsReward"> | number
+    baseAmount?: IntFilter<"CrownsReward"> | number
+    transactionId?: StringNullableFilter<"CrownsReward"> | string | null
+    createdAt?: DateTimeFilter<"CrownsReward"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "sourceKey">
+
+  export type CrownsRewardOrderByWithAggregationInput = {
+    id?: SortOrder
+    sourceKey?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    periodKey?: SortOrderInput | SortOrder
+    amount?: SortOrder
+    baseAmount?: SortOrder
+    transactionId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: CrownsRewardCountOrderByAggregateInput
+    _avg?: CrownsRewardAvgOrderByAggregateInput
+    _max?: CrownsRewardMaxOrderByAggregateInput
+    _min?: CrownsRewardMinOrderByAggregateInput
+    _sum?: CrownsRewardSumOrderByAggregateInput
+  }
+
+  export type CrownsRewardScalarWhereWithAggregatesInput = {
+    AND?: CrownsRewardScalarWhereWithAggregatesInput | CrownsRewardScalarWhereWithAggregatesInput[]
+    OR?: CrownsRewardScalarWhereWithAggregatesInput[]
+    NOT?: CrownsRewardScalarWhereWithAggregatesInput | CrownsRewardScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CrownsReward"> | string
+    sourceKey?: StringWithAggregatesFilter<"CrownsReward"> | string
+    userId?: StringWithAggregatesFilter<"CrownsReward"> | string
+    kind?: StringWithAggregatesFilter<"CrownsReward"> | string
+    periodKey?: StringNullableWithAggregatesFilter<"CrownsReward"> | string | null
+    amount?: IntWithAggregatesFilter<"CrownsReward"> | number
+    baseAmount?: IntWithAggregatesFilter<"CrownsReward"> | number
+    transactionId?: StringNullableWithAggregatesFilter<"CrownsReward"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CrownsReward"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -131572,6 +132968,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -131646,6 +133043,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -131720,6 +133118,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -131794,6 +133193,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -141422,6 +142822,89 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CrownsRewardCreateInput = {
+    id?: string
+    sourceKey: string
+    kind: string
+    periodKey?: string | null
+    amount: number
+    baseAmount: number
+    transactionId?: string | null
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutCrownsRewardsInput
+  }
+
+  export type CrownsRewardUncheckedCreateInput = {
+    id?: string
+    sourceKey: string
+    userId: string
+    kind: string
+    periodKey?: string | null
+    amount: number
+    baseAmount: number
+    transactionId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type CrownsRewardUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutCrownsRewardsNestedInput
+  }
+
+  export type CrownsRewardUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrownsRewardCreateManyInput = {
+    id?: string
+    sourceKey: string
+    userId: string
+    kind: string
+    periodKey?: string | null
+    amount: number
+    baseAmount: number
+    transactionId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type CrownsRewardUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrownsRewardUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -141600,6 +143083,12 @@ export namespace Prisma {
     none?: UserDiceThemeWhereInput
   }
 
+  export type CrownsRewardListRelationFilter = {
+    every?: CrownsRewardWhereInput
+    some?: CrownsRewardWhereInput
+    none?: CrownsRewardWhereInput
+  }
+
   export type ProBetListRelationFilter = {
     every?: ProBetWhereInput
     some?: ProBetWhereInput
@@ -141754,6 +143243,10 @@ export namespace Prisma {
   }
 
   export type UserDiceThemeOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CrownsRewardOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -147721,6 +149214,52 @@ export namespace Prisma {
     priceCrowns?: SortOrder
   }
 
+  export type CrownsRewardCountOrderByAggregateInput = {
+    id?: SortOrder
+    sourceKey?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    periodKey?: SortOrder
+    amount?: SortOrder
+    baseAmount?: SortOrder
+    transactionId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CrownsRewardAvgOrderByAggregateInput = {
+    amount?: SortOrder
+    baseAmount?: SortOrder
+  }
+
+  export type CrownsRewardMaxOrderByAggregateInput = {
+    id?: SortOrder
+    sourceKey?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    periodKey?: SortOrder
+    amount?: SortOrder
+    baseAmount?: SortOrder
+    transactionId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CrownsRewardMinOrderByAggregateInput = {
+    id?: SortOrder
+    sourceKey?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    periodKey?: SortOrder
+    amount?: SortOrder
+    baseAmount?: SortOrder
+    transactionId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CrownsRewardSumOrderByAggregateInput = {
+    amount?: SortOrder
+    baseAmount?: SortOrder
+  }
+
   export type MatchCreateNestedManyWithoutPlayersInput = {
     create?: XOR<MatchCreateWithoutPlayersInput, MatchUncheckedCreateWithoutPlayersInput> | MatchCreateWithoutPlayersInput[] | MatchUncheckedCreateWithoutPlayersInput[]
     connectOrCreate?: MatchCreateOrConnectWithoutPlayersInput | MatchCreateOrConnectWithoutPlayersInput[]
@@ -147863,6 +149402,13 @@ export namespace Prisma {
     connectOrCreate?: UserDiceThemeCreateOrConnectWithoutUserInput | UserDiceThemeCreateOrConnectWithoutUserInput[]
     createMany?: UserDiceThemeCreateManyUserInputEnvelope
     connect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+  }
+
+  export type CrownsRewardCreateNestedManyWithoutUserInput = {
+    create?: XOR<CrownsRewardCreateWithoutUserInput, CrownsRewardUncheckedCreateWithoutUserInput> | CrownsRewardCreateWithoutUserInput[] | CrownsRewardUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CrownsRewardCreateOrConnectWithoutUserInput | CrownsRewardCreateOrConnectWithoutUserInput[]
+    createMany?: CrownsRewardCreateManyUserInputEnvelope
+    connect?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
   }
 
   export type ProBetCreateNestedManyWithoutUserInput = {
@@ -148119,6 +149665,13 @@ export namespace Prisma {
     connectOrCreate?: UserDiceThemeCreateOrConnectWithoutUserInput | UserDiceThemeCreateOrConnectWithoutUserInput[]
     createMany?: UserDiceThemeCreateManyUserInputEnvelope
     connect?: UserDiceThemeWhereUniqueInput | UserDiceThemeWhereUniqueInput[]
+  }
+
+  export type CrownsRewardUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<CrownsRewardCreateWithoutUserInput, CrownsRewardUncheckedCreateWithoutUserInput> | CrownsRewardCreateWithoutUserInput[] | CrownsRewardUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CrownsRewardCreateOrConnectWithoutUserInput | CrownsRewardCreateOrConnectWithoutUserInput[]
+    createMany?: CrownsRewardCreateManyUserInputEnvelope
+    connect?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
   }
 
   export type ProBetUncheckedCreateNestedManyWithoutUserInput = {
@@ -148544,6 +150097,20 @@ export namespace Prisma {
     update?: UserDiceThemeUpdateWithWhereUniqueWithoutUserInput | UserDiceThemeUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserDiceThemeUpdateManyWithWhereWithoutUserInput | UserDiceThemeUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserDiceThemeScalarWhereInput | UserDiceThemeScalarWhereInput[]
+  }
+
+  export type CrownsRewardUpdateManyWithoutUserNestedInput = {
+    create?: XOR<CrownsRewardCreateWithoutUserInput, CrownsRewardUncheckedCreateWithoutUserInput> | CrownsRewardCreateWithoutUserInput[] | CrownsRewardUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CrownsRewardCreateOrConnectWithoutUserInput | CrownsRewardCreateOrConnectWithoutUserInput[]
+    upsert?: CrownsRewardUpsertWithWhereUniqueWithoutUserInput | CrownsRewardUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: CrownsRewardCreateManyUserInputEnvelope
+    set?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    disconnect?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    delete?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    connect?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    update?: CrownsRewardUpdateWithWhereUniqueWithoutUserInput | CrownsRewardUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: CrownsRewardUpdateManyWithWhereWithoutUserInput | CrownsRewardUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: CrownsRewardScalarWhereInput | CrownsRewardScalarWhereInput[]
   }
 
   export type ProBetUpdateManyWithoutUserNestedInput = {
@@ -149053,6 +150620,20 @@ export namespace Prisma {
     update?: UserDiceThemeUpdateWithWhereUniqueWithoutUserInput | UserDiceThemeUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserDiceThemeUpdateManyWithWhereWithoutUserInput | UserDiceThemeUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserDiceThemeScalarWhereInput | UserDiceThemeScalarWhereInput[]
+  }
+
+  export type CrownsRewardUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<CrownsRewardCreateWithoutUserInput, CrownsRewardUncheckedCreateWithoutUserInput> | CrownsRewardCreateWithoutUserInput[] | CrownsRewardUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CrownsRewardCreateOrConnectWithoutUserInput | CrownsRewardCreateOrConnectWithoutUserInput[]
+    upsert?: CrownsRewardUpsertWithWhereUniqueWithoutUserInput | CrownsRewardUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: CrownsRewardCreateManyUserInputEnvelope
+    set?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    disconnect?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    delete?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    connect?: CrownsRewardWhereUniqueInput | CrownsRewardWhereUniqueInput[]
+    update?: CrownsRewardUpdateWithWhereUniqueWithoutUserInput | CrownsRewardUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: CrownsRewardUpdateManyWithWhereWithoutUserInput | CrownsRewardUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: CrownsRewardScalarWhereInput | CrownsRewardScalarWhereInput[]
   }
 
   export type ProBetUncheckedUpdateManyWithoutUserNestedInput = {
@@ -154481,6 +156062,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDiceThemesInput, UserUpdateWithoutDiceThemesInput>, UserUncheckedUpdateWithoutDiceThemesInput>
   }
 
+  export type UserCreateNestedOneWithoutCrownsRewardsInput = {
+    create?: XOR<UserCreateWithoutCrownsRewardsInput, UserUncheckedCreateWithoutCrownsRewardsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCrownsRewardsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutCrownsRewardsNestedInput = {
+    create?: XOR<UserCreateWithoutCrownsRewardsInput, UserUncheckedCreateWithoutCrownsRewardsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCrownsRewardsInput
+    upsert?: UserUpsertWithoutCrownsRewardsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCrownsRewardsInput, UserUpdateWithoutCrownsRewardsInput>, UserUncheckedUpdateWithoutCrownsRewardsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -155653,6 +157248,37 @@ export namespace Prisma {
 
   export type UserDiceThemeCreateManyUserInputEnvelope = {
     data: UserDiceThemeCreateManyUserInput | UserDiceThemeCreateManyUserInput[]
+  }
+
+  export type CrownsRewardCreateWithoutUserInput = {
+    id?: string
+    sourceKey: string
+    kind: string
+    periodKey?: string | null
+    amount: number
+    baseAmount: number
+    transactionId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type CrownsRewardUncheckedCreateWithoutUserInput = {
+    id?: string
+    sourceKey: string
+    kind: string
+    periodKey?: string | null
+    amount: number
+    baseAmount: number
+    transactionId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type CrownsRewardCreateOrConnectWithoutUserInput = {
+    where: CrownsRewardWhereUniqueInput
+    create: XOR<CrownsRewardCreateWithoutUserInput, CrownsRewardUncheckedCreateWithoutUserInput>
+  }
+
+  export type CrownsRewardCreateManyUserInputEnvelope = {
+    data: CrownsRewardCreateManyUserInput | CrownsRewardCreateManyUserInput[]
   }
 
   export type ProBetCreateWithoutUserInput = {
@@ -156847,6 +158473,37 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"UserDiceTheme"> | Date | string
   }
 
+  export type CrownsRewardUpsertWithWhereUniqueWithoutUserInput = {
+    where: CrownsRewardWhereUniqueInput
+    update: XOR<CrownsRewardUpdateWithoutUserInput, CrownsRewardUncheckedUpdateWithoutUserInput>
+    create: XOR<CrownsRewardCreateWithoutUserInput, CrownsRewardUncheckedCreateWithoutUserInput>
+  }
+
+  export type CrownsRewardUpdateWithWhereUniqueWithoutUserInput = {
+    where: CrownsRewardWhereUniqueInput
+    data: XOR<CrownsRewardUpdateWithoutUserInput, CrownsRewardUncheckedUpdateWithoutUserInput>
+  }
+
+  export type CrownsRewardUpdateManyWithWhereWithoutUserInput = {
+    where: CrownsRewardScalarWhereInput
+    data: XOR<CrownsRewardUpdateManyMutationInput, CrownsRewardUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type CrownsRewardScalarWhereInput = {
+    AND?: CrownsRewardScalarWhereInput | CrownsRewardScalarWhereInput[]
+    OR?: CrownsRewardScalarWhereInput[]
+    NOT?: CrownsRewardScalarWhereInput | CrownsRewardScalarWhereInput[]
+    id?: StringFilter<"CrownsReward"> | string
+    sourceKey?: StringFilter<"CrownsReward"> | string
+    userId?: StringFilter<"CrownsReward"> | string
+    kind?: StringFilter<"CrownsReward"> | string
+    periodKey?: StringNullableFilter<"CrownsReward"> | string | null
+    amount?: IntFilter<"CrownsReward"> | number
+    baseAmount?: IntFilter<"CrownsReward"> | number
+    transactionId?: StringNullableFilter<"CrownsReward"> | string | null
+    createdAt?: DateTimeFilter<"CrownsReward"> | Date | string
+  }
+
   export type ProBetUpsertWithWhereUniqueWithoutUserInput = {
     where: ProBetWhereUniqueInput
     update: XOR<ProBetUpdateWithoutUserInput, ProBetUncheckedUpdateWithoutUserInput>
@@ -157367,6 +159024,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -157440,6 +159098,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -157529,6 +159188,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -157602,6 +159262,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -157675,6 +159336,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -157748,6 +159410,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -157837,6 +159500,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -157910,6 +159574,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -157983,6 +159648,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -158056,6 +159722,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -158145,6 +159812,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -158218,6 +159886,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -158291,6 +159960,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -158364,6 +160034,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -158453,6 +160124,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -158526,6 +160198,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -158599,6 +160272,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -158672,6 +160346,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -158761,6 +160436,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -158834,6 +160510,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -158907,6 +160584,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -158980,6 +160658,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -159069,6 +160748,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -159142,6 +160822,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159215,6 +160896,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -159288,6 +160970,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -159366,6 +161049,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -159439,6 +161123,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -159528,6 +161213,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -159601,6 +161287,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159685,6 +161372,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -159758,6 +161446,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -159891,6 +161580,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -159964,6 +161654,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -160082,6 +161773,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -160155,6 +161847,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -160228,6 +161921,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -160301,6 +161995,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -160379,6 +162074,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -160452,6 +162148,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -160755,6 +162452,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -160828,6 +162526,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -161391,6 +163090,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -161464,6 +163164,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -161705,6 +163406,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -161778,6 +163480,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -161938,6 +163641,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -162011,6 +163715,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -162618,6 +164323,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -162691,6 +164397,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -164856,6 +166563,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -164929,6 +166637,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -165256,6 +166965,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -165329,6 +167039,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -167083,6 +168794,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -167156,6 +168868,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -167326,6 +169039,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -167399,6 +169113,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -167559,6 +169274,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -167632,6 +169348,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -168040,6 +169757,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -168113,6 +169831,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -168636,6 +170355,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -168709,6 +170429,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -168937,6 +170658,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -169010,6 +170732,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -170006,6 +171729,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -170079,6 +171803,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -170157,6 +171882,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -170230,6 +171956,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -170516,6 +172243,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -170589,6 +172317,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -170673,6 +172402,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -170746,6 +172476,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -170983,6 +172714,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -171056,6 +172788,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -171134,6 +172867,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -171207,6 +172941,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -171460,6 +173195,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -171533,6 +173269,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -171617,6 +173354,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -171690,6 +173428,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -171981,6 +173720,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -172054,6 +173794,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -172287,6 +174028,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -172360,6 +174102,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -173967,6 +175710,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -174040,6 +175784,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -174176,6 +175921,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -174249,6 +175995,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -177286,6 +179033,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -177359,6 +179107,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -177495,6 +179244,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -177568,6 +179318,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -177694,6 +179445,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -177767,6 +179519,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -177881,6 +179634,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -177954,6 +179708,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -178343,6 +180098,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
@@ -178416,6 +180172,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
@@ -178534,6 +180291,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
@@ -178607,6 +180365,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
@@ -178779,6 +180538,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
@@ -178852,6 +180612,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
@@ -178941,6 +180702,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
@@ -179014,6 +180776,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
@@ -179220,6 +180983,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
@@ -179293,6 +181057,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
@@ -179433,6 +181198,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
@@ -179506,6 +181272,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
@@ -179651,6 +181418,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -179724,6 +181492,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -179852,6 +181621,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -179925,6 +181695,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -179998,6 +181769,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -180071,6 +181843,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -180212,6 +181985,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -180285,6 +182059,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -180417,6 +182192,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -180490,6 +182266,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -180612,6 +182389,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -180685,6 +182463,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -180785,6 +182564,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -180858,6 +182638,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -181047,6 +182828,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -181120,6 +182902,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -181307,6 +183090,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -181380,6 +183164,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -181594,6 +183379,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -181667,6 +183453,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -181990,6 +183777,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -182063,6 +183851,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -182296,6 +184085,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -182369,6 +184159,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -182627,6 +184418,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -182700,6 +184492,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -182824,6 +184617,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -182897,6 +184691,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -183037,6 +184832,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -183110,6 +184906,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
     diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -183272,6 +185069,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -183345,6 +185143,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -183417,6 +185216,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
     proBets?: ProBetCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
@@ -183490,6 +185290,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
     proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
     proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
     proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
@@ -183579,6 +185380,7 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -183652,6 +185454,319 @@ export namespace Prisma {
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserCreateWithoutCrownsRewardsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutCrownsRewardsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutCrownsRewardsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCrownsRewardsInput, UserUncheckedCreateWithoutCrownsRewardsInput>
+  }
+
+  export type UserUpsertWithoutCrownsRewardsInput = {
+    update: XOR<UserUpdateWithoutCrownsRewardsInput, UserUncheckedUpdateWithoutCrownsRewardsInput>
+    create: XOR<UserCreateWithoutCrownsRewardsInput, UserUncheckedCreateWithoutCrownsRewardsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCrownsRewardsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCrownsRewardsInput, UserUncheckedUpdateWithoutCrownsRewardsInput>
+  }
+
+  export type UserUpdateWithoutCrownsRewardsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCrownsRewardsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
@@ -183913,6 +186028,17 @@ export namespace Prisma {
     source: string
     priceCrowns?: number | null
     grantedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type CrownsRewardCreateManyUserInput = {
+    id?: string
+    sourceKey: string
+    kind: string
+    periodKey?: string | null
+    amount: number
+    baseAmount: number
+    transactionId?: string | null
     createdAt?: Date | string
   }
 
@@ -184983,6 +187109,39 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CrownsRewardUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrownsRewardUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CrownsRewardUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sourceKey?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    periodKey?: NullableStringFieldUpdateOperationsInput | string | null
+    amount?: IntFieldUpdateOperationsInput | number
+    baseAmount?: IntFieldUpdateOperationsInput | number
+    transactionId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ProBetUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     selection?: StringFieldUpdateOperationsInput | string
@@ -185651,6 +187810,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
     proBets?: ProBetUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
@@ -185724,6 +187884,7 @@ export namespace Prisma {
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
     diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
     proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
     proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
     proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
