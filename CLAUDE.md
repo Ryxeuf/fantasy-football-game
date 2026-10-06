@@ -2019,7 +2019,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md).
 - **2026-10-05** : **Pro League lot 4 « l'évolution persistée »** (change
-  OpenSpec `pro-league-coach-evolution`, `ENGINE_VER` 0.30.0). Le coach
+  OpenSpec `pro-league-coach-evolution`, archivé le 2026-10-06, `ENGINE_VER` 0.30.0). Le coach
   d'une équipe devient une PERSONA persistée (`ProCoach` : nom, philosophie,
   profil VIVANT, ANCRE, mémoire, expérience ; `ProCoachMemory` append-only
   avec les raisons). Adaptation BORNÉE et EXPLIQUÉE, sans self-play
@@ -2035,7 +2035,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   le journal du replay. Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md).
 - **2026-10-05** : **Pro League lot 5 « l'exploitation »** (change OpenSpec
-  `pro-league-exploitation`, pas de bump : les issues ne changent pas). Les
+  `pro-league-exploitation`, archivé le 2026-10-06, pas de bump : les issues ne changent pas). Les
   simulations sortent de l'event loop : pool de `worker_threads` dans le
   sim-engine (`createSimPool`), pool unique côté serveur
   (`services/pro-league-sim-pool`, `PRO_LEAGUE_SIM_WORKERS`, inline en test),
