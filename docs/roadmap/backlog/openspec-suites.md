@@ -248,6 +248,30 @@ et Couronnes (flag `crowns`) sont en recette. Restent :
   afficher ceux du lanceur demanderait de servir son thème dans l'état du
   match.
 
+## Pro League — coach persisté et exploitation (lots 4 et 5)
+
+Source : `pro-league-coach-evolution` et `pro-league-exploitation` (archivés
+2026-10-06, #1057). Le coach de chaque équipe est une persona persistée qui
+évolue de façon bornée ; les simulations tournent dans un pool de
+`worker_threads`, les matchs en direct se clôturent d'eux-mêmes et les
+replays anciens sont purgés. La Pro League reste gelée
+(`PRO_LEAGUE_ENABLED=false`). Restent :
+
+- **Gazette : un paragraphe « le coach » par match**, à partir du résumé
+  d'évolution (`ProCoachMemory.summary`).
+- **Comparer deux coachs d'une même race** après une saison (console admin),
+  avec alerte quand un profil reste collé à une borne de la bande `ancre ± 15`.
+- **Rejouer l'historique** (`ProCoachMemory`) pour recalculer la mémoire si
+  la règle d'adaptation change (script `db:replay-coach-memory`).
+- **Estimateur de cotes calibré sur le bench nocturne** : remplacer les 50
+  runs par une table race × race (décision 1 de l'exploration), puis retirer
+  le driver hybride une fois l'estimateur en place.
+- **Comparaison automatique de deux rapports nocturnes**
+  (`sim:compare-versions` sur `bench/nightly/*.json`) avec alerte.
+- **Live « par coups » du viewer**, différé depuis le lot 2.
+- **Décision de dégel** (`PRO_LEAGUE_ENABLED`) : produit, après le panel
+  humain de la gate du lot 3.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -265,3 +289,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `casualty-count-and-hate-keyword-choice` | `prisma db push` (colonnes `LeagueMatchSheet.casualtyRuleVersion` et `hateChoices`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh` (étape 3/5). Puis ouvrir une fois le classement de chaque ligue active pour déclencher le rattrapage. |
 | `dice-theme-shop-and-crowns` | `prisma db push` (tables `DiceTheme`, `UserDiceTheme`), joué par `scripts/deploy.sh`. Le catalogue sert le compilé tant que la table est vide ; le seed (`syncDiceThemes`, create-if-missing) la remplit pour l'éditer en admin. Créer la ligne du flag `crowns` (seed ou « Synchroniser depuis le code » dans `/admin/feature-flags`) pour pouvoir l'allumer. |
 | `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
+| `pro-league-coach-evolution` | `prisma db push` (tables `ProCoach`, `ProCoachMemory`), joué par `scripts/deploy.sh`. Aucun backfill : le coach d'une équipe se crée à son premier match. Variables optionnelles du lot 5 : `PRO_LEAGUE_SIM_WORKERS`, `PRO_LEAGUE_COMPLETION_TICK_MS`, `PRO_LEAGUE_REPLAY_RETENTION_DAYS`. |
