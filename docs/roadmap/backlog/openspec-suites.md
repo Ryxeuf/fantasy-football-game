@@ -248,6 +248,29 @@ et Couronnes (flag `crowns`) sont en recette. Restent :
   afficher ceux du lanceur demanderait de servir son thème dans l'état du
   match.
 
+## Pro League — match complet, journal rejouable, cerveau du coach (lots 1 à 3)
+
+Source : `pro-league-full-match`, `pro-league-replay-journal` et
+`pro-league-coach-brain` (archivés 2026-10-06 ; #1053, #1055, #1056). Le full
+driver joue un match complet, chaque replay est un journal rejouable bit à
+bit, et un coach par équipe choisit les activations avec les probabilités du
+moteur. Restent :
+
+- **Rendu `PixiBoard` : Prone et Stunned distincts** (pion couché / sonné).
+  Le moteur les distingue déjà par `state === 'stunned'`, l'affichage les
+  montre encore tous deux « à terre ».
+- **Dés du viewer de replay par `BlockDieIcon` / `D6Icon`** (règle « le thème
+  dessine ») et spec e2e Playwright du viewer terrain (pas par coup et par
+  activation).
+- **Panel humain de la gate du lot 3** : 3 à 5 coachs jugent 20 replays
+  Terrain à l'œil ; condition posée dans l'exploration, à tenir par le
+  coach du projet.
+- **Calibrage vers la référence FUMBBL (2,1 à 4,1 TD par match)** : coût de
+  marquage côté défense, tempo loin de l'en-but, course après ramassage (le
+  porteur avance 2 à 3 cases par tour), passes et remises (0,1 à 0,5 par
+  match), turnovers des duels agiles (11 à 12 par match contre 6 à 10 en
+  référence). Le bench nocturne complet, lui, est livré par le lot 5.
+
 ## Pro League — coach persisté et exploitation (lots 4 et 5)
 
 Source : `pro-league-coach-evolution` et `pro-league-exploitation` (archivés
