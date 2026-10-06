@@ -4,6 +4,8 @@ import {
   REWARDS_TX_REF_PREFIX,
   describeCrownsTransaction,
   describeRewardPass,
+  describeRewardPeriod,
+  describeRewardSource,
   diceThemeIdFromRef,
   formatCrowns,
   formatCrownsDelta,
@@ -71,5 +73,16 @@ describe("crowns (helpers d'affichage)", () => {
 
   it("même préfixe de passage que le serveur", () => {
     expect(REWARDS_TX_REF_PREFIX).toBe(SERVER_REWARDS_TX_REF_PREFIX);
+  });
+
+  it("libelle la source et la période d'une récompense du registre", () => {
+    expect(describeRewardSource("sheet", "sheet:abc:home")).toBe("Feuille de match (domicile)");
+    expect(describeRewardSource("sheet", "sheet:abc:away")).toBe("Feuille de match (extérieur)");
+    expect(describeRewardSource("achievement", "achievement:u1:first-friend")).toBe("Succès « first-friend »");
+    expect(describeRewardSource("signup", "signup:u1")).toBe("Bonus de bienvenue");
+    expect(describeRewardSource("other", "x:y")).toBe("x:y");
+    expect(describeRewardPeriod("season:s1")).toBe("Saison de ligue");
+    expect(describeRewardPeriod("cup:c1")).toBe("Coupe");
+    expect(describeRewardPeriod(null)).toBe("—");
   });
 });

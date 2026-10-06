@@ -113,3 +113,27 @@ export function describeCrownsTransaction(
       return tx.type;
   }
 }
+
+/**
+ * Source lisible d'une récompense du registre, depuis sa clé :
+ * `sheet:<id>:home|away`, `achievement:<userId>:<slug>`, `signup:<userId>`.
+ */
+export function describeRewardSource(kind: string, sourceKey: string): string {
+  const parts = sourceKey.split(":");
+  if (kind === "sheet") {
+    const side = parts[2] === "away" ? "extérieur" : "domicile";
+    return `Feuille de match (${side})`;
+  }
+  if (kind === "achievement") return `Succès « ${parts.slice(2).join(":") || sourceKey} »`;
+  if (kind === "signup") return "Bonus de bienvenue";
+  return sourceKey;
+}
+
+/** Période du plafond : « Saison », « Coupe » ou « — » (hors plafond). */
+export function describeRewardPeriod(periodKey: string | null): string {
+  if (!periodKey) return "—";
+  if (periodKey.startsWith("season:")) return "Saison de ligue";
+  if (periodKey.startsWith("cup:")) return "Coupe";
+  return periodKey;
+}
+

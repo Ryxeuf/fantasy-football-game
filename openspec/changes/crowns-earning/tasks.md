@@ -21,8 +21,8 @@
 
 ## 4. Admin
 
-- [ ] 4.1 Ajouter `GET /admin/coach-cosmetics/:userId/crowns-rewards` (`adminOnly`, 50 plus récentes : source, période, montant, barème, date) au routeur admin des cosmétiques ; vérifier par test de route : admin 200, coach 403, coach inconnu 404.
-- [ ] 4.2 Afficher la section « Récompenses » sur `/admin/coach-cosmetics/[userId]` (plafonnées signalées) ; vérifier par test de rendu.
+- [x] 4.1 Ajouter `GET /admin/coach-cosmetics/:userId/crowns-rewards` (`adminOnly`, 50 plus récentes : source, période, montant, barème, date) au routeur admin des cosmétiques ; vérifier par test de route : admin 200, coach 403, coach inconnu 404.
+- [x] 4.2 Afficher la section « Récompenses » sur `/admin/coach-cosmetics/[userId]` (plafonnées signalées) ; vérifier par test de rendu.
 
 ## 5. Dette des écrivains du wallet
 

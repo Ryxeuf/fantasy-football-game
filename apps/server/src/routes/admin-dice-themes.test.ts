@@ -46,7 +46,10 @@ vi.mock("../services/dice-theme-admin", () => {
   };
 });
 
+vi.mock("../services/crowns-rewards", () => ({ listCrownsRewardsForAdmin: vi.fn() }));
+
 import * as svc from "../services/dice-theme-admin";
+import { listCrownsRewardsForAdmin } from "../services/crowns-rewards";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import router from "./admin-dice-themes";
 
@@ -209,5 +212,35 @@ describe("coachs", () => {
     const res = await call("PUT", "/admin/coach-cosmetics/u1/dice-theme", { themeId: "../x" });
     expect(res.status).toBe(400);
     expect(m.setCoachDiceTheme).not.toHaveBeenCalled();
+  });
+});
+
+describe("récompenses en Couronnes d'un coach (crowns-earning)", () => {
+  const rewards = listCrownsRewardsForAdmin as unknown as Mock;
+
+  it("GET sert le registre du coach", async () => {
+    const rows = [
+      {
+        id: "r1",
+        sourceKey: "sheet:s1:home",
+        kind: "sheet",
+        periodKey: "season:x",
+        amount: 25,
+        baseAmount: 25,
+        createdAt: "2026-10-06T10:00:00.000Z",
+      },
+    ];
+    rewards.mockResolvedValue(rows);
+    const res = await call("GET", "/admin/coach-cosmetics/u1/crowns-rewards");
+    expect(res.status).toBe(200);
+    expect(res.body.rewards).toEqual(rows);
+    expect(rewards).toHaveBeenCalledWith("u1");
+  });
+
+  it("GET : coach inconnu => 404", async () => {
+    rewards.mockResolvedValue(null);
+    const res = await call("GET", "/admin/coach-cosmetics/ghost/crowns-rewards");
+    expect(res.status).toBe(404);
+    expect(res.body.code).toBe("user-not-found");
   });
 });

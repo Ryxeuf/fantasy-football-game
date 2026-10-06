@@ -347,3 +347,50 @@ export async function loadRewardBreakdowns(
   for (const [id, group] of byTx) breakdowns.set(id, summarizeCrownsRewards(group));
   return breakdowns;
 }
+
+/** Nombre de récompenses servies à l'écran admin d'un coach. */
+export const ADMIN_CROWNS_REWARDS_LIMIT = 50;
+
+export interface AdminCrownsRewardRow {
+  readonly id: string;
+  readonly sourceKey: string;
+  readonly kind: string;
+  readonly periodKey: string | null;
+  readonly amount: number;
+  readonly baseAmount: number;
+  readonly createdAt: string;
+}
+
+/**
+ * Registre des récompenses d'un coach, plus récentes d'abord (écran admin
+ * des cosmétiques). `null` si le coach n'existe pas.
+ */
+export async function listCrownsRewardsForAdmin(
+  userId: string,
+): Promise<AdminCrownsRewardRow[] | null> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (!user) return null;
+  const rows: Array<{
+    id: string;
+    sourceKey: string;
+    kind: string;
+    periodKey: string | null;
+    amount: number;
+    baseAmount: number;
+    createdAt: Date;
+  }> = await prisma.crownsReward.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: ADMIN_CROWNS_REWARDS_LIMIT,
+    select: {
+      id: true,
+      sourceKey: true,
+      kind: true,
+      periodKey: true,
+      amount: true,
+      baseAmount: true,
+      createdAt: true,
+    },
+  });
+  return rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() }));
+}

@@ -156,6 +156,22 @@ export function adminSetCoachDiceTheme(userId: string, themeId: string | null): 
 }
 
 /** Ajustement du solde par la route wallet existante (journal `ADMIN_ADJUST`). */
+/** Une ligne du registre des récompenses d'un coach (`crowns-earning`). */
+export interface AdminCrownsReward {
+  readonly id: string;
+  readonly sourceKey: string;
+  readonly kind: string;
+  readonly periodKey: string | null;
+  readonly amount: number;
+  readonly baseAmount: number;
+  readonly createdAt: string;
+}
+
+export async function adminGetCoachCrownsRewards(userId: string): Promise<AdminCrownsReward[]> {
+  const res = await apiRequest<{ rewards: AdminCrownsReward[] }>(`${coachPath(userId)}/crowns-rewards`);
+  return res.rewards;
+}
+
 export function adjustCoachCrowns(userId: string, delta: number, reason: string): Promise<unknown> {
   return apiRequest(`/admin/wallets/${encodeURIComponent(userId)}/balance`, {
     method: "PATCH",

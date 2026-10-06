@@ -9,7 +9,9 @@ vi.mock("../prisma", () => {
   const proTransaction = { findFirst: vi.fn(), create: vi.fn() };
   const proWallet = { update: vi.fn() };
   const crownsReward = { findMany: vi.fn(), groupBy: vi.fn(), create: vi.fn() };
+  const user = { findUnique: vi.fn() };
   const client = {
+    user,
     leagueMatchSheet,
     userAchievement,
     proTransaction,
@@ -36,6 +38,7 @@ import { getOrCreateWallet } from "./pro-wallet";
 import { DEFAULT_CROWNS_REWARD_SCHEDULE as S } from "./crowns-rewards-rules";
 import {
   loadAchievementRewardCandidates,
+  listCrownsRewardsForAdmin,
   loadRewardBreakdowns,
   loadSheetRewardCandidates,
   reconcileCrownsRewards,
@@ -44,6 +47,7 @@ import {
 
 type Fn = ReturnType<typeof vi.fn>;
 interface MockedPrisma {
+  user: { findUnique: Fn };
   leagueMatchSheet: { findMany: Fn };
   userAchievement: { findMany: Fn };
   proTransaction: { findFirst: Fn; create: Fn };
@@ -279,5 +283,37 @@ describe("loadRewardBreakdowns", () => {
     });
     expect(out.get("t-a")).toEqual({ sheets: 1, achievements: 1, signup: false, capped: 1 });
     expect(out.get("t-b")).toEqual({ sheets: 0, achievements: 0, signup: true, capped: 0 });
+  });
+});
+
+describe("listCrownsRewardsForAdmin", () => {
+  it("coach inconnu : null, sans lire le registre", async () => {
+    db.user.findUnique.mockResolvedValue(null);
+    expect(await listCrownsRewardsForAdmin("ghost")).toBeNull();
+    expect(db.crownsReward.findMany).not.toHaveBeenCalled();
+  });
+
+  it("50 plus récentes, dates en ISO", async () => {
+    db.user.findUnique.mockResolvedValue({ id: ME });
+    db.crownsReward.findMany.mockResolvedValue([
+      {
+        id: "r1",
+        sourceKey: "sheet:s1:home",
+        kind: "sheet",
+        periodKey: "season:x",
+        amount: 0,
+        baseAmount: 25,
+        createdAt: new Date("2026-10-06T10:00:00Z"),
+      },
+    ]);
+    const rows = await listCrownsRewardsForAdmin(ME);
+    expect(rows).toEqual([
+      expect.objectContaining({ id: "r1", amount: 0, createdAt: "2026-10-06T10:00:00.000Z" }),
+    ]);
+    expect(db.crownsReward.findMany.mock.calls[0][0]).toMatchObject({
+      where: { userId: ME },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
   });
 });
