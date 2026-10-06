@@ -237,6 +237,8 @@ export default function Header() {
                 {dropdownItem("/ligues", "🏆", "Ligues")}
                 {dropdownItem("/skills", "📚", t.nav.skills)}
                 {dropdownItem("/star-players", "⭐", t.nav.starPlayers)}
+                <div className="my-1 border-t border-gray-100" />
+                {dropdownItem("/aide", "❓", "Aide du site")}
               </div>
             )}
           </div>
@@ -503,6 +505,14 @@ export default function Header() {
                 className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
               >
                 ⭐ {t.nav.starPlayers}
+              </a>
+              <a
+                href="/aide"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-2 py-2.5 text-base font-subtitle font-semibold text-nuffle-bronze hover:text-nuffle-gold transition-colors"
+                data-testid="mobile-nav-help"
+              >
+                ❓ Aide du site
               </a>
             </nav>
 
