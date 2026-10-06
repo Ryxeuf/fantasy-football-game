@@ -1,3 +1,10 @@
+## [1.255.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.254.0...v1.255.0) (2026-10-06)
+
+
+### ✨ Features
+
+* **pro-league:** lots 4 et 5 — coach IA persisté et évolutif (engine 0.30.0), pool de workers, complétion des matchs et rétention des replays ([#1057](https://github.com/Ryxeuf/fantasy-football-game/issues/1057)) ([0f3a883](https://github.com/Ryxeuf/fantasy-football-game/commit/0f3a883a1399e824f4de5957c14bf1800124dbf4))
+
 ## [1.254.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.253.0...v1.254.0) (2026-10-05)
 
 
