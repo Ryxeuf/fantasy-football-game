@@ -30,15 +30,26 @@ tant qu'il n'y a pas de bracket).
 - WHEN un utilisateur non commissaire consulte une saison sans bracket
 - THEN aucun panneau de playoffs NE DOIT être affiché
 
+### Requirement: Réglage de la taille du bracket en cours de saison
+Le commissaire DOIT pouvoir modifier `playoffSize` (0, 2, 4 ou 8) après la
+création de la saison, tant qu'aucun round de playoff n'existe et que la saison
+n'est pas `completed`.
+
+#### Scenario: Tour de bracket créé à la main
+- WHEN un tour `kind="regular"` porte un `bracketSlot`
+- THEN la modification de `playoffSize` DOIT être refusée comme après la
+  génération du bracket
+
 ## ADDED Requirements
 
 ### Requirement: Quota de poule corrigeable jusqu'à la génération du bracket
 Le commissaire DOIT pouvoir modifier le nombre de qualifiés
-(`qualifiesForPlayoffs`) d'une poule tant qu'aucun round `kind="playoff"`
-n'existe et que la saison n'est pas `completed`, y compris sur une saison
-`in_progress`. Toute autre modification d'une poule (création, suppression,
-affectation, nom, ordre, couleur) DOIT rester refusée dès le démarrage de la
-saison.
+(`qualifiesForPlayoffs`) d'une poule tant qu'aucun tour de bracket n'existe
+(round `kind="playoff"`, ou tour créé à la main portant un `bracketSlot`) et
+que la saison n'est pas `completed`, y compris sur une saison `in_progress`.
+C'est la même fenêtre que celle de la taille du bracket. Toute autre
+modification d'une poule (création, suppression, affectation, nom, ordre,
+couleur) DOIT rester refusée dès le démarrage de la saison.
 
 #### Scenario: Quota corrigé en cours de saison
 - WHEN le commissaire passe le quota d'une poule de 2 à 4 sur une saison
@@ -52,6 +63,10 @@ saison.
 #### Scenario: Quota figé par le bracket
 - WHEN le commissaire modifie un quota alors qu'un round `kind="playoff"` existe
 - THEN la modification DOIT être refusée (`playoffs_started`, HTTP 409)
+
+#### Scenario: Tour de bracket créé à la main
+- WHEN un tour `kind="regular"` porte un `bracketSlot`
+- THEN il DOIT fermer la fenêtre du quota comme un round `kind="playoff"`
 
 #### Scenario: Quota figé par la clôture
 - WHEN la saison est `completed`

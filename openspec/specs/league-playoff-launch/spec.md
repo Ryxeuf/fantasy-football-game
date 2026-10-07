@@ -5,9 +5,10 @@
 La construction des seeds du bracket de playoffs à partir des
 quotas de qualification par poule, et le contrôle explicite du lancement des
 playoffs par le commissaire (taille du bracket, déclenchement manuel, clôture
-anticipée de la phase de poule). Surface serveur (`apps/server`) + UI
-commissaire (`apps/web`). Distincte de la progression du bracket
-(`advancePlayoffsWithWinner`) et de l'override des participants
+anticipée de la phase de poule, correction des quotas de poule jusqu'au
+bracket, total des qualifiés détaillé par poule). Surface serveur
+(`apps/server`) + UI commissaire (`apps/web`). Distincte de la progression
+du bracket (`advancePlayoffsWithWinner`) et de l'override des participants
 (`overridePlayoffParticipants`), inchangés.
 
 ## Requirements
@@ -61,6 +62,36 @@ quota. Aucun round ni pairing de playoff NE DOIT être créé dans ces cas.
 #### Scenario: Poule trop petite pour son quota
 - WHEN une poule qualifie 4 équipes mais n'en compte que 3 éligibles
 - THEN la génération DOIT être refusée avec la raison `insufficient-participants`
+
+### Requirement: Quota de poule corrigeable jusqu'à la génération du bracket
+Le commissaire DOIT pouvoir modifier le nombre de qualifiés
+(`qualifiesForPlayoffs`) d'une poule tant qu'aucun tour de bracket n'existe
+(round `kind="playoff"`, ou tour créé à la main portant un `bracketSlot`) et
+que la saison n'est pas `completed`, y compris sur une saison `in_progress`.
+C'est la même fenêtre que celle de la taille du bracket. Toute autre
+modification d'une poule (création, suppression, affectation, nom, ordre,
+couleur) DOIT rester refusée dès le démarrage de la saison.
+
+#### Scenario: Quota corrigé en cours de saison
+- WHEN le commissaire passe le quota d'une poule de 2 à 4 sur une saison
+  `in_progress` sans round de playoff
+- THEN la nouvelle valeur DOIT être enregistrée
+
+#### Scenario: Composition toujours figée
+- WHEN le commissaire renomme une poule d'une saison `in_progress`
+- THEN la modification DOIT être refusée (HTTP 409)
+
+#### Scenario: Quota figé par le bracket
+- WHEN le commissaire modifie un quota alors qu'un round `kind="playoff"` existe
+- THEN la modification DOIT être refusée (`playoffs_started`, HTTP 409)
+
+#### Scenario: Tour de bracket créé à la main
+- WHEN un tour `kind="regular"` porte un `bracketSlot`
+- THEN il DOIT fermer la fenêtre du quota comme un round `kind="playoff"`
+
+#### Scenario: Quota figé par la clôture
+- WHEN la saison est `completed`
+- THEN la modification du quota DOIT être refusée (HTTP 409)
 
 ### Requirement: Garde de fin de phase régulière
 Le démarrage des playoffs DOIT être refusé tant qu'un round non-playoff de la
@@ -120,21 +151,34 @@ n'est pas `completed`.
   `kind="playoff"` existe
 - THEN la modification DOIT être refusée (`playoff_already_started`, HTTP 409)
 
+#### Scenario: Tour de bracket créé à la main
+- WHEN un tour `kind="regular"` porte un `bracketSlot`
+- THEN la modification de `playoffSize` DOIT être refusée comme après la
+  génération du bracket
+
 #### Scenario: Refus sur saison clôturée
 - WHEN la saison est `completed`
 - THEN la modification DOIT être refusée (HTTP 409)
 
 ### Requirement: Restitution de l'état des playoffs au commissaire
 Tant qu'aucun bracket n'existe, l'interface DOIT exposer au commissaire la
-taille du bracket configurée, l'état d'avancement de la phase régulière, la
-cohérence des quotas de poule, et une action de démarrage. Les refus serveur
-DOIVENT être restitués en clair. Pour les autres utilisateurs, l'affichage DOIT
-rester inchangé (rien tant qu'il n'y a pas de bracket).
+taille du bracket configurée (avec le nombre d'équipes qu'elle engage),
+l'état d'avancement de la phase régulière, la cohérence des quotas de poule,
+et une action de démarrage. Les quotas DOIVENT être présentés comme un TOTAL,
+accompagné du quota de chaque poule. Les refus serveur DOIVENT être restitués
+en clair. Pour les autres utilisateurs, l'affichage DOIT rester inchangé (rien
+tant qu'il n'y a pas de bracket).
 
 #### Scenario: Panneau commissaire sans bracket
 - WHEN le commissaire consulte une saison dont le bracket n'est pas généré
 - THEN il DOIT voir la taille configurée, l'état de la phase régulière, la
   cohérence des quotas et un bouton de démarrage
+
+#### Scenario: Total des quotas détaillé par poule
+- WHEN la saison a 2 poules qualifiant chacune 4 équipes pour un bracket de 8
+- THEN le panneau DOIT annoncer 8 qualifiés AU TOTAL
+- AND DOIT détailler 4 qualifiés pour chacune des deux poules
+- AND NE DOIT PAS présenter 8 comme un nombre de qualifiés par poule
 
 #### Scenario: Refus restitué
 - WHEN le démarrage est refusé par le serveur

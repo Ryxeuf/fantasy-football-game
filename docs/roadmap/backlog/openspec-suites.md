@@ -277,7 +277,8 @@ Source : `crowns-earning` (archivé le 2026-10-07). Laissé hors du lot :
 
 ## Quotas de poule et taille du bracket
 
-Source : `playoff-pool-quota-clarity` (2026-10-07). Laissé hors du lot :
+Source : `playoff-pool-quota-clarity` (#1068, archivé le 2026-10-07). Laissé
+hors du lot :
 
 - **Bracket de 16 (huitièmes de finale)** : demandé implicitement par le
   retour de la ligue Kraken (« 4 qualifiés par poule pour des 1/8e »). Le
