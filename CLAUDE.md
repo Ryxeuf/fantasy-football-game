@@ -2109,6 +2109,17 @@ edition du `.json`, `pnpm --filter web typecheck` +
   avec une base gratuite, seuls ses styles se paient ; un habillage qui
   signale un statut est dérivé et gratuit. Voir
   [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](./docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).
+- **2026-10-07** : **Les Couronnes se gagnent en jouant** (change OpenSpec
+  `crowns-earning`, #1066, archivé le 2026-10-07). Premier robinet hors Pro
+  League : chaque côté d'une feuille validée (ligue et coupe, 25), chaque
+  succès (50) et le bonus de bienvenue réduit (250), plafond de 500 par saison
+  de ligue sur les seules feuilles. Rattrapage à la LECTURE de
+  `GET /crowns/me` (flag `crowns`), registre `CrownsReward` à clé de source
+  unique et globale, un passage = une opération `REWARD` réf. `rewards:<uuid>`
+  détaillée au journal, barème servi au bloc « Comment gagner des Couronnes »
+  (profil + en-tête de la Boutique), registre lisible en admin. Au passage, les
+  quatre derniers écrivains « solde lu ± montant » du wallet deviennent
+  atomiques. Flag toujours en recette.
 - **2026-10-07** : **Quotas de poule** (retour commissaire, ligue Kraken :
   « 4 qualifiés par poule » affichés « 8 par poule ») — le panneau de
   lancement des play-offs (ligue et coupe) annonce un TOTAL détaillé par

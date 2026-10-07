@@ -244,7 +244,7 @@ et Couronnes (flag `crowns`) sont en recette. Restent :
 
 ## Couronnes gagnées en jouant
 
-Source : `crowns-earning` (2026-10-06). Laissé hors du lot :
+Source : `crowns-earning` (archivé le 2026-10-07). Laissé hors du lot :
 
 - **Pronostics et palmarès à la clôture de saison** : conversion des points de
   pronostic (plafonnée, cf. « Les Crowns (phase 2) » ci-dessus) et récompenses
@@ -260,6 +260,10 @@ Source : `crowns-earning` (2026-10-06). Laissé hors du lot :
 - **Notification de gain** (« +25 Couronnes ») : le journal suffit en v1.
 - **Une ligne plafonnée à 0 n'est pas reprise** si le plafond augmente plus
   tard — un ajustement admin compense.
+- **Recette avant d'ouvrir `crowns` à tous** : premier passage d'un compte
+  réel (historique crédité d'un coup), plafond par saison, détail du journal,
+  section « Récompenses » de l'admin ; puis calibrer le barème (25 / 50 / 250,
+  plafond 500) sur le rythme réel de feuilles validées.
 - **Calibrage** : barème de départ 25 / 50 / 250, plafond 500 par saison, à
   revoir sur le rythme réel de feuilles validées avant d'ouvrir `crowns`.
 - **App mobile (Expo)** : le choix de blocage y reste textuel, aucun dé
