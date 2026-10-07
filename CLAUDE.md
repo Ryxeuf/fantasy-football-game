@@ -2125,4 +2125,5 @@ edition du `.json`, `pnpm --filter web typecheck` +
   lancement des play-offs (ligue et coupe) annonce un TOTAL détaillé par
   poule, les tailles en nombre d'équipes ; en ligue, le quota se corrige
   jusqu'au bracket ; la création de poule garde le dernier quota. Change
-  OpenSpec `playoff-pool-quota-clarity`.
+  OpenSpec `playoff-pool-quota-clarity` (#1068, archivé le 2026-10-07 ; specs
+  vivantes `league-playoff-launch` et `cup-playoffs`).
