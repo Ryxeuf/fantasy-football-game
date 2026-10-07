@@ -24,6 +24,7 @@ import { ManualScheduleEditor } from "./ManualScheduleEditor";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
 import { putPoolFirst } from "./pool-order";
+import { isPoolQuotaEditable, poolQuotaSignature } from "./pool-quota-window";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
 import { CollapsibleSection } from "../../components/CollapsibleSection";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
@@ -273,6 +274,9 @@ export default function LeagueDetailPage() {
     () => season?.status === "draft" || season?.status === "scheduled",
     [season],
   );
+  // Le QUOTA de qualifiés survit au démarrage : il reste corrigeable jusqu'au
+  // bracket (le commissaire voit les tours non publiés).
+  const poolQuotaEditable = useMemo(() => isPoolQuotaEditable(season), [season]);
 
   // FR5 — index participantId -> poule, pour grouper le calendrier par poule.
   const poolNamesById = useMemo<Record<string, string>>(() => {
@@ -573,6 +577,7 @@ export default function LeagueDetailPage() {
                   pools={pools}
                   participants={season.participants}
                   editable={seasonEditable}
+                  quotaEditable={poolQuotaEditable}
                   onChanged={() => {
                     if (selectedSeasonId) loadSeason(selectedSeasonId);
                   }}
@@ -785,6 +790,9 @@ export default function LeagueDetailPage() {
               <PlayoffBracketView
                 seasonId={season.id}
                 isCommissioner={isCreator}
+                // Un quota corrigé dans le panneau des poules change le
+                // total annoncé par le panneau de lancement : on le relit.
+                reloadKey={poolQuotaSignature(pools)}
                 eligibleParticipants={season.participants
                   .filter((p) => p.status === "active")
                   .map((p) => ({ id: p.id, name: p.team.name }))}

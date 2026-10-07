@@ -57,6 +57,97 @@ describe("PlayoffBracketView — panneau de lancement", () => {
     expect(screen.queryByTestId("playoff-force-close")).toBeNull();
   });
 
+  it("annonce les quotas comme un TOTAL détaillé par poule", async () => {
+    // Retour commissaire (ligue Kraken) : deux poules à 4 s'affichaient
+    // « Qualifiés par poule : 8 ».
+    apiRequestMock.mockResolvedValue(
+      bracketResponse({
+        playoffSize: 8,
+        poolQualification: {
+          totalQualified: 8,
+          playoffSize: 8,
+          consistent: true,
+          pools: [
+            { poolId: "pa", name: "Poule A", qualifiesForPlayoffs: 4 },
+            { poolId: "pb", name: "Poule B", qualifiesForPlayoffs: 4 },
+          ],
+        },
+      }),
+    );
+    render(<PlayoffBracketView seasonId="S1" isCommissioner />);
+
+    const state = await screen.findByTestId("playoff-pool-state");
+    expect(state.textContent).toBe(
+      "Qualifiés : 8 au total (Poule A : 4 · Poule B : 4) pour un bracket de 8 — cohérent",
+    );
+    expect(state.textContent).not.toMatch(/par poule/);
+  });
+
+  it("se relit quand un quota de poule change (reloadKey)", async () => {
+    // Le quota se corrige dans le panneau des poules, pas ici : sans
+    // relecture, le panneau annoncerait encore l'ancien total.
+    apiRequestMock.mockResolvedValueOnce(
+      bracketResponse({
+        playoffSize: 8,
+        poolQualification: {
+          totalQualified: 6,
+          playoffSize: 8,
+          consistent: false,
+        },
+      }),
+    );
+    const { rerender } = render(
+      <PlayoffBracketView seasonId="S1" isCommissioner reloadKey="pa:3|pb:3" />,
+    );
+    expect(
+      (await screen.findByTestId("playoff-pool-state")).textContent,
+    ).toMatch(/6 au total.*incohérent/);
+
+    apiRequestMock.mockResolvedValueOnce(
+      bracketResponse({
+        playoffSize: 8,
+        poolQualification: {
+          totalQualified: 8,
+          playoffSize: 8,
+          consistent: true,
+        },
+      }),
+    );
+    rerender(
+      <PlayoffBracketView seasonId="S1" isCommissioner reloadKey="pa:3|pb:5" />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("playoff-pool-state").textContent).toMatch(
+        /8 au total.*cohérent/,
+      ),
+    );
+    expect(apiRequestMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("annonce le total seul face à une API sans détail", async () => {
+    apiRequestMock.mockResolvedValue(bracketResponse());
+    render(<PlayoffBracketView seasonId="S1" isCommissioner />);
+
+    const state = await screen.findByTestId("playoff-pool-state");
+    expect(state.textContent).toBe(
+      "Qualifiés : 4 au total pour un bracket de 4 — cohérent",
+    );
+  });
+
+  it("annonce le nombre d'équipes de chaque taille de bracket", async () => {
+    apiRequestMock.mockResolvedValue(bracketResponse());
+    render(<PlayoffBracketView seasonId="S1" isCommissioner />);
+
+    const select = (await screen.findByTestId(
+      "playoff-size-select",
+    )) as HTMLSelectElement;
+    const labels = Array.from(select.options).map((o) => o.textContent);
+    expect(labels).toContain("Quarts de finale (8 équipes)");
+    expect(labels).toContain("Demi-finales (4 équipes)");
+    expect(labels).toContain("Finale seule (2 équipes)");
+  });
+
   it("propose la clôture anticipée quand la phase de poule est en cours", async () => {
     apiRequestMock.mockResolvedValue(
       bracketResponse({ regularSeasonComplete: false }),
@@ -133,7 +224,11 @@ describe("PlayoffBracketView — panneau de lancement", () => {
     fireEvent.click(await screen.findByTestId("playoff-start-button"));
 
     const error = await screen.findByTestId("playoff-launch-error");
-    expect(error.textContent).toMatch(/total des qualifiés par poule/i);
+    expect(error.textContent).toMatch(
+      /total des qualifiés de toutes les poules/i,
+    );
+    // Le refus dit quoi corriger, maintenant que le quota se corrige.
+    expect(error.textContent).toMatch(/corrigez le nombre de qualifiés/i);
   });
 
   it("masque le panneau dès qu'un bracket existe", async () => {

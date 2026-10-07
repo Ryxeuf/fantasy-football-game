@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("../prisma", () => ({
   prisma: {
     leagueSeason: { findUnique: vi.fn() },
+    leagueRound: { count: vi.fn() },
     leaguePool: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
@@ -161,6 +162,91 @@ describe("Lot C — league-pool service", () => {
       await expect(
         updatePool({ poolId: "p1", name: "A" }),
       ).resolves.toBeDefined();
+    });
+
+    // Retour commissaire (ligue Kraken) : un quota faux etait definitif des
+    // le demarrage de la saison. Le QUOTA reste corrigeable jusqu'au
+    // bracket ; la composition, elle, reste figee.
+    describe("quota de qualifies en cours de saison", () => {
+      beforeEach(() => {
+        mockPrisma.leaguePool.findUnique.mockResolvedValue({
+          id: "p1",
+          seasonId: "s1",
+          name: "Poule A",
+        });
+        mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+          id: "s1",
+          status: "in_progress",
+        });
+        mockPrisma.leagueRound.count.mockResolvedValue(0);
+        mockPrisma.leaguePool.update.mockImplementation(
+          async (args: { data: Record<string, unknown> }) => ({
+            id: "p1",
+            ...args.data,
+          }),
+        );
+      });
+
+      it("accepte un quota corrige sur une saison in_progress sans bracket", async () => {
+        const out = await updatePool({ poolId: "p1", qualifiesForPlayoffs: 4 });
+        expect(out).toMatchObject({ qualifiesForPlayoffs: 4 });
+        expect(mockPrisma.leaguePool.update).toHaveBeenCalledWith({
+          where: { id: "p1" },
+          data: { qualifiesForPlayoffs: 4 },
+        });
+      });
+
+      it("reconnait un tour de bracket par son kind OU son bracketSlot", async () => {
+        await updatePool({ poolId: "p1", qualifiesForPlayoffs: 4 });
+        expect(mockPrisma.leagueRound.count).toHaveBeenCalledWith({
+          where: {
+            seasonId: "s1",
+            OR: [{ kind: "playoff" }, { bracketSlot: { not: null } }],
+          },
+        });
+      });
+
+      it("refuse le quota une fois le bracket genere", async () => {
+        mockPrisma.leagueRound.count.mockResolvedValue(2);
+        await expect(
+          updatePool({ poolId: "p1", qualifiesForPlayoffs: 4 }),
+        ).rejects.toMatchObject({ code: "playoffs_started" });
+        expect(mockPrisma.leaguePool.update).not.toHaveBeenCalled();
+      });
+
+      it("refuse le quota sur une saison cloturee", async () => {
+        mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+          id: "s1",
+          status: "completed",
+        });
+        await expect(
+          updatePool({ poolId: "p1", qualifiesForPlayoffs: 4 }),
+        ).rejects.toMatchObject({ code: "season_completed" });
+        expect(mockPrisma.leaguePool.update).not.toHaveBeenCalled();
+      });
+
+      it("garde la composition figee : renommer reste refuse", async () => {
+        await expect(
+          updatePool({ poolId: "p1", name: "Poule Z" }),
+        ).rejects.toMatchObject({ code: "season_started" });
+      });
+
+      it("un patch quota + autre champ suit la regle de la composition", async () => {
+        await expect(
+          updatePool({ poolId: "p1", qualifiesForPlayoffs: 4, order: 3 }),
+        ).rejects.toMatchObject({ code: "season_started" });
+        expect(mockPrisma.leaguePool.update).not.toHaveBeenCalled();
+      });
+
+      it("une saison en brouillon accepte toujours tout", async () => {
+        mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+          id: "s1",
+          status: "draft",
+        });
+        await expect(
+          updatePool({ poolId: "p1", qualifiesForPlayoffs: 2 }),
+        ).resolves.toMatchObject({ qualifiesForPlayoffs: 2 });
+      });
     });
   });
 

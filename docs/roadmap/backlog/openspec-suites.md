@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-10-05
+> Dernière mise à jour : 2026-10-07
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -274,6 +274,21 @@ Source : `crowns-earning` (archivé le 2026-10-07). Laissé hors du lot :
 - **Thème de l'adversaire en match en ligne** : chacun voit ses propres dés ;
   afficher ceux du lanceur demanderait de servir son thème dans l'état du
   match.
+
+## Quotas de poule et taille du bracket
+
+Source : `playoff-pool-quota-clarity` (2026-10-07). Laissé hors du lot :
+
+- **Bracket de 16 (huitièmes de finale)** : demandé implicitement par le
+  retour de la ligue Kraken (« 4 qualifiés par poule pour des 1/8e »). Le
+  moteur s'arrête à 8 (`PlayoffSize = 0 | 2 | 4 | 8` dans
+  `services/bracket-seeding`). Il faudrait 8 slots de premier tour croisés
+  1-16, 8-9, 4-13, 5-12, 2-15, 7-10, 3-14, 6-11 (les têtes 1 et 2 ne se
+  croisent qu'en finale), la carte d'avancement vers `qf1`…`qf4`,
+  `firstRoundSlotsFor`, les trois schémas Zod (`league.schemas` ×2,
+  `cup.schemas`), les menus de taille (ligue, nouvelle saison, coupe, admin
+  coupe), l'affichage des colonnes du bracket, l'éditeur de têtes de série et
+  l'export PDF du bracket. À ouvrir en change dédié si le besoin se confirme.
 
 ## Pro League — match complet, journal rejouable, cerveau du coach (lots 1 à 3)
 

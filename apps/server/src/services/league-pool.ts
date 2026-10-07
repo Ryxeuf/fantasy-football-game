@@ -13,8 +13,11 @@
  * par poule.
  *
  * Garde-fous :
- *   - Les poules ne peuvent etre modifiees qu'avant le demarrage
+ *   - La COMPOSITION des poules (creation, suppression, affectation,
+ *     nom, ordre, couleur) ne peut etre modifiee qu'avant le demarrage
  *     de la saison (status='draft' ou 'scheduled').
+ *   - Le QUOTA de qualifies reste modifiable jusqu'a la generation du
+ *     bracket (cf. `ensureQuotaEditable`).
  *   - Le nom doit etre unique au sein d'une saison.
  *   - L'assignation des participants verifie qu'ils appartiennent
  *     bien a la saison.
@@ -27,6 +30,8 @@ export class LeaguePoolError extends Error {
     public readonly code:
       | "season_not_found"
       | "season_started"
+      | "season_completed"
+      | "playoffs_started"
       | "pool_not_found"
       | "pool_name_taken"
       | "pool_not_empty"
@@ -102,6 +107,70 @@ async function ensureSeasonEditable(seasonId: string) {
 }
 
 /**
+ * Fenetre du QUOTA de qualifies, plus large que celle de la composition :
+ * il ne gouverne que le seeding du bracket, qui n'a pas encore eu lieu (meme
+ * regle que la coupe, `updateCupPool`, et meme fenetre que la taille du
+ * bracket, `PATCH /seasons/:id/config`). Sans elle, un quota faux etait
+ * definitif des le demarrage de la saison.
+ *
+ * Bornee au bracket : une fois genere, changer un quota ne change plus rien,
+ * mais le badge « N qualifie(s) PO » du classement contredirait le bracket
+ * affiche. Le levier est alors l'editeur des participants des playoffs. Un
+ * tour de bracket cree a la main n'a pas forcement `kind = "playoff"` :
+ * son `bracketSlot` suffit a le reconnaitre.
+ */
+/**
+ * Les tours de BRACKET d'une saison : `kind = "playoff"`, ou un tour cree a
+ * la main par le commissaire, qui n'a que son `bracketSlot`. Partage avec la
+ * garde de la taille du bracket (`PATCH /seasons/:id/config`) : les deux
+ * fenetres se ferment ensemble.
+ */
+export function bracketRoundsWhere(seasonId: string) {
+  return {
+    seasonId,
+    OR: [{ kind: "playoff" }, { bracketSlot: { not: null } }],
+  };
+}
+
+async function ensureQuotaEditable(seasonId: string): Promise<void> {
+  const season = await prisma.leagueSeason.findUnique({
+    where: { id: seasonId },
+    select: { id: true, status: true },
+  });
+  if (!season) {
+    throw new LeaguePoolError(
+      "season_not_found",
+      `Saison introuvable: ${seasonId}`,
+    );
+  }
+  if (season.status === "completed") {
+    throw new LeaguePoolError(
+      "season_completed",
+      "Saison cloturee : le nombre de qualifies ne peut plus etre modifie",
+    );
+  }
+  const bracketRounds = await prisma.leagueRound.count({
+    where: bracketRoundsWhere(seasonId),
+  });
+  if (bracketRounds > 0) {
+    throw new LeaguePoolError(
+      "playoffs_started",
+      "Bracket deja genere : le nombre de qualifies ne gouverne plus rien. Corrigez les participants des playoffs depuis le bracket.",
+    );
+  }
+}
+
+/** Le patch ne touche que le quota de qualifies (fenetre elargie). */
+function isQuotaOnlyPatch(input: UpdatePoolInput): boolean {
+  return (
+    input.qualifiesForPlayoffs !== undefined &&
+    input.name === undefined &&
+    input.color === undefined &&
+    input.order === undefined
+  );
+}
+
+/**
  * Crée une nouvelle poule pour la saison. L'ordre est attribue
  * automatiquement (max+1) si non fourni.
  */
@@ -153,7 +222,11 @@ export async function listPoolsForSeason(seasonId: string) {
   });
 }
 
-/** Met a jour une poule (nom, couleur, qualif, ordre). */
+/**
+ * Met a jour une poule (nom, couleur, qualif, ordre). Un patch qui ne porte
+ * QUE le quota passe par la fenetre elargie (`ensureQuotaEditable`) ; tout
+ * autre champ reste fige au demarrage de la saison.
+ */
 export async function updatePool(input: UpdatePoolInput) {
   const pool = await prisma.leaguePool.findUnique({
     where: { id: input.poolId },
@@ -165,7 +238,11 @@ export async function updatePool(input: UpdatePoolInput) {
       `Poule introuvable: ${input.poolId}`,
     );
   }
-  await ensureSeasonEditable(pool.seasonId);
+  if (isQuotaOnlyPatch(input)) {
+    await ensureQuotaEditable(pool.seasonId);
+  } else {
+    await ensureSeasonEditable(pool.seasonId);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};

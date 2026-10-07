@@ -41,9 +41,9 @@ const STATUS_VALUES = ["ouverte", "en_cours", "terminee", "archivee"] as const;
 
 const PLAYOFF_LABELS: Record<number, string> = {
   0: "Aucun (classement)",
-  2: "Finale (2)",
-  4: "Demi-finales (4)",
-  8: "Quarts (8)",
+  2: "Finale (2 équipes)",
+  4: "Demi-finales (4 équipes)",
+  8: "Quarts de finale (8 équipes)",
 };
 
 export default function AdminCupManagePage() {

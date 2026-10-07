@@ -13,6 +13,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
+import {
+  formatPoolBreakdown,
+  type PoolQuotaView,
+} from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
 
 interface BracketTeam {
@@ -60,9 +64,12 @@ interface BracketResponse {
   /** Optionnels : rétro-compat avec une API pré-panneau commissaire. */
   regularSeasonComplete?: boolean;
   poolQualification?: {
+    /** SOMME des quotas de toutes les poules (jamais un quota par poule). */
     totalQualified: number;
     playoffSize: number;
     consistent: boolean;
+    /** Détail par poule. Optionnel : API antérieure. */
+    pools?: PoolQuotaView[];
   };
 }
 
@@ -80,6 +87,13 @@ interface Props {
   eligibleParticipants?: EligibleParticipant[];
   /** Rappelé après un override réussi (pour rafraîchir la saison). */
   onChanged?: () => void;
+  /**
+   * Signature des données dont dépend la réponse mais que ce composant ne
+   * modifie pas (quotas de poule, corrigés dans le panneau des poules) :
+   * quand elle change, le bracket est relu — sinon le panneau de lancement
+   * annoncerait encore l'ancien total.
+   */
+  reloadKey?: string;
 }
 
 /** Aplati les seeds courants du 1er tour du bracket (ordre home, away…). */
@@ -109,6 +123,7 @@ export function PlayoffBracketView({
   isCommissioner = false,
   eligibleParticipants = [],
   onChanged,
+  reloadKey,
 }: Props) {
   const [data, setData] = useState<BracketResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,7 +149,7 @@ export function PlayoffBracketView({
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, reloadKey]);
 
   // Group rounds by stage : QFs together, SFs together, Final.
   const stages = useMemo(() => {
@@ -623,7 +638,7 @@ const START_REFUSAL_HINTS: Record<string, string> = {
   "regular-season-incomplete":
     "La phase de poule n'est pas terminée : cochez la clôture anticipée pour la clore maintenant.",
   "pool-qualification-mismatch":
-    "Le total des qualifiés par poule ne correspond pas à la taille du bracket.",
+    "Le total des qualifiés de toutes les poules ne correspond pas à la taille du bracket : corrigez le nombre de qualifiés d'une poule (panneau « Poules ») ou la taille du bracket.",
 };
 
 interface LaunchPanelProps {
@@ -647,6 +662,7 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
   // laisse le serveur trancher au clic.
   const regularComplete = data.regularSeasonComplete;
   const pool = data.poolQualification;
+  const poolBreakdown = formatPoolBreakdown(pool?.pools);
 
   const changeSize = useCallback(
     async (next: number) => {
@@ -710,9 +726,9 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
           onChange={(e) => changeSize(Number(e.target.value))}
         >
           <option value={0}>Aucun (pas de playoffs)</option>
-          <option value={2}>Finale seule (2)</option>
-          <option value={4}>Demi-finales (4)</option>
-          <option value={8}>Quarts de finale (8)</option>
+          <option value={2}>Finale seule (2 équipes)</option>
+          <option value={4}>Demi-finales (4 équipes)</option>
+          <option value={8}>Quarts de finale (8 équipes)</option>
         </select>
       </label>
 
@@ -725,7 +741,8 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
         ) : null}
         {pool && pool.totalQualified > 0 ? (
           <li data-testid="playoff-pool-state">
-            Qualifiés par poule : {pool.totalQualified} pour un bracket de{" "}
+            Qualifiés : {pool.totalQualified} au total
+            {poolBreakdown ? ` (${poolBreakdown})` : ""} pour un bracket de{" "}
             {pool.playoffSize} —{" "}
             {pool.consistent ? "cohérent" : "incohérent"}
           </li>

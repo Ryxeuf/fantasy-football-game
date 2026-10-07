@@ -248,3 +248,64 @@ export function selectSeedsFromPools(
 
   return { ok: true, seeds };
 }
+
+/** Poule telle que la lit `summarizePoolQualification`. */
+export interface PoolQuotaRow {
+  readonly id: string;
+  readonly name: string;
+  readonly order: number;
+  readonly qualifiesForPlayoffs: number;
+}
+
+/** Quota d'une poule, tel que le panneau de lancement l'affiche. */
+export interface PoolQuotaView {
+  readonly poolId: string;
+  readonly name: string;
+  readonly qualifiesForPlayoffs: number;
+}
+
+export interface PoolQualificationSummary {
+  /** SOMME des quotas de toutes les poules — jamais un quota par poule. */
+  readonly totalQualified: number;
+  readonly playoffSize: number;
+  /** `true` sans quota configuré, ou si la somme vaut la taille du bracket. */
+  readonly consistent: boolean;
+  /** Détail par poule, dans l'ordre du serpentin de `selectSeedsFromPools`. */
+  readonly pools: readonly PoolQuotaView[];
+}
+
+/**
+ * PURE — résumé des quotas de poule servi au panneau de lancement (ligue ET
+ * coupe). Même somme que `selectSeedsFromPools` (quotas négatifs bornés à
+ * 0) : le panneau ne peut pas annoncer « cohérent » une configuration que le
+ * seeding refuserait.
+ *
+ * Le détail par poule existe parce que le total seul, affiché sous
+ * « Qualifiés par poule », se lisait comme un quota par poule (deux poules à
+ * 4 annonçaient « 8 par poule »).
+ */
+export function summarizePoolQualification(
+  pools: readonly PoolQuotaRow[],
+  playoffSize: number,
+): PoolQualificationSummary {
+  const ordered = pools
+    .slice()
+    .sort((a, b) =>
+      a.order !== b.order ? a.order - b.order : a.id.localeCompare(b.id),
+    )
+    .map((p) => ({
+      poolId: p.id,
+      name: p.name,
+      qualifiesForPlayoffs: Math.max(0, p.qualifiesForPlayoffs),
+    }));
+  const totalQualified = ordered.reduce(
+    (n, p) => n + p.qualifiesForPlayoffs,
+    0,
+  );
+  return {
+    totalQualified,
+    playoffSize,
+    consistent: totalQualified === 0 || totalQualified === playoffSize,
+    pools: ordered,
+  };
+}

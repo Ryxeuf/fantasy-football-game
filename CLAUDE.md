@@ -1219,6 +1219,22 @@ coupe passe `en_cours` à la validation, bien avant) — sauf le QUOTA de
 qualifiés, qui ne gouverne que le seeding et reste corrigeable. Doc :
 [`docs/cup-pools-and-playoffs.md`](./docs/cup-pools-and-playoffs.md).
 
+Même règle en LIGUE depuis le 2026-10-07 (change
+`playoff-pool-quota-clarity`) : `updatePool` n'appliquait que
+`ensureSeasonEditable`, un quota faux devenait définitif au démarrage. Un
+patch qui ne porte QUE `qualifiesForPlayoffs` passe par `ensureQuotaEditable`
+— saison non clôturée, aucun tour de bracket (`kind = "playoff"` OU
+`bracketSlot`), même fenêtre que la taille du bracket. Bornée au bracket, pas
+à la clôture : après, le badge « N qualifié(s) PO » contredirait le bracket
+affiché, et le levier est l'éditeur de participants.
+
+Piège d'affichage voisin : `poolQualification.totalQualified` est la SOMME
+des quotas. Affichée sous « Qualifiés par poule », deux poules à 4 se
+lisaient « 8 par poule ». Le résumé (`summarizePoolQualification`, moteur de
+bracket partagé) sert aussi le détail par poule ; un total s'annonce comme un
+total, et une taille de bracket en nombre d'ÉQUIPES (« Quarts de finale
+(8 équipes) » — les huitièmes, 16 équipes, n'existent pas).
+
 Le GROUPEMENT par poule (calendrier, classement) est lui aussi commun aux deux
 compétitions : `lib/competition-pools.groupByPool` prend un `poolIdOf` en
 argument et ne connaît aucun des deux modèles — la ligue lit la poule par son
@@ -2104,3 +2120,9 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (profil + en-tête de la Boutique), registre lisible en admin. Au passage, les
   quatre derniers écrivains « solde lu ± montant » du wallet deviennent
   atomiques. Flag toujours en recette.
+- **2026-10-07** : **Quotas de poule** (retour commissaire, ligue Kraken :
+  « 4 qualifiés par poule » affichés « 8 par poule ») — le panneau de
+  lancement des play-offs (ligue et coupe) annonce un TOTAL détaillé par
+  poule, les tailles en nombre d'équipes ; en ligue, le quota se corrige
+  jusqu'au bracket ; la création de poule garde le dernier quota. Change
+  OpenSpec `playoff-pool-quota-clarity`.

@@ -30,8 +30,11 @@ import {
   generatePlayoffSeedingFor,
   nextSlotFor,
   selectSeedsFromPools,
+  summarizePoolQualification,
   type PlayoffSize,
   type PoolQualificationInput,
+  type PoolQualificationSummary,
+  type PoolQuotaRow,
 } from "./bracket-seeding";
 import { computeCupStandings } from "../cupScoring";
 import type { CupActor } from "./cup-rounds";
@@ -625,12 +628,8 @@ export interface CupBracketView {
   readonly playoffsPublished: boolean | null;
   /** `true` si aucune rencontre de classement n'est encore ouverte. */
   readonly regularRoundsComplete: boolean;
-  /** Cohérence des quotas de poule avec la taille du bracket. */
-  readonly poolQualification: {
-    readonly totalQualified: number;
-    readonly playoffSize: number;
-    readonly consistent: boolean;
-  };
+  /** Total des quotas de poule, détail par poule et cohérence avec la taille. */
+  readonly poolQualification: PoolQualificationSummary;
   readonly rounds: readonly CupBracketRoundView[];
 }
 
@@ -660,23 +659,15 @@ export async function getCupBracket(input: {
     }) as Promise<number>,
     prisma.cupPool.findMany({
       where: { cupId: cup.id },
-      select: { qualifiesForPlayoffs: true },
-    }) as Promise<Array<{ qualifiesForPlayoffs: number }>>,
+      select: { id: true, name: true, order: true, qualifiesForPlayoffs: true },
+    }) as Promise<PoolQuotaRow[]>,
   ]);
-  const totalQualified = pools.reduce(
-    (n, p) => n + Math.max(0, p.qualifiesForPlayoffs),
-    0,
-  );
   const head = {
     cupId: cup.id,
     playoffSize: cup.playoffSize,
     playoffsPublished: cup.playoffsPublished,
     regularRoundsComplete: openRegular === 0,
-    poolQualification: {
-      totalQualified,
-      playoffSize: cup.playoffSize,
-      consistent: totalQualified === 0 || totalQualified === cup.playoffSize,
-    },
+    poolQualification: summarizePoolQualification(pools, cup.playoffSize),
   };
 
   if (!isCupBracketVisible(cup.playoffsPublished) && !isCommissioner) {
