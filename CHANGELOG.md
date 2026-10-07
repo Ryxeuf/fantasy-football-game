@@ -1,3 +1,15 @@
+## [1.257.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.0...v1.257.1) (2026-10-07)
+
+
+### 🐛 Bug Fixes
+
+* **playoffs:** quotas de poule — un panneau qui dit vrai, un quota qui se corrige ([#1068](https://github.com/Ryxeuf/fantasy-football-game/issues/1068)) ([d59f198](https://github.com/Ryxeuf/fantasy-football-game/commit/d59f19863144d4226d0bb110cde7ed3d4222992b))
+
+
+### 📝 Documentation
+
+* **openspec:** sync et archive de crowns-earning ([#1067](https://github.com/Ryxeuf/fantasy-football-game/issues/1067)) ([dbb8c9b](https://github.com/Ryxeuf/fantasy-football-game/commit/dbb8c9bf34e41a7ccbc121235cca570f960abda3)), closes [#1066](https://github.com/Ryxeuf/fantasy-football-game/issues/1066)
+
 ## [1.257.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.256.1...v1.257.0) (2026-10-07)
 
 
