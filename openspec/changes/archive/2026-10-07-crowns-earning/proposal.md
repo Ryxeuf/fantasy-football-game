@@ -7,7 +7,7 @@ aucune source : seul l'admin en crédite. La recette du flag `crowns` ne teste
 donc que des Couronnes offertes, et aucun prix ne peut être calibré. Les
 puits suivants (palettes d'équipe, épitaphe) n'ont de sens qu'une fois la
 monnaie gagnée par le jeu. Décisions et alternatives écartées :
-[`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](../../../docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).
+[`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](../../../../docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).
 
 ## What Changes
 
