@@ -13,6 +13,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
+import {
+  formatPoolBreakdown,
+  type PoolQuotaView,
+} from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
 
 interface BracketTeam {
@@ -60,9 +64,12 @@ interface BracketResponse {
   /** Optionnels : rétro-compat avec une API pré-panneau commissaire. */
   regularSeasonComplete?: boolean;
   poolQualification?: {
+    /** SOMME des quotas de toutes les poules (jamais un quota par poule). */
     totalQualified: number;
     playoffSize: number;
     consistent: boolean;
+    /** Détail par poule. Optionnel : API antérieure. */
+    pools?: PoolQuotaView[];
   };
 }
 
@@ -647,6 +654,7 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
   // laisse le serveur trancher au clic.
   const regularComplete = data.regularSeasonComplete;
   const pool = data.poolQualification;
+  const poolBreakdown = formatPoolBreakdown(pool?.pools);
 
   const changeSize = useCallback(
     async (next: number) => {
@@ -710,9 +718,9 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
           onChange={(e) => changeSize(Number(e.target.value))}
         >
           <option value={0}>Aucun (pas de playoffs)</option>
-          <option value={2}>Finale seule (2)</option>
-          <option value={4}>Demi-finales (4)</option>
-          <option value={8}>Quarts de finale (8)</option>
+          <option value={2}>Finale seule (2 équipes)</option>
+          <option value={4}>Demi-finales (4 équipes)</option>
+          <option value={8}>Quarts de finale (8 équipes)</option>
         </select>
       </label>
 
@@ -725,7 +733,8 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
         ) : null}
         {pool && pool.totalQualified > 0 ? (
           <li data-testid="playoff-pool-state">
-            Qualifiés par poule : {pool.totalQualified} pour un bracket de{" "}
+            Qualifiés : {pool.totalQualified} au total
+            {poolBreakdown ? ` (${poolBreakdown})` : ""} pour un bracket de{" "}
             {pool.playoffSize} —{" "}
             {pool.consistent ? "cohérent" : "incohérent"}
           </li>

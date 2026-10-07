@@ -18,6 +18,10 @@ import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { dynamicRoute } from "../../lib/typed-route";
 import { matchSheetHref } from "../../lib/competition-links";
+import {
+  formatPoolBreakdown,
+  type PoolQuotaView,
+} from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
 import {
   canEditSeeds,
@@ -55,9 +59,12 @@ export interface CupBracketResponse {
   playoffsPublished: boolean | null;
   regularRoundsComplete: boolean;
   poolQualification: {
+    /** SOMME des quotas de toutes les poules (jamais un quota par poule). */
     totalQualified: number;
     playoffSize: number;
     consistent: boolean;
+    /** Détail par poule. Optionnel : API antérieure. */
+    pools?: PoolQuotaView[];
   };
   rounds: CupBracketRound[];
 }
@@ -520,6 +527,13 @@ function LaunchPanel({
   }, [cupId, force, onChanged]);
 
   const pool = data.poolQualification;
+  const poolBreakdown = formatPoolBreakdown(pool.pools, (name, count) =>
+    // Remplaçants en FONCTION : un nom de poule saisi par le commissaire
+    // peut contenir « $& » ou « $$ », que `replace` interpréterait.
+    t.cups.playoffsPoolEntry
+      .replace("{name}", () => name)
+      .replace("{count}", () => String(count)),
+  );
 
   return (
     <section data-testid="cup-playoffs-launch" className="space-y-3">
@@ -553,6 +567,9 @@ function LaunchPanel({
           <li data-testid="cup-playoffs-pool-state">
             {t.cups.playoffsPoolState
               .replace("{total}", String(pool.totalQualified))
+              .replace("{breakdown}", () =>
+                poolBreakdown ? ` (${poolBreakdown})` : "",
+              )
               .replace("{size}", String(pool.playoffSize))}{" "}
             —{" "}
             {pool.consistent

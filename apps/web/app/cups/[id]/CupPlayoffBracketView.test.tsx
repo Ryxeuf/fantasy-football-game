@@ -154,6 +154,54 @@ describe("CupPlayoffBracketView", () => {
     expect(state.textContent).toContain("incohérent");
   });
 
+  it("annonce les quotas comme un TOTAL détaillé par poule", async () => {
+    apiRequest.mockResolvedValue(
+      response({
+        playoffSize: 8,
+        poolQualification: {
+          totalQualified: 8,
+          playoffSize: 8,
+          consistent: true,
+          pools: [
+            { poolId: "pa", name: "Poule A", qualifiesForPlayoffs: 4 },
+            { poolId: "pb", name: "Poule B", qualifiesForPlayoffs: 4 },
+          ],
+        },
+      }),
+    );
+    renderView({ isCommissioner: true });
+    const state = await screen.findByTestId("cup-playoffs-pool-state");
+    expect(state.textContent).toContain(
+      "Qualifiés : 8 au total (Poule A : 4 · Poule B : 4) pour un bracket de 8",
+    );
+    expect(state.textContent).not.toMatch(/par poule/);
+    const select = screen.getByTestId("cup-playoff-size") as HTMLSelectElement;
+    expect(Array.from(select.options).map((o) => o.textContent)).toContain(
+      "Quarts de finale (8 équipes)",
+    );
+  });
+
+  it("affiche tel quel un nom de poule contenant « $ »", async () => {
+    // `String.replace` interprète « $$ » / « $& » dans une chaîne de
+    // remplacement : le nom saisi doit passer par un remplaçant fonction.
+    apiRequest.mockResolvedValue(
+      response({
+        poolQualification: {
+          totalQualified: 4,
+          playoffSize: 4,
+          consistent: true,
+          pools: [
+            { poolId: "pa", name: "Cash $$", qualifiesForPlayoffs: 2 },
+            { poolId: "pb", name: "Poule $&", qualifiesForPlayoffs: 2 },
+          ],
+        },
+      }),
+    );
+    renderView({ isCommissioner: true });
+    const state = await screen.findByTestId("cup-playoffs-pool-state");
+    expect(state.textContent).toContain("(Cash $$ : 2 · Poule $& : 2)");
+  });
+
   it("rend les tours en colonnes, des demies vers la finale", async () => {
     apiRequest.mockResolvedValue(
       response({
