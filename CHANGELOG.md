@@ -1,3 +1,10 @@
+## [1.257.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.256.1...v1.257.0) (2026-10-07)
+
+
+### ✨ Features
+
+* **crowns:** les Couronnes se gagnent en jouant ([#1066](https://github.com/Ryxeuf/fantasy-football-game/issues/1066)) ([54e415e](https://github.com/Ryxeuf/fantasy-football-game/commit/54e415eb6d1f1b5a34631e49fbbbf7ad7e2aa1c6))
+
 ## [1.256.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.256.0...v1.256.1) (2026-10-06)
 
 
