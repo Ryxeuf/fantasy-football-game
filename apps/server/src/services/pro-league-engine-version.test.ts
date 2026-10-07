@@ -59,6 +59,26 @@ describe("assertSimulationAllowed — sprint 1.A.5", () => {
     ).toThrow(EngineVersionMismatchError);
   });
 
+  it("bac à sable : ignore le pin de la saison hôte", () => {
+    expect(() =>
+      assertSimulationAllowed({
+        engineVer: null,
+        season: { id: "s1", engineVer: OTHER_VER },
+        sandbox: true,
+      }),
+    ).not.toThrow();
+  });
+
+  it("bac à sable : refuse toujours un match déjà simulé avec une autre version", () => {
+    expect(() =>
+      assertSimulationAllowed({
+        engineVer: OTHER_VER,
+        season: { id: "s1", engineVer: OTHER_VER },
+        sandbox: true,
+      }),
+    ).toThrow(EngineVersionMismatchError);
+  });
+
   it("erreur expose pinnedVersion / currentVersion / context", () => {
     try {
       assertSimulationAllowed({

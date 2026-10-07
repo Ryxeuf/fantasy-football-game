@@ -59,7 +59,8 @@ export type ProTxType =
   | "ADMIN_ADJUST"
   | "ADMIN_REFUND";
 
-const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set([
+/** Tous les types, dans l'ordre (miroir validé de `schemas/crowns-admin`). */
+export const PRO_TX_TYPES: readonly ProTxType[] = [
   "BET",
   "WIN",
   "REWARD",
@@ -68,7 +69,9 @@ const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set([
   "SINK",
   "ADMIN_ADJUST",
   "ADMIN_REFUND",
-]);
+];
+
+const VALID_TX_TYPES: ReadonlySet<ProTxType> = new Set(PRO_TX_TYPES);
 
 export interface ProWalletSnapshot {
   readonly userId: string;

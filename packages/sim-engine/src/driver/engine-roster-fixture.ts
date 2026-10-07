@@ -13,6 +13,7 @@
 
 import { TEAM_ROSTERS } from '@bb/game-engine';
 
+import type { SimulateDriverKind } from '../simulate-match';
 import type { SimInput, SimRosterPlayer } from '../types';
 import type { ProTeamProfile } from '../tactics/race-profiles';
 
@@ -152,5 +153,25 @@ export function buildEngineSimInput(
       tv: away.tv,
       roster: awaySlug ? buildEngineRoster('away', awaySlug) : undefined,
     },
+  };
+}
+
+/**
+ * Entrée d'un match pour le driver demandé. Le full driver reçoit les rosters
+ * du catalogue (`buildEngineSimInput`) : sans eux, il retombe sur `setup()`
+ * du moteur et joue à 2 contre 2. L'hybrid garde son abstraction sans roster,
+ * comme le bench historique.
+ */
+export function buildSimInputForDriver(
+  home: ProTeamProfile,
+  away: ProTeamProfile,
+  seed: number,
+  driverKind: SimulateDriverKind,
+): SimInput {
+  if (driverKind === 'full') return buildEngineSimInput(home, away, seed);
+  return {
+    seed,
+    home: { id: home.id, name: home.name, side: 'home', tactics: home.tactics, tv: home.tv },
+    away: { id: away.id, name: away.name, side: 'away', tactics: away.tactics, tv: away.tv },
   };
 }

@@ -59,6 +59,7 @@ describe("CrownsCard (profil)", () => {
     expect(history).toContain("−400");
     expect(history).toContain("Lot du tournoi");
     expect(screen.getByText(/Dépenser mes Couronnes/)).toBeTruthy();
+    expect(screen.getByTestId("crowns-shop-link").getAttribute("href")).toBe("/me/shop");
   });
 
   it("explique comment gagner des Couronnes et détaille un passage de récompenses", () => {
@@ -87,7 +88,7 @@ describe("DiceThemeSummaryCard (profil)", () => {
     render(<DiceThemeSummaryCard />);
     expect(screen.getByTestId("dice-theme-summary-name").textContent).toBe("Orques");
     expect(screen.getByText("2 thèmes possédés")).toBeTruthy();
-    expect(screen.getByTestId("dice-theme-summary-link").getAttribute("href")).toBe("/me/dice-themes");
+    expect(screen.getByTestId("dice-theme-summary-link").getAttribute("href")).toBe("/me/shop/dice-themes");
     // L'aperçu dessine le thème ACTIF du coach.
     // Un seul nom accessible pour l'aperçu, les faces sont masquées aux lecteurs d'écran.
     expect(screen.getByRole("img", { name: "Aperçu de votre thème de dés Orques" })).toBeTruthy();

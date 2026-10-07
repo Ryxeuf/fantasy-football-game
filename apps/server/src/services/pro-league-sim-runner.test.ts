@@ -31,6 +31,15 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+vi.mock("./pro-coach", () => ({
+  getCoachProfile: vi.fn(),
+  applyPostMatchEvolution: vi.fn(async () => {}),
+}));
+
+vi.mock("./pro-roster-form", () => ({
+  applyMatchFormToRosters: vi.fn(async () => 0),
+}));
+
 vi.mock("@bb/sim-engine", async () => {
   const actual = await vi.importActual<typeof import("@bb/sim-engine")>(
     "@bb/sim-engine",
@@ -44,6 +53,8 @@ vi.mock("@bb/sim-engine", async () => {
 
 import { prisma } from "../prisma";
 import * as simEngine from "@bb/sim-engine";
+import { applyPostMatchEvolution, getCoachProfile } from "./pro-coach";
+import { applyMatchFormToRosters } from "./pro-roster-form";
 
 import {
   simulateProMatch,
@@ -86,6 +97,63 @@ beforeEach(() => {
   mocked.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) =>
     fn(prisma),
   );
+  // Lot 4 — le profil du coach vient de la base ; par défaut, le profil de race.
+  vi.mocked(getCoachProfile).mockImplementation(async (teamId: string) =>
+    teamId === "team-h"
+      ? simEngine.PRO_LEAGUE_TEAM_BY_ID["pit-smashers"].tactics
+      : simEngine.PRO_LEAGUE_TEAM_BY_ID["kc-soaring-hawks"].tactics,
+  );
+});
+
+describe("simulateProMatch — évolution persistée (lot 4)", () => {
+  it("passe le profil VIVANT du coach au simulateur et la forme des joueurs", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(makeMatch());
+    mocked.replay.upsert.mockResolvedValue({});
+    mocked.proLeagueMatch.update.mockResolvedValue({});
+    mocked.proTeamRoster.findMany.mockResolvedValue([
+      { id: "p1", name: "Vraskar", position: "Lineman", ma: 5, st: 3, ag: 3, pa: 4, av: 9, skills: [], form: 72 },
+    ]);
+    const living = { ...simEngine.PRO_LEAGUE_TEAM_BY_ID["pit-smashers"].tactics, pace: 71 };
+    vi.mocked(getCoachProfile).mockResolvedValueOnce(living);
+    const spy = vi
+      .spyOn(simEngine, "simulateMatch")
+      .mockImplementation(() => ({
+        result: "draw",
+        events: [],
+        summary: { outcome: "draw", score: { home: 0, away: 0 }, turnoverCount: 0, touchdownCount: 0, nuffleCount: 0, underdogBoostCount: 0, durationMs: 0, momentum: [] },
+        casualties: [],
+        engineVer: CURRENT_ENGINE_VER,
+        coachReport: { drives: [{ team: "A", half: 1, strategy: "stall", possession: true, outcome: "td", turnovers: 0, turns: 4 }] },
+      }));
+
+    await simulateProMatch(MATCH_ID);
+
+    const input = spy.mock.calls[0][0];
+    expect(input.home.tactics).toEqual(living);
+    expect(input.home.roster?.[0].form).toBe(72);
+    expect(vi.mocked(applyPostMatchEvolution)).toHaveBeenCalledWith(
+      expect.objectContaining({ matchId: MATCH_ID, homeTeamId: "team-h", awayTeamId: "team-a" }),
+    );
+    expect(vi.mocked(applyMatchFormToRosters)).toHaveBeenCalledWith({ teamIds: ["team-h", "team-a"], momentum: [] });
+    spy.mockRestore();
+  });
+
+  it("un match de test n'évolue ni les coachs ni la forme", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(makeMatch({ isTest: true }));
+    mocked.replay.upsert.mockResolvedValue({});
+    mocked.proLeagueMatch.update.mockResolvedValue({});
+    await simulateProMatch(MATCH_ID);
+    expect(vi.mocked(applyPostMatchEvolution)).not.toHaveBeenCalled();
+    expect(vi.mocked(applyMatchFormToRosters)).not.toHaveBeenCalled();
+  });
+
+  it("une évolution de forme qui échoue ne fait pas échouer le match persisté", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(makeMatch());
+    mocked.replay.upsert.mockResolvedValue({});
+    mocked.proLeagueMatch.update.mockResolvedValue({});
+    vi.mocked(applyMatchFormToRosters).mockRejectedValueOnce(new Error("db down"));
+    await expect(simulateProMatch(MATCH_ID)).resolves.toBe(true);
+  });
 });
 
 describe("simulateProMatch — sprint 1.A.4", () => {
@@ -201,6 +269,31 @@ describe("simulateProMatch — sprint 1.A.4", () => {
     // Le match n'est PAS marqué `failed` — un mismatch n'est pas un
     // échec de sim mais un refus de policy.
     expect(mocked.proLeagueMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("bac à sable : simule sur le moteur courant malgré une saison hôte pinnée", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({ isTest: true, season: { id: "s1", engineVer: "0.21.0" } }),
+    );
+    mocked.replay.upsert.mockResolvedValue({});
+    mocked.proLeagueMatch.update.mockResolvedValue({});
+
+    await expect(simulateProMatch(MATCH_ID, { sandbox: true })).resolves.toBe(true);
+
+    const update = mocked.proLeagueMatch.update.mock.calls[0][0];
+    expect(update.data.engineVer).toBe(CURRENT_ENGINE_VER);
+    expect(mocked.replay.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("bac à sable : sans effet sur un match de compétition (isTest=false)", async () => {
+    mocked.proLeagueMatch.findUnique.mockResolvedValue(
+      makeMatch({ isTest: false, season: { id: "s1", engineVer: "0.21.0" } }),
+    );
+
+    await expect(simulateProMatch(MATCH_ID, { sandbox: true })).rejects.toThrow(
+      /Engine version mismatch/,
+    );
+    expect(mocked.replay.upsert).not.toHaveBeenCalled();
   });
 
   it("refuse de re-simuler un match déjà sim avec un autre engineVer", async () => {

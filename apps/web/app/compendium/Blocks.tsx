@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import type { CompendiumBlock } from "./types";
 import { headingId } from "./data";
+import { BlockDiceFigure, BlockFaceCell, DiceRollCell } from "./CompendiumDice";
+import { blockFaceForName, parseDiceColumn, parseRollRange, type DiceColumn } from "./dice-notation";
 
 /** Rend le **gras** Markdown inline ; laisse les `*` simples intacts. */
 function renderInline(text: string): ReactNode {
@@ -16,6 +18,21 @@ function renderInline(text: string): ReactNode {
     }
     return <span key={i}>{part}</span>;
   });
+}
+
+/**
+ * Contenu d'une cellule de table. Une colonne de jets (« 2D6 », « D16 »…)
+ * dessine ses plages en faces de dés ; une cellule qui nomme un résultat du
+ * Dé de Blocage s'illustre de sa face ; tout le reste est du texte.
+ */
+function renderCell(text: string, column: DiceColumn | null): ReactNode {
+  if (column) {
+    const range = parseRollRange(text, column);
+    if (range) return <DiceRollCell column={column} range={range} />;
+  }
+  const face = blockFaceForName(text);
+  if (face) return <BlockFaceCell face={face}>{text}</BlockFaceCell>;
+  return renderInline(text);
 }
 
 const CALLOUT_STYLES: Record<
@@ -120,7 +137,8 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
             );
           }
 
-          case "table":
+          case "table": {
+            const diceColumns = block.columns.map(parseDiceColumn);
             return (
               <figure key={index} className="space-y-2">
                 <div className="overflow-x-auto rounded-xl border border-nuffle-bronze/20 shadow-sm">
@@ -148,7 +166,7 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
                               key={c}
                               className="border-t border-nuffle-bronze/10 px-3 py-2 text-nuffle-anthracite/85"
                             >
-                              {renderInline(cell)}
+                              {renderCell(cell, diceColumns[c] ?? null)}
                             </td>
                           ))}
                         </tr>
@@ -163,6 +181,10 @@ export function Blocks({ blocks }: BlocksProps): JSX.Element {
                 ) : null}
               </figure>
             );
+          }
+
+          case "dice":
+            return <BlockDiceFigure key={index} caption={block.caption} />;
 
           case "callout": {
             const style = CALLOUT_STYLES[block.variant];

@@ -10,6 +10,7 @@
 import type { CasualtyOutcome, GameState, Move, TeamId } from '@bb/game-engine';
 import type { MatchEvent } from '@bb/shared-types';
 
+import type { CoachMatchReport } from './coach/adaptation';
 import type { PlayerMomentum } from './tactics/momentum';
 import type { TacticalProfile } from './tactics/tactical-profile';
 import type { ReplayJournal } from './replay/journal';
@@ -17,6 +18,10 @@ import type { ReplayJournal } from './replay/journal';
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
  *
+ *  0.30.0 — Lot 4 « évolution persistée » : la forme des joueurs module
+ *           l'ordre des actions à dés, le journal fige les profils des deux
+ *           coachs, le résultat porte le rapport des drives. Les issues
+ *           changent à graine constante dès qu'une forme est fournie.
  *  0.29.0 — Lot 3 « cerveau du coach » : plan de drive collant, activations
  *           entières scorées en espérance, choix selon le plan, corrections
  *           du moteur (ballon sous un joueur au sol, ramassage du porteur,
@@ -38,7 +43,7 @@ import type { ReplayJournal } from './replay/journal';
  *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
  *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
  *  le re-snapshot de `bench/bench-baseline.json`. */
-export const ENGINE_VER = '0.29.0';
+export const ENGINE_VER = '0.30.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */
@@ -79,6 +84,11 @@ export interface SimRosterPlayer {
   av: number;
   /** Liste de skills (slugs). */
   skills?: readonly string[];
+  /**
+   * Lot 4 — forme persistée (0..100, 50 = neutre), lue par le coach pour
+   * moduler l'appétit pour le risque du joueur. Absente = neutre.
+   */
+  form?: number;
 }
 
 export interface SimTeamInput {
@@ -190,4 +200,11 @@ export interface SimResult {
    * les snapshots. Présent uniquement en full driver.
    */
   journal?: ReplayJournal;
+  /**
+   * Lot 4 « évolution persistée » — drives joués par chaque coach
+   * (stratégie dominante, possession, issue, turnovers). Le serveur s'en
+   * sert pour faire évoluer le profil du coach entre deux matchs
+   * (`adaptCoachProfile`). Présent uniquement en full driver.
+   */
+  coachReport?: CoachMatchReport;
 }

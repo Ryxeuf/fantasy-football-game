@@ -271,6 +271,82 @@ Source : `crowns-earning` (2026-10-06). Laissé hors du lot :
   afficher ceux du lanceur demanderait de servir son thème dans l'état du
   match.
 
+## Pro League — match complet, journal rejouable, cerveau du coach (lots 1 à 3)
+
+Source : `pro-league-full-match`, `pro-league-replay-journal` et
+`pro-league-coach-brain` (archivés 2026-10-06 ; #1053, #1055, #1056). Le full
+driver joue un match complet, chaque replay est un journal rejouable bit à
+bit, et un coach par équipe choisit les activations avec les probabilités du
+moteur. Restent :
+
+- **Rendu `PixiBoard` : Prone et Stunned distincts** (pion couché / sonné).
+  Le moteur les distingue déjà par `state === 'stunned'`, l'affichage les
+  montre encore tous deux « à terre ».
+- **Dés du viewer de replay par `BlockDieIcon` / `D6Icon`** (règle « le thème
+  dessine ») et spec e2e Playwright du viewer terrain (pas par coup et par
+  activation).
+- **Panel humain de la gate du lot 3** : 3 à 5 coachs jugent 20 replays
+  Terrain à l'œil ; condition posée dans l'exploration, à tenir par le
+  coach du projet.
+- **Calibrage vers la référence FUMBBL (2,1 à 4,1 TD par match)** : coût de
+  marquage côté défense, tempo loin de l'en-but, course après ramassage (le
+  porteur avance 2 à 3 cases par tour), passes et remises (0,1 à 0,5 par
+  match), turnovers des duels agiles (11 à 12 par match contre 6 à 10 en
+  référence). Le bench nocturne complet, lui, est livré par le lot 5.
+
+## Pro League — coach persisté et exploitation (lots 4 et 5)
+
+Source : `pro-league-coach-evolution` et `pro-league-exploitation` (archivés
+2026-10-06, #1057). Le coach de chaque équipe est une persona persistée qui
+évolue de façon bornée ; les simulations tournent dans un pool de
+`worker_threads`, les matchs en direct se clôturent d'eux-mêmes et les
+replays anciens sont purgés. La Pro League reste gelée
+(`PRO_LEAGUE_ENABLED=false`). Restent :
+
+- **Gazette : un paragraphe « le coach » par match**, à partir du résumé
+  d'évolution (`ProCoachMemory.summary`).
+- **Comparer deux coachs d'une même race** après une saison (console admin),
+  avec alerte quand un profil reste collé à une borne de la bande `ancre ± 15`.
+- **Rejouer l'historique** (`ProCoachMemory`) pour recalculer la mémoire si
+  la règle d'adaptation change (script `db:replay-coach-memory`).
+- **Estimateur de cotes calibré sur le bench nocturne** : remplacer les 50
+  runs par une table race × race (décision 1 de l'exploration), puis retirer
+  le driver hybride une fois l'estimateur en place.
+- **Comparaison automatique de deux rapports nocturnes**
+  (`sim:compare-versions` sur `bench/nightly/*.json`) avec alerte.
+- **Live « par coups » du viewer**, différé depuis le lot 2.
+- **Décision de dégel** (`PRO_LEAGUE_ENABLED`) : produit, après le panel
+  humain de la gate du lot 3.
+
+## Changes de septembre clôturés le 2026-10-06
+
+Dix changes dont le code était fusionné depuis des semaines ont été
+synchronisés et archivés d'un coup. Leurs suites « hors périmètre » :
+
+- **Exports PDF (`competition-pdf-exports`, #1036)** : recette à valider par
+  le coach du projet, puis retrait du flag `competition_pdf_exports` du code
+  (constante, `KNOWN_FLAGS`, miroir web, gates, seeds, `matchday-legacy-pdf` ;
+  la ligne en base se supprime depuis l'admin) ; version anglaise des PDF.
+- **Contagieux (`contagious-plague-ridden`, #1027)** : blessures durables
+  subies par le relevé pendant le match, non reportées s'il est recruté (même
+  limite que le journalier) ; deux relevés sur le même côté quand les deux
+  règles jouent dans le même match (un seul choix par côté, la victime
+  gratuite préférée).
+- **Notifications et cycle de vie (`notifications-and-competition-lifecycle`)** :
+  préférences par type de notification interne, purge des notifications lues
+  anciennes ; cloche et page notifications dans l'application mobile Expo ;
+  corbeille / restauration d'une compétition supprimée.
+- **Rondes suisses et calendrier (`swiss-cups-and-matchday-calendar`, #1013)** :
+  départages propres à la ronde suisse (Buchholz, adversaires battus) et
+  affichage du score de départage ; appariement manuel d'une ronde de coupe
+  (`system: "manual"`, livré depuis par `cups-managed-like-leagues`) ; rondes
+  suisses en ligue (le moteur pur est déjà indépendant de la coupe) ; rappel
+  de rencontre (push) à l'approche de la date prévisionnelle.
+
+Sans suite : `add-competition-official-documents`, `private-league-visibility`,
+`invalidate-sheet-after-sheet-player-hire`, `home-compact-layout`,
+`home-news-ticker-readability`, `shop-and-crowns-admin`.
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -289,3 +365,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `dice-theme-shop-and-crowns` | `prisma db push` (tables `DiceTheme`, `UserDiceTheme`), joué par `scripts/deploy.sh`. Le catalogue sert le compilé tant que la table est vide ; le seed (`syncDiceThemes`, create-if-missing) la remplit pour l'éditer en admin. Créer la ligne du flag `crowns` (seed ou « Synchroniser depuis le code » dans `/admin/feature-flags`) pour pouvoir l'allumer. |
 | `crowns-earning` | `prisma db push` (table `CrownsReward`), joué par `scripts/deploy.sh`. Rien n'est crédité tant que le flag `crowns` est fermé ; à son ouverture, chaque coach reçoit l'historique de ses feuilles validées et de ses succès (plafonné par saison) plus le bonus de bienvenue, à sa première lecture du solde. |
 | `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
+| `pro-league-coach-evolution` | `prisma db push` (tables `ProCoach`, `ProCoachMemory`), joué par `scripts/deploy.sh`. Aucun backfill : le coach d'une équipe se crée à son premier match. Variables optionnelles du lot 5 : `PRO_LEAGUE_SIM_WORKERS`, `PRO_LEAGUE_COMPLETION_TICK_MS`, `PRO_LEAGUE_REPLAY_RETENTION_DAYS`. |

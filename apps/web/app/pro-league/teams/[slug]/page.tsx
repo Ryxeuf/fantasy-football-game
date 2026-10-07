@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "../../../lib/api-client";
+import TeamCoachSection, { type TeamCoach } from "./_components/TeamCoachSection";
 import { TeamRivalriesSection } from "./_components/TeamRivalriesSection";
 
 /**
@@ -122,6 +123,8 @@ interface TeamDetail {
   readonly totalRosterTv?: number;
   readonly upcomingMatches: readonly DetailMatch[];
   readonly recentMatches: readonly DetailMatch[];
+  /** Lot 4 — coach IA, optionnel pour rétro-compat (null avant le premier match). */
+  readonly coach?: TeamCoach | null;
 }
 
 const FORM_BADGE_STYLES: Record<FormChar, string> = {
@@ -813,6 +816,7 @@ export default function ProLeagueTeamPage({
           </header>
 
           <div className="px-4 py-6">
+            <TeamCoachSection coach={data.coach} />
             {data.record ? (
               <section
                 data-testid="team-record"

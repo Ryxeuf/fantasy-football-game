@@ -1336,6 +1336,22 @@ passe par `{ increment }` ou par le décrément conditionnel
 La raison d'un ajustement admin (`ADMIN_ADJUST`, réf. = raison) est VISIBLE du
 coach dans son historique (`GET /crowns/me`) : la modale le rappelle.
 
+Un coach SANS wallet est le cas silencieux : `getBalance` rend 0, le wallet
+ne naît qu'au premier crédit, rien ne le signale. D'où l'admin
+(`services/crowns-admin`, change `shop-and-crowns-admin`) : `/admin/wallets`
+filtre « avec / sans wallet » et crée le manquant (unitaire idempotent, P2002
+= déjà créé ; en masse par lots `createMany` SANS `skipDuplicates`, rejoué
+ligne à ligne sur conflit), la fiche annonce `wallet.exists = false`.
+`/admin/crowns` montre masse, flux par type (débit/crédit séparés : un même
+type, `ADMIN_ADJUST`, fait les deux), journal global, et l'état du flag en
+distinguant la ligne ABSENTE (seed jamais joué en prod) du flag éteint — la
+cause réelle d'un « Bientôt disponible » qu'aucun override ne levait.
+
+La page coach est une **Boutique** (`/me/shop`) : registre PUR de catégories
+(`app/me/shop/categories.ts`, une entrée = id + page + flag), en-tête commun
+(solde) et onglets ; les thèmes de dés sont `/me/shop/dice-themes`,
+`/me/dice-themes` redirige. Le menu suit le registre, pas un flag en dur.
+
 **Les Couronnes se GAGNENT en jouant** (change `crowns-earning`) : chaque côté
 d'une feuille de match validée (ligue ET coupe) rapporte au propriétaire de
 l'équipe, chaque succès du catalogue rapporte une fois, le bonus de bienvenue
@@ -1959,6 +1975,12 @@ edition du `.json`, `pnpm --filter web typecheck` +
   boutique `/me/dice-themes`, admin `/admin/dice-themes` +
   `/admin/coach-cosmetics`. Flags `dice_themes` + `crowns` (OFF). Change
   OpenSpec `dice-theme-shop-and-crowns`.
+- **2026-10-05** : **Boutique, admin des Couronnes et des wallets** — page
+  coach « Thèmes de dés » devenue la première catégorie d'une Boutique
+  (`/me/shop`, registre de catégories, redirection de l'ancienne adresse) ;
+  `/admin/wallets` (coachs avec / sans wallet, création unitaire et en masse)
+  et `/admin/crowns` (état du flag dont « ligne absente », masse, flux, top,
+  journal global). Change OpenSpec `shop-and-crowns-admin`.
 - **2026-10-05** : **Exploration « Pro League : un match intégral, un coach
   qui évolue, un replay rejouable sur plateau »** (`/opsx:explore`, aucun
   code). Mesuré sur 0.26.0, full driver, rosters de 13 joueurs : 0,5 TD/match,
@@ -1977,7 +1999,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   cerveau du coach → évolution → exploitation. Voir
   [`docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md`](./docs/roadmap/explorations/2026-10-05-pro-league-match-integral.md).
 - **2026-10-05** : **Pro League lot 1 « un match complet »** (change
-  OpenSpec `pro-league-full-match`, `ENGINE_VER` 0.27.0). Moteur : coup
+  OpenSpec `pro-league-full-match`, archivé le 2026-10-06, `ENGINE_VER` 0.27.0). Moteur : coup
   `STAND_UP` (Prone = `stunned` sans `state: 'stunned'`, sonné retourné face
   visible en fin de tour de son équipe, aucun champ nouveau) ; un `pending*`
   FERME la liste des coups légaux et `applyMove` refuse le reste (END_TURN =
@@ -1992,7 +2014,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (`buildEngineSimInput`) et `full-match.invariants.test.ts`. Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot1-match-complet.md).
 - **2026-10-05** : **Pro League lot 2 « le journal rejouable »** (change
-  OpenSpec `pro-league-replay-journal`, `ENGINE_VER` 0.28.0). Un flux de dés
+  OpenSpec `pro-league-replay-journal`, archivé le 2026-10-06, `ENGINE_VER` 0.28.0). Un flux de dés
   PAR PAS (`${seed}:move:${n}` / `drive:${n}`, l'IA tire à part) ; journal
   `{ v: 2, seed, initialState sans gameLog, steps[{ move, drive?, dice }] }`
   dont `replayJournal` re-dérive les états BIT À BIT (13,5 Ko compressés
@@ -2006,7 +2028,7 @@ edition du `.json`, `pnpm --filter web typecheck` +
   (`awardTouchdown` l'efface). Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot2-journal-rejouable.md).
 - **2026-10-05** : **Pro League lot 3 « le cerveau du coach »** (change
-  OpenSpec `pro-league-coach-brain`, `ENGINE_VER` 0.29.0). Un COACH par
+  OpenSpec `pro-league-coach-brain`, archivé le 2026-10-06, `ENGINE_VER` 0.29.0). Un COACH par
   équipe (`packages/sim-engine/src/coach/`) remplace l'évaluateur glouton du
   full driver : plan de drive COLLANT (ré-évalué sur évènement seulement),
   activations ENTIÈRES scorées `P × gain − (1 − P) × coût du turnover` avec
@@ -2024,6 +2046,36 @@ edition du `.json`, `pnpm --filter web typecheck` +
   1,5-1,9 TD par match (référence FUMBBL 2,1-4,1), calibrage en suite.
   Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot3-cerveau-du-coach.md).
+- **2026-10-05** : **Pro League lot 4 « l'évolution persistée »** (change
+  OpenSpec `pro-league-coach-evolution`, archivé le 2026-10-06, `ENGINE_VER` 0.30.0). Le coach
+  d'une équipe devient une PERSONA persistée (`ProCoach` : nom, philosophie,
+  profil VIVANT, ANCRE, mémoire, expérience ; `ProCoachMemory` append-only
+  avec les raisons). Adaptation BORNÉE et EXPLIQUÉE, sans self-play
+  (`coach/adaptation.ts`, pur) : récompense par drive, EMA par stratégie,
+  pas de 2 points max par match vers ce que les stratégies qui rapportent
+  tirent (`STRATEGY_INFLUENCE`), dans `ancre ± 15`, rappel vers l'ancre
+  sans signal. Trois règles à retenir : un réglage admin POSE L'ANCRE (et y
+  ramène le vivant), sinon l'évolution défait le curseur ; l'évolution se
+  joue APRÈS le commit du match, par côté isolé, jamais pour un match de
+  test ; la forme (`ProTeamRoster.form`, enfin écrite : hot +15 / cold −15 /
+  retour vers 50) module l'ORDRE des actions à dés, jamais les dés — sans
+  forme, le bench se re-tamponne à l'identique. Les profils sont FIGÉS dans
+  le journal du replay. Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot4-evolution-persistee.md).
+- **2026-10-05** : **Pro League lot 5 « l'exploitation »** (change OpenSpec
+  `pro-league-exploitation`, archivé le 2026-10-06, pas de bump : les issues ne changent pas). Les
+  simulations sortent de l'event loop : pool de `worker_threads` dans le
+  sim-engine (`createSimPool`), pool unique côté serveur
+  (`services/pro-league-sim-pool`, `PRO_LEAGUE_SIM_WORKERS`, inline en test),
+  cotes sur 50 runs parallèles. Transition `ready → completed` enfin écrite
+  (`completedAt` = `scheduledAt + durée du replay`, UPDATE conditionné au
+  statut), rétention des replays (365 j, hors saison en cours), bench
+  nocturne sur la matrice complète, healthcheck `simPool` + `liveCompletion`.
+  Piège : un worker `.ts` ne résout pas ses imports sans extension avec les
+  hooks tsx hérités par `execArgv` — il s'amorce par un `.mjs` qui appelle
+  `register()` de `tsx/esm/api` (tsx est dépendance de production du
+  sim-engine). Récit
+  [`docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md).
 - **2026-10-06** : **Exploration « que vendre en Couronnes après les dés ? »**
   (`/opsx:explore`, aucun code). Constat : hors Pro League, UN puits (thèmes
   de dés) et AUCUN robinet (seul l'admin crédite ; le type `BADGE` n'est

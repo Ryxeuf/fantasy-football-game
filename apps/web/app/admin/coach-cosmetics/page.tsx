@@ -43,7 +43,7 @@ export default function AdminCoachCosmeticsPage() {
   return (
     <div className="space-y-6" data-testid="admin-coach-cosmetics">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite">👑 Couronnes &amp; thèmes des coachs</h1>
+        <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite">🎨 Thèmes des coachs</h1>
         <p className="mt-1 text-sm text-gray-600">
           Solde de Crowns, thèmes de dés acquis (achats, cadeaux) et thème choisi par chaque coach.
         </p>

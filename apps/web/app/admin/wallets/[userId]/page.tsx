@@ -19,11 +19,14 @@ import Link from "next/link";
 import { API_BASE } from "../../../auth-client";
 import BalanceAdjustModal from "./_components/BalanceAdjustModal";
 import BetRefundModal from "./_components/BetRefundModal";
+import { adminCreateWallet } from "../../../lib/admin-crowns";
 
 interface WalletData {
   user: { id: string; email: string; coachName: string };
   wallet: {
     userId: string;
+    /** Faux = pas de wallet (solde lu 0). Optionnel : serveur antérieur. */
+    exists?: boolean;
     crowns: number;
     createdAt: string | null;
     updatedAt: string | null;
@@ -94,6 +97,7 @@ export default function AdminWalletDetailPage() {
     WalletData["pendingBets"][number] | null
   >(null);
   const [refundLoading, setRefundLoading] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -130,6 +134,18 @@ export default function AdminWalletDetailPage() {
       alert(e.message || "Erreur lors de l'ajustement");
     } finally {
       setAdjustLoading(false);
+    }
+  };
+
+  const handleCreateWallet = async () => {
+    setCreating(true);
+    try {
+      await adminCreateWallet(userId);
+      await load();
+    } catch (e: any) {
+      alert(e.message || "Erreur lors de la création du wallet");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -184,12 +200,32 @@ export default function AdminWalletDetailPage() {
           <p className="text-sm text-gray-600 break-all">{data.user.email}</p>
         </div>
         <Link
-          href="/admin/users"
+          href="/admin/wallets"
           className="text-sm text-blue-600 hover:underline whitespace-nowrap"
         >
-          ← Retour
+          ← Wallets
         </Link>
       </div>
+
+      {data.wallet.exists === false && (
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+          data-testid="wallet-missing"
+        >
+          <span>
+            Ce coach n&apos;a pas encore de wallet : son solde se lit 0. Un crédit le créera aussi,
+            mais vous pouvez le créer dès maintenant (solde 0, aucune transaction).
+          </span>
+          <button
+            onClick={() => void handleCreateWallet()}
+            disabled={creating}
+            data-testid="btn-create-wallet"
+            className="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {creating ? "Création…" : "Créer le wallet"}
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow border border-gray-200 p-4 sm:p-6 flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
         <div>

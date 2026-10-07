@@ -219,3 +219,30 @@ describe("AuthBar — entrée Notifications du menu utilisateur", () => {
     expect(link.getAttribute("href")).toBe("/me/notifications");
   });
 });
+
+describe("AuthBar — entrée Boutique du menu utilisateur", () => {
+  function connected() {
+    window.localStorage.setItem("auth_token", "valid-access");
+    fetchMock.mockImplementation((url: string) =>
+      String(url).includes("/auth/me")
+        ? Promise.resolve(jsonResponse(200, { user: { email: "coach@nuffle.fr", roles: ["user"] } }))
+        : Promise.resolve(jsonResponse(200, {})),
+    );
+  }
+
+  it("une catégorie ouverte (dice_themes) : lien « Boutique » vers /me/shop", async () => {
+    connected();
+    mockFetchMyFlags.mockResolvedValue(["dice_themes"]);
+    renderAuthBar(<AuthBar isMobileMenu />);
+    const link = await screen.findByTestId("mobile-user-menu-shop");
+    expect(link.getAttribute("href")).toBe("/me/shop");
+    expect(link.textContent).toContain("Boutique");
+  });
+
+  it("aucune catégorie ouverte : pas d'entrée Boutique", async () => {
+    connected();
+    renderAuthBar(<AuthBar isMobileMenu />);
+    await screen.findByTestId("mobile-user-menu-notifications");
+    expect(screen.queryByTestId("mobile-user-menu-shop")).toBeNull();
+  });
+});
