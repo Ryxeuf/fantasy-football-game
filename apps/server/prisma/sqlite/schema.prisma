@@ -101,6 +101,8 @@ model User {
   proWallet                   ProWallet?
   /// Mirror PG — thèmes de dés acquis.
   diceThemes                  UserDiceTheme[]
+  /// Récompenses en Couronnes (registre du rattrapage, `crowns-earning`).
+  crownsRewards               CrownsReward[]
   proBets                     ProBet[]
   proUserBadges               ProUserBadge[]
   proHofDedications           ProHallOfFameDedication[]
@@ -2344,4 +2346,34 @@ model UserDiceTheme {
 
   @@unique([userId, themeId])
   @@index([themeId])
+}
+
+/// Registre des RÉCOMPENSES en Couronnes (change `crowns-earning`) : une ligne
+/// par récompense due, écrite par le rattrapage de `GET /crowns/me`
+/// (`services/crowns-rewards`). `sourceKey` est UNIQUE et GLOBAL — c'est lui
+/// qui rend le versement idempotent (deux lectures simultanées : P2002) et qui
+/// empêche un côté de feuille d'être payé deux fois si l'équipe change de
+/// propriétaire. Une ligne à 0 (plafonnée, bonus déjà perçu) n'est jamais
+/// réévaluée. Append-only.
+model CrownsReward {
+  id            String   @id @default(cuid())
+  /// `sheet:<sheetId>:home|away` | `achievement:<userId>:<slug>` | `signup:<userId>`
+  sourceKey     String   @unique
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// "sheet" | "achievement" | "signup"
+  kind          String
+  /// `season:<seasonId>` | `cup:<cupId>` pour une feuille (plafond) ; null sinon.
+  periodKey     String?
+  /// Couronnes versées (>= 0 ; 0 = plafonnée ou marqueur « déjà perçu »).
+  amount        Int
+  /// Barème avant plafond.
+  baseAmount    Int
+  /// Opération `ProTransaction` du passage ; null si rien n'a été versé.
+  transactionId String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId, periodKey])
+  @@index([userId, createdAt])
+  @@index([transactionId])
 }

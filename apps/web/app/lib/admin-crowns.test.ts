@@ -61,6 +61,8 @@ describe("helpers purs", () => {
 
   it("libellé d'un type, repli sur le code", () => {
     expect(crownsTxTypeLabel("SINK")).toBe("Dépense (boutique)");
+    // Le type REWARD couvre désormais feuilles, succès et bonus (crowns-earning).
+    expect(crownsTxTypeLabel("REWARD")).toBe("Récompenses (jeu, bienvenue)");
     expect(crownsTxTypeLabel("MYSTERY")).toBe("MYSTERY");
   });
 });

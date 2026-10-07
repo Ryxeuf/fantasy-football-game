@@ -11,6 +11,14 @@ import { seedAndLogin } from "../helpers/factories";
  * (`FEATURE_FLAGS_FORCE_ENABLED`).
  */
 
+/**
+ * `crowns-earning` : la première lecture de `GET /crowns/me` rattrape les
+ * récompenses dues — ici le seul bonus de bienvenue (barème de départ de
+ * `crowns-rewards-rules`). Les soldes ci-dessous l'incluent dès qu'une
+ * lecture a eu lieu ; un achat seul ne déclenche pas de rattrapage.
+ */
+const SIGNUP = 250;
+
 interface ThemeOption {
   id: string;
   collection: string;
@@ -57,7 +65,7 @@ describe("E2E API — thèmes de dés et Couronnes", () => {
     expect(pref.themes.find((t) => t.id === "orques")).toMatchObject({ owned: false, forSale: true });
 
     const crowns = await get<Crowns>("/crowns/me", coach.token);
-    expect(crowns.balance).toBe(0);
+    expect(crowns.balance).toBe(SIGNUP);
   });
 
   it("parcours complet : crédit, achat, refus, retrait de la vente, remboursement, cadeau", async () => {
@@ -72,19 +80,19 @@ describe("E2E API — thèmes de dés et Couronnes", () => {
       reason: "Lot e2e",
     });
     expect(res.status).toBe(200);
-    expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000);
+    expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000 + SIGNUP);
 
     // Achat : débit, thème acquis ET équipé.
     res = await send("POST", "/dice-themes/orques/purchase", coach.token);
     expect(res.status).toBe(200);
-    expect(res.body.balance).toBe(600);
+    expect(res.body.balance).toBe(600 + SIGNUP);
     expect(res.body.themeId).toBe("orques");
 
     // Double achat refusé, solde intact.
     res = await send("POST", "/dice-themes/orques/purchase", coach.token);
     expect(res.status).toBe(409);
     const crowns = await get<Crowns>("/crowns/me", coach.token);
-    expect(crowns.balance).toBe(600);
+    expect(crowns.balance).toBe(600 + SIGNUP);
     expect(crowns.transactions[0]).toMatchObject({ type: "SINK", amount: -400, ref: "dice-theme:orques" });
 
     // L'admin voit l'acquisition et la recette.
@@ -123,7 +131,7 @@ describe("E2E API — thèmes de dés et Couronnes", () => {
     });
     expect(res.status).toBe(200);
     expect(res.body.refunded).toBe(400);
-    expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000);
+    expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000 + SIGNUP);
     pref = await get<Preference>("/dice-themes/me", coach.token);
     expect(pref.themeId).toBe("nuffle");
 
@@ -132,7 +140,7 @@ describe("E2E API — thèmes de dés et Couronnes", () => {
     expect(res.status).toBe(200);
     pref = await put<Preference>("/dice-themes/me", coach.token, { themeId: "nains" });
     expect(pref.themeId).toBe("nains");
-    expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000);
+    expect((await get<Crowns>("/crowns/me", coach.token)).balance).toBe(1000 + SIGNUP);
   });
 
   it("deux achats simultanés ne font jamais passer le solde sous zéro", async () => {
@@ -146,8 +154,9 @@ describe("E2E API — thèmes de dés et Couronnes", () => {
     ]);
     const statuses = results.map((r) => r.status).sort();
     expect(statuses).toEqual([200, 402]);
+    // Aucune lecture avant les achats : le bonus arrive à celle-ci.
     const crowns = await get<Crowns>("/crowns/me", coach.token);
-    expect(crowns.balance).toBe(200);
+    expect(crowns.balance).toBe(200 + SIGNUP);
     expect(crowns.transactions.filter((t) => t.type === "SINK")).toHaveLength(1);
   });
 

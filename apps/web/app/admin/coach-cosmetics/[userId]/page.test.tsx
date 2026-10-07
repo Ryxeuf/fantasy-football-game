@@ -8,6 +8,7 @@ vi.mock("../../../lib/admin-dice-themes", () => ({
   adminRevokeDiceTheme: vi.fn(),
   adminSetCoachDiceTheme: vi.fn(),
   adjustCoachCrowns: vi.fn(),
+  adminGetCoachCrownsRewards: vi.fn(),
   acquisitionSourceLabel: (s: string) => (s === "purchase" ? "Achat" : "Cadeau admin"),
 }));
 
@@ -36,6 +37,7 @@ const DETAIL = {
 beforeEach(() => {
   vi.resetAllMocks();
   m.adminGetCoachCosmetics.mockResolvedValue(DETAIL);
+  m.adminGetCoachCrownsRewards.mockResolvedValue([]);
   vi.spyOn(window, "confirm").mockReturnValue(true);
 });
 
@@ -46,6 +48,23 @@ describe("Admin — cosmétiques d'un coach", () => {
     expect(screen.getByTestId("coach-crowns-history").textContent).toContain("Achat du thème de dés « Orques »");
     expect(screen.getByTestId("coach-acquisition-orques").textContent).toContain("Achat");
     expect((screen.getByTestId("coach-theme-select") as HTMLSelectElement).value).toBe("orques");
+  });
+
+  it("affiche le registre des récompenses du coach", async () => {
+    m.adminGetCoachCrownsRewards.mockResolvedValue([
+      {
+        id: "r1",
+        sourceKey: "sheet:s1:away",
+        kind: "sheet",
+        periodKey: "season:x",
+        amount: 25,
+        baseAmount: 25,
+        createdAt: "2026-10-06T10:00:00Z",
+      },
+    ]);
+    render(<Page />);
+    expect((await screen.findByTestId("coach-crowns-reward-r1")).textContent).toContain("Feuille de match (extérieur)");
+    expect(m.adminGetCoachCrownsRewards).toHaveBeenCalledWith("u1");
   });
 
   it("offre un thème non possédé", async () => {

@@ -102,9 +102,10 @@ describe("enterTournament", () => {
     expect(out.paidCrowns).toBe(100);
     expect(out.balance).toBe(400);
     expect(out.tournamentId).toBe("t_1");
+    // Décrément conditionnel, jamais « solde lu − frais ».
     expect(mocked.__tx.proWallet.update).toHaveBeenCalledWith({
-      where: { userId: "u_1" },
-      data: { crowns: 400 },
+      where: { userId: "u_1", crowns: { gte: 100 } },
+      data: { crowns: { decrement: 100 } },
       select: { crowns: true },
     });
     expect(mocked.__tx.proTransaction.create).toHaveBeenCalledWith({
@@ -191,6 +192,26 @@ describe("enterTournament", () => {
     await expect(enterTournament("u_1", "t_1")).rejects.toBeInstanceOf(
       InsufficientFundsError,
     );
+  });
+
+  it("solde vidé entre la lecture et l'écriture (P2025) : InsufficientFundsError, aucune inscription", async () => {
+    mocked.proTournament.findUnique.mockResolvedValue({
+      id: "t_1",
+      entryFeeCrowns: 100,
+      maxEntries: null,
+      status: "open",
+    } as never);
+    mocked.proTournamentEntry.findUnique.mockResolvedValue(null as never);
+    mocked.__tx.proWallet.findUnique.mockResolvedValue({ crowns: 500 } as never);
+    mocked.__tx.proWallet.update.mockRejectedValueOnce(
+      Object.assign(new Error("gone"), { code: "P2025" }) as never,
+    );
+    mocked.__tx.proTournamentEntry.create.mockClear();
+
+    await expect(enterTournament("u_1", "t_1")).rejects.toBeInstanceOf(
+      InsufficientFundsError,
+    );
+    expect(mocked.__tx.proTournamentEntry.create).not.toHaveBeenCalled();
   });
 
   it("instanceof TournamentError pour les erreurs typees", async () => {

@@ -133,7 +133,8 @@ export const CROWNS_TX_TYPES = [
 const TX_TYPE_LABELS: Record<string, string> = {
   BET: "Mise de pari",
   WIN: "Gain de pari",
-  REWARD: "Bonus de bienvenue",
+  // `crowns-earning` : feuilles validées, succès ET bonus de bienvenue.
+  REWARD: "Récompenses (jeu, bienvenue)",
   DAILY: "Bonus quotidien",
   BADGE: "Récompense de badge",
   SINK: "Dépense (boutique)",

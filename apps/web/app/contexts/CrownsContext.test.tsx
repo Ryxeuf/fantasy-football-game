@@ -72,6 +72,17 @@ describe("CrownsContext", () => {
     await waitFor(() => expect(screen.getByTestId("crowns").textContent).toBe("true:750"));
     expect(mockedApi).toHaveBeenCalledWith("/crowns/me");
     expect(captured!.transactions).toHaveLength(1);
+    expect(captured!.schedule).toBeNull();
+  });
+
+  it("expose le barème servi, et le garde après applyBalance", async () => {
+    const schedule = { sheet: 25, achievement: 50, signup: 250, seasonSheetCap: 500 };
+    mockedApi.mockResolvedValue({ balance: 750, transactions: [], schedule });
+    renderWithProviders();
+    await waitFor(() => expect(captured!.schedule).toEqual(schedule));
+    act(() => captured!.applyBalance(350));
+    expect(captured!.balance).toBe(350);
+    expect(captured!.schedule).toEqual(schedule);
   });
 
   it("applyBalance remplace le solde sans requête", async () => {

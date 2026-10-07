@@ -9,13 +9,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../prisma", () => {
   const proTransaction = { findFirst: vi.fn(), create: vi.fn() };
   const proWallet = { findUnique: vi.fn(), update: vi.fn() };
+  const crownsReward = { findFirst: vi.fn() };
   return {
     prisma: {
       proTransaction,
       proWallet,
+      crownsReward,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       $transaction: vi.fn(async (cb: any) =>
-        cb({ proTransaction, proWallet }),
+        cb({ proTransaction, proWallet, crownsReward }),
       ),
     },
   };
@@ -45,6 +47,9 @@ interface MockedPrisma {
     findUnique: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
   };
+  crownsReward: {
+    findFirst: ReturnType<typeof vi.fn>;
+  };
   $transaction: ReturnType<typeof vi.fn>;
 }
 
@@ -58,6 +63,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mockedEnsure.mockResolvedValue({ userId: USER, crowns: 0 });
   mocked.proWallet.findUnique.mockResolvedValue({ crowns: 0 });
+  mocked.crownsReward.findFirst.mockResolvedValue(null);
   // Re-attache le comportement par defaut du $transaction (vi.clearAllMocks
   // l'a vide).
   mocked.$transaction.mockImplementation(
@@ -66,6 +72,7 @@ beforeEach(() => {
       cb({
         proTransaction: mocked.proTransaction,
         proWallet: mocked.proWallet,
+        crownsReward: mocked.crownsReward,
       }),
   );
 });
@@ -83,6 +90,13 @@ describe("grantFirstTimeBonus — sprint 1.D.6", () => {
     expect(out.granted).toBe(true);
     expect(out.amount).toBe(FIRST_TIME_BONUS_AMOUNT);
     expect(out.balance).toBe(1000);
+    // Écriture atomique : incrément, jamais « solde lu + montant ».
+    expect(mocked.proWallet.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: USER },
+        data: { crowns: { increment: FIRST_TIME_BONUS_AMOUNT } },
+      }),
+    );
     expect(out.nextEligibleAt).toBeNull();
     expect(mocked.$transaction).toHaveBeenCalledTimes(1);
     expect(mocked.proTransaction.create).toHaveBeenCalledWith(
@@ -107,6 +121,22 @@ describe("grantFirstTimeBonus — sprint 1.D.6", () => {
     expect(out.balance).toBe(1500);
     expect(mockedCredit).not.toHaveBeenCalled();
   });
+
+  it("crowns-earning : refuse si le bonus a déjà été versé par le rattrapage", async () => {
+    mocked.proTransaction.findFirst.mockResolvedValue(null);
+    mocked.crownsReward.findFirst.mockResolvedValue({ id: "reward_signup" });
+    mocked.proWallet.findUnique.mockResolvedValue({ crowns: 250 });
+
+    const out = await grantFirstTimeBonus(USER);
+    expect(out.granted).toBe(false);
+    expect(out.balance).toBe(250);
+    expect(mocked.crownsReward.findFirst).toHaveBeenCalledWith({
+      where: { sourceKey: `signup:${USER}`, amount: { gt: 0 } },
+      select: { id: true },
+    });
+    expect(mocked.proWallet.update).not.toHaveBeenCalled();
+    expect(mocked.proTransaction.create).not.toHaveBeenCalled();
+  });
 });
 
 describe("claimDailyBonus — sprint 1.D.6", () => {
@@ -127,7 +157,7 @@ describe("claimDailyBonus — sprint 1.D.6", () => {
     expect(mocked.proWallet.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { userId: USER },
-        data: { crowns: 50 },
+        data: { crowns: { increment: DAILY_BONUS_AMOUNT } },
       }),
     );
     expect(mocked.proTransaction.create).toHaveBeenCalledWith(

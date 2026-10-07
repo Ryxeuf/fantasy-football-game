@@ -16,13 +16,15 @@ import { DiceThemePreview } from "../../../components/dice/DiceThemePreview";
 import { describeCrownsTransaction, formatCrowns, formatCrownsDelta } from "../../../lib/crowns";
 import { dynamicRoute } from "../../../lib/typed-route";
 import BalanceAdjustModal from "../../wallets/[userId]/_components/BalanceAdjustModal";
+import { CoachCrownsRewards } from "./CoachCrownsRewards";
 
 /**
  * Admin — Couronnes & thèmes de dés d'UN coach :
  *  - solde de Crowns + ajustement (route wallet, journal `ADMIN_ADJUST`) ;
  *  - thème choisi (parmi ceux qu'il possède, ou retour au défaut) ;
  *  - thèmes acquis (retrait, avec remboursement d'un achat) et cadeaux ;
- *  - dernières opérations du journal des Crowns.
+ *  - dernières opérations du journal des Crowns ;
+ *  - registre des récompenses gagnées en jouant (`crowns-earning`).
  */
 export default function AdminCoachCosmeticsDetailPage() {
   const params = useParams<{ userId: string }>();
@@ -136,6 +138,8 @@ export default function AdminCoachCosmeticsDetailPage() {
             ))}
           </ul>
         </section>
+
+        <CoachCrownsRewards userId={detail.user.id} />
 
         {/* Thème choisi */}
         <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">

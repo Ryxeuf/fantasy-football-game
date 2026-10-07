@@ -16,7 +16,11 @@
  */
 
 import { prisma } from "../prisma";
-import { InsufficientFundsError, getOrCreateWallet } from "./pro-wallet";
+import {
+  InsufficientFundsError,
+  decrementOrThrow,
+  getOrCreateWallet,
+} from "./pro-wallet";
 
 export const DEDICATE_COST_CROWNS = 500;
 export const DEDICATION_MAX_LENGTH = 280;
@@ -129,11 +133,11 @@ export async function dedicateHallOfFame(
     if (current < DEDICATE_COST_CROWNS) {
       throw new InsufficientFundsError(current, DEDICATE_COST_CROWNS);
     }
-    const updated = await tx.proWallet.update({
-      where: { userId },
-      data: { crowns: current - DEDICATE_COST_CROWNS },
-      select: { crowns: true },
-    });
+    // Décrément CONDITIONNEL (`crowns >= coût` rejoué dans l'écriture) : la
+    // lecture ci-dessus n'est qu'un refus rapide, jamais la valeur écrite.
+    const updated = {
+      crowns: await decrementOrThrow(tx, userId, DEDICATE_COST_CROWNS, current),
+    };
     await tx.proTransaction.create({
       data: {
         walletId: userId,

@@ -1352,6 +1352,34 @@ La page coach est une **Boutique** (`/me/shop`) : registre PUR de catégories
 (solde) et onglets ; les thèmes de dés sont `/me/shop/dice-themes`,
 `/me/dice-themes` redirige. Le menu suit le registre, pas un flag en dur.
 
+**Les Couronnes se GAGNENT en jouant** (change `crowns-earning`) : chaque côté
+d'une feuille de match validée (ligue ET coupe) rapporte au propriétaire de
+l'équipe, chaque succès du catalogue rapporte une fois, le bonus de bienvenue
+(250) est versé une fois. C'est la PARTICIPATION qui paie, jamais la victoire —
+donc une invalidation ne reprend rien et il n'y a aucune reversion à écrire.
+Quatre règles qui ne se voient pas en lisant un seul fichier :
+
+- **Rattrapage à la LECTURE**, pas crédit à la validation :
+  `reconcileCrownsRewards` (`services/crowns-rewards`) tourne dans
+  `GET /crowns/me` avant de servir le solde, en best-effort (le solde se sert
+  toujours). Un seul chemin pour l'historique, les succès débloqués ailleurs et
+  le présent, aucune dépendance vers le service de feuille de match, et le
+  flag `crowns` de la route ferme tout. Débounce 60 s par coach en prod.
+- **Registre `CrownsReward` à clé de source UNIQUE et GLOBALE** :
+  `sheet:<sheetId>:home|away` (sans l'utilisateur — un côté ne paie qu'une
+  fois, même si l'équipe change de propriétaire), `achievement:<userId>:<slug>`,
+  `signup:<userId>`. Deux passages simultanés : le second lève P2002 et sa
+  transaction (opération + lignes + incrément) est annulée en entier.
+- **Une ligne à 0 n'est jamais retentée** : récompense plafonnée, ou bonus déjà
+  perçu en Pro League (marqueur). Même posture que les refus définitifs du
+  rattrapage des sorties.
+- **Plafond par SAISON DE LIGUE** sur les seuls gains de feuilles (une coupe
+  tient lieu de saison : `season:<id>` / `cup:<id>`), appliqué dans l'ordre de
+  validation par le module PUR `crowns-rewards-rules` (barème, clés, plan,
+  détail servi au journal). Un passage = UNE opération `REWARD` réf.
+  `rewards:<uuid>`, détaillée à la lecture par le registre. Le bonus de la
+  Pro League (`grantFirstTimeBonus`) refuse si le registre l'a déjà versé.
+
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
 JSON serialisee (sqlite mirror), null ou undefined :
@@ -2048,3 +2076,20 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `register()` de `tsx/esm/api` (tsx est dépendance de production du
   sim-engine). Récit
   [`docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md`](./docs/roadmap/sessions/2026-10-05-pro-league-lot5-exploitation.md).
+- **2026-10-06** : **Exploration « que vendre en Couronnes après les dés ? »**
+  (`/opsx:explore`, aucun code). Constat : hors Pro League, UN puits (thèmes
+  de dés) et AUCUN robinet (seul l'admin crédite ; le type `BADGE` n'est
+  jamais écrit). Décisions : Couronnes 100 % gagnées (pas d'euros, pas assez
+  de matière ni d'utilisateurs), couleurs d'équipe débloquées par COACH,
+  joker de pronostic enterré, plateau en ligne hors périmètre (jeu sur table,
+  feuille saisie après coup). Sources : la feuille validée (participation,
+  pas victoire — donc insensible à l'invalidation), les succès, un plafond ;
+  pas de bonus quotidien ; plafond par SAISON DE LIGUE (la coupe tient lieu
+  de saison). Puits retenus, par ordre : PALETTES NOMMÉES d'équipe (achetées
+  par le coach, choisies par équipe, slug stocké sur `Team`, couleurs en
+  données éditables en admin), épitaphe. Bonus d'inscription RÉDUIT (250
+  proposé). En attente : Gazette de la rencontre, impression (les coachs
+  n'impriment pas). Un support nouveau naît
+  avec une base gratuite, seuls ses styles se paient ; un habillage qui
+  signale un statut est dérivé et gratuit. Voir
+  [`docs/roadmap/explorations/2026-10-06-boutique-couronnes.md`](./docs/roadmap/explorations/2026-10-06-boutique-couronnes.md).

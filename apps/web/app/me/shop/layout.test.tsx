@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 const { state } = vi.hoisted(() => ({
-  state: { flags: null as null | { flags: Set<string>; loading: boolean }, pathname: "/me/shop/dice-themes" },
+  state: {
+    flags: null as null | { flags: Set<string>; loading: boolean },
+    pathname: "/me/shop/dice-themes",
+    crowns: {} as Record<string, unknown>,
+  },
 }));
 
 vi.mock("next/navigation", () => ({ usePathname: () => state.pathname }));
@@ -10,7 +14,7 @@ vi.mock("../../contexts/FeatureFlagContext", () => ({
   useOptionalFeatureFlagContext: () => state.flags,
 }));
 vi.mock("../../contexts/CrownsContext", () => ({
-  useCrowns: () => ({ enabled: true, balance: 1250 }),
+  useCrowns: () => state.crowns,
 }));
 
 import ShopLayout from "./layout";
@@ -18,6 +22,11 @@ import ShopLayout from "./layout";
 beforeEach(() => {
   state.flags = { flags: new Set(["dice_themes", "crowns"]), loading: false };
   state.pathname = "/me/shop/dice-themes";
+  state.crowns = {
+    enabled: true,
+    balance: 1250,
+    schedule: { sheet: 25, achievement: 50, signup: 250, seasonSheetCap: 500 },
+  };
 });
 
 describe("ShopLayout", () => {
@@ -33,6 +42,25 @@ describe("ShopLayout", () => {
     expect(tab.getAttribute("href")).toBe("/me/shop/dice-themes");
     expect(tab.getAttribute("aria-current")).toBe("page");
     expect(screen.getByText("contenu")).toBeTruthy();
+  });
+
+  it("Couronnes ouvertes : explique comment en gagner (barème servi)", () => {
+    render(
+      <ShopLayout>
+        <p>contenu</p>
+      </ShopLayout>,
+    );
+    expect(screen.getByTestId("crowns-how-to-earn").textContent).toContain("+25 par coach");
+  });
+
+  it("Couronnes fermées : pas d'explication des gains", () => {
+    state.crowns = { enabled: false, balance: null };
+    render(
+      <ShopLayout>
+        <p>contenu</p>
+      </ShopLayout>,
+    );
+    expect(screen.queryByTestId("crowns-how-to-earn")).toBeNull();
   });
 
   it("aucune catégorie ouverte : boutique fermée, contenu non rendu", () => {

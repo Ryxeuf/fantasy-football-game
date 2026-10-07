@@ -31,7 +31,16 @@ beforeEach(() => {
     transactions: [
       { id: "t1", type: "SINK", amount: -400, ref: "dice-theme:orques", createdAt: "2026-10-01T10:00:00Z" },
       { id: "t2", type: "ADMIN_ADJUST", amount: 1650, ref: "Lot du tournoi", createdAt: "2026-09-30T10:00:00Z" },
+      {
+        id: "t3",
+        type: "REWARD",
+        amount: 325,
+        ref: "rewards:abc",
+        createdAt: "2026-09-29T10:00:00Z",
+        rewards: { sheets: 1, achievements: 1, signup: true, capped: 0 },
+      },
     ],
+    schedule: { sheet: 25, achievement: 50, signup: 250, seasonSheetCap: 500 },
   };
 });
 
@@ -51,6 +60,14 @@ describe("CrownsCard (profil)", () => {
     expect(history).toContain("Lot du tournoi");
     expect(screen.getByText(/Dépenser mes Couronnes/)).toBeTruthy();
     expect(screen.getByTestId("crowns-shop-link").getAttribute("href")).toBe("/me/shop");
+  });
+
+  it("explique comment gagner des Couronnes et détaille un passage de récompenses", () => {
+    render(<CrownsCard />);
+    expect(screen.getByTestId("crowns-how-to-earn").textContent).toContain("+25 par coach");
+    expect(screen.getByTestId("crowns-card-history").textContent).toContain(
+      "Récompenses : 1 feuille de match, 1 succès, bonus de bienvenue",
+    );
   });
 
   it("sans thèmes de dés : pas de lien boutique", () => {

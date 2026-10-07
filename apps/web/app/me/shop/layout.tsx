@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CrownsBalance } from "../../components/crowns/CrownsBalance";
+import { HowToEarnCrowns } from "../../components/crowns/HowToEarnCrowns";
+import { useCrowns } from "../../contexts/CrownsContext";
 import { dynamicRoute } from "../../lib/typed-route";
 import { activeShopCategory } from "./categories";
 import { useShopCategories } from "./useShopCategories";
@@ -11,12 +13,15 @@ import { useShopCategories } from "./useShopCategories";
 /**
  * Boutique : en-tête commun (titre, solde de Couronnes) et onglets des
  * catégories ouvertes. Chaque catégorie sert sa page sous `/me/shop/<id>`.
+ * Couronnes ouvertes : « Comment gagner des Couronnes » (barème servi par le
+ * serveur, change `crowns-earning`), commun à toutes les catégories.
  * L'accès connecté est garanti par le middleware `/me/*`.
  */
 export default function ShopLayout({ children }: { readonly children: ReactNode }) {
   const pathname = usePathname();
   const { categories, loading } = useShopCategories();
   const active = activeShopCategory(pathname);
+  const crowns = useCrowns();
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" data-testid="shop">
@@ -30,6 +35,8 @@ export default function ShopLayout({ children }: { readonly children: ReactNode 
         </div>
         <CrownsBalance className="text-sm" />
       </div>
+
+      {crowns.enabled && <HowToEarnCrowns schedule={crowns.schedule ?? null} />}
 
       {loading && categories.length === 0 ? (
         <div className="flex justify-center py-12" data-testid="shop-loading">

@@ -12,6 +12,7 @@
  *  - POST   /admin/coach-cosmetics/:userId/dice-themes/:themeId   — offrir un thème
  *  - DELETE /admin/coach-cosmetics/:userId/dice-themes/:themeId   — retirer (± rembourser)
  *  - PUT    /admin/coach-cosmetics/:userId/dice-theme             — choisir son thème
+ *  - GET    /admin/coach-cosmetics/:userId/crowns-rewards         — registre des récompenses
  *
  * Le solde de Crowns s'ajuste par `PATCH /admin/wallets/:userId/balance`.
  * Chaque mutation laisse une trace dans le journal admin (`AuditLog`).
@@ -46,6 +47,7 @@ import {
   setCoachDiceTheme,
   updateDiceTheme,
 } from "../services/dice-theme-admin";
+import { listCrownsRewardsForAdmin } from "../services/crowns-rewards";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import { serverLog } from "../utils/server-log";
 
@@ -148,6 +150,22 @@ router.get(
       return res.json(await getCoachCosmetics(req.params.userId));
     } catch (e: unknown) {
       return fail(res, e, "détail du coach échoué");
+    }
+  },
+);
+
+router.get(
+  "/coach-cosmetics/:userId/crowns-rewards",
+  validateParams(adminCoachParamsSchema),
+  async (req, res) => {
+    try {
+      const rewards = await listCrownsRewardsForAdmin(req.params.userId);
+      if (!rewards) {
+        return res.status(404).json({ error: "Utilisateur introuvable", code: "user-not-found" });
+      }
+      return res.json({ rewards });
+    } catch (e: unknown) {
+      return fail(res, e, "récompenses du coach échouées");
     }
   },
 );
