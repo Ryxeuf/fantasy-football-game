@@ -498,15 +498,44 @@ describe("getCupBracket", () => {
       playoffsPublished: true,
     });
     mockPrisma.cupPool.findMany.mockResolvedValue([
-      { qualifiesForPlayoffs: 3 },
-      { qualifiesForPlayoffs: 3 },
+      { id: "pa", name: "Poule A", order: 0, qualifiesForPlayoffs: 3 },
+      { id: "pb", name: "Poule B", order: 1, qualifiesForPlayoffs: 3 },
     ]);
     const out = await getCupBracket({ cupId: "cup-1", viewerId: "u-com" });
     expect(out.poolQualification).toEqual({
       totalQualified: 6,
       playoffSize: 4,
       consistent: false,
+      pools: [
+        { poolId: "pa", name: "Poule A", qualifiesForPlayoffs: 3 },
+        { poolId: "pb", name: "Poule B", qualifiesForPlayoffs: 3 },
+      ],
     });
+  });
+
+  it("sert le détail des quotas par poule, dans l'ordre des poules", async () => {
+    mockPrisma.cup.findUnique.mockResolvedValue({
+      ...CUP,
+      playoffSize: 8,
+      playoffsPublished: true,
+    });
+    mockPrisma.cupPool.findMany.mockResolvedValue([
+      { id: "pb", name: "Poule B", order: 1, qualifiesForPlayoffs: 4 },
+      { id: "pa", name: "Poule A", order: 0, qualifiesForPlayoffs: 4 },
+    ]);
+    const out = await getCupBracket({ cupId: "cup-1", viewerId: "u-com" });
+    expect(out.poolQualification.totalQualified).toBe(8);
+    expect(out.poolQualification.consistent).toBe(true);
+    expect(out.poolQualification.pools.map((p) => p.name)).toEqual([
+      "Poule A",
+      "Poule B",
+    ]);
+    // Le select doit remonter de quoi nommer et ordonner les poules.
+    expect(mockPrisma.cupPool.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: { id: true, name: true, order: true, qualifiesForPlayoffs: true },
+      }),
+    );
   });
 });
 

@@ -265,8 +265,8 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
     mocked.roundFindMany.mockResolvedValue([]);
     mocked.roundCount.mockResolvedValue(0);
     mocked.poolFindMany.mockResolvedValue([
-      { qualifiesForPlayoffs: 2 },
-      { qualifiesForPlayoffs: 2 },
+      { id: "pa", name: "Poule A", order: 0, qualifiesForPlayoffs: 2 },
+      { id: "pb", name: "Poule B", order: 1, qualifiesForPlayoffs: 2 },
     ]);
 
     const req = createReq({ params: { seasonId: "s1" } as never });
@@ -285,6 +285,45 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
         },
       },
     });
+  });
+
+  it("detaille le total des quotas poule par poule (2 poules a 4 = 8)", async () => {
+    mocked.seasonFind.mockResolvedValue({
+      id: "s1",
+      playoffSize: 8,
+      status: "in_progress",
+      playoffsPublished: false,
+      league: { id: "league-1", creatorId: "user-1", isPublic: true },
+    });
+    mocked.roundFindMany.mockResolvedValue([]);
+    mocked.roundCount.mockResolvedValue(1);
+    mocked.poolFindMany.mockResolvedValue([
+      { id: "pb", name: "Poule B", order: 1, qualifiesForPlayoffs: 4 },
+      { id: "pa", name: "Poule A", order: 0, qualifiesForPlayoffs: 4 },
+    ]);
+
+    const req = createReq({ params: { seasonId: "s1" } as never });
+    const res = createRes();
+    await handleGetPlayoffBracket(req, res);
+
+    expect(res.payload).toMatchObject({
+      data: {
+        poolQualification: {
+          totalQualified: 8,
+          playoffSize: 8,
+          consistent: true,
+          pools: [
+            { poolId: "pa", name: "Poule A", qualifiesForPlayoffs: 4 },
+            { poolId: "pb", name: "Poule B", qualifiesForPlayoffs: 4 },
+          ],
+        },
+      },
+    });
+    expect(mocked.poolFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: { id: true, name: true, order: true, qualifiesForPlayoffs: true },
+      }),
+    );
   });
 
   it("sert le score validé de chaque rencontre (export PDF du bracket)", async () => {
@@ -322,8 +361,8 @@ describe("Route: GET /leagues/seasons/:seasonId/playoff-bracket", () => {
     mocked.roundFindMany.mockResolvedValue([]);
     mocked.roundCount.mockResolvedValue(3);
     mocked.poolFindMany.mockResolvedValue([
-      { qualifiesForPlayoffs: 3 },
-      { qualifiesForPlayoffs: 3 },
+      { id: "pa", name: "Poule A", order: 0, qualifiesForPlayoffs: 3 },
+      { id: "pb", name: "Poule B", order: 1, qualifiesForPlayoffs: 3 },
     ]);
 
     const req = createReq({ params: { seasonId: "s1" } as never });

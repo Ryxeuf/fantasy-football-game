@@ -83,6 +83,12 @@ import {
   isPlayoffBracketVisible,
   PlayoffOverrideError,
 } from "../services/league-playoffs";
+// Importé du moteur PARTAGÉ (et non via `league-playoffs`, mocké en bloc par
+// les tests de route) : même résumé des quotas que le bracket de coupe.
+import {
+  summarizePoolQualification,
+  type PoolQuotaRow,
+} from "../services/bracket-seeding";
 import {
   createManualRound,
   createManualPairing,
@@ -1136,27 +1142,21 @@ export async function handleGetPlayoffBracket(
         status: { not: "completed" },
       },
     });
-    const pools = await prisma.leaguePool.findMany({
+    const pools = (await prisma.leaguePool.findMany({
       where: { seasonId },
-      select: { qualifiesForPlayoffs: true },
-    });
-    const totalQualified = pools.reduce(
-      (n: number, p: { qualifiesForPlayoffs: number }) =>
-        n + p.qualifiesForPlayoffs,
-      0,
-    );
+      select: { id: true, name: true, order: true, qualifiesForPlayoffs: true },
+    })) as PoolQuotaRow[];
     sendSuccess(res, {
       seasonId,
       playoffSize: seasonRow.playoffSize,
       seasonStatus: seasonRow.status,
       regularSeasonComplete: incompleteRegular === 0,
-      poolQualification: {
-        totalQualified,
-        playoffSize: seasonRow.playoffSize,
-        // `consistent` n'a de sens que si des quotas sont configures.
-        consistent:
-          totalQualified === 0 || totalQualified === seasonRow.playoffSize,
-      },
+      // Total des quotas + détail par poule ; `consistent` n'a de sens que
+      // si des quotas sont configurés.
+      poolQualification: summarizePoolQualification(
+        pools,
+        seasonRow.playoffSize,
+      ),
       playoffsPublished,
       rounds,
     });
