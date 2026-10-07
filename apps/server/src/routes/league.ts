@@ -107,6 +107,7 @@ import {
 import {
   createPool,
   updatePool,
+  bracketRoundsWhere,
   deletePool,
   listPoolsForSeason,
   assignParticipantsToPools,
@@ -416,6 +417,8 @@ function domainError(res: Response, e: unknown): void {
       e.code === "participant_not_found"
         ? 404
         : e.code === "season_started" ||
+            e.code === "season_completed" ||
+            e.code === "playoffs_started" ||
             e.code === "pool_name_taken" ||
             e.code === "pool_not_empty" ||
             e.code === "participant_not_in_season"
@@ -2883,8 +2886,10 @@ export async function handleUpdateSeasonConfig(
         );
         return;
       }
+      // Même fenêtre que le quota de poule (`bracketRoundsWhere`) : un tour
+      // de bracket créé à la main n'a que son `bracketSlot`.
       const playoffRounds = await prisma.leagueRound.count({
-        where: { seasonId, kind: "playoff" },
+        where: bracketRoundsWhere(seasonId),
       });
       if (playoffRounds > 0) {
         sendError(

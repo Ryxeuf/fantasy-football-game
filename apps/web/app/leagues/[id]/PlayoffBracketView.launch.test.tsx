@@ -83,6 +83,48 @@ describe("PlayoffBracketView — panneau de lancement", () => {
     expect(state.textContent).not.toMatch(/par poule/);
   });
 
+  it("se relit quand un quota de poule change (reloadKey)", async () => {
+    // Le quota se corrige dans le panneau des poules, pas ici : sans
+    // relecture, le panneau annoncerait encore l'ancien total.
+    apiRequestMock.mockResolvedValueOnce(
+      bracketResponse({
+        playoffSize: 8,
+        poolQualification: {
+          totalQualified: 6,
+          playoffSize: 8,
+          consistent: false,
+        },
+      }),
+    );
+    const { rerender } = render(
+      <PlayoffBracketView seasonId="S1" isCommissioner reloadKey="pa:3|pb:3" />,
+    );
+    expect(
+      (await screen.findByTestId("playoff-pool-state")).textContent,
+    ).toMatch(/6 au total.*incohérent/);
+
+    apiRequestMock.mockResolvedValueOnce(
+      bracketResponse({
+        playoffSize: 8,
+        poolQualification: {
+          totalQualified: 8,
+          playoffSize: 8,
+          consistent: true,
+        },
+      }),
+    );
+    rerender(
+      <PlayoffBracketView seasonId="S1" isCommissioner reloadKey="pa:3|pb:5" />,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("playoff-pool-state").textContent).toMatch(
+        /8 au total.*cohérent/,
+      ),
+    );
+    expect(apiRequestMock).toHaveBeenCalledTimes(2);
+  });
+
   it("annonce le total seul face à une API sans détail", async () => {
     apiRequestMock.mockResolvedValue(bracketResponse());
     render(<PlayoffBracketView seasonId="S1" isCommissioner />);
@@ -182,7 +224,11 @@ describe("PlayoffBracketView — panneau de lancement", () => {
     fireEvent.click(await screen.findByTestId("playoff-start-button"));
 
     const error = await screen.findByTestId("playoff-launch-error");
-    expect(error.textContent).toMatch(/total des qualifiés par poule/i);
+    expect(error.textContent).toMatch(
+      /total des qualifiés de toutes les poules/i,
+    );
+    // Le refus dit quoi corriger, maintenant que le quota se corrige.
+    expect(error.textContent).toMatch(/corrigez le nombre de qualifiés/i);
   });
 
   it("masque le panneau dès qu'un bracket existe", async () => {

@@ -147,6 +147,10 @@ export interface LeagueRoundDetail {
   roundNumber: number;
   name: string | null;
   status: LeagueRoundStatus | string;
+  /** `regular` | `playoff`. Optionnel : servi par l'API, non typé avant. */
+  kind?: string;
+  /** Slot de bracket (`qf1`…`final`) ; un tour créé à la main peut n'avoir que lui. */
+  bracketSlot?: string | null;
   startDate: string | null;
   endDate: string | null;
   pairings?: LeaguePairingDetail[];

@@ -87,6 +87,13 @@ interface Props {
   eligibleParticipants?: EligibleParticipant[];
   /** Rappelé après un override réussi (pour rafraîchir la saison). */
   onChanged?: () => void;
+  /**
+   * Signature des données dont dépend la réponse mais que ce composant ne
+   * modifie pas (quotas de poule, corrigés dans le panneau des poules) :
+   * quand elle change, le bracket est relu — sinon le panneau de lancement
+   * annoncerait encore l'ancien total.
+   */
+  reloadKey?: string;
 }
 
 /** Aplati les seeds courants du 1er tour du bracket (ordre home, away…). */
@@ -116,6 +123,7 @@ export function PlayoffBracketView({
   isCommissioner = false,
   eligibleParticipants = [],
   onChanged,
+  reloadKey,
 }: Props) {
   const [data, setData] = useState<BracketResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -141,7 +149,7 @@ export function PlayoffBracketView({
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, reloadKey]);
 
   // Group rounds by stage : QFs together, SFs together, Final.
   const stages = useMemo(() => {
@@ -630,7 +638,7 @@ const START_REFUSAL_HINTS: Record<string, string> = {
   "regular-season-incomplete":
     "La phase de poule n'est pas terminée : cochez la clôture anticipée pour la clore maintenant.",
   "pool-qualification-mismatch":
-    "Le total des qualifiés par poule ne correspond pas à la taille du bracket.",
+    "Le total des qualifiés de toutes les poules ne correspond pas à la taille du bracket : corrigez le nombre de qualifiés d'une poule (panneau « Poules ») ou la taille du bracket.",
 };
 
 interface LaunchPanelProps {

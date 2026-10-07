@@ -40,7 +40,7 @@ vi.mock("../prisma", () => ({
   prisma: {
     leagueSeason: { findUnique: vi.fn(), update: vi.fn() },
     leagueRound: { count: vi.fn(), findMany: vi.fn() },
-    leaguePool: { findMany: vi.fn() },
+    leaguePool: { findMany: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     // Visibilité d'une ligue privée (`services/league-access`).
     leagueParticipant: { count: vi.fn() },
     leagueInvitation: { count: vi.fn() },
@@ -59,6 +59,7 @@ import {
   handleUpdateSeasonConfig,
   handleGetPlayoffBracket,
   handlePublishPlayoffBracket,
+  handleUpdatePool,
 } from "./league";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
@@ -71,6 +72,8 @@ const mocked = {
   roundCount: prisma.leagueRound.count as unknown as MockFn,
   roundFindMany: prisma.leagueRound.findMany as unknown as MockFn,
   poolFindMany: prisma.leaguePool.findMany as unknown as MockFn,
+  poolFindUnique: prisma.leaguePool.findUnique as unknown as MockFn,
+  poolUpdate: prisma.leaguePool.update as unknown as MockFn,
   setPublished: setPlayoffsPublished as unknown as MockFn,
 };
 
@@ -218,6 +221,28 @@ describe("Route: PATCH /leagues/seasons/:seasonId/config (playoffSize)", () => {
 
     expect(res.statusCode).toBe(409);
     expect(mocked.seasonUpdate).not.toHaveBeenCalled();
+  });
+
+  it("reconnait un tour de bracket par son kind OU son bracketSlot (meme fenetre que le quota)", async () => {
+    mocked.seasonFind.mockResolvedValue({ status: "in_progress" });
+    mocked.roundCount.mockResolvedValue(0);
+    mocked.seasonUpdate.mockResolvedValue({
+      id: "s1",
+      meceneEnabled: false,
+      playoffSize: 4,
+    });
+    const req = createReq({
+      params: { seasonId: "s1" } as never,
+      body: { playoffSize: 4 },
+    });
+    await handleUpdateSeasonConfig(req, createRes());
+
+    expect(mocked.roundCount).toHaveBeenCalledWith({
+      where: {
+        seasonId: "s1",
+        OR: [{ kind: "playoff" }, { bracketSlot: { not: null } }],
+      },
+    });
   });
 
   it("refuse (409) quand la saison est cloturee", async () => {
@@ -592,5 +617,76 @@ describe("Route: PATCH /leagues/seasons/:seasonId/playoff-bracket/publish", () =
     expect(res.payload).toMatchObject({
       error: expect.stringMatching(/aucun bracket/i),
     });
+  });
+});
+
+// Le quota de qualifies d'une poule reste corrigeable en cours de saison,
+// jusqu'au bracket (retour commissaire, ligue Kraken). Service REEL, prisma
+// mocke : c'est le mapping HTTP des refus qu'on verifie ici.
+describe("Route: PATCH /leagues/pools/:poolId (quota en cours de saison)", () => {
+  function arrange(opts: { status: string; bracketRounds: number }) {
+    mocked.poolFindUnique.mockResolvedValue({
+      id: "p1",
+      seasonId: "s1",
+      name: "Poule A",
+    });
+    mocked.seasonFind.mockResolvedValue({ id: "s1", status: opts.status });
+    mocked.roundCount.mockResolvedValue(opts.bracketRounds);
+    mocked.poolUpdate.mockImplementation(
+      async (args: { data: Record<string, unknown> }) => ({
+        id: "p1",
+        ...args.data,
+      }),
+    );
+  }
+
+  it("enregistre le quota sur une saison in_progress sans bracket", async () => {
+    arrange({ status: "in_progress", bracketRounds: 0 });
+    const req = createReq({
+      params: { poolId: "p1" } as never,
+      body: { qualifiesForPlayoffs: 4 },
+    });
+    const res = createRes();
+    await handleUpdatePool(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(mocked.poolUpdate).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: { qualifiesForPlayoffs: 4 },
+    });
+  });
+
+  it("refuse en 409 une fois le bracket genere", async () => {
+    arrange({ status: "in_progress", bracketRounds: 1 });
+    const req = createReq({
+      params: { poolId: "p1" } as never,
+      body: { qualifiesForPlayoffs: 4 },
+    });
+    const res = createRes();
+    await handleUpdatePool(req, res);
+    expect(res.statusCode).toBe(409);
+    expect(JSON.stringify(res.payload)).toMatch(/Bracket deja genere/);
+  });
+
+  it("refuse en 409 sur une saison cloturee", async () => {
+    arrange({ status: "completed", bracketRounds: 0 });
+    const req = createReq({
+      params: { poolId: "p1" } as never,
+      body: { qualifiesForPlayoffs: 4 },
+    });
+    const res = createRes();
+    await handleUpdatePool(req, res);
+    expect(res.statusCode).toBe(409);
+  });
+
+  it("refuse en 409 un renommage en cours de saison (composition figee)", async () => {
+    arrange({ status: "in_progress", bracketRounds: 0 });
+    const req = createReq({
+      params: { poolId: "p1" } as never,
+      body: { name: "Poule Z" },
+    });
+    const res = createRes();
+    await handleUpdatePool(req, res);
+    expect(res.statusCode).toBe(409);
+    expect(mocked.poolUpdate).not.toHaveBeenCalled();
   });
 });

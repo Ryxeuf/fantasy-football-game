@@ -5,15 +5,22 @@ import type { LeaguePool, LeagueParticipantDetail } from "./types";
 
 // FR2 — gestion des poules (groupes) d'une saison + affectation des
 // équipes et nombre de qualifiés par poule pour les play-offs. Réservé au
-// commissaire et éditable seulement avant le démarrage de la saison
-// (draft / scheduled), conformément à `ensureSeasonEditable` côté serveur.
+// commissaire. La COMPOSITION n'est éditable qu'avant le démarrage de la
+// saison (draft / scheduled, `ensureSeasonEditable` côté serveur) ; le
+// QUOTA de qualifiés reste corrigeable jusqu'à la génération du bracket
+// (`ensureQuotaEditable`) — sans quoi un quota faux devenait définitif.
 
 interface PoolsManagerPanelProps {
   seasonId: string;
   pools: LeaguePool[];
   participants: LeagueParticipantDetail[];
-  /** Saison encore éditable (draft / scheduled). */
+  /** Saison encore éditable (draft / scheduled) : composition ET quotas. */
   editable: boolean;
+  /**
+   * Quota de qualifiés encore corrigeable (saison non clôturée, aucun tour
+   * de bracket) — cf. `isPoolQuotaEditable`. Défaut : `editable`.
+   */
+  quotaEditable?: boolean;
   onChanged: () => void;
 }
 
@@ -22,8 +29,10 @@ export function PoolsManagerPanel({
   pools,
   participants,
   editable,
+  quotaEditable = editable,
   onChanged,
 }: PoolsManagerPanelProps) {
+  const canEditQuota = editable || quotaEditable;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -43,15 +52,18 @@ export function PoolsManagerPanel({
     [assign, participants],
   );
 
+  /** Exécute une écriture ; `true` si elle a réussi. */
   const run = useCallback(
-    async (fn: () => Promise<unknown>) => {
+    async (fn: () => Promise<unknown>): Promise<boolean> => {
       setBusy(true);
       setError(null);
       try {
         await fn();
         onChanged();
+        return true;
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : "Erreur");
+        return false;
       } finally {
         setBusy(false);
       }
@@ -127,8 +139,13 @@ export function PoolsManagerPanel({
           Poules
         </h3>
         {!editable ? (
-          <span className="text-xs text-gray-500">
-            Lecture seule (saison démarrée)
+          <span
+            data-testid="pools-manager-lock"
+            className="text-xs text-gray-500"
+          >
+            {canEditQuota
+              ? "Composition figée (saison démarrée) — qualifiés modifiables jusqu'au bracket"
+              : "Lecture seule"}
           </span>
         ) : null}
       </div>
@@ -160,15 +177,26 @@ export function PoolsManagerPanel({
               <label className="ml-auto flex items-center gap-1 text-xs text-gray-600">
                 Qualifiés PO :
                 <input
+                  // Re-monté quand le serveur renvoie une autre valeur
+                  // (quota borné) : le champ n'est pas contrôlé.
+                  key={`${pool.id}:${pool.qualifiesForPlayoffs}`}
+                  data-testid={`pool-quota-${pool.id}`}
                   type="number"
                   min={0}
                   max={128}
                   defaultValue={pool.qualifiesForPlayoffs}
-                  disabled={!editable || busy}
+                  disabled={!canEditQuota || busy}
                   onBlur={(e) => {
-                    const v = Number(e.target.value);
+                    const input = e.currentTarget;
+                    const v = Number(input.value);
                     if (Number.isFinite(v) && v !== pool.qualifiesForPlayoffs) {
-                      updatePool(pool.id, { qualifiesForPlayoffs: v });
+                      // Refusé (bracket généré entre-temps…) : le champ
+                      // revient à la valeur du serveur, à côté de l'erreur.
+                      void updatePool(pool.id, { qualifiesForPlayoffs: v }).then(
+                        (ok) => {
+                          if (!ok) input.value = String(pool.qualifiesForPlayoffs);
+                        },
+                      );
                     }
                   }}
                   className="w-16 border border-gray-300 rounded px-1 py-0.5 disabled:bg-gray-100"
