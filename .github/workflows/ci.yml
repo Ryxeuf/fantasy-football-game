@@ -21,7 +21,10 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # 20 min ne suffisaient plus (#1067, octobre 2026) : Unit tests (~8 min)
+    # puis Coverage thresholds (~8 min, memes suites avec couverture) amenent
+    # le job a ~20 min, et un run sain a ete coupe pendant `Post Cache turbo`.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
