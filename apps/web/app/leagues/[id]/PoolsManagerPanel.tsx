@@ -79,8 +79,9 @@ export function PoolsManagerPanel({
         method: "POST",
         body: JSON.stringify({ name, qualifiesForPlayoffs: newQualifies }),
       });
+      // Le quota saisi est GARDÉ : le remettre à 1 créait les poules
+      // suivantes à 1 dès qu'on oubliait de le ressaisir.
       setNewName("");
-      setNewQualifies(1);
     });
   }, [newName, newQualifies, run, seasonId]);
 

@@ -118,3 +118,31 @@ describe("PoolsManagerPanel — quota en cours de saison", () => {
     expect(apiRequestMock).not.toHaveBeenCalled();
   });
 });
+
+describe("PoolsManagerPanel — création de poule", () => {
+  it("garde le dernier quota saisi d'une poule à la suivante", async () => {
+    renderPanel({ editable: true, pools: [] });
+
+    const name = screen.getByPlaceholderText("Poule A");
+    const quota = screen.getByLabelText("Qualifiés PO");
+
+    fireEvent.change(name, { target: { value: "Poule A" } });
+    fireEvent.change(quota, { target: { value: "4" } });
+    fireEvent.click(screen.getByTestId("pool-create"));
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    // Le nom se vide, le quota reste : la poule B part aussi à 4.
+    await waitFor(() => expect((name as HTMLInputElement).value).toBe(""));
+    expect((quota as HTMLInputElement).value).toBe("4");
+
+    fireEvent.change(name, { target: { value: "Poule B" } });
+    fireEvent.click(screen.getByTestId("pool-create"));
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(2));
+
+    expect(apiRequestMock.mock.calls.map((c) => JSON.parse(c[1].body))).toEqual(
+      [
+        { name: "Poule A", qualifiesForPlayoffs: 4 },
+        { name: "Poule B", qualifiesForPlayoffs: 4 },
+      ],
+    );
+  });
+});
