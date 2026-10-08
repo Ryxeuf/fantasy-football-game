@@ -5,7 +5,13 @@
  * coupe compte restent demandés.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "cp-1" }),
@@ -288,6 +294,56 @@ describe("feuille de coupe en saisie SIMPLIFIÉE", () => {
     expect(list.textContent).not.toContain("1re mi-temps");
   });
 
+  it("ne réclame pas une météo que la saisie simplifiée ne demande pas", async () => {
+    render(<MatchSheetPage />);
+    fireEvent.click(await screen.findByTestId("tab-during"));
+
+    expect(screen.queryByTestId("weather-reminder")).toBeNull();
+    expect(screen.queryByTestId("weather-reminder-missing")).toBeNull();
+  });
+
+  it("garde « Agression » pour une agression saisie en complet sans sortie", async () => {
+    serve(
+      sheetResponse("simplified", {
+        sheet: {
+          id: "ms1",
+          status: "draft",
+          events: [
+            {
+              id: "e1",
+              kind: "aggression",
+              team: "home",
+              actorPlayerId: "h1",
+              targetPlayerId: "a1",
+              causeDetail: null,
+              injurySeverity: null,
+              meta: null,
+            },
+            {
+              id: "e2",
+              kind: "aggression",
+              team: "home",
+              actorPlayerId: "h2",
+              targetPlayerId: "a1",
+              causeDetail: null,
+              injurySeverity: null,
+              meta: { eliminated: true },
+            },
+          ],
+        },
+      }),
+    );
+    render(<MatchSheetPage />);
+    fireEvent.click(await screen.findByTestId("tab-during"));
+
+    const items = within(await screen.findByTestId("events-list")).getAllByRole(
+      "listitem",
+    );
+    expect(items[0].textContent).toContain("Agression");
+    expect(items[0].textContent).not.toContain("Élimination sur Agression");
+    expect(items[1].textContent).toContain("Élimination sur Agression");
+  });
+
   it("annonce la saisie simplifiée et renvoie à l'aide", async () => {
     render(<MatchSheetPage />);
     const notice = await screen.findByTestId("cup-sheet-entry-mode");
@@ -323,6 +379,63 @@ describe("feuille de coupe en saisie COMPLÈTE", () => {
     expect(screen.getByTestId("toss-winner-select")).toBeTruthy();
     const notice = screen.getByTestId("cup-sheet-entry-mode");
     expect(notice.getAttribute("data-mode")).toBe("full");
+  });
+
+  it("réaligne le formulaire quand la coupe passe en saisie simplifiée, feuille ouverte", async () => {
+    serve(sheetResponse("full"));
+    render(<MatchSheetPage />);
+    fireEvent.click(await screen.findByTestId("tab-during"));
+
+    // Saisie en cours en mode complet : un coup d'envoi, puis une Séquelle
+    // sans caractéristique (bouton désactivé).
+    fireEvent.change(screen.getByTestId("event-kind"), {
+      target: { value: "kickoff" },
+    });
+    fireEvent.change(screen.getByTestId("event-kind"), {
+      target: { value: "casualty" },
+    });
+    fireEvent.change(screen.getByTestId("event-injury-severity"), {
+      target: { value: "stat_loss" },
+    });
+    expect(
+      (screen.getByTestId("add-event") as HTMLButtonElement).disabled,
+    ).toBe(true);
+    fireEvent.change(screen.getByTestId("event-kind"), {
+      target: { value: "kickoff" },
+    });
+
+    // Le commissaire bascule la coupe ; la feuille se recharge (ici après
+    // la suppression d'un brouillon : n'importe quel `run` recharge).
+    serve(sheetResponse("simplified"));
+    fireEvent.click(screen.getByTestId("tab-before"));
+    fireEvent.click(screen.getByTestId("save-pre-match"));
+    await waitFor(() =>
+      expect(screen.queryByTestId("toss-winner-select")).toBeNull(),
+    );
+    fireEvent.click(screen.getByTestId("tab-during"));
+
+    const kindSelect = screen.getByTestId("event-kind") as HTMLSelectElement;
+    expect(kindSelect.value).toBe("touchdown");
+    const add = screen.getByTestId("add-event") as HTMLButtonElement;
+    expect(add.disabled).toBe(false);
+
+    fireEvent.change(screen.getByTestId("event-actor"), {
+      target: { value: "h1" },
+    });
+    fireEvent.click(add);
+    await waitFor(() =>
+      expect(
+        apiRequest.mock.calls.some(
+          ([p, init]) =>
+            p === "/leagues/pairings/cp-1/sheet/events" &&
+            init?.method === "POST",
+        ),
+      ).toBe(true),
+    );
+    const body = lastBody("/leagues/pairings/cp-1/sheet/events");
+    expect(body.kind).toBe("touchdown");
+    expect(body.meta).toBeUndefined();
+    expect(body).not.toHaveProperty("injurySeverity");
   });
 
   it("n'ajoute aucune marque de sortie à une agression saisie en complet", async () => {

@@ -502,7 +502,9 @@ export default function MatchSheetPage() {
           meta:
             profile.markAggressionEliminated && kind === "aggression"
               ? { eliminated: true }
-              : injurySeverity === "stat_loss" && injuryStat
+              : profile.injuryDetails &&
+                  injurySeverity === "stat_loss" &&
+                  injuryStat
                 ? { stat: injuryStat }
                 : kind === "kickoff" && kickoffEvent
                   ? { kickoffEvent }
@@ -773,6 +775,22 @@ export default function MatchSheetPage() {
     competitionKind: data?.competitionKind,
     competitionRules: data?.competitionRules,
   });
+  // Le mode peut changer feuille ouverte (le commissaire bascule la coupe, la
+  // feuille se recharge) : le formulaire ne doit garder ni un type que le
+  // profil ne propose plus, ni une gravité / un coup d'envoi qu'il ne
+  // demande plus — sinon on enverrait ce que l'écran n'affiche pas.
+  useEffect(() => {
+    if (!profile.eventKinds.some((k) => k.value === kind)) {
+      setKind(profile.eventKinds[0].value);
+    }
+  }, [profile, kind]);
+  useEffect(() => {
+    if (!profile.injuryDetails) {
+      setInjurySeverity("");
+      setInjuryStat("");
+    }
+    if (!profile.kickoffDetails) setKickoffEvent("");
+  }, [profile]);
   // Haine (X) : situe le joueur blessé dans son équipe (les 2 côtés jettent).
   const hateTeamNames: Record<string, string> = {};
   if (home?.teamId) hateTeamNames[home.teamId] = home.name ?? "Domicile";
@@ -1170,13 +1188,22 @@ export default function MatchSheetPage() {
             Au cours du match
           </h2>
 
-          <WeatherReminder
-            weather={sheetWeather}
-            changingWeather={changingWeather}
-            onEditPreMatch={canEdit ? () => setTab("before") : undefined}
-            effectsEnabled={weatherEffects}
-            onToggleEffects={toggleWeatherEffects}
-          />
+          {/* Saisie simplifiée : la météo n'est pas demandée — on ne la
+              réclame pas, et on ne renvoie pas vers un avant-match qui ne
+              la propose plus. Une météo déjà saisie reste rappelée. */}
+          {(profile.preMatch === "full" || sheetWeather) && (
+            <WeatherReminder
+              weather={sheetWeather}
+              changingWeather={changingWeather}
+              onEditPreMatch={
+                canEdit && profile.preMatch === "full"
+                  ? () => setTab("before")
+                  : undefined
+              }
+              effectsEnabled={weatherEffects}
+              onToggleEffects={toggleWeatherEffects}
+            />
+          )}
 
           {/* Bloc de saisie EN PREMIER : éviter de scroller toute la timeline. */}
           {canEdit && (
@@ -1382,7 +1409,10 @@ export default function MatchSheetPage() {
                 className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
                 onClick={addEvent}
                 disabled={
-                  busy || (injurySeverity === "stat_loss" && !injuryStat)
+                  busy ||
+                  (profile.injuryDetails &&
+                    injurySeverity === "stat_loss" &&
+                    !injuryStat)
                 }
                 data-testid="add-event"
               >
@@ -1408,11 +1438,21 @@ export default function MatchSheetPage() {
                   // Libellé du profil d'abord (« Élimination sur Agression » en
                   // saisie simplifiée), sinon celui de la ligue : un évènement
                   // saisi dans l'autre mode reste lisible.
+                  // « Élimination sur Agression » ne qualifie qu'une agression
+                  // qui SORT sa cible : une agression saisie en complet sans
+                  // blessure garde son libellé de ligue.
+                  const leagueLabel = EVENT_KINDS.find(
+                    (k) => k.value === ev.kind,
+                  )?.label;
+                  const aggressionWithoutElimination =
+                    ev.kind === "aggression" &&
+                    !ev.injurySeverity &&
+                    !isMarkedEliminated(ev.meta);
                   const kindLabel =
-                    profile.eventKinds.find((k) => k.value === ev.kind)
-                      ?.label ??
-                    EVENT_KINDS.find((k) => k.value === ev.kind)?.label ??
-                    ev.kind;
+                    (aggressionWithoutElimination
+                      ? leagueLabel
+                      : (profile.eventKinds.find((k) => k.value === ev.kind)
+                          ?.label ?? leagueLabel)) ?? ev.kind;
                   const accent =
                     ev.team === "home"
                       ? data.reference.colors.home.primary
