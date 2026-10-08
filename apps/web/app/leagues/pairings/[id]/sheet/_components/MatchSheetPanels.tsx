@@ -1092,6 +1092,7 @@ export function PreMatchPanel({
   disabled,
   onSave,
   reference,
+  forfeitOnly = false,
 }: {
   initial: PreMatchValues;
   homeName: string;
@@ -1102,6 +1103,12 @@ export function PreMatchPanel({
   disabled?: boolean;
   onSave: (v: PreMatchValues) => Promise<void>;
   reference: MatchSheetReference;
+  /**
+   * Saisie SIMPLIFIÉE d'une coupe : le même panneau, réduit au forfait (seul
+   * champ d'avant-match qui compte en coupe). Météo, pile ou face,
+   * popularité, coups de pouce et prières sont retirés, pas redessinés.
+   */
+  forfeitOnly?: boolean;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -1218,98 +1225,102 @@ export function PreMatchPanel({
         Avant-match
       </h2>
 
-      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="block text-xs">
-          Table météo
-          <select
-            value={weatherTable}
-            onChange={(e) => {
-              setWeatherTable(e.target.value);
-              setWeather(""); // la météo dépend de la table -> on réinitialise
-            }}
-            disabled={disabled}
-            data-testid="weather-table-select"
-            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-          >
-            <option value="">— Choisir —</option>
-            {tables.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
+      {!forfeitOnly && (
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="block text-xs">
+            Table météo
+            <select
+              value={weatherTable}
+              onChange={(e) => {
+                setWeatherTable(e.target.value);
+                setWeather(""); // la météo dépend de la table -> on réinitialise
+              }}
+              disabled={disabled}
+              data-testid="weather-table-select"
+              className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+            >
+              <option value="">— Choisir —</option>
+              {tables.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+              {/* Valeur héritée hors catalogue (ancienne saisie). */}
+              {weatherTable && !selectedTable && (
+                <option value={weatherTable}>{weatherTable}</option>
+              )}
+            </select>
+          </label>
+          <label className="block text-xs">
+            Météo (2D6)
+            <select
+              value={weather}
+              onChange={(e) => setWeather(e.target.value)}
+              disabled={disabled || weatherResults.length === 0}
+              data-testid="weather-select"
+              className="mt-1 block w-full rounded border px-2 py-2 text-sm disabled:bg-slate-100"
+            >
+              <option value="">
+                {weatherResults.length === 0 ? "— Table d'abord —" : "—"}
               </option>
-            ))}
-            {/* Valeur héritée hors catalogue (ancienne saisie). */}
-            {weatherTable && !selectedTable && (
-              <option value={weatherTable}>{weatherTable}</option>
-            )}
-          </select>
-        </label>
-        <label className="block text-xs">
-          Météo (2D6)
-          <select
-            value={weather}
-            onChange={(e) => setWeather(e.target.value)}
-            disabled={disabled || weatherResults.length === 0}
-            data-testid="weather-select"
-            className="mt-1 block w-full rounded border px-2 py-2 text-sm disabled:bg-slate-100"
-          >
-            <option value="">
-              {weatherResults.length === 0 ? "— Table d'abord —" : "—"}
-            </option>
-            {weatherResults.map((r) => (
-              <option key={r.roll} value={r.condition}>
-                {r.roll} — {r.condition}
-              </option>
-            ))}
-            {weather && !selectedWeather && (
-              <option value={weather}>{weather}</option>
-            )}
-          </select>
-        </label>
-      </div>
+              {weatherResults.map((r) => (
+                <option key={r.roll} value={r.condition}>
+                  {r.roll} — {r.condition}
+                </option>
+              ))}
+              {weather && !selectedWeather && (
+                <option value={weather}>{weather}</option>
+              )}
+            </select>
+          </label>
+        </div>
+      )}
 
       {/* Toss d'avant-match : vainqueur + choix (engager ou recevoir). */}
-      <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <label className="block text-xs">
-          Toss gagné par
-          <select
-            value={tossWinner}
-            onChange={(e) => {
-              const v = e.target.value as "home" | "away" | "";
-              setTossWinner(v);
-              // Le choix appartient au vainqueur : sans vainqueur, pas de choix.
-              if (v === "") setTossChoice("");
-            }}
-            disabled={disabled}
-            data-testid="toss-winner-select"
-            className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-          >
-            <option value="">—</option>
-            <option value="home">{homeName}</option>
-            <option value="away">{awayName}</option>
-          </select>
-        </label>
-        <label className="block text-xs">
-          Choix du vainqueur
-          <select
-            value={tossChoice}
-            onChange={(e) =>
-              setTossChoice(e.target.value as "kick" | "receive" | "")
-            }
-            disabled={disabled || tossWinner === ""}
-            data-testid="toss-choice-select"
-            className="mt-1 block w-full rounded border px-2 py-2 text-sm disabled:bg-slate-100"
-          >
-            <option value="">
-              {tossWinner === "" ? "— Vainqueur d'abord —" : "—"}
-            </option>
-            <option value="kick">Donne le coup d&apos;envoi (engage)</option>
-            <option value="receive">Reçoit le coup d&apos;envoi</option>
-          </select>
-        </label>
-      </div>
+      {!forfeitOnly && (
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label className="block text-xs">
+            Toss gagné par
+            <select
+              value={tossWinner}
+              onChange={(e) => {
+                const v = e.target.value as "home" | "away" | "";
+                setTossWinner(v);
+                // Le choix appartient au vainqueur : sans vainqueur, pas de choix.
+                if (v === "") setTossChoice("");
+              }}
+              disabled={disabled}
+              data-testid="toss-winner-select"
+              className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+            >
+              <option value="">—</option>
+              <option value="home">{homeName}</option>
+              <option value="away">{awayName}</option>
+            </select>
+          </label>
+          <label className="block text-xs">
+            Choix du vainqueur
+            <select
+              value={tossChoice}
+              onChange={(e) =>
+                setTossChoice(e.target.value as "kick" | "receive" | "")
+              }
+              disabled={disabled || tossWinner === ""}
+              data-testid="toss-choice-select"
+              className="mt-1 block w-full rounded border px-2 py-2 text-sm disabled:bg-slate-100"
+            >
+              <option value="">
+                {tossWinner === "" ? "— Vainqueur d'abord —" : "—"}
+              </option>
+              <option value="kick">Donne le coup d&apos;envoi (engage)</option>
+              <option value="receive">Reçoit le coup d&apos;envoi</option>
+            </select>
+          </label>
+        </div>
+      )}
 
       {/* Équipe qui engage, déduite du toss (informatif). */}
-      {tossWinner !== "" && tossChoice !== "" && (
+      {!forfeitOnly && tossWinner !== "" && tossChoice !== "" && (
         <div
           data-testid="toss-kicking-team"
           className="mb-3 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700"
@@ -1324,7 +1335,7 @@ export function PreMatchPanel({
       )}
 
       {/* Conséquences (informatives) de la météo sélectionnée. */}
-      {selectedWeather && (
+      {!forfeitOnly && selectedWeather && (
         <div
           data-testid="weather-consequence"
           className="mb-3 rounded border-l-4 border-nuffle-gold bg-nuffle-gold/5 px-3 py-2 text-xs text-slate-700"
@@ -1356,48 +1367,55 @@ export function PreMatchPanel({
               />
               Déclarer forfait
             </label>
-            <label className="block text-xs">
-              {/* Formule officielle : 1D3 + fans dévoués DE L'ÉQUIPE. */}
-              <span data-testid={`popularity-label-${c.side}`}>
-                Facteur de popularité (1D3 +{" "}
-                {c.fans !== null ? `${c.fans} fans dévoués` : "fans dévoués"})
-              </span>
-              <input
-                type="number"
-                min={0}
-                max={20}
-                value={c.pop}
-                onChange={(e) => c.setPop(e.target.value)}
-                disabled={disabled}
-                data-testid={`popularity-${c.side}`}
-                className="mt-1 block w-24 rounded border px-2 py-2 text-sm"
-              />
-              {c.fans !== null ? (
-                <span className="mt-0.5 block text-[11px] text-slate-500">
-                  Résultat attendu entre {c.fans + 1} et {c.fans + 3}.
-                </span>
-              ) : null}
-              <span className="mt-0.5 block text-[11px] text-slate-500">
-                Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10 000 po
-                par TD marqué, +10 000 po si l&apos;équipe n&apos;a pas
-                temporisé)
-              </span>
-            </label>
-            <InducementEditor
-              list={c.ind}
-              onChange={c.setInd}
-              disabled={disabled}
-              testId={`inducements-${c.side}`}
-              catalogue={c.catalogue}
-              starPlayers={c.stars}
-              budget={c.budget}
-            />
-            <PrayersEditor
-              list={c.prayers}
-              onChange={c.setPrayers}
-              disabled={disabled}
-              testId={`prayers-${c.side}`}
-            />
+            {!forfeitOnly && (
+              <>
+                <label className="block text-xs">
+                  {/* Formule officielle : 1D3 + fans dévoués DE L'ÉQUIPE. */}
+                  <span data-testid={`popularity-label-${c.side}`}>
+                    Facteur de popularité (1D3 +{" "}
+                    {c.fans !== null
+                      ? `${c.fans} fans dévoués`
+                      : "fans dévoués"}
+                    )
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={20}
+                    value={c.pop}
+                    onChange={(e) => c.setPop(e.target.value)}
+                    disabled={disabled}
+                    data-testid={`popularity-${c.side}`}
+                    className="mt-1 block w-24 rounded border px-2 py-2 text-sm"
+                  />
+                  {c.fans !== null ? (
+                    <span className="mt-0.5 block text-[11px] text-slate-500">
+                      Résultat attendu entre {c.fans + 1} et {c.fans + 3}.
+                    </span>
+                  ) : null}
+                  <span className="mt-0.5 block text-[11px] text-slate-500">
+                    Gains auto : {c.winnings.toLocaleString("fr-FR")} po (+10
+                    000 po par TD marqué, +10 000 po si l&apos;équipe n&apos;a
+                    pas temporisé)
+                  </span>
+                </label>
+                <InducementEditor
+                  list={c.ind}
+                  onChange={c.setInd}
+                  disabled={disabled}
+                  testId={`inducements-${c.side}`}
+                  catalogue={c.catalogue}
+                  starPlayers={c.stars}
+                  budget={c.budget}
+                />
+                <PrayersEditor
+                  list={c.prayers}
+                  onChange={c.setPrayers}
+                  disabled={disabled}
+                  testId={`prayers-${c.side}`}
+                />
+              </>
+            )}
           </div>
         ))}
       </div>
@@ -1407,13 +1425,13 @@ export function PreMatchPanel({
           <button
             type="button"
             onClick={save}
-            disabled={busy || overBudget}
+            disabled={busy || (overBudget && !forfeitOnly)}
             data-testid="save-pre-match"
             className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             Enregistrer l&apos;avant-match
           </button>
-          {overBudget && (
+          {overBudget && !forfeitOnly && (
             <span className="text-xs font-medium text-red-600">
               Budget de coups de pouce dépassé.
             </span>

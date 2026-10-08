@@ -25,11 +25,11 @@
 
 ## 5. Feuille de match (web)
 
-- [ ] 5.1 `leagues/pairings/[id]/sheet/page.tsx` : le MÊME bloc « Ajouter un évènement » suit le profil (types, mi-temps/tour, gravité, séquelle, réceptionneur, coup d'envoi retirés en simplifié), sans nouveau composant ni nouvelle mise en page — vérifier : tests de rendu en coupe simplifiée et en coupe complète (complète identique à l'existant).
-- [ ] 5.2 Onglets et parcours inchangés en simplifié : « Avant-match » ne garde que le forfait (le panneau n'envoie que `{ forfeitSide }`), « En cours » reste l'onglet de saisie, boutons de soumission, de validation et d'invalidation identiques — vérifier : test de rendu (mêmes onglets et boutons que la saisie complète) + test que le corps du PATCH ne porte que `forfeitSide`.
-- [ ] 5.3 « Élimination sur Agression » envoie `kind: "aggression"`, la cible et `meta.eliminated: true` ; la timeline affiche « [Sortie] » pour une agression marquée sans gravité — vérifier : tests (corps envoyé, libellé de timeline, y compris en saisie complète).
-- [ ] 5.4 Masquer en simplifié les panneaux journaliers et mort relevé et les séparateurs de mi-temps qu'aucune saisie n'a renseignés ; garder les rosters et les journaliers dans les sélecteurs — vérifier : tests de rendu.
-- [ ] 5.5 Bandeau de coupe : annonce du mode et lien vers `/aide#saisie-de-coupe` — vérifier : test de rendu dans les deux modes.
+- [x] 5.1 `leagues/pairings/[id]/sheet/page.tsx` : le MÊME bloc « Ajouter un évènement » suit le profil (types, mi-temps/tour, gravité, séquelle, réceptionneur, coup d'envoi retirés en simplifié), sans nouveau composant ni nouvelle mise en page — vérifier : tests de rendu en coupe simplifiée et en coupe complète (complète identique à l'existant).
+- [x] 5.2 Onglets et parcours inchangés en simplifié : « Avant-match » ne garde que le forfait (le panneau n'envoie que `{ forfeitSide }`), « En cours » reste l'onglet de saisie, boutons de soumission, de validation et d'invalidation identiques — vérifier : test de rendu (mêmes onglets et boutons que la saisie complète) + test que le corps du PATCH ne porte que `forfeitSide`.
+- [x] 5.3 « Élimination sur Agression » envoie `kind: "aggression"`, la cible et `meta.eliminated: true` ; la timeline affiche « [Sortie] » pour une agression marquée sans gravité — vérifier : tests (corps envoyé, libellé de timeline, y compris en saisie complète).
+- [x] 5.4 Masquer en simplifié les panneaux journaliers et mort relevé et les séparateurs de mi-temps qu'aucune saisie n'a renseignés ; garder les rosters et les journaliers dans les sélecteurs — vérifier : tests de rendu.
+- [x] 5.5 Bandeau de coupe : annonce du mode et lien vers `/aide#saisie-de-coupe` — vérifier : test de rendu dans les deux modes.
 
 ## 6. Formulaires de coupe (web)
 

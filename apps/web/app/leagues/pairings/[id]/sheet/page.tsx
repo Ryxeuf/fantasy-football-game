@@ -60,6 +60,7 @@ import {
   eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
+  isMarkedEliminated,
   RECEIVER_BEARING_KINDS,
   TARGET_BEARING_KINDS,
   type EventKind,
@@ -77,6 +78,7 @@ import {
   isCupCompetition,
 } from "../../../../lib/competition-links";
 import { dynamicRoute } from "../../../../lib/typed-route";
+import { sheetEntryProfile } from "../../../../lib/sheet-entry-profile";
 
 // Feuille de match v2 (ligue physique) — saisie mobile-first.
 // Sections RÉSUMÉ / AVANT-MATCH / AU COURS DU MATCH / FIN DU MATCH.
@@ -156,6 +158,8 @@ interface MatchEvent {
     turn?: number;
     stat?: string;
     kickoffEvent?: string;
+    /** Agression saisie en mode simplifié : la cible est sortie. */
+    eliminated?: boolean;
   } | null;
 }
 
@@ -244,6 +248,11 @@ interface SheetResponse {
     purchasesEnabled?: boolean;
     firingsEnabled?: boolean;
     resurrection?: boolean;
+    /**
+     * Profil du formulaire : une coupe peut être en saisie simplifiée.
+     * Optionnel : un serveur antérieur ne le sert pas (saisie complète).
+     */
+    entryMode?: "full" | "simplified";
   };
   /** Compétition du pairing (lien retour). Optionnel : rétro-compat pré-fix. */
   leagueId?: string;
@@ -472,23 +481,32 @@ export default function MatchSheetPage() {
           actorPlayerId: actorPlayerId || undefined,
           // A62 — pas de cible pour les évènements qui n'en portent pas.
           // FDM — sur une passe réussie, ce champ porte le réceptionneur
-          // (coéquipier) au lieu d'une cible adverse.
-          targetPlayerId: hasTargetField(kind)
-            ? targetPlayerId || undefined
-            : undefined,
-          injurySeverity: INJURY_BEARING_KINDS.has(kind)
-            ? injurySeverity || undefined
-            : undefined,
-          half: eventHalf,
-          turn: eventTurn ? Number(eventTurn) : undefined,
+          // (coéquipier) au lieu d'une cible adverse — sauf en saisie
+          // simplifiée, qui ne le demande pas.
+          targetPlayerId:
+            hasTargetField(kind) &&
+            (profile.passReceiver || !RECEIVER_BEARING_KINDS.has(kind))
+              ? targetPlayerId || undefined
+              : undefined,
+          injurySeverity:
+            profile.injuryDetails && INJURY_BEARING_KINDS.has(kind)
+              ? injurySeverity || undefined
+              : undefined,
+          half: profile.halfAndTurn ? eventHalf : undefined,
+          turn:
+            profile.halfAndTurn && eventTurn ? Number(eventTurn) : undefined,
           // A68 — la Séquelle porte la caractéristique affectée.
           // A56 — le coup d'envoi porte le résultat de la table 2D6.
+          // Saisie simplifiée : une agression n'est retenue que si elle SORT
+          // sa cible, marquée faute de gravité à saisir.
           meta:
-            injurySeverity === "stat_loss" && injuryStat
-              ? { stat: injuryStat }
-              : kind === "kickoff" && kickoffEvent
-                ? { kickoffEvent }
-                : undefined,
+            profile.markAggressionEliminated && kind === "aggression"
+              ? { eliminated: true }
+              : injurySeverity === "stat_loss" && injuryStat
+                ? { stat: injuryStat }
+                : kind === "kickoff" && kickoffEvent
+                  ? { kickoffEvent }
+                  : undefined,
         }),
       }),
     ).then(() => {
@@ -580,19 +598,25 @@ export default function MatchSheetPage() {
     run(() =>
       apiRequest(`/leagues/pairings/${pairingId}/sheet/pre-match`, {
         method: "PATCH",
-        body: JSON.stringify({
-          weatherTable: v.weatherTable || null,
-          weather: v.weather || null,
-          forfeitSide: v.forfeitSide,
-          tossWinner: v.tossWinner,
-          tossChoice: v.tossChoice,
-          popularityHome: v.popularityHome,
-          popularityAway: v.popularityAway,
-          inducementsHome: v.inducementsHome,
-          inducementsAway: v.inducementsAway,
-          prayersHome: v.prayersHome,
-          prayersAway: v.prayersAway,
-        }),
+        // Saisie simplifiée : le panneau ne montre que le forfait, il
+        // n'envoie que lui — le serveur fusionne, rien d'autre ne bouge.
+        body: JSON.stringify(
+          profile.preMatch === "forfeit-only"
+            ? { forfeitSide: v.forfeitSide }
+            : {
+                weatherTable: v.weatherTable || null,
+                weather: v.weather || null,
+                forfeitSide: v.forfeitSide,
+                tossWinner: v.tossWinner,
+                tossChoice: v.tossChoice,
+                popularityHome: v.popularityHome,
+                popularityAway: v.popularityAway,
+                inducementsHome: v.inducementsHome,
+                inducementsAway: v.inducementsAway,
+                prayersHome: v.prayersHome,
+                prayersAway: v.prayersAway,
+              },
+        ),
       }),
     );
 
@@ -717,6 +741,11 @@ export default function MatchSheetPage() {
   // l'ordre de saisie (occurredAt) comme départage stable. Le meta est
   // résolu une seule fois ici.
   const timeline = useMemo(() => chronologicalTimeline(events), [events]);
+  // Au moins un évènement porte-t-il une mi-temps saisie ?
+  const hasHalves = useMemo(
+    () => timeline.some(({ m }) => m.half != null),
+    [timeline],
+  );
   // FR — nb de joueurs tués dans ce match : invalider la feuille les
   // ressuscite (dead:false). On en avertit le commissaire avant de confirmer.
   const deadCount = useMemo(
@@ -738,6 +767,12 @@ export default function MatchSheetPage() {
   const home = data?.teams.home ?? null;
   const away = data?.teams.away ?? null;
   const eventTeam = team === "home" ? home : away;
+  // Profil du formulaire : une coupe en saisie simplifiée RETIRE des champs
+  // de la feuille de ligue (même page, mêmes onglets, mêmes libellés).
+  const profile = sheetEntryProfile({
+    competitionKind: data?.competitionKind,
+    competitionRules: data?.competitionRules,
+  });
   // Haine (X) : situe le joueur blessé dans son équipe (les 2 côtés jettent).
   const hateTeamNames: Record<string, string> = {};
   if (home?.teamId) hateTeamNames[home.teamId] = home.name ?? "Domicile";
@@ -863,6 +898,36 @@ export default function MatchSheetPage() {
           avec le roster d&apos;inscription, tel quel.
         </p>
       )}
+      {isCup && (
+        <p
+          data-testid="cup-sheet-entry-mode"
+          data-mode={profile.mode}
+          className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"
+        >
+          {profile.mode === "simplified" ? (
+            <>
+              <strong>Saisie simplifiée.</strong> Seuls le forfait, les
+              touchdowns, les éliminations sur blocage et sur agression, les
+              passes réussies et les interceptions sont demandés : c&apos;est
+              tout ce que comptent le classement et les tops de la coupe.
+            </>
+          ) : (
+            <>
+              <strong>Saisie complète.</strong> La feuille demande tout le
+              détail du match ; seuls le forfait, les touchdowns, les
+              éliminations, les passes et les interceptions comptent pour le
+              classement et les tops de la coupe.
+            </>
+          )}{" "}
+          <Link
+            href={dynamicRoute("/aide#saisie-de-coupe")}
+            data-testid="cup-sheet-entry-mode-help"
+            className="font-medium text-nuffle-bronze hover:underline"
+          >
+            Comprendre les deux modes
+          </Link>
+        </p>
+      )}
       {/* RÉSUMÉ */}
       <section className="rounded-lg border bg-white p-4">
         <h1 className="mb-2 text-sm font-bold uppercase tracking-wide text-nuffle-bronze">
@@ -926,42 +991,50 @@ export default function MatchSheetPage() {
             choix du poste reste editable tant que la feuille n'est pas
             validee (il fige avec le roster a la 1re soumission). */}
         <div className="mt-3 space-y-1.5">
-          <JourneymenPanel
-            team={home}
-            side="home"
-            editable={editable && (mySide === "home" || isCommissioner)}
-            onChoose={(index, slug) =>
-              saveJourneymanPosition("home", index, slug)
-            }
-          />
-          <JourneymenPanel
-            team={away}
-            side="away"
-            editable={editable && (mySide === "away" || isCommissioner)}
-            onChoose={(index, slug) =>
-              saveJourneymanPosition("away", index, slug)
-            }
-          />
+          {profile.journeymanPosition && (
+            <>
+              <JourneymenPanel
+                team={home}
+                side="home"
+                editable={editable && (mySide === "home" || isCommissioner)}
+                onChoose={(index, slug) =>
+                  saveJourneymanPosition("home", index, slug)
+                }
+              />
+              <JourneymenPanel
+                team={away}
+                side="away"
+                editable={editable && (mySide === "away" || isCommissioner)}
+                onChoose={(index, slug) =>
+                  saveJourneymanPosition("away", index, slug)
+                }
+              />
+            </>
+          )}
           {/* « Relever le Mort » (Maîtres de la Non-vie) et Contagieux.
               Visible dès qu'un adversaire tué est relevable ; le relevé
               rejoint les pickers d'évènements et s'embauche à l'étape 4
               (gratuitement, ou au prix du poste pour un Contaminé). */}
-          <RaiseDeadPanel
-            team={home}
-            side="home"
-            editable={editable && (mySide === "home" || isCommissioner)}
-            onChoose={(victimId, position) =>
-              saveRaiseDead("home", victimId, position)
-            }
-          />
-          <RaiseDeadPanel
-            team={away}
-            side="away"
-            editable={editable && (mySide === "away" || isCommissioner)}
-            onChoose={(victimId, position) =>
-              saveRaiseDead("away", victimId, position)
-            }
-          />
+          {profile.raiseDead && (
+            <>
+              <RaiseDeadPanel
+                team={home}
+                side="home"
+                editable={editable && (mySide === "home" || isCommissioner)}
+                onChoose={(victimId, position) =>
+                  saveRaiseDead("home", victimId, position)
+                }
+              />
+              <RaiseDeadPanel
+                team={away}
+                side="away"
+                editable={editable && (mySide === "away" || isCommissioner)}
+                onChoose={(victimId, position) =>
+                  saveRaiseDead("away", victimId, position)
+                }
+              />
+            </>
+          )}
         </div>
 
         {/* E11 — rosters consultables par chaque coach, y compris celui de
@@ -1072,6 +1145,7 @@ export default function MatchSheetPage() {
             disabled={!editable}
             onSave={savePreMatch}
             reference={data.reference}
+            forfeitOnly={profile.preMatch === "forfeit-only"}
           />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
@@ -1111,36 +1185,40 @@ export default function MatchSheetPage() {
                 Ajouter un évènement
               </h3>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
-                <label className="text-xs">
-                  Mi-temps
-                  <select
-                    value={eventHalf}
-                    onChange={(e) =>
-                      setEventHalf(Number(e.target.value) === 2 ? 2 : 1)
-                    }
-                    data-testid="event-half"
-                    className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-                  >
-                    <option value={1}>1re mi-temps</option>
-                    <option value={2}>2e mi-temps</option>
-                  </select>
-                </label>
-                <label className="text-xs">
-                  Tour
-                  <select
-                    value={eventTurn}
-                    onChange={(e) => setEventTurn(e.target.value)}
-                    data-testid="event-turn"
-                    className="mt-1 block w-full rounded border px-2 py-2 text-sm"
-                  >
-                    <option value="">—</option>
-                    {Array.from({ length: 8 }, (_, i) => i + 1).map((t) => (
-                      <option key={t} value={t}>
-                        Tour {t}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {profile.halfAndTurn && (
+                  <>
+                    <label className="text-xs">
+                      Mi-temps
+                      <select
+                        value={eventHalf}
+                        onChange={(e) =>
+                          setEventHalf(Number(e.target.value) === 2 ? 2 : 1)
+                        }
+                        data-testid="event-half"
+                        className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                      >
+                        <option value={1}>1re mi-temps</option>
+                        <option value={2}>2e mi-temps</option>
+                      </select>
+                    </label>
+                    <label className="text-xs">
+                      Tour
+                      <select
+                        value={eventTurn}
+                        onChange={(e) => setEventTurn(e.target.value)}
+                        data-testid="event-turn"
+                        className="mt-1 block w-full rounded border px-2 py-2 text-sm"
+                      >
+                        <option value="">—</option>
+                        {Array.from({ length: 8 }, (_, i) => i + 1).map((t) => (
+                          <option key={t} value={t}>
+                            Tour {t}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
+                )}
                 <label className="text-xs">
                   Type
                   <select
@@ -1158,7 +1236,7 @@ export default function MatchSheetPage() {
                     data-testid="event-kind"
                     className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                   >
-                    {EVENT_KINDS.map((k) => (
+                    {profile.eventKinds.map((k) => (
                       <option key={k.value} value={k.value}>
                         {k.label}
                       </option>
@@ -1167,7 +1245,7 @@ export default function MatchSheetPage() {
                   {/* Toutes les éliminations ne rapportent pas de PSP : sans
                       ce rappel, une saisie correcte passe pour une perte de
                       données. */}
-                  {eventKindHint(kind) && (
+                  {profile.kindHints && eventKindHint(kind) && (
                     <span
                       data-testid="event-kind-hint"
                       className="mt-1 block text-[11px] font-normal text-slate-500"
@@ -1226,7 +1304,7 @@ export default function MatchSheetPage() {
                   Il ne marque pas la Réussite (elle revient au lanceur) mais
                   c'est lui que récompense la Prière à Nuffle « Réception
                   Étourdissante » (1 PSP par réception). */}
-                {RECEIVER_BEARING_KINDS.has(kind) && (
+                {profile.passReceiver && RECEIVER_BEARING_KINDS.has(kind) && (
                   <label className="text-xs">
                     Réceptionneur (même équipe)
                     <PlayerSelect
@@ -1257,7 +1335,7 @@ export default function MatchSheetPage() {
                   </label>
                 )}
                 {/* A59/A61 — blessure saisissable aussi sur Sortie Public et Agression. */}
-                {INJURY_BEARING_KINDS.has(kind) && (
+                {profile.injuryDetails && INJURY_BEARING_KINDS.has(kind) && (
                   <label className="text-xs">
                     Gravité de la blessure
                     <select
@@ -1278,7 +1356,8 @@ export default function MatchSheetPage() {
                   </label>
                 )}
                 {/* A68 — Séquelle : choisir la caractéristique affectée. */}
-                {INJURY_BEARING_KINDS.has(kind) &&
+                {profile.injuryDetails &&
+                  INJURY_BEARING_KINDS.has(kind) &&
                   injurySeverity === "stat_loss" && (
                     <label className="text-xs">
                       Caractéristique affectée
@@ -1326,7 +1405,12 @@ export default function MatchSheetPage() {
               >
                 {timeline.map(({ ev, m }, idx) => {
                   const evTeam = ev.team === "home" ? home : away;
+                  // Libellé du profil d'abord (« Élimination sur Agression » en
+                  // saisie simplifiée), sinon celui de la ligue : un évènement
+                  // saisi dans l'autre mode reste lisible.
                   const kindLabel =
+                    profile.eventKinds.find((k) => k.value === ev.kind)
+                      ?.label ??
                     EVENT_KINDS.find((k) => k.value === ev.kind)?.label ??
                     ev.kind;
                   const accent =
@@ -1338,7 +1422,10 @@ export default function MatchSheetPage() {
                   const prevHalf =
                     idx > 0 ? (timeline[idx - 1].m.half ?? 1) : null;
                   const curHalf = m.half ?? 1;
-                  const showHalfDivider = curHalf !== prevHalf;
+                  // Pas de séparateur qu'aucune saisie n'a renseigné : en
+                  // saisie simplifiée, les mi-temps ne sont pas demandées.
+                  const showHalfDivider =
+                    curHalf !== prevHalf && (profile.halfAndTurn || hasHalves);
                   return (
                     <li key={ev.id} className="space-y-1">
                       {showHalfDivider && (
@@ -1381,6 +1468,13 @@ export default function MatchSheetPage() {
                                     : home,
                                 ev.targetPlayerId,
                               )}`
+                            : ""}
+                          {/* Agression saisie en simplifié : sortie marquée,
+                              sans gravité — jamais une gravité inventée. */}
+                          {!ev.injurySeverity &&
+                          ev.kind === "aggression" &&
+                          isMarkedEliminated(ev.meta)
+                            ? " [Sortie]"
                             : ""}
                           {ev.injurySeverity
                             ? ` [${injurySeverityLabel(ev.injurySeverity)}${
