@@ -21,7 +21,7 @@
 
 ## 4. Profil de saisie partagé (web, pur)
 
-- [ ] 4.1 Créer `apps/web/app/lib/sheet-entry-profile.ts` (`sheetEntryProfile({ competitionKind, competitionRules })` : types d'évènements et libellés, mi-temps/tour, détails de blessure, réceptionneur, avant-match, poste des journaliers, mort relevé), les libellés étant CEUX DE LA LIGUE (seul « Élimination sur Agression » est nouveau) — vérifier : tests unitaires (ligue ⇒ complet, coupe sans `entryMode` ⇒ complet, coupe `simplified` ⇒ 5 types et champs masqués, libellés identiques à ceux de la ligue).
+- [x] 4.1 Créer `apps/web/app/lib/sheet-entry-profile.ts` (`sheetEntryProfile({ competitionKind, competitionRules })` : types d'évènements et libellés, mi-temps/tour, détails de blessure, réceptionneur, avant-match, poste des journaliers, mort relevé), les libellés étant CEUX DE LA LIGUE (seul « Élimination sur Agression » est nouveau) — vérifier : tests unitaires (ligue ⇒ complet, coupe sans `entryMode` ⇒ complet, coupe `simplified` ⇒ 5 types et champs masqués, libellés identiques à ceux de la ligue).
 
 ## 5. Feuille de match (web)
 

@@ -56,6 +56,7 @@ import { WeatherReminder } from "./_components/WeatherReminder";
 import { WeatherScene } from "./_components/WeatherScene";
 import { parsePurchases } from "./purchases";
 import {
+  EVENT_KIND_OPTIONS,
   eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
@@ -83,21 +84,7 @@ import { dynamicRoute } from "../../../../lib/typed-route";
 // les 2 coachs valident leur saisie -> notif commissaire -> validation
 // (applique classement + trésorerie + SPP + progression).
 
-const EVENT_KINDS: ReadonlyArray<{ value: EventKind; label: string }> = [
-  { value: "kickoff", label: "Coup d'envoi" },
-  { value: "touchdown", label: "Touchdown" },
-  { value: "casualty", label: "Élimination sur Blocage" },
-  { value: "pass_complete", label: "Passe réussie" },
-  { value: "interception", label: "Interception" },
-  { value: "aggression", label: "Agression" },
-  { value: "expulsion", label: "Expulsion" },
-  { value: "crowd_surge", label: "Sortie (Public)" },
-  { value: "stalling", label: "Temporisation" },
-  { value: "team_throw", label: "Lancer de coéquipier" },
-  { value: "ttm_landing", label: "Atterrissage réussi (coéquipier lancé)" },
-  { value: "special_elim", label: "Élimination sur Action Spéciale" },
-  { value: "other_elim", label: "Autre élimination" },
-];
+const EVENT_KINDS = EVENT_KIND_OPTIONS;
 
 // A58 — libellés officiels du livre de règles (les valeurs internes
 // badly_hurt/mng/niggling/stat_loss/dead restent inchangées côté API).
