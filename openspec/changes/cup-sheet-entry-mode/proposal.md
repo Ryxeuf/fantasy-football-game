@@ -20,8 +20,10 @@ une partie sur table : chaque champ inutile est une saisie de trop.
   n'en dépend.
 - **Défauts** : les coupes existantes restent en saisie complète ; une
   nouvelle coupe est créée en saisie simplifiée, sauf choix contraire.
-- **Feuille simplifiée** : même feuille, mêmes évènements, mêmes soumissions
-  et même validation. Seul le formulaire se réduit au forfait et à cinq
+- **Feuille simplifiée** : la feuille de match de la ligue, au même design
+  (onglets, formulaire, timeline, libellés) et au même parcours
+  (soumissions des deux coachs, validation et invalidation du commissaire),
+  dont on RETIRE des champs. Seul le formulaire se réduit au forfait et à cinq
   types d'évènements (touchdown, sortie sur blocage, sortie sur agression,
   passe réussie, interception), avec acteur et, pour les sorties, victime.
   Plus de mi-temps, de tour, de gravité, d'avant-match détaillé, de choix de

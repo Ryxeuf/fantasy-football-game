@@ -52,6 +52,26 @@ pouce, prières, poste des journaliers ou joueur relevé.
 - WHEN la coupe est en saisie complète
 - THEN la feuille DOIT proposer exactement la saisie d'avant ce réglage
 
+### Requirement: La saisie simplifiée garde le design et le parcours de la ligue
+
+La saisie simplifiée DOIT être la feuille de match de la ligue dont on a
+retiré des champs, jamais un écran distinct : mêmes sections, mêmes onglets
+de saisie (avant-match, en cours), même formulaire d'ajout d'évènement, même
+timeline, mêmes libellés d'évènements, et même parcours de soumission par
+les deux coachs, validation et invalidation par le commissaire.
+
+#### Scenario: Mêmes onglets
+- WHEN un coach ouvre une feuille de coupe en saisie simplifiée
+- THEN il DOIT y trouver les onglets « Avant-match » et « En cours » d'une feuille de coupe en saisie complète
+
+#### Scenario: Mêmes libellés
+- WHEN un type d'évènement existe aussi en saisie complète
+- THEN il DOIT porter le même libellé dans les deux modes
+
+#### Scenario: Même parcours
+- WHEN une feuille de coupe en saisie simplifiée est soumise par les deux coachs
+- THEN le commissaire DOIT la valider, et pouvoir l'invalider, exactement comme en saisie complète
+
 ### Requirement: Le mode de saisie ne change ni la validation ni la lecture
 
 Le mode de saisie DOIT ne gouverner que le formulaire. Le serveur DOIT

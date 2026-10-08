@@ -115,10 +115,11 @@ garantit que ce qu'on note à table correspond à ce qu'on saisit ensuite.
 Même posture que `buildSheetSummaryOptions` (« une définition, plusieurs
 consommateurs qui ne peuvent pas diverger »).
 
-En simplifié, les cinq types et leurs libellés sont : Touchdown, Sortie sur
-blocage (`casualty`), Sortie sur agression (`aggression`, voir D5), Passe
-réussie, Interception. La cible est libellée « Victime » pour les deux
-sorties.
+En simplifié, les cinq types gardent les LIBELLÉS DE LA LIGUE : Touchdown,
+Élimination sur Blocage (`casualty`), Passe réussie, Interception, et
+« Élimination sur Agression » (`aggression` marquée, voir D5), seul libellé
+nouveau, construit sur le modèle d'« Élimination sur Blocage ». La cible
+garde son libellé de ligue, « Cible (équipe adverse) ».
 
 - *Rejeté : multiplier les `isCup && simplified` dans `page.tsx`.* La page
   fait déjà 1 762 lignes, et chaque condition éparse devrait être recopiée
@@ -126,7 +127,7 @@ sorties.
 
 ### D5 — Sortie sur agression : marque `meta.eliminated`, lue par la seule matérialisation de coupe
 
-Le type simplifié « Sortie sur agression » écrit `kind: "aggression"`, la
+Le type simplifié « Élimination sur Agression » écrit `kind: "aggression"`, la
 victime, et `meta.eliminated: true`, sans gravité.
 `sheetEventsToLocalMatchActions` compte une agression comme sortie si
 `injurySeverity` est posée OU si `meta.eliminated` est vrai. Les tops
@@ -144,18 +145,33 @@ Le summarizer de ligue n'est pas modifié : en coupe, la liste « Blessures »
 de la feuille ne la mentionne pas, ce qui est sans conséquence (une coupe
 ne persiste aucune blessure).
 
-### D6 — Écran simplifié : un seul écran, sans onglets
+### D6 — Même design et même parcours que la ligue : on RETIRE des champs, on ne redessine rien
 
-En simplifié, la feuille de coupe n'a plus d'onglets : le forfait (seul
-champ d'avant-match) est posé au-dessus du journal. Le panneau d'avant-match
-réduit n'envoie que `{ forfeitSide }`, que `updatePreMatch` fusionne sans
-toucher aux autres colonnes (vérifié). Les évènements sont ajoutés sans
-`half` ni `turn` (la matérialisation retombe sur 1/1, comme aujourd'hui), et
-la timeline masque ses séparateurs de mi-temps.
+La coupe reste « une ligue moins ses effets » jusque dans l'écran. La
+saisie simplifiée garde la page de la ligue telle quelle : résumé, rosters,
+onglets « Avant-match » et « En cours » (les onglets « Fin du match » et
+« Évolutions » restent masqués en coupe, comme aujourd'hui), même bloc
+« Ajouter un évènement » en tête de l'onglet, même timeline, mêmes boutons
+« Valider ma saisie » / « Reprendre la saisie » / « Valider le match », même
+invalidation. Seuls des champs et des options disparaissent :
 
-Les panneaux de journaliers et de mort relevé disparaissent ; les
-journaliers restent dans les sélecteurs, au poste par défaut que la
-dérivation leur donne déjà. Le panneau des rosters reste.
+- l'onglet « Avant-match » ne garde que le forfait. Le panneau réduit
+  n'envoie que `{ forfeitSide }`, que `updatePreMatch` fusionne sans toucher
+  aux autres colonnes (vérifié) ;
+- le bloc « Ajouter un évènement » perd les listes Mi-temps, Tour, Gravité,
+  Séquelle, Réceptionneur et Coup d'envoi, et sa liste Type n'offre que les
+  cinq types du profil. Les évènements partent sans `half` ni `turn` (la
+  matérialisation retombe sur 1/1, comme aujourd'hui) ;
+- la timeline ne trace pas de séparateur « 1re mi-temps » qu'aucune saisie
+  n'a renseigné ;
+- les panneaux de journaliers et de mort relevé du résumé disparaissent ;
+  les journaliers restent dans les sélecteurs, au poste par défaut que la
+  dérivation leur donne déjà.
+
+- *Rejeté : un écran simplifié propre à la coupe (sans onglets, forfait
+  au-dessus du journal).* Ce serait un second design pour la même feuille :
+  un coach qui joue une ligue et une coupe changerait de repères, et chaque
+  évolution de la feuille devrait être faite deux fois.
 
 Le bandeau « Coupe — mode résurrection » annonce le mode et renvoie à
 `/aide#saisie-de-coupe`.
@@ -176,12 +192,13 @@ Le bandeau « Coupe — mode résurrection » annonce le mode et renvoie à
 
 ### D8 — Feuille papier simplifiée
 
-L'adaptateur PDF lit le même profil (D4). En simplifié : en-tête et forfait,
-une page par équipe avec une case par joueur pour TD / Sor / Agr / Pas /
-Int, un journal réduit (type, acteur, victime), les signatures. Pas de
-popularité, coups de pouce, prières, météo, pile ou face, table de coup
-d'envoi ni légende de gravité. La mise en page exacte se règle à
-l'implémentation, sous le flag existant `competition_pdf_exports`.
+L'adaptateur PDF lit le même profil (D4) et garde le MÊME gabarit que la
+feuille de ligue, dont il retire des sections — même règle que D6 pour
+l'écran. En simplifié : en-tête et forfait, une page par équipe avec une
+case par joueur pour TD / Sor / Agr / Pas / Int, un journal réduit (type,
+acteur, cible), les signatures. Pas de popularité, coups de pouce, prières,
+météo, pile ou face, table de coup d'envoi ni légende de gravité. Le tout
+reste sous le flag existant `competition_pdf_exports`.
 
 ### D9 — Aide : un champ `details` optionnel sur les cartes
 

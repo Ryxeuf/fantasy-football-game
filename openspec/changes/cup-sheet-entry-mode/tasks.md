@@ -21,14 +21,14 @@
 
 ## 4. Profil de saisie partagé (web, pur)
 
-- [ ] 4.1 Créer `apps/web/app/lib/sheet-entry-profile.ts` (`sheetEntryProfile({ competitionKind, competitionRules })` : types d'évènements et libellés, mi-temps/tour, détails de blessure, réceptionneur, avant-match, poste des journaliers, mort relevé) — vérifier : tests unitaires (ligue ⇒ complet, coupe sans `entryMode` ⇒ complet, coupe `simplified` ⇒ 5 types et champs masqués).
+- [ ] 4.1 Créer `apps/web/app/lib/sheet-entry-profile.ts` (`sheetEntryProfile({ competitionKind, competitionRules })` : types d'évènements et libellés, mi-temps/tour, détails de blessure, réceptionneur, avant-match, poste des journaliers, mort relevé), les libellés étant CEUX DE LA LIGUE (seul « Élimination sur Agression » est nouveau) — vérifier : tests unitaires (ligue ⇒ complet, coupe sans `entryMode` ⇒ complet, coupe `simplified` ⇒ 5 types et champs masqués, libellés identiques à ceux de la ligue).
 
 ## 5. Feuille de match (web)
 
-- [ ] 5.1 `leagues/pairings/[id]/sheet/page.tsx` : le formulaire d'évènement suit le profil (types, mi-temps/tour, gravité, réceptionneur, cible libellée « Victime » sur les sorties) — vérifier : tests de rendu en coupe simplifiée et en coupe complète (complète identique à l'existant).
-- [ ] 5.2 Saisie simplifiée sans onglets : forfait au-dessus du journal, panneau réduit qui n'envoie que `{ forfeitSide }` — vérifier : test de rendu + test que le corps du PATCH ne porte que `forfeitSide`.
-- [ ] 5.3 « Sortie sur agression » envoie `kind: "aggression"`, la victime et `meta.eliminated: true` ; la timeline affiche « [Sortie] » pour une agression marquée sans gravité — vérifier : tests (corps envoyé, libellé de timeline, y compris en saisie complète).
-- [ ] 5.4 Masquer en simplifié les panneaux journaliers et mort relevé et les séparateurs de mi-temps ; garder les rosters et les journaliers dans les sélecteurs — vérifier : tests de rendu.
+- [ ] 5.1 `leagues/pairings/[id]/sheet/page.tsx` : le MÊME bloc « Ajouter un évènement » suit le profil (types, mi-temps/tour, gravité, séquelle, réceptionneur, coup d'envoi retirés en simplifié), sans nouveau composant ni nouvelle mise en page — vérifier : tests de rendu en coupe simplifiée et en coupe complète (complète identique à l'existant).
+- [ ] 5.2 Onglets et parcours inchangés en simplifié : « Avant-match » ne garde que le forfait (le panneau n'envoie que `{ forfeitSide }`), « En cours » reste l'onglet de saisie, boutons de soumission, de validation et d'invalidation identiques — vérifier : test de rendu (mêmes onglets et boutons que la saisie complète) + test que le corps du PATCH ne porte que `forfeitSide`.
+- [ ] 5.3 « Élimination sur Agression » envoie `kind: "aggression"`, la cible et `meta.eliminated: true` ; la timeline affiche « [Sortie] » pour une agression marquée sans gravité — vérifier : tests (corps envoyé, libellé de timeline, y compris en saisie complète).
+- [ ] 5.4 Masquer en simplifié les panneaux journaliers et mort relevé et les séparateurs de mi-temps qu'aucune saisie n'a renseignés ; garder les rosters et les journaliers dans les sélecteurs — vérifier : tests de rendu.
 - [ ] 5.5 Bandeau de coupe : annonce du mode et lien vers `/aide#saisie-de-coupe` — vérifier : test de rendu dans les deux modes.
 
 ## 6. Formulaires de coupe (web)
@@ -38,7 +38,7 @@
 
 ## 7. Feuille papier (web)
 
-- [ ] 7.1 `lib/competition-pdf/adapters/match-sheet.ts` et le gabarit de feuille suivent le profil : en simplifié, en-tête + forfait, page par équipe TD / Sor / Agr / Pas / Int, journal réduit (type, acteur, victime), signatures ; ni popularité, coups de pouce, prières, météo, pile ou face, table de coup d'envoi, légende de gravité — vérifier : tests de l'adaptateur et du rendu dans les deux modes.
+- [ ] 7.1 `lib/competition-pdf/adapters/match-sheet.ts` et le gabarit de feuille suivent le profil : en simplifié, en-tête + forfait, page par équipe TD / Sor / Agr / Pas / Int, journal réduit (type, acteur, cible), signatures, sur le MÊME gabarit que la feuille de ligue ; ni popularité, coups de pouce, prières, météo, pile ou face, table de coup d'envoi, légende de gravité — vérifier : tests de l'adaptateur et du rendu dans les deux modes.
 
 ## 8. Aide du site (web)
 
