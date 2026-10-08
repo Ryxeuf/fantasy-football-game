@@ -33,8 +33,8 @@
 
 ## 6. Formulaires de coupe (web)
 
-- [ ] 6.1 Création (`cups/page.tsx`) : choix « Simplifiée — recommandé » / « Complète », simplifiée pré-sélectionnée, phrase d'explication et lien vers l'aide ; le champ est envoyé — vérifier : test du formulaire (défaut, valeur envoyée).
-- [ ] 6.2 Édition (`cups/[id]/edit`) : même choix sur la valeur courante (`null` affiché « Complète »), modifiable coupe lancée — vérifier : test de la page d'édition.
+- [x] 6.1 Création (`cups/page.tsx`) : choix « Simplifiée — recommandé » / « Complète », simplifiée pré-sélectionnée, phrase d'explication et lien vers l'aide ; le champ est envoyé — vérifier : test du formulaire (défaut, valeur envoyée).
+- [x] 6.2 Édition (`cups/[id]/edit`) : même choix sur la valeur courante (`null` affiché « Complète »), modifiable coupe lancée — vérifier : test de la page d'édition.
 
 ## 7. Feuille papier (web)
 
