@@ -35,6 +35,7 @@ import {
 } from "../services/match-of-the-week";
 import { serverLog } from "../utils/server-log";
 import { parseNumberMap, type CupRulesConfig } from "../services/cup-rules";
+import { parseSheetEntryMode } from "../services/sheet-entry-mode";
 import {
   computeCupPlayerLeaderboards,
   CUP_LEADERBOARD_CATEGORIES,
@@ -653,6 +654,10 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         (cup as unknown as { tieBreakRules?: unknown }).tieBreakRules,
       ),
       rulesConfig: formatCupRules(cup as unknown as CupRulesConfig),
+      /** Mode de saisie de la feuille : `null` en base = saisie complète. */
+      sheetEntryMode: parseSheetEntryMode(
+        (cup as unknown as { sheetEntryMode?: unknown }).sheetEntryMode,
+      ),
       standings: standingsResult.teamStats,
       /**
        * Classements par poule. Vide quand la coupe n'a pas de poules —
@@ -862,6 +867,10 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         ...(body.tieBreakRules !== undefined
           ? { tieBreakRules: serializeTieBreakRules(body.tieBreakRules) }
           : {}),
+        // Une coupe NEUVE naît en saisie simplifiée. Écrit ici et non en
+        // `@default` : `db push` poserait le défaut sur les coupes existantes,
+        // qui doivent rester en saisie complète (null).
+        sheetEntryMode: body.sheetEntryMode ?? "simplified",
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
         ...(wantsMonthly
@@ -911,6 +920,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         passPoints: cup.passPoints,
       },
       rulesConfig: formatCupRules(cup),
+      sheetEntryMode: parseSheetEntryMode(
+        (cup as unknown as { sheetEntryMode?: unknown }).sheetEntryMode,
+      ),
     };
 
     res.status(201).json({ cup: formattedCup });
@@ -982,7 +994,8 @@ router.patch(
  *
  * Le barème et les départages restent modifiables même en cours de coupe :
  * le classement est entièrement DÉRIVÉ des matchs, il se recalcule donc au
- * prochain affichage sans rien à reprendre. L'édition (`ruleset`), le
+ * prochain affichage sans rien à reprendre. Le mode de saisie de la feuille
+ * aussi : il ne gouverne que le formulaire. L'édition (`ruleset`), le
  * `format` et le règlement de tournoi n'y figurent pas : les équipes ont été
  * construites POUR eux (cf. `updateCupSchema`).
  */
@@ -1034,6 +1047,11 @@ router.patch(
       if (body.tieBreakRules !== undefined) {
         data.tieBreakRules = serializeTieBreakRules(body.tieBreakRules);
       }
+      // Mode de saisie : aucun verrou de ronde, il ne gouverne que le
+      // formulaire de la feuille (le serveur accepte tout évènement).
+      if (body.sheetEntryMode !== undefined) {
+        data.sheetEntryMode = body.sheetEntryMode;
+      }
       if (body.playoffSize !== undefined) {
         // Le bracket est SEEDÉ à sa génération : en changer la taille après
         // coup laisserait des rondes dont le nombre ne correspond plus.
@@ -1071,6 +1089,7 @@ router.patch(
           passPoints: true,
           tieBreakRules: true,
           playoffSize: true,
+          sheetEntryMode: true,
         },
       });
 
@@ -1078,6 +1097,7 @@ router.patch(
         cup: {
           ...updated,
           tieBreakRules: parseCupTieBreakRules(updated.tieBreakRules),
+          sheetEntryMode: parseSheetEntryMode(updated.sheetEntryMode),
         },
       });
     } catch (e: unknown) {

@@ -1419,6 +1419,10 @@ async function main() {
               isPublic: true,
               status: "en_cours",
               ...defaultCupScoring,
+              // Comme toute coupe neuve (cf. POST /cup) : la colonne n'a pas
+              // de défaut, la création écrit le mode. La mise à jour
+              // ci-dessus n'y touche pas : un choix fait en admin survit.
+              sheetEntryMode: "simplified",
             },
           });
           serverLog.log("   ✅ Coupe 'Test 1' créée");

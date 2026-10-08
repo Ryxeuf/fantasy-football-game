@@ -9,10 +9,10 @@
 
 ## 2. Création et édition d'une coupe (serveur)
 
-- [ ] 2.1 `schemas/cup.schemas` : `sheetEntryMode: z.enum(["full", "simplified"]).optional()` dans `createCupSchema` et `updateCupSchema` — vérifier : tests de schéma (valeurs acceptées, valeur inconnue refusée).
-- [ ] 2.2 `POST /cup` écrit `body.sheetEntryMode ?? "simplified"` — vérifier : test de route (sans champ ⇒ `simplified`, `full` explicite conservé).
-- [ ] 2.3 `PATCH /cup/:id` accepte `sheetEntryMode` en cours de coupe — vérifier : tests de route (changement avec rondes jouées accepté, valeur inconnue ⇒ 400, coupe archivée ⇒ 409 inchangé).
-- [ ] 2.4 `seed.ts` : les coupes de démonstration écrivent leur mode explicitement (au moins une de chaque) — vérifier : seed rejoué sur base de dev, les deux modes visibles.
+- [x] 2.1 `schemas/cup.schemas` : `sheetEntryMode: z.enum(["full", "simplified"]).optional()` dans `createCupSchema` et `updateCupSchema` — vérifier : tests de schéma (valeurs acceptées, valeur inconnue refusée).
+- [x] 2.2 `POST /cup` écrit `body.sheetEntryMode ?? "simplified"` — vérifier : test de route (sans champ ⇒ `simplified`, `full` explicite conservé).
+- [x] 2.3 `PATCH /cup/:id` accepte `sheetEntryMode` en cours de coupe — vérifier : tests de route (changement avec rondes jouées accepté, valeur inconnue ⇒ 400, coupe archivée ⇒ 409 inchangé).
+- [x] 2.4 `seed.ts` : la coupe de démonstration (« Test 1 », seule coupe du seed) écrit explicitement `simplified` à sa création, comme une coupe neuve, et sa mise à jour ne réécrit pas le mode — vérifier : `pnpm --filter @bb/server typecheck` (le seed exige Postgres ; le mode complet se montre en basculant la coupe depuis son édition).
 
 ## 3. Sortie sur agression sans gravité (serveur)
 

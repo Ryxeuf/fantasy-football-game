@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SHEET_ENTRY_MODES } from "../services/sheet-entry-mode";
 
 /** Tiers de roster reconnus (clés des maps budget/PSP par tier). */
 const CUP_TIERS = ["I", "II", "III", "IV"] as const;
@@ -75,6 +76,9 @@ const scoringConfigSchema = z.object({
   passPoints: z.number().optional(),
 });
 
+/** Mode de saisie de la feuille de match d'une coupe (`full` | `simplified`). */
+export const sheetEntryModeSchema = z.enum(SHEET_ENTRY_MODES);
+
 export const createCupSchema = z
   .object({
     name: z
@@ -110,6 +114,9 @@ export const createCupSchema = z
     tierStartingPsp: tierStartingPspSchema.optional(),
     rosterStartingPspOverrides: rosterStartingPspOverridesSchema.optional(),
     tieBreakRules: tieBreakRulesSchema.optional(),
+    // Mode de saisie de la feuille de match. Absent = saisie SIMPLIFIÉE pour
+    // une coupe neuve (posé par le handler, la colonne n'a pas de défaut).
+    sheetEntryMode: sheetEntryModeSchema.optional(),
   })
   .refine(
     (data) =>
@@ -148,6 +155,11 @@ export const updateCupSchema = z.object({
    * de la changer une fois le bracket généré.
    */
   playoffSize: z.union([z.literal(0), z.literal(2), z.literal(4), z.literal(8)]).optional(),
+  /**
+   * Mode de saisie de la feuille de match. Modifiable à tout moment : il ne
+   * gouverne que le formulaire, rien de persisté n'en dépend.
+   */
+  sheetEntryMode: sheetEntryModeSchema.optional(),
 });
 
 export type UpdateCupInput = z.infer<typeof updateCupSchema>;

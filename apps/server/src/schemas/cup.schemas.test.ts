@@ -150,3 +150,35 @@ describe("updateCupSchema — édition d'une coupe par son commissaire", () => {
     expect(out).not.toHaveProperty("tournamentRuleset");
   });
 });
+
+describe("mode de saisie de la feuille (createCupSchema + updateCupSchema)", () => {
+  it("accepte les deux modes à la création, et l'absence de choix", () => {
+    expect(
+      createCupSchema.safeParse({ name: "C", sheetEntryMode: "full" }).success,
+    ).toBe(true);
+    expect(
+      createCupSchema.safeParse({ name: "C", sheetEntryMode: "simplified" })
+        .success,
+    ).toBe(true);
+    const out = createCupSchema.parse({ name: "C" });
+    expect(out.sheetEntryMode).toBeUndefined();
+  });
+
+  it("refuse un mode inconnu à la création comme à l'édition", () => {
+    expect(
+      createCupSchema.safeParse({ name: "C", sheetEntryMode: "quick" }).success,
+    ).toBe(false);
+    expect(updateCupSchema.safeParse({ sheetEntryMode: "quick" }).success).toBe(
+      false,
+    );
+  });
+
+  it("accepte un changement de mode seul à l'édition", () => {
+    expect(
+      updateCupSchema.safeParse({ sheetEntryMode: "simplified" }).success,
+    ).toBe(true);
+    expect(updateCupSchema.safeParse({ sheetEntryMode: "full" }).success).toBe(
+      true,
+    );
+  });
+});
