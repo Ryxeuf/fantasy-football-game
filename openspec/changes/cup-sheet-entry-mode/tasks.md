@@ -47,8 +47,8 @@
 
 ## 9. Intégration
 
-- [ ] 9.1 Spec e2e-api (étendre `tests/e2e-api/specs/cup-match-sheet-flow.spec.ts` ou en créer une) : coupe créée sans mode ⇒ feuille servie `simplified` ; sortie sur agression marquée validée ⇒ points d'agression au classement, agresseur et victime aux tops ; passage en complet en cours de coupe ⇒ classement inchangé — vérifier : suite e2e-api verte (tuer tout serveur resté sur le port 18002 avant).
-- [ ] 9.2 Contrôles complets — vérifier : `pnpm --filter @bb/server typecheck`, `pnpm --filter @bb/web typecheck`, tests Vitest serveur et web verts.
+- [x] 9.1 Spec e2e-api (étendre `tests/e2e-api/specs/cup-match-sheet-flow.spec.ts` ou en créer une) : coupe créée sans mode ⇒ feuille servie `simplified` ; sortie sur agression marquée validée ⇒ points d'agression au classement, agresseur et victime aux tops ; passage en complet en cours de coupe ⇒ classement inchangé — vérifier : suite e2e-api verte (tuer tout serveur resté sur le port 18002 avant).
+- [x] 9.2 Contrôles complets — vérifier : `pnpm --filter @bb/server typecheck`, `pnpm --filter @bb/web typecheck`, tests Vitest serveur et web verts.
 
 ## Workflow follow-up
 

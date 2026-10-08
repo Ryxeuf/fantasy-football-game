@@ -2139,3 +2139,14 @@ edition du `.json`, `pnpm --filter web typecheck` +
   jusqu'au bracket ; la création de poule garde le dernier quota. Change
   OpenSpec `playoff-pool-quota-clarity` (#1068, archivé le 2026-10-07 ; specs
   vivantes `league-playoff-launch` et `cup-playoffs`).
+- **2026-10-08** : **Saisie complète ou simplifiée des feuilles de coupe**
+  (change OpenSpec `cup-sheet-entry-mode`). Une coupe choisit son mode de
+  saisie (`Cup.sheetEntryMode`, `null` = complète, une coupe neuve naît
+  simplifiée sans `@default`) ; la simplifiée est la feuille de la LIGUE dont
+  on retire des champs — mêmes onglets, libellés et parcours — et ne garde que
+  le forfait et les cinq gestes que comptent classement et tops. Profil de
+  saisie unique (`lib/sheet-entry-profile`) lu par la page ET la feuille
+  papier PDF ; Élimination sur Agression sans gravité marquée
+  `meta.eliminated` ; mode modifiable à tout moment ; carte d'aide
+  `#saisie-de-coupe`. Au passage, `LeagueMatchEvent.meta` passe en `Json?`
+  dans le miroir SQLite (l'e2e ne pouvait écrire aucun `meta`).
