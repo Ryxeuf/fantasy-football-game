@@ -47,6 +47,11 @@ export interface HelpFeature {
   readonly icon: string;
   /** Ce que la fonctionnalité permet de faire, en une ou deux phrases. */
   readonly description: string;
+  /**
+   * Explication détaillée, en puces, quand une ou deux phrases ne suffisent
+   * pas (ex. les deux modes de saisie d'une coupe).
+   */
+  readonly details?: readonly string[];
   /** Page d'entrée de la fonctionnalité. */
   readonly href: string;
   readonly access: HelpAccess;
@@ -230,6 +235,22 @@ export const HELP_CATEGORIES: readonly HelpCategory[] = [
         links: [{ label: "Coupes archivées", href: "/cups/archived" }],
       },
       {
+        id: "saisie-de-coupe",
+        title: "Saisie complète ou simplifiée",
+        icon: "✏️",
+        href: "/cups",
+        access: "commissioner",
+        description:
+          "Le commissaire choisit, pour chaque coupe, comment se saisissent ses feuilles de match : la feuille complète de la ligue, ou une saisie simplifiée limitée à ce que la coupe compte.",
+        details: [
+          "Saisie simplifiée (proposée par défaut pour une nouvelle coupe) : le forfait, puis les touchdowns, éliminations sur blocage et sur agression, passes réussies et interceptions, chacun avec son joueur et, pour une élimination, sa cible.",
+          "Saisie complète : toute la feuille de la ligue (météo, pile ou face, popularité, coups de pouce, prières, mi-temps et tour, gravité des blessures, coup d'envoi…).",
+          "Même feuille et même parcours dans les deux cas : mêmes onglets, soumission par les deux coachs, validation par le commissaire. La feuille papier imprimable suit le même mode.",
+          "Rien n'est perdu : une coupe ne conserve ni PSP, ni blessure, ni or d'une ronde à l'autre, donc le classement et les tops (individuels et par équipe) sont identiques dans les deux modes.",
+          "Le réglage se choisit à la création de la coupe et se change à tout moment depuis son édition, coupe lancée comprise ; ce qui a déjà été saisi reste affiché sur la feuille.",
+        ],
+      },
+      {
         id: "rondes-de-coupe",
         title: "Rondes, poules et classement",
         icon: "🎯",
@@ -255,7 +276,10 @@ export const HELP_CATEGORIES: readonly HelpCategory[] = [
         access: "account",
         description:
           "Avant-match (météo, prières à Nuffle, coups de pouce, journaliers), évènements du match, fin de match (PSP, blessures, achats, licenciements) et évolutions. Les deux coachs soumettent, le commissaire valide ou invalide.",
-        links: [{ label: "Depuis une coupe", href: "/cups" }],
+        links: [
+          { label: "Depuis une coupe", href: "/cups" },
+          { label: "Saisie complète ou simplifiée", href: "/aide#saisie-de-coupe" },
+        ],
       },
       {
         id: "documents-officiels",

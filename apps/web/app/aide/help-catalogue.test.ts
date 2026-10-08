@@ -62,6 +62,24 @@ describe("catalogue de l'aide", () => {
     }
   });
 
+  it("ne sert jamais une liste de détails vide ou une puce vide", () => {
+    for (const f of features) {
+      if (f.details === undefined) continue;
+      expect(f.details.length, f.id).toBeGreaterThan(0);
+      for (const d of f.details) expect(d.trim(), f.id).not.toBe("");
+    }
+  });
+
+  it("explique le mode de saisie des coupes à l'ancre visée par la feuille et les formulaires", () => {
+    const cups = HELP_CATEGORIES.find((c) => c.id === "coupes");
+    const card = cups?.features.find((f) => f.id === "saisie-de-coupe");
+    expect(card).toBeTruthy();
+    const text = [card!.description, ...(card!.details ?? [])].join(" ");
+    expect(text).toContain("simplifiée");
+    expect(text).toContain("complète");
+    expect(text).toContain("tops");
+  });
+
   it("ne pointe que vers des pages qui existent", () => {
     for (const href of helpHrefs(HELP_CATEGORIES)) {
       expect(

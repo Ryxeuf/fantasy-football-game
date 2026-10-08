@@ -63,6 +63,16 @@ function FeatureCard({ feature }: { readonly feature: HelpFeature }): JSX.Elemen
         </div>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-nuffle-anthracite/80">{feature.description}</p>
+      {feature.details && feature.details.length > 0 ? (
+        <ul
+          className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-nuffle-anthracite/80"
+          data-testid={`help-feature-${feature.id}-details`}
+        >
+          {feature.details.map((detail) => (
+            <li key={detail}>{detail}</li>
+          ))}
+        </ul>
+      ) : null}
       {feature.links && feature.links.length > 0 ? (
         <ul className="mt-3 flex flex-wrap gap-2">
           {feature.links.map((link) => (

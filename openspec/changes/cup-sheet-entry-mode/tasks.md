@@ -42,8 +42,8 @@
 
 ## 8. Aide du site (web)
 
-- [ ] 8.1 `HelpFeature.details?: readonly string[]` rendu en liste à puces sur la carte — vérifier : test de rendu de `/aide`.
-- [ ] 8.2 Carte `saisie-de-coupe` dans la catégorie « Coupes » (ce que demande chaque mode, qui le choisit et quand, défaut des nouvelles coupes, classement et tops identiques) — vérifier : tests du catalogue (ancres uniques, liens vivants) et de rendu.
+- [x] 8.1 `HelpFeature.details?: readonly string[]` rendu en liste à puces sur la carte — vérifier : test de rendu de `/aide`.
+- [x] 8.2 Carte `saisie-de-coupe` dans la catégorie « Coupes » (ce que demande chaque mode, qui le choisit et quand, défaut des nouvelles coupes, classement et tops identiques) — vérifier : tests du catalogue (ancres uniques, liens vivants) et de rendu.
 
 ## 9. Intégration
 
