@@ -63,6 +63,21 @@ describe("renderCompetitionPdf", () => {
     expect(cup).not.toContain("Trésorerie finale");
   });
 
+  it("retire de la feuille de coupe simplifiée tout ce que le formulaire ne demande pas", () => {
+    const full = pdfText(renderCompetitionPdf({ kind: "match-sheet", data: F.cupMatchSheet }));
+    const doc = renderCompetitionPdf({ kind: "match-sheet", data: F.cupSimplifiedMatchSheet });
+    // Même gabarit : mêmes pages, on retire des sections.
+    expect(doc.getNumberOfPages()).toBe(5);
+    const simplified = pdfText(doc);
+    expect(simplified).toContain("Forfait");
+    expect(simplified).toContain("JOURNAL DES");
+    expect(simplified).toContain("Agression");
+    for (const absent of ["Toss gagn", "Popularit", "Coups de pouce", "Table des Pri", "COUP D'ENVOI", "Commotion", "Lancer de co"]) {
+      expect(full).toContain(absent);
+      expect(simplified).not.toContain(absent);
+    }
+  });
+
   it("reporte les évènements déjà saisis dans le journal", () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     renderMatchSheet(doc, {

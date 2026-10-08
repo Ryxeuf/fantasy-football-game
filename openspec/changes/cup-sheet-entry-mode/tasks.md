@@ -38,7 +38,7 @@
 
 ## 7. Feuille papier (web)
 
-- [ ] 7.1 `lib/competition-pdf/adapters/match-sheet.ts` et le gabarit de feuille suivent le profil : en simplifié, en-tête + forfait, page par équipe TD / Sor / Agr / Pas / Int, journal réduit (type, acteur, cible), signatures, sur le MÊME gabarit que la feuille de ligue ; ni popularité, coups de pouce, prières, météo, pile ou face, table de coup d'envoi, légende de gravité — vérifier : tests de l'adaptateur et du rendu dans les deux modes.
+- [x] 7.1 `lib/competition-pdf/adapters/match-sheet.ts` et le gabarit de feuille suivent le profil : en simplifié, en-tête + forfait, page par équipe TD / Sor / Agr / Pas / Int, journal réduit (type, acteur, cible), signatures, sur le MÊME gabarit que la feuille de ligue ; ni popularité, coups de pouce, prières, météo, pile ou face, table de coup d'envoi, légende de gravité — vérifier : tests de l'adaptateur et du rendu dans les deux modes.
 
 ## 8. Aide du site (web)
 

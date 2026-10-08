@@ -8,6 +8,7 @@ import type { MatchSheetDocument, PdfSheetPlayer, PdfSheetTeam } from "../types"
 import { contentWidth, drawSectionTitle, type PdfPage } from "../layout";
 import { BODY_STYLES, HEAD_STYLES, drawTable, lastTableBottom } from "../tables";
 import { PDF_COLORS, formatGoldPdf, hexToRgb, pdfSafe, setText } from "../theme";
+import { sheetEntryOf } from "./match-sheet-entry";
 
 /** Lignes vides en bas de liste : journalier, Star Player, relevé… */
 export const EXTRA_ROSTER_ROWS = 3;
@@ -32,6 +33,21 @@ const TALLY_COLUMNS: TallyColumn[] = [
   { key: "motm", label: "JDM", legend: "Joueur du Match", width: 8 },
   { key: "injury", label: "Blessure", legend: "C / A / BP / S(carac.) / M", width: 15 },
 ];
+
+/**
+ * Colonnes de comptage retenues par le profil de saisie, dans l'ordre de la
+ * feuille complète. Saisie simplifiée : les cinq actions de la coupe (libellés
+ * du site), plus réceptionneur / blessure seulement s'ils sont demandés.
+ */
+function tallyColumnsFor(doc: MatchSheetDocument): TallyColumn[] {
+  const entry = sheetEntryOf(doc);
+  if (!entry.tally) return TALLY_COLUMNS;
+  const legends = new Map(entry.tally.map((c) => [c.key, c.legend]));
+  if (entry.passReceiver) legends.set("rec", "Réception (passe)");
+  return TALLY_COLUMNS.filter(
+    (c) => legends.has(c.key) || (c.key === "injury" && entry.injuryDetails),
+  ).map((c) => ({ ...c, legend: legends.get(c.key) ?? c.legend }));
+}
 
 function tallyValue(p: PdfSheetPlayer, key: TallyColumn["key"]): string {
   const v = p.tally?.[key];
@@ -75,7 +91,7 @@ export function drawRosterPage(
   pdf.text(identityLine(team), page.margin, y);
   y += 3;
 
-  const tally = TALLY_COLUMNS;
+  const tally = tallyColumnsFor(doc);
   const withSpp = doc.rules.spp;
   const fixed = 7 + 22 + 7 * 5; // # + poste + M F AG CP AR
   const tallyW = tally.reduce((n, c) => n + c.width, 0) + (withSpp ? 9 + 9 : 0);
@@ -208,7 +224,9 @@ export function drawRosterPage(
   pdf.text(wrapped, page.margin, end);
   end += wrapped.length * 3;
   pdf.text(
-    "Blessure : C = Commotion, A = Amoché (rate le prochain match), BP = Blessure persistante, S = Séquelle (préciser M/F/AG/CP/AR), M = Mort.   Lignes vierges : journaliers, Star Players engagés, joueur relevé.",
+    sheetEntryOf(doc).injuryDetails
+      ? "Blessure : C = Commotion, A = Amoché (rate le prochain match), BP = Blessure persistante, S = Séquelle (préciser M/F/AG/CP/AR), M = Mort.   Lignes vierges : journaliers, Star Players engagés, joueur relevé."
+      : "Lignes vierges : journaliers, Star Players engagés, joueur relevé.",
     page.margin,
     end,
   );

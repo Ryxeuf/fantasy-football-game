@@ -254,6 +254,8 @@ export interface PdfSheetPrefill {
   prayersHome?: string[];
   prayersAway?: string[];
   score?: { home: number; away: number } | null;
+  /** Forfait déjà déclaré sur le site. */
+  forfeitSide?: "home" | "away" | null;
   events?: PdfSheetEvent[];
   motm?: { home: string[]; away: string[] };
 }
@@ -266,6 +268,28 @@ export interface PdfSheetRules {
   firings: boolean;
 }
 
+/**
+ * Ce que la feuille papier fait SAISIR, dérivé du profil de saisie du site
+ * (`lib/sheet-entry-profile`). Une coupe en saisie simplifiée garde le même
+ * gabarit, dont on retire des sections et des colonnes.
+ */
+export interface PdfSheetEntry {
+  /** Avant-match complet, ou réduit au forfait. */
+  preMatch: "full" | "forfeit-only";
+  /** Colonnes « MT » / « Tour » du journal. */
+  halfAndTurn: boolean;
+  /** Gravité des blessures (colonnes et légende). */
+  injuryDetails: boolean;
+  /** Résultat du coup d'envoi (colonne Détail et table 2D6). */
+  kickoffDetails: boolean;
+  /** Réceptionneur d'une passe. */
+  passReceiver: boolean;
+  /** Légende des évènements à saisir ; `null` = légende complète. */
+  eventLegend: Array<{ code: string; label: string }> | null;
+  /** Colonnes de comptage des pages d'équipe ; `null` = toutes. */
+  tally: Array<{ key: keyof PdfSheetPlayerTally; legend: string }> | null;
+}
+
 export interface MatchSheetDocument {
   meta: PdfMeta;
   /** « Journée 4 », « Ronde 2 — Demi-finale ». */
@@ -275,6 +299,8 @@ export interface MatchSheetDocument {
   home: PdfSheetTeam;
   away: PdfSheetTeam;
   rules: PdfSheetRules;
+  /** Profil de saisie. Absent = feuille complète (rétro-compat). */
+  entry?: PdfSheetEntry | null;
   /** Table 2D6 de coup d'envoi (moteur). */
   kickoffTable: Array<{ roll: string; name: string }>;
   /** Table de météo retenue (2D6). */

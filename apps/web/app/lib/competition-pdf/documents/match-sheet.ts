@@ -36,6 +36,7 @@ import { fitText } from "../tables";
 import { PDF_COLORS, formatGoldPdf, pdfSafe, setDraw, setFill, setText } from "../theme";
 import { drawWriteGrid } from "../write-grid";
 import { drawRosterPage } from "./match-sheet-roster";
+import { sheetEntryOf } from "./match-sheet-entry";
 
 const COL_GAP = 6;
 /** Bas du contenu de la page d'avant-match (A4 paysage, pied de page réservé). */
@@ -158,10 +159,38 @@ function drawTeamPreMatch(
 ): number {
   const { doc } = page;
   const team = sideTeam(data, side);
-  const p = data.prefill;
   y = drawSectionTitle(page, y, side === "home" ? "Avant-match - Domicile" : "Avant-match - Extérieur", { x, width: w });
   y = drawIdentityStrip(page, x, y - 1.5, w, team);
+  if (sheetEntryOf(data).preMatch === "full") {
+    y = drawTeamPreMatchEntries(page, x, y, w, data, side);
+  }
 
+  // Le reste de la colonne : notes libres (relances, rappels de règles…).
+  const notesH = PRE_MATCH_BOTTOM - y;
+  if (notesH > 12) {
+    setDraw(doc, PDF_COLORS.RULE);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(x, y, w, notesH, 1.2, 1.2);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.8);
+    setText(doc, PDF_COLORS.INK_SOFT);
+    doc.text("Notes d'avant-match", x + 2, y + 3.6);
+    y += notesH;
+  }
+  return y;
+}
+
+/** Popularité, coups de pouce, prières, journaliers, absents (saisie complète). */
+function drawTeamPreMatchEntries(
+  page: PdfPage,
+  x: number,
+  y: number,
+  w: number,
+  data: MatchSheetDocument,
+  side: "home" | "away",
+): number {
+  const { doc } = page;
+  const p = data.prefill;
   const pop = side === "home" ? p?.popularityHome : p?.popularityAway;
   drawField(doc, x, y + 2, w * 0.55, "Popularité (D3 + fans dévoués)", pop ?? null);
   drawField(doc, x + w * 0.6, y + 2, w * 0.4, "Budget / caisse", null);
@@ -198,33 +227,14 @@ function drawTeamPreMatch(
   drawField(doc, x, y, w, "Journaliers engagés (nombre, poste)", null);
   y += 6;
   drawField(doc, x, y, w, "Joueurs absents (blessés, suspendus)", null);
-  y += 5;
-
-  // Le reste de la colonne : notes libres (relances, rappels de règles…).
-  const notesH = PRE_MATCH_BOTTOM - y;
-  if (notesH > 12) {
-    setDraw(doc, PDF_COLORS.RULE);
-    doc.setLineWidth(0.25);
-    doc.roundedRect(x, y, w, notesH, 1.2, 1.2);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(6.8);
-    setText(doc, PDF_COLORS.INK_SOFT);
-    doc.text("Notes d'avant-match", x + 2, y + 3.6);
-    y += notesH;
-  }
-  return y;
+  return y + 5;
 }
 
 function drawCommonPreMatch(page: PdfPage, x: number, y: number, w: number, data: MatchSheetDocument): number {
   const { doc } = page;
   const p = data.prefill;
   y = drawSectionTitle(page, y, "Avant-match - Commun", { x, width: w });
-
-  // Toss.
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  setText(doc, PDF_COLORS.INK);
-  doc.text("Toss gagné par", x, y);
+  const forfeitOnly = sheetEntryOf(data).preMatch === "forfeit-only";
   const opt = (ox: number, oy: number, label: string, checked: boolean) => {
     drawCheckbox(doc, ox, oy - 2.6, 3, checked);
     doc.setFont("helvetica", "normal");
@@ -232,6 +242,22 @@ function drawCommonPreMatch(page: PdfPage, x: number, y: number, w: number, data
     setText(doc, PDF_COLORS.INK);
     doc.text(label, ox + 4, oy);
   };
+
+  if (forfeitOnly) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    setText(doc, PDF_COLORS.INK);
+    doc.text("Forfait", x, y);
+    opt(x + 24, y, "Domicile", p?.forfeitSide === "home");
+    opt(x + 46, y, "Extérieur", p?.forfeitSide === "away");
+    return y + 6;
+  }
+
+  // Toss.
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  setText(doc, PDF_COLORS.INK);
+  doc.text("Toss gagné par", x, y);
   opt(x + 24, y, "Domicile", p?.tossWinner === "home");
   opt(x + 46, y, "Extérieur", p?.tossWinner === "away");
   y += 5;
@@ -242,8 +268,8 @@ function drawCommonPreMatch(page: PdfPage, x: number, y: number, w: number, data
   y += 5;
   doc.setFont("helvetica", "bold");
   doc.text("Forfait", x, y);
-  opt(x + 24, y, "Domicile", false);
-  opt(x + 46, y, "Extérieur", false);
+  opt(x + 24, y, "Domicile", p?.forfeitSide === "home");
+  opt(x + 46, y, "Extérieur", p?.forfeitSide === "away");
   y += 6;
 
   // Météo.
@@ -353,31 +379,50 @@ function drawEventLogPage(page: PdfPage, y: number, data: MatchSheetDocument): v
     right: "Une ligne par action - joueurs désignés par leur numéro",
   });
   const events = data.prefill?.events ?? [];
+  const entry = sheetEntryOf(data);
   const sideCode = (s: "home" | "away" | null) => (s === "home" ? "D" : s === "away" ? "E" : "");
+  // Colonnes retirées une à une selon le profil : la grille reste la même.
+  type LogEvent = (typeof events)[number];
+  const columns: Array<{
+    label: string;
+    weight: number;
+    align?: "left";
+    cell: (e: LogEvent) => string;
+  }> = [
+    ...(entry.halfAndTurn
+      ? [
+          { label: "MT", weight: 1, cell: (e: LogEvent) => (e.half ? String(e.half) : "") },
+          { label: "Tour", weight: 1.2, cell: (e: LogEvent) => (e.turn ? String(e.turn) : "") },
+        ]
+      : []),
+    { label: "Éq. (D/E)", weight: 1.6, cell: (e) => sideCode(e.side) },
+    { label: "Évènement", weight: 2, cell: (e) => e.kind },
+    { label: "Acteur n°", weight: 1.8, cell: (e) => e.actor ?? "" },
+    {
+      label: entry.passReceiver ? "Cible / réceptionneur n°" : "Cible n°",
+      weight: 3.4,
+      cell: (e) => e.target ?? "",
+    },
+    ...(entry.injuryDetails
+      ? [{ label: "Blessure", weight: 1.8, cell: (e: LogEvent) => e.injury ?? "" }]
+      : []),
+    ...(entry.kickoffDetails || entry.injuryDetails
+      ? [
+          {
+            label: "Détail (coup d'envoi, carac. perdue...)",
+            weight: 7,
+            align: "left" as const,
+            cell: (e: LogEvent) => e.detail ?? "",
+          },
+        ]
+      : []),
+  ];
   drawWriteGrid(doc, {
     x: page.margin,
     y,
     width: gridW,
-    columns: [
-      { label: "MT", weight: 1 },
-      { label: "Tour", weight: 1.2 },
-      { label: "Éq. (D/E)", weight: 1.6 },
-      { label: "Évènement", weight: 2 },
-      { label: "Acteur n°", weight: 1.8 },
-      { label: "Cible / réceptionneur n°", weight: 3.4 },
-      { label: "Blessure", weight: 1.8 },
-      { label: "Détail (coup d'envoi, carac. perdue...)", weight: 7, align: "left" },
-    ],
-    rows: events.map((e) => [
-      e.half ? String(e.half) : "",
-      e.turn ? String(e.turn) : "",
-      sideCode(e.side),
-      e.kind,
-      e.actor ?? "",
-      e.target ?? "",
-      e.injury ?? "",
-      e.detail ?? "",
-    ]),
+    columns: columns.map(({ label, weight, align }) => ({ label, weight, align })),
+    rows: events.map((e) => columns.map((c) => c.cell(e))),
     minRows: Math.max(LOG_ROWS, events.length + 4),
     rowHeight: 6.2,
     headHeight: 5.5,
@@ -385,17 +430,21 @@ function drawEventLogPage(page: PdfPage, y: number, data: MatchSheetDocument): v
 
   const lx = page.margin + gridW + COL_GAP;
   let ly = y - 4;
-  ly = drawLegendBlock(page, lx, ly, legendW, "Évènements", EVENT_CODES);
-  ly = drawLegendBlock(page, lx, ly, legendW, "Blessures", INJURY_CODES, 6);
-  drawLegendBlock(
-    page,
-    lx,
-    ly,
-    legendW,
-    "Coup d'envoi (2D6)",
-    data.kickoffTable.map((k) => ({ code: k.roll, label: k.name })),
-    6,
-  );
+  ly = drawLegendBlock(page, lx, ly, legendW, "Évènements", entry.eventLegend ?? EVENT_CODES);
+  if (entry.injuryDetails) {
+    ly = drawLegendBlock(page, lx, ly, legendW, "Blessures", INJURY_CODES, 6);
+  }
+  if (entry.kickoffDetails) {
+    drawLegendBlock(
+      page,
+      lx,
+      ly,
+      legendW,
+      "Coup d'envoi (2D6)",
+      data.kickoffTable.map((k) => ({ code: k.roll, label: k.name })),
+      6,
+    );
+  }
 }
 
 // ─── Page 5 : fin de match ───────────────────────────────────────────────────
