@@ -142,6 +142,53 @@ describe("sheetEventsToLocalMatchActions", () => {
     expect(out[1].opponentState).toBeNull();
   });
 
+  it("compte une agression MARQUÉE « cible sortie » sans gravité (saisie simplifiée)", () => {
+    const out = sheetEventsToLocalMatchActions(
+      [
+        {
+          kind: "aggression",
+          team: "home",
+          actorPlayerId: "p1",
+          targetPlayerId: "p3",
+          meta: { eliminated: true },
+        },
+      ],
+      resolveName,
+    );
+    expect(out).toEqual([
+      expect.objectContaining({
+        actionType: "aggression",
+        playerId: "p1",
+        opponentId: "p3",
+        armorBroken: true,
+        opponentState: "elimine",
+      }),
+    ]);
+  });
+
+  it("ne déduit JAMAIS une sortie d'une marque absente ou non booléenne", () => {
+    const out = sheetEventsToLocalMatchActions(
+      [
+        {
+          kind: "aggression",
+          team: "home",
+          actorPlayerId: "p1",
+          targetPlayerId: "p3",
+          meta: { eliminated: "yes" },
+        },
+        {
+          kind: "aggression",
+          team: "home",
+          actorPlayerId: "p1",
+          targetPlayerId: "p3",
+          meta: { half: 1 },
+        },
+      ],
+      resolveName,
+    );
+    expect(out.map((a) => a.opponentState)).toEqual([null, null]);
+  });
+
   it("traduit passes et interceptions", () => {
     const out = sheetEventsToLocalMatchActions(
       [

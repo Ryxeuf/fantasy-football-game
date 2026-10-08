@@ -223,6 +223,12 @@ catalogue (ancres uniques, liens vivants) la couvrent.
 - [Une agression saisie en complet SANS gravité, voulue comme « sans
   effet », n'est jamais confondue avec une sortie] → seule la marque
   explicite `meta.eliminated` en fait une sortie ; aucune déduction.
+- [Le miroir SQLite des tests stockait `LeagueMatchEvent.meta` en
+  `String?` : il refusait l'objet que le service écrit, si bien que la suite
+  e2e-api ne pouvait couvrir ni la marque `eliminated` ni mi-temps/tour]
+  → `meta` passe en `Json?` dans le miroir, comme les colonnes de
+  `LeagueMatchSheet` (écart constaté à l'implémentation ; un seul écrivain,
+  qui écrit déjà un objet ; la prod Postgres n'est pas concernée).
 - [`competitionRules.entryMode` absent d'une réponse serveur antérieure] →
   champ optionnel côté web, repli en saisie complète.
 - [La feuille papier reste derrière le flag `competition_pdf_exports`,

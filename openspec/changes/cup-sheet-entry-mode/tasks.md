@@ -16,8 +16,8 @@
 
 ## 3. Sortie sur agression sans gravité (serveur)
 
-- [ ] 3.1 `sheetEventsToLocalMatchActions` compte une agression comme sortie si `injurySeverity` OU `meta.eliminated === true` — vérifier : tests unitaires (marquée sans gravité ⇒ `elimine`, ni gravité ni marque ⇒ pas de sortie, gravité seule ⇒ `elimine` comme avant).
-- [ ] 3.2 Mettre à jour `docs/cup-match-sheet.md` (mode de saisie, profil simplifié, marque `meta.eliminated`, défauts) — vérifier : doc relue, tableau des effets toujours exact.
+- [x] 3.1 `sheetEventsToLocalMatchActions` compte une agression comme sortie si `injurySeverity` OU `meta.eliminated === true` — vérifier : tests unitaires (marquée sans gravité ⇒ `elimine`, ni gravité ni marque ⇒ pas de sortie, gravité seule ⇒ `elimine` comme avant).
+- [x] 3.2 Mettre à jour `docs/cup-match-sheet.md` (mode de saisie, profil simplifié, marque `meta.eliminated`, défauts) — vérifier : doc relue, tableau des effets toujours exact.
 
 ## 4. Profil de saisie partagé (web, pur)
 

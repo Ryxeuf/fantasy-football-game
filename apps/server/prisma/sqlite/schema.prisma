@@ -1487,7 +1487,10 @@ model LeagueMatchEvent {
   targetPlayerId String?
   causeDetail    String?
   injurySeverity String?
-  meta           String?
+  /// `Json?` comme en PG (et comme les colonnes de `LeagueMatchSheet`) :
+  /// le service écrit un OBJET (`{ half, turn }`, la marque `eliminated`
+  /// d'une agression en saisie simplifiée), qu'un `String?` refusait.
+  meta           Json?
   occurredAt     DateTime         @default(now())
 
   @@index([matchSheetId, kind])

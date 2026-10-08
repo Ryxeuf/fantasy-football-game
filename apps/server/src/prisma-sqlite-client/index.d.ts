@@ -74789,7 +74789,6 @@ export namespace Prisma {
     targetPlayerId: string | null
     causeDetail: string | null
     injurySeverity: string | null
-    meta: string | null
     occurredAt: Date | null
   }
 
@@ -74802,7 +74801,6 @@ export namespace Prisma {
     targetPlayerId: string | null
     causeDetail: string | null
     injurySeverity: string | null
-    meta: string | null
     occurredAt: Date | null
   }
 
@@ -74830,7 +74828,6 @@ export namespace Prisma {
     targetPlayerId?: true
     causeDetail?: true
     injurySeverity?: true
-    meta?: true
     occurredAt?: true
   }
 
@@ -74843,7 +74840,6 @@ export namespace Prisma {
     targetPlayerId?: true
     causeDetail?: true
     injurySeverity?: true
-    meta?: true
     occurredAt?: true
   }
 
@@ -74942,7 +74938,7 @@ export namespace Prisma {
     targetPlayerId: string | null
     causeDetail: string | null
     injurySeverity: string | null
-    meta: string | null
+    meta: JsonValue | null
     occurredAt: Date
     _count: LeagueMatchEventCountAggregateOutputType | null
     _min: LeagueMatchEventMinAggregateOutputType | null
@@ -75043,7 +75039,12 @@ export namespace Prisma {
       targetPlayerId: string | null
       causeDetail: string | null
       injurySeverity: string | null
-      meta: string | null
+      /**
+       * `Json?` comme en PG (et comme les colonnes de `LeagueMatchSheet`) :
+       * le service écrit un OBJET (`{ half, turn }`, la marque `eliminated`
+       * d'une agression en saisie simplifiée), qu'un `String?` refusait.
+       */
+      meta: Prisma.JsonValue | null
       occurredAt: Date
     }, ExtArgs["result"]["leagueMatchEvent"]>
     composites: {}
@@ -75477,7 +75478,7 @@ export namespace Prisma {
     readonly targetPlayerId: FieldRef<"LeagueMatchEvent", 'String'>
     readonly causeDetail: FieldRef<"LeagueMatchEvent", 'String'>
     readonly injurySeverity: FieldRef<"LeagueMatchEvent", 'String'>
-    readonly meta: FieldRef<"LeagueMatchEvent", 'String'>
+    readonly meta: FieldRef<"LeagueMatchEvent", 'Json'>
     readonly occurredAt: FieldRef<"LeagueMatchEvent", 'DateTime'>
   }
     
@@ -131977,7 +131978,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeFilter<"LeagueMatchEvent"> | Date | string
     matchSheet?: XOR<LeagueMatchSheetScalarRelationFilter, LeagueMatchSheetWhereInput>
   }
@@ -132008,7 +132009,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeFilter<"LeagueMatchEvent"> | Date | string
     matchSheet?: XOR<LeagueMatchSheetScalarRelationFilter, LeagueMatchSheetWhereInput>
   }, "id">
@@ -132041,7 +132042,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableWithAggregatesFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeWithAggregatesFilter<"LeagueMatchEvent"> | Date | string
   }
 
@@ -141734,7 +141735,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
     matchSheet: LeagueMatchSheetCreateNestedOneWithoutEventsInput
   }
@@ -141748,7 +141749,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -141760,7 +141761,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matchSheet?: LeagueMatchSheetUpdateOneRequiredWithoutEventsNestedInput
   }
@@ -141774,7 +141775,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -141787,7 +141788,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -141799,7 +141800,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -141812,7 +141813,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -149941,7 +149942,6 @@ export namespace Prisma {
     targetPlayerId?: SortOrder
     causeDetail?: SortOrder
     injurySeverity?: SortOrder
-    meta?: SortOrder
     occurredAt?: SortOrder
   }
 
@@ -149954,7 +149954,6 @@ export namespace Prisma {
     targetPlayerId?: SortOrder
     causeDetail?: SortOrder
     injurySeverity?: SortOrder
-    meta?: SortOrder
     occurredAt?: SortOrder
   }
 
@@ -179295,7 +179294,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -179307,7 +179306,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -179432,7 +179431,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeFilter<"LeagueMatchEvent"> | Date | string
   }
 
@@ -194303,7 +194302,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -194315,7 +194314,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -194327,7 +194326,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -194339,7 +194338,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
