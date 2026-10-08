@@ -46886,6 +46886,7 @@ export namespace Prisma {
     foulCasualtyPoints: number | null
     passPoints: number | null
     tieBreakRules: string | null
+    sheetEntryMode: string | null
     playoffSize: number | null
     playoffsPublished: boolean | null
     resurrectionMode: boolean | null
@@ -46917,6 +46918,7 @@ export namespace Prisma {
     foulCasualtyPoints: number | null
     passPoints: number | null
     tieBreakRules: string | null
+    sheetEntryMode: string | null
     playoffSize: number | null
     playoffsPublished: boolean | null
     resurrectionMode: boolean | null
@@ -46948,6 +46950,7 @@ export namespace Prisma {
     foulCasualtyPoints: number
     passPoints: number
     tieBreakRules: number
+    sheetEntryMode: number
     playoffSize: number
     playoffsPublished: number
     resurrectionMode: number
@@ -47005,6 +47008,7 @@ export namespace Prisma {
     foulCasualtyPoints?: true
     passPoints?: true
     tieBreakRules?: true
+    sheetEntryMode?: true
     playoffSize?: true
     playoffsPublished?: true
     resurrectionMode?: true
@@ -47036,6 +47040,7 @@ export namespace Prisma {
     foulCasualtyPoints?: true
     passPoints?: true
     tieBreakRules?: true
+    sheetEntryMode?: true
     playoffSize?: true
     playoffsPublished?: true
     resurrectionMode?: true
@@ -47067,6 +47072,7 @@ export namespace Prisma {
     foulCasualtyPoints?: true
     passPoints?: true
     tieBreakRules?: true
+    sheetEntryMode?: true
     playoffSize?: true
     playoffsPublished?: true
     resurrectionMode?: true
@@ -47185,6 +47191,7 @@ export namespace Prisma {
     foulCasualtyPoints: number
     passPoints: number
     tieBreakRules: string | null
+    sheetEntryMode: string | null
     playoffSize: number
     playoffsPublished: boolean | null
     resurrectionMode: boolean
@@ -47235,6 +47242,7 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    sheetEntryMode?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -47274,6 +47282,7 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    sheetEntryMode?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -47306,6 +47315,7 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    sheetEntryMode?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -47338,6 +47348,7 @@ export namespace Prisma {
     foulCasualtyPoints?: boolean
     passPoints?: boolean
     tieBreakRules?: boolean
+    sheetEntryMode?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -47347,7 +47358,7 @@ export namespace Prisma {
     rosterStartingPspOverrides?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "sheetEntryMode" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
@@ -47401,6 +47412,7 @@ export namespace Prisma {
       foulCasualtyPoints: number
       passPoints: number
       tieBreakRules: string | null
+      sheetEntryMode: string | null
       playoffSize: number
       playoffsPublished: boolean | null
       resurrectionMode: boolean
@@ -47859,6 +47871,7 @@ export namespace Prisma {
     readonly foulCasualtyPoints: FieldRef<"Cup", 'Int'>
     readonly passPoints: FieldRef<"Cup", 'Int'>
     readonly tieBreakRules: FieldRef<"Cup", 'String'>
+    readonly sheetEntryMode: FieldRef<"Cup", 'String'>
     readonly playoffSize: FieldRef<"Cup", 'Int'>
     readonly playoffsPublished: FieldRef<"Cup", 'Boolean'>
     readonly resurrectionMode: FieldRef<"Cup", 'Boolean'>
@@ -74776,7 +74789,6 @@ export namespace Prisma {
     targetPlayerId: string | null
     causeDetail: string | null
     injurySeverity: string | null
-    meta: string | null
     occurredAt: Date | null
   }
 
@@ -74789,7 +74801,6 @@ export namespace Prisma {
     targetPlayerId: string | null
     causeDetail: string | null
     injurySeverity: string | null
-    meta: string | null
     occurredAt: Date | null
   }
 
@@ -74817,7 +74828,6 @@ export namespace Prisma {
     targetPlayerId?: true
     causeDetail?: true
     injurySeverity?: true
-    meta?: true
     occurredAt?: true
   }
 
@@ -74830,7 +74840,6 @@ export namespace Prisma {
     targetPlayerId?: true
     causeDetail?: true
     injurySeverity?: true
-    meta?: true
     occurredAt?: true
   }
 
@@ -74929,7 +74938,7 @@ export namespace Prisma {
     targetPlayerId: string | null
     causeDetail: string | null
     injurySeverity: string | null
-    meta: string | null
+    meta: JsonValue | null
     occurredAt: Date
     _count: LeagueMatchEventCountAggregateOutputType | null
     _min: LeagueMatchEventMinAggregateOutputType | null
@@ -75030,7 +75039,12 @@ export namespace Prisma {
       targetPlayerId: string | null
       causeDetail: string | null
       injurySeverity: string | null
-      meta: string | null
+      /**
+       * `Json?` comme en PG (et comme les colonnes de `LeagueMatchSheet`) :
+       * le service écrit un OBJET (`{ half, turn }`, la marque `eliminated`
+       * d'une agression en saisie simplifiée), qu'un `String?` refusait.
+       */
+      meta: Prisma.JsonValue | null
       occurredAt: Date
     }, ExtArgs["result"]["leagueMatchEvent"]>
     composites: {}
@@ -75464,7 +75478,7 @@ export namespace Prisma {
     readonly targetPlayerId: FieldRef<"LeagueMatchEvent", 'String'>
     readonly causeDetail: FieldRef<"LeagueMatchEvent", 'String'>
     readonly injurySeverity: FieldRef<"LeagueMatchEvent", 'String'>
-    readonly meta: FieldRef<"LeagueMatchEvent", 'String'>
+    readonly meta: FieldRef<"LeagueMatchEvent", 'Json'>
     readonly occurredAt: FieldRef<"LeagueMatchEvent", 'DateTime'>
   }
     
@@ -125362,6 +125376,7 @@ export namespace Prisma {
     foulCasualtyPoints: 'foulCasualtyPoints',
     passPoints: 'passPoints',
     tieBreakRules: 'tieBreakRules',
+    sheetEntryMode: 'sheetEntryMode',
     playoffSize: 'playoffSize',
     playoffsPublished: 'playoffsPublished',
     resurrectionMode: 'resurrectionMode',
@@ -129488,6 +129503,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
+    sheetEntryMode?: StringNullableFilter<"Cup"> | string | null
     playoffSize?: IntFilter<"Cup"> | number
     playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
@@ -129526,6 +129542,7 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrderInput | SortOrder
+    sheetEntryMode?: SortOrderInput | SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
@@ -129567,6 +129584,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
+    sheetEntryMode?: StringNullableFilter<"Cup"> | string | null
     playoffSize?: IntFilter<"Cup"> | number
     playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
@@ -129605,6 +129623,7 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrderInput | SortOrder
+    sheetEntryMode?: SortOrderInput | SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
@@ -129644,6 +129663,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntWithAggregatesFilter<"Cup"> | number
     passPoints?: IntWithAggregatesFilter<"Cup"> | number
     tieBreakRules?: StringNullableWithAggregatesFilter<"Cup"> | string | null
+    sheetEntryMode?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     playoffSize?: IntWithAggregatesFilter<"Cup"> | number
     playoffsPublished?: BoolNullableWithAggregatesFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolWithAggregatesFilter<"Cup"> | boolean
@@ -131958,7 +131978,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeFilter<"LeagueMatchEvent"> | Date | string
     matchSheet?: XOR<LeagueMatchSheetScalarRelationFilter, LeagueMatchSheetWhereInput>
   }
@@ -131989,7 +132009,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeFilter<"LeagueMatchEvent"> | Date | string
     matchSheet?: XOR<LeagueMatchSheetScalarRelationFilter, LeagueMatchSheetWhereInput>
   }, "id">
@@ -132022,7 +132042,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableWithAggregatesFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableWithAggregatesFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeWithAggregatesFilter<"LeagueMatchEvent"> | Date | string
   }
 
@@ -138908,6 +138928,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -138946,6 +138967,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -138982,6 +139004,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -139020,6 +139043,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -139057,6 +139081,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -139087,6 +139112,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -139118,6 +139144,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -141708,7 +141735,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
     matchSheet: LeagueMatchSheetCreateNestedOneWithoutEventsInput
   }
@@ -141722,7 +141749,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -141734,7 +141761,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
     matchSheet?: LeagueMatchSheetUpdateOneRequiredWithoutEventsNestedInput
   }
@@ -141748,7 +141775,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -141761,7 +141788,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -141773,7 +141800,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -141786,7 +141813,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -148361,6 +148388,7 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrder
+    sheetEntryMode?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
@@ -148404,6 +148432,7 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrder
+    sheetEntryMode?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
@@ -148435,6 +148464,7 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     tieBreakRules?: SortOrder
+    sheetEntryMode?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
@@ -149912,7 +149942,6 @@ export namespace Prisma {
     targetPlayerId?: SortOrder
     causeDetail?: SortOrder
     injurySeverity?: SortOrder
-    meta?: SortOrder
     occurredAt?: SortOrder
   }
 
@@ -149925,7 +149954,6 @@ export namespace Prisma {
     targetPlayerId?: SortOrder
     causeDetail?: SortOrder
     injurySeverity?: SortOrder
-    meta?: SortOrder
     occurredAt?: SortOrder
   }
 
@@ -159848,6 +159876,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -159884,6 +159913,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -161132,6 +161162,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFilter<"Cup"> | number
     passPoints?: IntFilter<"Cup"> | number
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
+    sheetEntryMode?: StringNullableFilter<"Cup"> | string | null
     playoffSize?: IntFilter<"Cup"> | number
     playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
@@ -170352,6 +170383,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -170389,6 +170421,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -170548,6 +170581,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -170585,6 +170619,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -170740,6 +170775,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -170777,6 +170813,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -170855,6 +170892,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -170892,6 +170930,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -170943,6 +170982,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -170980,6 +171020,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -171066,6 +171107,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -171103,6 +171145,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -172701,6 +172744,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -172738,6 +172782,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -173202,6 +173247,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -173239,6 +173285,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -175748,6 +175795,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -175785,6 +175833,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -176223,6 +176272,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -176260,6 +176310,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -176755,6 +176806,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -176792,6 +176844,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -177057,6 +177110,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -177094,6 +177148,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -179239,7 +179294,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -179251,7 +179306,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -179376,7 +179431,7 @@ export namespace Prisma {
     targetPlayerId?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     causeDetail?: StringNullableFilter<"LeagueMatchEvent"> | string | null
     injurySeverity?: StringNullableFilter<"LeagueMatchEvent"> | string | null
-    meta?: StringNullableFilter<"LeagueMatchEvent"> | string | null
+    meta?: JsonNullableFilter<"LeagueMatchEvent">
     occurredAt?: DateTimeFilter<"LeagueMatchEvent"> | Date | string
   }
 
@@ -189340,6 +189395,7 @@ export namespace Prisma {
     foulCasualtyPoints?: number
     passPoints?: number
     tieBreakRules?: string | null
+    sheetEntryMode?: string | null
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -190026,6 +190082,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -190062,6 +190119,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -190098,6 +190156,7 @@ export namespace Prisma {
     foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
     passPoints?: IntFieldUpdateOperationsInput | number
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -194243,7 +194302,7 @@ export namespace Prisma {
     targetPlayerId?: string | null
     causeDetail?: string | null
     injurySeverity?: string | null
-    meta?: string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: Date | string
   }
 
@@ -194255,7 +194314,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -194267,7 +194326,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -194279,7 +194338,7 @@ export namespace Prisma {
     targetPlayerId?: NullableStringFieldUpdateOperationsInput | string | null
     causeDetail?: NullableStringFieldUpdateOperationsInput | string | null
     injurySeverity?: NullableStringFieldUpdateOperationsInput | string | null
-    meta?: NullableStringFieldUpdateOperationsInput | string | null
+    meta?: NullableJsonNullValueInput | InputJsonValue
     occurredAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

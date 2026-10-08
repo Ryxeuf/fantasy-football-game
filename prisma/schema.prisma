@@ -1014,6 +1014,15 @@ model Cup {
   /// lisible telle quelle.
   tieBreakRules String?
 
+  /// Mode de saisie de la feuille de match : "full" (feuille complète, celle
+  /// de la ligue) ou "simplified" (forfait + TD, éliminations sur blocage et
+  /// sur agression, passes, interceptions). Ne gouverne QUE le formulaire :
+  /// rien de persisté n'en dépend (cf. `parseSheetEntryMode`).
+  /// null = coupe antérieure au réglage → saisie COMPLÈTE. PAS de `@default` :
+  /// `db push` le poserait sur les coupes existantes ; c'est la création
+  /// (`POST /cup`) qui écrit "simplified" pour une coupe neuve.
+  sheetEntryMode String?
+
   /// S27.1 — Mensualisation : edition canonique "Nuffle Cup {Mois} {YYYY}".
   /// Les deux champs sont nullable pour rester retro-compatibles avec les
   /// cups existantes (privees / non programmees). Quand fournis, ils

@@ -28,6 +28,7 @@
  */
 
 import { prisma } from "../prisma";
+import { parseSheetEntryMode, type SheetEntryMode } from "./sheet-entry-mode";
 
 export type CompetitionKind = "league" | "cup";
 
@@ -55,6 +56,12 @@ export interface CompetitionSheetRules {
    * pris à l'inscription (`CupParticipant.rosterSnapshot`).
    */
   readonly resurrection: boolean;
+  /**
+   * Profil du FORMULAIRE de la feuille : `full` (feuille complète) ou
+   * `simplified` (coupe réglée en saisie simplifiée). N'influe sur aucune
+   * écriture — servi à l'UI, qui retire des champs. Toujours `full` en ligue.
+   */
+  readonly entryMode: SheetEntryMode;
 }
 
 /** Ligue : la feuille écrit tout, c'est la séquence d'après-match du livre. */
@@ -66,6 +73,7 @@ export const LEAGUE_SHEET_RULES: CompetitionSheetRules = {
   purchasesEnabled: true,
   firingsEnabled: true,
   resurrection: false,
+  entryMode: "full",
 };
 
 /**
@@ -80,7 +88,18 @@ export const CUP_SHEET_RULES: CompetitionSheetRules = {
   purchasesEnabled: false,
   firingsEnabled: false,
   resurrection: true,
+  entryMode: "full",
 };
+
+/**
+ * Jeu de règles d'une coupe selon son mode de saisie. Seul `entryMode`
+ * change : les effets d'après-match restent ceux de `CUP_SHEET_RULES`.
+ */
+export function cupSheetRules(mode: SheetEntryMode): CompetitionSheetRules {
+  return mode === CUP_SHEET_RULES.entryMode
+    ? CUP_SHEET_RULES
+    : { ...CUP_SHEET_RULES, entryMode: mode };
+}
 
 export function sheetRulesFor(kind: CompetitionKind): CompetitionSheetRules {
   return kind === "cup" ? CUP_SHEET_RULES : LEAGUE_SHEET_RULES;
@@ -189,7 +208,14 @@ type CupPairingRow = FixtureRowFields & {
   awayTeamId: string | null;
   homeTeam: { ownerId: string } | null;
   awayTeam: { ownerId: string } | null;
-  round: { cup: { id: string; name: string; creatorId: string } };
+  round: {
+    cup: {
+      id: string;
+      name: string;
+      creatorId: string;
+      sheetEntryMode?: string | null;
+    };
+  };
 };
 
 /**
@@ -262,7 +288,14 @@ export async function resolveCompetitionPairing(
           name: true,
           bracketSlot: true,
           scheduledAt: true,
-          cup: { select: { id: true, name: true, creatorId: true } },
+          cup: {
+            select: {
+              id: true,
+              name: true,
+              creatorId: true,
+              sheetEntryMode: true,
+            },
+          },
         },
       },
     },
@@ -283,7 +316,7 @@ export async function resolveCompetitionPairing(
     awayTeamId: cupPairing.awayTeamId,
     homeOwnerId: cupPairing.homeTeam?.ownerId ?? "",
     awayOwnerId: cupPairing.awayTeam?.ownerId ?? "",
-    rules: CUP_SHEET_RULES,
+    rules: cupSheetRules(parseSheetEntryMode(cup.sheetEntryMode)),
     fixture: fixtureInfoFromRow(cupPairing),
   };
 }

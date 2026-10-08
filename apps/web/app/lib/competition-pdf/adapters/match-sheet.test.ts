@@ -157,3 +157,60 @@ describe("en-tête de la feuille : journée, saison, date", () => {
     expect(doc.meta.seasonName).toBeNull();
   });
 });
+
+describe("matchSheetToPdf — mode de saisie", () => {
+  it("garde la feuille complète en ligue (légendes et colonnes par défaut)", () => {
+    const doc = matchSheetToPdf(input());
+    expect(doc.entry).toEqual({
+      preMatch: "full",
+      halfAndTurn: true,
+      injuryDetails: true,
+      kickoffDetails: true,
+      passReceiver: true,
+      eventLegend: null,
+      tally: null,
+    });
+  });
+
+  it("garde la feuille complète d'une coupe sans mode servi", () => {
+    const doc = matchSheetToPdf(input({ competitionKind: "cup" }));
+    expect(doc.entry?.preMatch).toBe("full");
+    expect(doc.entry?.eventLegend).toBeNull();
+  });
+
+  it("réduit la feuille d'une coupe en saisie simplifiée à ce que demande le formulaire", () => {
+    const doc = matchSheetToPdf(
+      input({
+        competitionKind: "cup",
+        competitionRules: { sppEnabled: false, entryMode: "simplified" },
+      }),
+    );
+    expect(doc.entry).toMatchObject({
+      preMatch: "forfeit-only",
+      halfAndTurn: false,
+      injuryDetails: false,
+      kickoffDetails: false,
+      passReceiver: false,
+    });
+    expect(doc.entry?.eventLegend).toEqual([
+      { code: "TD", label: "Touchdown" },
+      { code: "SOR", label: "Élimination sur Blocage" },
+      { code: "PAS", label: "Passe réussie" },
+      { code: "INT", label: "Interception" },
+      { code: "AGR", label: "Élimination sur Agression" },
+    ]);
+    expect(doc.entry?.tally?.map((c) => c.key).sort()).toEqual(
+      ["agg", "cas", "int", "pass", "td"].sort(),
+    );
+    expect(doc.entry?.tally?.find((c) => c.key === "agg")?.legend).toBe(
+      "Élimination sur Agression",
+    );
+  });
+
+  it("reporte le forfait déjà saisi", () => {
+    const doc = matchSheetToPdf(
+      input({ sheet: { status: "draft", events: [], forfeitSide: "away" } }),
+    );
+    expect(doc.prefill?.forfeitSide).toBe("away");
+  });
+});

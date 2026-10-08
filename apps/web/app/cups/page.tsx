@@ -8,6 +8,8 @@ import { RULESETS } from "@bb/game-engine";
 import PendingCupInvitations from "./PendingCupInvitations";
 import PendingCompetitionDocuments from "../components/PendingCompetitionDocuments";
 import { uploadPendingCompetitionDocuments } from "../lib/competition-documents";
+import { SheetEntryModeField } from "./SheetEntryModeField";
+import type { SheetEntryMode } from "../lib/sheet-entry-profile";
 import {
   getRosterName,
 } from "@bb/game-engine";
@@ -120,6 +122,10 @@ export default function CupsPage() {
   const [blockCasualtyPoints, setBlockCasualtyPoints] = useState(3);
   const [foulCasualtyPoints, setFoulCasualtyPoints] = useState(2);
   const [passPoints, setPassPoints] = useState(2);
+  // Une coupe neuve naît en saisie simplifiée (le serveur applique le même
+  // défaut quand le champ manque).
+  const [newCupSheetEntryMode, setNewCupSheetEntryMode] =
+    useState<SheetEntryMode>("simplified");
   // Règles avancées de composition (mode coupe).
   const [newCupDescription, setNewCupDescription] = useState("");
   // Documents officiels choisis avant la creation : la coupe n'ayant pas
@@ -286,6 +292,7 @@ export default function CupsPage() {
           passPoints,
         },
         // resurrectionMode : forcé côté serveur (seul mode disponible).
+        sheetEntryMode: newCupSheetEntryMode,
         tierBudgets: toNumberMap(tierBudgets),
         tierStartingPsp: toNumberMap(tierStartingPsp),
         rosterBudgetOverrides:
@@ -320,6 +327,7 @@ export default function CupsPage() {
       setBlockCasualtyPoints(3);
       setFoulCasualtyPoints(2);
       setPassPoints(2);
+      setNewCupSheetEntryMode("simplified");
       setNewCupDescription("");
       setNewCupFormat("bb11");
       setNewCupTournamentRuleset("");
@@ -511,6 +519,13 @@ export default function CupsPage() {
                 s&apos;inscrire (seuls les packs compatibles avec le ruleset
                 et le format choisis sont proposés).
               </p>
+            </div>
+            <div className="pt-2 border-t border-gray-200">
+              <SheetEntryModeField
+                value={newCupSheetEntryMode}
+                onChange={setNewCupSheetEntryMode}
+                disabled={creating}
+              />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-200">
               <div>

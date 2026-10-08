@@ -15,7 +15,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { get, post, rawPost, unwrap, resetDb } from "../helpers/api";
+import { get, post, rawPatch, rawPost, unwrap, resetDb } from "../helpers/api";
 import { seedAndLogin, createTeam } from "../helpers/factories";
 
 interface SheetPlayer {
@@ -30,17 +30,30 @@ interface SheetResponse {
   sheet: { id: string; status: string };
   summary: { scoreHome: number; scoreAway: number };
   competitionKind?: string;
-  competitionRules?: { sppEnabled: boolean; economyEnabled: boolean };
+  competitionRules?: {
+    sppEnabled: boolean;
+    economyEnabled: boolean;
+    entryMode?: "full" | "simplified";
+  };
   leagueId?: string;
   teams: {
     home: { teamId: string; players: SheetPlayer[] } | null;
     away: { teamId: string; players: SheetPlayer[] } | null;
   };
 }
+interface CupLeaderRow {
+  playerId: string;
+  value: number;
+}
 interface CupDTO {
   cup: {
     id: string;
     status: string;
+    sheetEntryMode?: "full" | "simplified";
+    playerLeaderboards?: {
+      topAggressors: CupLeaderRow[];
+      topPunchingBags: CupLeaderRow[];
+    };
     rounds: Array<{
       id: string;
       roundNumber: number;
@@ -59,6 +72,7 @@ interface CupDTO {
       losses: number;
       matchesPlayed: number;
       touchdownsFor: number;
+      foulCasualties: number;
       totalPoints: number;
     }>;
   };
@@ -141,9 +155,8 @@ describe("E2E API — feuille de match de coupe", () => {
     ).team;
 
     // Deux touchdowns et une sortie : de quoi remplir un score et des PSP.
-    // (Pas de `half`/`turn` : le miroir SQLite stocke `meta` en `String?`,
-    // il refuse l'objet que le serveur écrit en PostgreSQL. La valeur par
-    // défaut mi-temps 1 / tour 1 est couverte en test unitaire.)
+    // (Sans `half`/`turn` : la valeur par défaut mi-temps 1 / tour 1 est
+    // couverte en test unitaire.)
     await post(`${base}/events`, ctx.homeToken, {
       kind: "touchdown",
       team: "home",
@@ -236,6 +249,72 @@ describe("E2E API — feuille de match de coupe", () => {
     const reopened = cup.rounds[0].pairings.find((p) => p.id === ctx.pairing.id)!;
     expect(reopened.status).toBe("scheduled");
     expect(reopened.localMatch).toBeNull();
+  });
+
+  it("naît en saisie simplifiée et compte une élimination sur agression sans gravité", async () => {
+    const ctx = await setupCupPairing("cs5");
+    const base = `/cup/pairings/${ctx.pairing.id}/sheet`;
+
+    // Coupe créée sans choix ⇒ saisie simplifiée, servie à la feuille.
+    const created = (await get<CupDTO>(`/cup/${ctx.cupId}`, ctx.commish.token)).cup;
+    expect(created.sheetEntryMode).toBe("simplified");
+    await post(base, ctx.homeToken, {});
+    const sheet = unwrap(await get<{ data: SheetResponse }>(base, ctx.homeToken));
+    expect(sheet.competitionRules?.entryMode).toBe("simplified");
+
+    // Ce qu'envoie le formulaire simplifié : une agression marquée « cible
+    // sortie », sans gravité ni mi-temps.
+    const aggressor = sheet.teams.home!.players[0];
+    const victim = sheet.teams.away!.players[0];
+    await post(`${base}/events`, ctx.homeToken, {
+      kind: "aggression",
+      team: "home",
+      actorPlayerId: aggressor.id,
+      targetPlayerId: victim.id,
+      meta: { eliminated: true },
+    });
+    await post(`${base}/submit`, ctx.homeToken, {});
+    await post(`${base}/submit`, ctx.awayToken, {});
+    await post(`${base}/validate`, ctx.commish.token, {});
+
+    const cup = (await get<CupDTO>(`/cup/${ctx.cupId}`, ctx.commish.token)).cup;
+    const homeRow = cup.standings.find((s) => s.teamId === sheet.teams.home!.teamId)!;
+    expect(homeRow.foulCasualties).toBe(1);
+    expect(cup.playerLeaderboards?.topAggressors[0]).toMatchObject({
+      playerId: aggressor.id,
+      value: 1,
+    });
+    expect(cup.playerLeaderboards?.topPunchingBags[0]).toMatchObject({
+      playerId: victim.id,
+      value: 1,
+    });
+  });
+
+  it("change de mode en cours de coupe sans toucher au classement", async () => {
+    const ctx = await setupCupPairing("cs6");
+    const base = `/cup/pairings/${ctx.pairing.id}/sheet`;
+    await post(base, ctx.homeToken, {});
+    const sheet = unwrap(await get<{ data: SheetResponse }>(base, ctx.homeToken));
+    await post(`${base}/events`, ctx.homeToken, {
+      kind: "touchdown",
+      team: "home",
+      actorPlayerId: sheet.teams.home!.players[0].id,
+    });
+    await post(`${base}/submit`, ctx.homeToken, {});
+    await post(`${base}/submit`, ctx.awayToken, {});
+    await post(`${base}/validate`, ctx.commish.token, {});
+    const before = (await get<CupDTO>(`/cup/${ctx.cupId}`, ctx.commish.token)).cup;
+
+    const res = await rawPatch(`/cup/${ctx.cupId}`, ctx.commish.token, {
+      sheetEntryMode: "full",
+    });
+    expect(res.status).toBe(200);
+
+    const after = (await get<CupDTO>(`/cup/${ctx.cupId}`, ctx.commish.token)).cup;
+    expect(after.sheetEntryMode).toBe("full");
+    expect(after.standings).toEqual(before.standings);
+    const reread = unwrap(await get<{ data: SheetResponse }>(base, ctx.homeToken));
+    expect(reread.competitionRules?.entryMode).toBe("full");
   });
 
   it("réserve la validation au commissaire", async () => {

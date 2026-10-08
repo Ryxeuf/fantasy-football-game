@@ -20,6 +20,42 @@ export type EventKind =
   | "special_elim"
   | "other_elim";
 
+export interface EventKindOption {
+  readonly value: EventKind;
+  readonly label: string;
+}
+
+/**
+ * Les 13 types d'évènement de la feuille, avec leur libellé, dans l'ordre du
+ * sélecteur. Source UNIQUE des libellés : la saisie simplifiée d'une coupe en
+ * filtre un sous-ensemble (`lib/sheet-entry-profile`) sans les réécrire.
+ */
+export const EVENT_KIND_OPTIONS: ReadonlyArray<EventKindOption> = [
+  { value: "kickoff", label: "Coup d'envoi" },
+  { value: "touchdown", label: "Touchdown" },
+  { value: "casualty", label: "Élimination sur Blocage" },
+  { value: "pass_complete", label: "Passe réussie" },
+  { value: "interception", label: "Interception" },
+  { value: "aggression", label: "Agression" },
+  { value: "expulsion", label: "Expulsion" },
+  { value: "crowd_surge", label: "Sortie (Public)" },
+  { value: "stalling", label: "Temporisation" },
+  { value: "team_throw", label: "Lancer de coéquipier" },
+  { value: "ttm_landing", label: "Atterrissage réussi (coéquipier lancé)" },
+  { value: "special_elim", label: "Élimination sur Action Spéciale" },
+  { value: "other_elim", label: "Autre élimination" },
+];
+
+/**
+ * Agression saisie en mode SIMPLIFIÉ d'une coupe : marquée « cible sortie »
+ * (`meta.eliminated === true`), sans gravité. Strictement booléenne, comme
+ * côté serveur (`cup-match-sheet`) — aucune sortie n'est déduite.
+ */
+export function isMarkedEliminated(meta: unknown): boolean {
+  if (!meta || typeof meta !== "object") return false;
+  return (meta as Record<string, unknown>).eliminated === true;
+}
+
 // A62 — seuls ces types d'évènement portent une cible (joueur adverse
 // touché). Pour les autres (TD, passe, interception, lancer de
 // coéquipier, expulsion, temporisation, autre élimination), le champ

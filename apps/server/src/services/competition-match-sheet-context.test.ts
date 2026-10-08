@@ -10,6 +10,7 @@ vi.mock("../prisma", () => ({
 import { prisma } from "../prisma";
 import {
   CUP_SHEET_RULES,
+  cupSheetRules,
   LEAGUE_SHEET_RULES,
   resolveCompetitionPairing,
   sheetCreateData,
@@ -30,6 +31,7 @@ describe("règles par compétition", () => {
       purchasesEnabled: true,
       firingsEnabled: true,
       resurrection: false,
+      entryMode: "full",
     });
   });
 
@@ -42,6 +44,15 @@ describe("règles par compétition", () => {
       purchasesEnabled: false,
       firingsEnabled: false,
       resurrection: true,
+      entryMode: "full",
+    });
+  });
+
+  it("cupSheetRules ne change QUE le mode de saisie", () => {
+    expect(cupSheetRules("full")).toBe(CUP_SHEET_RULES);
+    expect(cupSheetRules("simplified")).toEqual({
+      ...CUP_SHEET_RULES,
+      entryMode: "simplified",
     });
   });
 
@@ -131,6 +142,53 @@ describe("resolveCompetitionPairing", () => {
       awayTeamId: "t2",
       rules: CUP_SHEET_RULES,
     });
+  });
+
+  it("sert le mode de saisie de la coupe, null = complète", async () => {
+    mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+    mockPrisma.cupPairing.findUnique.mockResolvedValue({
+      id: "cp1",
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      homeTeam: { ownerId: "u-home" },
+      awayTeam: { ownerId: "u-away" },
+      round: {
+        cup: {
+          id: "C1",
+          name: "World Cup",
+          creatorId: "u-com",
+          sheetEntryMode: "simplified",
+        },
+      },
+    });
+
+    const ctx = await resolveCompetitionPairing("cp1");
+
+    expect(ctx?.rules.entryMode).toBe("simplified");
+    expect(ctx?.rules.sppEnabled).toBe(false);
+    expect(
+      mockPrisma.cupPairing.findUnique.mock.calls[0][0].select.round.select.cup
+        .select,
+    ).toMatchObject({ sheetEntryMode: true });
+  });
+
+  it("lit une coupe sans mode (antérieure au réglage) en saisie complète", async () => {
+    mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+    mockPrisma.cupPairing.findUnique.mockResolvedValue({
+      id: "cp1",
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      homeTeam: { ownerId: "u-home" },
+      awayTeam: { ownerId: "u-away" },
+      round: {
+        cup: { id: "C1", name: "World Cup", creatorId: "u-com", sheetEntryMode: null },
+      },
+    });
+
+    const ctx = await resolveCompetitionPairing("cp1");
+
+    expect(ctx?.rules).toBe(CUP_SHEET_RULES);
+    expect(ctx?.rules.entryMode).toBe("full");
   });
 
   it("place une rencontre de coupe : ronde, stade, date de la ronde en repli", async () => {

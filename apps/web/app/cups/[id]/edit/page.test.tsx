@@ -97,6 +97,43 @@ describe("édition d'une coupe", () => {
     expect(JSON.parse((patch![1] as { body: string }).body).tieBreakRules).toBeNull();
   });
 
+  it("préremplit le mode de saisie, une coupe sans mode étant en saisie complète", async () => {
+    apiRequest.mockResolvedValue({ cup: CUP });
+    const { unmount } = render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    expect(
+      (screen.getByTestId("sheet-entry-mode-full") as HTMLInputElement).checked,
+    ).toBe(true);
+    unmount();
+
+    apiRequest.mockResolvedValue({
+      cup: { ...CUP, sheetEntryMode: "simplified" },
+    });
+    render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    expect(
+      (screen.getByTestId("sheet-entry-mode-simplified") as HTMLInputElement)
+        .checked,
+    ).toBe(true);
+  });
+
+  it("enregistre le mode de saisie choisi, coupe lancée comprise", async () => {
+    apiRequest.mockResolvedValue({ cup: { ...CUP, status: "en_cours" } });
+    render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+
+    fireEvent.click(screen.getByTestId("sheet-entry-mode-simplified"));
+    fireEvent.click(screen.getByTestId("cup-edit-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/cups/cup-1"));
+    const patch = apiRequest.mock.calls.find(
+      (c) => (c[1] as { method?: string } | undefined)?.method === "PATCH",
+    );
+    expect(JSON.parse((patch![1] as { body: string }).body).sheetEntryMode).toBe(
+      "simplified",
+    );
+  });
+
   it("affiche l'erreur serveur sans quitter l'écran", async () => {
     apiRequest.mockImplementation((path: string, init?: { method?: string }) => {
       if (init?.method === "PATCH") return Promise.reject(new Error("Coupe archivée"));

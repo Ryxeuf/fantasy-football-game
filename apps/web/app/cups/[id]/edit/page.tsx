@@ -8,6 +8,8 @@ import {
   CUP_TIE_BREAK_ORDER,
 } from "../tie-break-labels";
 import { TieBreakOrderEditor } from "../../../components/TieBreakOrderEditor";
+import { SheetEntryModeField } from "../../SheetEntryModeField";
+import type { SheetEntryMode } from "../../../lib/sheet-entry-profile";
 
 /**
  * Édition d'une coupe par son commissaire — pendant de `/leagues/[id]/edit`.
@@ -17,6 +19,8 @@ import { TieBreakOrderEditor } from "../../../components/TieBreakOrderEditor";
  * tout le monde. Le barème et les départages restent modifiables en cours de
  * coupe : le classement est entièrement dérivé des matchs, il se recalcule
  * au prochain affichage.
+ *
+ * Le mode de saisie des feuilles aussi : il ne gouverne que le formulaire.
  *
  * L'édition, le format et le règlement de tournoi ne sont PAS éditables : les
  * équipes ont été construites POUR eux (le serveur les refuse aussi).
@@ -40,6 +44,8 @@ interface CupForEdit {
     passPoints: number;
   };
   tieBreakRules?: string[];
+  /** Absent (serveur antérieur) = saisie complète. */
+  sheetEntryMode?: SheetEntryMode;
 }
 
 const SCORING_FIELDS = [
@@ -79,6 +85,7 @@ export default function CupEditPage() {
     passPoints: "",
   });
   const [tieBreak, setTieBreak] = useState<string[]>([]);
+  const [sheetEntryMode, setSheetEntryMode] = useState<SheetEntryMode>("full");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,6 +97,9 @@ export default function CupEditPage() {
       setDescription(res.cup.description ?? "");
       setIsPublic(res.cup.isPublic);
       setTieBreak(res.cup.tieBreakRules ?? []);
+      setSheetEntryMode(
+        res.cup.sheetEntryMode === "simplified" ? "simplified" : "full",
+      );
       const sc = res.cup.scoringConfig;
       if (sc) {
         setScoring({
@@ -126,6 +136,8 @@ export default function CupEditPage() {
         // `null` remet la coupe sur l'ordre par défaut : c'est ce que
         // signifie « aucun critère coché ».
         tieBreakRules: tieBreak.length > 0 ? tieBreak : null,
+        // Modifiable coupe lancée : il ne gouverne que le formulaire.
+        sheetEntryMode,
       };
       for (const field of SCORING_FIELDS) {
         const raw = scoring[field.key];
@@ -272,6 +284,13 @@ export default function CupEditPage() {
             catalogue={CUP_TIE_BREAK_ORDER}
             labels={CUP_TIE_BREAK_LABELS}
             testIdPrefix="cup-tiebreak"
+          />
+        </section>
+
+        <section className="rounded-lg border bg-white p-4">
+          <SheetEntryModeField
+            value={sheetEntryMode}
+            onChange={setSheetEntryMode}
           />
         </section>
 

@@ -63,6 +63,17 @@ function metaNumber(meta: unknown, key: "half" | "turn"): number | null {
 }
 
 /**
+ * Marque « cible sortie » d'une agression saisie en mode SIMPLIFIÉ
+ * (`meta.eliminated === true`), qui ne porte pas de gravité. Lue par la seule
+ * matérialisation de coupe : la ligue n'en écrit jamais et n'en lit jamais.
+ * Strictement booléenne — aucune sortie n'est DÉDUITE d'une autre valeur.
+ */
+function isMarkedEliminated(meta: unknown): boolean {
+  if (!meta || typeof meta !== "object") return false;
+  return (meta as Record<string, unknown>).eliminated === true;
+}
+
+/**
  * Type d'action `LocalMatchAction` correspondant à une sortie infligée AU
  * CONTACT. Le cause detail d'un `casualty` porte le geste : seuls le blocage
  * et le blitz rapportent les points « sortie sur blocage » d'une coupe — une
@@ -130,15 +141,20 @@ export function sheetEventsToLocalMatchActions(
         });
         break;
       }
-      case "aggression":
+      case "aggression": {
+        // Une agression ne marque des points que si elle SORT le joueur :
+        // une gravité saisie (saisie complète) OU la marque « cible sortie »
+        // de la saisie simplifiée, qui ne demande pas de gravité.
+        const eliminated =
+          Boolean(event.injurySeverity) || isMarkedEliminated(event.meta);
         out.push({
           ...base,
           actionType: "aggression",
-          armorBroken: Boolean(event.injurySeverity),
-          // Une agression ne marque des points que si elle SORT le joueur.
-          opponentState: event.injurySeverity ? "elimine" : null,
+          armorBroken: eliminated,
+          opponentState: eliminated ? "elimine" : null,
         });
         break;
+      }
       case "pass_complete":
         out.push({
           ...base,

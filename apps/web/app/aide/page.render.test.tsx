@@ -45,6 +45,17 @@ describe("HelpPage (rendu)", () => {
     );
   });
 
+  it("détaille en liste les deux modes de saisie d'une coupe", async () => {
+    await renderHelp([]);
+    const card = screen.getByTestId("help-feature-saisie-de-coupe");
+    expect(card.getAttribute("id")).toBe("saisie-de-coupe");
+    const details = within(card).getByTestId("help-feature-saisie-de-coupe-details");
+    const items = within(details).getAllByRole("listitem");
+    expect(items.length).toBeGreaterThanOrEqual(3);
+    expect(details.textContent).toContain("Saisie simplifiée");
+    expect(details.textContent).toContain("Saisie complète");
+  });
+
   it("masque ce qui dépend d'un flag fermé, catégorie vide comprise", async () => {
     await renderHelp([]);
     expect(screen.queryByTestId("help-feature-jouer-en-ligne")).toBeNull();

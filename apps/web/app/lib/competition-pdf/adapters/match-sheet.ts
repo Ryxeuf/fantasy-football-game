@@ -10,6 +10,7 @@
 import { getSkillDisplayNames } from "../../../me/teams/skills-data";
 import type {
   MatchSheetDocument,
+  PdfSheetEntry,
   PdfSheetEvent,
   PdfSheetInducement,
   PdfSheetPlayer,
@@ -25,6 +26,10 @@ import {
   type RosterNameResolver,
 } from "./common";
 import { KICKOFF_EVENTS, LEGACY_KICKOFF_EVENT_IDS } from "@bb/game-engine";
+import {
+  sheetEntryProfile,
+  type SheetEntryProfile,
+} from "../../sheet-entry-profile";
 
 // ─── Formes d'entrée (sous-ensemble de la réponse API) ──────────────────────
 
@@ -90,6 +95,7 @@ export interface SheetPdfInput {
     inducementsAway?: unknown;
     prayersHome?: unknown;
     prayersAway?: unknown;
+    forfeitSide?: "home" | "away" | null;
   };
   summary?: {
     scoreHome: number;
@@ -110,6 +116,8 @@ export interface SheetPdfInput {
     advancementsEnabled?: boolean;
     purchasesEnabled?: boolean;
     firingsEnabled?: boolean;
+    /** Une coupe peut être en saisie simplifiée (absent = complète). */
+    entryMode?: "full" | "simplified";
   };
   leagueName?: string;
   /** Placement de la rencontre. Optionnel : rétro-compat serveur antérieur. */
@@ -231,6 +239,50 @@ function parseIds(raw: string[] | string | null | undefined): string[] {
     }
   }
   return [];
+}
+
+// ─── Profil de saisie ────────────────────────────────────────────────────────
+
+/** Colonne de comptage des pages d'équipe qui recueille chaque type. */
+const TALLY_KEY_BY_KIND: Readonly<
+  Record<string, keyof PdfSheetPlayerTally>
+> = {
+  touchdown: "td",
+  pass_complete: "pass",
+  interception: "int",
+  casualty: "cas",
+  aggression: "agg",
+  team_throw: "ttm",
+  ttm_landing: "land",
+  expulsion: "exp",
+};
+
+/**
+ * Ce que la feuille papier fait saisir, dérivé du MÊME profil que la page du
+ * site : ce qu'on note à table est exactement ce qu'on saisit ensuite. La
+ * feuille complète garde ses légendes et colonnes par défaut (`null`).
+ */
+function sheetEntry(profile: SheetEntryProfile): PdfSheetEntry {
+  const full = profile.mode === "full";
+  return {
+    preMatch: profile.preMatch,
+    halfAndTurn: profile.halfAndTurn,
+    injuryDetails: profile.injuryDetails,
+    kickoffDetails: profile.kickoffDetails,
+    passReceiver: profile.passReceiver,
+    eventLegend: full
+      ? null
+      : profile.eventKinds.map((k) => ({
+          code: EVENT_KIND_CODES[k.value] ?? k.value,
+          label: k.label,
+        })),
+    tally: full
+      ? null
+      : profile.eventKinds.flatMap((k) => {
+          const key = TALLY_KEY_BY_KIND[k.value];
+          return key ? [{ key, legend: k.label }] : [];
+        }),
+  };
 }
 
 // ─── Joueurs ─────────────────────────────────────────────────────────────────
@@ -394,6 +446,12 @@ export function matchSheetToPdf(input: SheetPdfInput, ctx: SheetPdfContext = {})
     purchases: r.purchasesEnabled ?? !isCup,
     firings: r.firingsEnabled ?? !isCup,
   };
+  const entry = sheetEntry(
+    sheetEntryProfile({
+      competitionKind: input.competitionKind,
+      competitionRules: input.competitionRules,
+    }),
+  );
   const tallies = buildTallies(input);
   const home = sheetTeam(input.teams.home ?? EMPTY_TEAM, tallies, rules.spp, rosterName);
   const away = sheetTeam(input.teams.away ?? EMPTY_TEAM, tallies, rules.spp, rosterName);
@@ -422,6 +480,7 @@ export function matchSheetToPdf(input: SheetPdfInput, ctx: SheetPdfContext = {})
     home,
     away,
     rules,
+    entry,
     kickoffTable: kickoffTableRows(),
     weatherTable: table ? { name: table.name, results: compressWeatherResults(table.results) } : null,
     prayersTable: prayersTableRows(),
@@ -437,6 +496,7 @@ export function matchSheetToPdf(input: SheetPdfInput, ctx: SheetPdfContext = {})
       prayersHome: parsePrayerRolls(input.sheet.prayersHome),
       prayersAway: parsePrayerRolls(input.sheet.prayersAway),
       score: started && input.summary ? { home: input.summary.scoreHome, away: input.summary.scoreAway } : null,
+      forfeitSide: input.sheet.forfeitSide ?? null,
       events,
       motm: { home: motmFor(input.teams.home), away: motmFor(input.teams.away) },
     },

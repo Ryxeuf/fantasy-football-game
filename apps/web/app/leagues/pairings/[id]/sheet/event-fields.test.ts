@@ -6,6 +6,8 @@
  */
 import { describe, it, expect } from "vitest";
 import {
+  EVENT_KIND_OPTIONS,
+  isMarkedEliminated,
   eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
@@ -176,5 +178,24 @@ describe("event-fields — rappel de règle des sorties", () => {
     for (const kind of ["kickoff", "touchdown", "pass_complete", "interception", "expulsion", "team_throw"] as const) {
       expect(eventKindHint(kind), kind).toBeNull();
     }
+  });
+});
+
+describe("isMarkedEliminated — agression saisie en mode simplifié", () => {
+  it("ne reconnaît que la marque booléenne `eliminated: true`", () => {
+    expect(isMarkedEliminated({ eliminated: true })).toBe(true);
+    expect(isMarkedEliminated({ eliminated: true, half: 1 })).toBe(true);
+    expect(isMarkedEliminated({ eliminated: "true" })).toBe(false);
+    expect(isMarkedEliminated({ half: 1 })).toBe(false);
+    expect(isMarkedEliminated(null)).toBe(false);
+    expect(isMarkedEliminated(undefined)).toBe(false);
+  });
+});
+
+describe("EVENT_KIND_OPTIONS", () => {
+  it("liste les 13 types, chacun une seule fois", () => {
+    const values = EVENT_KIND_OPTIONS.map((k) => k.value);
+    expect(values).toHaveLength(13);
+    expect(new Set(values).size).toBe(13);
   });
 });

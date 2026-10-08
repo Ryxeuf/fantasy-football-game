@@ -630,4 +630,31 @@ export const cupMatchSheet: MatchSheetDocument = {
   prefill: null,
 };
 
+/** Même rencontre de coupe, coupe réglée en saisie SIMPLIFIÉE. */
+export const cupSimplifiedMatchSheet: MatchSheetDocument = {
+  ...cupMatchSheet,
+  entry: {
+    preMatch: "forfeit-only",
+    halfAndTurn: false,
+    injuryDetails: false,
+    kickoffDetails: false,
+    passReceiver: false,
+    eventLegend: [
+      { code: "TD", label: "Touchdown" },
+      { code: "SOR", label: "Élimination sur Blocage" },
+      { code: "PAS", label: "Passe réussie" },
+      { code: "INT", label: "Interception" },
+      { code: "AGR", label: "Élimination sur Agression" },
+    ],
+    tally: [
+      { key: "td", legend: "Touchdown" },
+      { key: "cas", legend: "Élimination sur Blocage" },
+      { key: "pass", legend: "Passe réussie" },
+      { key: "int", legend: "Interception" },
+      { key: "agg", legend: "Élimination sur Agression" },
+    ],
+  },
+  prefill: { forfeitSide: null },
+};
+
 void CUP_TEAMS;
