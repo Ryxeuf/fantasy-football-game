@@ -2,10 +2,10 @@
 
 ## 1. Modèle et jeu de règles (serveur)
 
-- [ ] 1.1 Ajouter `sheetEntryMode String?` au modèle `Cup` dans `prisma/schema.prisma` ET `apps/server/prisma/sqlite/schema.prisma`, SANS `@default`, avec un commentaire « null = complète, la création écrit simplified » ; régénérer le client SQLite de test — vérifier : `pnpm --filter @bb/server typecheck` passe.
-- [ ] 1.2 `services/competition-match-sheet-context` : `entryMode` dans `CompetitionSheetRules` (`full` pour la ligue et `CUP_SHEET_RULES`), parseur pur `parseSheetEntryMode` (inconnu/null ⇒ `full`) et `cupSheetRules(mode)` — vérifier : tests unitaires (null, `full`, `simplified`, valeur inconnue, ligue toujours `full`).
-- [ ] 1.3 `resolveCompetitionPairing` lit `sheetEntryMode` dans le `select` de la coupe et pose `cupSheetRules(...)` — vérifier : test de résolution d'une rencontre de coupe en simplifié et d'une coupe à `null`, et `GET /cup/pairings/:id/sheet` sert `competitionRules.entryMode`.
-- [ ] 1.4 Consigner dans `CLAUDE.md` le piège « une colonne de réglage à défaut différent pour l'existant et le neuf : pas de `@default`, la création écrit la valeur » — vérifier : section relue, cohérente avec `playoffsPublished`.
+- [x] 1.1 Ajouter `sheetEntryMode String?` au modèle `Cup` dans `prisma/schema.prisma` ET `apps/server/prisma/sqlite/schema.prisma`, SANS `@default`, avec un commentaire « null = complète, la création écrit simplified » ; régénérer le client SQLite de test — vérifier : `pnpm --filter @bb/server typecheck` passe.
+- [x] 1.2 `services/competition-match-sheet-context` : `entryMode` dans `CompetitionSheetRules` (`full` pour la ligue et `CUP_SHEET_RULES`), parseur pur `parseSheetEntryMode` (inconnu/null ⇒ `full`) et `cupSheetRules(mode)` — vérifier : tests unitaires (null, `full`, `simplified`, valeur inconnue, ligue toujours `full`).
+- [x] 1.3 `resolveCompetitionPairing` lit `sheetEntryMode` dans le `select` de la coupe et pose `cupSheetRules(...)` — vérifier : test de résolution d'une rencontre de coupe en simplifié et d'une coupe à `null`, et `GET /cup/pairings/:id/sheet` sert `competitionRules.entryMode`.
+- [x] 1.4 Consigner dans `CLAUDE.md` le piège « une colonne de réglage à défaut différent pour l'existant et le neuf : pas de `@default`, la création écrit la valeur » — vérifier : section relue, cohérente avec `playoffsPublished`.
 
 ## 2. Création et édition d'une coupe (serveur)
 

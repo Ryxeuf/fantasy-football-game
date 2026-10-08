@@ -1501,6 +1501,18 @@ par un `upsert` par clé composite (P2002 d'une course = « déjà fait »).
 Reste à traiter le jour où on y touche : `services/pro-badges.ts` (Pro
 League gelée).
 
+### Un réglage au défaut DIFFÉRENT pour l'existant et le neuf : jamais de `@default`
+
+Cas de `Cup.sheetEntryMode` (2026-10-08) : les coupes existantes restent en
+saisie complète, une coupe NEUVE naît en saisie simplifiée. Un
+`@default("simplified")` aurait l'air juste, mais sur Postgres `db push` ajoute
+la colonne avec son `DEFAULT`, qui REMPLIT les lignes existantes : toutes les
+coupes en cours basculeraient. Patron : colonne nullable sans `@default`,
+`null` lu comme l'état historique par un parseur pur
+(`parseSheetEntryMode`), et c'est la CRÉATION qui écrit la valeur des neuves
+(`POST /cup` : `body.sheetEntryMode ?? "simplified"`). Même famille que
+`playoffsPublished`, dont `startPlayoffs` écrit le `false`.
+
 ### Une compétence déjà possédée n'est refusée nulle part par défaut
 
 `applyAdvancementChoice` concaténait un doublon dans le CSV `skills` (le

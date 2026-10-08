@@ -460,6 +460,39 @@ describe("Lot G — league-match-sheet", () => {
       expect(mockMarkPredictionsClosed).not.toHaveBeenCalled();
     });
 
+    it("accepte tout évènement sur une coupe en saisie SIMPLIFIÉE (le mode ne gouverne que le formulaire)", async () => {
+      mockPrisma.leaguePairing.findUnique.mockReset();
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+      mockPrisma.cupPairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        homeTeamId: "team-home",
+        awayTeamId: "team-away",
+        homeTeam: { ownerId: HOME },
+        awayTeam: { ownerId: AWAY },
+        round: {
+          cup: {
+            id: "cup-1",
+            name: "Coupe",
+            creatorId: COMMISH,
+            sheetEntryMode: "simplified",
+          },
+        },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchEvent.create.mockResolvedValue({ id: "e1" });
+      await addEvent({
+        pairingId: "pair-1",
+        userId: HOME,
+        event: { kind: "kickoff", team: "home", half: 2, turn: 3 },
+      });
+      const args = mockPrisma.leagueMatchEvent.create.mock.calls[0][0];
+      expect(args.data.kind).toBe("kickoff");
+      expect(args.data.meta).toEqual({ half: 2, turn: 3 });
+    });
+
     it("merges half/turn into meta", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",

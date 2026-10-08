@@ -784,6 +784,10 @@ model Cup {
   // chaîne JSON de slugs, null = ordre historique.
   tieBreakRules String?
 
+  // Mode de saisie de la feuille (miroir SQLite de schema.prisma) :
+  // "full" | "simplified", null = complète. Pas de @default (cf. PG).
+  sheetEntryMode String?
+
   // Playoffs de coupe (miroir SQLite de schema.prisma).
   playoffSize       Int      @default(0)
   playoffsPublished Boolean?
