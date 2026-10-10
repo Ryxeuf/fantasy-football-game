@@ -4,10 +4,17 @@ vi.mock('../prisma', () => ({
   prisma: { team: { findUnique: vi.fn() } },
 }));
 
+vi.mock('./inducement-repository', () => ({
+  loadInducementCatalogue: vi.fn(async () => [
+    { slug: 'team_mascot', displayNameFr: "Mascotte d'Équipe" },
+  ]),
+}));
+
 import { prisma } from '../prisma';
 import {
   buildRosterSnapshot,
   captureRosterSnapshot,
+  parseSnapshotInducements,
   type TeamForSnapshot,
 } from './cup-roster-snapshot';
 
@@ -86,5 +93,58 @@ describe('captureRosterSnapshot — filtre des joueurs', () => {
       firedAt: null,
       missNextMatch: false,
     });
+  });
+});
+
+describe('coups de pouce de création dans le snapshot', () => {
+  beforeEach(() => mockTeamFind.mockReset());
+
+  it('fige les coups de pouce de l’équipe, nommés depuis le catalogue', async () => {
+    mockTeamFind.mockResolvedValue({
+      ...team,
+      inducements: [
+        { slug: 'team_mascot', quantity: 1, unitCost: 25_000 },
+        { slug: 'bloodweiser_kegs', quantity: 2, unitCost: 50_000 },
+      ],
+    });
+
+    const snap = await captureRosterSnapshot('t1');
+
+    expect(snap?.inducements).toEqual([
+      { slug: 'team_mascot', name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+      // Slug absent du catalogue mocké : le libellé retombe sur le slug.
+      { slug: 'bloodweiser_kegs', name: 'bloodweiser_kegs', quantity: 2, unitCost: 50_000 },
+    ]);
+    expect(mockTeamFind.mock.calls[0][0].include.inducements).toBe(true);
+  });
+
+  it('une équipe sans coup de pouce fige une liste vide', () => {
+    expect(buildRosterSnapshot(team, 1).inducements).toEqual([]);
+  });
+
+  it('un snapshot antérieur (sans le champ) se lit « aucun coup de pouce »', () => {
+    const legacy = { ...buildRosterSnapshot(team, 1) } as Record<string, unknown>;
+    delete legacy.inducements;
+    expect(parseSnapshotInducements(legacy)).toEqual([]);
+    expect(parseSnapshotInducements(JSON.stringify(legacy))).toEqual([]);
+    expect(parseSnapshotInducements('{pas du json')).toEqual([]);
+    expect(parseSnapshotInducements(null)).toEqual([]);
+  });
+
+  it('relit les coups de pouce figés, objet natif ou chaîne', () => {
+    const snap = buildRosterSnapshot(
+      {
+        ...team,
+        inducements: [
+          { slug: 'team_mascot', name: 'Mascotte', quantity: 1, unitCost: 25_000 },
+        ],
+      },
+      1,
+    );
+    const expected = [
+      { slug: 'team_mascot', name: 'Mascotte', quantity: 1, unitCost: 25_000 },
+    ];
+    expect(parseSnapshotInducements(snap)).toEqual(expected);
+    expect(parseSnapshotInducements(JSON.stringify(snap))).toEqual(expected);
   });
 });
