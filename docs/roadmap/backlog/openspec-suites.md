@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-10-07
+> Dernière mise à jour : 2026-10-10
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -23,8 +23,6 @@ Players et au barème de cumul de compétences. Restent :
   l'escouade, scoring d'escouade.
 - **Résurrection côté ligues à règlement** : neutraliser SPP et blessures
   entre les matchs, comme `Cup.resurrectionMode` le fait déjà pour les coupes.
-- **Enforcement en match de la liste fermée de coups de pouce** du pack (elle
-  est aujourd'hui affichée mais pas contrainte).
 
 ## Star Players
 
@@ -291,6 +289,26 @@ hors du lot :
   coupe), l'affichage des colonnes du bracket, l'éditeur de têtes de série et
   l'export PDF du bracket. À ouvrir en change dédié si le besoin se confirme.
 
+## Coups de pouce de coupe (build / match / none)
+
+Source : `cup-build-inducements` (2026-10-10). Laissé hors du lot :
+
+- **Jet des Débutants Déchaînés par ronde** : un coup de pouce acheté au
+  build vaut pour toute la coupe, mais « Débutants Déchaînés » (D3 joueurs)
+  se tire normalement avant CHAQUE match. Aujourd'hui exclu du catalogue de
+  build (coût variable) ; il faudrait un tirage par rencontre, stocké sur la
+  feuille et rejouable.
+- **Ligues à règlement de tournoi** : trésorerie résiduelle (perdue sous
+  règlement en coupe, conservée en ligue) et achat de coups de pouce au build
+  — la ligue continue de les vendre en avant-match.
+- **`create-from-roster` en contexte de coupe** : la création « depuis un
+  roster » ne passe pas par le catalogue de build ni par le mode de la coupe ;
+  seul le builder (`/me/teams/new?cupId=`) les connaît.
+- **Règle d'égalité de VEA de `calculatePettyCash`** (ligue) à confirmer
+  dans le livre : à VEA égale, les deux équipes peuvent y puiser toute leur
+  trésorerie, alors que le compendium dit « aucune ». Hors coupe depuis que
+  la coupe n'a plus de trésorerie.
+
 ## Pro League — match complet, journal rejouable, cerveau du coach (lots 1 à 3)
 
 Source : `pro-league-full-match`, `pro-league-replay-journal` et
@@ -385,4 +403,5 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `dice-theme-shop-and-crowns` | `prisma db push` (tables `DiceTheme`, `UserDiceTheme`), joué par `scripts/deploy.sh`. Le catalogue sert le compilé tant que la table est vide ; le seed (`syncDiceThemes`, create-if-missing) la remplit pour l'éditer en admin. Créer la ligne du flag `crowns` (seed ou « Synchroniser depuis le code » dans `/admin/feature-flags`) pour pouvoir l'allumer. |
 | `crowns-earning` | `prisma db push` (table `CrownsReward`), joué par `scripts/deploy.sh`. Rien n'est crédité tant que le flag `crowns` est fermé ; à son ouverture, chaque coach reçoit l'historique de ses feuilles validées et de ses succès (plafonné par saison) plus le bonus de bienvenue, à sa première lecture du solde. |
 | `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
+| `cup-build-inducements` | `prisma db push` (colonnes `Cup.inducementMode` et `Cup.allowedInducements`, nullables sans `@default` — les coupes existantes restent en avant-match ; table `TeamInducement`), joué par `scripts/deploy.sh`. Puis, dans `/admin/data/tournament-rulesets`, **réinitialiser** (ou éditer) la ligne NAF World Cup 2027 pour y porter la remise des Pots-de-vin (50 000 po) et le plafond « Arme Secrète » (2) : le seed ne réécrit jamais une ligne existante. |
 | `pro-league-coach-evolution` | `prisma db push` (tables `ProCoach`, `ProCoachMemory`), joué par `scripts/deploy.sh`. Aucun backfill : le coach d'une équipe se crée à son premier match. Variables optionnelles du lot 5 : `PRO_LEAGUE_SIM_WORKERS`, `PRO_LEAGUE_COMPLETION_TICK_MS`, `PRO_LEAGUE_REPLAY_RETENTION_DAYS`. |
