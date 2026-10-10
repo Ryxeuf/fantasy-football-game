@@ -81,8 +81,21 @@ export const tournamentInducementRuleSchema = z.object({
   cost: z.number().int().min(0).max(10_000_000),
   /** Quantité max (absent = limite du catalogue). */
   max: z.number().int().min(0).max(99).optional(),
+  /**
+   * Prix réduit, en po, appliqué aux équipes que le catalogue désigne pour
+   * la remise de ce coup de pouce (absent = pas de remise du règlement).
+   */
+  discountCost: z.number().int().min(0).max(10_000_000).optional(),
+  /** Quantité max avec un Star Player à Arme Secrète (absent = aucune). */
+  maxWithSecretWeaponStar: z.number().int().min(0).max(99).optional(),
   noteFr: z.string().trim().max(500).optional(),
-});
+}).refine(
+  (rule) => rule.discountCost === undefined || rule.discountCost <= rule.cost,
+  {
+    path: ["discountCost"],
+    error: "Le prix réduit ne peut pas dépasser le prix du règlement",
+  },
+);
 
 export const tournamentScoringSchema = z.object({
   win: z.number().int().min(-100).max(100),
