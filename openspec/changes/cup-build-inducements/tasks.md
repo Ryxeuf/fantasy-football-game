@@ -72,7 +72,7 @@
 - [x] 9.4 `cups/page.tsx` (« Règles de composition ») : mode en trois choix (`build` présélectionné en BB11, imposé et grisé sous règlement, absent en Sept) et liste autorisée ; `cups/[id]` affiche le mode et la liste — vérifier : tests du formulaire (défauts, valeurs envoyées) et du détail.
 - [x] 9.5 Documentation : `docs/cup-composition-rules.md` (mode, liste, achat au build, snapshot, inscription) et une section « Coups de pouce de coupe : build / match / none » dans `CLAUDE.md`, avec le piège de la trésorerie fictive d'une coupe — vérifier : docs relues, cohérentes avec les specs.
 - [x] 9.6 Consigner les suites hors périmètre dans `docs/roadmap/backlog/openspec-suites.md` : jet de Débutants Déchaînés par ronde, ligues à règlement (trésorerie résiduelle, achat au build), `create-from-roster` en contexte de coupe, règle d'égalité de VEA de `calculatePettyCash` à confirmer dans le livre. Retirer la ligne « Enforcement en match de la liste fermée de coups de pouce » (déjà livrée) — vérifier : fichier relu.
-- [ ] 9.7 Changeset `.changeset/coups-de-pouce-creation-coupe.md` (`@bb/game-engine`, `@bb/server`, `@bb/web` : patch) — vérifier : `pnpm changeset status` liste le fichier.
+- [x] 9.7 Changeset `.changeset/coups-de-pouce-creation-coupe.md` (`@bb/game-engine`, `@bb/server`, `@bb/web` : patch) — vérifier : `pnpm changeset status` liste le fichier.
 
 ## 10. Intégration
 
