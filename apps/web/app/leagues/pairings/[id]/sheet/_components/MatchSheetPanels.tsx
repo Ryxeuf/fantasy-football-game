@@ -105,6 +105,11 @@ export interface SheetStarPlayer {
   skills?: string;
   slug?: string;
   cost?: number;
+  /**
+   * Coupe — Star Player du roster D'INSCRIPTION (acheté à la création de
+   * l'équipe). Optionnel : absent des réponses antérieures.
+   */
+  registered?: boolean;
 }
 
 /** Règle qui fait naître un joueur relevé pendant le match. */
@@ -477,7 +482,7 @@ export function PlayerSelect({
       ))}
       {starPlayers.map((sp) => (
         <option key={sp.id} value={sp.id}>
-          {`⭐ ${sp.name} — ${sp.positionName}`}
+          {`⭐ ${sp.name} — ${sp.positionName}${sp.registered ? " (inscrit)" : ""}`}
         </option>
       ))}
       {raisedDead.map((r) => (
