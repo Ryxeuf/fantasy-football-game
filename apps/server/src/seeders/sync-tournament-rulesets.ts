@@ -6,8 +6,14 @@
  * manquantes mais ne réécrit JAMAIS une ligne existante : une correction
  * saisie en admin ne doit pas être écrasée au prochain déploiement.
  *
- * `force: true` (action admin « réinitialiser depuis le moteur ») remet
- * explicitement une ligne à la valeur du registre.
+ * `force: true` (action admin « réinitialiser depuis le moteur »,
+ * `POST /admin/tournament-rulesets/:slug/reset`) remet explicitement une
+ * ligne à la valeur du registre.
+ *
+ * Corollaire : un champ AJOUTÉ au registre après la création d'une ligne
+ * (ex. prix réduit et plafond « Arme Secrète » des coups de pouce) n'atteint
+ * pas cette ligne. L'admin le saisit dans l'éditeur, ou réinitialise la
+ * ligne depuis le moteur si elle ne porte aucune correction à garder.
  */
 
 import { TOURNAMENT_RULESETS } from "@bb/game-engine";

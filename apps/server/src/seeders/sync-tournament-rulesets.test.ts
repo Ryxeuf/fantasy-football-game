@@ -73,4 +73,32 @@ describe("syncTournamentRulesets", () => {
     expect(res.created).toEqual([]);
     expect(res.skipped).toEqual([]);
   });
+
+  it("une ligne créée porte les remises et le plafond Arme Secrète du registre", async () => {
+    findUnique.mockResolvedValue(null);
+    await syncTournamentRulesets({ write: true });
+    const bribe = create.mock.calls[0][0].data.definition.allowedInducements.find(
+      (r: { slug: string }) => r.slug === "bribe",
+    );
+    expect(bribe).toMatchObject({
+      cost: 100_000,
+      discountCost: 50_000,
+      maxWithSecretWeaponStar: 2,
+    });
+  });
+
+  it("une ligne éditée en admin ne reçoit pas les nouveaux champs sans force", async () => {
+    findUnique.mockResolvedValue({ id: "r1" });
+    await syncTournamentRulesets({ write: true });
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("force : la réinitialisation apporte les nouveaux champs", async () => {
+    findUnique.mockResolvedValue({ id: "r1" });
+    await syncTournamentRulesets({ write: true, force: true });
+    const chef = update.mock.calls[0][0].data.definition.allowedInducements.find(
+      (r: { slug: string }) => r.slug === "halfling_master_chef",
+    );
+    expect(chef).toMatchObject({ cost: 300_000, discountCost: 100_000 });
+  });
 });

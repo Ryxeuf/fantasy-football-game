@@ -19,7 +19,7 @@
 - [x] 2.3 `applyPackInducementRules` reçoit le contexte de l'équipe : prix réduit si `qualifiesForInducementDiscount`, plafond = min(plafond du règlement sinon du moteur, plafond Arme Secrète si un Star Player recruté porte `secret-weapon`) — vérifier : `tournament-inducements.test.ts` (goblin ⇒ 50 000 po ×6, halfling ⇒ Chef 100 000, autre ⇒ 300 000, Arme Secrète ⇒ 2 Pots-de-vin).
 - [x] 2.4 `schemas/tournament-ruleset.schemas` : validation (0 ≤ prix réduit ≤ prix, plafond ≥ 0), `serializeDefinition` et la lecture conservent les deux champs, une ligne incohérente est ignorée à la lecture — vérifier : `tournament-ruleset.schemas.test.ts`.
 - [x] 2.5 Admin `admin/data/tournament-rulesets` : saisie du prix réduit et du plafond Arme Secrète par coup de pouce autorisé — vérifier : test du composant de section (édition + erreur de prix réduit > prix).
-- [ ] 2.6 Resynchroniser le seed sans écraser une édition admin (`syncTournamentRulesets`), et documenter le comportement `force: true` pour réinitialiser — vérifier : test du seeder (ligne absente ⇒ créée avec les nouveaux champs, ligne éditée ⇒ inchangée).
+- [x] 2.6 Resynchroniser le seed sans écraser une édition admin (`syncTournamentRulesets`), et documenter le comportement `force: true` pour réinitialiser — vérifier : test du seeder (ligne absente ⇒ créée avec les nouveaux champs, ligne éditée ⇒ inchangée).
 
 ## 3. Lot 0 — Budget de coups de pouce d'une coupe sans trésorerie (serveur + web)
 
