@@ -89,7 +89,8 @@ import {
   type PurchaseOptions,
 } from "./league-sheet-purchase-options";
 import {
-  deriveSheetStarPlayers,
+  deriveSideStarPlayers,
+  sheetCompetitionKind,
   isSyntheticSheetPlayerId,
   syntheticSheetPlayerSide,
   type SheetStarPlayer,
@@ -300,6 +301,8 @@ interface SheetRaisedDeadColumns {
 interface SheetInducementColumns {
   inducementsHome?: unknown;
   inducementsAway?: unknown;
+  /** Feuille de coupe : les Star Players du roster d'inscription jouent. */
+  cupPairingId?: unknown;
 }
 
 /** Tout ce dont dependent les trois familles de joueurs synthetiques. */
@@ -331,11 +334,14 @@ async function sideSheetPlayers(
     team.journeymen ?? deriveSideJourneymen(team, side, sheet, positions);
   const stars =
     team.starPlayersHired ??
-    (await deriveSheetStarPlayers({
+    (await deriveSideStarPlayers({
       side,
       inducements:
         side === "home" ? sheet.inducementsHome : sheet.inducementsAway,
       ruleset: team.ruleset,
+      frozenSnapshot:
+        side === "home" ? sheet.rosterSnapshotHome : sheet.rosterSnapshotAway,
+      competitionKind: sheetCompetitionKind(sheet),
     }));
   const keywordsOf = (slug: string): string | null =>
     positions?.find((p) => p.slug === slug)?.keywords ??
@@ -354,6 +360,40 @@ async function sideSheetPlayers(
     ...journeymen.map((j) => ({ ...j, keywords: keywordsOf(j.position) })),
     ...stars.map((s) => ({ ...s, keywords: getStarPlayerKeywords(s.slug) })),
   ];
+}
+
+/**
+ * Pose sur chaque équipe les Star Players qui jouent la rencontre
+ * (`deriveSideStarPlayers` : roster d'inscription en coupe + coups de pouce
+ * d'avant-match). Le champ est TOUJOURS posé, vide compris : les chemins
+ * suivants (relève, Haine, noms des actions de coupe) le relisent au lieu de
+ * re-dériver.
+ */
+async function withSheetStarPlayers(
+  teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null },
+  sheet: SheetSyntheticColumns,
+): Promise<{ home: MatchSheetTeam | null; away: MatchSheetTeam | null }> {
+  const kind = sheetCompetitionKind(sheet);
+  const enrich = async (
+    team: MatchSheetTeam | null,
+    side: "home" | "away",
+  ): Promise<MatchSheetTeam | null> => {
+    if (!team) return null;
+    const starPlayersHired = await deriveSideStarPlayers({
+      side,
+      inducements:
+        side === "home" ? sheet.inducementsHome : sheet.inducementsAway,
+      ruleset: team.ruleset,
+      frozenSnapshot:
+        side === "home" ? sheet.rosterSnapshotHome : sheet.rosterSnapshotAway,
+      competitionKind: kind,
+    });
+    return { ...team, starPlayersHired };
+  };
+  return {
+    home: await enrich(teams.home, "home"),
+    away: await enrich(teams.away, "away"),
+  };
 }
 
 /** Ce que la feuille sait du joueur releve d'un cote. */
@@ -2532,7 +2572,13 @@ export async function validateByCommissioner(input: {
   // compétences du COUP D'ENVOI et des Prières de la feuille : la
   // validation et la lecture doivent créditer exactement les mêmes joueurs
   // (cf. `sheetSummaryOptions`).
-  const teamsForBudgetLive = await loadSheetTeams(ctx);
+  // Star Players qui jouent la rencontre (roster d'inscription en coupe +
+  // coups de pouce d'avant-match) : derives UNE fois, ils alimentent la
+  // releve, les mots-cles de Haine et les noms des actions de coupe.
+  const teamsForBudgetLive = await withSheetStarPlayers(
+    await loadSheetTeams(ctx),
+    sheet as SheetSyntheticColumns,
+  );
   const summary = summarizeMatchSheet(
     events,
     sheetSummaryOptions(teamsForBudgetLive, sheet as SheetSummarySource),
@@ -2726,16 +2772,8 @@ export async function validateByCommissioner(input: {
           .map((r) => ({ id: r.id, position: r.position })),
       ],
       starPlayerIds: [
-        ...(await deriveSheetStarPlayers({
-          side: "home",
-          inducements: sheetIndForBudget.inducementsHome,
-          ruleset: teamsForBudget.home?.ruleset,
-        })),
-        ...(await deriveSheetStarPlayers({
-          side: "away",
-          inducements: sheetIndForBudget.inducementsAway,
-          ruleset: teamsForBudget.away?.ruleset,
-        })),
+        ...(teamsForBudget.home?.starPlayersHired ?? []),
+        ...(teamsForBudget.away?.starPlayersHired ?? []),
       ].map((sp) => sp.id),
     });
   } catch (e: unknown) {
@@ -4764,31 +4802,16 @@ export async function getMatchSheet(input: {
       journeymenChoices: journeymen.map((j) => j.position),
     };
   };
-  // Star Players engagés en coup de pouce : ils JOUENT le match, donc ils
-  // doivent apparaître dans les pickers d'acteur / de cible d'évènement.
-  const sheetInducements = sheet as {
-    inducementsHome?: unknown;
-    inducementsAway?: unknown;
-  };
-  const withStarPlayers = async (
-    team: MatchSheetTeam | null,
-    side: "home" | "away",
-  ): Promise<MatchSheetTeam | null> => {
-    if (!team) return null;
-    const starPlayersHired = await deriveSheetStarPlayers({
-      side,
-      inducements:
-        side === "home"
-          ? sheetInducements.inducementsHome
-          : sheetInducements.inducementsAway,
-      ruleset: team.ruleset,
-    });
-    return starPlayersHired.length > 0 ? { ...team, starPlayersHired } : team;
-  };
-  const teamsWithJourneymen = {
-    home: await withStarPlayers(withJourneymen(teams.home, "home"), "home"),
-    away: await withStarPlayers(withJourneymen(teams.away, "away"), "away"),
-  };
+  // Star Players qui JOUENT le match (coups de pouce d'avant-match et, en
+  // coupe, roster d'inscription) : ils doivent apparaître dans les pickers
+  // d'acteur / de cible d'évènement.
+  const teamsWithJourneymen = await withSheetStarPlayers(
+    {
+      home: withJourneymen(teams.home, "home"),
+      away: withJourneymen(teams.away, "away"),
+    },
+    sheet as SheetSyntheticColumns,
+  );
   // Joueur releve — « Relever le Mort » (Maitres de la Non-vie) ou Trait
   // Contagieux : pour une equipe qui dispose d'une de ces regles, la feuille
   // expose les adversaires tues relevables, les postes de Trois-quart au
