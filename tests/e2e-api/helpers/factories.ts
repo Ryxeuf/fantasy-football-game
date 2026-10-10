@@ -18,9 +18,16 @@ import { post, get, unwrap } from "./api";
  * porte la règle spéciale Maîtres de la Non-vie (Squelette OU Zombie) : le
  * cas « Relever le Mort ». `nurgle` porte le Trait Contagieux sur chacun de
  * ses Trois-Quarts Putrescents : le cas « Contagieux » (blocage, embauche au
- * prix du poste).
+ * prix du poste). `goblin` porte Chantage et Corruption : la remise des
+ * Pots-de-vin achetés à la création d'une équipe de coupe à règlement.
  */
-export type RosterKey = "skaven" | "lizardmen" | "orc" | "undead" | "nurgle";
+export type RosterKey =
+  | "skaven"
+  | "lizardmen"
+  | "orc"
+  | "undead"
+  | "nurgle"
+  | "goblin";
 
 export interface Coach {
   email: string;
