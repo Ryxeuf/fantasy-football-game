@@ -154,6 +154,11 @@ import {
   inducementOptionsFor,
   type InducementOption,
 } from "./inducement-options";
+import type { CupInducementMode } from "./cup-inducement-mode";
+import {
+  parseSnapshotInducements,
+  type SnapshotInducement,
+} from "./snapshot-inducements";
 import { loadAdvancementSchedule } from "./advancement-schedule-repository";
 import {
   parseStagedAdvancements,
@@ -599,6 +604,7 @@ export class MatchSheetError extends Error {
       | "inducement_over_budget"
       | "inducement_not_allowed"
       | "inducement_star_already_registered"
+      | "inducements_locked"
       | "advancement_wrong_side"
       | "advancement_invalid_player"
       | "journeyman_not_found"
@@ -1206,6 +1212,22 @@ export async function updatePreMatch(input: {
   // CTV/tresoreries sont figees au debut du match si le roster l'est deja —
   // sur l'état RE-FIGÉ par ce même PATCH le cas échéant.
   if (p.inducementsHome !== undefined || p.inducementsAway !== undefined) {
+    // Coupe en `build` (coups de pouce achetés à la création) ou `none` :
+    // l'avant-match ne vend rien. Une liste VIDE n'est pas une sélection —
+    // un client qui renvoie l'avant-match entier ne doit pas être refusé.
+    const hasSelection = (raw: unknown): boolean =>
+      Array.isArray(raw) ? raw.length > 0 : raw !== undefined && raw !== null;
+    if (
+      ctx.rules.inducementMode !== "match" &&
+      (hasSelection(p.inducementsHome) || hasSelection(p.inducementsAway))
+    ) {
+      throw new MatchSheetError(
+        "inducements_locked",
+        ctx.rules.inducementMode === "build"
+          ? "Cette coupe vend ses coups de pouce à la création des équipes : aucun achat d'avant-match."
+          : "Cette coupe se joue sans coups de pouce.",
+      );
+    }
     const { teams: teamsLive, positions: journeymanPositions } =
       await loadTeamsAndPositions();
     const snapForBudget: SheetJourneymenColumns = {
@@ -1260,7 +1282,7 @@ export async function updatePreMatch(input: {
       { home: spentHome, away: spentAway },
       null,
       new Set(),
-      ctx.kind,
+      { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
     );
     // FR17 — enforcement à la soumission : aucun coup de pouce hors allowlist
     // ligue. Les Star Players (slug "star_player") sont exemptés (ils
@@ -2761,7 +2783,7 @@ export async function validateByCommissioner(input: {
     },
     null,
     new Set(),
-    ctx.kind,
+    { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
   );
 
   // A63 — les gains auto dependent du score final (10k/TD) et du bonus
@@ -3618,6 +3640,11 @@ export interface MatchSheetTeam {
    */
   readonly starPlayersHired?: readonly SheetStarPlayer[];
   /**
+   * Coupe en mode `build` : coups de pouce achetés à la création, figés au
+   * roster d'inscription. Rappel en LECTURE SEULE (aucun achat d'avant-match).
+   */
+  readonly registeredInducements?: readonly SnapshotInducement[];
+  /**
    * « Relever le Mort » (Maitres de la Non-vie) et Trait Contagieux.
    * Renseigne par getMatchSheet pour une equipe qui dispose d'au moins une
    * des deux regles : les regles (`sources`), les adversaires tues ce match
@@ -4371,10 +4398,15 @@ export async function buildMatchSheetReference(
   deadThisMatch: ReadonlySet<string> = new Set(),
   // Compétition de la feuille. Une COUPE ne débite jamais la trésorerie (elle
   // n'écrit rien sur les équipes) : la compter dans le budget en ferait une
-  // cagnotte réutilisable à chaque ronde.
-  competitionKind: CompetitionKind = "league",
+  // cagnotte réutilisable à chaque ronde. Une coupe en `build` / `none` ne
+  // vend RIEN en avant-match : catalogue vide, budget nul.
+  competition: {
+    readonly kind?: CompetitionKind;
+    readonly inducementMode?: CupInducementMode;
+  } = {},
 ): Promise<MatchSheetReference> {
-  const isCup = competitionKind === "cup";
+  const isCup = competition.kind === "cup";
+  const sellsInducements = (competition.inducementMode ?? "match") === "match";
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
   const homeTreasury = isCup ? 0 : (teams.home?.treasury ?? 0);
@@ -4403,7 +4435,7 @@ export async function buildMatchSheetReference(
     weatherTables: buildWeatherTables(),
     purchases: { home: purchasesHome, away: purchasesAway },
     inducements: {
-      home: teams.home
+      home: sellsInducements && teams.home
         ? await inducementOptionsFor(
             teams.home.roster,
             (teams.home.ruleset as Ruleset) ?? DEFAULT_RULESET,
@@ -4412,7 +4444,7 @@ export async function buildMatchSheetReference(
             pack,
           )
         : [],
-      away: teams.away
+      away: sellsInducements && teams.away
         ? await inducementOptionsFor(
             teams.away.roster,
             (teams.away.ruleset as Ruleset) ?? DEFAULT_RULESET,
@@ -4423,14 +4455,14 @@ export async function buildMatchSheetReference(
         : [],
     },
     starPlayers: {
-      home: teams.home
+      home: sellsInducements && teams.home
         ? await starPlayersFor(
             teams.home.roster,
             teams.home.ruleset as Ruleset,
             teams.home.regionalLeague,
           )
         : [],
-      away: teams.away
+      away: sellsInducements && teams.away
         ? await starPlayersFor(
             teams.away.roster,
             teams.away.ruleset as Ruleset,
@@ -4446,14 +4478,14 @@ export async function buildMatchSheetReference(
       home: {
         ctv: homeCtv,
         treasury: homeTreasury,
-        pettyCash: petty.teamA.pettyCash,
-        maxBudget: petty.teamA.maxBudget,
+        pettyCash: sellsInducements ? petty.teamA.pettyCash : 0,
+        maxBudget: sellsInducements ? petty.teamA.maxBudget : 0,
       },
       away: {
         ctv: awayCtv,
         treasury: awayTreasury,
-        pettyCash: petty.teamB.pettyCash,
-        maxBudget: petty.teamB.maxBudget,
+        pettyCash: sellsInducements ? petty.teamB.pettyCash : 0,
+        maxBudget: sellsInducements ? petty.teamB.maxBudget : 0,
       },
     },
   };
@@ -4784,13 +4816,32 @@ export async function getMatchSheet(input: {
   // Star Players qui JOUENT le match (coups de pouce d'avant-match et, en
   // coupe, roster d'inscription) : ils doivent apparaître dans les pickers
   // d'acteur / de cible d'évènement.
-  const teamsWithJourneymen = await withSheetStarPlayers(
+  const teamsWithStars = await withSheetStarPlayers(
     {
       home: withJourneymen(teams.home, "home"),
       away: withJourneymen(teams.away, "away"),
     },
     sheet as SheetSyntheticColumns,
   );
+  // Coupe en `build` : les coups de pouce figés au roster d'inscription sont
+  // rappelés par équipe (ils valent pour la rencontre, sans achat).
+  const withRegisteredInducements = (
+    team: MatchSheetTeam | null,
+    frozen: unknown,
+  ): MatchSheetTeam | null =>
+    team && ctx.kind === "cup" && ctx.rules.inducementMode === "build"
+      ? { ...team, registeredInducements: parseSnapshotInducements(frozen) }
+      : team;
+  const teamsWithJourneymen = {
+    home: withRegisteredInducements(
+      teamsWithStars.home,
+      sheetSnapRaw.rosterSnapshotHome,
+    ),
+    away: withRegisteredInducements(
+      teamsWithStars.away,
+      sheetSnapRaw.rosterSnapshotAway,
+    ),
+  };
   // Joueur releve — « Relever le Mort » (Maitres de la Non-vie) ou Trait
   // Contagieux : pour une equipe qui dispose d'une de ces regles, la feuille
   // expose les adversaires tues relevables, les postes de Trois-quart au
@@ -4887,7 +4938,7 @@ export async function getMatchSheet(input: {
       { home: 0, away: 0 },
       inducementPack,
       deadThisMatch(summary),
-      ctx.kind,
+      { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
     ),
     computedSpp,
     viewerRole: commissioner

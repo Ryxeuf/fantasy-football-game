@@ -176,7 +176,7 @@ function team(id: string, ownerId: string, players: string[]) {
   };
 }
 
-function mockCupPairing() {
+function mockCupPairing(cup: Record<string, unknown> = {}) {
   mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
   mockPrisma.cupPairing.findUnique.mockResolvedValue({
     id: "pair-1",
@@ -184,7 +184,7 @@ function mockCupPairing() {
     awayTeamId: "team-away",
     homeTeam: { ownerId: HOME },
     awayTeam: { ownerId: AWAY },
-    round: { cup: { id: "cup-1", name: "Coupe", creatorId: COMMISH } },
+    round: { cup: { id: "cup-1", name: "Coupe", creatorId: COMMISH, ...cup } },
   });
 }
 
@@ -374,6 +374,94 @@ describe("feuille de coupe — budget de coups de pouce sans trésorerie", () =>
     });
 
     expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
+  });
+});
+
+describe("feuille de coupe — régime des coups de pouce", () => {
+  const mascot = [
+    { slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 },
+  ];
+  const draftSheet = (over: Record<string, unknown> = {}) => ({
+    id: "ms1",
+    status: "draft",
+    cupPairingId: "pair-1",
+    rosterSnapshotHome: frozen([], {
+      inducements: [
+        { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+      ],
+    }),
+    rosterSnapshotAway: frozen([], { currentValue: 900_000 }),
+    events: [],
+    ...over,
+  });
+
+  it("build : rappelle les coups de pouce figés, catalogue vide et budget nul", async () => {
+    mockCupPairing({ inducementMode: "build", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.competitionRules.inducementMode).toBe("build");
+    expect(out.teams.home?.registeredInducements).toEqual([
+      { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+    ]);
+    expect(out.teams.away?.registeredInducements).toEqual([]);
+    expect(out.reference.inducements).toEqual({ home: [], away: [] });
+    expect(out.reference.starPlayers).toEqual({ home: [], away: [] });
+    // L'écart de VEA (100 000 po) n'ouvre aucune petite monnaie en build.
+    expect(out.reference.budget.away).toMatchObject({ pettyCash: 0, maxBudget: 0 });
+  });
+
+  it("build : une sélection d'avant-match est refusée sans modification", async () => {
+    mockCupPairing({ inducementMode: "build", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: mascot },
+      }),
+    ).rejects.toMatchObject({ code: "inducements_locked" });
+    expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+  });
+
+  it("build : une liste vide n'est pas une sélection (avant-match renvoyé tel quel)", async () => {
+    mockCupPairing({ inducementMode: "build", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({ id: "ms1" });
+
+    await updatePreMatch({
+      pairingId: "pair-1",
+      userId: AWAY,
+      payload: { inducementsAway: [], inducementsHome: [] },
+    });
+
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
+  });
+
+  it("none : une sélection d'avant-match est refusée", async () => {
+    mockCupPairing({ inducementMode: "none", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: mascot },
+      }),
+    ).rejects.toMatchObject({ code: "inducements_locked" });
+  });
+
+  it("coupe antérieure au réglage (null) : match, pas de rappel, achat possible", async () => {
+    mockCupPairing({ inducementMode: null });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.competitionRules.inducementMode).toBe("match");
+    expect(out.teams.home?.registeredInducements).toBeUndefined();
+    expect(out.reference.budget.away.maxBudget).toBe(100_000);
   });
 });
 

@@ -4347,7 +4347,7 @@ describe("budget de coups de pouce d'une COUPE : jamais la trésorerie", () => {
       { home: 0, away: 0 },
       null,
       NO_DEAD,
-      "cup",
+      { kind: "cup" },
     );
     expect(ref.budget.home).toMatchObject({
       treasury: 0,
@@ -4363,7 +4363,7 @@ describe("budget de coups de pouce d'une COUPE : jamais la trésorerie", () => {
       { home: 60_000, away: 0 },
       null,
       NO_DEAD,
-      "cup",
+      { kind: "cup" },
     );
     expect(ref.budget.away).toMatchObject({
       treasury: 0,

@@ -29,6 +29,10 @@
 
 import { prisma } from "../prisma";
 import { parseSheetEntryMode, type SheetEntryMode } from "./sheet-entry-mode";
+import {
+  resolveCupInducementMode,
+  type CupInducementMode,
+} from "./cup-inducement-mode";
 
 export type CompetitionKind = "league" | "cup";
 
@@ -62,6 +66,12 @@ export interface CompetitionSheetRules {
    * écriture — servi à l'UI, qui retire des champs. Toujours `full` en ligue.
    */
   readonly entryMode: SheetEntryMode;
+  /**
+   * Régime des coups de pouce de la feuille : `match` (achat d'avant-match —
+   * toujours en ligue), `build` (coupe : achetés à la création, rappelés en
+   * lecture seule, aucun achat d'avant-match) ou `none`.
+   */
+  readonly inducementMode: CupInducementMode;
 }
 
 /** Ligue : la feuille écrit tout, c'est la séquence d'après-match du livre. */
@@ -74,6 +84,7 @@ export const LEAGUE_SHEET_RULES: CompetitionSheetRules = {
   firingsEnabled: true,
   resurrection: false,
   entryMode: "full",
+  inducementMode: "match",
 };
 
 /**
@@ -89,16 +100,21 @@ export const CUP_SHEET_RULES: CompetitionSheetRules = {
   firingsEnabled: false,
   resurrection: true,
   entryMode: "full",
+  inducementMode: "match",
 };
 
 /**
  * Jeu de règles d'une coupe selon son mode de saisie. Seul `entryMode`
  * change : les effets d'après-match restent ceux de `CUP_SHEET_RULES`.
  */
-export function cupSheetRules(mode: SheetEntryMode): CompetitionSheetRules {
-  return mode === CUP_SHEET_RULES.entryMode
+export function cupSheetRules(
+  mode: SheetEntryMode,
+  inducementMode: CupInducementMode = CUP_SHEET_RULES.inducementMode,
+): CompetitionSheetRules {
+  return mode === CUP_SHEET_RULES.entryMode &&
+    inducementMode === CUP_SHEET_RULES.inducementMode
     ? CUP_SHEET_RULES
-    : { ...CUP_SHEET_RULES, entryMode: mode };
+    : { ...CUP_SHEET_RULES, entryMode: mode, inducementMode };
 }
 
 export function sheetRulesFor(kind: CompetitionKind): CompetitionSheetRules {
@@ -214,6 +230,9 @@ type CupPairingRow = FixtureRowFields & {
       name: string;
       creatorId: string;
       sheetEntryMode?: string | null;
+      inducementMode?: string | null;
+      format?: string | null;
+      tournamentRuleset?: string | null;
     };
   };
 };
@@ -294,6 +313,9 @@ export async function resolveCompetitionPairing(
               name: true,
               creatorId: true,
               sheetEntryMode: true,
+              inducementMode: true,
+              format: true,
+              tournamentRuleset: true,
             },
           },
         },
@@ -316,7 +338,13 @@ export async function resolveCompetitionPairing(
     awayTeamId: cupPairing.awayTeamId,
     homeOwnerId: cupPairing.homeTeam?.ownerId ?? "",
     awayOwnerId: cupPairing.awayTeam?.ownerId ?? "",
-    rules: cupSheetRules(parseSheetEntryMode(cup.sheetEntryMode)),
+    rules: cupSheetRules(
+      parseSheetEntryMode(cup.sheetEntryMode),
+      resolveCupInducementMode(cup.inducementMode, {
+        hasTournamentRuleset: Boolean(cup.tournamentRuleset),
+        format: cup.format ?? "bb11",
+      }),
+    ),
     fixture: fixtureInfoFromRow(cupPairing),
   };
 }

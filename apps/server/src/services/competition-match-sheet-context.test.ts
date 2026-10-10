@@ -32,6 +32,8 @@ describe("règles par compétition", () => {
       firingsEnabled: true,
       resurrection: false,
       entryMode: "full",
+      // Une ligue vend ses coups de pouce en avant-match.
+      inducementMode: "match",
     });
   });
 
@@ -45,14 +47,20 @@ describe("règles par compétition", () => {
       firingsEnabled: false,
       resurrection: true,
       entryMode: "full",
+      inducementMode: "match",
     });
   });
 
-  it("cupSheetRules ne change QUE le mode de saisie", () => {
+  it("cupSheetRules ne change QUE le mode de saisie et le régime des coups de pouce", () => {
     expect(cupSheetRules("full")).toBe(CUP_SHEET_RULES);
     expect(cupSheetRules("simplified")).toEqual({
       ...CUP_SHEET_RULES,
       entryMode: "simplified",
+    });
+    expect(cupSheetRules("simplified", "build")).toEqual({
+      ...CUP_SHEET_RULES,
+      entryMode: "simplified",
+      inducementMode: "build",
     });
   });
 
@@ -170,6 +178,39 @@ describe("resolveCompetitionPairing", () => {
       mockPrisma.cupPairing.findUnique.mock.calls[0][0].select.round.select.cup
         .select,
     ).toMatchObject({ sheetEntryMode: true });
+  });
+
+  it("sert le régime de coups de pouce de la coupe (règlement ⇒ build, null ⇒ match)", async () => {
+    const cupRow = (cup: Record<string, unknown>) => ({
+      id: "cp1",
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      homeTeam: { ownerId: "u-home" },
+      awayTeam: { ownerId: "u-away" },
+      round: { cup: { id: "C1", name: "World Cup", creatorId: "u-com", ...cup } },
+    });
+    mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+
+    mockPrisma.cupPairing.findUnique.mockResolvedValueOnce(
+      cupRow({ inducementMode: "build", format: "bb11" }),
+    );
+    expect((await resolveCompetitionPairing("cp1"))?.rules.inducementMode).toBe(
+      "build",
+    );
+
+    mockPrisma.cupPairing.findUnique.mockResolvedValueOnce(
+      cupRow({ inducementMode: null, tournamentRuleset: "naf_world_cup_2027" }),
+    );
+    expect((await resolveCompetitionPairing("cp1"))?.rules.inducementMode).toBe(
+      "build",
+    );
+
+    mockPrisma.cupPairing.findUnique.mockResolvedValueOnce(
+      cupRow({ inducementMode: null }),
+    );
+    expect((await resolveCompetitionPairing("cp1"))?.rules.inducementMode).toBe(
+      "match",
+    );
   });
 
   it("lit une coupe sans mode (antérieure au réglage) en saisie complète", async () => {
