@@ -150,7 +150,10 @@ import {
 } from "../utils/team-values";
 import { getEliteSkillSlugs } from "./elite-skills";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
-import { loadInducementCatalogue } from "./inducement-repository";
+import {
+  inducementOptionsFor,
+  type InducementOption,
+} from "./inducement-options";
 import { loadAdvancementSchedule } from "./advancement-schedule-repository";
 import {
   parseStagedAdvancements,
@@ -4029,15 +4032,8 @@ export interface MatchSheetWeatherTable {
 }
 
 /** Entree du catalogue officiel de coups de pouce (hors star players). */
-export interface MatchSheetInducementOption {
-  readonly slug: string;
-  readonly name: string;
-  readonly cost: number;
-  readonly maxQuantity: number;
-  readonly description: string;
-  /** A53 — prix variable (ex: Mercenaires) : le coach saisit le coût. */
-  readonly variableCost?: boolean;
-}
+/** Option de coup de pouce servie à la feuille (cf. `inducement-options`). */
+export type MatchSheetInducementOption = InducementOption;
 
 export interface MatchSheetStarPlayerOption {
   readonly slug: string;
@@ -4111,93 +4107,6 @@ function buildWeatherTables(): MatchSheetWeatherTable[] {
       }))
       .sort((a, b) => a.roll - b.roll),
   }));
-}
-
-/**
- * Catalogue de coups de pouce ACCESSIBLES a une equipe : on filtre selon
- * `canPurchase` (apothicaire itinerant / Igor selon l'acces apothicaire du
- * roster) et on resout le cout effectif (rabais regional). `star_player`
- * est traite a part. Suit les regles officielles d'acces par equipe.
- */
-async function inducementOptionsFor(
-  roster: string,
-  // Ruleset REEL de l'équipe : `DEFAULT_RULESET` était forcé ici, donc les
-  // Ligues et remises d'une équipe Saison 2 étaient arbitrées sur la table
-  // Saison 3 (S8 de l'audit).
-  ruleset: Ruleset,
-  // FR17 — allowlist de coups de pouce au niveau ligue. `null` = tous
-  // autorisés (défaut). Les Star Players ne sont jamais filtrés ici.
-  allowedInducements: string[] | null = null,
-  // Ligue régionale CHOISIE par l'équipe : c'est elle (et l'alignement
-  // qu'elle apporte) qui ouvre les Coups de Pouce régionaux, pas l'union
-  // des Ligues du roster. `null` = équipe sans choix enregistré.
-  regionalLeague: string | null = null,
-  // Règlement de tournoi de la ligue : liste FERMÉE de coups de pouce, avec
-  // ses prix et quantités (ils priment sur le catalogue du moteur).
-  pack: TournamentRulesetDefinition | null = null,
-): Promise<MatchSheetInducementOption[]> {
-  // Acces apothicaire et regles speciales lus EN BASE
-  // (`RosterStaffConfig.apothecaryAllowed`, `Roster.specialRules`) : ils
-  // arbitrent le prix, la quantite et la disponibilite des coups de pouce,
-  // donc le debit de tresorerie post-match (S9 de l'audit). Les tables
-  // compilees `APOTHECARY_FORBIDDEN_ROSTERS` / `getSpecialRulesForTeam` ne
-  // sont plus que le repli, porte par les resolveurs eux-memes.
-  const [declaredRules, staffConfig, specialRules, catalogue] =
-    await Promise.all([
-      getDeclaredRegionalRules(roster, ruleset),
-      // Le Jeu en Ligue se joue en BB11 : la config staff est declaree par
-      // couple roster x format et la feuille de ligue n'a pas d'autre format.
-      resolveStaffConfigBySlug(roster, ruleset, "bb11"),
-      resolveSpecialRulesForTeam(prisma, roster, ruleset),
-      // Lot 6.1 — prix, plafonds et conditions servis par la base.
-      loadInducementCatalogue(ruleset),
-    ]);
-  const ctx: InducementContext = {
-    teamId: "A" as const,
-    regionalRules: resolveTeamRegionalRules(
-      roster,
-      ruleset,
-      regionalLeague,
-      // Ligues DÉCLARÉES par le roster (`Roster.regionalRules`) : sans elles
-      // la résolution retombe sur la table compilée et une Ligue éditée en
-      // admin ne changeait ni les remises ni l'offre de stars.
-      declaredRules,
-    ),
-    hasApothecary: staffConfig.apothecaryAllowed,
-    rosterSlug: roster,
-    // A53 — les restrictions/remises officielles dépendent des règles
-    // spéciales d'équipe (Maîtres de la Non-vie, Chantage et Corruption…).
-    specialRules: [...specialRules],
-    ruleset,
-    catalogue,
-  };
-  const effective = effectiveInducementAllowlist(allowedInducements, pack);
-  const allow = effective ? new Set(effective) : null;
-  // Lot 6.1 — catalogue servi par la base (`Inducement`), repli compilé.
-  const options = (ctx.catalogue ?? INDUCEMENT_CATALOGUE)
-    .filter((d) => d.slug !== "star_player")
-    .filter((d) => canPurchaseInducement(d, ctx))
-    .filter((d) => allow === null || allow.has(d.slug))
-    .map((d) => ({
-      slug: d.slug,
-      name: d.displayNameFr,
-      cost: getInducementCost(d.slug, ctx),
-      maxQuantity: getInducementMaxQuantity(d.slug, ctx),
-      description: d.description,
-      ...(d.variableCost ? { variableCost: true } : {}),
-    }));
-  // Prix, quantités et précisions du règlement priment sur le catalogue. Le
-  // règlement fixe le montant d'une remise, le catalogue désigne qui y a
-  // droit (Pots-de-vin pour Chantage et Corruption, Chef pour les Halflings).
-  const defsBySlug = new Map(
-    (ctx.catalogue ?? INDUCEMENT_CATALOGUE).map((d) => [d.slug, d]),
-  );
-  return applyPackInducementRules(options, pack, {
-    qualifiesForDiscount: (slug) => {
-      const def = defsBySlug.get(slug);
-      return def ? qualifiesForInducementDiscount(def, ctx) : false;
-    },
-  }) as MatchSheetInducementOption[];
 }
 
 /** Couleur 24 bits -> hex CSS (#rrggbb). */

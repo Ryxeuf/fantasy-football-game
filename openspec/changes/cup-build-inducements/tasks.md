@@ -42,7 +42,7 @@
 
 ## 6. Catalogue partagé et achat au build (serveur)
 
-- [ ] 6.1 Extraire `inducementOptionsFor` de `league-match-sheet.ts` vers `services/inducement-options`, sans changement de comportement — vérifier : tests de la feuille existants verts + test unitaire du service (mock Prisma) sur un roster avec et sans apothicaire.
+- [x] 6.1 Extraire `inducementOptionsFor` de `league-match-sheet.ts` vers `services/inducement-options`, sans changement de comportement — vérifier : tests de la feuille existants verts + test unitaire du service (mock Prisma) sur un roster avec et sans apothicaire.
 - [ ] 6.2 `buildInducementCatalogue({ roster, ruleset, regionalLeague, pack, allowlist, hiredStarSlugs })` : retire `star_player` et les coûts variables, applique le règlement (groupe 2) — vérifier : tests (règlement NAF ⇒ 5 options, coupe avec liste ⇒ intersection, Mercenaires absents).
 - [ ] 6.3 `GET /team/build-inducements` (`authUser`, `validateQuery`) : roster, édition, Ligue régionale, règlement ou `cupId` ; avec `cupId`, le serveur relit règlement, mode et liste de la coupe ; hors contexte autorisé, la liste est vide — vérifier : tests de route (coupe en `build`, coupe en `match` ⇒ vide, règlement seul, cupId inconnu ⇒ 404).
 - [ ] 6.4 Module pur `resolveBuildInducements(requested, catalogue)` : lignes au prix du catalogue, total en po, erreurs (hors catalogue, plafond, doublon) — vérifier : tests unitaires (dont « prix du client ignoré » : le schéma ne déclare pas `cost`).
