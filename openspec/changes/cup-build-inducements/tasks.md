@@ -38,7 +38,7 @@
 - [x] 5.2 Module pur `services/cup-inducement-mode` : `resolveCupInducementMode(raw, { pack, format })` (règlement ⇒ `build`, Sept sans `build`, inconnu/`null` ⇒ `match`) et parseur tolérant de `allowedInducements` (PG / SQLite) — vérifier : tests unitaires (toutes les combinaisons).
 - [x] 5.3 `cupRulesConfigSchema` accepte `inducementMode` et `allowedInducements`. `POST /cup` écrit le mode explicitement (`build` en BB11 sans choix, `match` en Sept, `build` imposé sous règlement), et `build` demandé en Sept ⇒ 400. `PATCH /cup/:id/rules` applique les mêmes règles dans sa fenêtre existante — vérifier : tests de route (défauts, refus Sept, règlement qui force `build`, coupe validée ⇒ 400).
 - [x] 5.4 `GET /cup/:id` sert `inducementMode` (effectif) et `allowedInducements` dans `rulesConfig` — vérifier : test de route (coupe à `null` ⇒ `match`).
-- [ ] 5.5 Ratchet `team-audit-coverage` : ajouter `teamInducement` aux modèles surveillés — vérifier : le test passe sur la base actuelle et échoue sur un écrivain fictif non journalisé.
+- [x] 5.5 Ratchet `team-audit-coverage` : ajouter `teamInducement` aux modèles surveillés — vérifier : le test passe sur la base actuelle et échoue sur un écrivain fictif non journalisé.
 
 ## 6. Catalogue partagé et achat au build (serveur)
 

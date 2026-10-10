@@ -2,7 +2,7 @@
  * Garde anti-régression — couverture du journal d'équipe.
  *
  * Invariant : tout module de `services/` ou `routes/` qui ÉCRIT sur `Team`,
- * `TeamPlayer` ou `TeamStarPlayer` doit journaliser (`safeRecordTeamAudit`
+ * `TeamPlayer`, `TeamStarPlayer` ou `TeamInducement` doit journaliser (`safeRecordTeamAudit`
  * / `recordTeamAudit` / `withTeamAudit`), directement ou en déléguant à un
  * module qui le fait.
  *
@@ -28,7 +28,7 @@ const ROUTES_DIR = join(__dirname, "..", "routes");
  * à la garde juste en ajoutant un cast.
  */
 const TEAM_WRITE =
-  /(?:\b(?:prisma|tx|db|client)\s*\.|\bas\s+any\s*\)\s*\.)\s*(?:team|teamPlayer|teamStarPlayer)\s*\.\s*(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\b/;
+  /(?:\b(?:prisma|tx|db|client)\s*\.|\bas\s+any\s*\)\s*\.)\s*(?:team|teamPlayer|teamStarPlayer|teamInducement)\s*\.\s*(?:create|createMany|update|updateMany|upsert|delete|deleteMany)\b/;
 
 /** Appel au journal, sous l'une de ses trois formes. */
 const AUDIT_CALL = /\b(?:safeRecordTeamAudit|recordTeamAudit|withTeamAudit)\s*\(/;
@@ -151,7 +151,7 @@ describe("couverture du journal d'équipe", () => {
   it("aucun module ne mute une équipe sans journaliser", () => {
     expect(
       offenders,
-      `Ces modules écrivent sur Team/TeamPlayer/TeamStarPlayer sans appeler le journal d'équipe.\n` +
+      `Ces modules écrivent sur Team/TeamPlayer/TeamStarPlayer/TeamInducement sans appeler le journal d'équipe.\n` +
         `Ajoute un appel à safeRecordTeamAudit/withTeamAudit, ou inscris le fichier dans AUDIT_EXEMPT avec sa justification :\n` +
         offenders.map((f) => `  - ${f}`).join("\n"),
     ).toEqual([]);
@@ -167,6 +167,20 @@ describe("couverture du journal d'équipe", () => {
       stale,
       "Exemptions obsolètes (fichier supprimé ou renommé) : à retirer",
     ).toEqual([]);
+  });
+
+  it("reconnaît une écriture de coups de pouce d'équipe comme une mutation", () => {
+    // Un écrivain fictif non journalisé serait refusé par la garde.
+    expect(
+      writesToTeamEntities("  await tx.teamInducement.createMany({ data });"),
+    ).toBe(true);
+    expect(
+      writesToTeamEntities("  await prisma.teamInducement.deleteMany({ where });"),
+    ).toBe(true);
+    // Une lecture n'en est pas une.
+    expect(
+      writesToTeamEntities("  await prisma.teamInducement.findMany({ where });"),
+    ).toBe(false);
   });
 
   it("chaque exemption porte une justification non vide", () => {
