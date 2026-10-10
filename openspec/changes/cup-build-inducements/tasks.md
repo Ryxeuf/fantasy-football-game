@@ -29,7 +29,7 @@
 
 ## 4. Lot 0 — Inscription telle quelle contrôlée sur la dépense (serveur)
 
-- [ ] 4.1 `registerTeamToCup` compare le budget de la coupe à `buildTeamBudgetSummary(...).totalSpent`, et non plus à `team.teamValue` — vérifier : test (VE 1 000 kpo + 150 kpo de Star Players refusée à 1 000 kpo, équipe sans star dans le budget acceptée, message `budget_exceeded` détaillé).
+- [x] 4.1 `registerTeamToCup` compare le budget de la coupe à `buildTeamBudgetSummary(...).totalSpent`, et non plus à `team.teamValue` — vérifier : test (VE 1 000 kpo + 150 kpo de Star Players refusée à 1 000 kpo, équipe sans star dans le budget acceptée, message `budget_exceeded` détaillé).
 - [ ] 4.2 Mettre à jour `docs/cup-composition-rules.md` (contrôle sur la dépense) et `docs/cup-match-sheet.md` (Star Players figés, budget sans trésorerie) — vérifier : docs relues, cohérentes avec les tests des groupes 1 à 4.
 
 ## 5. Modèle de données et mode de coupe (serveur)

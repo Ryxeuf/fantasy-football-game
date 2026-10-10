@@ -9,7 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../prisma', () => ({
   prisma: {
     cup: { findUnique: vi.fn() },
-    team: { findFirst: vi.fn() },
+    team: { findFirst: vi.fn(), findUnique: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
     roster: { findFirst: vi.fn() },
     cupParticipant: { create: vi.fn() },
@@ -24,9 +24,14 @@ vi.mock('./cup-roster-snapshot', () => ({
   captureRosterSnapshot: vi.fn(),
 }));
 
+vi.mock('./team-budget-summary', () => ({
+  buildTeamBudgetSummary: vi.fn(),
+}));
+
 import { prisma } from '../prisma';
 import { getTeamEngagement } from './team-competition-status';
 import { captureRosterSnapshot } from './cup-roster-snapshot';
+import { buildTeamBudgetSummary } from './team-budget-summary';
 import {
   registerTeamToCup,
   CupRegistrationError,
@@ -152,5 +157,66 @@ describe('registerTeamToCup — règlement de tournoi', () => {
     });
     expect(out.participantId).toBe('P1');
     expect(out.pspPoolGranted).toBe(0);
+  });
+});
+
+describe('registerTeamToCup — budget de la coupe contre la dépense de construction', () => {
+  const summary = buildTeamBudgetSummary as unknown as ReturnType<typeof vi.fn>;
+  const teamUnique = prisma.team.findUnique as unknown as ReturnType<
+    typeof vi.fn
+  >;
+
+  beforeEach(() => {
+    cupFind.mockResolvedValue(baseCup({ tierBudgets: { I: 1000 } }));
+    rosterFind.mockResolvedValue({ tier: 'I', budget: 1000 });
+    teamFind.mockResolvedValue(baseTeam({ teamValue: 1_000_000 }));
+    teamUnique.mockResolvedValue({
+      ...baseTeam({ teamValue: 1_000_000 }),
+      players: [],
+      starPlayers: [{ starPlayerSlug: 'griff_oberwald', cost: 150_000 }],
+    });
+  });
+
+  it('refuse une VE de 1 000k qui a payé 150k de Star Players hors VE', async () => {
+    summary.mockResolvedValue({ totalSpent: 1_150_000 });
+
+    const err = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    }).catch((e: unknown) => e);
+
+    expect((err as CupRegistrationError).code).toBe('budget_exceeded');
+    expect((err as Error).message).toMatch(/1150k/);
+    expect((err as Error).message).toMatch(/Star Players/);
+    expect((err as Error).message).toMatch(/1000k/);
+    expect(participantCreate).not.toHaveBeenCalled();
+    // La dépense se calcule sur le roster actif et ses Star Players.
+    expect(summary).toHaveBeenCalledWith(
+      prisma,
+      expect.objectContaining({ id: 'T1' }),
+      [],
+      [{ starPlayerSlug: 'griff_oberwald', cost: 150_000 }],
+    );
+  });
+
+  it('accepte une équipe dont la dépense tient dans le budget', async () => {
+    summary.mockResolvedValue({ totalSpent: 990_000 });
+
+    const out = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    });
+
+    expect(out.participantId).toBe('P1');
+  });
+
+  it("ne calcule aucune dépense quand la coupe ne fixe pas de budget", async () => {
+    cupFind.mockResolvedValue(baseCup());
+
+    await registerTeamToCup({ cupId: 'C1', teamId: 'T1', userId: 'U1' });
+
+    expect(summary).not.toHaveBeenCalled();
   });
 });

@@ -23,6 +23,7 @@ import {
 import { captureRosterSnapshot } from './cup-roster-snapshot';
 import { getTeamEngagement } from './team-competition-status';
 import { ACTIVE_PLAYER_WHERE } from './player-status';
+import { buildTeamBudgetSummary } from './team-budget-summary';
 
 export type CupRegistrationErrorCode =
   | 'cup_not_found'
@@ -150,12 +151,33 @@ export async function registerTeamToCup(input: {
       Object.keys(parseNumberMap(cupRules.rosterStartingPspOverrides)).length > 0;
 
     if (hasBudgetRules) {
+      // Le budget d'une coupe borne ce que l'équipe a DÉPENSÉ pour se
+      // construire — joueurs, relances, staff, fans, Star Players — et non sa
+      // VE : les Star Players n'y entrent pas, donc une équipe de VE 1 000k
+      // qui a payé 150k de stars passait sous un budget de 1 000k.
       const budgetKpo = resolveCupBudget(cupRules, rosterForRules);
-      if (team.teamValue > budgetKpo * 1000) {
-        const teamValueKpo = Math.round(team.teamValue / 1000);
+      const withRoster = await prisma.team.findUnique({
+        where: { id: teamId },
+        include: {
+          players: { where: ACTIVE_PLAYER_WHERE },
+          starPlayers: true,
+        },
+      });
+      const spent = withRoster
+        ? (
+            await buildTeamBudgetSummary(
+              prisma,
+              withRoster,
+              withRoster.players,
+              withRoster.starPlayers,
+            )
+          ).totalSpent
+        : team.teamValue;
+      if (spent > budgetKpo * 1000) {
+        const spentKpo = Math.round(spent / 1000);
         throw new CupRegistrationError(
           'budget_exceeded',
-          `Cette équipe (VE ${teamValueKpo}k) dépasse le budget autorisé pour cette coupe (${budgetKpo}k)`,
+          `Cette équipe a dépensé ${spentKpo}k à sa construction (joueurs, staff et Star Players compris), au-delà du budget autorisé pour cette coupe (${budgetKpo}k)`,
         );
       }
     }
