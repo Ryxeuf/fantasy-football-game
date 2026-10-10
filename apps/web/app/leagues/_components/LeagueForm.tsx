@@ -5,9 +5,6 @@ import Link from "next/link";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesets } from "../../lib/tournament-rulesets";
 import { useLanguage } from "../../contexts/LanguageContext";
-import {
-  INDUCEMENT_CATALOGUE,
-} from "@bb/game-engine";
 import { BonusRulesEditor } from "./BonusRulesEditor";
 import { StandingsOrderField } from "./StandingsOrderField";
 import { PredictionsScopeField } from "./PredictionsScopeField";
@@ -16,13 +13,8 @@ import {
   type PredictionScope,
 } from "./predictions";
 import PendingCompetitionDocuments from "../../components/PendingCompetitionDocuments";
+import { AllowedInducementsField } from "../../components/AllowedInducementsField";
 import type { BonusRuleValue } from "./bonus-rules";
-
-// FR17 — coups de pouce paramétrables au niveau ligue (hors Star Players,
-// qui dépendent des rosters). Source : catalogue officiel du game-engine.
-const INDUCEMENT_OPTIONS = INDUCEMENT_CATALOGUE.filter(
-  (d) => d.slug !== "star_player",
-).map((d) => ({ slug: d.slug, name: d.displayNameFr }));
 
 // L2.D — Formulaire de ligue partage entre la creation (`/leagues/new`,
 // POST /leagues) et l'edition (`/leagues/:id/edit`, PATCH /leagues/:id).
@@ -184,16 +176,8 @@ export function LeagueForm({
     });
   }, []);
 
-  const toggleInducement = useCallback((slug: string) => {
-    setForm((prev) => {
-      const has = prev.allowedInducements.includes(slug);
-      return {
-        ...prev,
-        allowedInducements: has
-          ? prev.allowedInducements.filter((s) => s !== slug)
-          : [...prev.allowedInducements, slug],
-      };
-    });
+  const setAllowedInducements = useCallback((next: string[]) => {
+    setForm((prev) => ({ ...prev, allowedInducements: next }));
   }, []);
 
   const canSubmit = useMemo(() => {
@@ -388,37 +372,11 @@ export function LeagueForm({
         </fieldset>
 
         {/* FR17 — coups de pouce autorisés (vide = tous autorisés). */}
-        <fieldset className="block" data-testid="league-form-inducements">
-          <legend className="text-sm font-medium text-gray-700">
-            Coups de pouce autorisés
-          </legend>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Aucune case cochée = tous les coups de pouce sont autorisés. Les
-            Star Players ne sont pas concernés (ils dépendent des rosters).
-          </p>
-          <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {INDUCEMENT_OPTIONS.map((opt) => {
-              const checked = form.allowedInducements.includes(opt.slug);
-              return (
-                <label
-                  key={opt.slug}
-                  className={`flex items-center gap-2 px-3 py-2 rounded border text-sm cursor-pointer ${
-                    checked
-                      ? "border-nuffle-gold bg-nuffle-gold/10"
-                      : "border-gray-300 bg-white"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleInducement(opt.slug)}
-                  />
-                  <span>{opt.name}</span>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
+        <AllowedInducementsField
+          testId="league-form-inducements"
+          value={form.allowedInducements}
+          onChange={setAllowedInducements}
+        />
 
         <fieldset className="block">
           <legend className="text-sm font-medium text-gray-700 mb-2">
