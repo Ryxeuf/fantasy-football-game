@@ -543,24 +543,30 @@ export function getInducementCost(
   const def = catalogueMapOf(ctx).get(slug);
   if (!def) return 0;
 
-  // A53 — remise par règle (régionale OU spéciale d'équipe)…
-  if (
-    def.discountRule &&
-    def.discountCost &&
-    contextRules(ctx).includes(def.discountRule)
-  ) {
+  if (def.discountCost && qualifiesForInducementDiscount(def, ctx)) {
     return def.discountCost;
+  }
+  return def.baseCost;
+}
+
+/**
+ * L'équipe a-t-elle droit à la remise que le catalogue officiel attache à ce
+ * coup de pouce ? Remise par règle (régionale OU spéciale d'équipe — Pots-de-
+ * vin pour Chantage et Corruption) ou par roster (Chef Cuistot Halfling pour
+ * les Halflings). Ne dit rien du MONTANT : un règlement de tournoi peut
+ * remplacer le prix réduit du catalogue par le sien, mais il désigne les
+ * mêmes équipes.
+ */
+export function qualifiesForInducementDiscount(
+  def: Pick<InducementDefinition, 'discountRule' | 'discountRoster'>,
+  ctx: InducementContext,
+): boolean {
+  // A53 — remise par règle (régionale OU spéciale d'équipe)…
+  if (def.discountRule && contextRules(ctx).includes(def.discountRule)) {
+    return true;
   }
   // …ou par roster (ex: Chef Cuistot Halfling à 100k pour les Halflings).
-  if (
-    def.discountRoster &&
-    def.discountCost &&
-    ctx.rosterSlug === def.discountRoster
-  ) {
-    return def.discountCost;
-  }
-
-  return def.baseCost;
+  return Boolean(def.discountRoster && ctx.rosterSlug === def.discountRoster);
 }
 
 /**

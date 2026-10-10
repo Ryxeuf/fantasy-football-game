@@ -102,6 +102,7 @@ export {
   getInducementMaxQuantity,
   calculatePettyCash,
   getInducementCost,
+  qualifiesForInducementDiscount,
   validateInducementSelection,
   applyInducementEffects,
   processInducementsWithSelection,

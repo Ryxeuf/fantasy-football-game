@@ -9,6 +9,7 @@ import {
   isWiredInducementSlug,
   applyInducementEffects,
   processInducementsWithSelection,
+  qualifiesForInducementDiscount,
   INDUCEMENT_CATALOGUE,
   type InducementContext,
   type InducementSelection,
@@ -704,5 +705,46 @@ describe('Règle: processInducementsWithSelection', () => {
     expect(validationA.valid).toBe(true);
     expect(newState.preMatch.inducements?.teamA.pettyCash).toBe(100_000);
     expect(newState.preMatch.inducements?.teamA.treasurySpent).toBe(50_000);
+  });
+});
+
+describe('qualifiesForInducementDiscount', () => {
+  const bribe = getInducementDefinition('bribe')!;
+  const chef = getInducementDefinition('halfling_master_chef')!;
+  const kegs = getInducementDefinition('bloodweiser_kegs')!;
+
+  it('remise par règle spéciale (Chantage et Corruption)', () => {
+    expect(
+      qualifiesForInducementDiscount(
+        bribe,
+        makeCtx({ specialRules: ['chantage_et_corruption'] }),
+      ),
+    ).toBe(true);
+  });
+
+  it('remise par règle régionale', () => {
+    expect(
+      qualifiesForInducementDiscount(
+        bribe,
+        makeCtx({ regionalRules: ['chantage_et_corruption'] }),
+      ),
+    ).toBe(true);
+  });
+
+  it('remise par roster (Chef Cuistot pour les Halflings)', () => {
+    expect(
+      qualifiesForInducementDiscount(chef, makeCtx({ rosterSlug: 'halfling' })),
+    ).toBe(true);
+    expect(qualifiesForInducementDiscount(chef, makeCtx())).toBe(false);
+  });
+
+  it("ni règle ni roster : aucune remise", () => {
+    expect(qualifiesForInducementDiscount(bribe, makeCtx())).toBe(false);
+    expect(
+      qualifiesForInducementDiscount(
+        kegs,
+        makeCtx({ specialRules: ['chantage_et_corruption'] }),
+      ),
+    ).toBe(false);
   });
 });

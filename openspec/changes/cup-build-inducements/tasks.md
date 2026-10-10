@@ -14,7 +14,7 @@
 
 ## 2. Lot 0 — Remises et plafond du règlement de tournoi (moteur + serveur + admin)
 
-- [ ] 2.1 Moteur : extraire `qualifiesForInducementDiscount(def, ctx)` de `getInducementCost`, sans changement de comportement — vérifier : tests existants de `inducements.test.ts` verts + tests de la fonction (règle spéciale, roster, ni l'un ni l'autre).
+- [x] 2.1 Moteur : extraire `qualifiesForInducementDiscount(def, ctx)` de `getInducementCost`, sans changement de comportement — vérifier : tests existants de `inducements.test.ts` verts + tests de la fonction (règle spéciale, roster, ni l'un ni l'autre).
 - [ ] 2.2 Moteur : `TournamentInducementRule` gagne `discountCost?` et `maxWithSecretWeaponStar?`. Données NAF WC 2027 : Pots-de-vin `discountCost: 50_000`, `maxWithSecretWeaponStar: 2` ; Chef Cuistot `discountCost: 100_000` — vérifier : `tournament-rulesets.test.ts` (valeurs du pack).
 - [ ] 2.3 `applyPackInducementRules` reçoit le contexte de l'équipe : prix réduit si `qualifiesForInducementDiscount`, plafond = min(plafond du règlement sinon du moteur, plafond Arme Secrète si un Star Player recruté porte `secret-weapon`) — vérifier : `tournament-inducements.test.ts` (goblin ⇒ 50 000 po ×6, halfling ⇒ Chef 100 000, autre ⇒ 300 000, Arme Secrète ⇒ 2 Pots-de-vin).
 - [ ] 2.4 `schemas/tournament-ruleset.schemas` : validation (0 ≤ prix réduit ≤ prix, plafond ≥ 0), `serializeDefinition` et la lecture conservent les deux champs, une ligne incohérente est ignorée à la lecture — vérifier : `tournament-ruleset.schemas.test.ts`.
