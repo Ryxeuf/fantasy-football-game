@@ -11,7 +11,7 @@
  *    - contraintes de format (BB11 11-16 / Sevens 7-11, non-Linemen,
  *      Big Guys, Star Players, plafonds staff) via validateFormatSelection
  *    - paires Star Players valides + cap joueurs selon format
- *    - budget (joueurs + Star Players + staff) <= teamValue
+ *    - budget (joueurs + Star Players + staff + coups de pouce) <= teamValue
  *    Cree `team` + `teamPlayer[]` + `teamStarPlayer[]`, recalcule TV.
  *
  * Helpers leaf uniquement : `prisma`, `sendError`/`sendSuccess`,
@@ -69,6 +69,15 @@ import { safeRecordTeamAudit, type TeamAuditPrismaLike } from '../services/team-
 import { isAllowedTeamRoster } from '../services/roster-catalogue';
 import { resolveCupBudget, resolveCupStartingPsp } from '../services/cup-rules';
 import {
+  buildInducementContextFrom,
+  type CupForBuildInducements,
+} from '../services/build-inducement-context';
+import { buildInducementCatalogue } from '../services/inducement-options';
+import {
+  resolveBuildInducements,
+  type BuildInducementLine,
+} from '../services/build-inducements';
+import {
   applyCupBuildAdvancements,
   CupBuildAdvancementError,
   type BuildAdvancementInput,
@@ -110,6 +119,7 @@ export async function handleBuildTeam(
       cupId: bodyCupId,
       tournamentRuleset: bodyTournamentRuleset,
       regionalLeague: bodyRegionalLeague,
+      inducements: bodyInducements,
     }: {
       name: string;
       roster: string;
@@ -137,6 +147,7 @@ export async function handleBuildTeam(
       cupId?: string;
       tournamentRuleset?: string | null;
       regionalLeague?: string | null;
+      inducements?: Array<{ slug: string; quantity: number }>;
     } = req.body;
     // Lot 6.8 — l'univers des rosters vient de la BASE : un roster créé en
     // admin est jouable immédiatement, un roster retiré ne l'est plus.
@@ -204,6 +215,9 @@ export async function handleBuildTeam(
     // En jeu libre, `pspPool` vient du mode « édition avancée » du coach.
     let pspPool = Math.max(0, bodyStartingPspPool ?? 0);
     let cupForRegister: { id: string } | null = null;
+    // Ce que la coupe dit des coups de pouce (mode, liste) : il décide si le
+    // build peut en porter (cf. `buildInducementContextFrom`).
+    let cupForInducements: CupForBuildInducements | null = null;
     if (bodyCupId) {
       const cup = await prisma.cup.findUnique({
         where: { id: bodyCupId },
@@ -219,12 +233,15 @@ export async function handleBuildTeam(
           tierStartingPsp: true,
           rosterStartingPspOverrides: true,
           tournamentRuleset: true,
+          inducementMode: true,
+          allowedInducements: true,
         },
       });
       if (!cup) {
         sendError(res, 'Coupe introuvable', 404);
         return;
       }
+      cupForInducements = cup;
       if (cup.status !== 'ouverte' || cup.validated) {
         sendError(res, 'Cette coupe est fermée aux inscriptions', 400);
         return;
@@ -513,11 +530,57 @@ export async function handleBuildTeam(
       pspPool -= starSppTax;
     }
 
-    const totalBudgetUsed = totalCost + starPlayersCost + staffCost;
+    // Coups de pouce achetés À LA CRÉATION : seulement pour une coupe qui les
+    // vend à l'inscription (mode `build`) ou sous un règlement de tournoi.
+    // Prix et plafonds viennent du catalogue effectif (jamais du client), le
+    // plafond « Arme Secrète » des Star Players recrutés ci-dessus.
+    let inducementLines: readonly BuildInducementLine[] = [];
+    let inducementsCost = 0;
+    if ((bodyInducements?.length ?? 0) > 0) {
+      const inducementContext = buildInducementContextFrom({
+        cup: cupForInducements,
+        pack,
+      });
+      if (!inducementContext.allowed) {
+        sendError(
+          res,
+          "Les coups de pouce ne s'achètent à la création que pour une coupe qui les vend à l'inscription, ou sous un règlement de tournoi",
+          400,
+        );
+        return;
+      }
+      const catalogue = await buildInducementCatalogue({
+        roster,
+        ruleset,
+        regionalLeague,
+        pack,
+        allowlist: inducementContext.allowlist,
+        hiredStarSlugs: starPlayersToHire,
+      });
+      const resolvedInducements = resolveBuildInducements(
+        bodyInducements ?? [],
+        catalogue,
+      );
+      if (!resolvedInducements.ok) {
+        sendError(
+          res,
+          pack
+            ? `${resolvedInducements.error} (règlement ${pack.shortLabel})`
+            : resolvedInducements.error,
+          400,
+        );
+        return;
+      }
+      inducementLines = resolvedInducements.lines;
+      inducementsCost = resolvedInducements.totalCost / 1000;
+    }
+
+    const totalBudgetUsed =
+      totalCost + starPlayersCost + staffCost + inducementsCost;
     if (totalBudgetUsed > finalTeamValue) {
       sendError(
         res,
-        `Budget depasse: ${totalBudgetUsed}k (${totalCost}k joueurs + ${starPlayersCost}k Star Players + ${staffCost}k staff) / ${finalTeamValue}k`,
+        `Budget depasse: ${totalBudgetUsed}k (${totalCost}k joueurs + ${starPlayersCost}k Star Players + ${staffCost}k staff + ${inducementsCost}k coups de pouce) / ${finalTeamValue}k`,
         400,
       );
       return;
@@ -583,6 +646,16 @@ export async function handleBuildTeam(
       if (starPlayersData.length > 0) {
         await tx.teamStarPlayer.createMany({
           data: starPlayersData.map((sp: any) => ({ ...sp, teamId: newTeam.id })),
+        });
+      }
+      if (inducementLines.length > 0) {
+        await tx.teamInducement.createMany({
+          data: inducementLines.map((line) => ({
+            teamId: newTeam.id,
+            slug: line.slug,
+            quantity: line.quantity,
+            unitCost: line.unitCost,
+          })),
         });
       }
       return newTeam;
@@ -709,6 +782,11 @@ export async function handleBuildTeam(
         pspPool,
         players: safePlayerRows.length,
         starPlayers: starPlayersData.length,
+        inducements: inducementLines.map((line) => ({
+          slug: line.slug,
+          quantity: line.quantity,
+          unitCost: line.unitCost,
+        })),
         tournamentRuleset: pack?.slug ?? null,
         regionalLeague,
       },
@@ -775,6 +853,7 @@ export async function handleBuildTeam(
           players: totalCost,
           starPlayers: starPlayersCost,
           staff: staffCost,
+          inducements: inducementsCost,
         },
         // Pool de PSP alloué + coupe auto-inscrite (Flow B), pour l'UI.
         startingPspPool: pspPool,
