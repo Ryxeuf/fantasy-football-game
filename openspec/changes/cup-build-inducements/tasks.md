@@ -77,7 +77,7 @@
 ## 10. Intégration
 
 - [x] 10.1 Spec e2e-api `tests/e2e-api/specs/cups-build-inducements.spec.ts` : coupe NAF WC 2027 → build goblin avec Pots-de-vin (50 000 po) et un Star Player → inscription → feuille ouverte : Star Player proposé, coups de pouce rappelés, sélection d'avant-match refusée → validation sans écriture sur l'équipe — vérifier : la spec passe localement (serveur de test sur le port 18002 arrêté avant le run).
-- [ ] 10.2 Lancer `pnpm --filter @bb/game-engine test`, `pnpm --filter @bb/server test`, `pnpm --filter web vitest run` et `pnpm -w run typecheck` — vérifier : tout est vert.
+- [x] 10.2 Lancer `pnpm --filter @bb/game-engine test`, `pnpm --filter @bb/server test`, `pnpm --filter web vitest run` et `pnpm -w run typecheck` — vérifier : tout est vert.
 
 ## Workflow follow-up
 
