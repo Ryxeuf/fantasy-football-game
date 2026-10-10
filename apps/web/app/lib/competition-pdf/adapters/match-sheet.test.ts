@@ -214,3 +214,35 @@ describe("matchSheetToPdf — mode de saisie", () => {
     expect(doc.prefill?.forfeitSide).toBe("away");
   });
 });
+
+describe("matchSheetToPdf — Star Players du roster d'inscription (coupe)", () => {
+  const morg = {
+    id: "star-h-morg_n_thorg",
+    number: 81,
+    name: "Morg 'n' Thorg",
+    position: "star_player",
+    positionName: "Star Player",
+    stats,
+    registered: true,
+  };
+
+  it.each(["full", "simplified"] as const)(
+    "liste le Star Player inscrit dans la page de l'équipe (saisie %s)",
+    (entryMode) => {
+      const doc = matchSheetToPdf(
+        input({
+          competitionKind: "cup",
+          competitionRules: { sppEnabled: false, entryMode },
+          teams: {
+            home: { ...team("h", "Karak"), starPlayersHired: [morg] },
+            away: team("a", "Morr"),
+          },
+        }),
+      );
+      const star = doc.home.players.find((p) => p.name === "Morg 'n' Thorg");
+      expect(star).toMatchObject({ note: "Star Player", unavailable: false });
+      // Une case par action, comme tout joueur de la rencontre.
+      expect(star?.tally).toBeNull();
+    },
+  );
+});

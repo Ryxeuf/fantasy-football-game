@@ -10,7 +10,7 @@
 - [x] 1.2 Faire passer TOUS les sites de dérivation par cette fonction : `withStarPlayers` de `getMatchSheet`, le repli de `sideSheetPlayers`, les lectures d'appartenance et de noms de la validation — vérifier : `grep deriveSheetStarPlayers` ne la trouve plus que dans le module + test de feuille de coupe où un Star Player figé est accepté comme acteur d'un touchdown et comme Joueur du Match (PSP non persistés).
 - [x] 1.3 Refuser à `updatePreMatch` un Star Player sélectionné en avant-match s'il est déjà au roster d'inscription (400, code dédié) — vérifier : test de service (refus) + test qu'une feuille ancienne portant le doublon se lit sans erreur.
 - [x] 1.4 Web : les Star Players figés apparaissent dans les sélecteurs d'acteur et de victime en saisie complète ET simplifiée — vérifier : tests de rendu de `leagues/pairings/[id]/sheet` dans les deux modes de coupe.
-- [ ] 1.5 Feuille papier : les Star Players figés sont listés dans la page de l'équipe avec leurs cases d'actions — vérifier : test de l'adaptateur `lib/competition-pdf/adapters/match-sheet`.
+- [x] 1.5 Feuille papier : les Star Players figés sont listés dans la page de l'équipe avec leurs cases d'actions — vérifier : test de l'adaptateur `lib/competition-pdf/adapters/match-sheet`.
 
 ## 2. Lot 0 — Remises et plafond du règlement de tournoi (moteur + serveur + admin)
 
