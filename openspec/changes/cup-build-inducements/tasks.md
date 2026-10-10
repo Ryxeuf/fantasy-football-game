@@ -23,7 +23,7 @@
 
 ## 3. Lot 0 — Budget de coups de pouce d'une coupe sans trésorerie (serveur + web)
 
-- [ ] 3.1 `buildMatchSheetReference` reçoit la compétition. En coupe, `calculatePettyCash` est appelé sans bonus d'outsider et avec des trésoreries à 0 ; la ligue est inchangée — vérifier : tests (favori à 300 000 po de trésorerie ⇒ budget 0, outsider à 80 000 po d'écart ⇒ 80 000, ligue identique à l'existant).
+- [x] 3.1 `buildMatchSheetReference` reçoit la compétition. En coupe, `calculatePettyCash` est appelé sans bonus d'outsider et avec des trésoreries à 0 ; la ligue est inchangée — vérifier : tests (favori à 300 000 po de trésorerie ⇒ budget 0, outsider à 80 000 po d'écart ⇒ 80 000, ligue identique à l'existant).
 - [ ] 3.2 Le contrôle `inducement_over_budget` de `updatePreMatch` utilise le même budget — vérifier : test de service (sélection d'un favori de coupe refusée, ligue inchangée).
 - [ ] 3.3 Web : en coupe, l'éditeur de coups de pouce n'affiche plus la trésorerie comme cagnotte — vérifier : test de `MatchSheetPanels` (libellé de budget en coupe et en ligue).
 

@@ -4324,6 +4324,69 @@ describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
   });
 });
 
+describe("budget de coups de pouce d'une COUPE : jamais la trésorerie", () => {
+  function team(currentValue: number, treasury: number) {
+    return {
+      teamId: `t-${currentValue}`,
+      name: "Équipe",
+      roster: "human",
+      raceName: "Humains",
+      coachName: "Coach",
+      teamValue: currentValue,
+      currentValue,
+      treasury,
+      players: [],
+    };
+  }
+  const NO_DEAD = new Set<string>();
+
+  it("favori à 300 000 po de trésorerie figée : budget nul", async () => {
+    const ref = await buildMatchSheetReference(
+      { home: team(1_100_000, 300_000), away: team(1_020_000, 0) },
+      null,
+      { home: 0, away: 0 },
+      null,
+      NO_DEAD,
+      "cup",
+    );
+    expect(ref.budget.home).toMatchObject({
+      treasury: 0,
+      pettyCash: 0,
+      maxBudget: 0,
+    });
+  });
+
+  it("outsider : l'écart de VEA, sans complément de trésorerie ni dépense adverse", async () => {
+    const ref = await buildMatchSheetReference(
+      { home: team(1_100_000, 0), away: team(1_020_000, 200_000) },
+      null,
+      { home: 60_000, away: 0 },
+      null,
+      NO_DEAD,
+      "cup",
+    );
+    expect(ref.budget.away).toMatchObject({
+      treasury: 0,
+      pettyCash: 80_000,
+      maxBudget: 80_000,
+    });
+  });
+
+  it("ligue : comportement inchangé (bonus d'outsider et trésorerie)", async () => {
+    const ref = await buildMatchSheetReference(
+      { home: team(1_100_000, 300_000), away: team(1_020_000, 200_000) },
+      null,
+      { home: 60_000, away: 0 },
+    );
+    expect(ref.budget.home).toMatchObject({ treasury: 300_000, maxBudget: 300_000 });
+    // 80k d'écart + 60k dépensés par le favori + min(50k, 200k).
+    expect(ref.budget.away).toMatchObject({
+      pettyCash: 140_000,
+      maxBudget: 190_000,
+    });
+  });
+});
+
 describe("collectViolentInnovators — E30", () => {
   const player = (id: string, skills: string | null) =>
     ({ id, skills }) as never;

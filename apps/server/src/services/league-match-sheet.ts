@@ -1251,10 +1251,14 @@ export async function updatePreMatch(input: {
         ? p.inducementsAway
         : sheetInd.inducementsAway,
     );
-    const { budget } = await buildMatchSheetReference(teams, null, {
-      home: spentHome,
-      away: spentAway,
-    });
+    const { budget } = await buildMatchSheetReference(
+      teams,
+      null,
+      { home: spentHome, away: spentAway },
+      null,
+      new Set(),
+      ctx.kind,
+    );
     // FR17 — enforcement à la soumission : aucun coup de pouce hors allowlist
     // ligue. Les Star Players (slug "star_player") sont exemptés (ils
     // dépendent des rosters / règles régionales, pas de l'allowlist).
@@ -2745,10 +2749,17 @@ export async function validateByCommissioner(input: {
     inducementsHome?: unknown;
     inducementsAway?: unknown;
   };
-  const { budget } = await buildMatchSheetReference(teamsForBudget, null, {
-    home: sumGold(sheetIndForBudget.inducementsHome),
-    away: sumGold(sheetIndForBudget.inducementsAway),
-  });
+  const { budget } = await buildMatchSheetReference(
+    teamsForBudget,
+    null,
+    {
+      home: sumGold(sheetIndForBudget.inducementsHome),
+      away: sumGold(sheetIndForBudget.inducementsAway),
+    },
+    null,
+    new Set(),
+    ctx.kind,
+  );
 
   // A63 — les gains auto dependent du score final (10k/TD) et du bonus
   // « sans temporisation » (+10k si aucun event stalling pour l'equipe) :
@@ -4449,11 +4460,16 @@ export async function buildMatchSheetReference(
   // Joueurs tués pendant CE match (pas encore persistés) : leur place est
   // libre pour l'embauche de l'étape 4.
   deadThisMatch: ReadonlySet<string> = new Set(),
+  // Compétition de la feuille. Une COUPE ne débite jamais la trésorerie (elle
+  // n'écrit rien sur les équipes) : la compter dans le budget en ferait une
+  // cagnotte réutilisable à chaque ronde.
+  competitionKind: CompetitionKind = "league",
 ): Promise<MatchSheetReference> {
+  const isCup = competitionKind === "cup";
   const homeCtv = teams.home?.currentValue ?? 0;
   const awayCtv = teams.away?.currentValue ?? 0;
-  const homeTreasury = teams.home?.treasury ?? 0;
-  const awayTreasury = teams.away?.treasury ?? 0;
+  const homeTreasury = isCup ? 0 : (teams.home?.treasury ?? 0);
+  const awayTreasury = isCup ? 0 : (teams.away?.treasury ?? 0);
 
   const petty = calculatePettyCash({
     ctvTeamA: homeCtv,
@@ -4462,10 +4478,11 @@ export async function buildMatchSheetReference(
     treasuryTeamB: awayTreasury,
     // FR14/A55 — règle de ligue : l'équipe la plus faible peut investir
     // jusqu'à 50 000 po de SA trésorerie (selon disponibilité) au-delà de la
-    // différence de VEA + des dépenses adverses.
-    underdogBonus: LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
-    spentTeamA: spent.home,
-    spentTeamB: spent.away,
+    // différence de VEA + des dépenses adverses. En coupe, ni bonus ni
+    // dépense adverse : la petite monnaie est l'écart de VEA, rien d'autre.
+    underdogBonus: isCup ? 0 : LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
+    spentTeamA: isCup ? 0 : spent.home,
+    spentTeamB: isCup ? 0 : spent.away,
   });
 
   const [purchasesHome, purchasesAway] = await Promise.all([
@@ -4961,6 +4978,7 @@ export async function getMatchSheet(input: {
       { home: 0, away: 0 },
       inducementPack,
       deadThisMatch(summary),
+      ctx.kind,
     ),
     computedSpp,
     viewerRole: commissioner
