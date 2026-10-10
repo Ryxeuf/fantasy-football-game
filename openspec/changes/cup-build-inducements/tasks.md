@@ -54,7 +54,7 @@
 
 - [x] 7.1 Module pur `me/teams/new/build-inducements.ts` : total, bornage aux plafonds, réinitialisation au changement de roster, tri retenus / écartés pour le clonage — vérifier : tests unitaires.
 - [x] 7.2 `BuildInducementPicker.tsx` : liste du catalogue servi, quantités ±, prix et plafond, total — vérifier : tests de rendu (bornes, `data-testid` stables : `build-inducements`, `build-inducement-<slug>`).
-- [ ] 7.3 `page.tsx` : la section n'apparaît que sous règlement ou pour une coupe en `build`. Elle charge le catalogue, ajoute `inducementsCost` au bandeau et au budget restant, envoie `inducements` au build, et rappelle que l'or non dépensé est perdu sous règlement — vérifier : tests de page (coupe en `build`, coupe en `match` sans section, jeu libre sans section, budget restant décompté).
+- [x] 7.3 `page.tsx` : la section n'apparaît que sous règlement ou pour une coupe en `build`. Elle charge le catalogue, ajoute `inducementsCost` au bandeau et au budget restant, envoie `inducements` au build, et rappelle que l'or non dépensé est perdu sous règlement — vérifier : tests de page (coupe en `build`, coupe en `match` sans section, jeu libre sans section, budget restant décompté).
 - [ ] 7.4 Clonage `?cupId=…&fromTeamId=…` : préremplit les coups de pouce retenus au prix de la coupe et signale les écartés — vérifier : test de page (Mage Météo écarté, Mascotte retenue).
 
 ## 8. Snapshot, feuille et papier en mode `build` (serveur + web)

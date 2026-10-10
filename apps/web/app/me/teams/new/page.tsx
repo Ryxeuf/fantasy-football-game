@@ -23,6 +23,15 @@ import { uploadTeamLogo } from "../components/team-logo-client";
 import { BUILDER_DEFAULTS, readBuilderParams } from "./builder-url-params";
 import { defaultBudgetK } from "./default-budget";
 import { resolveBuildBudget, type CupBuildRules } from "./build-budget";
+import BuildInducementPicker from "./BuildInducementPicker";
+import {
+  EMPTY_SELECTION,
+  clampSelection,
+  selectionCostK,
+  toBuildRequest,
+  type BuildInducementOption,
+  type InducementSelection,
+} from "./build-inducements";
 import { formatStatByLabel } from "../../../lib/format-stats";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import {
@@ -189,6 +198,18 @@ export default function NewTeamBuilder() {
     () => (pack ? tournamentStarPlayerSppTax(pack, selectedStarCost / 1000) : 0),
     [pack, selectedStarCost],
   );
+
+  // Coups de pouce achetés À LA CRÉATION : seulement pour une coupe qui les
+  // vend à l'inscription (mode `build`) ou sous un règlement de tournoi. Le
+  // catalogue (prix pour CE roster, plafonds) est servi par le serveur ;
+  // `allowed` dit si la section doit apparaître.
+  const [inducementOptions, setInducementOptions] = useState<
+    BuildInducementOption[]
+  >([]);
+  const [inducementsAllowed, setInducementsAllowed] = useState(false);
+  const [inducementsLoading, setInducementsLoading] = useState(false);
+  const [inducementSelection, setInducementSelection] =
+    useState<InducementSelection>(EMPTY_SELECTION);
 
   // Un règlement choisi force l'édition, le format et le mode avancé
   // (achats de compétences depuis le pool de SPP du pack). Vrai AUSSI en
@@ -446,6 +467,48 @@ export default function NewTeamBuilder() {
       });
   }, [cupId]);
 
+  // Catalogue des coups de pouce du build. Hors coupe et hors règlement,
+  // rien à charger : l'avant-match les vend. Les Star Players choisis font
+  // partie de la requête (le plafond « Arme Secrète » en dépend), et un
+  // changement de catalogue borne la sélection en cours.
+  const selectedStarsKey = selectedStarPlayers.join(",");
+  useEffect(() => {
+    if (!cupId && !tournamentRuleset) {
+      setInducementsAllowed(false);
+      setInducementOptions([]);
+      setInducementSelection(EMPTY_SELECTION);
+      return;
+    }
+    let cancelled = false;
+    const params = new URLSearchParams({ roster: rosterId, ruleset });
+    if (regionalLeague) params.set("regionalLeague", regionalLeague);
+    if (tournamentRuleset) params.set("tournamentRuleset", tournamentRuleset);
+    if (cupId) params.set("cupId", cupId);
+    if (selectedStarsKey) params.set("stars", selectedStarsKey);
+    setInducementsLoading(true);
+    apiRequest<{ allowed: boolean; inducements: BuildInducementOption[] }>(
+      `/team/build-inducements?${params.toString()}`,
+    )
+      .then((data) => {
+        if (cancelled) return;
+        const options = data.allowed ? data.inducements : [];
+        setInducementsAllowed(data.allowed);
+        setInducementOptions(options);
+        setInducementSelection((prev) => clampSelection(prev, options));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setInducementsAllowed(false);
+        setInducementOptions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setInducementsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [cupId, tournamentRuleset, rosterId, ruleset, regionalLeague, selectedStarsKey]);
+
   // Budget d'or + pool de PSP IMPOSÉS, toutes sources confondues. La règle
   // (règlement de tournoi > règles de coupe > rien) vit dans un module pur
   // qui reproduit la précédence du serveur : sans ça, une équipe construite
@@ -572,9 +635,14 @@ export default function NewTeamBuilder() {
   // démonté (sortie du mode avancé, format Sevens) : la sélection fait foi.
   const starPlayersCost =
     selectedStarPlayers.length > 0 ? selectedStarCost / 1000 : 0;
+  // Coups de pouce achetés à la création, en kpo, au prix servi.
+  const inducementsCost = inducementsAllowed
+    ? selectionCostK(inducementSelection, inducementOptions)
+    : 0;
   // Budget engagé hors Star Players : c'est celui que le sélecteur compare
-  // au coût des stars pour savoir ce qui reste recrutable.
-  const budgetBeforeStars = teamValue - total - staffCost;
+  // au coût des stars pour savoir ce qui reste recrutable (coups de pouce
+  // déjà déduits).
+  const budgetBeforeStars = teamValue - total - staffCost - inducementsCost;
   const remainingBudget = budgetBeforeStars - starPlayersCost;
 
   // Le moteur (pur) attend pa: number avec sentinel 0 = "pas de passe".
@@ -708,6 +776,12 @@ export default function NewTeamBuilder() {
           // Mode « édition avancée » / coupe : pool de PSP + améliorations.
           // En Flow B, le serveur ré-impose budget + pool (valeurs ignorées).
           ...(cupId ? { cupId } : {}),
+          // Coups de pouce de création : quantités seulement, le serveur
+          // tarife et revalide (catalogue effectif, plafonds, budget).
+          ...(inducementsAllowed &&
+          Object.keys(inducementSelection).length > 0
+            ? { inducements: toBuildRequest(inducementSelection) }
+            : {}),
           ...(advancedMode || cupId
             ? {
                 startingPspPool,
@@ -817,6 +891,15 @@ export default function NewTeamBuilder() {
                   value={`${starPlayersCost}${t.teams.kpo}`}
                   tone="neutral"
                   testId="star-players-cost-summary"
+                  className="hidden sm:flex"
+                />
+              )}
+              {inducementsCost > 0 && (
+                <SummaryMetric
+                  label="🎁 Coups de pouce"
+                  value={`${inducementsCost}${t.teams.kpo}`}
+                  tone="neutral"
+                  testId="inducements-cost-summary"
                   className="hidden sm:flex"
                 />
               )}
@@ -1737,6 +1820,21 @@ export default function NewTeamBuilder() {
               maxTotalPlayers={constraints.maxPlayers}
             />
           ))}
+        {inducementsAllowed && (
+          <BuildInducementPicker
+            options={inducementOptions}
+            selection={inducementSelection}
+            onChange={setInducementSelection}
+            loading={inducementsLoading}
+            // Ce qui reste une fois joueurs, staff et Star Players payés.
+            availableBudgetK={budgetBeforeStars - starPlayersCost + inducementsCost}
+            hint={
+              pack
+                ? `${pack.shortLabel} : l'or non dépensé à la création est perdu, et les coups de pouce ne s'achètent qu'ici.`
+                : undefined
+            }
+          />
+        )}
       </div>
     </div>
   );
