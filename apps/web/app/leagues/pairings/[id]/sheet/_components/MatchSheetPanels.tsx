@@ -897,6 +897,7 @@ function InducementEditor({
   catalogue,
   starPlayers,
   budget,
+  cupBudget = false,
 }: {
   list: Inducement[];
   onChange: (l: Inducement[]) => void;
@@ -905,6 +906,11 @@ function InducementEditor({
   catalogue: InducementOption[];
   starPlayers: StarPlayerOption[];
   budget: TeamBudget;
+  /**
+   * Coupe : la trésorerie n'est jamais débitée, elle n'entre donc pas dans
+   * le budget — seule la petite monnaie (écart de VEA) se dépense.
+   */
+  cupBudget?: boolean;
 }) {
   const [pick, setPick] = useState("");
 
@@ -967,9 +973,18 @@ function InducementEditor({
           />
         </div>
         <div className="flex justify-between text-[11px] text-slate-500">
-          <span>
-            Petite Monnaie {formatGold(budget.pettyCash)} + cagnotte{" "}
-            {formatGold(budget.treasury)}
+          <span data-testid={`${testId}-budget-detail`}>
+            {cupBudget ? (
+              <>
+                Petite Monnaie {formatGold(budget.pettyCash)} (écart de VEA,
+                pas de trésorerie en coupe)
+              </>
+            ) : (
+              <>
+                Petite Monnaie {formatGold(budget.pettyCash)} + cagnotte{" "}
+                {formatGold(budget.treasury)}
+              </>
+            )}
           </span>
           <span
             className={overBudget ? "font-semibold text-red-600" : ""}
@@ -1098,6 +1113,7 @@ export function PreMatchPanel({
   onSave,
   reference,
   forfeitOnly = false,
+  cupBudget = false,
 }: {
   initial: PreMatchValues;
   homeName: string;
@@ -1114,6 +1130,11 @@ export function PreMatchPanel({
    * popularité, coups de pouce et prières sont retirés, pas redessinés.
    */
   forfeitOnly?: boolean;
+  /**
+   * Feuille de COUPE : le budget de coups de pouce est la seule petite
+   * monnaie, sans trésorerie ni dépense adverse ajoutée à l'outsider.
+   */
+  cupBudget?: boolean;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -1157,12 +1178,13 @@ export function PreMatchPanel({
   // adverse (règle officielle : la CTV de la plus forte inclut ses achats).
   const spentH = sumInducements(indH);
   const spentA = sumInducements(indA);
+  // En coupe, ni trésorerie ni dépense adverse : le budget servi fait foi.
   const effectiveMaxHome =
     reference.budget.home.maxBudget +
-    (reference.budget.home.pettyCash > 0 ? spentA : 0);
+    (!cupBudget && reference.budget.home.pettyCash > 0 ? spentA : 0);
   const effectiveMaxAway =
     reference.budget.away.maxBudget +
-    (reference.budget.away.pettyCash > 0 ? spentH : 0);
+    (!cupBudget && reference.budget.away.pettyCash > 0 ? spentH : 0);
   const overHome = spentH > effectiveMaxHome;
   const overAway = spentA > effectiveMaxAway;
   const overBudget = overHome || overAway;
@@ -1412,6 +1434,7 @@ export function PreMatchPanel({
                   catalogue={c.catalogue}
                   starPlayers={c.stars}
                   budget={c.budget}
+                  cupBudget={cupBudget}
                 />
                 <PrayersEditor
                   list={c.prayers}

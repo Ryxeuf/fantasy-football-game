@@ -1165,6 +1165,68 @@ describe("PreMatchPanel — libellé « Petite Monnaie »", () => {
   });
 });
 
+describe("PreMatchPanel — budget de coups de pouce d'une coupe", () => {
+  const cupReference: MatchSheetReference = {
+    ...REFERENCE,
+    budget: {
+      home: { ctv: 1_100_000, treasury: 0, pettyCash: 0, maxBudget: 0 },
+      away: { ctv: 1_020_000, treasury: 0, pettyCash: 80_000, maxBudget: 80_000 },
+    },
+  };
+
+  it("en coupe, n'annonce que la petite monnaie, sans cagnotte", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={cupReference}
+        cupBudget
+      />,
+    );
+    const detail = screen.getByTestId("inducements-away-budget-detail");
+    expect(detail.textContent).toMatch(/pas de trésorerie en coupe/);
+    expect(detail.textContent).not.toMatch(/cagnotte/);
+  });
+
+  it("en ligue, garde « Petite Monnaie + cagnotte »", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+      />,
+    );
+    expect(
+      screen.getByTestId("inducements-home-budget-detail").textContent,
+    ).toMatch(/cagnotte/);
+  });
+
+  it("en coupe, l'outsider ne récupère pas la dépense adverse", () => {
+    render(
+      <PreMatchPanel
+        initial={{
+          ...EMPTY_VALUES,
+          inducementsHome: [{ slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 }],
+          inducementsAway: [{ slug: "bribe", name: "Pot-de-vin", cost: 100_000, qty: 1 }],
+        }}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={cupReference}
+        cupBudget
+      />,
+    );
+    // 100 000 po pour 80 000 d'écart : dépassé, même si le favori dépense.
+    expect(
+      screen.getByTestId("inducements-away-remaining").textContent,
+    ).toContain("Dépassé");
+  });
+});
+
 describe("PreMatchPanel — forfait par équipe", () => {
   it("coche le forfait d'une équipe, exclut l'autre, et l'enregistre", () => {
     const onSave = vi.fn();

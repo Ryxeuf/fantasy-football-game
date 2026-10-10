@@ -1164,6 +1164,7 @@ export default function MatchSheetPage() {
             onSave={savePreMatch}
             reference={data.reference}
             forfeitOnly={profile.preMatch === "forfeit-only"}
+            cupBudget={isCup}
           />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
