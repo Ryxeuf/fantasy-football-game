@@ -26,6 +26,27 @@ Ce qui change tient dans un JEU DE RÈGLES
 Une coupe se joue donc en résurrection : le roster inscrit rejoue à
 l'identique à chaque ronde. Seuls le score et le classement bougent.
 
+## Star Players et coups de pouce en coupe
+
+- **Les Star Players du roster d'inscription jouent chaque rencontre.** Un
+  Star Player acheté à la création est figé dans `RosterSnapshot.starPlayers`,
+  donc dans le roster « version du match » de chaque feuille. La feuille le
+  dérive comme un Star Player engagé (`star-<side>-<slug>`, marqué
+  `registered`) : il est proposé dans les sélecteurs, peut être Joueur du
+  Match et porte son nom dans les actions matérialisées, sans jamais être
+  persisté. UNE seule dérivation pour tous les chemins :
+  `deriveSideStarPlayers` (via `withSheetStarPlayers`), qui fusionne le
+  roster figé (coupe uniquement) et les coups de pouce d'avant-match,
+  dédoublonnés par slug. Engager en avant-match un Star Player déjà inscrit
+  est refusé (`inducement_star_already_registered`).
+- **Le budget de coups de pouce d'une coupe ne compte jamais la
+  trésorerie.** Une coupe n'écrivant rien, la trésorerie figée n'est jamais
+  débitée : la compter en ferait une cagnotte réutilisable à chaque ronde.
+  `buildMatchSheetReference(…, competitionKind)` sert donc, en coupe, la
+  seule petite monnaie (écart de VEA pour l'équipe la moins chère), sans
+  bonus d'outsider ni dépense adverse ajoutée. La lecture, le contrôle de
+  `updatePreMatch` et l'éditeur web appliquent le même budget.
+
 ## Mode de saisie : complète ou simplifiée
 
 Chaque coupe porte un mode de saisie (`Cup.sheetEntryMode`), choisi à la

@@ -23,6 +23,11 @@ Le commissaire peut moduler la construction des équipes d'une coupe :
 - **Parcours d'inscription** :
   - **Flow A — inscrire tel quel** : l'équipe existante doit déjà respecter le
     budget + PSP de la coupe ; vérifiée à l'inscription (`POST /cup/:id/register`).
+    Le budget se compare à la **dépense de construction**
+    (`buildTeamBudgetSummary.totalSpent` : embauches, relances, staff, fans
+    dévoués, Star Players), jamais à la VE — les Star Players n'entrent pas
+    dans la VE, une équipe de VE 1 000k ayant payé 150k de stars passait
+    sous un budget de 1 000k.
   - **Flow B — construire pour la coupe** : builder avec `?cupId=`, budget/pool/
     ruleset/format imposés et verrouillés, équipe auto-inscrite (`POST /team/build`).
   - **Clone & adapter** : builder avec `?cupId=…&fromTeamId=…` — préremplit la
@@ -111,6 +116,6 @@ dans `GET /cup/:id` (`playerLeaderboards`), affiché sur le détail coupe. Exclu
 - `POST /cup` — accepte la config de composition + `description`.
 - `PATCH /cup/:id/rules` — met à jour la config (créateur/admin, avant validation).
 - `GET /cup/:id` — expose `rulesConfig`.
-- `POST /cup/:id/register` — Flow A : valide budget + PSP (si la coupe définit
-  ces règles) et capture le snapshot.
+- `POST /cup/:id/register` — Flow A : valide budget (sur la dépense de
+  construction) + PSP (si la coupe définit ces règles) et capture le snapshot.
 - `POST /team/build` — champs `cupId?`, `startingPspPool?`, `advancements?`.
