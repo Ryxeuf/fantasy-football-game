@@ -334,4 +334,28 @@ describe("cohérence générale du pack", () => {
       "team_mascot",
     ]);
   });
+
+  it("porte en données les remises et le plafond de Pots-de-vin du pack", () => {
+    const bySlug = new Map(def.allowedInducements.map((i) => [i.slug, i]));
+    expect(bySlug.get("bribe")).toMatchObject({
+      cost: 100_000,
+      discountCost: 50_000,
+      maxWithSecretWeaponStar: 2,
+    });
+    expect(bySlug.get("halfling_master_chef")).toMatchObject({
+      cost: 300_000,
+      discountCost: 100_000,
+    });
+    // Sans remise ni plafond conditionnel.
+    expect(bySlug.get("team_mascot")?.discountCost).toBeUndefined();
+    expect(bySlug.get("bloodweiser_kegs")?.maxWithSecretWeaponStar).toBeUndefined();
+  });
+
+  it("un prix réduit ne dépasse jamais le prix du pack", () => {
+    for (const rule of def.allowedInducements) {
+      if (rule.discountCost !== undefined) {
+        expect(rule.discountCost).toBeLessThanOrEqual(rule.cost);
+      }
+    }
+  });
 });
