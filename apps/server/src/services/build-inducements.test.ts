@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { resolveBuildInducements } from "./build-inducements";
+import {
+  nameTeamInducements,
+  resolveBuildInducements,
+} from "./build-inducements";
 
 const CATALOGUE = [
   { slug: "team_mascot", name: "Mascotte", cost: 25_000, maxQuantity: 1 },
@@ -76,5 +79,22 @@ describe("resolveBuildInducements", () => {
       CATALOGUE,
     );
     expect(!out.ok && out.error).toMatch(/deux fois/);
+  });
+});
+
+describe("nameTeamInducements", () => {
+  it("nomme depuis le catalogue, garde le slug d'un coup de pouce retiré", () => {
+    expect(
+      nameTeamInducements(
+        [
+          { slug: "team_mascot", quantity: 1, unitCost: 25_000 },
+          { slug: "ancien_slug", quantity: 2, unitCost: 10_000 },
+        ],
+        [{ slug: "team_mascot", displayNameFr: "Mascotte d'Équipe" }],
+      ),
+    ).toEqual([
+      { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+      { slug: "ancien_slug", name: "ancien_slug", quantity: 2, unitCost: 10_000 },
+    ]);
   });
 });

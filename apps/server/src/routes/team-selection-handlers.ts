@@ -22,6 +22,12 @@
  * l'API publique consommee par `team.test.ts`.
  */
 
+import {
+  INDUCEMENT_CATALOGUE,
+  type InducementCatalogue,
+} from '@bb/game-engine';
+import { loadInducementCatalogue } from '../services/inducement-repository';
+import { nameTeamInducements } from '../services/build-inducements';
 import type { Response } from 'express';
 import { prisma } from '../prisma';
 import { AuthenticatedRequest } from '../middleware/authUser';
@@ -154,6 +160,7 @@ export async function handleGetTeamDetail(
       include: {
         players: true,
         starPlayers: true,
+        inducements: true,
       },
     });
     if (!team) {
@@ -300,6 +307,21 @@ export async function handleGetTeamDetail(
       team,
       team.players,
       team.starPlayers,
+      team.inducements ?? [],
+    );
+
+    // Coups de pouce achetés à la création (coupe en mode `build`, règlement
+    // de tournoi), nommés depuis le catalogue. Best-effort sur le libellé :
+    // le repli compilé suffit à les afficher.
+    let inducementCatalogue: InducementCatalogue = INDUCEMENT_CATALOGUE;
+    try {
+      inducementCatalogue = await loadInducementCatalogue(team.ruleset as Ruleset);
+    } catch (e: unknown) {
+      serverLog.error('[team-detail] catalogue de coups de pouce', e);
+    }
+    const inducements = nameTeamInducements(
+      team.inducements ?? [],
+      inducementCatalogue,
     );
 
     // État du pool de PSP de construction, calculé ICI et non re-dérivé côté
@@ -385,6 +407,7 @@ export async function handleGetTeamDetail(
         teamValue: budgetSummary.teamValue,
         currentValue: budgetSummary.currentValue,
         starPlayers: enrichedStarPlayers,
+        inducements,
         staffConfig,
         budgetSummary,
         pspPool,

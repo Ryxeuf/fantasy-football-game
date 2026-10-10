@@ -87,3 +87,30 @@ export function resolveBuildInducements(
 
   return { ok: true, lines, totalCost };
 }
+
+/** Coup de pouce d'une équipe tel que servi à l'écran (nom résolu). */
+export interface TeamInducementView {
+  readonly slug: string;
+  readonly name: string;
+  readonly quantity: number;
+  /** Prix unitaire figé à l'achat, en po. */
+  readonly unitCost: number;
+}
+
+/**
+ * Nomme les coups de pouce d'une équipe depuis le catalogue (libellé FR).
+ * Un slug retiré du catalogue garde son slug comme nom : la ligne reste
+ * lisible, et sa dépense comptée.
+ */
+export function nameTeamInducements(
+  rows: ReadonlyArray<{ slug: string; quantity: number; unitCost: number }>,
+  catalogue: ReadonlyArray<{ slug: string; displayNameFr: string }>,
+): TeamInducementView[] {
+  const names = new Map(catalogue.map((d) => [d.slug, d.displayNameFr]));
+  return rows.map((row) => ({
+    slug: row.slug,
+    name: names.get(row.slug) ?? row.slug,
+    quantity: row.quantity,
+    unitCost: row.unitCost,
+  }));
+}

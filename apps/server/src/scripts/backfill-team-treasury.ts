@@ -41,7 +41,7 @@ export async function backfillTeamTreasury(apply: boolean): Promise<{
 }> {
   const teams = await prisma.team.findMany({
     where: { treasury: 0, deletedAt: null },
-    include: { players: true, starPlayers: true },
+    include: { players: true, starPlayers: true, inducements: true },
   });
 
   let updated = 0;
@@ -57,6 +57,7 @@ export async function backfillTeamTreasury(apply: boolean): Promise<{
       team,
       team.players,
       team.starPlayers,
+      team.inducements,
     );
     const treasury = Math.max(0, summary.remaining);
     if (treasury === 0) {

@@ -152,7 +152,8 @@ export async function registerTeamToCup(input: {
 
     if (hasBudgetRules) {
       // Le budget d'une coupe borne ce que l'équipe a DÉPENSÉ pour se
-      // construire — joueurs, relances, staff, fans, Star Players — et non sa
+      // construire — joueurs, relances, staff, fans, Star Players, coups de
+      // pouce — et non sa
       // VE : les Star Players n'y entrent pas, donc une équipe de VE 1 000k
       // qui a payé 150k de stars passait sous un budget de 1 000k.
       const budgetKpo = resolveCupBudget(cupRules, rosterForRules);
@@ -161,6 +162,7 @@ export async function registerTeamToCup(input: {
         include: {
           players: { where: ACTIVE_PLAYER_WHERE },
           starPlayers: true,
+          inducements: true,
         },
       });
       const spent = withRoster
@@ -170,6 +172,7 @@ export async function registerTeamToCup(input: {
               withRoster,
               withRoster.players,
               withRoster.starPlayers,
+              withRoster.inducements,
             )
           ).totalSpent
         : team.teamValue;

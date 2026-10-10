@@ -174,6 +174,7 @@ describe('registerTeamToCup — budget de la coupe contre la dépense de constru
       ...baseTeam({ teamValue: 1_000_000 }),
       players: [],
       starPlayers: [{ starPlayerSlug: 'griff_oberwald', cost: 150_000 }],
+      inducements: [],
     });
   });
 
@@ -191,12 +192,14 @@ describe('registerTeamToCup — budget de la coupe contre la dépense de constru
     expect((err as Error).message).toMatch(/Star Players/);
     expect((err as Error).message).toMatch(/1000k/);
     expect(participantCreate).not.toHaveBeenCalled();
-    // La dépense se calcule sur le roster actif et ses Star Players.
+    // La dépense se calcule sur le roster actif, ses Star Players et ses
+    // coups de pouce de création.
     expect(summary).toHaveBeenCalledWith(
       prisma,
       expect.objectContaining({ id: 'T1' }),
       [],
       [{ starPlayerSlug: 'griff_oberwald', cost: 150_000 }],
+      [],
     );
   });
 

@@ -112,6 +112,28 @@ describe("buildTeamBudgetSummary", () => {
     expect(summary.teamValue).toBe(550_000);
   });
 
+  it("compte les coups de pouce de création au budget mais pas dans la VE", async () => {
+    const withInducements = await buildTeamBudgetSummary(
+      db(),
+      team(),
+      players(11),
+      [],
+      [
+        { quantity: 1, unitCost: 25_000 },
+        { quantity: 2, unitCost: 50_000 },
+      ],
+    );
+    const without = await buildTeamBudgetSummary(db(), team(), players(11));
+
+    expect(withInducements.inducementsCost).toBe(125_000);
+    expect(withInducements.totalSpent).toBe(550_000 + 125_000);
+    expect(withInducements.remaining).toBe(1_000_000 - 675_000);
+    // VE et VEA identiques à la même équipe sans coups de pouce.
+    expect(withInducements.teamValue).toBe(without.teamValue);
+    expect(withInducements.currentValue).toBe(without.currentValue);
+    expect(without.inducementsCost).toBe(0);
+  });
+
   it("compte les surcoûts d'avancement dans le coût des joueurs", async () => {
     const withSkill = JSON.stringify([{ type: "primary", skillSlug: "block" }]);
     const summary = await buildTeamBudgetSummary(
@@ -230,6 +252,28 @@ describe("creditInitialTreasury", () => {
       where: { id: "team-1" },
       data: { treasury: credited },
     });
+  });
+
+  it("ne crédite que le reliquat après les coups de pouce de création", async () => {
+    const update = vi.fn().mockResolvedValue({});
+    const prisma = {
+      team: {
+        findUnique: vi.fn().mockResolvedValue({
+          ...team(),
+          players: players(11),
+          starPlayers: [],
+          inducements: [{ quantity: 1, unitCost: 25_000 }],
+        }),
+        update,
+      },
+      skill: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const credited = await creditInitialTreasury(prisma as any, "team-1");
+
+    // 1 000k − 550k de joueurs − 25k de Mascotte.
+    expect(credited).toBe(425_000);
   });
 
   it("ne touche pas une trésorerie déjà non nulle", async () => {

@@ -34,7 +34,7 @@ export interface TeamShareResult {
 
 /** Équipe publique avec son roster (joueurs + Star Players). */
 export type PublicTeam = Prisma.TeamGetPayload<{
-  include: { players: true; starPlayers: true };
+  include: { players: true; starPlayers: true; inducements: true };
 }>;
 
 /** Token de partage non-devinable (128 bits). */
@@ -79,7 +79,7 @@ export async function getPublicTeamByToken(
   if (!token) return null;
   const team = await prisma.team.findFirst({
     where: { shareToken: token, isPublic: true },
-    include: { players: true, starPlayers: true },
+    include: { players: true, starPlayers: true, inducements: true },
   });
   return team;
 }
