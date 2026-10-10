@@ -1089,6 +1089,40 @@ choix « Tirage au sort ». Et hors sélection il reste NEUTRE : une coupe
 panache les systèmes d'une ronde à l'autre, c'est le badge de chaque ronde
 qui tranche.
 
+### Coups de pouce de coupe : `build` / `match` / `none`
+
+Une coupe rejoue son roster d'inscription à chaque ronde. Les coups de pouce
+s'y achètent donc à UN de trois moments, porté par `Cup.inducementMode`
+(`services/cup-inducement-mode`, pur) : à la création de l'équipe (`build`,
+sur le budget d'or, table `TeamInducement`, figés dans le snapshot
+d'inscription), en avant-match (`match`, comme en ligue) ou jamais (`none`).
+Change OpenSpec `cup-build-inducements`, doc
+[`docs/cup-composition-rules.md`](./docs/cup-composition-rules.md).
+
+- **Défaut différent pour l'existant et le neuf** (cf. piège dédié) :
+  colonne nullable sans `@default`, `null` = `match` ; `POST /cup` écrit
+  `build` pour une coupe BB11 neuve. Règlement de tournoi ⇒ `build` imposé ;
+  Sept ⇒ `build` refusé. Le mode servi (`rulesConfig.inducementMode`) est
+  l'EFFECTIF, le formulaire web en est un miroir pur (`cups/inducement-mode`).
+- **Un seul catalogue de build** (`buildInducementCatalogue`), servi au
+  builder ET relu par `POST /team/build` qui tarife lui-même — un prix client
+  est ignoré. Même catalogue pour l'inscription telle quelle
+  (`inducement_not_allowed`) : les trois ne peuvent pas diverger.
+- **Le règlement reprend la main sur les prix** : `applyPackInducementRules`
+  applique la remise d'équipe (`discountCost`, ex. Pots-de-vin Gobelins à
+  50 000 po) et le plafond « Arme Secrète » — un prix de pack qui écrase la
+  remise du moteur fait payer le plein tarif aux équipes qui y ont droit.
+- **Sous règlement, l'or non dépensé est perdu** (`treasuryCredit` = 0).
+
+Piège principal — **la trésorerie fictive d'une coupe** : une équipe porte la
+trésorerie de sa vie hors coupe, et la résurrection la rejouerait à chaque
+ronde. `buildMatchSheetReference` la met donc à 0 en coupe et n'y applique ni
+bonus d'outsider ni dépense : le budget d'avant-match d'une coupe en `match`
+est l'écart de VEA seul. Corollaire de feuille : les Star Players du roster
+d'inscription (`star-<side>-<slug>`, `registered: true`) sont dérivés à la
+lecture du SNAPSHOT (`registeredStarPlayerSlugs`) et fusionnés avec ceux
+d'avant-match — une équipe construite avec Morg ne le perd plus à la feuille.
+
 ### Le placeholder d'un bracket, c'est `home === away`
 
 `CupPairing.homeTeamId` / `LeaguePairing.homeParticipantId` sont NOT NULL : une
