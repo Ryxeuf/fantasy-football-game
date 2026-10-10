@@ -25,6 +25,8 @@ import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
 import { dynamicRoute } from "../../lib/typed-route";
+import { CupInducementRulesSummary } from "../CupInducementRulesSummary";
+import { parseCupInducementMode } from "../inducement-mode";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -152,6 +154,10 @@ type Cup = {
     rosterBudgetOverrides: Record<string, number>;
     tierStartingPsp: Record<string, number>;
     rosterStartingPspOverrides: Record<string, number>;
+    /** Régime EFFECTIF des coups de pouce. Optionnel : API antérieure. */
+    inducementMode?: string;
+    /** Liste autorisée (`null` = tout le catalogue). */
+    allowedInducements?: string[] | null;
   };
   standings?: CupTeamStats[];
   /**
@@ -653,6 +659,7 @@ export default function CupDetailPage() {
               )}
               {cup.rulesConfig &&
                 (cup.rulesConfig.resurrectionMode ||
+                  parseCupInducementMode(cup.rulesConfig.inducementMode) ||
                   Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
                   Object.keys(cup.rulesConfig.rosterBudgetOverrides).length >
                     0 ||
@@ -671,6 +678,10 @@ export default function CupDetailPage() {
                         ♻️ Mode résurrection
                       </div>
                     )}
+                    <CupInducementRulesSummary
+                      mode={cup.rulesConfig.inducementMode}
+                      allowed={cup.rulesConfig.allowedInducements}
+                    />
                     {(Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
                       Object.keys(cup.rulesConfig.tierStartingPsp).length >
                         0) && (

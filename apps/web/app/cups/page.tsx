@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
@@ -9,6 +9,12 @@ import PendingCupInvitations from "./PendingCupInvitations";
 import PendingCompetitionDocuments from "../components/PendingCompetitionDocuments";
 import { uploadPendingCompetitionDocuments } from "../lib/competition-documents";
 import { SheetEntryModeField } from "./SheetEntryModeField";
+import { CupInducementModeField } from "./CupInducementModeField";
+import {
+  coerceCupInducementMode,
+  showsAllowedInducements,
+  type CupInducementMode,
+} from "./inducement-mode";
 import type { SheetEntryMode } from "../lib/sheet-entry-profile";
 import {
   getRosterName,
@@ -126,6 +132,13 @@ export default function CupsPage() {
   // défaut quand le champ manque).
   const [newCupSheetEntryMode, setNewCupSheetEntryMode] =
     useState<SheetEntryMode>("simplified");
+  // Coups de pouce : une coupe BB11 neuve les vend à la création (le serveur
+  // applique le même défaut, impose `build` sous règlement, le refuse en Sept).
+  const [newCupInducementMode, setNewCupInducementMode] =
+    useState<CupInducementMode>("build");
+  const [newCupAllowedInducements, setNewCupAllowedInducements] = useState<
+    string[]
+  >([]);
   // Règles avancées de composition (mode coupe).
   const [newCupDescription, setNewCupDescription] = useState("");
   // Documents officiels choisis avant la creation : la coupe n'ayant pas
@@ -196,6 +209,20 @@ export default function CupsPage() {
       setNewCupTournamentRuleset("");
     }
   }, [newCupRuleset, newCupFormat, newCupTournamentRuleset, rulesetsBySlug]);
+
+  const inducementContext = useMemo(
+    () => ({
+      format: newCupFormat,
+      hasTournamentRuleset: Boolean(newCupTournamentRuleset),
+    }),
+    [newCupFormat, newCupTournamentRuleset],
+  );
+  // Format ou règlement changé : le mode suit s'il n'est plus proposé.
+  useEffect(() => {
+    setNewCupInducementMode((mode) =>
+      coerceCupInducementMode(mode, inducementContext),
+    );
+  }, [inducementContext]);
 
   const loadTeams = async () => {
     try {
@@ -293,6 +320,12 @@ export default function CupsPage() {
         },
         // resurrectionMode : forcé côté serveur (seul mode disponible).
         sheetEntryMode: newCupSheetEntryMode,
+        inducementMode: newCupInducementMode,
+        allowedInducements:
+          showsAllowedInducements(newCupInducementMode, inducementContext) &&
+          newCupAllowedInducements.length > 0
+            ? newCupAllowedInducements
+            : undefined,
         tierBudgets: toNumberMap(tierBudgets),
         tierStartingPsp: toNumberMap(tierStartingPsp),
         rosterBudgetOverrides:
@@ -654,6 +687,21 @@ export default function CupsPage() {
                 ♻️ Mode résurrection (même roster à chaque match, aucun PSP gagné) —
                 seul mode disponible actuellement.
               </p>
+
+              <CupInducementModeField
+                value={newCupInducementMode}
+                onChange={setNewCupInducementMode}
+                allowed={newCupAllowedInducements}
+                onAllowedChange={setNewCupAllowedInducements}
+                context={inducementContext}
+                rulesetLabel={
+                  newCupTournamentRuleset
+                    ? (rulesetsBySlug.get(newCupTournamentRuleset)?.shortLabel ??
+                      null)
+                    : null
+                }
+                disabled={creating}
+              />
 
               <div>
                 <p className="text-xs font-medium text-gray-600 mb-1">
