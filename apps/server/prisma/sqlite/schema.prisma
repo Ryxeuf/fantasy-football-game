@@ -355,6 +355,7 @@ model Team {
   createdAt            DateTime            @default(now())
   players              TeamPlayer[]
   starPlayers          TeamStarPlayer[]
+  inducements          TeamInducement[]
   selections           TeamSelection[]
   cupParticipants      CupParticipant[]
   cupInvitations       CupInvitation[]     @relation("CupInvitationTeam")
@@ -487,6 +488,19 @@ model TeamStarPlayer {
   hiredAt        DateTime @default(now())
 
   @@unique([teamId, starPlayerSlug])
+  @@index([teamId])
+}
+
+model TeamInducement {
+  id        String   @id @default(cuid())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  slug      String
+  quantity  Int
+  unitCost  Int
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, slug])
   @@index([teamId])
 }
 
@@ -800,6 +814,11 @@ model Cup {
   rosterBudgetOverrides      String?
   tierStartingPsp            String?
   rosterStartingPspOverrides String?
+
+  // Régime des coups de pouce (miroir SQLite) : null = "match", pas de
+  // @default. Liste autorisée sérialisée en chaîne (pas de JSONB).
+  inducementMode     String?
+  allowedInducements String?
 
   // Relations
   participants CupParticipant[]

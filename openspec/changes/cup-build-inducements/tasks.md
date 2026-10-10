@@ -34,7 +34,7 @@
 
 ## 5. Modèle de données et mode de coupe (serveur)
 
-- [ ] 5.1 Ajouter `Cup.inducementMode String?` et `Cup.allowedInducements Json?` (SANS `@default`, avec un commentaire « null = match / tout le catalogue à prix fixe ») et le modèle `TeamInducement` (`@@unique([teamId, slug])`, `onDelete: Cascade`) dans `prisma/schema.prisma` ET le miroir SQLite. Régénérer le client SQLite de test — vérifier : `pnpm --filter @bb/server typecheck`.
+- [x] 5.1 Ajouter `Cup.inducementMode String?` et `Cup.allowedInducements Json?` (SANS `@default`, avec un commentaire « null = match / tout le catalogue à prix fixe ») et le modèle `TeamInducement` (`@@unique([teamId, slug])`, `onDelete: Cascade`) dans `prisma/schema.prisma` ET le miroir SQLite. Régénérer le client SQLite de test — vérifier : `pnpm --filter @bb/server typecheck`.
 - [ ] 5.2 Module pur `services/cup-inducement-mode` : `resolveCupInducementMode(raw, { pack, format })` (règlement ⇒ `build`, Sept sans `build`, inconnu/`null` ⇒ `match`) et parseur tolérant de `allowedInducements` (PG / SQLite) — vérifier : tests unitaires (toutes les combinaisons).
 - [ ] 5.3 `cupRulesConfigSchema` accepte `inducementMode` et `allowedInducements`. `POST /cup` écrit le mode explicitement (`build` en BB11 sans choix, `match` en Sept, `build` imposé sous règlement), et `build` demandé en Sept ⇒ 400. `PATCH /cup/:id/rules` applique les mêmes règles dans sa fenêtre existante — vérifier : tests de route (défauts, refus Sept, règlement qui force `build`, coupe validée ⇒ 400).
 - [ ] 5.4 `GET /cup/:id` sert `inducementMode` (effectif) et `allowedInducements` dans `rulesConfig` — vérifier : test de route (coupe à `null` ⇒ `match`).

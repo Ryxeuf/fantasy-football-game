@@ -437,6 +437,9 @@ model Team {
   createdAt            DateTime            @default(now())
   players              TeamPlayer[]
   starPlayers          TeamStarPlayer[]
+  /// Coups de pouce achetés à la CRÉATION (coupe en mode `build` ou
+  /// règlement de tournoi). Valables à chaque rencontre, hors VE.
+  inducements          TeamInducement[]
   selections           TeamSelection[]
   cupParticipants      CupParticipant[]
   cupInvitations       CupInvitation[]     @relation("CupInvitationTeam")
@@ -617,6 +620,24 @@ model TeamStarPlayer {
   hiredAt        DateTime @default(now())
 
   @@unique([teamId, starPlayerSlug]) // Un même Star Player ne peut être recruté qu'une fois par équipe
+  @@index([teamId])
+}
+
+/// Coup de pouce acheté à la création d'une équipe (coupe en mode `build`
+/// ou règlement de tournoi) : il vaut pour CHAQUE rencontre, est figé dans le
+/// roster d'inscription et n'entre jamais dans la VE. Le prix unitaire est
+/// figé à l'achat : une édition du catalogue ne change pas la dépense d'une
+/// équipe déjà construite.
+model TeamInducement {
+  id        String   @id @default(cuid())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String
+  slug      String // Slug du catalogue (ex: 'team_mascot')
+  quantity  Int
+  unitCost  Int // po, au moment de l'achat
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, slug])
   @@index([teamId])
 }
 
@@ -1057,6 +1078,19 @@ model Cup {
   /// Surcharge du pool de PSP par roster précis (slug). JSON objet
   /// `{ "skaven": 8 }`. Prime sur `tierStartingPsp`. null = aucun override.
   rosterStartingPspOverrides Json?
+
+  /// Régime des coups de pouce : "build" (achetés à la création, valables à
+  /// chaque ronde), "match" (avant-match, petite monnaie seule) ou "none".
+  /// null = coupe antérieure au réglage → "match". PAS de `@default` : `db
+  /// push` le poserait sur les coupes existantes ; c'est la création
+  /// (`POST /cup`) qui écrit la valeur d'une coupe neuve
+  /// (cf. `resolveCupInducementMode`).
+  inducementMode String?
+
+  /// Coups de pouce autorisés par une coupe SANS règlement de tournoi
+  /// (liste de slugs). null = tout le catalogue à prix fixe. Sous règlement,
+  /// sa liste fermée prime.
+  allowedInducements Json?
 
   // Relations
   participants CupParticipant[]
