@@ -116,7 +116,10 @@ const MORG = {
   hirableBy: ["all"],
 };
 
-function frozen(starPlayers: Array<{ starPlayerSlug: string; cost: number }>) {
+function frozen(
+  starPlayers: Array<{ starPlayerSlug: string; cost: number }>,
+  over: Record<string, unknown> = {},
+) {
   return {
     capturedAt: 1,
     roster: "human",
@@ -134,6 +137,7 @@ function frozen(starPlayers: Array<{ starPlayerSlug: string; cost: number }>) {
     dedicatedFans: 1,
     players: [],
     starPlayers,
+    ...over,
   };
 }
 
@@ -326,3 +330,50 @@ describe("feuille de coupe — Star Players du roster d'inscription", () => {
     ]);
   });
 });
+
+describe("feuille de coupe — budget de coups de pouce sans trésorerie", () => {
+  const mascot = [
+    { slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 },
+  ];
+
+  it("refuse la sélection du favori, malgré sa trésorerie figée", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([], {
+        currentValue: 1_100_000,
+        treasury: 300_000,
+      }),
+      rosterSnapshotAway: frozen([], { currentValue: 1_020_000 }),
+    });
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { inducementsHome: mascot },
+      }),
+    ).rejects.toMatchObject({ code: "inducement_over_budget" });
+  });
+
+  it("accepte la sélection de l'outsider dans l'écart de VEA", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([], { currentValue: 1_100_000 }),
+      rosterSnapshotAway: frozen([], { currentValue: 1_020_000 }),
+    });
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({ id: "ms1" });
+
+    await updatePreMatch({
+      pairingId: "pair-1",
+      userId: AWAY,
+      payload: { inducementsAway: mascot },
+    });
+
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
+  });
+});
+
