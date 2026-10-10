@@ -2577,6 +2577,72 @@ describe("Lot G — league-match-sheet", () => {
       expect(kegs?.cost).toBe(50_000);
       expect(kegs?.maxQuantity).toBe(2);
     });
+
+    it("sous règlement, applique ses remises aux équipes que le catalogue désigne", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: {
+          season: {
+            league: {
+              id: "L1",
+              creatorId: COMMISH,
+              allowedInducements: null,
+              tournamentRuleset: "naf_world_cup_2027",
+            },
+          },
+        },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      const elevenPlayers = (prefix: string) =>
+        Array.from({ length: 11 }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `${prefix}${i + 1}`,
+          position: "lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Gobbos",
+          roster: "goblin",
+          currentValue: 1_000_000,
+          treasury: 0,
+          owner: { coachName: "Snik" },
+          players: elevenPlayers("h"),
+        },
+        {
+          id: "team-away",
+          name: "Petits Pieds",
+          roster: "halfling",
+          currentValue: 1_000_000,
+          treasury: 0,
+          owner: { coachName: "Bilbo" },
+          players: elevenPlayers("a"),
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      const find = (side: "home" | "away", slug: string) =>
+        out.reference.inducements[side].find((i) => i.slug === slug);
+      // Goblin = Chantage et Corruption : 50 000 po et 6 au plus.
+      expect(find("home", "bribe")).toMatchObject({
+        cost: 50_000,
+        maxQuantity: 6,
+      });
+      // Halflings : Chef Cuistot à 100 000 po ; les Gobelins le paient 300 000.
+      expect(find("away", "halfling_master_chef")?.cost).toBe(100_000);
+      expect(find("home", "halfling_master_chef")?.cost).toBe(300_000);
+      expect(find("away", "bribe")?.cost).toBe(100_000);
+    });
   });
 
   // Lot H — liste des matchs a valider pour le commissaire.

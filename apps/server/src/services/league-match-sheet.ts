@@ -176,6 +176,7 @@ import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
   canPurchaseInducement,
+  qualifiesForInducementDiscount,
   type InducementContext,
   getNextAdvancementPspCost,
   surchargeForAdvancement,
@@ -4174,11 +4175,18 @@ async function inducementOptionsFor(
       description: d.description,
       ...(d.variableCost ? { variableCost: true } : {}),
     }));
-  // Prix, quantités et précisions du règlement priment sur le catalogue.
-  return applyPackInducementRules(
-    options,
-    pack,
-  ) as MatchSheetInducementOption[];
+  // Prix, quantités et précisions du règlement priment sur le catalogue. Le
+  // règlement fixe le montant d'une remise, le catalogue désigne qui y a
+  // droit (Pots-de-vin pour Chantage et Corruption, Chef pour les Halflings).
+  const defsBySlug = new Map(
+    (ctx.catalogue ?? INDUCEMENT_CATALOGUE).map((d) => [d.slug, d]),
+  );
+  return applyPackInducementRules(options, pack, {
+    qualifiesForDiscount: (slug) => {
+      const def = defsBySlug.get(slug);
+      return def ? qualifiesForInducementDiscount(def, ctx) : false;
+    },
+  }) as MatchSheetInducementOption[];
 }
 
 /** Couleur 24 bits -> hex CSS (#rrggbb). */

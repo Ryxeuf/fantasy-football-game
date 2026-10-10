@@ -47,13 +47,46 @@ export function effectiveInducementAllowlist(
 }
 
 /**
+ * Ce que le règlement doit savoir de l'équipe pour fixer prix et plafonds.
+ * Absent = équipe sans remise ni Star Player à Arme Secrète.
+ */
+export interface PackTeamContext {
+  /**
+   * L'équipe a-t-elle droit à la remise que le CATALOGUE attache à ce coup
+   * de pouce (cf. `qualifiesForInducementDiscount`) ? Le règlement en fixe
+   * le montant, jamais les bénéficiaires.
+   */
+  readonly qualifiesForDiscount?: (slug: string) => boolean;
+  /** L'équipe recrute-t-elle un Star Player portant Arme Secrète ? */
+  readonly hasSecretWeaponStar?: boolean;
+}
+
+/** Compétence « Arme Secrète » (slug du catalogue de compétences). */
+export const SECRET_WEAPON_SKILL = "secret-weapon";
+
+/** Un Star Player porte-t-il Arme Secrète (CSV de slugs de compétences) ? */
+export function hasSecretWeapon(skillsCsv: string | null | undefined): boolean {
+  return (skillsCsv ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .includes(SECRET_WEAPON_SKILL);
+}
+
+/**
  * Applique les prix, quantités et précisions du règlement aux options du
  * catalogue. Une option absente de la liste du règlement est RETIRÉE (liste
  * fermée) ; les Star Players sont laissés tels quels.
+ *
+ * Prix : celui du règlement, ou son prix réduit pour une équipe qui a droit
+ * à la remise du catalogue. Plafond : celui du règlement, sinon celui de
+ * l'option (catalogue, déjà ajusté par les règles spéciales — 6 Pots-de-vin
+ * pour Chantage et Corruption), abaissé au plafond « Arme Secrète » quand
+ * l'équipe recrute un tel Star Player.
  */
 export function applyPackInducementRules(
   options: readonly InducementOptionLike[],
   pack: TournamentRulesetDefinition | null,
+  team: PackTeamContext = {},
 ): InducementOptionLike[] {
   if (!pack) return [...options];
   const bySlug = new Map(
@@ -67,10 +100,18 @@ export function applyPackInducementRules(
     }
     const rule = bySlug.get(option.slug);
     if (!rule) continue;
+    const discounted =
+      rule.discountCost !== undefined &&
+      (team.qualifiesForDiscount?.(option.slug) ?? false);
+    const baseMax = rule.max ?? option.maxQuantity;
+    const maxQuantity =
+      team.hasSecretWeaponStar && rule.maxWithSecretWeaponStar !== undefined
+        ? Math.min(baseMax, rule.maxWithSecretWeaponStar)
+        : baseMax;
     out.push({
       ...option,
-      cost: rule.cost,
-      ...(rule.max !== undefined ? { maxQuantity: rule.max } : {}),
+      cost: discounted ? (rule.discountCost as number) : rule.cost,
+      maxQuantity,
       // La précision du règlement (coût réduit conditionnel, restriction de
       // roster) complète la description officielle, elle ne la remplace pas.
       description: rule.noteFr
