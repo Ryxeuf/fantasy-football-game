@@ -10,6 +10,7 @@ import SkillAccessBadges from "../components/SkillAccessBadges";
 import KeywordChips from "../../../components/KeywordChips";
 import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import StarPlayersPanel from "../components/StarPlayersPanel";
+import TeamInducementsPanel from "../components/TeamInducementsPanel";
 import {
   getPlayerCost,
   getDisplayName,
@@ -88,6 +89,8 @@ interface TeamBudgetSummary {
   /** Surcoûts d'avancement (po), payés en PSP et non en or. */
   readonly advancementsCost?: number;
   readonly starPlayersCost: number;
+  /** Coups de pouce achetés au build (po). Optionnel : serveur antérieur. */
+  readonly inducementsCost?: number;
   readonly staffCost: number;
   readonly rerollsCost: number;
   readonly dedicatedFansCost: number;
@@ -125,6 +128,10 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
     (total: number, sp: any) => total + (sp?.cost ?? 0),
     0,
   );
+  const inducementsCost = (team?.inducements ?? []).reduce(
+    (total: number, i: any) => total + (i?.unitCost ?? 0) * (i?.quantity ?? 0),
+    0,
+  );
   const rerollsCost =
     (team?.rerolls || 0) * (sc?.rerollCost ?? getRerollCost(team?.roster || ""));
   const staffCost =
@@ -137,7 +144,12 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
   // `playersCost` du repli est déjà un coût d'embauche (le calcul local
   // n'ajoute aucun surcoût d'avancement) : les deux postes coïncident donc.
   const totalSpent =
-    playersCost + starPlayersCost + staffCost + rerollsCost + dedicatedFansCost;
+    playersCost +
+    starPlayersCost +
+    inducementsCost +
+    staffCost +
+    rerollsCost +
+    dedicatedFansCost;
 
   return {
     initialBudget,
@@ -145,6 +157,7 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
     playersHireCost: playersCost,
     advancementsCost: 0,
     starPlayersCost,
+    inducementsCost,
     staffCost,
     rerollsCost,
     dedicatedFansCost,
@@ -839,7 +852,11 @@ export default function TeamDetailPage() {
                     <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
                       <div className="text-xs sm:text-sm text-green-600 font-medium">{t.teams.currentCost}</div>
                       <div className="text-xl sm:text-2xl font-bold text-green-900" data-testid="budget-players-cost">
-                        {kpo(hireCost + budget.starPlayersCost)}
+                        {kpo(
+                          hireCost +
+                            budget.starPlayersCost +
+                            (budget.inducementsCost ?? 0),
+                        )}
                       </div>
                       {advancements > 0 ? (
                         <div
@@ -965,6 +982,14 @@ export default function TeamDetailPage() {
                     <div className="flex justify-between">
                       <span>{t.teams.starPlayersCostLabel}</span>
                       <span className="font-mono">{kpo(budget.starPlayersCost)}</span>
+                    </div>
+                  ) : null}
+                  {(budget.inducementsCost ?? 0) > 0 ? (
+                    <div className="flex justify-between">
+                      <span>{t.teams.inducementsCostLabel}</span>
+                      <span className="font-mono" data-testid="budget-inducements-cost">
+                        {kpo(budget.inducementsCost ?? 0)}
+                      </span>
                     </div>
                   ) : null}
                   <div className="flex justify-between">
@@ -1326,6 +1351,7 @@ export default function TeamDetailPage() {
           {/* Star Players recrutés — ils ne sont pas des `TeamPlayer`, donc
               absents du tableau de composition ci-dessus. */}
           <StarPlayersPanel starPlayers={team.starPlayers ?? []} />
+          <TeamInducementsPanel inducements={team.inducements ?? []} />
 
           {/* A11 — Ligues régionales ("type de ligue") du roster */}
           {regionalLeagues.length > 0 && (
