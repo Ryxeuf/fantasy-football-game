@@ -27,9 +27,11 @@ import BuildInducementPicker from "./BuildInducementPicker";
 import {
   EMPTY_SELECTION,
   clampSelection,
+  partitionCloneInducements,
   selectionCostK,
   toBuildRequest,
   type BuildInducementOption,
+  type DiscardedInducement,
   type InducementSelection,
 } from "./build-inducements";
 import { formatStatByLabel } from "../../../lib/format-stats";
@@ -210,6 +212,14 @@ export default function NewTeamBuilder() {
   const [inducementsLoading, setInducementsLoading] = useState(false);
   const [inducementSelection, setInducementSelection] =
     useState<InducementSelection>(EMPTY_SELECTION);
+  // Clone : coups de pouce de l'équipe de base, appliqués une fois le
+  // catalogue de la coupe chargé ; ceux qu'elle n'autorise pas sont signalés.
+  const [pendingBaseInducements, setPendingBaseInducements] = useState<
+    ReadonlyArray<{ slug: string; name?: string; quantity: number }> | null
+  >(null);
+  const [discardedInducements, setDiscardedInducements] = useState<
+    DiscardedInducement[]
+  >([]);
 
   // Un règlement choisi force l'édition, le format et le mode avancé
   // (achats de compétences depuis le pool de SPP du pack). Vrai AUSSI en
@@ -472,22 +482,33 @@ export default function NewTeamBuilder() {
   // partie de la requête (le plafond « Arme Secrète » en dépend), et un
   // changement de catalogue borne la sélection en cours.
   const selectedStarsKey = selectedStarPlayers.join(",");
-  useEffect(() => {
-    if (!cupId && !tournamentRuleset) {
-      setInducementsAllowed(false);
-      setInducementOptions([]);
-      setInducementSelection(EMPTY_SELECTION);
-      return;
-    }
-    let cancelled = false;
+  // Requête du catalogue (`null` = rien à charger). Elle sert aussi de CLÉ :
+  // le clone n'applique les coups de pouce de la base qu'au catalogue de la
+  // requête courante, jamais à celui du roster précédent.
+  const inducementQuery = useMemo(() => {
+    if (!cupId && !tournamentRuleset) return null;
     const params = new URLSearchParams({ roster: rosterId, ruleset });
     if (regionalLeague) params.set("regionalLeague", regionalLeague);
     if (tournamentRuleset) params.set("tournamentRuleset", tournamentRuleset);
     if (cupId) params.set("cupId", cupId);
     if (selectedStarsKey) params.set("stars", selectedStarsKey);
+    return params.toString();
+  }, [cupId, tournamentRuleset, rosterId, ruleset, regionalLeague, selectedStarsKey]);
+  const [inducementCatalogKey, setInducementCatalogKey] = useState<
+    string | null
+  >(null);
+  useEffect(() => {
+    if (!inducementQuery) {
+      setInducementsAllowed(false);
+      setInducementOptions([]);
+      setInducementSelection(EMPTY_SELECTION);
+      setInducementCatalogKey(null);
+      return;
+    }
+    let cancelled = false;
     setInducementsLoading(true);
     apiRequest<{ allowed: boolean; inducements: BuildInducementOption[] }>(
-      `/team/build-inducements?${params.toString()}`,
+      `/team/build-inducements?${inducementQuery}`,
     )
       .then((data) => {
         if (cancelled) return;
@@ -495,6 +516,7 @@ export default function NewTeamBuilder() {
         setInducementsAllowed(data.allowed);
         setInducementOptions(options);
         setInducementSelection((prev) => clampSelection(prev, options));
+        setInducementCatalogKey(inducementQuery);
       })
       .catch(() => {
         if (cancelled) return;
@@ -507,7 +529,29 @@ export default function NewTeamBuilder() {
     return () => {
       cancelled = true;
     };
-  }, [cupId, tournamentRuleset, rosterId, ruleset, regionalLeague, selectedStarsKey]);
+  }, [inducementQuery]);
+
+  // Clone : une fois le catalogue de la coupe connu (et plus en cours de
+  // chargement), les coups de pouce de l'équipe de base qu'il autorise sont
+  // repris AU PRIX DE LA COUPE ; les autres sont listés comme écartés.
+  useEffect(() => {
+    if (!pendingBaseInducements || inducementsLoading) return;
+    if (inducementQuery && inducementCatalogKey !== inducementQuery) return;
+    const { retained, discarded } = partitionCloneInducements(
+      pendingBaseInducements,
+      inducementsAllowed ? inducementOptions : [],
+    );
+    setInducementSelection(retained);
+    setDiscardedInducements(discarded);
+    setPendingBaseInducements(null);
+  }, [
+    pendingBaseInducements,
+    inducementsLoading,
+    inducementsAllowed,
+    inducementOptions,
+    inducementQuery,
+    inducementCatalogKey,
+  ]);
 
   // Budget d'or + pool de PSP IMPOSÉS, toutes sources confondues. La règle
   // (règlement de tournoi > règles de coupe > rien) vit dans un module pur
@@ -545,6 +589,7 @@ export default function NewTeamBuilder() {
           firedAt?: string | null;
         }>;
         starPlayers?: Array<{ slug?: string }>;
+        inducements?: Array<{ slug: string; name?: string; quantity: number }>;
         rerolls?: number;
         cheerleaders?: number;
         assistants?: number;
@@ -569,6 +614,9 @@ export default function NewTeamBuilder() {
           .map((s) => s.slug)
           .filter((s): s is string => Boolean(s));
         setSelectedStarPlayers(cloneStars);
+        if ((team.inducements ?? []).length > 0) {
+          setPendingBaseInducements(team.inducements ?? []);
+        }
         // Le recrutement de Star Players est réservé à l'édition avancée :
         // un clone qui en porte bascule le builder dans ce mode.
         if (cloneStars.length > 0) setAdvancedMode(true);
@@ -1820,6 +1868,19 @@ export default function NewTeamBuilder() {
               maxTotalPlayers={constraints.maxPlayers}
             />
           ))}
+        {discardedInducements.length > 0 && (
+          <p
+            data-testid="clone-discarded-inducements"
+            className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2"
+          >
+            🎁 Coups de pouce de l&apos;équipe de base non repris (la coupe ne
+            les vend pas à la création) :{" "}
+            {discardedInducements
+              .map((d) => `${d.name} ×${d.quantity}`)
+              .join(", ")}
+            .
+          </p>
+        )}
         {inducementsAllowed && (
           <BuildInducementPicker
             options={inducementOptions}

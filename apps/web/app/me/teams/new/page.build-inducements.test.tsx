@@ -83,6 +83,20 @@ function mockApis(mode: "build" | "match") {
       );
     }
     if (url.includes("/cup/")) return Promise.resolve({ cup: cup(mode) });
+    if (url.startsWith("/team/base-1")) {
+      return Promise.resolve({
+        team: {
+          name: "Base",
+          roster: "human",
+          players: Array.from({ length: 11 }, () => ({ position: "lineman" })),
+          starPlayers: [],
+          inducements: [
+            { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1 },
+            { slug: "weather_mage", name: "Mage Météo", quantity: 1 },
+          ],
+        },
+      });
+    }
     if (url.includes("/api/skills")) return Promise.resolve({ skills: [] });
     if (url.includes("/api/tournament-rulesets")) {
       return Promise.resolve({ rulesets: [] });
@@ -172,5 +186,21 @@ describe("Builder — coups de pouce de création", () => {
     await screen.findByTestId("remaining-budget");
     expect(screen.queryByTestId("build-inducements")).toBeNull();
     expect(inducementCalls()).toEqual([]);
+  });
+
+  it("adapter à la coupe : reprend la Mascotte, signale le Mage Météo écarté", async () => {
+    mockApis("build");
+    renderAt(
+      "/me/teams/new?cupId=cup-1&fromTeamId=base-1&ruleset=season_3&format=bb11&roster=human",
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("build-inducement-team_mascot-qty").textContent,
+      ).toBe("1"),
+    );
+    expect(
+      screen.getByTestId("clone-discarded-inducements").textContent,
+    ).toMatch(/Mage Météo ×1/);
   });
 });
