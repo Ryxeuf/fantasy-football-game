@@ -37,6 +37,13 @@ import { serverLog } from "../utils/server-log";
 import { parseNumberMap, type CupRulesConfig } from "../services/cup-rules";
 import { parseSheetEntryMode } from "../services/sheet-entry-mode";
 import {
+  modeToWrite,
+  parseCupAllowedInducements,
+  resolveCupInducementMode,
+  type CupInducementMode,
+  type CupInducementModeError,
+} from "../services/cup-inducement-mode";
+import {
   computeCupPlayerLeaderboards,
   CUP_LEADERBOARD_CATEGORIES,
   type CupMatchForPlayerStats,
@@ -90,6 +97,9 @@ interface CupRulesBody {
   rosterBudgetOverrides?: Record<string, number>;
   tierStartingPsp?: Record<string, number>;
   rosterStartingPspOverrides?: Record<string, number>;
+  /** Écrit à part (`modeToWrite`) : il dépend du règlement et du format. */
+  inducementMode?: CupInducementMode;
+  allowedInducements?: string[] | null;
 }
 
 /**
@@ -120,16 +130,31 @@ function serializeCupRulesData(body: CupRulesBody): Record<string, unknown> {
       ? JSON.stringify(body.rosterStartingPspOverrides)
       : null;
   }
+  if (body.allowedInducements !== undefined) {
+    // Liste vide = aucune restriction : on stocke `null`, pas `[]`.
+    const slugs = parseCupAllowedInducements(body.allowedInducements);
+    data.allowedInducements = slugs ? JSON.stringify(slugs) : null;
+  }
   return data;
 }
 
+/** Message d'un refus de mode de coups de pouce (400). */
+const INDUCEMENT_MODE_ERRORS: Record<CupInducementModeError, string> = {
+  build_not_allowed_in_sevens:
+    "Une coupe à Sept ne peut pas vendre ses coups de pouce à la création",
+};
+
 /** Projette la config « règles avancées » d'une coupe pour les réponses API. */
-function formatCupRules(cup: {
+export function formatCupRules(cup: {
   resurrectionMode?: boolean | null;
   tierBudgets?: unknown;
   rosterBudgetOverrides?: unknown;
   tierStartingPsp?: unknown;
   rosterStartingPspOverrides?: unknown;
+  inducementMode?: unknown;
+  allowedInducements?: unknown;
+  format?: string | null;
+  tournamentRuleset?: string | null;
 }) {
   return {
     resurrectionMode: Boolean(cup.resurrectionMode),
@@ -137,6 +162,13 @@ function formatCupRules(cup: {
     rosterBudgetOverrides: parseNumberMap(cup.rosterBudgetOverrides),
     tierStartingPsp: parseNumberMap(cup.tierStartingPsp),
     rosterStartingPspOverrides: parseNumberMap(cup.rosterStartingPspOverrides),
+    /** Régime EFFECTIF (`null` en base = `match`, règlement ⇒ `build`). */
+    inducementMode: resolveCupInducementMode(cup.inducementMode, {
+      hasTournamentRuleset: Boolean(cup.tournamentRuleset),
+      format: cup.format ?? "bb11",
+    }),
+    /** Liste autorisée telle que stockée (`null` = tout le catalogue). */
+    allowedInducements: parseCupAllowedInducements(cup.allowedInducements),
   };
 }
 
@@ -772,6 +804,19 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
     });
   }
 
+  // Régime des coups de pouce : écrit EXPLICITEMENT (la colonne n'a pas de
+  // défaut, `null` se lisant comme l'état historique « match »). Un règlement
+  // impose `build` ; une coupe à Sept ne peut pas l'être.
+  const inducementMode = modeToWrite(body.inducementMode, {
+    hasTournamentRuleset: Boolean(pack),
+    format,
+  });
+  if (!inducementMode.ok) {
+    return res
+      .status(400)
+      .json({ error: INDUCEMENT_MODE_ERRORS[inducementMode.error] });
+  }
+
   // Par défaut, la coupe est publique
   const cupIsPublic = isPublic !== undefined ? Boolean(isPublic) : true;
 
@@ -871,6 +916,7 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         // `@default` : `db push` poserait le défaut sur les coupes existantes,
         // qui doivent rester en saisie complète (null).
         sheetEntryMode: body.sheetEntryMode ?? "simplified",
+        inducementMode: inducementMode.mode,
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
         ...(wantsMonthly
@@ -947,7 +993,14 @@ router.patch(
     try {
       const cup = await prisma.cup.findUnique({
         where: { id: cupId },
-        select: { id: true, creatorId: true, validated: true },
+        select: {
+          id: true,
+          creatorId: true,
+          validated: true,
+          format: true,
+          tournamentRuleset: true,
+          inducementMode: true,
+        },
       });
       if (!cup) {
         return res.status(404).json({ error: "Coupe introuvable" });
@@ -965,15 +1018,37 @@ router.patch(
         });
       }
 
+      const data = serializeCupRulesData(body);
+      // Le mode ne s'écrit que s'il est demandé : une coupe antérieure
+      // (`null` = match) qu'on ne fait que rééquilibrer garde son régime.
+      if (body.inducementMode !== undefined) {
+        const mode = modeToWrite(
+          body.inducementMode,
+          {
+            hasTournamentRuleset: Boolean(cup.tournamentRuleset),
+            format: cup.format,
+          },
+          cup.inducementMode,
+        );
+        if (!mode.ok) {
+          return res.status(400).json({ error: INDUCEMENT_MODE_ERRORS[mode.error] });
+        }
+        data.inducementMode = mode.mode;
+      }
+
       const updated = await prisma.cup.update({
         where: { id: cupId },
-        data: serializeCupRulesData(body),
+        data,
         select: {
           resurrectionMode: true,
           tierBudgets: true,
           rosterBudgetOverrides: true,
           tierStartingPsp: true,
           rosterStartingPspOverrides: true,
+          inducementMode: true,
+          allowedInducements: true,
+          format: true,
+          tournamentRuleset: true,
         },
       });
 

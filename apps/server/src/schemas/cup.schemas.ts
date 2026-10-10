@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { SHEET_ENTRY_MODES } from "../services/sheet-entry-mode";
+import { CUP_INDUCEMENT_MODES } from "../services/cup-inducement-mode";
 
 /** Tiers de roster reconnus (clés des maps budget/PSP par tier). */
 const CUP_TIERS = ["I", "II", "III", "IV"] as const;
@@ -39,12 +40,30 @@ const rosterStartingPspOverridesSchema = z.record(
  * Règles avancées de composition (mode coupe). Tous les champs sont
  * optionnels → une coupe sans ces champs se comporte comme avant.
  */
+/**
+ * Régime des coups de pouce d'une coupe (`build` | `match` | `none`). Absent
+ * à la création = défaut d'une coupe neuve (posé par le handler).
+ */
+export const cupInducementModeSchema = z.enum(CUP_INDUCEMENT_MODES);
+
+/**
+ * Coups de pouce autorisés d'une coupe sans règlement (slugs du catalogue).
+ * `null` ou liste vide = tout le catalogue à prix fixe. Forme seule : un slug
+ * inconnu du catalogue n'ouvre rien (il n'est jamais proposé).
+ */
+export const cupAllowedInducementsSchema = z
+  .array(z.string().trim().min(1).max(64))
+  .max(40)
+  .nullable();
+
 export const cupRulesConfigSchema = z.object({
   resurrectionMode: z.boolean().optional(),
   tierBudgets: tierBudgetsSchema.optional(),
   rosterBudgetOverrides: rosterBudgetOverridesSchema.optional(),
   tierStartingPsp: tierStartingPspSchema.optional(),
   rosterStartingPspOverrides: rosterStartingPspOverridesSchema.optional(),
+  inducementMode: cupInducementModeSchema.optional(),
+  allowedInducements: cupAllowedInducementsSchema.optional(),
 });
 
 /** Body de mise à jour dédiée des règles de composition (commissaire/admin). */
@@ -113,6 +132,10 @@ export const createCupSchema = z
     rosterBudgetOverrides: rosterBudgetOverridesSchema.optional(),
     tierStartingPsp: tierStartingPspSchema.optional(),
     rosterStartingPspOverrides: rosterStartingPspOverridesSchema.optional(),
+    // Régime des coups de pouce : absent = défaut d'une coupe neuve (`build`
+    // en BB11, `match` en Sept, `build` imposé sous règlement).
+    inducementMode: cupInducementModeSchema.optional(),
+    allowedInducements: cupAllowedInducementsSchema.optional(),
     tieBreakRules: tieBreakRulesSchema.optional(),
     // Mode de saisie de la feuille de match. Absent = saisie SIMPLIFIÉE pour
     // une coupe neuve (posé par le handler, la colonne n'a pas de défaut).
