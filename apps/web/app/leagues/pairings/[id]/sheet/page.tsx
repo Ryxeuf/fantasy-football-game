@@ -32,6 +32,7 @@ import {
   PlayerSelect,
   InvalidateControl,
   TeamIdentityBadges,
+  RegisteredInducementsStrip,
   TeamValueStrip,
   type PreMatchValues,
   type PostMatchValues,
@@ -253,6 +254,12 @@ interface SheetResponse {
      * Optionnel : un serveur antérieur ne le sert pas (saisie complète).
      */
     entryMode?: "full" | "simplified";
+    /**
+     * Régime des coups de pouce : `build` (achetés à la création, rappelés en
+     * lecture seule), `match` (avant-match) ou `none`. Optionnel : un serveur
+     * antérieur ne le sert pas (avant-match, comportement historique).
+     */
+    inducementMode?: "build" | "match" | "none";
   };
   /** Compétition du pairing (lien retour). Optionnel : rétro-compat pré-fix. */
   leagueId?: string;
@@ -398,6 +405,18 @@ function sheetHirables(team: SheetTeam | null): SheetJourneyman[] {
     ...(team?.journeymen ?? []),
     ...(team?.raisedDead ? [team.raisedDead] : []),
   ];
+}
+
+/**
+ * Coupe en `build` (coups de pouce achetés à la création) ou `none` : rien à
+ * acheter en avant-match — ni éditeur, ni sélection envoyée.
+ */
+function preMatchInducementsLocked(
+  d: Pick<SheetResponse, "competitionKind" | "competitionRules"> | null,
+): boolean {
+  if (!d || !isCupCompetition(d.competitionKind)) return false;
+  const mode = d.competitionRules?.inducementMode;
+  return mode === "build" || mode === "none";
 }
 
 export default function MatchSheetPage() {
@@ -613,8 +632,14 @@ export default function MatchSheetPage() {
                 tossChoice: v.tossChoice,
                 popularityHome: v.popularityHome,
                 popularityAway: v.popularityAway,
-                inducementsHome: v.inducementsHome,
-                inducementsAway: v.inducementsAway,
+                // Coupe en `build` / `none` : l'avant-match ne vend rien, on
+                // n'envoie donc aucune sélection (le serveur la refuserait).
+                ...(preMatchInducementsLocked(data)
+                  ? {}
+                  : {
+                      inducementsHome: v.inducementsHome,
+                      inducementsAway: v.inducementsAway,
+                    }),
                 prayersHome: v.prayersHome,
                 prayersAway: v.prayersAway,
               },
@@ -884,6 +909,7 @@ export default function MatchSheetPage() {
 
   // Une coupe se joue en résurrection : ni fin de match, ni évolutions.
   const isCup = isCupCompetition(data.competitionKind);
+  const inducementsLocked = preMatchInducementsLocked(data);
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4" data-testid="match-sheet">
@@ -968,6 +994,7 @@ export default function MatchSheetPage() {
             />
             <TeamIdentityBadges team={home} align="right" />
             <TeamValueStrip team={home} align="right" />
+            <RegisteredInducementsStrip team={home} side="home" align="right" />
           </div>
           <div
             className="mt-1 shrink-0 rounded border-y-2 bg-nuffle-anthracite px-3 py-1.5 text-lg font-bold text-white"
@@ -995,6 +1022,7 @@ export default function MatchSheetPage() {
             />
             <TeamIdentityBadges team={away} align="left" />
             <TeamValueStrip team={away} align="left" />
+            <RegisteredInducementsStrip team={away} side="away" align="left" />
           </div>
         </div>
         <p className="mt-2 text-center text-xs text-slate-500">
@@ -1165,6 +1193,7 @@ export default function MatchSheetPage() {
             reference={data.reference}
             forfeitOnly={profile.preMatch === "forfeit-only"}
             cupBudget={isCup}
+            inducementsLocked={inducementsLocked}
           />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">

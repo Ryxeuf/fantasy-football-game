@@ -61,7 +61,7 @@
 
 - [x] 8.1 `buildRosterSnapshot` fige `inducements?` (`{ slug, name, quantity, unitCost }`) ; `parseRosterSnapshot` lit un snapshot sans le champ comme « aucun » — vérifier : tests de `cup-roster-snapshot` (capture, snapshot ancien).
 - [x] 8.2 Feuille de coupe en `build` : `registeredInducements` servi par équipe depuis le roster figé ; catalogue vide et budget nul ; `updatePreMatch` refuse toute sélection (`inducements_locked`, 400). Même refus en `none` ; `match` est inchangé (groupe 3) — vérifier : tests de service (`build`, `none`, `match`, coupe à `null`).
-- [ ] 8.3 Web : en `build`, rappel en lecture seule des coups de pouce figés dans l'en-tête de chaque équipe, dans les deux modes de saisie, et aucun éditeur de coups de pouce ; en `none`, aucun éditeur — vérifier : tests de rendu (`build` complète, `build` simplifiée, `none`, `match`).
+- [x] 8.3 Web : en `build`, rappel en lecture seule des coups de pouce figés dans l'en-tête de chaque équipe, dans les deux modes de saisie, et aucun éditeur de coups de pouce ; en `none`, aucun éditeur — vérifier : tests de rendu (`build` complète, `build` simplifiée, `none`, `match`).
 - [ ] 8.4 Feuille papier : bloc « Coups de pouce (inscription) » par équipe pour une coupe en `build`, dans les deux modes, sans case d'achat — vérifier : tests de l'adaptateur et du rendu (« Mascotte d'Équipe ×1 », « Fûts de Blitz Premium ×2 »).
 
 ## 9. Inscription, fiche d'équipe et formulaire de coupe

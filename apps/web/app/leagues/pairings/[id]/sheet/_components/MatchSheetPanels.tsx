@@ -256,6 +256,49 @@ export interface SheetTeam {
   raiseDead?: RaiseDeadInfo;
   /** Trois-quart relevé pendant ce match, s'il y en a un. */
   raisedDead?: SheetRaisedDead | null;
+  /**
+   * Coupe en mode `build` : coups de pouce achetés à la création, figés au
+   * roster d'inscription (rappel, pas de saisie). Optionnel : rétro-compat.
+   */
+  registeredInducements?: RegisteredInducement[];
+}
+
+/** Coup de pouce acheté à la création d'une équipe de coupe. */
+export interface RegisteredInducement {
+  slug: string;
+  name: string;
+  quantity: number;
+  unitCost: number;
+}
+
+/**
+ * Rappel en LECTURE SEULE des coups de pouce achetés à la création (coupe en
+ * mode `build`) : ils valent pour la rencontre, sans rien à saisir. Rendu
+ * dans l'en-tête de l'équipe, donc visible dans les deux modes de saisie.
+ */
+export function RegisteredInducementsStrip({
+  team,
+  side,
+  align = "left",
+}: {
+  team: SheetTeam | null;
+  side: "home" | "away";
+  align?: "left" | "right";
+}) {
+  const list = team?.registeredInducements;
+  if (!list) return null;
+  return (
+    <p
+      data-testid={`registered-inducements-${side}`}
+      className={`mt-1 text-[11px] text-slate-500 ${align === "right" ? "text-right" : ""}`}
+      title="Coups de pouce achetés à la création de l'équipe : ils valent pour chaque rencontre de la coupe."
+    >
+      🎁{" "}
+      {list.length === 0
+        ? "Aucun coup de pouce"
+        : list.map((i) => `${i.name} ×${i.quantity}`).join(" · ")}
+    </p>
+  );
 }
 
 // ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
@@ -1114,6 +1157,7 @@ export function PreMatchPanel({
   reference,
   forfeitOnly = false,
   cupBudget = false,
+  inducementsLocked = false,
 }: {
   initial: PreMatchValues;
   homeName: string;
@@ -1135,6 +1179,11 @@ export function PreMatchPanel({
    * monnaie, sans trésorerie ni dépense adverse ajoutée à l'outsider.
    */
   cupBudget?: boolean;
+  /**
+   * Coupe en `build` (coups de pouce achetés à la création) ou `none` :
+   * l'avant-match ne vend rien, l'éditeur de coups de pouce disparaît.
+   */
+  inducementsLocked?: boolean;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -1426,16 +1475,18 @@ export function PreMatchPanel({
                     pas temporisé)
                   </span>
                 </label>
-                <InducementEditor
-                  list={c.ind}
-                  onChange={c.setInd}
-                  disabled={disabled}
-                  testId={`inducements-${c.side}`}
-                  catalogue={c.catalogue}
-                  starPlayers={c.stars}
-                  budget={c.budget}
-                  cupBudget={cupBudget}
-                />
+                {!inducementsLocked && (
+                  <InducementEditor
+                    list={c.ind}
+                    onChange={c.setInd}
+                    disabled={disabled}
+                    testId={`inducements-${c.side}`}
+                    catalogue={c.catalogue}
+                    starPlayers={c.stars}
+                    budget={c.budget}
+                    cupBudget={cupBudget}
+                  />
+                )}
                 <PrayersEditor
                   list={c.prayers}
                   onChange={c.setPrayers}
