@@ -78,6 +78,27 @@ describe("renderCompetitionPdf", () => {
     }
   });
 
+  it.each([
+    ["complète", F.cupBuildMatchSheet],
+    ["simplifiée", F.cupBuildSimplifiedMatchSheet],
+  ] as const)("rappelle les coups de pouce d'inscription d'une coupe en build (saisie %s)", (_label, data) => {
+    const text = pdfText(renderCompetitionPdf({ kind: "match-sheet", data }));
+    // Le flux PDF échappe les parenthèses.
+    expect(text).toContain("Coups de pouce \\(inscription\\)");
+    expect(text).toContain("Mascotte d'Équipe ×1");
+    expect(text).toContain("Fûts de Blitz Premium ×2");
+    expect(text).toContain("Aucun coup de pouce acheté à la création");
+    // Rien ne s'achète en avant-match : ni grille d'achat, ni caisse.
+    expect(text).not.toContain("Coups de pouce \\(Star Players");
+    expect(text).not.toContain("Budget / caisse");
+  });
+
+  it("garde la grille d'achat d'une coupe hors build", () => {
+    const text = pdfText(renderCompetitionPdf({ kind: "match-sheet", data: F.cupMatchSheet }));
+    expect(text).toContain("Coups de pouce \\(Star Players");
+    expect(text).not.toContain("Coups de pouce \\(inscription");
+  });
+
   it("reporte les évènements déjà saisis dans le journal", () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     renderMatchSheet(doc, {

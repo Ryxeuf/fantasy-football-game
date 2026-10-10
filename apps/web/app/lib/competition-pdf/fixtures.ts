@@ -657,4 +657,22 @@ export const cupSimplifiedMatchSheet: MatchSheetDocument = {
   prefill: { forfeitSide: null },
 };
 
+/** Coupe en `build` : coups de pouce achetés à la création, figés à l'inscription. */
+const BUILD_INDUCEMENTS = [
+  { name: "Mascotte d'Équipe", qty: 1, cost: 25_000 },
+  { name: "Fûts de Blitz Premium", qty: 2, cost: 50_000 },
+];
+
+export const cupBuildMatchSheet: MatchSheetDocument = {
+  ...cupMatchSheet,
+  home: { ...cupMatchSheet.home, registeredInducements: BUILD_INDUCEMENTS },
+  away: { ...cupMatchSheet.away, registeredInducements: [] },
+};
+
+export const cupBuildSimplifiedMatchSheet: MatchSheetDocument = {
+  ...cupSimplifiedMatchSheet,
+  home: cupBuildMatchSheet.home,
+  away: cupBuildMatchSheet.away,
+};
+
 void CUP_TEAMS;

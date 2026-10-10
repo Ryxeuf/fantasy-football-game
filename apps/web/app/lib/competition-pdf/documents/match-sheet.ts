@@ -149,6 +149,38 @@ function inducementRows(list: PdfSheetInducement[] | undefined): string[][] {
   return (list ?? []).map((i) => [pdfSafe(i.name), String(i.qty), formatGoldPdf(i.cost * i.qty)]);
 }
 
+/**
+ * Coupe en `build` : rappel des coups de pouce achetés à la création et figés
+ * à l'inscription. Un par ligne (nom ×quantité), dans les deux modes de
+ * saisie — ils valent pour chaque ronde, rien ne s'achète en avant-match.
+ */
+function drawRegisteredInducements(
+  page: PdfPage,
+  x: number,
+  y: number,
+  w: number,
+  list: PdfSheetInducement[],
+): number {
+  const { doc } = page;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  setText(doc, PDF_COLORS.INK);
+  doc.text("Coups de pouce (inscription)", x, y);
+  y += 3.8;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  if (list.length === 0) {
+    setText(doc, PDF_COLORS.INK_SOFT);
+    doc.text("Aucun coup de pouce acheté à la création", x + 2, y);
+    return y + 5;
+  }
+  for (const i of list) {
+    doc.text(fitText(doc, `${pdfSafe(i.name)} ×${i.qty}`, w - 2), x + 2, y);
+    y += 3.6;
+  }
+  return y + 1.5;
+}
+
 function drawTeamPreMatch(
   page: PdfPage,
   x: number,
@@ -161,8 +193,10 @@ function drawTeamPreMatch(
   const team = sideTeam(data, side);
   y = drawSectionTitle(page, y, side === "home" ? "Avant-match - Domicile" : "Avant-match - Extérieur", { x, width: w });
   y = drawIdentityStrip(page, x, y - 1.5, w, team);
+  const registered = team.registeredInducements;
+  if (registered) y = drawRegisteredInducements(page, x, y + 1, w, registered);
   if (sheetEntryOf(data).preMatch === "full") {
-    y = drawTeamPreMatchEntries(page, x, y, w, data, side);
+    y = drawTeamPreMatchEntries(page, x, y, w, data, side, !registered);
   }
 
   // Le reste de la colonne : notes libres (relances, rappels de règles…).
@@ -180,7 +214,11 @@ function drawTeamPreMatch(
   return y;
 }
 
-/** Popularité, coups de pouce, prières, journaliers, absents (saisie complète). */
+/**
+ * Popularité, coups de pouce, prières, journaliers, absents (saisie complète).
+ * Sans achat (`purchases` faux, coupe en `build`) : ni caisse ni grille de
+ * coups de pouce, ceux de l'inscription étant rappelés au-dessus.
+ */
 function drawTeamPreMatchEntries(
   page: PdfPage,
   x: number,
@@ -188,32 +226,35 @@ function drawTeamPreMatchEntries(
   w: number,
   data: MatchSheetDocument,
   side: "home" | "away",
+  purchases = true,
 ): number {
   const { doc } = page;
   const p = data.prefill;
   const pop = side === "home" ? p?.popularityHome : p?.popularityAway;
   drawField(doc, x, y + 2, w * 0.55, "Popularité (D3 + fans dévoués)", pop ?? null);
-  drawField(doc, x + w * 0.6, y + 2, w * 0.4, "Budget / caisse", null);
+  if (purchases) drawField(doc, x + w * 0.6, y + 2, w * 0.4, "Budget / caisse", null);
   y += 8;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  setText(doc, PDF_COLORS.INK);
-  doc.text("Coups de pouce (Star Players, pots-de-vin, mercenaires...)", x, y);
-  y = drawWriteGrid(doc, {
-    x,
-    y: y + 1.5,
-    width: w,
-    columns: [
-      { label: "Coup de pouce", weight: 6, align: "left" },
-      { label: "Qté", weight: 1 },
-      { label: "Coût", weight: 2 },
-    ],
-    rows: inducementRows(side === "home" ? p?.inducementsHome : p?.inducementsAway),
-    minRows: 6,
-    rowHeight: 6,
-  });
-  y += 6;
+  if (purchases) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    setText(doc, PDF_COLORS.INK);
+    doc.text("Coups de pouce (Star Players, pots-de-vin, mercenaires...)", x, y);
+    y = drawWriteGrid(doc, {
+      x,
+      y: y + 1.5,
+      width: w,
+      columns: [
+        { label: "Coup de pouce", weight: 6, align: "left" },
+        { label: "Qté", weight: 1 },
+        { label: "Coût", weight: 2 },
+      ],
+      rows: inducementRows(side === "home" ? p?.inducementsHome : p?.inducementsAway),
+      minRows: 6,
+      rowHeight: 6,
+    });
+    y += 6;
+  }
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);

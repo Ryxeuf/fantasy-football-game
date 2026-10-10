@@ -246,3 +246,44 @@ describe("matchSheetToPdf — Star Players du roster d'inscription (coupe)", () 
     },
   );
 });
+
+describe("matchSheetToPdf — coups de pouce d'inscription (coupe en build)", () => {
+  const registered = [
+    { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+    { slug: "bloodweiser_kegs", name: "Fûts de Blitz Premium", quantity: 2, unitCost: 50_000 },
+  ];
+  const teams = {
+    home: { ...team("h", "Karak"), registeredInducements: registered },
+    away: team("a", "Morr"),
+  };
+
+  it.each(["full", "simplified"] as const)(
+    "reporte les coups de pouce figés à l'inscription (saisie %s)",
+    (entryMode) => {
+      const doc = matchSheetToPdf(
+        input({
+          competitionKind: "cup",
+          competitionRules: { sppEnabled: false, entryMode, inducementMode: "build" },
+          teams,
+        }),
+      );
+      expect(doc.home.registeredInducements).toEqual([
+        { name: "Mascotte d'Équipe", qty: 1, cost: 25_000 },
+        { name: "Fûts de Blitz Premium", qty: 2, cost: 50_000 },
+      ]);
+      // Équipe sans coup de pouce : liste vide, le rappel reste imprimé.
+      expect(doc.away.registeredInducements).toEqual([]);
+    },
+  );
+
+  it("n'en dit rien hors mode build (avant-match, ligue, mode absent)", () => {
+    for (const over of [
+      { competitionKind: "cup" as const, competitionRules: { inducementMode: "match" as const } },
+      { competitionKind: "cup" as const },
+      { competitionKind: "league" as const, competitionRules: { inducementMode: "build" as const } },
+    ]) {
+      const doc = matchSheetToPdf(input({ ...over, teams }));
+      expect(doc.home.registeredInducements).toBeUndefined();
+    }
+  });
+});

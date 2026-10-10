@@ -68,6 +68,8 @@ export interface SheetPdfTeam {
   journeymen?: SheetPdfPlayer[];
   starPlayersHired?: SheetPdfPlayer[];
   raisedDead?: SheetPdfPlayer | null;
+  /** Coupe en `build` : coups de pouce achetés à la création (cf. API). */
+  registeredInducements?: Array<{ name: string; quantity: number; unitCost: number }>;
 }
 
 export interface SheetPdfEvent {
@@ -118,6 +120,8 @@ export interface SheetPdfInput {
     firingsEnabled?: boolean;
     /** Une coupe peut être en saisie simplifiée (absent = complète). */
     entryMode?: "full" | "simplified";
+    /** Régime des coups de pouce (absent = avant-match, historique). */
+    inducementMode?: "build" | "match" | "none";
   };
   leagueName?: string;
   /** Placement de la rencontre. Optionnel : rétro-compat serveur antérieur. */
@@ -357,6 +361,8 @@ function sheetTeam(
   tallies: Map<string, PdfSheetPlayerTally>,
   withSpp: boolean,
   rosterName: RosterNameResolver,
+  /** Coupe en `build` : rappeler les coups de pouce achetés à la création. */
+  registeredInducements = false,
 ): PdfSheetTeam {
   const roster = [...team.players]
     .filter((p) => !p.dead)
@@ -379,6 +385,15 @@ function sheetTeam(
     dedicatedFans: team.dedicatedFans ?? null,
     staff: team.staff ?? null,
     players: [...roster, ...extras],
+    ...(registeredInducements
+      ? {
+          registeredInducements: (team.registeredInducements ?? []).map((i) => ({
+            name: i.name,
+            qty: i.quantity,
+            cost: i.unitCost,
+          })),
+        }
+      : {}),
   };
 }
 
@@ -453,8 +468,11 @@ export function matchSheetToPdf(input: SheetPdfInput, ctx: SheetPdfContext = {})
     }),
   );
   const tallies = buildTallies(input);
-  const home = sheetTeam(input.teams.home ?? EMPTY_TEAM, tallies, rules.spp, rosterName);
-  const away = sheetTeam(input.teams.away ?? EMPTY_TEAM, tallies, rules.spp, rosterName);
+  // Coupe en `build` : les coups de pouce sont ceux de l'inscription, rappelés
+  // sur la feuille à la place de la grille d'achat d'avant-match.
+  const registered = isCup && r.inducementMode === "build";
+  const home = sheetTeam(input.teams.home ?? EMPTY_TEAM, tallies, rules.spp, rosterName, registered);
+  const away = sheetTeam(input.teams.away ?? EMPTY_TEAM, tallies, rules.spp, rosterName, registered);
 
   const tables = input.reference?.weatherTables ?? [];
   const table = tables.find((t) => t.id === input.sheet.weatherTable) ?? tables[0] ?? null;
