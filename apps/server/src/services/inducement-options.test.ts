@@ -18,11 +18,18 @@ vi.mock("./roster-staff-config", () => ({
 vi.mock("./inducement-repository", () => ({
   loadInducementCatalogue: vi.fn(async () => undefined),
 }));
+vi.mock("../utils/star-player-repository", () => ({
+  getStarPlayerBySlugDb: vi.fn(),
+}));
 
 import { NAF_WORLD_CUP_2027, getSpecialRulesForTeam } from "@bb/game-engine";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
-import { inducementOptionsFor } from "./inducement-options";
+import {
+  buildInducementCatalogue,
+  inducementOptionsFor,
+} from "./inducement-options";
+import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 
 const staff = resolveStaffConfigBySlug as unknown as ReturnType<typeof vi.fn>;
 const specialRules = resolveSpecialRulesForTeam as unknown as ReturnType<
@@ -73,5 +80,66 @@ describe("inducementOptionsFor", () => {
       cost: 50_000,
       maxQuantity: 2,
     });
+  });
+});
+
+describe("buildInducementCatalogue", () => {
+  const star = getStarPlayerBySlugDb as unknown as ReturnType<typeof vi.fn>;
+
+  it("règlement NAF : les 5 coups de pouce du pack accessibles au roster", async () => {
+    const out = await buildInducementCatalogue({
+      roster: "snotling",
+      ruleset: "season_3",
+      pack: NAF_WORLD_CUP_2027,
+    });
+    // Snotlings : Débutants Déchaînés (Trois-quarts à vil prix) compris.
+    expect(slugs(out).sort()).toEqual([
+      "bloodweiser_kegs",
+      "bribe",
+      "halfling_master_chef",
+      "riotous_rookies",
+      "team_mascot",
+    ]);
+  });
+
+  it("coupe avec liste : intersection avec le catalogue", async () => {
+    const out = await buildInducementCatalogue({
+      roster: "human",
+      ruleset: "season_3",
+      allowlist: ["team_mascot", "bloodweiser_kegs", "mercenary_players"],
+    });
+    expect(slugs(out).sort()).toEqual(["bloodweiser_kegs", "team_mascot"]);
+  });
+
+  it("jamais de coût variable ni de Star Player", async () => {
+    const out = await buildInducementCatalogue({
+      roster: "human",
+      ruleset: "season_3",
+    });
+    expect(slugs(out)).not.toContain("mercenary_players");
+    expect(slugs(out)).not.toContain("star_player");
+    expect(slugs(out)).toContain("team_mascot");
+  });
+
+  it("Star Player recruté à Arme Secrète : Pots-de-vin plafonnés par le règlement", async () => {
+    star.mockResolvedValue({ skills: "secret-weapon,stunty" });
+    const out = await buildInducementCatalogue({
+      roster: "goblin",
+      ruleset: "season_3",
+      pack: NAF_WORLD_CUP_2027,
+      hiredStarSlugs: ["bomber_dribblesnot"],
+    });
+    expect(out.find((o) => o.slug === "bribe")?.maxQuantity).toBe(2);
+  });
+
+  it("sans Arme Secrète : plafond du catalogue (6 pour Chantage et Corruption)", async () => {
+    star.mockResolvedValue({ skills: "block" });
+    const out = await buildInducementCatalogue({
+      roster: "goblin",
+      ruleset: "season_3",
+      pack: NAF_WORLD_CUP_2027,
+      hiredStarSlugs: ["griff_oberwald"],
+    });
+    expect(out.find((o) => o.slug === "bribe")?.maxQuantity).toBe(6);
   });
 });

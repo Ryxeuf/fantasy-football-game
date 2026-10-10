@@ -28,7 +28,9 @@ import { loadInducementCatalogue } from "./inducement-repository";
 import {
   applyPackInducementRules,
   effectiveInducementAllowlist,
+  hasSecretWeapon,
 } from "./tournament-inducements";
+import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 
 /** Une option de coup de pouce, prix et plafond résolus pour l'équipe. */
 export interface InducementOption {
@@ -130,4 +132,58 @@ export async function inducementOptionsFor(
       return def ? qualifiesForInducementDiscount(def, ctx) : false;
     },
   }) as InducementOption[];
+}
+
+/** Contexte de construction d'une équipe pour le catalogue du builder. */
+export interface BuildInducementCatalogueInput {
+  readonly roster: string;
+  readonly ruleset: Ruleset;
+  readonly regionalLeague?: string | null;
+  /** Règlement de tournoi (liste fermée, prix imposés). */
+  readonly pack?: TournamentRulesetDefinition | null;
+  /** Liste autorisée par la coupe (`null` = tout le catalogue). */
+  readonly allowlist?: string[] | null;
+  /** Star Players recrutés au même build (plafond Arme Secrète). */
+  readonly hiredStarSlugs?: readonly string[];
+}
+
+/**
+ * Catalogue de coups de pouce achetables À LA CONSTRUCTION. Même résolution
+ * que la feuille (`inducementOptionsFor`), moins :
+ *  - les Star Players, qui ont leur propre sélecteur au builder ;
+ *  - les coups de pouce à coût VARIABLE (Mercenaires) : leur prix dépend
+ *    d'un choix de poste et de compétence que le builder ne sait pas porter.
+ */
+export async function buildInducementCatalogue(
+  input: BuildInducementCatalogueInput,
+): Promise<InducementOption[]> {
+  const hasSecretWeaponStar = await anyStarHasSecretWeapon(
+    input.hiredStarSlugs ?? [],
+    input.ruleset,
+  );
+  const options = await inducementOptionsFor(
+    input.roster,
+    input.ruleset,
+    input.allowlist ?? null,
+    input.regionalLeague ?? null,
+    input.pack ?? null,
+    { hasSecretWeaponStar },
+  );
+  return options.filter((o) => o.slug !== "star_player" && !o.variableCost);
+}
+
+/** Un des Star Players recrutés porte-t-il Arme Secrète (fiche en base) ? */
+async function anyStarHasSecretWeapon(
+  slugs: readonly string[],
+  ruleset: Ruleset,
+): Promise<boolean> {
+  for (const slug of slugs) {
+    try {
+      const def = await getStarPlayerBySlugDb(slug, ruleset);
+      if (hasSecretWeapon(def?.skills)) return true;
+    } catch {
+      // Fiche illisible : on ne présume pas d'Arme Secrète.
+    }
+  }
+  return false;
 }
