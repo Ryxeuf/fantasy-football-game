@@ -82,6 +82,7 @@ function mapCupRegistrationStatus(code: CupRegistrationErrorCode): number {
       return 409;
     case "budget_exceeded":
     case "psp_exceeded":
+    case "inducement_not_allowed":
       return 422;
     default:
       return 400;

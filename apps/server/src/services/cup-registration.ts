@@ -9,7 +9,10 @@
  * `CupParticipant`.
  */
 
-import { tournamentRulesetShortLabel } from './tournament-ruleset-repository';
+import {
+  getTournamentRulesetDefinition,
+  tournamentRulesetShortLabel,
+} from './tournament-ruleset-repository';
 import { loadAdvancementSchedule } from './advancement-schedule-repository';
 import type { Ruleset } from '@bb/game-engine';
 import { prisma } from '../prisma';
@@ -24,6 +27,12 @@ import { captureRosterSnapshot } from './cup-roster-snapshot';
 import { getTeamEngagement } from './team-competition-status';
 import { ACTIVE_PLAYER_WHERE } from './player-status';
 import { buildTeamBudgetSummary } from './team-budget-summary';
+import {
+  buildInducementContextFrom,
+  type CupForBuildInducements,
+} from './build-inducement-context';
+import { buildInducementCatalogue } from './inducement-options';
+import { resolveBuildInducements } from './build-inducements';
 
 export type CupRegistrationErrorCode =
   | 'cup_not_found'
@@ -35,7 +44,8 @@ export type CupRegistrationErrorCode =
   | 'already_registered'
   | 'already_engaged'
   | 'budget_exceeded'
-  | 'psp_exceeded';
+  | 'psp_exceeded'
+  | 'inducement_not_allowed';
 
 export class CupRegistrationError extends Error {
   constructor(
@@ -129,6 +139,12 @@ export async function registerTeamToCup(input: {
       } et n'est pas disponible`,
     );
   }
+
+  await assertTeamInducementsFitCup({
+    cup: cup as unknown as CupForBuildInducements,
+    cupPackSlug,
+    team: team as unknown as TeamForInducementCheck,
+  });
 
   // Contraintes de composition (uniquement si la coupe les définit).
   const cupRules = cup as unknown as CupRulesConfig;
@@ -225,4 +241,70 @@ export async function registerTeamToCup(input: {
   });
 
   return { participantId: participant.id, pspPoolGranted };
+}
+
+const ADAPT_HINT =
+  'utilisez « Adapter à la coupe » pour en créer une version conforme';
+
+interface TeamForInducementCheck {
+  readonly id: string;
+  readonly roster: string;
+  readonly ruleset: string;
+  readonly regionalLeague?: string | null;
+}
+
+/**
+ * Une équipe qui porte des coups de pouce achetés à sa création ne s'inscrit
+ * telle quelle qu'à une coupe qui les vend AU MÊME MOMENT (mode `build`), et
+ * seulement s'ils tiennent dans son catalogue effectif (liste autorisée ou
+ * liste fermée du règlement, plafonds — Arme Secrète comprise). Sinon le
+ * roster d'inscription figerait des coups de pouce que la coupe interdit.
+ * Le prix n'est pas rejugé ici : la dépense est contrôlée par le budget.
+ */
+async function assertTeamInducementsFitCup(input: {
+  cup: CupForBuildInducements;
+  cupPackSlug: string | null;
+  team: TeamForInducementCheck;
+}): Promise<void> {
+  const { cup, cupPackSlug, team } = input;
+  const rows = await prisma.teamInducement.findMany({
+    where: { teamId: team.id },
+    select: { slug: true, quantity: true },
+  });
+  if (rows.length === 0) return;
+
+  const pack = cupPackSlug
+    ? await getTournamentRulesetDefinition(cupPackSlug)
+    : null;
+  const context = buildInducementContextFrom({ cup, pack });
+  if (!context.allowed) {
+    const regime =
+      context.cupMode === 'none'
+        ? "n'autorise aucun coup de pouce"
+        : 'vend ses coups de pouce en avant-match';
+    throw new CupRegistrationError(
+      'inducement_not_allowed',
+      `Cette équipe porte des coups de pouce achetés à sa création, or cette coupe ${regime} : ${ADAPT_HINT}`,
+    );
+  }
+
+  const stars = await prisma.teamStarPlayer.findMany({
+    where: { teamId: team.id },
+    select: { starPlayerSlug: true },
+  });
+  const catalogue = await buildInducementCatalogue({
+    roster: team.roster,
+    ruleset: team.ruleset as Ruleset,
+    regionalLeague: team.regionalLeague ?? null,
+    pack,
+    allowlist: context.allowlist,
+    hiredStarSlugs: stars.map((s: { starPlayerSlug: string }) => s.starPlayerSlug),
+  });
+  const resolved = resolveBuildInducements(rows, catalogue);
+  if (!resolved.ok) {
+    throw new CupRegistrationError(
+      'inducement_not_allowed',
+      `Coups de pouce incompatibles avec cette coupe (${resolved.error}) : ${ADAPT_HINT}`,
+    );
+  }
 }
