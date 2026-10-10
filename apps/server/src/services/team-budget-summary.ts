@@ -71,6 +71,13 @@ export interface TeamBudgetSummary {
    * une équipe a été éditée en admin au-delà de son budget.
    */
   readonly remaining: number;
+  /**
+   * Part du reliquat VERSABLE en trésorerie : `max(0, remaining)`, et 0 sous
+   * règlement de tournoi — « l'or non dépensé à la création est perdu ».
+   * C'est elle que créditent la création et la resynchronisation d'un
+   * brouillon, jamais `remaining` directement.
+   */
+  readonly treasuryCredit: number;
   /** Trésorerie réelle de l'équipe (po) — la monnaie d'après-création. */
   readonly treasury: number;
   /** VE — Valeur d'Équipe. */
@@ -94,6 +101,12 @@ interface BudgetTeamRow {
   readonly dedicatedFans: number;
   readonly initialBudget: number;
   readonly treasury: number;
+  /**
+   * Règlement de tournoi de l'équipe : sous règlement, l'or non dépensé à la
+   * création est PERDU (cf. `treasuryCredit`). Optionnel : absent des
+   * lectures qui ne le sélectionnent pas.
+   */
+  readonly tournamentRuleset?: string | null;
 }
 
 interface BudgetPlayerRow {
@@ -193,6 +206,9 @@ export async function buildTeamBudgetSummary(
     dedicatedFansCost,
     totalSpent,
     remaining: initialBudget - totalSpent,
+    treasuryCredit: team.tournamentRuleset
+      ? 0
+      : Math.max(0, initialBudget - totalSpent),
     treasury: team.treasury,
     teamValue: breakdown.teamValue,
     currentValue: breakdown.currentValue,
@@ -262,7 +278,7 @@ export async function creditInitialTreasury(
     team.starPlayers,
     team.inducements ?? [],
   );
-  const treasury = Math.max(0, summary.remaining);
+  const treasury = summary.treasuryCredit;
   if (treasury === 0) return 0;
 
   const auditDb = prisma as unknown as TeamAuditPrismaLike;
@@ -319,7 +335,7 @@ export async function syncDraftTreasury(
     team.starPlayers,
     team.inducements ?? [],
   );
-  const treasury = Math.max(0, summary.remaining);
+  const treasury = summary.treasuryCredit;
   if (treasury === team.treasury) return treasury;
 
   const auditDb = prisma as unknown as TeamAuditPrismaLike;

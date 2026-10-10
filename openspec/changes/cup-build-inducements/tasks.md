@@ -48,7 +48,7 @@
 - [x] 6.4 Module pur `resolveBuildInducements(requested, catalogue)` : lignes au prix du catalogue, total en po, erreurs (hors catalogue, plafond, doublon) — vérifier : tests unitaires (dont « prix du client ignoré » : le schéma ne déclare pas `cost`).
 - [x] 6.5 `team.schemas` : champ `inducements` (forme bornée). `team-build-handler` : refus hors contexte (`pack` ou coupe en `build`), validation après les Star Players, total ajouté à `totalBudgetUsed` avec une part nommée dans le message, écriture dans la transaction, détail dans `team.create` — vérifier : tests du handler (achat NAF accepté, Mage Météo NAF refusé, hors contexte refusé, budget dépassé, Arme Secrète ⇒ 3 Pots-de-vin refusés, journal).
 - [x] 6.6 `buildTeamBudgetSummary` compte `inducementsCost` dans `totalSpent`, et `GET /team/:id` sert les `inducements` de l'équipe — vérifier : tests (dépense avec coups de pouce, VE inchangée).
-- [ ] 6.7 Sous règlement, le reliquat versable vaut 0 dans le résumé de budget, donc à la création ET au `resyncDraftTreasury` d'un brouillon ; sans règlement, le comportement est inchangé — vérifier : tests (`team-budget-summary`, édition de brouillon NAF qui reste à 0, équipe libre à 40 000 po).
+- [x] 6.7 Sous règlement, le reliquat versable vaut 0 dans le résumé de budget, donc à la création ET au `resyncDraftTreasury` d'un brouillon ; sans règlement, le comportement est inchangé — vérifier : tests (`team-budget-summary`, édition de brouillon NAF qui reste à 0, équipe libre à 40 000 po).
 
 ## 7. Builder (web)
 

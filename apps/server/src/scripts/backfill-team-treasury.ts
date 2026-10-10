@@ -59,7 +59,7 @@ export async function backfillTeamTreasury(apply: boolean): Promise<{
       team.starPlayers,
       team.inducements,
     );
-    const treasury = Math.max(0, summary.remaining);
+    const treasury = summary.treasuryCredit;
     if (treasury === 0) {
       skipped += 1;
       continue;
