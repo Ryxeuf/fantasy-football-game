@@ -90,6 +90,8 @@ import {
 } from "./league-sheet-purchase-options";
 import {
   deriveSideStarPlayers,
+  parseStarPlayerInducements,
+  registeredStarPlayerSlugs,
   sheetCompetitionKind,
   isSyntheticSheetPlayerId,
   syntheticSheetPlayerSide,
@@ -592,6 +594,7 @@ export class MatchSheetError extends Error {
       | "invalidation_failed"
       | "inducement_over_budget"
       | "inducement_not_allowed"
+      | "inducement_star_already_registered"
       | "advancement_wrong_side"
       | "advancement_invalid_player"
       | "journeyman_not_found"
@@ -1263,6 +1266,26 @@ export async function updatePreMatch(input: {
     assertInducementsAllowed(
       p.inducementsAway,
       effectiveAllowlist,
+      "extérieur",
+    );
+    // Coupe : un Star Player du roster d'inscription joue déjà la rencontre.
+    // L'engager aussi en avant-match le ferait payer deux fois pour un seul
+    // joueur sur le terrain.
+    const competitionKind = sheetCompetitionKind(sheet as SheetSyntheticColumns);
+    assertStarsNotRegistered(
+      p.inducementsHome,
+      registeredStarPlayerSlugs({
+        frozenSnapshot: snapForBudget.rosterSnapshotHome,
+        competitionKind,
+      }),
+      "domicile",
+    );
+    assertStarsNotRegistered(
+      p.inducementsAway,
+      registeredStarPlayerSlugs({
+        frozenSnapshot: snapForBudget.rosterSnapshotAway,
+        competitionKind,
+      }),
       "extérieur",
     );
     if (p.inducementsHome !== undefined) {
@@ -4342,6 +4365,28 @@ async function loadLeagueInducementRules(pairingId: string): Promise<{
     return { allowlist, pack };
   } catch {
     return { allowlist: null, pack: null };
+  }
+}
+
+/**
+ * Coupe — rejette l'engagement en avant-match d'un Star Player déjà au roster
+ * d'inscription (`registered`) : il joue déjà la rencontre. No-op sans
+ * sélection ou sans Star Player inscrit.
+ */
+function assertStarsNotRegistered(
+  selection: unknown,
+  registered: readonly string[],
+  sideLabel: string,
+): void {
+  if (registered.length === 0 || selection === undefined) return;
+  const already = new Set(registered);
+  for (const sel of parseStarPlayerInducements(selection)) {
+    if (already.has(sel.slug)) {
+      throw new MatchSheetError(
+        "inducement_star_already_registered",
+        `${sel.name} figure déjà au roster d'inscription (${sideLabel}) : un Star Player ne joue qu'une fois par équipe.`,
+      );
+    }
   }
 }
 

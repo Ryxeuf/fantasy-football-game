@@ -88,7 +88,11 @@ import { recordOfflineLeagueResult } from "./league-offline-result";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import { getSpecialRulesForTeam } from "@bb/game-engine";
-import { getMatchSheet, validateByCommissioner } from "./league-match-sheet";
+import {
+  getMatchSheet,
+  updatePreMatch,
+  validateByCommissioner,
+} from "./league-match-sheet";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
@@ -267,5 +271,58 @@ describe("feuille de coupe — Star Players du roster d'inscription", () => {
     // Une coupe n'écrit rien sur les équipes : aucun résultat de ligue (PSP,
     // blessures, or) n'est joué, Star Player compris.
     expect(recordOfflineLeagueResult).not.toHaveBeenCalled();
+  });
+
+  it("refuse d'engager en avant-match un Star Player déjà au roster d'inscription", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([
+        { starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ]),
+      rosterSnapshotAway: frozen([]),
+    });
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          inducementsHome: [
+            {
+              slug: "star_player",
+              starPlayerSlug: "morg_n_thorg",
+              name: "Morg 'n' Thorg",
+              cost: 380_000,
+              qty: 1,
+            },
+          ],
+        },
+      }),
+    ).rejects.toMatchObject({ code: "inducement_star_already_registered" });
+    expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+  });
+
+  it("relit sans erreur une feuille ancienne qui porte déjà le doublon", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([
+        { starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ]),
+      rosterSnapshotAway: frozen([]),
+      inducementsHome: [
+        { slug: "star_player", starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ],
+      events: [],
+    });
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.teams.home?.starPlayersHired?.map((s) => s.id)).toEqual([
+      "star-home-morg_n_thorg",
+    ]);
   });
 });
