@@ -109,13 +109,25 @@ une session interactive.
 
 Une requête authentifiée par clé DOIT être refusée (HTTP 403,
 `interactive_session_required`) sur : la gestion des clés API,
-l'impersonation d'un utilisateur, la modification du profil, du mot de
-passe et la désactivation du compte courant.
+l'impersonation d'un utilisateur, le changement de rôle d'un utilisateur,
+la réinitialisation de son mot de passe par un admin, le changement de sa
+validité, la modification du profil, du mot de passe et la désactivation du
+compte courant.
 
 #### Scenario: Une clé ne crée pas de clé
 - WHEN un client appelle `POST /admin/api-keys` avec une clé de portée
   `write`
 - THEN la requête DOIT être refusée (HTTP 403)
+
+#### Scenario: Une clé ne promeut pas de compte
+- WHEN un client appelle `PATCH /admin/users/:id/role` avec une clé de
+  portée `write`
+- THEN la requête DOIT être refusée (HTTP 403) et le rôle inchangé
+
+#### Scenario: Une clé n'obtient pas de mot de passe
+- WHEN un client appelle `POST /admin/users/:id/password-reset` avec une
+  clé de portée `write`
+- THEN la requête DOIT être refusée (HTTP 403) et aucun mot de passe émis
 
 #### Scenario: Une clé n'impersonne pas
 - WHEN un client appelle `POST /admin/users/:id/impersonate` avec une clé

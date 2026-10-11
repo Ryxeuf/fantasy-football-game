@@ -249,8 +249,10 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-// Route pour modifier le rôle d'un utilisateur
-router.patch("/users/:id/role", validate(updateUserRoleSchema), async (req, res) => {
+// Route pour modifier le rôle d'un utilisateur.
+// Refusée à une clé API (`sessionOnly`) : promouvoir un compte jetable
+// donnerait un accès admin qui survit à la révocation de la clé.
+router.patch("/users/:id/role", sessionOnly, validate(updateUserRoleSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { role, roles } = req.body;
@@ -354,8 +356,10 @@ router.patch("/users/:id/patreon", validate(updateUserPatreonSchema), async (req
   }
 });
 
-// Route pour modifier le statut de validation d'un utilisateur
-router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, res) => {
+// Route pour modifier le statut de validation d'un utilisateur.
+// Refusée à une clé API (`sessionOnly`) : une clé fuitée pourrait sinon
+// désactiver son propre propriétaire et l'exclure.
+router.patch("/users/:id/valid", sessionOnly, validate(updateUserValidSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { valid } = req.body;
@@ -650,8 +654,11 @@ router.post("/users/:id/unban", async (req, res) => {
  *
  * Audit log strict : trace l'identite admin via safeAudit. Le password
  * temporaire n'est jamais persiste en clair.
+ *
+ * Refuse a une cle API (`sessionOnly`) : le mot de passe rendu en clair
+ * ouvrirait un compte (possiblement admin) qui survit a la revocation.
  */
-router.post("/users/:id/password-reset", async (req, res) => {
+router.post("/users/:id/password-reset", sessionOnly, async (req, res) => {
   try {
     const { id } = req.params;
 

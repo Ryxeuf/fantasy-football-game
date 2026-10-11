@@ -117,6 +117,12 @@ requête est authentifiée par clé. Routes concernées :
 - `/admin/api-keys/*` — une clé ne crée, ne liste ni ne révoque de clé ;
 - `POST /admin/users/:id/impersonate` — émettrait un JWT qui survit à la
   révocation ;
+- `PATCH /admin/users/:id/role` — promouvoir un compte jetable donnerait un
+  accès admin durable ;
+- `POST /admin/users/:id/password-reset` — rend un mot de passe en clair,
+  donc un compte (possiblement admin) ouvert après la révocation ;
+- `PATCH /admin/users/:id/valid` — une clé pourrait désactiver son propre
+  propriétaire (la route n'a pas de garde « soi-même ») ;
 - `PUT /auth/me`, `PUT /auth/me/password`, `DELETE /auth/me` — prendre ou
   détruire le compte propriétaire.
 

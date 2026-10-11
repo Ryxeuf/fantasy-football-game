@@ -87,8 +87,12 @@ les actions réservées à une session interactive (ci-dessous).
   qui n'est plus admin. La cause est dans les logs serveur, avec le préfixe.
 - **Réservé à une session interactive** (403 `interactive_session_required`,
   middleware `sessionOnly`) : gestion des clés (`/admin/api-keys/*`),
-  impersonation, `PUT /auth/me`, `PUT /auth/me/password`, `DELETE /auth/me`.
-  Une clé fuitée ne peut pas se perpétuer en fabriquant un autre accès.
+  impersonation, changement de rôle (`PATCH /admin/users/:id/role`),
+  mot de passe temporaire (`POST /admin/users/:id/password-reset`),
+  validité d'un compte (`PATCH /admin/users/:id/valid`), `PUT /auth/me`,
+  `PUT /auth/me/password`, `DELETE /auth/me`. Une clé fuitée ne peut pas se
+  perpétuer en fabriquant un autre accès (compte promu, mot de passe rendu en
+  clair, JWT d'impersonation), ni exclure son propriétaire.
 - **Révocation immédiate** : aucune mise en cache côté serveur.
 - **Traçabilité** : `AuditLog.apiKeyId` et `TeamAuditEvent.apiKeyId` (via le
   contexte d'audit) ; le journal d'audit admin affiche un badge « 🔑 clé API ».
@@ -123,7 +127,8 @@ les actions réservées à une session interactive (ci-dessous).
 - Serveur : `api-key-rules.test.ts`, `api-keys.test.ts`,
   `middleware/apiKeyAuth.test.ts`, `routes/admin-api-keys.test.ts` (chaîne
   Express réelle, `/auth/me`, `sessionOnly` sur `/auth`),
-  `admin-impersonate.test.ts` (refus par clé), `audit-log.test.ts`,
+  `admin-impersonate.test.ts` et `admin-session-only.test.ts` (refus par
+  clé), `audit-log.test.ts`,
   `team-audit.test.ts`, `audit-context.test.ts`,
   `scripts/remote-smoke.test.ts`.
 - Web : `lib/admin-api-keys.test.ts`, `admin/api-keys/page.test.tsx`,

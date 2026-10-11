@@ -14,6 +14,7 @@
 - [x] 3.1 `authUser` / `optionalAuthUser` : branche clé avant `jwt.verify`, chemin JWT synchrone inchangé, résolution mémorisée par requête, portée appliquée, `req.user.apiKey`, `setAuditActor({ apiKeyId })` — vérifier : tests du middleware (JWT inchangé, clé valide, clé refusée ⇒ 401 / vue publique, lecture seule ⇒ 403 sur POST, mémorisation).
 - [x] 3.2 `requireFeatureFlag` et l'auth optionnelle locale de `routes/feature-flags` reconnaissent la clé — vérifier : tests.
 - [x] 3.3 Middleware `sessionOnly` posé sur l'impersonation et sur `PUT /auth/me`, `PUT /auth/me/password`, `DELETE /auth/me` ; `GET /auth/me` annonce la clé utilisée — vérifier : tests de route.
+- [x] 3.4 (revue sécurité) `sessionOnly` aussi sur `PATCH /admin/users/:id/role`, `POST /admin/users/:id/password-reset`, `PATCH /admin/users/:id/valid` — vérifier : `admin-session-only.test.ts`.
 
 ## 4. Traçabilité (serveur)
 

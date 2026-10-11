@@ -612,9 +612,11 @@ visé. Quatre règles qui ne se voient pas dans un seul fichier :
   propriétaire doit être admin, valide, ni banni ni supprimé. Refus = 401
   indistinct (`api_key_invalid`).
 - **`sessionOnly` pour tout ce par quoi une clé fuitée se perpétuerait** :
-  gérer les clés, impersonner (le JWT émis survit à la révocation), modifier
-  le profil / le mot de passe / désactiver le compte. Toute nouvelle route qui
-  ÉMET un accès (token, mot de passe, invitation d'admin…) le pose.
+  gérer les clés, impersonner (le JWT émis survit à la révocation), changer
+  un rôle (compte jetable promu admin), réinitialiser un mot de passe (rendu
+  en clair), changer la validité d'un compte, modifier le profil / le mot de
+  passe / désactiver le compte courant. Toute nouvelle route qui ÉMET un
+  accès (token, mot de passe, rôle, invitation d'admin…) le pose.
 - **Portée `read` = méthodes sûres, y compris sous `optionalAuthUser`** : un
   POST avec une clé en lecture seule est un 403, jamais une écriture faite en
   anonyme.
