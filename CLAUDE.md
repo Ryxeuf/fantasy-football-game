@@ -1113,6 +1113,16 @@ Change OpenSpec `cup-build-inducements`, doc
   50 000 po) et le plafond « Arme Secrète » — un prix de pack qui écrase la
   remise du moteur fait payer le plein tarif aux équipes qui y ont droit.
 - **Sous règlement, l'or non dépensé est perdu** (`treasuryCredit` = 0).
+- **La liste du commissaire fait foi, règlement compris**
+  (`resolveCupInducementList`) : `null` = liste par défaut (règlement, sinon
+  catalogue), `[...]` = exactement ces coups de pouce — ceux que le règlement
+  ne liste pas sont des AJOUTS au prix du catalogue —, `[]` = aucun. D'où un
+  parseur qui distingue `[]` de `null`, et une liste égale au défaut
+  enregistrée `null` (elle suit alors les éditions admin du règlement). Les
+  LIGUES gardent l'intersection (`resolveLeagueInducementList`). Piège
+  rencontré : la feuille d'une coupe en avant-match ignorait la liste
+  (`loadLeagueInducementRules` ne lisait que le règlement) — tout lecteur de
+  coups de pouce d'une coupe part de la résolution.
 
 Piège principal — **la trésorerie fictive d'une coupe** : une équipe porte la
 trésorerie de sa vie hors coupe, et la résurrection la rejouerait à chaque

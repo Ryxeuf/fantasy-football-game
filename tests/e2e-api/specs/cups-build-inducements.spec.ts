@@ -262,4 +262,63 @@ describe("E2E API — coups de pouce achetés à la création (coupe à règleme
     );
     expect(tooMany.status).toBe(400);
   });
+
+  it("le commissaire retire et ajoute des coups de pouce au règlement, jusqu'à la clôture", async () => {
+    const { cupId, commish, rival } = await setupNafCup();
+
+    // Liste du commissaire : sans Pots-de-vin, avec le Mage Météo (hors NAF).
+    const list = ["team_mascot", "bloodweiser_kegs", "weather_mage"];
+    const patched = await rawPatch(`/cup/${cupId}/rules`, commish.token, {
+      allowedInducements: list,
+    });
+    expect(patched.status).toBe(200);
+    const cup = (await get<CupDTO>(`/cup/${cupId}`, commish.token)).cup;
+    expect(cup.rulesConfig?.inducementMode).toBe("build");
+    expect(cup.rulesConfig?.allowedInducements).toEqual(list);
+
+    const catalogue = unwrap(
+      await get<{ data: BuildCatalogue }>(
+        `/team/build-inducements?roster=goblin&ruleset=season_3&regionalLeague=badlands_brawl&cupId=${cupId}`,
+        commish.token,
+      ),
+    );
+    const bySlug = new Map(catalogue.inducements.map((i) => [i.slug, i]));
+    expect(bySlug.has("bribe")).toBe(false);
+    // Ajout hors règlement : prix du catalogue ; règlement : son prix.
+    expect(bySlug.get("weather_mage")?.cost).toBe(25_000);
+    expect(bySlug.get("team_mascot")?.cost).toBe(25_000);
+
+    // Le build suit la liste : l'ajout passe, le retrait est refusé.
+    const withMage = await buildFor(commish, cupId, "Les Météorologues", {
+      inducements: [{ slug: "weather_mage", quantity: 1 }],
+    });
+    expect(withMage.breakdown.inducements).toBe(25);
+    const withBribe = await rawPost(
+      "/team/build",
+      rival.token,
+      buildBody("Les Corrupteurs", cupId, {
+        inducements: [{ slug: "bribe", quantity: 1 }],
+      }),
+    );
+    expect(withBribe.status).toBe(400);
+
+    // Retour à la liste du règlement : les Pots-de-vin reviennent.
+    await rawPatch(`/cup/${cupId}/rules`, commish.token, { allowedInducements: null });
+    const reset = unwrap(
+      await get<{ data: BuildCatalogue }>(
+        `/team/build-inducements?roster=goblin&ruleset=season_3&regionalLeague=badlands_brawl&cupId=${cupId}`,
+        commish.token,
+      ),
+    );
+    expect(reset.inducements.some((i) => i.slug === "bribe")).toBe(true);
+    expect(reset.inducements.some((i) => i.slug === "weather_mage")).toBe(false);
+
+    // Inscriptions closes : la liste ne se modifie plus.
+    await buildFor(rival, cupId, "Les Fouineurs");
+    await post(`/cup/${cupId}/validate`, commish.token, {});
+    const locked = await rawPatch(`/cup/${cupId}/rules`, commish.token, {
+      allowedInducements: ["team_mascot"],
+    });
+    expect(locked.status).toBe(400);
+  });
 });

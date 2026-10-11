@@ -304,6 +304,11 @@ Source : `cup-build-inducements` (2026-10-10). Laissé hors du lot :
 - **`create-from-roster` en contexte de coupe** : la création « depuis un
   roster » ne passe pas par le catalogue de build ni par le mode de la coupe ;
   seul le builder (`/me/teams/new?cupId=`) les connaît.
+- **Liste de coups de pouce des ligues à règlement** : une coupe administre
+  sa liste règlement compris (retraits ET ajouts, `resolveCupInducementList`),
+  une ligue ne peut que restreindre celle du règlement (intersection). À
+  aligner si un commissaire de ligue le demande — `LeagueForm` affiche
+  d'ailleurs tout le catalogue sous règlement, et un ajout y est sans effet.
 - **Règle d'égalité de VEA de `calculatePettyCash`** (ligue) à confirmer
   dans le livre : à VEA égale, les deux équipes peuvent y puiser toute leur
   trésorerie, alors que le compendium dit « aucune ». Hors coupe depuis que

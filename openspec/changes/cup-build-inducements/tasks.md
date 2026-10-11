@@ -85,7 +85,7 @@
 - [x] 11.2 Brancher la résolution sur les cinq lecteurs : contexte de build (catalogue du builder, `POST /team/build`, inscription telle quelle) et feuille d'avant-match d'une coupe (`loadLeagueInducementRules` lit `Cup.allowedInducements`, options et contrôle) ; `serializeCupRulesData` stocke `[]` — vérifier : tests du contexte, de l'inscription et de la feuille de coupe en `match`.
 - [x] 11.3 Web : `CupInducementModeField` affiche la liste sous règlement aussi, cases parties du défaut (badge et prix du règlement), « Revenir à la liste du règlement », liste égale au défaut normalisée à `null` ; `cups/page.tsx` envoie la liste — vérifier : tests du module pur et du formulaire de création.
 - [x] 11.4 `cups/[id]/edit` : bloc « Coups de pouce » (mode + liste) enregistré par `PATCH /cup/:id/rules` tant que les inscriptions sont ouvertes, lecture seule sinon ; la fiche annonce ajouts et retraits par rapport au règlement — vérifier : tests de l'écran d'édition et du résumé.
-- [ ] 11.5 Docs (`docs/cup-composition-rules.md`, `CLAUDE.md`), changeset, et suite e2e : coupe NAF dont le commissaire retire les Pots-de-vin et ajoute le Mage Météo — vérifier : spec e2e verte, suites et typecheck verts.
+- [x] 11.5 Docs (`docs/cup-composition-rules.md`, `CLAUDE.md`), changeset, et suite e2e : coupe NAF dont le commissaire retire les Pots-de-vin et ajoute le Mage Météo — vérifier : spec e2e verte, suites et typecheck verts.
 
 ## Workflow follow-up
 

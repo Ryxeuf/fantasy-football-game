@@ -59,9 +59,23 @@ compétition. D'où `Cup.inducementMode` :
   peut pas l'être (400 `build_not_allowed_in_sevens`), un règlement de
   tournoi impose `build` quoi qu'on demande. `resolveCupInducementMode` donne
   le mode EFFECTIF, servi par `rulesConfig.inducementMode`.
-- **Liste autorisée** (`Cup.allowedInducements`, `null` = tout le catalogue) :
-  sans règlement seulement — sous règlement, c'est sa liste fermée et ses prix
-  qui s'appliquent (remise d'équipe comprise, plafond « Arme Secrète »).
+- **Liste du commissaire** (`Cup.allowedInducements`), qui FAIT FOI, règlement
+  compris (`resolveCupInducementList`, pur) :
+  - `null` : liste par défaut — celle du règlement (ses prix, remise d'équipe
+    et plafond « Arme Secrète » compris), sinon tout le catalogue ;
+  - `[...]` : exactement ces coups de pouce. Sous règlement, ceux qu'il liste
+    gardent ses prix ; ceux qu'il ne liste pas sont des AJOUTS, vendus au prix
+    du catalogue pour le roster (`applyPackInducementRules`, `extras`) ;
+  - `[]` explicite : aucun coup de pouce — sous règlement, `build` étant
+    imposé, c'est la seule façon d'en jouer sans.
+
+  Elle se règle à la création et depuis `cups/[id]/edit`, par
+  `PATCH /cup/:id/rules`, tant que les inscriptions sont ouvertes ; elle
+  s'applique au catalogue du builder, à `POST /team/build`, à l'inscription
+  telle quelle ET à la feuille d'une coupe en avant-match. Une liste égale à
+  la liste par défaut s'enregistre `null`, pour suivre les éditions admin du
+  règlement. Les LIGUES gardent l'intersection : leur liste ne fait que
+  restreindre celle du règlement.
 - **Un seul catalogue de build** (`services/inducement-options` →
   `buildInducementCatalogue`) : prix pour CE roster, liste de la coupe ou du
   règlement, hors Star Players (recrutés à part) et hors coups de pouce à coût
@@ -93,7 +107,8 @@ chaque ronde, comme tout le reste du roster d'inscription.
   `rosterBudgetOverrides Json?`, `tierStartingPsp Json?`,
   `rosterStartingPspOverrides Json?` (maps kpo / PSP).
 - `Cup` : `inducementMode String?` (`build` | `match` | `none`, `null` =
-  `match`), `allowedInducements Json?` (slugs, `null` = tout le catalogue).
+  `match`), `allowedInducements Json?` (slugs ; `null` = liste par défaut,
+  `[]` = aucun coup de pouce).
 - `CupParticipant` : `rosterSnapshot Json?` (roster figé à l'inscription,
   Star Players et coups de pouce compris), `pspPoolGranted Int`.
 - `TeamInducement` : coups de pouce achetés à la création (`slug`,
@@ -132,7 +147,11 @@ persisté. Le roster live reste identique au snapshot d'inscription.
 - `cups/page.tsx` — section « Règles de composition » à la création, dont le
   régime des coups de pouce (`CupInducementModeField` : `build` présélectionné
   en BB11, imposé et grisé sous règlement, absent en Sept) et la liste
-  autorisée (`AllowedInducementsField`, partagé avec `LeagueForm`).
+  autorisée (`AllowedInducementsField`, partagé avec `LeagueForm`) : cases
+  parties de la liste par défaut, mention « NAF WC 2027 · 25k » sur celles du
+  règlement, « Revenir à la liste du règlement ».
+- `cups/[id]/edit/page.tsx` — même bloc, tant que les inscriptions sont
+  ouvertes (`PATCH /cup/:id/rules`), lecture seule ensuite.
 - `cups/[id]/page.tsx` — affichage des règles (mode et liste des coups de
   pouce compris) + bouton « Construire pour cette coupe » (Flow B).
 - `me/teams/new/page.tsx` — mode « édition avancée » (budget custom + pool),
