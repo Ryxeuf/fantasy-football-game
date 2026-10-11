@@ -107,8 +107,10 @@ Sept) : c'est le patron de `sheetEntryMode` et de `playoffsPublished`.
 ### D2 — `Cup.allowedInducements Json?`, `null` = tout le catalogue à prix fixe
 
 Même forme que `League.allowedInducements` (liste de slugs), parseur
-tolérant PG / SQLite. L'intersection avec le règlement passe par
-`effectiveInducementAllowlist`, qui existe déjà.
+tolérant PG / SQLite. ~~L'intersection avec le règlement passe par
+`effectiveInducementAllowlist`, qui existe déjà.~~ Remplacé par D13 : la
+liste de la coupe fait foi, règlement compris (l'intersection reste celle
+des ligues).
 
 Les deux champs (mode et liste) entrent dans `cupRulesConfigSchema`. Ils
 héritent donc des deux écritures (création, `PATCH /cup/:id/rules`) et de
@@ -332,6 +334,47 @@ L'adaptateur de `lib/competition-pdf` lit `registeredInducements` et
 d'une coupe en `build`, et aucune case d'achat. Le profil de saisie
 (`lib/sheet-entry-profile`) n'est pas modifié : le rappel n'est pas une
 saisie.
+
+### D13 — La liste de la coupe fait foi, règlement compris (ajout 2026-10-11)
+
+Retour utilisateur : le commissaire d'une coupe doit pouvoir autoriser ou
+interdire des coups de pouce « en plus du règlement ». D2 l'interdisait
+(sous règlement, la liste de la coupe ne pouvait que restreindre, et
+l'écran la masquait). Trois modèles envisagés :
+
+| Modèle | Pour | Contre |
+|---|---|---|
+| Intersection (statu quo) | aucune donnée nouvelle | impossible d'AJOUTER |
+| Deux listes (ajouts + retraits) | suit les éditions admin du règlement | deux colonnes, écran à deux états |
+| **Une liste = la liste effective** | une colonne, un écran à cases | une liste personnalisée ne suit plus les éditions du règlement |
+
+Retenu : **une liste**, à trois lectures, `Cup.allowedInducements` :
+
+- `null` : la liste PAR DÉFAUT, celle du règlement, sinon tout le
+  catalogue. Elle suit les éditions admin du règlement.
+- `[...]` : exactement ces coups de pouce. Sous règlement, ceux qu'il liste
+  gardent son prix, sa remise et ses plafonds ; les AJOUTS sont vendus au
+  prix du catalogue pour CE roster (remises et plafonds du catalogue).
+- `[]` explicite : aucun coup de pouce. Sous règlement, `none` restant
+  interdit comme mode, c'est le seul moyen d'en jouer sans ; hors règlement,
+  il équivaut à `none`. Une ligne illisible se lit toujours `null`.
+
+Résolution pure, unique (`resolveCupInducementList`, à côté de
+`effectiveInducementAllowlist` qui garde l'intersection des LIGUES) :
+`{ allowed, extras }`. `applyPackInducementRules` laisse passer les
+`extras` au prix du catalogue. Les cinq lecteurs en partent : catalogue du
+builder, validation du build, inscription telle quelle, options et
+contrôle de la feuille d'avant-match. Ce dernier ignorait la liste d'une
+coupe (`loadLeagueInducementRules` : « une coupe n'a pas d'allowlist
+propre ») — corrigé au passage.
+
+Écran : les cases partent de la liste par défaut (cochées), un clic la
+matérialise, « Revenir à la liste du règlement » la remet à `null` ; une
+liste identique au défaut s'enregistre `null`. L'administration se fait à
+la création ET dans `cups/[id]/edit` (`PATCH /cup/:id/rules`, mise à jour
+partielle), tant que les inscriptions sont ouvertes — même fenêtre que le
+mode. Une équipe déjà inscrite garde les coups de pouce figés dans son
+roster d'inscription.
 
 ## Risks / Trade-offs
 

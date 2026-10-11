@@ -79,6 +79,14 @@
 - [x] 10.1 Spec e2e-api `tests/e2e-api/specs/cups-build-inducements.spec.ts` : coupe NAF WC 2027 → build goblin avec Pots-de-vin (50 000 po) et un Star Player → inscription → feuille ouverte : Star Player proposé, coups de pouce rappelés, sélection d'avant-match refusée → validation sans écriture sur l'équipe — vérifier : la spec passe localement (serveur de test sur le port 18002 arrêté avant le run).
 - [x] 10.2 Lancer `pnpm --filter @bb/game-engine test`, `pnpm --filter @bb/server test`, `pnpm --filter web vitest run` et `pnpm -w run typecheck` — vérifier : tout est vert.
 
+## 11. Administration des coups de pouce par le commissaire (ajout 2026-10-11)
+
+- [ ] 11.1 Résolution pure `resolveCupInducementList(list, pack)` → `{ allowed, extras }` (`null` = défaut, `[]` = aucun) ; `applyPackInducementRules` laisse passer les `extras` au prix du catalogue ; `parseCupAllowedInducements` distingue `[]` de `null` ; `inducementOptionsFor` accepte la résolution — vérifier : tests unitaires (défaut, retrait, ajout au prix du catalogue, liste vide, ligue inchangée).
+- [ ] 11.2 Brancher la résolution sur les cinq lecteurs : contexte de build (catalogue du builder, `POST /team/build`, inscription telle quelle) et feuille d'avant-match d'une coupe (`loadLeagueInducementRules` lit `Cup.allowedInducements`, options et contrôle) ; `serializeCupRulesData` stocke `[]` — vérifier : tests du contexte, de l'inscription et de la feuille de coupe en `match`.
+- [ ] 11.3 Web : `CupInducementModeField` affiche la liste sous règlement aussi, cases parties du défaut (badge et prix du règlement), « Revenir à la liste du règlement », liste égale au défaut normalisée à `null` ; `cups/page.tsx` envoie la liste — vérifier : tests du module pur et du formulaire de création.
+- [ ] 11.4 `cups/[id]/edit` : bloc « Coups de pouce » (mode + liste) enregistré par `PATCH /cup/:id/rules` tant que les inscriptions sont ouvertes, lecture seule sinon ; la fiche annonce ajouts et retraits par rapport au règlement — vérifier : tests de l'écran d'édition et du résumé.
+- [ ] 11.5 Docs (`docs/cup-composition-rules.md`, `CLAUDE.md`), changeset, et suite e2e : coupe NAF dont le commissaire retire les Pots-de-vin et ajoute le Mage Météo — vérifier : spec e2e verte, suites et typecheck verts.
+
 ## Workflow follow-up
 
 - Après merge : `/opsx:sync` puis `/opsx:archive`. Le change crée `openspec/specs/cup-inducements/` et met à jour `tournament-ruleset`, `cup-match-sheet`, `league-match-sheet` et `competition-pdf-exports`.

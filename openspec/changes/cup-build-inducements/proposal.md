@@ -65,6 +65,15 @@ monnaie, trésorerie), et cet écart produit des bugs concrets :
   plus à la VE. Une équipe ne peut pas apporter un coup de pouce que la
   coupe n'autorise pas.
 
+- **Le commissaire administre les coups de pouce de SA coupe** (ajout du
+  2026-10-11, retour utilisateur) : la liste de la coupe devient sa liste
+  EFFECTIVE, règlement de tournoi compris. Sous règlement, elle part de la
+  liste du règlement ; le commissaire peut y RETIRER un coup de pouce ou en
+  AJOUTER un que le règlement ne liste pas (vendu au prix du catalogue). La
+  liste se règle à la création ET depuis l'écran d'édition de la coupe, tant
+  que les inscriptions sont ouvertes. Au passage, une coupe en avant-match
+  applique enfin sa liste sur la feuille (elle était ignorée).
+
 ## Capabilities
 
 ### New Capabilities
@@ -111,7 +120,8 @@ monnaie, trésorerie), et cet écart produit des bugs concrets :
 - **Web** :
   - `me/teams/new` (section et budget) ;
   - `me/teams/[id]` (fiche) ;
-  - `cups/page.tsx` + `cups/[id]` (réglage et affichage) ;
+  - `cups/page.tsx` + `cups/[id]` + `cups/[id]/edit` (réglage, affichage
+    et administration par le commissaire) ;
   - feuille de match ;
   - `lib/competition-pdf` ;
   - `admin/data/tournament-rulesets`.
@@ -120,4 +130,6 @@ monnaie, trésorerie), et cet écart produit des bugs concrets :
   - coups de pouce au build des ligues à règlement ;
   - assistant « première équipe » (`create-from-roster`) ;
   - match en ligne ;
-  - règle d'égalité de VEA en ligue, à confirmer dans le livre.
+  - règle d'égalité de VEA en ligue, à confirmer dans le livre ;
+  - ligues à règlement : leur liste reste une RESTRICTION de celle du
+    règlement (intersection), sans ajout possible.

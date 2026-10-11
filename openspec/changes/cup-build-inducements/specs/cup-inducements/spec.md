@@ -59,21 +59,63 @@ création (règlement ⇒ `build`, Sept ⇒ pas de `build`) DOIVENT tenir aussi
 - **WHEN** le commissaire demande `none` sur une coupe NAF WC 2027
 - **THEN** la coupe DOIT rester en `build`
 
-### Requirement: Liste autorisée d'une coupe sans règlement
+### Requirement: Liste de coups de pouce administrée par le commissaire
 
-Une coupe sans règlement DOIT pouvoir restreindre les coups de pouce à une
-liste choisie par le commissaire ; sans liste, tout le catalogue à prix fixe
-est autorisé. Sous règlement, la liste fermée et les prix du règlement
-priment, et la liste de la coupe NE DOIT PAS pouvoir y ajouter un coup de
-pouce.
+Chaque coupe DOIT porter une liste de coups de pouce administrée par son
+commissaire, qui fait foi, règlement de tournoi compris. Sans liste, la
+coupe DOIT appliquer la liste par défaut : celle du règlement s'il y en a
+un, sinon tout le catalogue à prix fixe accessible au roster. Avec une
+liste, seuls les coups de pouce qu'elle porte DOIVENT être vendus ; sous
+règlement, ceux que le règlement liste DOIVENT garder son prix, sa remise
+et ses plafonds, et ceux qu'il ne liste pas DOIVENT être vendus au prix du
+catalogue pour le roster. Une liste vide explicite NE DOIT autoriser aucun
+coup de pouce. Les Star Players NE DOIVENT PAS en dépendre.
 
 #### Scenario: Coupe sans liste
-- **WHEN** une coupe en `build` sans règlement ne restreint rien
+- **WHEN** une coupe en `build` sans règlement ne pose aucune liste
 - **THEN** le builder DOIT proposer tout le catalogue à prix fixe accessible au roster
 
 #### Scenario: Coupe avec liste
 - **WHEN** la coupe n'autorise que la Mascotte et les Fûts de Blitz Premium
 - **THEN** le builder et le serveur DOIVENT refuser tout autre coup de pouce
+
+#### Scenario: Retrait d'un coup de pouce du règlement
+- **WHEN** le commissaire d'une coupe NAF WC 2027 retire les Pots-de-vin de sa liste
+- **THEN** le builder NE DOIT PLUS les proposer et le serveur DOIT les refuser
+
+#### Scenario: Ajout d'un coup de pouce hors règlement
+- **WHEN** le commissaire d'une coupe NAF WC 2027 ajoute le Mage Météo à sa liste
+- **THEN** le builder DOIT le proposer au prix du catalogue, à côté des coups de pouce du règlement à leur prix
+
+#### Scenario: Aucun coup de pouce sous règlement
+- **WHEN** le commissaire d'une coupe à règlement décoche tous les coups de pouce
+- **THEN** aucun coup de pouce NE DOIT être vendu, ni au build ni en avant-match
+
+#### Scenario: Liste d'une coupe en avant-match
+- **WHEN** une coupe en `match` n'autorise que la Mascotte
+- **THEN** la feuille NE DOIT proposer que la Mascotte et le serveur DOIT refuser tout autre achat d'avant-match
+
+### Requirement: Administration de la liste par le commissaire
+
+Le commissaire DOIT pouvoir régler la liste à la création de la coupe et
+depuis son écran d'édition, tant que les inscriptions sont ouvertes ; après,
+l'écran DOIT l'afficher en lecture seule en disant pourquoi. Les cases
+DOIVENT partir de la liste par défaut, un retour à la liste par défaut DOIT
+être possible, et une liste identique au défaut DOIT s'enregistrer comme
+« liste par défaut ». La fiche de la coupe DOIT annoncer la liste, et sous
+règlement les ajouts et retraits par rapport à lui.
+
+#### Scenario: Édition avant la clôture
+- **WHEN** le commissaire retire un coup de pouce depuis l'écran d'édition d'une coupe ouverte
+- **THEN** la liste DOIT être enregistrée et la fiche DOIT annoncer le retrait
+
+#### Scenario: Inscriptions closes
+- **WHEN** le commissaire ouvre l'écran d'édition d'une coupe validée
+- **THEN** la liste DOIT être affichée sans contrôle de saisie, avec la raison du verrou
+
+#### Scenario: Retour à la liste du règlement
+- **WHEN** le commissaire revient à la liste du règlement après l'avoir modifiée
+- **THEN** la coupe DOIT être enregistrée sans liste propre
 
 ### Requirement: Achat de coups de pouce au builder
 
@@ -195,7 +237,7 @@ du roster d'inscription jouent toujours le match.
 
 L'inscription d'une équipe portant des coups de pouce DOIT être refusée,
 avec un message qui le dit, si la coupe n'est pas en `build` ou si l'un
-d'eux est hors du catalogue effectif de la coupe. Le message DOIT orienter
+d'eux est hors du catalogue effectif de la coupe (sa liste, ses plafonds). Le message DOIT orienter
 vers « Adapter à la coupe ».
 
 #### Scenario: Coupe en match
