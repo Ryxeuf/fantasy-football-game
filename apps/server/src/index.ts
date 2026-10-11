@@ -42,6 +42,7 @@ import adminSimReplaysRoutes from "./routes/admin-sim-replays";
 import adminWalletRoutes from "./routes/admin-wallet";
 import adminCrownsRoutes from "./routes/admin-crowns";
 import adminTeamJournalRoutes from "./routes/admin-team-journal";
+import adminApiKeysRoutes from "./routes/admin-api-keys";
 import adminUtilitiesRoutes from "./routes/admin-utilities";
 import adminProSeasonRoutes from "./routes/admin-pro-season";
 import adminProTestSeasonRoutes from "./routes/admin-pro-test-season";
@@ -345,6 +346,8 @@ app.use("/match", requireFeatureFlag(ONLINE_PLAY_FLAG), matchRoutes);
 // rejoue `authUser`+`adminOnly` puis retombe ici par `next()` — meme
 // resultat, mais deux passes d'authentification pour rien.
 app.use("/admin/team-journal", adminTeamJournalRoutes);
+// Clés API d'administration (change OpenSpec `admin-api-keys`).
+app.use("/admin/api-keys", adminApiKeysRoutes);
 app.use("/admin", adminRoutes);
 app.use("/admin/data", adminDataRoutes);
 app.use("/admin/data/tournament-rulesets", adminTournamentRulesetRoutes);
@@ -693,6 +696,9 @@ if (process.env.TEST_SQLITE === "1") {
         "crownsReward",
         () => (prisma as any).crownsReward?.deleteMany?.({}) ?? Promise.resolve(),
       );
+      // Clés API d'administration (`admin-api-keys`) : cascade avec
+      // l'utilisateur, explicite ici comme les récompenses.
+      await safe("apiKey", () => prisma.apiKey.deleteMany({}));
       await safe("user", () => prisma.user.deleteMany({}));
       // Reference data caches (memoizeAsync) survive the DB wipe and would
       // otherwise serve stale `[]` lists to the next test. Drop everything.
