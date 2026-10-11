@@ -152,9 +152,13 @@ import { getEliteSkillSlugs } from "./elite-skills";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import {
   inducementOptionsFor,
+  type InducementAllowlistInput,
   type InducementOption,
 } from "./inducement-options";
-import type { CupInducementMode } from "./cup-inducement-mode";
+import {
+  parseCupAllowedInducements,
+  type CupInducementMode,
+} from "./cup-inducement-mode";
 import {
   parseSnapshotInducements,
   type SnapshotInducement,
@@ -212,8 +216,9 @@ import {
   normalizeKeyword,
 } from "@bb/game-engine";
 import {
-  applyPackInducementRules,
-  effectiveInducementAllowlist,
+  resolveCupInducementList,
+  resolveLeagueInducementList,
+  type CompetitionInducementList,
 } from "./tournament-inducements";
 import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository";
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
@@ -1287,15 +1292,19 @@ export async function updatePreMatch(input: {
     // FR17 — enforcement à la soumission : aucun coup de pouce hors allowlist
     // ligue. Les Star Players (slug "star_player") sont exemptés (ils
     // dépendent des rosters / règles régionales, pas de l'allowlist).
-    const { allowlist, pack } = await loadLeagueInducementRules(
+    // Liste RÉSOLUE de la compétition : en ligue, celle du règlement bornée
+    // par l'allowlist ; en coupe, celle du commissaire (ajouts compris).
+    const { list: inducementList } = await loadLeagueInducementRules(
       input.pairingId,
     );
-    // Le règlement pose une liste FERMÉE : elle borne l'allowlist de ligue.
-    const effectiveAllowlist = effectiveInducementAllowlist(allowlist, pack);
-    assertInducementsAllowed(p.inducementsHome, effectiveAllowlist, "domicile");
+    assertInducementsAllowed(
+      p.inducementsHome,
+      inducementList.allowed,
+      "domicile",
+    );
     assertInducementsAllowed(
       p.inducementsAway,
-      effectiveAllowlist,
+      inducementList.allowed,
       "extérieur",
     );
     // Coupe : un Star Player du roster d'inscription joue déjà la rencontre.
@@ -4255,26 +4264,39 @@ async function starPlayersFor(
  * restriction, la feuille de match reste servie.
  */
 async function loadLeagueInducementRules(pairingId: string): Promise<{
-  allowlist: string[] | null;
+  list: CompetitionInducementList;
   pack: TournamentRulesetDefinition | null;
 }> {
   try {
-    // Coupe : c'est LE reglement de tournoi de la coupe qui borne les coups
-    // de pouce (une coupe n'a pas d'allowlist propre).
+    // Coupe : la liste du COMMISSAIRE fait foi, règlement compris (retraits
+    // et ajouts) ; sans liste, celle du règlement, sinon tout le catalogue.
     const cupRow = (await prisma.cupPairing.findUnique({
       where: { id: pairingId },
       select: {
-        round: { select: { cup: { select: { tournamentRuleset: true } } } },
+        round: {
+          select: {
+            cup: {
+              select: { tournamentRuleset: true, allowedInducements: true },
+            },
+          },
+        },
       },
     })) as {
-      round?: { cup?: { tournamentRuleset?: string | null } };
+      round?: {
+        cup?: { tournamentRuleset?: string | null; allowedInducements?: unknown };
+      };
     } | null;
     if (cupRow) {
+      const cup = cupRow.round?.cup;
+      const pack = await getTournamentRulesetDefinition(
+        cup?.tournamentRuleset ?? null,
+      );
       return {
-        allowlist: null,
-        pack: await getTournamentRulesetDefinition(
-          cupRow.round?.cup?.tournamentRuleset ?? null,
+        list: resolveCupInducementList(
+          parseCupAllowedInducements(cup?.allowedInducements ?? null),
+          pack,
         ),
+        pack,
       };
     }
 
@@ -4310,16 +4332,17 @@ async function loadLeagueInducementRules(pairingId: string): Promise<{
     const pack = await getTournamentRulesetDefinition(
       league?.tournamentRuleset ?? null,
     );
+    // Ligue : sa liste ne fait que RESTREINDRE celle du règlement.
     const raw = league?.allowedInducements ?? null;
-    if (!raw) return { allowlist: null, pack };
+    if (!raw) return { list: resolveLeagueInducementList(null, pack), pack };
     const parsed: unknown = JSON.parse(raw);
     const allowlist =
       Array.isArray(parsed) && parsed.every((v) => typeof v === "string")
         ? (parsed as string[])
         : null;
-    return { allowlist, pack };
+    return { list: resolveLeagueInducementList(allowlist, pack), pack };
   } catch {
-    return { allowlist: null, pack: null };
+    return { list: { allowed: null, extras: [] }, pack: null };
   }
 }
 
@@ -4352,7 +4375,7 @@ function assertStarsNotRegistered(
  */
 function assertInducementsAllowed(
   selection: unknown,
-  allowlist: string[] | null,
+  allowlist: readonly string[] | null,
   sideLabel: string,
 ): void {
   if (allowlist === null || !Array.isArray(selection)) return;
@@ -4364,7 +4387,7 @@ function assertInducementsAllowed(
     if (!allow.has(slug)) {
       throw new MatchSheetError(
         "inducement_not_allowed",
-        `Coup de pouce non autorisé par la ligue (${sideLabel}) : "${slug}".`,
+        `Coup de pouce non autorisé par la compétition (${sideLabel}) : "${slug}".`,
       );
     }
   }
@@ -4386,8 +4409,9 @@ export async function buildMatchSheetReference(
     home: MatchSheetTeam | null;
     away: MatchSheetTeam | null;
   },
-  // FR17 — coups de pouce autorisés par la ligue (null = tous).
-  allowedInducements: string[] | null = null,
+  // FR17 — coups de pouce autorisés : allowlist brute d'une ligue (null =
+  // tous) ou liste RÉSOLUE de la compétition (`loadLeagueInducementRules`).
+  allowedInducements: InducementAllowlistInput = null,
   // A55 — dépenses de coups de pouce déjà engagées : la dépense de la plus
   // forte équipe augmente d'autant la cagnotte de l'underdog.
   spent: { home: number; away: number } = { home: 0, away: 0 },
@@ -4758,7 +4782,7 @@ export async function getMatchSheet(input: {
     prayersAway: sheetPrayersForSpp.prayersAway,
   });
 
-  const { allowlist: allowedInducements, pack: inducementPack } =
+  const { list: allowedInducements, pack: inducementPack } =
     await loadLeagueInducementRules(input.pairingId);
 
   // Journaliers de la VERSION DU MATCH : derives du roster FIGE (la feuille

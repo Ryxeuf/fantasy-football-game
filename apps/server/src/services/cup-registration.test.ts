@@ -311,7 +311,7 @@ describe('registerTeamToCup — coups de pouce achetés à la création', () => 
       ruleset: 'season_3',
       regionalLeague: 'badlands_brawl',
       pack: null,
-      allowlist: ['bribe'],
+      allowlist: { allowed: ['bribe'], extras: [] },
       hiredStarSlugs: ['morg_n_thorg'],
     });
   });

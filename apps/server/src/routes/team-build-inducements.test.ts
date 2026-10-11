@@ -105,7 +105,7 @@ describe("GET /team/build-inducements", () => {
     expect(catalogue).toHaveBeenCalledWith(
       expect.objectContaining({
         roster: "human",
-        allowlist: ["team_mascot"],
+        allowlist: { allowed: ["team_mascot"], extras: [] },
         pack: null,
         hiredStarSlugs: ["griff_oberwald"],
       }),

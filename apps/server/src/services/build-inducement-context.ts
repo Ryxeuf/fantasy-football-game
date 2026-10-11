@@ -21,14 +21,22 @@ import {
   resolveCupInducementMode,
   type CupInducementMode,
 } from "./cup-inducement-mode";
+import {
+  resolveCupInducementList,
+  type CompetitionInducementList,
+} from "./tournament-inducements";
 
 export interface BuildInducementContext {
   /** Le build peut-il porter des coups de pouce ? */
   readonly allowed: boolean;
   /** Règlement de tournoi effectif (celui de la coupe prime). */
   readonly pack: TournamentRulesetDefinition | null;
-  /** Liste autorisée par la coupe (`null` = tout le catalogue à prix fixe). */
-  readonly allowlist: string[] | null;
+  /**
+   * Liste résolue : celle du commissaire de la coupe, qui fait foi
+   * règlement compris (retraits ET ajouts), sinon la liste du règlement,
+   * sinon tout le catalogue (`allowed: null`).
+   */
+  readonly allowlist: CompetitionInducementList;
   /** Mode de la coupe visée (`null` hors coupe). */
   readonly cupMode: CupInducementMode | null;
 }
@@ -62,11 +70,19 @@ export function buildInducementContextFrom(input: {
     return {
       allowed: cupMode === "build",
       pack,
-      allowlist: parseCupAllowedInducements(cup.allowedInducements),
+      allowlist: resolveCupInducementList(
+        parseCupAllowedInducements(cup.allowedInducements),
+        pack,
+      ),
       cupMode,
     };
   }
-  return { allowed: Boolean(pack), pack, allowlist: null, cupMode: null };
+  return {
+    allowed: Boolean(pack),
+    pack,
+    allowlist: resolveCupInducementList(null, pack),
+    cupMode: null,
+  };
 }
 
 /**

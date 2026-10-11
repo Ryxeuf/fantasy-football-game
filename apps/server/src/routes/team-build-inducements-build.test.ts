@@ -409,7 +409,10 @@ describe('handleBuildTeam — coups de pouce hors contexte et en coupe', () => {
     );
     expect(res.statusCode).toBe(201);
     expect(catalogue).toHaveBeenCalledWith(
-      expect.objectContaining({ allowlist: ['team_mascot'], pack: null }),
+      expect.objectContaining({
+        allowlist: { allowed: ['team_mascot'], extras: [] },
+        pack: null,
+      }),
     );
   });
 

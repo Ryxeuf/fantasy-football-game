@@ -465,3 +465,59 @@ describe("feuille de coupe — régime des coups de pouce", () => {
   });
 });
 
+
+describe("feuille de coupe en avant-match — liste du commissaire", () => {
+  const draft = () => ({
+    id: "ms1",
+    status: "draft",
+    cupPairingId: "pair-1",
+    rosterSnapshotHome: frozen([], { currentValue: 900_000 }),
+    rosterSnapshotAway: frozen([], { currentValue: 1_100_000 }),
+    events: [],
+  });
+
+  it("ne propose que les coups de pouce de la liste de la coupe", async () => {
+    mockCupPairing({ inducementMode: "match", allowedInducements: '["team_mascot"]' });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draft());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.reference.inducements.home.map((o) => o.slug)).toEqual([
+      "team_mascot",
+    ]);
+  });
+
+  it("refuse un achat hors liste, accepte un achat de la liste", async () => {
+    mockCupPairing({ inducementMode: "match", allowedInducements: ["team_mascot"] });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draft());
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({ id: "ms1" });
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          inducementsHome: [{ slug: "bloodweiser_kegs", name: "Fûts", cost: 50_000, qty: 1 }],
+        },
+      }),
+    ).rejects.toMatchObject({ code: "inducement_not_allowed" });
+
+    await updatePreMatch({
+      pairingId: "pair-1",
+      userId: HOME,
+      payload: {
+        inducementsHome: [{ slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 }],
+      },
+    });
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("liste vide explicite : rien à vendre", async () => {
+    mockCupPairing({ inducementMode: "match", allowedInducements: [] });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draft());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.reference.inducements.home).toEqual([]);
+  });
+});
