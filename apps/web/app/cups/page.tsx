@@ -12,9 +12,13 @@ import { SheetEntryModeField } from "./SheetEntryModeField";
 import { CupInducementModeField } from "./CupInducementModeField";
 import {
   coerceCupInducementMode,
+  defaultCupInducementSlugs,
+  normalizeCupAllowedInducements,
+  packInducementSlugs,
   showsAllowedInducements,
   type CupInducementMode,
 } from "./inducement-mode";
+import { ALLOWED_INDUCEMENT_OPTIONS } from "../components/AllowedInducementsField";
 import type { SheetEntryMode } from "../lib/sheet-entry-profile";
 import {
   getRosterName,
@@ -136,9 +140,11 @@ export default function CupsPage() {
   // applique le même défaut, impose `build` sous règlement, le refuse en Sept).
   const [newCupInducementMode, setNewCupInducementMode] =
     useState<CupInducementMode>("build");
+  // Liste du commissaire : `null` = liste par défaut (règlement, sinon tout
+  // le catalogue) ; un changement de règlement la remet à `null`.
   const [newCupAllowedInducements, setNewCupAllowedInducements] = useState<
-    string[]
-  >([]);
+    string[] | null
+  >(null);
   // Règles avancées de composition (mode coupe).
   const [newCupDescription, setNewCupDescription] = useState("");
   // Documents officiels choisis avant la creation : la coupe n'ayant pas
@@ -223,6 +229,16 @@ export default function CupsPage() {
       coerceCupInducementMode(mode, inducementContext),
     );
   }, [inducementContext]);
+  // Un autre règlement, c'est une autre liste par défaut : la liste repart.
+  useEffect(() => {
+    setNewCupAllowedInducements(null);
+  }, [newCupTournamentRuleset]);
+  const newCupPackInducements = newCupTournamentRuleset
+    ? (rulesetsBySlug.get(newCupTournamentRuleset)?.allowedInducements ?? null)
+    : null;
+  const newCupPackSlugs = newCupTournamentRuleset
+    ? packInducementSlugs(newCupPackInducements)
+    : null;
 
   const loadTeams = async () => {
     try {
@@ -321,11 +337,15 @@ export default function CupsPage() {
         // resurrectionMode : forcé côté serveur (seul mode disponible).
         sheetEntryMode: newCupSheetEntryMode,
         inducementMode: newCupInducementMode,
-        allowedInducements:
-          showsAllowedInducements(newCupInducementMode, inducementContext) &&
-          newCupAllowedInducements.length > 0
-            ? newCupAllowedInducements
-            : undefined,
+        allowedInducements: showsAllowedInducements(newCupInducementMode)
+          ? (normalizeCupAllowedInducements(
+              newCupAllowedInducements,
+              defaultCupInducementSlugs(
+                newCupPackSlugs,
+                ALLOWED_INDUCEMENT_OPTIONS.map((o) => o.slug),
+              ),
+            ) ?? undefined)
+          : undefined,
         tierBudgets: toNumberMap(tierBudgets),
         tierStartingPsp: toNumberMap(tierStartingPsp),
         rosterBudgetOverrides:
@@ -694,6 +714,7 @@ export default function CupsPage() {
                 allowed={newCupAllowedInducements}
                 onAllowedChange={setNewCupAllowedInducements}
                 context={inducementContext}
+                packInducements={newCupPackInducements}
                 rulesetLabel={
                   newCupTournamentRuleset
                     ? (rulesetsBySlug.get(newCupTournamentRuleset)?.shortLabel ??

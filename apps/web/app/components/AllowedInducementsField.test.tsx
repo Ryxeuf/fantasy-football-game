@@ -49,3 +49,18 @@ describe("AllowedInducementsField", () => {
     expect((screen.getByTestId("f") as HTMLFieldSetElement).disabled).toBe(true);
   });
 });
+
+describe("AllowedInducementsField — mentions", () => {
+  it("accole une mention aux seuls coups de pouce qui en portent une", () => {
+    render(
+      <AllowedInducementsField
+        testId="f"
+        value={[]}
+        onChange={vi.fn()}
+        badges={{ team_mascot: "NAF · 25k" }}
+      />,
+    );
+    expect(screen.getByTestId("f-team_mascot-badge").textContent).toBe("NAF · 25k");
+    expect(screen.queryByTestId("f-bribe-badge")).toBeNull();
+  });
+});

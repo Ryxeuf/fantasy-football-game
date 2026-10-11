@@ -51,14 +51,75 @@ export function coerceCupInducementMode(
 }
 
 /**
- * La liste autorisée n'a de sens que sans règlement (qui impose sa liste
- * fermée) et quand des coups de pouce existent.
+ * La liste de la coupe se règle dès que la coupe vend des coups de pouce,
+ * règlement compris : le commissaire y retire ou y ajoute des coups de pouce.
  */
 export function showsAllowedInducements(
   mode: CupInducementMode,
-  ctx: Pick<CupInducementModeContext, "hasTournamentRuleset">,
+  _ctx?: Pick<CupInducementModeContext, "hasTournamentRuleset">,
 ): boolean {
-  return !ctx.hasTournamentRuleset && mode !== "none";
+  return mode !== "none";
+}
+
+/** Coup de pouce d'un règlement, tel que le sert sa définition. */
+export interface PackInducementRule {
+  readonly slug: string;
+  readonly cost: number;
+}
+
+/** Slugs de la liste du règlement (`null` sans règlement). */
+export function packInducementSlugs(
+  rules: readonly PackInducementRule[] | null | undefined,
+): string[] | null {
+  return rules ? rules.map((r) => r.slug) : null;
+}
+
+/**
+ * Liste PAR DÉFAUT d'une coupe — ce que valent les cases quand le
+ * commissaire n'a rien réglé : celle du règlement, sinon tout le catalogue.
+ */
+export function defaultCupInducementSlugs(
+  packSlugs: readonly string[] | null,
+  catalogue: readonly string[],
+): readonly string[] {
+  return packSlugs ?? catalogue;
+}
+
+/** Cases cochées : la liste du commissaire, sinon la liste par défaut. */
+export function effectiveCupInducementSlugs(
+  value: readonly string[] | null,
+  defaults: readonly string[],
+): readonly string[] {
+  return value ?? defaults;
+}
+
+/**
+ * Liste à ENREGISTRER : `null` si elle vaut la liste par défaut (la coupe
+ * suit alors les éditions du règlement), sinon la liste telle quelle — une
+ * liste vide veut dire « aucun coup de pouce ».
+ */
+export function normalizeCupAllowedInducements(
+  value: readonly string[] | null,
+  defaults: readonly string[],
+): string[] | null {
+  if (value === null) return null;
+  const a = new Set(value);
+  const b = new Set(defaults);
+  const same = a.size === b.size && [...a].every((slug) => b.has(slug));
+  return same ? null : [...value];
+}
+
+/** Écart d'une liste de coupe à celle de son règlement. */
+export function cupInducementListDiff(
+  list: readonly string[],
+  packSlugs: readonly string[],
+): { added: string[]; removed: string[] } {
+  const inList = new Set(list);
+  const inPack = new Set(packSlugs);
+  return {
+    added: list.filter((slug) => !inPack.has(slug)),
+    removed: packSlugs.filter((slug) => !inList.has(slug)),
+  };
 }
 
 export const CUP_INDUCEMENT_MODE_COPY: Readonly<

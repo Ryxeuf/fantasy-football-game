@@ -40,6 +40,8 @@ export interface AllowedInducementsFieldProps {
   readonly legend?: ReactNode;
   readonly hint?: ReactNode;
   readonly disabled?: boolean;
+  /** Mention accolée à un coup de pouce (« Règlement · 25k »), par slug. */
+  readonly badges?: Readonly<Record<string, string>>;
 }
 
 export function AllowedInducementsField({
@@ -54,6 +56,7 @@ export function AllowedInducementsField({
     </>
   ),
   disabled = false,
+  badges,
 }: AllowedInducementsFieldProps) {
   return (
     <fieldset className="block" data-testid={testId} disabled={disabled}>
@@ -78,6 +81,14 @@ export function AllowedInducementsField({
                 onChange={() => onChange(toggleAllowedInducement(value, opt.slug))}
               />
               <span>{opt.name}</span>
+              {badges?.[opt.slug] ? (
+                <span
+                  data-testid={`${testId}-${opt.slug}-badge`}
+                  className="ml-auto rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+                >
+                  {badges[opt.slug]}
+                </span>
+              ) : null}
             </label>
           );
         })}

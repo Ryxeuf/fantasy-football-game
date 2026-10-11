@@ -22,6 +22,11 @@ const NAF = {
     format: "bb11",
     nameFr: "NAF World Cup 2027",
     shortLabel: "NAF WC 2027",
+    allowedInducements: [
+      { slug: "team_mascot", cost: 25_000 },
+      { slug: "bloodweiser_kegs", cost: 50_000, max: 2 },
+      { slug: "bribe", cost: 100_000 },
+    ],
   },
 };
 
@@ -33,6 +38,7 @@ vi.mock("../lib/tournament-rulesets", () => ({
 }));
 
 import CupsPage from "./page";
+import { ALLOWED_INDUCEMENT_OPTIONS } from "../components/AllowedInducementsField";
 
 const fetchMock = vi.fn();
 
@@ -78,6 +84,11 @@ async function openForm() {
 const radio = (mode: string) =>
   screen.queryByTestId(`cup-inducement-mode-${mode}`) as HTMLInputElement | null;
 
+const box = (slug: string) =>
+  within(screen.getByTestId(`cup-allowed-inducements-${slug}`)).getByRole(
+    "checkbox",
+  ) as HTMLInputElement;
+
 function submit() {
   fireEvent.submit(screen.getByLabelText(/Nom de la coupe/).closest("form")!);
 }
@@ -95,18 +106,29 @@ describe("création d'une coupe — coups de pouce", () => {
     expect(createBody().allowedInducements).toBeUndefined();
   });
 
-  it("envoie la liste autorisée cochée", async () => {
+  it("sans règlement, tout est coché : décocher interdit, et part dans le POST", async () => {
     await openForm();
     fireEvent.click(radio("match")!);
-    fireEvent.click(
-      within(screen.getByTestId("cup-allowed-inducements-team_mascot")).getByRole(
-        "checkbox",
-      ),
-    );
+    expect(box("team_mascot").checked).toBe(true);
+    expect(box("weather_mage").checked).toBe(true);
+    fireEvent.click(box("team_mascot"));
 
     submit();
     await waitFor(() => expect(createBody().inducementMode).toBe("match"));
-    expect(createBody().allowedInducements).toEqual(["team_mascot"]);
+    const sent = createBody().allowedInducements as string[];
+    expect(sent).not.toContain("team_mascot");
+    expect(sent).toContain("weather_mage");
+  });
+
+  it("tout décocher : aucun coup de pouce, envoyé comme liste vide", async () => {
+    await openForm();
+    for (const slug of ALLOWED_INDUCEMENT_OPTIONS.map((o) => o.slug)) {
+      fireEvent.click(box(slug));
+    }
+    expect(screen.getByTestId("cup-allowed-inducements-empty")).toBeTruthy();
+
+    submit();
+    await waitFor(() => expect(createBody().allowedInducements).toEqual([]));
   });
 
   it("`none` : pas de liste, rien d'envoyé pour elle", async () => {
@@ -131,7 +153,45 @@ describe("création d'une coupe — coups de pouce", () => {
     await waitFor(() => expect(createBody().inducementMode).toBe("match"));
   });
 
-  it("règlement : `build` imposé, grisé, sans liste autorisée", async () => {
+  it("règlement : la liste du règlement est cochée ; retirer et ajouter part dans le POST", async () => {
+    await openForm();
+    fireEvent.change(screen.getByTestId("cup-tournament-ruleset-select"), {
+      target: { value: NAF.slug },
+    });
+    await waitFor(() => expect(box("bribe").checked).toBe(true));
+    expect(box("team_mascot").checked).toBe(true);
+    expect(box("weather_mage").checked).toBe(false);
+    expect(
+      screen.getByTestId("cup-allowed-inducements-team_mascot-badge").textContent,
+    ).toMatch(/NAF WC 2027 · 25k/);
+
+    fireEvent.click(box("bribe"));
+    fireEvent.click(box("weather_mage"));
+
+    submit();
+    await waitFor(() => expect(createBody().inducementMode).toBe("build"));
+    expect([...(createBody().allowedInducements as string[])].sort()).toEqual(
+      ["bloodweiser_kegs", "team_mascot", "weather_mage"],
+    );
+  });
+
+  it("règlement : revenir à la liste du règlement n'envoie aucune liste", async () => {
+    await openForm();
+    fireEvent.change(screen.getByTestId("cup-tournament-ruleset-select"), {
+      target: { value: NAF.slug },
+    });
+    await waitFor(() => expect(box("bribe").checked).toBe(true));
+    fireEvent.click(box("bribe"));
+    fireEvent.click(screen.getByTestId("cup-allowed-inducements-reset"));
+    expect(box("bribe").checked).toBe(true);
+    expect(screen.queryByTestId("cup-allowed-inducements-reset")).toBeNull();
+
+    submit();
+    await waitFor(() => expect(createBody().inducementMode).toBe("build"));
+    expect(createBody().allowedInducements).toBeUndefined();
+  });
+
+  it("règlement : `build` imposé et grisé", async () => {
     await openForm();
     fireEvent.change(screen.getByTestId("cup-tournament-ruleset-select"), {
       target: { value: NAF.slug },
@@ -144,7 +204,7 @@ describe("création d'une coupe — coups de pouce", () => {
     expect(radio("build")?.checked).toBe(true);
     expect(radio("build")?.disabled).toBe(true);
     expect(radio("match")).toBeNull();
-    expect(screen.queryByTestId("cup-allowed-inducements")).toBeNull();
+    expect(screen.getByTestId("cup-allowed-inducements")).toBeTruthy();
 
     submit();
     await waitFor(() => expect(createBody().inducementMode).toBe("build"));
