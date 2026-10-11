@@ -132,7 +132,8 @@ function serializeCupRulesData(body: CupRulesBody): Record<string, unknown> {
       : null;
   }
   if (body.allowedInducements !== undefined) {
-    // Liste vide = aucune restriction : on stocke `null`, pas `[]`.
+    // `null` = liste par défaut (règlement, sinon catalogue) ; `[]` = aucun
+    // coup de pouce, stocké tel quel (cf. `parseCupAllowedInducements`).
     const slugs = parseCupAllowedInducements(body.allowedInducements);
     data.allowedInducements = slugs ? JSON.stringify(slugs) : null;
   }
@@ -168,7 +169,7 @@ export function formatCupRules(cup: {
       hasTournamentRuleset: Boolean(cup.tournamentRuleset),
       format: cup.format ?? "bb11",
     }),
-    /** Liste autorisée telle que stockée (`null` = tout le catalogue). */
+    /** Liste de la coupe telle que stockée (`null` = liste par défaut, `[]` = aucun). */
     allowedInducements: parseCupAllowedInducements(cup.allowedInducements),
   };
 }

@@ -188,11 +188,21 @@ describe("POST /cup — régime des coups de pouce", () => {
     );
   });
 
-  it("une liste autorisée vide est stockée null (aucune restriction)", async () => {
+  it("une liste vide explicite est stockée telle quelle (aucun coup de pouce)", async () => {
     await request(
       "POST",
       "/cup",
       { name: "Coupe", allowedInducements: [] },
+      tokenFor(COMMISH),
+    );
+    expect(written().allowedInducements).toBe("[]");
+  });
+
+  it("`null` est stocké null (liste par défaut)", async () => {
+    await request(
+      "POST",
+      "/cup",
+      { name: "Coupe", allowedInducements: null },
       tokenFor(COMMISH),
     );
     expect(written().allowedInducements).toBeNull();

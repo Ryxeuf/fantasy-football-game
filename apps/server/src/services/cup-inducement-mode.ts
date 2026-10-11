@@ -86,10 +86,13 @@ export function modeToWrite(
 }
 
 /**
- * Liste de coups de pouce autorisés d'une coupe (colonne `Json?` : tableau
- * natif PG ou chaîne du miroir SQLite). `null` = aucune restriction ; une
- * liste vide ou illisible vaut aussi « aucune restriction » — une ligne
- * corrompue ne doit pas fermer tout le catalogue.
+ * Liste de coups de pouce d'une coupe (colonne `Json?` : tableau natif PG ou
+ * chaîne du miroir SQLite), telle que stockée :
+ *  - `null` : liste par défaut (celle du règlement, sinon tout le catalogue) ;
+ *  - `[...]` : la liste du commissaire ;
+ *  - `[]` : aucun coup de pouce — une liste VIDE explicite.
+ * Une ligne illisible, ou dont aucune entrée n'est exploitable, se lit
+ * `null` : une donnée corrompue ne doit pas fermer tout le catalogue.
  */
 export function parseCupAllowedInducements(raw: unknown): string[] | null {
   let value: unknown = raw;
@@ -101,6 +104,7 @@ export function parseCupAllowedInducements(raw: unknown): string[] | null {
     }
   }
   if (!Array.isArray(value)) return null;
+  if (value.length === 0) return [];
   const slugs = [
     ...new Set(
       value.filter((s): s is string => typeof s === "string" && s.length > 0),

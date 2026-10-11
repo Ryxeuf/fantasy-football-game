@@ -28,11 +28,22 @@ import { loadInducementCatalogue } from "./inducement-repository";
 import {
   applyPackInducementRules,
   effectiveInducementAllowlist,
+  isCompetitionInducementList,
+  type CompetitionInducementList,
   hasSecretWeapon,
 } from "./tournament-inducements";
 import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 
 /** Une option de coup de pouce, prix et plafond résolus pour l'équipe. */
+/**
+ * Liste d'une compétition : allowlist brute d'une LIGUE (intersectée avec le
+ * règlement) ou résolution d'une COUPE (qui fait foi, ajouts compris).
+ */
+export type InducementAllowlistInput =
+  | readonly string[]
+  | null
+  | CompetitionInducementList;
+
 export interface InducementOption {
   readonly slug: string;
   readonly name: string;
@@ -56,8 +67,10 @@ export async function inducementOptionsFor(
   // Saison 3 (S8 de l'audit).
   ruleset: Ruleset,
   // FR17 — allowlist de coups de pouce au niveau ligue. `null` = tous
-  // autorisés (défaut). Les Star Players ne sont jamais filtrés ici.
-  allowedInducements: string[] | null = null,
+  // autorisés (défaut). Les Star Players ne sont jamais filtrés ici. Une
+  // RÉSOLUTION (coupe, `resolveCupInducementList`) fait foi telle quelle :
+  // sa liste et ses ajouts au règlement.
+  allowedInducements: InducementAllowlistInput = null,
   // Ligue régionale CHOISIE par l'équipe : c'est elle (et l'alignement
   // qu'elle apporte) qui ouvre les Coups de Pouce régionaux, pas l'union
   // des Ligues du roster. `null` = équipe sans choix enregistré.
@@ -104,8 +117,15 @@ export async function inducementOptionsFor(
     ruleset,
     catalogue,
   };
-  const effective = effectiveInducementAllowlist(allowedInducements, pack);
-  const allow = effective ? new Set(effective) : null;
+  const list: CompetitionInducementList = isCompetitionInducementList(
+    allowedInducements,
+  )
+    ? allowedInducements
+    : {
+        allowed: effectiveInducementAllowlist(allowedInducements, pack),
+        extras: [],
+      };
+  const allow = list.allowed ? new Set(list.allowed) : null;
   // Lot 6.1 — catalogue servi par la base (`Inducement`), repli compilé.
   const options = (ctx.catalogue ?? INDUCEMENT_CATALOGUE)
     .filter((d) => d.slug !== "star_player")
@@ -125,13 +145,18 @@ export async function inducementOptionsFor(
   const defsBySlug = new Map(
     (ctx.catalogue ?? INDUCEMENT_CATALOGUE).map((d) => [d.slug, d]),
   );
-  return applyPackInducementRules(options, pack, {
-    hasSecretWeaponStar: team.hasSecretWeaponStar ?? false,
-    qualifiesForDiscount: (slug) => {
-      const def = defsBySlug.get(slug);
-      return def ? qualifiesForInducementDiscount(def, ctx) : false;
+  return applyPackInducementRules(
+    options,
+    pack,
+    {
+      hasSecretWeaponStar: team.hasSecretWeaponStar ?? false,
+      qualifiesForDiscount: (slug) => {
+        const def = defsBySlug.get(slug);
+        return def ? qualifiesForInducementDiscount(def, ctx) : false;
+      },
     },
-  }) as InducementOption[];
+    list.extras,
+  ) as InducementOption[];
 }
 
 /** Contexte de construction d'une équipe pour le catalogue du builder. */
@@ -141,8 +166,11 @@ export interface BuildInducementCatalogueInput {
   readonly regionalLeague?: string | null;
   /** Règlement de tournoi (liste fermée, prix imposés). */
   readonly pack?: TournamentRulesetDefinition | null;
-  /** Liste autorisée par la coupe (`null` = tout le catalogue). */
-  readonly allowlist?: string[] | null;
+  /**
+   * Liste de la compétition : allowlist brute (ligue, `null` = tout le
+   * catalogue) ou résolution d'une coupe (`resolveCupInducementList`).
+   */
+  readonly allowlist?: InducementAllowlistInput;
   /** Star Players recrutés au même build (plafond Arme Secrète). */
   readonly hiredStarSlugs?: readonly string[];
 }

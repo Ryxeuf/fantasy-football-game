@@ -22,7 +22,12 @@ vi.mock("../utils/star-player-repository", () => ({
   getStarPlayerBySlugDb: vi.fn(),
 }));
 
-import { NAF_WORLD_CUP_2027, getSpecialRulesForTeam } from "@bb/game-engine";
+import {
+  INDUCEMENT_CATALOGUE,
+  NAF_WORLD_CUP_2027,
+  getSpecialRulesForTeam,
+} from "@bb/game-engine";
+import { resolveCupInducementList } from "./tournament-inducements";
 import { resolveSpecialRulesForTeam } from "../utils/team-values";
 import { resolveStaffConfigBySlug } from "./roster-staff-config";
 import {
@@ -141,5 +146,49 @@ describe("buildInducementCatalogue", () => {
       hiredStarSlugs: ["griff_oberwald"],
     });
     expect(out.find((o) => o.slug === "bribe")?.maxQuantity).toBe(6);
+  });
+});
+
+describe("buildInducementCatalogue — liste administrée par le commissaire (coupe)", () => {
+  it("retire un coup de pouce du règlement, ajoute un hors-règlement au prix du catalogue", async () => {
+    const out = await buildInducementCatalogue({
+      roster: "goblin",
+      ruleset: "season_3",
+      pack: NAF_WORLD_CUP_2027,
+      allowlist: resolveCupInducementList(
+        ["team_mascot", "bloodweiser_kegs", "weather_mage"],
+        NAF_WORLD_CUP_2027,
+      ),
+    });
+    expect(slugs(out)).toEqual(
+      expect.arrayContaining(["team_mascot", "bloodweiser_kegs", "weather_mage"]),
+    );
+    expect(slugs(out)).not.toContain("bribe");
+    // Règlement : 25 000 po ; ajout : prix du catalogue BB2025.
+    expect(out.find((o) => o.slug === "team_mascot")?.cost).toBe(25_000);
+    expect(out.find((o) => o.slug === "weather_mage")?.cost).toBe(
+      INDUCEMENT_CATALOGUE.find((d) => d.slug === "weather_mage")?.baseCost,
+    );
+  });
+
+  it("liste vide explicite : aucun coup de pouce", async () => {
+    const out = await buildInducementCatalogue({
+      roster: "goblin",
+      ruleset: "season_3",
+      pack: NAF_WORLD_CUP_2027,
+      allowlist: resolveCupInducementList([], NAF_WORLD_CUP_2027),
+    });
+    expect(out).toEqual([]);
+  });
+
+  it("sans liste : celle du règlement, comme avant", async () => {
+    const out = await buildInducementCatalogue({
+      roster: "goblin",
+      ruleset: "season_3",
+      pack: NAF_WORLD_CUP_2027,
+      allowlist: resolveCupInducementList(null, NAF_WORLD_CUP_2027),
+    });
+    expect(slugs(out)).toContain("bribe");
+    expect(slugs(out)).not.toContain("weather_mage");
   });
 });

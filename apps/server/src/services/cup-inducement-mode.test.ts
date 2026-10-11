@@ -105,11 +105,17 @@ describe("parseCupAllowedInducements", () => {
     ]);
   });
 
-  it("null, vide, illisible ⇒ aucune restriction", () => {
+  it("null ou illisible ⇒ liste par défaut (`null`)", () => {
     expect(parseCupAllowedInducements(null)).toBeNull();
-    expect(parseCupAllowedInducements([])).toBeNull();
     expect(parseCupAllowedInducements("{pas du json")).toBeNull();
     expect(parseCupAllowedInducements({ slug: "bribe" })).toBeNull();
+    // Des entrées toutes inexploitables ne ferment pas le catalogue.
+    expect(parseCupAllowedInducements([3, ""])).toBeNull();
+  });
+
+  it("liste vide EXPLICITE ⇒ aucun coup de pouce (`[]`)", () => {
+    expect(parseCupAllowedInducements([])).toEqual([]);
+    expect(parseCupAllowedInducements("[]")).toEqual([]);
   });
 
   it("dédoublonne et ignore les entrées non textuelles", () => {
