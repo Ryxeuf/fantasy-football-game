@@ -590,6 +590,41 @@ Hors contexte (script, test unitaire), tout dégrade sans lever : `step` = 1,
 corrélation neuve. Pour un job, ouvrir le contexte explicitement :
 `runAsAuditJob("league.postmatch.sequence", () => settle(matchId))`.
 
+### Clés API d'administration : un client automatisé agit AU NOM d'un admin
+
+`ApiKey` (change OpenSpec `admin-api-keys`, doc
+[`docs/admin-api-keys.md`](./docs/admin-api-keys.md)) : un agent Claude Code,
+un script de recette ou une CI s'authentifie par `Authorization: Bearer nak_…`
+(ou `X-API-Key`), secret stocké dans SES variables d'environnement
+(`NUFFLE_API_URL` / `NUFFLE_API_KEY`), jamais collé dans une conversation.
+`pnpm smoke:remote` joue un smoke test en lecture seule contre le serveur
+visé. Quatre règles qui ne se voient pas dans un seul fichier :
+
+- **Aiguillage AVANT `jwt.verify`, par le préfixe** (`nak_` ; un JWT commence
+  par `eyJ`). Le chemin JWT reste SYNCHRONE (les tests appellent `authUser`
+  sans `await`) ; seul le chemin clé est asynchrone. Tout NOUVEAU parseur
+  d'`Authorization` passe par `resolveRequestApiKey`
+  (`middleware/apiKeyAuth`, mémorisée par requête) — il y en avait quatre
+  (`authUser`, `optionalAuthUser`, `requireFeatureFlag`, une copie locale
+  dans `routes/feature-flags`, supprimée).
+- **Une clé ne porte AUCUN rôle** : ceux du propriétaire sont relus en base à
+  chaque requête (`roles ?? role`, comme la connexion et `adminOnly`), et le
+  propriétaire doit être admin, valide, ni banni ni supprimé. Refus = 401
+  indistinct (`api_key_invalid`).
+- **`sessionOnly` pour tout ce par quoi une clé fuitée se perpétuerait** :
+  gérer les clés, impersonner (le JWT émis survit à la révocation), modifier
+  le profil / le mot de passe / désactiver le compte. Toute nouvelle route qui
+  ÉMET un accès (token, mot de passe, invitation d'admin…) le pose.
+- **Portée `read` = méthodes sûres, y compris sous `optionalAuthUser`** : un
+  POST avec une clé en lecture seule est un 403, jamais une écriture faite en
+  anonyme.
+
+Traçabilité : `apiKeyId` voyage dans le contexte d'audit (`setAuditActor`) et
+finit dans `AuditLog.apiKeyId` / `TeamAuditEvent.apiKeyId` (nullable : `null`
+= session, donc tout l'historique). Le dernier usage s'écrit au plus une fois
+par minute, sans `await`. Le `fetch` natif de Node 22 ne suit le proxy des
+environnements cloud qu'avec `NODE_USE_ENV_PROXY=1` (posé par `smoke:remote`).
+
 ### Soft delete trace + reversion VERIFIEE (morts/licenciements)
 Un statut qui retire une entite du perimetre actif (mort, licenciement)
 n'est jamais un DELETE : c'est un flag + la **provenance** de qui l'a
@@ -2194,3 +2229,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `meta.eliminated` ; mode modifiable à tout moment ; carte d'aide
   `#saisie-de-coupe`. Au passage, `LeagueMatchEvent.meta` passe en `Json?`
   dans le miroir SQLite (l'e2e ne pouvait écrire aucun `meta`).
+- **2026-10-11** : **Clés API d'administration** (change OpenSpec
+  `admin-api-keys`) — pour qu'un agent Claude Code lance des tests sur le
+  serveur sans mot de passe : modèle `ApiKey` (empreinte SHA-256, préfixe
+  `nak_`, portée `read`/`write`, expiration, dernier usage), authentification
+  par `Bearer`/`X-API-Key` dans les quatre parseurs, `sessionOnly` sur la
+  gestion des clés, l'impersonation et le compte courant, `apiKeyId` dans les
+  deux journaux, page `/admin/api-keys`, smoke test distant
+  `pnpm smoke:remote`. Doc [`docs/admin-api-keys.md`](./docs/admin-api-keys.md).
