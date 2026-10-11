@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
-import { useTournamentRulesetLabel } from "../../lib/tournament-rulesets";
+import { useTournamentRulesetDefinition } from "../../lib/tournament-rulesets";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { buildForCupHref } from "../build-for-cup-href";
@@ -26,7 +26,7 @@ import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
 import { dynamicRoute } from "../../lib/typed-route";
 import { CupInducementRulesSummary } from "../CupInducementRulesSummary";
-import { parseCupInducementMode } from "../inducement-mode";
+import { packInducementSlugs, parseCupInducementMode } from "../inducement-mode";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -250,9 +250,14 @@ export default function CupDetailPage() {
   const params = useParams();
   const cupId = params.id as string;
   const [cup, setCup] = useState<Cup | null>(null);
-  const tournamentRulesetLabel = useTournamentRulesetLabel(
+  // Une seule lecture du règlement : son libellé ET sa liste de coups de
+  // pouce (le résumé annonce ce que la coupe y ajoute ou en retire).
+  const tournamentRulesetDefinition = useTournamentRulesetDefinition(
     cup?.tournamentRuleset ?? null,
   );
+  const tournamentRulesetLabel = cup?.tournamentRuleset
+    ? (tournamentRulesetDefinition?.shortLabel ?? cup.tournamentRuleset)
+    : null;
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -681,6 +686,14 @@ export default function CupDetailPage() {
                     <CupInducementRulesSummary
                       mode={cup.rulesConfig.inducementMode}
                       allowed={cup.rulesConfig.allowedInducements}
+                      packSlugs={
+                        cup.tournamentRuleset
+                          ? packInducementSlugs(
+                              tournamentRulesetDefinition?.allowedInducements,
+                            )
+                          : null
+                      }
+                      rulesetLabel={tournamentRulesetLabel}
                     />
                     {(Object.keys(cup.rulesConfig.tierBudgets).length > 0 ||
                       Object.keys(cup.rulesConfig.tierStartingPsp).length >

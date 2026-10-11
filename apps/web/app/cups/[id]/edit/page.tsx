@@ -10,6 +10,17 @@ import {
 import { TieBreakOrderEditor } from "../../../components/TieBreakOrderEditor";
 import { SheetEntryModeField } from "../../SheetEntryModeField";
 import type { SheetEntryMode } from "../../../lib/sheet-entry-profile";
+import { CupInducementModeField } from "../../CupInducementModeField";
+import { CupInducementRulesSummary } from "../../CupInducementRulesSummary";
+import {
+  defaultCupInducementSlugs,
+  normalizeCupAllowedInducements,
+  packInducementSlugs,
+  parseCupInducementMode,
+  type CupInducementMode,
+} from "../../inducement-mode";
+import { ALLOWED_INDUCEMENT_OPTIONS } from "../../../components/AllowedInducementsField";
+import { useTournamentRulesetDefinition } from "../../../lib/tournament-rulesets";
 
 /**
  * Édition d'une coupe par son commissaire — pendant de `/leagues/[id]/edit`.
@@ -24,6 +35,11 @@ import type { SheetEntryMode } from "../../../lib/sheet-entry-profile";
  *
  * L'édition, le format et le règlement de tournoi ne sont PAS éditables : les
  * équipes ont été construites POUR eux (le serveur les refuse aussi).
+ *
+ * Les coups de pouce (régime et liste du commissaire) le sont TANT QUE les
+ * inscriptions sont ouvertes : ils passent par `PATCH /cup/:id/rules`, la
+ * route des règles de composition, fermée à la validation de la coupe. Après,
+ * le bloc reste affiché en lecture seule, avec la raison du verrou.
  */
 
 interface CupForEdit {
@@ -46,7 +62,17 @@ interface CupForEdit {
   tieBreakRules?: string[];
   /** Absent (serveur antérieur) = saisie complète. */
   sheetEntryMode?: SheetEntryMode;
+  format?: string;
+  tournamentRuleset?: string | null;
+  validated?: boolean;
+  rulesConfig?: {
+    inducementMode?: string;
+    /** `null` = liste par défaut, `[]` = aucun coup de pouce. */
+    allowedInducements?: string[] | null;
+  };
 }
+
+const CATALOGUE_SLUGS = ALLOWED_INDUCEMENT_OPTIONS.map((o) => o.slug);
 
 const SCORING_FIELDS = [
   { key: "winPoints", label: "Victoire" },
@@ -86,6 +112,14 @@ export default function CupEditPage() {
   });
   const [tieBreak, setTieBreak] = useState<string[]>([]);
   const [sheetEntryMode, setSheetEntryMode] = useState<SheetEntryMode>("full");
+  const [inducementMode, setInducementMode] =
+    useState<CupInducementMode>("match");
+  const [allowedInducements, setAllowedInducements] = useState<
+    string[] | null
+  >(null);
+  const packDefinition = useTournamentRulesetDefinition(
+    cup?.tournamentRuleset ?? null,
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,6 +134,10 @@ export default function CupEditPage() {
       setSheetEntryMode(
         res.cup.sheetEntryMode === "simplified" ? "simplified" : "full",
       );
+      setInducementMode(
+        parseCupInducementMode(res.cup.rulesConfig?.inducementMode) ?? "match",
+      );
+      setAllowedInducements(res.cup.rulesConfig?.allowedInducements ?? null);
       const sc = res.cup.scoringConfig;
       if (sc) {
         setScoring({
@@ -123,6 +161,33 @@ export default function CupEditPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const packSlugs = cup?.tournamentRuleset
+    ? packInducementSlugs(packDefinition?.allowedInducements)
+    : null;
+  const inducementsEditable = Boolean(cup) && !cup?.validated;
+
+  /** Corps du `PATCH /cup/:id/rules`, ou `null` si rien n'a changé. */
+  const inducementRulesPatch = (): Record<string, unknown> | null => {
+    if (!cup || !inducementsEditable) return null;
+    // Sous règlement, la liste par défaut est la sienne : tant qu'elle n'est
+    // pas chargée, on n'écrit rien plutôt que de deviner.
+    if (cup.tournamentRuleset && !packSlugs) return null;
+    const defaults = defaultCupInducementSlugs(packSlugs, CATALOGUE_SLUGS);
+    const initialMode =
+      parseCupInducementMode(cup.rulesConfig?.inducementMode) ?? "match";
+    const initialList = normalizeCupAllowedInducements(
+      cup.rulesConfig?.allowedInducements ?? null,
+      defaults,
+    );
+    const nextList = normalizeCupAllowedInducements(allowedInducements, defaults);
+    const sameList = JSON.stringify(initialList) === JSON.stringify(nextList);
+    if (inducementMode === initialMode && sameList) return null;
+    return {
+      ...(inducementMode !== initialMode ? { inducementMode } : {}),
+      ...(sameList ? {} : { allowedInducements: nextList }),
+    };
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,6 +213,15 @@ export default function CupEditPage() {
         method: "PATCH",
         body: JSON.stringify(body),
       });
+      // Coups de pouce : la route des règles, et seulement s'ils ont changé
+      // (une coupe close les refuserait, même inchangés).
+      const rules = inducementRulesPatch();
+      if (rules) {
+        await apiRequest(`/cup/${cupId}/rules`, {
+          method: "PATCH",
+          body: JSON.stringify(rules),
+        });
+      }
       router.push(`/cups/${cupId}`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erreur d'enregistrement");
@@ -292,6 +366,50 @@ export default function CupEditPage() {
             value={sheetEntryMode}
             onChange={setSheetEntryMode}
           />
+        </section>
+
+        <section
+          className="space-y-2 rounded-lg border bg-white p-4"
+          data-testid="cup-edit-inducements"
+        >
+          {inducementsEditable ? (
+            <CupInducementModeField
+              value={inducementMode}
+              onChange={setInducementMode}
+              allowed={allowedInducements}
+              onAllowedChange={setAllowedInducements}
+              context={{
+                format: cup.format ?? "bb11",
+                hasTournamentRuleset: Boolean(cup.tournamentRuleset),
+              }}
+              rulesetLabel={packDefinition?.shortLabel ?? cup.tournamentRuleset ?? null}
+              packInducements={
+                cup.tournamentRuleset
+                  ? (packDefinition?.allowedInducements ?? null)
+                  : null
+              }
+              disabled={saving}
+            />
+          ) : (
+            <>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+                Coups de pouce
+              </h2>
+              <CupInducementRulesSummary
+                mode={cup.rulesConfig?.inducementMode}
+                allowed={cup.rulesConfig?.allowedInducements ?? null}
+                packSlugs={packSlugs}
+                rulesetLabel={packDefinition?.shortLabel ?? cup.tournamentRuleset ?? null}
+              />
+              <p
+                data-testid="cup-edit-inducements-locked"
+                className="text-xs text-gray-500"
+              >
+                Inscriptions closes : les coups de pouce ne se modifient plus,
+                les équipes ont été construites et figées pour eux.
+              </p>
+            </>
+          )}
         </section>
 
         <button
