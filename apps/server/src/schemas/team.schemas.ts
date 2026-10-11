@@ -78,6 +78,18 @@ export const buildTeamSchema = z.object({
   // Construction « pour une coupe » (Flow B) : le serveur impose budget + pool
   // depuis la config de la coupe et auto-inscrit l'équipe.
   cupId: z.string().min(1).optional(),
+  // Coups de pouce achetés À LA CRÉATION (coupe en mode `build` ou règlement
+  // de tournoi). Forme seule : le fond (catalogue effectif, plafonds) et le
+  // PRIX sont résolus par le serveur — aucun coût n'est accepté du client.
+  inducements: z
+    .array(
+      z.object({
+        slug: z.string().trim().min(1).max(64),
+        quantity: z.number().int().min(1).max(10),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export type BuildTeamInput = z.infer<typeof buildTeamSchema>;
@@ -276,3 +288,18 @@ export const updateInitialBudgetSchema = z.object({
   initialBudget: z.number().int().min(100).max(2000),
 });
 export type UpdateInitialBudgetBody = z.infer<typeof updateInitialBudgetSchema>;
+
+/**
+ * `GET /team/build-inducements` : catalogue de coups de pouce achetables au
+ * build pour un roster dans son contexte. `stars` = slugs des Star Players
+ * déjà sélectionnés (CSV) — ils bornent le règlement (Arme Secrète).
+ */
+export const buildInducementsQuerySchema = z.object({
+  roster: z.string().trim().min(1).max(64),
+  ruleset: z.string().trim().max(32).optional(),
+  regionalLeague: z.string().trim().max(64).optional(),
+  tournamentRuleset: z.string().trim().max(64).optional(),
+  cupId: z.string().trim().max(64).optional(),
+  stars: z.string().trim().max(1000).optional(),
+});
+export type BuildInducementsQuery = z.infer<typeof buildInducementsQuerySchema>;

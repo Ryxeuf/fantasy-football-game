@@ -1,0 +1,523 @@
+/**
+ * Star Players du roster D'INSCRIPTION sur une feuille de coupe.
+ *
+ * Un Star Player acheté au build est figé dans le roster d'inscription
+ * (`RosterSnapshot.starPlayers`), donc dans la « version du match » de
+ * chaque feuille de la coupe. Il JOUE la rencontre : il doit être proposé
+ * dans les pickers, porter son nom dans les actions matérialisées, et ne
+ * jamais être persisté. Avant la dérivation unique, seuls les Star Players
+ * engagés en coup de pouce d'avant-match étaient dérivés.
+ */
+
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+vi.mock("../prisma", () => ({
+  prisma: {
+    leaguePairing: { findUnique: vi.fn(), count: vi.fn() },
+    cupPairing: { findUnique: vi.fn() },
+    cupParticipant: { findMany: vi.fn() },
+    leagueMatchSheet: {
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    leagueMatchEvent: {
+      create: vi.fn(),
+      findUnique: vi.fn(),
+      findMany: vi.fn(),
+      delete: vi.fn(),
+    },
+    team: { findMany: vi.fn() },
+    match: { findFirst: vi.fn() },
+    roster: { findMany: vi.fn() },
+    user: { findUnique: vi.fn() },
+  },
+}));
+
+vi.mock("../utils/star-player-repository", () => ({
+  getStarPlayerBySlugDb: vi.fn(),
+  getAvailableStarPlayersDb: vi.fn(),
+}));
+
+vi.mock("./cup-match-sheet", async (importOriginal) => {
+  const original = await importOriginal<typeof import("./cup-match-sheet")>();
+  return { ...original, settleCupMatchSheet: vi.fn() };
+});
+
+vi.mock("./league-offline-result", () => ({
+  recordOfflineLeagueResult: vi.fn(),
+  OFFLINE_MATCH_MODE: "offline",
+}));
+vi.mock("./league-offline-edit", () => ({
+  reverseOfflineLeagueResult: vi.fn(),
+}));
+vi.mock("./cup-roster-snapshot", () => ({
+  captureRosterSnapshot: vi.fn(),
+  parseRosterSnapshot: vi.fn(() => null),
+}));
+vi.mock("./push-notifications", () => ({
+  sendLeagueMatchValidationPush: vi.fn(),
+}));
+vi.mock("./league-predictions-settlement", () => ({
+  markPairingPredictionsClosed: vi.fn(),
+}));
+vi.mock("../utils/team-values", async () => {
+  const { getSpecialRulesForTeam } = await import("@bb/game-engine");
+  return {
+    updateTeamValues: vi.fn(),
+    resolveSpecialRulesForTeam: vi.fn(
+      (_db: unknown, rosterSlug: string, ruleset: string) =>
+        Promise.resolve(getSpecialRulesForTeam(rosterSlug, ruleset as never)),
+    ),
+  };
+});
+vi.mock("./roster-staff-config", () => ({
+  resolveStaffConfigBySlug: vi.fn(() =>
+    Promise.resolve({ apothecaryAllowed: true }),
+  ),
+}));
+
+import { prisma } from "../prisma";
+import {
+  getAvailableStarPlayersDb,
+  getStarPlayerBySlugDb,
+} from "../utils/star-player-repository";
+import { settleCupMatchSheet } from "./cup-match-sheet";
+import { recordOfflineLeagueResult } from "./league-offline-result";
+import { resolveSpecialRulesForTeam } from "../utils/team-values";
+import { resolveStaffConfigBySlug } from "./roster-staff-config";
+import { getSpecialRulesForTeam } from "@bb/game-engine";
+import {
+  getMatchSheet,
+  updatePreMatch,
+  validateByCommissioner,
+} from "./league-match-sheet";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockPrisma = prisma as any;
+const mockStar = getStarPlayerBySlugDb as ReturnType<typeof vi.fn>;
+const mockSettle = settleCupMatchSheet as ReturnType<typeof vi.fn>;
+
+const HOME = "home-owner";
+const AWAY = "away-owner";
+const COMMISH = "commish";
+
+const MORG = {
+  slug: "morg_n_thorg",
+  displayName: "Morg 'n' Thorg",
+  cost: 380_000,
+  ma: 6,
+  st: 6,
+  ag: 3,
+  pa: 4,
+  av: 11,
+  skills: "block,mighty-blow-2,thick-skull,throw-team-mate",
+  hirableBy: ["all"],
+};
+
+function frozen(
+  starPlayers: Array<{ starPlayerSlug: string; cost: number }>,
+  over: Record<string, unknown> = {},
+) {
+  return {
+    capturedAt: 1,
+    roster: "human",
+    ruleset: "season_3",
+    format: "bb11",
+    teamValue: 1_000_000,
+    currentValue: 1_000_000,
+    treasury: 0,
+    initialBudget: 1000,
+    startingPspPool: 0,
+    rerolls: 2,
+    cheerleaders: 0,
+    assistants: 0,
+    apothecary: false,
+    dedicatedFans: 1,
+    players: [],
+    starPlayers,
+    ...over,
+  };
+}
+
+function team(id: string, ownerId: string, players: string[]) {
+  return {
+    id,
+    name: id,
+    roster: "human",
+    ruleset: "season_3",
+    format: "bb11",
+    teamValue: 1_000_000,
+    currentValue: 1_000_000,
+    treasury: 0,
+    dedicatedFans: 1,
+    rerolls: 2,
+    cheerleaders: 0,
+    assistants: 0,
+    apothecary: false,
+    owner: { coachName: ownerId },
+    players: players.map((pid, i) => ({
+      id: pid,
+      number: i + 1,
+      name: `Joueur ${pid}`,
+      position: "human_lineman",
+      dead: false,
+      missNextMatch: false,
+      spp: 0,
+      skills: "",
+      advancements: "[]",
+      ma: 6,
+      st: 3,
+      ag: 3,
+      pa: 4,
+      av: 9,
+    })),
+  };
+}
+
+function mockCupPairing(cup: Record<string, unknown> = {}) {
+  mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+  mockPrisma.cupPairing.findUnique.mockResolvedValue({
+    id: "pair-1",
+    homeTeamId: "team-home",
+    awayTeamId: "team-away",
+    homeTeam: { ownerId: HOME },
+    awayTeam: { ownerId: AWAY },
+    round: { cup: { id: "cup-1", name: "Coupe", creatorId: COMMISH, ...cup } },
+  });
+}
+
+const ELEVEN = Array.from({ length: 11 }, (_, i) => `p${i + 1}`);
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  (resolveStaffConfigBySlug as ReturnType<typeof vi.fn>).mockResolvedValue({
+    apothecaryAllowed: true,
+  });
+  (resolveSpecialRulesForTeam as ReturnType<typeof vi.fn>).mockImplementation(
+    (_db: unknown, rosterSlug: string, ruleset: string) =>
+      Promise.resolve(getSpecialRulesForTeam(rosterSlug, ruleset as never)),
+  );
+  mockStar.mockImplementation(async (slug: string) =>
+    slug === MORG.slug ? MORG : null,
+  );
+  (getAvailableStarPlayersDb as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+  mockCupPairing();
+  mockPrisma.team.findMany.mockResolvedValue([
+    team("team-home", HOME, ELEVEN.map((p) => `h-${p}`)),
+    team("team-away", AWAY, ELEVEN.map((p) => `a-${p}`)),
+  ]);
+});
+
+describe("feuille de coupe — Star Players du roster d'inscription", () => {
+  it("la lecture aligne le Star Player acheté au build dans les pickers", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([
+        { starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ]),
+      rosterSnapshotAway: frozen([]),
+      events: [],
+    });
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.competitionKind).toBe("cup");
+    expect(out.teams.home?.starPlayersHired).toEqual([
+      expect.objectContaining({
+        id: "star-home-morg_n_thorg",
+        name: "Morg 'n' Thorg",
+        registered: true,
+      }),
+    ]);
+    expect(out.teams.away?.starPlayersHired).toEqual([]);
+  });
+
+  it("la validation nomme le Star Player du build dans les actions et ne persiste rien", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "submitted",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([
+        { starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ]),
+      rosterSnapshotAway: frozen([]),
+      motmPlayerIds: ["star-home-morg_n_thorg"],
+    });
+    mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+      {
+        kind: "touchdown",
+        team: "home",
+        actorPlayerId: "star-home-morg_n_thorg",
+      },
+    ]);
+    mockSettle.mockResolvedValue({ localMatchId: "lm1" });
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({
+      id: "ms1",
+      status: "validated",
+    });
+
+    await validateByCommissioner({ pairingId: "pair-1", userId: COMMISH });
+
+    expect(mockSettle).toHaveBeenCalledTimes(1);
+    const { actions, scoreHome } = mockSettle.mock.calls[0][0];
+    expect(scoreHome).toBe(1);
+    expect(actions).toEqual([
+      expect.objectContaining({
+        actionType: "td",
+        playerId: "star-home-morg_n_thorg",
+        playerName: "Morg 'n' Thorg",
+      }),
+    ]);
+    // Une coupe n'écrit rien sur les équipes : aucun résultat de ligue (PSP,
+    // blessures, or) n'est joué, Star Player compris.
+    expect(recordOfflineLeagueResult).not.toHaveBeenCalled();
+  });
+
+  it("refuse d'engager en avant-match un Star Player déjà au roster d'inscription", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([
+        { starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ]),
+      rosterSnapshotAway: frozen([]),
+    });
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          inducementsHome: [
+            {
+              slug: "star_player",
+              starPlayerSlug: "morg_n_thorg",
+              name: "Morg 'n' Thorg",
+              cost: 380_000,
+              qty: 1,
+            },
+          ],
+        },
+      }),
+    ).rejects.toMatchObject({ code: "inducement_star_already_registered" });
+    expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+  });
+
+  it("relit sans erreur une feuille ancienne qui porte déjà le doublon", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([
+        { starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ]),
+      rosterSnapshotAway: frozen([]),
+      inducementsHome: [
+        { slug: "star_player", starPlayerSlug: "morg_n_thorg", cost: 380_000 },
+      ],
+      events: [],
+    });
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.teams.home?.starPlayersHired?.map((s) => s.id)).toEqual([
+      "star-home-morg_n_thorg",
+    ]);
+  });
+});
+
+describe("feuille de coupe — budget de coups de pouce sans trésorerie", () => {
+  const mascot = [
+    { slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 },
+  ];
+
+  it("refuse la sélection du favori, malgré sa trésorerie figée", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([], {
+        currentValue: 1_100_000,
+        treasury: 300_000,
+      }),
+      rosterSnapshotAway: frozen([], { currentValue: 1_020_000 }),
+    });
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: { inducementsHome: mascot },
+      }),
+    ).rejects.toMatchObject({ code: "inducement_over_budget" });
+  });
+
+  it("accepte la sélection de l'outsider dans l'écart de VEA", async () => {
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "draft",
+      cupPairingId: "pair-1",
+      rosterSnapshotHome: frozen([], { currentValue: 1_100_000 }),
+      rosterSnapshotAway: frozen([], { currentValue: 1_020_000 }),
+    });
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({ id: "ms1" });
+
+    await updatePreMatch({
+      pairingId: "pair-1",
+      userId: AWAY,
+      payload: { inducementsAway: mascot },
+    });
+
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
+  });
+});
+
+describe("feuille de coupe — régime des coups de pouce", () => {
+  const mascot = [
+    { slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 },
+  ];
+  const draftSheet = (over: Record<string, unknown> = {}) => ({
+    id: "ms1",
+    status: "draft",
+    cupPairingId: "pair-1",
+    rosterSnapshotHome: frozen([], {
+      inducements: [
+        { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+      ],
+    }),
+    rosterSnapshotAway: frozen([], { currentValue: 900_000 }),
+    events: [],
+    ...over,
+  });
+
+  it("build : rappelle les coups de pouce figés, catalogue vide et budget nul", async () => {
+    mockCupPairing({ inducementMode: "build", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.competitionRules.inducementMode).toBe("build");
+    expect(out.teams.home?.registeredInducements).toEqual([
+      { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+    ]);
+    expect(out.teams.away?.registeredInducements).toEqual([]);
+    expect(out.reference.inducements).toEqual({ home: [], away: [] });
+    expect(out.reference.starPlayers).toEqual({ home: [], away: [] });
+    // L'écart de VEA (100 000 po) n'ouvre aucune petite monnaie en build.
+    expect(out.reference.budget.away).toMatchObject({ pettyCash: 0, maxBudget: 0 });
+  });
+
+  it("build : une sélection d'avant-match est refusée sans modification", async () => {
+    mockCupPairing({ inducementMode: "build", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: mascot },
+      }),
+    ).rejects.toMatchObject({ code: "inducements_locked" });
+    expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+  });
+
+  it("build : une liste vide n'est pas une sélection (avant-match renvoyé tel quel)", async () => {
+    mockCupPairing({ inducementMode: "build", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({ id: "ms1" });
+
+    await updatePreMatch({
+      pairingId: "pair-1",
+      userId: AWAY,
+      payload: { inducementsAway: [], inducementsHome: [] },
+    });
+
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalled();
+  });
+
+  it("none : une sélection d'avant-match est refusée", async () => {
+    mockCupPairing({ inducementMode: "none", format: "bb11" });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: mascot },
+      }),
+    ).rejects.toMatchObject({ code: "inducements_locked" });
+  });
+
+  it("coupe antérieure au réglage (null) : match, pas de rappel, achat possible", async () => {
+    mockCupPairing({ inducementMode: null });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draftSheet());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.competitionRules.inducementMode).toBe("match");
+    expect(out.teams.home?.registeredInducements).toBeUndefined();
+    expect(out.reference.budget.away.maxBudget).toBe(100_000);
+  });
+});
+
+
+describe("feuille de coupe en avant-match — liste du commissaire", () => {
+  const draft = () => ({
+    id: "ms1",
+    status: "draft",
+    cupPairingId: "pair-1",
+    rosterSnapshotHome: frozen([], { currentValue: 900_000 }),
+    rosterSnapshotAway: frozen([], { currentValue: 1_100_000 }),
+    events: [],
+  });
+
+  it("ne propose que les coups de pouce de la liste de la coupe", async () => {
+    mockCupPairing({ inducementMode: "match", allowedInducements: '["team_mascot"]' });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draft());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.reference.inducements.home.map((o) => o.slug)).toEqual([
+      "team_mascot",
+    ]);
+  });
+
+  it("refuse un achat hors liste, accepte un achat de la liste", async () => {
+    mockCupPairing({ inducementMode: "match", allowedInducements: ["team_mascot"] });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draft());
+    mockPrisma.leagueMatchSheet.update.mockResolvedValue({ id: "ms1" });
+
+    await expect(
+      updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          inducementsHome: [{ slug: "bloodweiser_kegs", name: "Fûts", cost: 50_000, qty: 1 }],
+        },
+      }),
+    ).rejects.toMatchObject({ code: "inducement_not_allowed" });
+
+    await updatePreMatch({
+      pairingId: "pair-1",
+      userId: HOME,
+      payload: {
+        inducementsHome: [{ slug: "team_mascot", name: "Mascotte", cost: 25_000, qty: 1 }],
+      },
+    });
+    expect(mockPrisma.leagueMatchSheet.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("liste vide explicite : rien à vendre", async () => {
+    mockCupPairing({ inducementMode: "match", allowedInducements: [] });
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(draft());
+
+    const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+    expect(out.reference.inducements.home).toEqual([]);
+  });
+});

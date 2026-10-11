@@ -214,3 +214,76 @@ describe("matchSheetToPdf — mode de saisie", () => {
     expect(doc.prefill?.forfeitSide).toBe("away");
   });
 });
+
+describe("matchSheetToPdf — Star Players du roster d'inscription (coupe)", () => {
+  const morg = {
+    id: "star-h-morg_n_thorg",
+    number: 81,
+    name: "Morg 'n' Thorg",
+    position: "star_player",
+    positionName: "Star Player",
+    stats,
+    registered: true,
+  };
+
+  it.each(["full", "simplified"] as const)(
+    "liste le Star Player inscrit dans la page de l'équipe (saisie %s)",
+    (entryMode) => {
+      const doc = matchSheetToPdf(
+        input({
+          competitionKind: "cup",
+          competitionRules: { sppEnabled: false, entryMode },
+          teams: {
+            home: { ...team("h", "Karak"), starPlayersHired: [morg] },
+            away: team("a", "Morr"),
+          },
+        }),
+      );
+      const star = doc.home.players.find((p) => p.name === "Morg 'n' Thorg");
+      expect(star).toMatchObject({ note: "Star Player", unavailable: false });
+      // Une case par action, comme tout joueur de la rencontre.
+      expect(star?.tally).toBeNull();
+    },
+  );
+});
+
+describe("matchSheetToPdf — coups de pouce d'inscription (coupe en build)", () => {
+  const registered = [
+    { slug: "team_mascot", name: "Mascotte d'Équipe", quantity: 1, unitCost: 25_000 },
+    { slug: "bloodweiser_kegs", name: "Fûts de Blitz Premium", quantity: 2, unitCost: 50_000 },
+  ];
+  const teams = {
+    home: { ...team("h", "Karak"), registeredInducements: registered },
+    away: team("a", "Morr"),
+  };
+
+  it.each(["full", "simplified"] as const)(
+    "reporte les coups de pouce figés à l'inscription (saisie %s)",
+    (entryMode) => {
+      const doc = matchSheetToPdf(
+        input({
+          competitionKind: "cup",
+          competitionRules: { sppEnabled: false, entryMode, inducementMode: "build" },
+          teams,
+        }),
+      );
+      expect(doc.home.registeredInducements).toEqual([
+        { name: "Mascotte d'Équipe", qty: 1, cost: 25_000 },
+        { name: "Fûts de Blitz Premium", qty: 2, cost: 50_000 },
+      ]);
+      // Équipe sans coup de pouce : liste vide, le rappel reste imprimé.
+      expect(doc.away.registeredInducements).toEqual([]);
+    },
+  );
+
+  it("n'en dit rien hors mode build (avant-match, ligue, mode absent)", () => {
+    for (const over of [
+      { competitionKind: "cup" as const, competitionRules: { inducementMode: "match" as const } },
+      { competitionKind: "cup" as const },
+      { competitionKind: "league" as const, competitionRules: { inducementMode: "build" as const } },
+    ]) {
+      const doc = matchSheetToPdf(input({ ...over, teams }));
+      expect(doc.home.registeredInducements).toBeUndefined();
+    }
+  });
+});

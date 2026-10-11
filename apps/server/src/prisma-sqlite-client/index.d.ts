@@ -99,6 +99,11 @@ export type TeamPlayerStatusEvent = $Result.DefaultSelection<Prisma.$TeamPlayerS
  */
 export type TeamStarPlayer = $Result.DefaultSelection<Prisma.$TeamStarPlayerPayload>
 /**
+ * Model TeamInducement
+ * 
+ */
+export type TeamInducement = $Result.DefaultSelection<Prisma.$TeamInducementPayload>
+/**
  * Model Roster
  * 
  */
@@ -861,6 +866,16 @@ export class PrismaClient<
     * ```
     */
   get teamStarPlayer(): Prisma.TeamStarPlayerDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.teamInducement`: Exposes CRUD operations for the **TeamInducement** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TeamInducements
+    * const teamInducements = await prisma.teamInducement.findMany()
+    * ```
+    */
+  get teamInducement(): Prisma.TeamInducementDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.roster`: Exposes CRUD operations for the **Roster** model.
@@ -2088,6 +2103,7 @@ export namespace Prisma {
     TeamPlayer: 'TeamPlayer',
     TeamPlayerStatusEvent: 'TeamPlayerStatusEvent',
     TeamStarPlayer: 'TeamStarPlayer',
+    TeamInducement: 'TeamInducement',
     Roster: 'Roster',
     RosterStaffConfig: 'RosterStaffConfig',
     Skill: 'Skill',
@@ -2183,7 +2199,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "teamInducement" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -3442,6 +3458,80 @@ export namespace Prisma {
           count: {
             args: Prisma.TeamStarPlayerCountArgs<ExtArgs>
             result: $Utils.Optional<TeamStarPlayerCountAggregateOutputType> | number
+          }
+        }
+      }
+      TeamInducement: {
+        payload: Prisma.$TeamInducementPayload<ExtArgs>
+        fields: Prisma.TeamInducementFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TeamInducementFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TeamInducementFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>
+          }
+          findFirst: {
+            args: Prisma.TeamInducementFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TeamInducementFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>
+          }
+          findMany: {
+            args: Prisma.TeamInducementFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>[]
+          }
+          create: {
+            args: Prisma.TeamInducementCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>
+          }
+          createMany: {
+            args: Prisma.TeamInducementCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TeamInducementCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>[]
+          }
+          delete: {
+            args: Prisma.TeamInducementDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>
+          }
+          update: {
+            args: Prisma.TeamInducementUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>
+          }
+          deleteMany: {
+            args: Prisma.TeamInducementDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TeamInducementUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.TeamInducementUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>[]
+          }
+          upsert: {
+            args: Prisma.TeamInducementUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TeamInducementPayload>
+          }
+          aggregate: {
+            args: Prisma.TeamInducementAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTeamInducement>
+          }
+          groupBy: {
+            args: Prisma.TeamInducementGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TeamInducementGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TeamInducementCountArgs<ExtArgs>
+            result: $Utils.Optional<TeamInducementCountAggregateOutputType> | number
           }
         }
       }
@@ -9256,6 +9346,7 @@ export namespace Prisma {
     teamPlayer?: TeamPlayerOmit
     teamPlayerStatusEvent?: TeamPlayerStatusEventOmit
     teamStarPlayer?: TeamStarPlayerOmit
+    teamInducement?: TeamInducementOmit
     roster?: RosterOmit
     rosterStaffConfig?: RosterStaffConfigOmit
     skill?: SkillOmit
@@ -9841,6 +9932,7 @@ export namespace Prisma {
   export type TeamCountOutputType = {
     players: number
     starPlayers: number
+    inducements: number
     selections: number
     cupParticipants: number
     cupInvitations: number
@@ -9856,6 +9948,7 @@ export namespace Prisma {
   export type TeamCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     players?: boolean | TeamCountOutputTypeCountPlayersArgs
     starPlayers?: boolean | TeamCountOutputTypeCountStarPlayersArgs
+    inducements?: boolean | TeamCountOutputTypeCountInducementsArgs
     selections?: boolean | TeamCountOutputTypeCountSelectionsArgs
     cupParticipants?: boolean | TeamCountOutputTypeCountCupParticipantsArgs
     cupInvitations?: boolean | TeamCountOutputTypeCountCupInvitationsArgs
@@ -9891,6 +9984,13 @@ export namespace Prisma {
    */
   export type TeamCountOutputTypeCountStarPlayersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: TeamStarPlayerWhereInput
+  }
+
+  /**
+   * TeamCountOutputType without action
+   */
+  export type TeamCountOutputTypeCountInducementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamInducementWhereInput
   }
 
   /**
@@ -27687,6 +27787,7 @@ export namespace Prisma {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
     starPlayers?: boolean | Team$starPlayersArgs<ExtArgs>
+    inducements?: boolean | Team$inducementsArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
     cupParticipants?: boolean | Team$cupParticipantsArgs<ExtArgs>
     cupInvitations?: boolean | Team$cupInvitationsArgs<ExtArgs>
@@ -27788,6 +27889,7 @@ export namespace Prisma {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
     starPlayers?: boolean | Team$starPlayersArgs<ExtArgs>
+    inducements?: boolean | Team$inducementsArgs<ExtArgs>
     selections?: boolean | Team$selectionsArgs<ExtArgs>
     cupParticipants?: boolean | Team$cupParticipantsArgs<ExtArgs>
     cupInvitations?: boolean | Team$cupInvitationsArgs<ExtArgs>
@@ -27813,6 +27915,7 @@ export namespace Prisma {
       owner: Prisma.$UserPayload<ExtArgs>
       players: Prisma.$TeamPlayerPayload<ExtArgs>[]
       starPlayers: Prisma.$TeamStarPlayerPayload<ExtArgs>[]
+      inducements: Prisma.$TeamInducementPayload<ExtArgs>[]
       selections: Prisma.$TeamSelectionPayload<ExtArgs>[]
       cupParticipants: Prisma.$CupParticipantPayload<ExtArgs>[]
       cupInvitations: Prisma.$CupInvitationPayload<ExtArgs>[]
@@ -28246,6 +28349,7 @@ export namespace Prisma {
     owner<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     players<T extends Team$playersArgs<ExtArgs> = {}>(args?: Subset<T, Team$playersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     starPlayers<T extends Team$starPlayersArgs<ExtArgs> = {}>(args?: Subset<T, Team$starPlayersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamStarPlayerPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    inducements<T extends Team$inducementsArgs<ExtArgs> = {}>(args?: Subset<T, Team$inducementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     selections<T extends Team$selectionsArgs<ExtArgs> = {}>(args?: Subset<T, Team$selectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     cupParticipants<T extends Team$cupParticipantsArgs<ExtArgs> = {}>(args?: Subset<T, Team$cupParticipantsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupParticipantPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     cupInvitations<T extends Team$cupInvitationsArgs<ExtArgs> = {}>(args?: Subset<T, Team$cupInvitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -28748,6 +28852,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: TeamStarPlayerScalarFieldEnum | TeamStarPlayerScalarFieldEnum[]
+  }
+
+  /**
+   * Team.inducements
+   */
+  export type Team$inducementsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    where?: TeamInducementWhereInput
+    orderBy?: TeamInducementOrderByWithRelationInput | TeamInducementOrderByWithRelationInput[]
+    cursor?: TeamInducementWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TeamInducementScalarFieldEnum | TeamInducementScalarFieldEnum[]
   }
 
   /**
@@ -32815,6 +32943,1113 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: TeamStarPlayerInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TeamInducement
+   */
+
+  export type AggregateTeamInducement = {
+    _count: TeamInducementCountAggregateOutputType | null
+    _avg: TeamInducementAvgAggregateOutputType | null
+    _sum: TeamInducementSumAggregateOutputType | null
+    _min: TeamInducementMinAggregateOutputType | null
+    _max: TeamInducementMaxAggregateOutputType | null
+  }
+
+  export type TeamInducementAvgAggregateOutputType = {
+    quantity: number | null
+    unitCost: number | null
+  }
+
+  export type TeamInducementSumAggregateOutputType = {
+    quantity: number | null
+    unitCost: number | null
+  }
+
+  export type TeamInducementMinAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    slug: string | null
+    quantity: number | null
+    unitCost: number | null
+    createdAt: Date | null
+  }
+
+  export type TeamInducementMaxAggregateOutputType = {
+    id: string | null
+    teamId: string | null
+    slug: string | null
+    quantity: number | null
+    unitCost: number | null
+    createdAt: Date | null
+  }
+
+  export type TeamInducementCountAggregateOutputType = {
+    id: number
+    teamId: number
+    slug: number
+    quantity: number
+    unitCost: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type TeamInducementAvgAggregateInputType = {
+    quantity?: true
+    unitCost?: true
+  }
+
+  export type TeamInducementSumAggregateInputType = {
+    quantity?: true
+    unitCost?: true
+  }
+
+  export type TeamInducementMinAggregateInputType = {
+    id?: true
+    teamId?: true
+    slug?: true
+    quantity?: true
+    unitCost?: true
+    createdAt?: true
+  }
+
+  export type TeamInducementMaxAggregateInputType = {
+    id?: true
+    teamId?: true
+    slug?: true
+    quantity?: true
+    unitCost?: true
+    createdAt?: true
+  }
+
+  export type TeamInducementCountAggregateInputType = {
+    id?: true
+    teamId?: true
+    slug?: true
+    quantity?: true
+    unitCost?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type TeamInducementAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamInducement to aggregate.
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamInducements to fetch.
+     */
+    orderBy?: TeamInducementOrderByWithRelationInput | TeamInducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TeamInducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamInducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamInducements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TeamInducements
+    **/
+    _count?: true | TeamInducementCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TeamInducementAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TeamInducementSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TeamInducementMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TeamInducementMaxAggregateInputType
+  }
+
+  export type GetTeamInducementAggregateType<T extends TeamInducementAggregateArgs> = {
+        [P in keyof T & keyof AggregateTeamInducement]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTeamInducement[P]>
+      : GetScalarType<T[P], AggregateTeamInducement[P]>
+  }
+
+
+
+
+  export type TeamInducementGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TeamInducementWhereInput
+    orderBy?: TeamInducementOrderByWithAggregationInput | TeamInducementOrderByWithAggregationInput[]
+    by: TeamInducementScalarFieldEnum[] | TeamInducementScalarFieldEnum
+    having?: TeamInducementScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TeamInducementCountAggregateInputType | true
+    _avg?: TeamInducementAvgAggregateInputType
+    _sum?: TeamInducementSumAggregateInputType
+    _min?: TeamInducementMinAggregateInputType
+    _max?: TeamInducementMaxAggregateInputType
+  }
+
+  export type TeamInducementGroupByOutputType = {
+    id: string
+    teamId: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt: Date
+    _count: TeamInducementCountAggregateOutputType | null
+    _avg: TeamInducementAvgAggregateOutputType | null
+    _sum: TeamInducementSumAggregateOutputType | null
+    _min: TeamInducementMinAggregateOutputType | null
+    _max: TeamInducementMaxAggregateOutputType | null
+  }
+
+  type GetTeamInducementGroupByPayload<T extends TeamInducementGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TeamInducementGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TeamInducementGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TeamInducementGroupByOutputType[P]>
+            : GetScalarType<T[P], TeamInducementGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TeamInducementSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    slug?: boolean
+    quantity?: boolean
+    unitCost?: boolean
+    createdAt?: boolean
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamInducement"]>
+
+  export type TeamInducementSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    slug?: boolean
+    quantity?: boolean
+    unitCost?: boolean
+    createdAt?: boolean
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamInducement"]>
+
+  export type TeamInducementSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    teamId?: boolean
+    slug?: boolean
+    quantity?: boolean
+    unitCost?: boolean
+    createdAt?: boolean
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["teamInducement"]>
+
+  export type TeamInducementSelectScalar = {
+    id?: boolean
+    teamId?: boolean
+    slug?: boolean
+    quantity?: boolean
+    unitCost?: boolean
+    createdAt?: boolean
+  }
+
+  export type TeamInducementOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "slug" | "quantity" | "unitCost" | "createdAt", ExtArgs["result"]["teamInducement"]>
+  export type TeamInducementInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+  export type TeamInducementIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+  export type TeamInducementIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    team?: boolean | TeamDefaultArgs<ExtArgs>
+  }
+
+  export type $TeamInducementPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TeamInducement"
+    objects: {
+      team: Prisma.$TeamPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      teamId: string
+      slug: string
+      quantity: number
+      unitCost: number
+      createdAt: Date
+    }, ExtArgs["result"]["teamInducement"]>
+    composites: {}
+  }
+
+  type TeamInducementGetPayload<S extends boolean | null | undefined | TeamInducementDefaultArgs> = $Result.GetResult<Prisma.$TeamInducementPayload, S>
+
+  type TeamInducementCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<TeamInducementFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: TeamInducementCountAggregateInputType | true
+    }
+
+  export interface TeamInducementDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TeamInducement'], meta: { name: 'TeamInducement' } }
+    /**
+     * Find zero or one TeamInducement that matches the filter.
+     * @param {TeamInducementFindUniqueArgs} args - Arguments to find a TeamInducement
+     * @example
+     * // Get one TeamInducement
+     * const teamInducement = await prisma.teamInducement.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TeamInducementFindUniqueArgs>(args: SelectSubset<T, TeamInducementFindUniqueArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one TeamInducement that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {TeamInducementFindUniqueOrThrowArgs} args - Arguments to find a TeamInducement
+     * @example
+     * // Get one TeamInducement
+     * const teamInducement = await prisma.teamInducement.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TeamInducementFindUniqueOrThrowArgs>(args: SelectSubset<T, TeamInducementFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamInducement that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementFindFirstArgs} args - Arguments to find a TeamInducement
+     * @example
+     * // Get one TeamInducement
+     * const teamInducement = await prisma.teamInducement.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TeamInducementFindFirstArgs>(args?: SelectSubset<T, TeamInducementFindFirstArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first TeamInducement that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementFindFirstOrThrowArgs} args - Arguments to find a TeamInducement
+     * @example
+     * // Get one TeamInducement
+     * const teamInducement = await prisma.teamInducement.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TeamInducementFindFirstOrThrowArgs>(args?: SelectSubset<T, TeamInducementFindFirstOrThrowArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more TeamInducements that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TeamInducements
+     * const teamInducements = await prisma.teamInducement.findMany()
+     * 
+     * // Get first 10 TeamInducements
+     * const teamInducements = await prisma.teamInducement.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const teamInducementWithIdOnly = await prisma.teamInducement.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TeamInducementFindManyArgs>(args?: SelectSubset<T, TeamInducementFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a TeamInducement.
+     * @param {TeamInducementCreateArgs} args - Arguments to create a TeamInducement.
+     * @example
+     * // Create one TeamInducement
+     * const TeamInducement = await prisma.teamInducement.create({
+     *   data: {
+     *     // ... data to create a TeamInducement
+     *   }
+     * })
+     * 
+     */
+    create<T extends TeamInducementCreateArgs>(args: SelectSubset<T, TeamInducementCreateArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many TeamInducements.
+     * @param {TeamInducementCreateManyArgs} args - Arguments to create many TeamInducements.
+     * @example
+     * // Create many TeamInducements
+     * const teamInducement = await prisma.teamInducement.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TeamInducementCreateManyArgs>(args?: SelectSubset<T, TeamInducementCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TeamInducements and returns the data saved in the database.
+     * @param {TeamInducementCreateManyAndReturnArgs} args - Arguments to create many TeamInducements.
+     * @example
+     * // Create many TeamInducements
+     * const teamInducement = await prisma.teamInducement.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TeamInducements and only return the `id`
+     * const teamInducementWithIdOnly = await prisma.teamInducement.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TeamInducementCreateManyAndReturnArgs>(args?: SelectSubset<T, TeamInducementCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a TeamInducement.
+     * @param {TeamInducementDeleteArgs} args - Arguments to delete one TeamInducement.
+     * @example
+     * // Delete one TeamInducement
+     * const TeamInducement = await prisma.teamInducement.delete({
+     *   where: {
+     *     // ... filter to delete one TeamInducement
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TeamInducementDeleteArgs>(args: SelectSubset<T, TeamInducementDeleteArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one TeamInducement.
+     * @param {TeamInducementUpdateArgs} args - Arguments to update one TeamInducement.
+     * @example
+     * // Update one TeamInducement
+     * const teamInducement = await prisma.teamInducement.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TeamInducementUpdateArgs>(args: SelectSubset<T, TeamInducementUpdateArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more TeamInducements.
+     * @param {TeamInducementDeleteManyArgs} args - Arguments to filter TeamInducements to delete.
+     * @example
+     * // Delete a few TeamInducements
+     * const { count } = await prisma.teamInducement.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TeamInducementDeleteManyArgs>(args?: SelectSubset<T, TeamInducementDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamInducements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TeamInducements
+     * const teamInducement = await prisma.teamInducement.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TeamInducementUpdateManyArgs>(args: SelectSubset<T, TeamInducementUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TeamInducements and returns the data updated in the database.
+     * @param {TeamInducementUpdateManyAndReturnArgs} args - Arguments to update many TeamInducements.
+     * @example
+     * // Update many TeamInducements
+     * const teamInducement = await prisma.teamInducement.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more TeamInducements and only return the `id`
+     * const teamInducementWithIdOnly = await prisma.teamInducement.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends TeamInducementUpdateManyAndReturnArgs>(args: SelectSubset<T, TeamInducementUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one TeamInducement.
+     * @param {TeamInducementUpsertArgs} args - Arguments to update or create a TeamInducement.
+     * @example
+     * // Update or create a TeamInducement
+     * const teamInducement = await prisma.teamInducement.upsert({
+     *   create: {
+     *     // ... data to create a TeamInducement
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TeamInducement we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TeamInducementUpsertArgs>(args: SelectSubset<T, TeamInducementUpsertArgs<ExtArgs>>): Prisma__TeamInducementClient<$Result.GetResult<Prisma.$TeamInducementPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of TeamInducements.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementCountArgs} args - Arguments to filter TeamInducements to count.
+     * @example
+     * // Count the number of TeamInducements
+     * const count = await prisma.teamInducement.count({
+     *   where: {
+     *     // ... the filter for the TeamInducements we want to count
+     *   }
+     * })
+    **/
+    count<T extends TeamInducementCountArgs>(
+      args?: Subset<T, TeamInducementCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TeamInducementCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TeamInducement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TeamInducementAggregateArgs>(args: Subset<T, TeamInducementAggregateArgs>): Prisma.PrismaPromise<GetTeamInducementAggregateType<T>>
+
+    /**
+     * Group by TeamInducement.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TeamInducementGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TeamInducementGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TeamInducementGroupByArgs['orderBy'] }
+        : { orderBy?: TeamInducementGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TeamInducementGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTeamInducementGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TeamInducement model
+   */
+  readonly fields: TeamInducementFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TeamInducement.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TeamInducementClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    team<T extends TeamDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TeamDefaultArgs<ExtArgs>>): Prisma__TeamClient<$Result.GetResult<Prisma.$TeamPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TeamInducement model
+   */
+  interface TeamInducementFieldRefs {
+    readonly id: FieldRef<"TeamInducement", 'String'>
+    readonly teamId: FieldRef<"TeamInducement", 'String'>
+    readonly slug: FieldRef<"TeamInducement", 'String'>
+    readonly quantity: FieldRef<"TeamInducement", 'Int'>
+    readonly unitCost: FieldRef<"TeamInducement", 'Int'>
+    readonly createdAt: FieldRef<"TeamInducement", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TeamInducement findUnique
+   */
+  export type TeamInducementFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamInducement to fetch.
+     */
+    where: TeamInducementWhereUniqueInput
+  }
+
+  /**
+   * TeamInducement findUniqueOrThrow
+   */
+  export type TeamInducementFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamInducement to fetch.
+     */
+    where: TeamInducementWhereUniqueInput
+  }
+
+  /**
+   * TeamInducement findFirst
+   */
+  export type TeamInducementFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamInducement to fetch.
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamInducements to fetch.
+     */
+    orderBy?: TeamInducementOrderByWithRelationInput | TeamInducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamInducements.
+     */
+    cursor?: TeamInducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamInducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamInducements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamInducements.
+     */
+    distinct?: TeamInducementScalarFieldEnum | TeamInducementScalarFieldEnum[]
+  }
+
+  /**
+   * TeamInducement findFirstOrThrow
+   */
+  export type TeamInducementFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamInducement to fetch.
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamInducements to fetch.
+     */
+    orderBy?: TeamInducementOrderByWithRelationInput | TeamInducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TeamInducements.
+     */
+    cursor?: TeamInducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamInducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamInducements.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TeamInducements.
+     */
+    distinct?: TeamInducementScalarFieldEnum | TeamInducementScalarFieldEnum[]
+  }
+
+  /**
+   * TeamInducement findMany
+   */
+  export type TeamInducementFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * Filter, which TeamInducements to fetch.
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TeamInducements to fetch.
+     */
+    orderBy?: TeamInducementOrderByWithRelationInput | TeamInducementOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TeamInducements.
+     */
+    cursor?: TeamInducementWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TeamInducements from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TeamInducements.
+     */
+    skip?: number
+    distinct?: TeamInducementScalarFieldEnum | TeamInducementScalarFieldEnum[]
+  }
+
+  /**
+   * TeamInducement create
+   */
+  export type TeamInducementCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TeamInducement.
+     */
+    data: XOR<TeamInducementCreateInput, TeamInducementUncheckedCreateInput>
+  }
+
+  /**
+   * TeamInducement createMany
+   */
+  export type TeamInducementCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TeamInducements.
+     */
+    data: TeamInducementCreateManyInput | TeamInducementCreateManyInput[]
+  }
+
+  /**
+   * TeamInducement createManyAndReturn
+   */
+  export type TeamInducementCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * The data used to create many TeamInducements.
+     */
+    data: TeamInducementCreateManyInput | TeamInducementCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeamInducement update
+   */
+  export type TeamInducementUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TeamInducement.
+     */
+    data: XOR<TeamInducementUpdateInput, TeamInducementUncheckedUpdateInput>
+    /**
+     * Choose, which TeamInducement to update.
+     */
+    where: TeamInducementWhereUniqueInput
+  }
+
+  /**
+   * TeamInducement updateMany
+   */
+  export type TeamInducementUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TeamInducements.
+     */
+    data: XOR<TeamInducementUpdateManyMutationInput, TeamInducementUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamInducements to update
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * Limit how many TeamInducements to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamInducement updateManyAndReturn
+   */
+  export type TeamInducementUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * The data used to update TeamInducements.
+     */
+    data: XOR<TeamInducementUpdateManyMutationInput, TeamInducementUncheckedUpdateManyInput>
+    /**
+     * Filter which TeamInducements to update
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * Limit how many TeamInducements to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TeamInducement upsert
+   */
+  export type TeamInducementUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TeamInducement to update in case it exists.
+     */
+    where: TeamInducementWhereUniqueInput
+    /**
+     * In case the TeamInducement found by the `where` argument doesn't exist, create a new TeamInducement with this data.
+     */
+    create: XOR<TeamInducementCreateInput, TeamInducementUncheckedCreateInput>
+    /**
+     * In case the TeamInducement was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TeamInducementUpdateInput, TeamInducementUncheckedUpdateInput>
+  }
+
+  /**
+   * TeamInducement delete
+   */
+  export type TeamInducementDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
+    /**
+     * Filter which TeamInducement to delete.
+     */
+    where: TeamInducementWhereUniqueInput
+  }
+
+  /**
+   * TeamInducement deleteMany
+   */
+  export type TeamInducementDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TeamInducements to delete
+     */
+    where?: TeamInducementWhereInput
+    /**
+     * Limit how many TeamInducements to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * TeamInducement without action
+   */
+  export type TeamInducementDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TeamInducement
+     */
+    select?: TeamInducementSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the TeamInducement
+     */
+    omit?: TeamInducementOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TeamInducementInclude<ExtArgs> | null
   }
 
 
@@ -46894,6 +48129,8 @@ export namespace Prisma {
     rosterBudgetOverrides: string | null
     tierStartingPsp: string | null
     rosterStartingPspOverrides: string | null
+    inducementMode: string | null
+    allowedInducements: string | null
   }
 
   export type CupMaxAggregateOutputType = {
@@ -46926,6 +48163,8 @@ export namespace Prisma {
     rosterBudgetOverrides: string | null
     tierStartingPsp: string | null
     rosterStartingPspOverrides: string | null
+    inducementMode: string | null
+    allowedInducements: string | null
   }
 
   export type CupCountAggregateOutputType = {
@@ -46958,6 +48197,8 @@ export namespace Prisma {
     rosterBudgetOverrides: number
     tierStartingPsp: number
     rosterStartingPspOverrides: number
+    inducementMode: number
+    allowedInducements: number
     _all: number
   }
 
@@ -47016,6 +48257,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: true
     tierStartingPsp?: true
     rosterStartingPspOverrides?: true
+    inducementMode?: true
+    allowedInducements?: true
   }
 
   export type CupMaxAggregateInputType = {
@@ -47048,6 +48291,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: true
     tierStartingPsp?: true
     rosterStartingPspOverrides?: true
+    inducementMode?: true
+    allowedInducements?: true
   }
 
   export type CupCountAggregateInputType = {
@@ -47080,6 +48325,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: true
     tierStartingPsp?: true
     rosterStartingPspOverrides?: true
+    inducementMode?: true
+    allowedInducements?: true
     _all?: true
   }
 
@@ -47199,6 +48446,8 @@ export namespace Prisma {
     rosterBudgetOverrides: string | null
     tierStartingPsp: string | null
     rosterStartingPspOverrides: string | null
+    inducementMode: string | null
+    allowedInducements: string | null
     _count: CupCountAggregateOutputType | null
     _avg: CupAvgAggregateOutputType | null
     _sum: CupSumAggregateOutputType | null
@@ -47250,6 +48499,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: boolean
     tierStartingPsp?: boolean
     rosterStartingPspOverrides?: boolean
+    inducementMode?: boolean
+    allowedInducements?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
     pools?: boolean | Cup$poolsArgs<ExtArgs>
@@ -47290,6 +48541,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: boolean
     tierStartingPsp?: boolean
     rosterStartingPspOverrides?: boolean
+    inducementMode?: boolean
+    allowedInducements?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cup"]>
 
@@ -47323,6 +48576,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: boolean
     tierStartingPsp?: boolean
     rosterStartingPspOverrides?: boolean
+    inducementMode?: boolean
+    allowedInducements?: boolean
     creator?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cup"]>
 
@@ -47356,9 +48611,11 @@ export namespace Prisma {
     rosterBudgetOverrides?: boolean
     tierStartingPsp?: boolean
     rosterStartingPspOverrides?: boolean
+    inducementMode?: boolean
+    allowedInducements?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "sheetEntryMode" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "sheetEntryMode" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides" | "inducementMode" | "allowedInducements", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
@@ -47420,6 +48677,8 @@ export namespace Prisma {
       rosterBudgetOverrides: string | null
       tierStartingPsp: string | null
       rosterStartingPspOverrides: string | null
+      inducementMode: string | null
+      allowedInducements: string | null
     }, ExtArgs["result"]["cup"]>
     composites: {}
   }
@@ -47879,6 +49138,8 @@ export namespace Prisma {
     readonly rosterBudgetOverrides: FieldRef<"Cup", 'String'>
     readonly tierStartingPsp: FieldRef<"Cup", 'String'>
     readonly rosterStartingPspOverrides: FieldRef<"Cup", 'String'>
+    readonly inducementMode: FieldRef<"Cup", 'String'>
+    readonly allowedInducements: FieldRef<"Cup", 'String'>
   }
     
 
@@ -125147,6 +126408,18 @@ export namespace Prisma {
   export type TeamStarPlayerScalarFieldEnum = (typeof TeamStarPlayerScalarFieldEnum)[keyof typeof TeamStarPlayerScalarFieldEnum]
 
 
+  export const TeamInducementScalarFieldEnum: {
+    id: 'id',
+    teamId: 'teamId',
+    slug: 'slug',
+    quantity: 'quantity',
+    unitCost: 'unitCost',
+    createdAt: 'createdAt'
+  };
+
+  export type TeamInducementScalarFieldEnum = (typeof TeamInducementScalarFieldEnum)[keyof typeof TeamInducementScalarFieldEnum]
+
+
   export const RosterScalarFieldEnum: {
     id: 'id',
     slug: 'slug',
@@ -125383,7 +126656,9 @@ export namespace Prisma {
     tierBudgets: 'tierBudgets',
     rosterBudgetOverrides: 'rosterBudgetOverrides',
     tierStartingPsp: 'tierStartingPsp',
-    rosterStartingPspOverrides: 'rosterStartingPspOverrides'
+    rosterStartingPspOverrides: 'rosterStartingPspOverrides',
+    inducementMode: 'inducementMode',
+    allowedInducements: 'allowedInducements'
   };
 
   export type CupScalarFieldEnum = (typeof CupScalarFieldEnum)[keyof typeof CupScalarFieldEnum]
@@ -127894,6 +129169,7 @@ export namespace Prisma {
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
     starPlayers?: TeamStarPlayerListRelationFilter
+    inducements?: TeamInducementListRelationFilter
     selections?: TeamSelectionListRelationFilter
     cupParticipants?: CupParticipantListRelationFilter
     cupInvitations?: CupInvitationListRelationFilter
@@ -127934,6 +129210,7 @@ export namespace Prisma {
     owner?: UserOrderByWithRelationInput
     players?: TeamPlayerOrderByRelationAggregateInput
     starPlayers?: TeamStarPlayerOrderByRelationAggregateInput
+    inducements?: TeamInducementOrderByRelationAggregateInput
     selections?: TeamSelectionOrderByRelationAggregateInput
     cupParticipants?: CupParticipantOrderByRelationAggregateInput
     cupInvitations?: CupInvitationOrderByRelationAggregateInput
@@ -127977,6 +129254,7 @@ export namespace Prisma {
     owner?: XOR<UserScalarRelationFilter, UserWhereInput>
     players?: TeamPlayerListRelationFilter
     starPlayers?: TeamStarPlayerListRelationFilter
+    inducements?: TeamInducementListRelationFilter
     selections?: TeamSelectionListRelationFilter
     cupParticipants?: CupParticipantListRelationFilter
     cupInvitations?: CupInvitationListRelationFilter
@@ -128402,6 +129680,69 @@ export namespace Prisma {
     starPlayerSlug?: StringWithAggregatesFilter<"TeamStarPlayer"> | string
     cost?: IntWithAggregatesFilter<"TeamStarPlayer"> | number
     hiredAt?: DateTimeWithAggregatesFilter<"TeamStarPlayer"> | Date | string
+  }
+
+  export type TeamInducementWhereInput = {
+    AND?: TeamInducementWhereInput | TeamInducementWhereInput[]
+    OR?: TeamInducementWhereInput[]
+    NOT?: TeamInducementWhereInput | TeamInducementWhereInput[]
+    id?: StringFilter<"TeamInducement"> | string
+    teamId?: StringFilter<"TeamInducement"> | string
+    slug?: StringFilter<"TeamInducement"> | string
+    quantity?: IntFilter<"TeamInducement"> | number
+    unitCost?: IntFilter<"TeamInducement"> | number
+    createdAt?: DateTimeFilter<"TeamInducement"> | Date | string
+    team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+  }
+
+  export type TeamInducementOrderByWithRelationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    slug?: SortOrder
+    quantity?: SortOrder
+    unitCost?: SortOrder
+    createdAt?: SortOrder
+    team?: TeamOrderByWithRelationInput
+  }
+
+  export type TeamInducementWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    teamId_slug?: TeamInducementTeamIdSlugCompoundUniqueInput
+    AND?: TeamInducementWhereInput | TeamInducementWhereInput[]
+    OR?: TeamInducementWhereInput[]
+    NOT?: TeamInducementWhereInput | TeamInducementWhereInput[]
+    teamId?: StringFilter<"TeamInducement"> | string
+    slug?: StringFilter<"TeamInducement"> | string
+    quantity?: IntFilter<"TeamInducement"> | number
+    unitCost?: IntFilter<"TeamInducement"> | number
+    createdAt?: DateTimeFilter<"TeamInducement"> | Date | string
+    team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
+  }, "id" | "teamId_slug">
+
+  export type TeamInducementOrderByWithAggregationInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    slug?: SortOrder
+    quantity?: SortOrder
+    unitCost?: SortOrder
+    createdAt?: SortOrder
+    _count?: TeamInducementCountOrderByAggregateInput
+    _avg?: TeamInducementAvgOrderByAggregateInput
+    _max?: TeamInducementMaxOrderByAggregateInput
+    _min?: TeamInducementMinOrderByAggregateInput
+    _sum?: TeamInducementSumOrderByAggregateInput
+  }
+
+  export type TeamInducementScalarWhereWithAggregatesInput = {
+    AND?: TeamInducementScalarWhereWithAggregatesInput | TeamInducementScalarWhereWithAggregatesInput[]
+    OR?: TeamInducementScalarWhereWithAggregatesInput[]
+    NOT?: TeamInducementScalarWhereWithAggregatesInput | TeamInducementScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TeamInducement"> | string
+    teamId?: StringWithAggregatesFilter<"TeamInducement"> | string
+    slug?: StringWithAggregatesFilter<"TeamInducement"> | string
+    quantity?: IntWithAggregatesFilter<"TeamInducement"> | number
+    unitCost?: IntWithAggregatesFilter<"TeamInducement"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"TeamInducement"> | Date | string
   }
 
   export type RosterWhereInput = {
@@ -129511,6 +130852,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
     tierStartingPsp?: StringNullableFilter<"Cup"> | string | null
     rosterStartingPspOverrides?: StringNullableFilter<"Cup"> | string | null
+    inducementMode?: StringNullableFilter<"Cup"> | string | null
+    allowedInducements?: StringNullableFilter<"Cup"> | string | null
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     participants?: CupParticipantListRelationFilter
     pools?: CupPoolListRelationFilter
@@ -129550,6 +130893,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: SortOrderInput | SortOrder
     tierStartingPsp?: SortOrderInput | SortOrder
     rosterStartingPspOverrides?: SortOrderInput | SortOrder
+    inducementMode?: SortOrderInput | SortOrder
+    allowedInducements?: SortOrderInput | SortOrder
     creator?: UserOrderByWithRelationInput
     participants?: CupParticipantOrderByRelationAggregateInput
     pools?: CupPoolOrderByRelationAggregateInput
@@ -129592,6 +130937,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
     tierStartingPsp?: StringNullableFilter<"Cup"> | string | null
     rosterStartingPspOverrides?: StringNullableFilter<"Cup"> | string | null
+    inducementMode?: StringNullableFilter<"Cup"> | string | null
+    allowedInducements?: StringNullableFilter<"Cup"> | string | null
     creator?: XOR<UserScalarRelationFilter, UserWhereInput>
     participants?: CupParticipantListRelationFilter
     pools?: CupPoolListRelationFilter
@@ -129631,6 +130978,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: SortOrderInput | SortOrder
     tierStartingPsp?: SortOrderInput | SortOrder
     rosterStartingPspOverrides?: SortOrderInput | SortOrder
+    inducementMode?: SortOrderInput | SortOrder
+    allowedInducements?: SortOrderInput | SortOrder
     _count?: CupCountOrderByAggregateInput
     _avg?: CupAvgOrderByAggregateInput
     _max?: CupMaxOrderByAggregateInput
@@ -129671,6 +131020,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     tierStartingPsp?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     rosterStartingPspOverrides?: StringNullableWithAggregatesFilter<"Cup"> | string | null
+    inducementMode?: StringNullableWithAggregatesFilter<"Cup"> | string | null
+    allowedInducements?: StringNullableWithAggregatesFilter<"Cup"> | string | null
   }
 
   export type CupParticipantWhereInput = {
@@ -137056,6 +138407,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -137095,6 +138447,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -137134,6 +138487,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -137173,6 +138527,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -137684,6 +139039,68 @@ export namespace Prisma {
     starPlayerSlug?: StringFieldUpdateOperationsInput | string
     cost?: IntFieldUpdateOperationsInput | number
     hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamInducementCreateInput = {
+    id?: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt?: Date | string
+    team: TeamCreateNestedOneWithoutInducementsInput
+  }
+
+  export type TeamInducementUncheckedCreateInput = {
+    id?: string
+    teamId: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt?: Date | string
+  }
+
+  export type TeamInducementUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    team?: TeamUpdateOneRequiredWithoutInducementsNestedInput
+  }
+
+  export type TeamInducementUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamInducementCreateManyInput = {
+    id?: string
+    teamId: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt?: Date | string
+  }
+
+  export type TeamInducementUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamInducementUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    teamId?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type RosterCreateInput = {
@@ -138936,6 +140353,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
@@ -138975,6 +140394,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
@@ -139012,6 +140433,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
@@ -139051,6 +140474,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
@@ -139089,6 +140514,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
   }
 
   export type CupUpdateManyMutationInput = {
@@ -139120,6 +140547,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CupUncheckedUpdateManyInput = {
@@ -139152,6 +140581,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CupParticipantCreateInput = {
@@ -147104,6 +148535,12 @@ export namespace Prisma {
     none?: TeamStarPlayerWhereInput
   }
 
+  export type TeamInducementListRelationFilter = {
+    every?: TeamInducementWhereInput
+    some?: TeamInducementWhereInput
+    none?: TeamInducementWhereInput
+  }
+
   export type CupParticipantListRelationFilter = {
     every?: CupParticipantWhereInput
     some?: CupParticipantWhereInput
@@ -147133,6 +148570,10 @@ export namespace Prisma {
   }
 
   export type TeamStarPlayerOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TeamInducementOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -147559,6 +149000,48 @@ export namespace Prisma {
 
   export type TeamStarPlayerSumOrderByAggregateInput = {
     cost?: SortOrder
+  }
+
+  export type TeamInducementTeamIdSlugCompoundUniqueInput = {
+    teamId: string
+    slug: string
+  }
+
+  export type TeamInducementCountOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    slug?: SortOrder
+    quantity?: SortOrder
+    unitCost?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TeamInducementAvgOrderByAggregateInput = {
+    quantity?: SortOrder
+    unitCost?: SortOrder
+  }
+
+  export type TeamInducementMaxOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    slug?: SortOrder
+    quantity?: SortOrder
+    unitCost?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TeamInducementMinOrderByAggregateInput = {
+    id?: SortOrder
+    teamId?: SortOrder
+    slug?: SortOrder
+    quantity?: SortOrder
+    unitCost?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TeamInducementSumOrderByAggregateInput = {
+    quantity?: SortOrder
+    unitCost?: SortOrder
   }
 
   export type PositionListRelationFilter = {
@@ -148396,6 +149879,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: SortOrder
     tierStartingPsp?: SortOrder
     rosterStartingPspOverrides?: SortOrder
+    inducementMode?: SortOrder
+    allowedInducements?: SortOrder
   }
 
   export type CupAvgOrderByAggregateInput = {
@@ -148440,6 +149925,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: SortOrder
     tierStartingPsp?: SortOrder
     rosterStartingPspOverrides?: SortOrder
+    inducementMode?: SortOrder
+    allowedInducements?: SortOrder
   }
 
   export type CupMinOrderByAggregateInput = {
@@ -148472,6 +149959,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: SortOrder
     tierStartingPsp?: SortOrder
     rosterStartingPspOverrides?: SortOrder
+    inducementMode?: SortOrder
+    allowedInducements?: SortOrder
   }
 
   export type CupSumOrderByAggregateInput = {
@@ -154412,6 +155901,13 @@ export namespace Prisma {
     connect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
   }
 
+  export type TeamInducementCreateNestedManyWithoutTeamInput = {
+    create?: XOR<TeamInducementCreateWithoutTeamInput, TeamInducementUncheckedCreateWithoutTeamInput> | TeamInducementCreateWithoutTeamInput[] | TeamInducementUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamInducementCreateOrConnectWithoutTeamInput | TeamInducementCreateOrConnectWithoutTeamInput[]
+    createMany?: TeamInducementCreateManyTeamInputEnvelope
+    connect?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+  }
+
   export type TeamSelectionCreateNestedManyWithoutTeamRefInput = {
     create?: XOR<TeamSelectionCreateWithoutTeamRefInput, TeamSelectionUncheckedCreateWithoutTeamRefInput> | TeamSelectionCreateWithoutTeamRefInput[] | TeamSelectionUncheckedCreateWithoutTeamRefInput[]
     connectOrCreate?: TeamSelectionCreateOrConnectWithoutTeamRefInput | TeamSelectionCreateOrConnectWithoutTeamRefInput[]
@@ -154494,6 +155990,13 @@ export namespace Prisma {
     connectOrCreate?: TeamStarPlayerCreateOrConnectWithoutTeamInput | TeamStarPlayerCreateOrConnectWithoutTeamInput[]
     createMany?: TeamStarPlayerCreateManyTeamInputEnvelope
     connect?: TeamStarPlayerWhereUniqueInput | TeamStarPlayerWhereUniqueInput[]
+  }
+
+  export type TeamInducementUncheckedCreateNestedManyWithoutTeamInput = {
+    create?: XOR<TeamInducementCreateWithoutTeamInput, TeamInducementUncheckedCreateWithoutTeamInput> | TeamInducementCreateWithoutTeamInput[] | TeamInducementUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamInducementCreateOrConnectWithoutTeamInput | TeamInducementCreateOrConnectWithoutTeamInput[]
+    createMany?: TeamInducementCreateManyTeamInputEnvelope
+    connect?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
   }
 
   export type TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput = {
@@ -154608,6 +156111,20 @@ export namespace Prisma {
     update?: TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput | TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput[]
     updateMany?: TeamStarPlayerUpdateManyWithWhereWithoutTeamInput | TeamStarPlayerUpdateManyWithWhereWithoutTeamInput[]
     deleteMany?: TeamStarPlayerScalarWhereInput | TeamStarPlayerScalarWhereInput[]
+  }
+
+  export type TeamInducementUpdateManyWithoutTeamNestedInput = {
+    create?: XOR<TeamInducementCreateWithoutTeamInput, TeamInducementUncheckedCreateWithoutTeamInput> | TeamInducementCreateWithoutTeamInput[] | TeamInducementUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamInducementCreateOrConnectWithoutTeamInput | TeamInducementCreateOrConnectWithoutTeamInput[]
+    upsert?: TeamInducementUpsertWithWhereUniqueWithoutTeamInput | TeamInducementUpsertWithWhereUniqueWithoutTeamInput[]
+    createMany?: TeamInducementCreateManyTeamInputEnvelope
+    set?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    disconnect?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    delete?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    connect?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    update?: TeamInducementUpdateWithWhereUniqueWithoutTeamInput | TeamInducementUpdateWithWhereUniqueWithoutTeamInput[]
+    updateMany?: TeamInducementUpdateManyWithWhereWithoutTeamInput | TeamInducementUpdateManyWithWhereWithoutTeamInput[]
+    deleteMany?: TeamInducementScalarWhereInput | TeamInducementScalarWhereInput[]
   }
 
   export type TeamSelectionUpdateManyWithoutTeamRefNestedInput = {
@@ -154776,6 +156293,20 @@ export namespace Prisma {
     update?: TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput | TeamStarPlayerUpdateWithWhereUniqueWithoutTeamInput[]
     updateMany?: TeamStarPlayerUpdateManyWithWhereWithoutTeamInput | TeamStarPlayerUpdateManyWithWhereWithoutTeamInput[]
     deleteMany?: TeamStarPlayerScalarWhereInput | TeamStarPlayerScalarWhereInput[]
+  }
+
+  export type TeamInducementUncheckedUpdateManyWithoutTeamNestedInput = {
+    create?: XOR<TeamInducementCreateWithoutTeamInput, TeamInducementUncheckedCreateWithoutTeamInput> | TeamInducementCreateWithoutTeamInput[] | TeamInducementUncheckedCreateWithoutTeamInput[]
+    connectOrCreate?: TeamInducementCreateOrConnectWithoutTeamInput | TeamInducementCreateOrConnectWithoutTeamInput[]
+    upsert?: TeamInducementUpsertWithWhereUniqueWithoutTeamInput | TeamInducementUpsertWithWhereUniqueWithoutTeamInput[]
+    createMany?: TeamInducementCreateManyTeamInputEnvelope
+    set?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    disconnect?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    delete?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    connect?: TeamInducementWhereUniqueInput | TeamInducementWhereUniqueInput[]
+    update?: TeamInducementUpdateWithWhereUniqueWithoutTeamInput | TeamInducementUpdateWithWhereUniqueWithoutTeamInput[]
+    updateMany?: TeamInducementUpdateManyWithWhereWithoutTeamInput | TeamInducementUpdateManyWithWhereWithoutTeamInput[]
+    deleteMany?: TeamInducementScalarWhereInput | TeamInducementScalarWhereInput[]
   }
 
   export type TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput = {
@@ -155008,6 +156539,20 @@ export namespace Prisma {
     upsert?: TeamUpsertWithoutStarPlayersInput
     connect?: TeamWhereUniqueInput
     update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutStarPlayersInput, TeamUpdateWithoutStarPlayersInput>, TeamUncheckedUpdateWithoutStarPlayersInput>
+  }
+
+  export type TeamCreateNestedOneWithoutInducementsInput = {
+    create?: XOR<TeamCreateWithoutInducementsInput, TeamUncheckedCreateWithoutInducementsInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutInducementsInput
+    connect?: TeamWhereUniqueInput
+  }
+
+  export type TeamUpdateOneRequiredWithoutInducementsNestedInput = {
+    create?: XOR<TeamCreateWithoutInducementsInput, TeamUncheckedCreateWithoutInducementsInput>
+    connectOrCreate?: TeamCreateOrConnectWithoutInducementsInput
+    upsert?: TeamUpsertWithoutInducementsInput
+    connect?: TeamWhereUniqueInput
+    update?: XOR<XOR<TeamUpdateToOneWithWhereWithoutInducementsInput, TeamUpdateWithoutInducementsInput>, TeamUncheckedUpdateWithoutInducementsInput>
   }
 
   export type PositionCreateNestedManyWithoutRosterInput = {
@@ -159771,6 +161316,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -159809,6 +161355,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -159884,6 +161431,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
@@ -159921,6 +161470,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
@@ -161170,6 +162721,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: StringNullableFilter<"Cup"> | string | null
     tierStartingPsp?: StringNullableFilter<"Cup"> | string | null
     rosterStartingPspOverrides?: StringNullableFilter<"Cup"> | string | null
+    inducementMode?: StringNullableFilter<"Cup"> | string | null
+    allowedInducements?: StringNullableFilter<"Cup"> | string | null
   }
 
   export type CompetitionDocumentUpsertWithWhereUniqueWithoutUploaderInput = {
@@ -166392,6 +167945,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -166430,6 +167984,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -166714,6 +168269,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -166752,6 +168308,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -167022,6 +168579,31 @@ export namespace Prisma {
 
   export type TeamStarPlayerCreateManyTeamInputEnvelope = {
     data: TeamStarPlayerCreateManyTeamInput | TeamStarPlayerCreateManyTeamInput[]
+  }
+
+  export type TeamInducementCreateWithoutTeamInput = {
+    id?: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt?: Date | string
+  }
+
+  export type TeamInducementUncheckedCreateWithoutTeamInput = {
+    id?: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt?: Date | string
+  }
+
+  export type TeamInducementCreateOrConnectWithoutTeamInput = {
+    where: TeamInducementWhereUniqueInput
+    create: XOR<TeamInducementCreateWithoutTeamInput, TeamInducementUncheckedCreateWithoutTeamInput>
+  }
+
+  export type TeamInducementCreateManyTeamInputEnvelope = {
+    data: TeamInducementCreateManyTeamInput | TeamInducementCreateManyTeamInput[]
   }
 
   export type TeamSelectionCreateWithoutTeamRefInput = {
@@ -167677,6 +169259,34 @@ export namespace Prisma {
     hiredAt?: DateTimeFilter<"TeamStarPlayer"> | Date | string
   }
 
+  export type TeamInducementUpsertWithWhereUniqueWithoutTeamInput = {
+    where: TeamInducementWhereUniqueInput
+    update: XOR<TeamInducementUpdateWithoutTeamInput, TeamInducementUncheckedUpdateWithoutTeamInput>
+    create: XOR<TeamInducementCreateWithoutTeamInput, TeamInducementUncheckedCreateWithoutTeamInput>
+  }
+
+  export type TeamInducementUpdateWithWhereUniqueWithoutTeamInput = {
+    where: TeamInducementWhereUniqueInput
+    data: XOR<TeamInducementUpdateWithoutTeamInput, TeamInducementUncheckedUpdateWithoutTeamInput>
+  }
+
+  export type TeamInducementUpdateManyWithWhereWithoutTeamInput = {
+    where: TeamInducementScalarWhereInput
+    data: XOR<TeamInducementUpdateManyMutationInput, TeamInducementUncheckedUpdateManyWithoutTeamInput>
+  }
+
+  export type TeamInducementScalarWhereInput = {
+    AND?: TeamInducementScalarWhereInput | TeamInducementScalarWhereInput[]
+    OR?: TeamInducementScalarWhereInput[]
+    NOT?: TeamInducementScalarWhereInput | TeamInducementScalarWhereInput[]
+    id?: StringFilter<"TeamInducement"> | string
+    teamId?: StringFilter<"TeamInducement"> | string
+    slug?: StringFilter<"TeamInducement"> | string
+    quantity?: IntFilter<"TeamInducement"> | number
+    unitCost?: IntFilter<"TeamInducement"> | number
+    createdAt?: DateTimeFilter<"TeamInducement"> | Date | string
+  }
+
   export type TeamSelectionUpsertWithWhereUniqueWithoutTeamRefInput = {
     where: TeamSelectionWhereUniqueInput
     update: XOR<TeamSelectionUpdateWithoutTeamRefInput, TeamSelectionUncheckedUpdateWithoutTeamRefInput>
@@ -167927,6 +169537,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     owner: UserCreateNestedOneWithoutTeamsInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -167965,6 +169576,7 @@ export namespace Prisma {
     shareToken?: string | null
     deletedAt?: Date | string | null
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -168054,6 +169666,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -168092,6 +169705,7 @@ export namespace Prisma {
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -168331,6 +169945,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -168369,6 +169984,7 @@ export namespace Prisma {
     shareToken?: string | null
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -168423,6 +170039,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -168461,6 +170078,179 @@ export namespace Prisma {
     shareToken?: NullableStringFieldUpdateOperationsInput | string | null
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUncheckedUpdateManyWithoutTeamBNestedInput
+    cupPairingsHome?: CupPairingUncheckedUpdateManyWithoutHomeTeamNestedInput
+    cupPairingsAway?: CupPairingUncheckedUpdateManyWithoutAwayTeamNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateManyWithoutTeamNestedInput
+    leagueParticipations?: LeagueParticipantUncheckedUpdateManyWithoutTeamNestedInput
+    leagueInvitations?: LeagueInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
+  }
+
+  export type TeamCreateWithoutInducementsInput = {
+    id?: string
+    name: string
+    roster: string
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    regionalLeague?: string | null
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    startingPspPool?: number
+    logoUrl?: string | null
+    description?: string | null
+    isPublic?: boolean
+    shareToken?: string | null
+    deletedAt?: Date | string | null
+    owner: UserCreateNestedOneWithoutTeamsInput
+    players?: TeamPlayerCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
+    cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
+    localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchCreateNestedManyWithoutTeamBInput
+    cupPairingsHome?: CupPairingCreateNestedManyWithoutHomeTeamInput
+    cupPairingsAway?: CupPairingCreateNestedManyWithoutAwayTeamInput
+    matchQueue?: MatchQueueCreateNestedManyWithoutTeamInput
+    leagueParticipations?: LeagueParticipantCreateNestedManyWithoutTeamInput
+    leagueInvitations?: LeagueInvitationCreateNestedManyWithoutInviteeTeamInput
+  }
+
+  export type TeamUncheckedCreateWithoutInducementsInput = {
+    id?: string
+    ownerId: string
+    name: string
+    roster: string
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    regionalLeague?: string | null
+    createdAt?: Date | string
+    treasury?: number
+    rerolls?: number
+    cheerleaders?: number
+    assistants?: number
+    apothecary?: boolean
+    dedicatedFans?: number
+    teamValue?: number
+    currentValue?: number
+    initialBudget?: number
+    startingPspPool?: number
+    logoUrl?: string | null
+    description?: string | null
+    isPublic?: boolean
+    shareToken?: string | null
+    deletedAt?: Date | string | null
+    players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
+    starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
+    cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
+    cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
+    localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
+    localMatchesAsTeamB?: LocalMatchUncheckedCreateNestedManyWithoutTeamBInput
+    cupPairingsHome?: CupPairingUncheckedCreateNestedManyWithoutHomeTeamInput
+    cupPairingsAway?: CupPairingUncheckedCreateNestedManyWithoutAwayTeamInput
+    matchQueue?: MatchQueueUncheckedCreateNestedManyWithoutTeamInput
+    leagueParticipations?: LeagueParticipantUncheckedCreateNestedManyWithoutTeamInput
+    leagueInvitations?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
+  }
+
+  export type TeamCreateOrConnectWithoutInducementsInput = {
+    where: TeamWhereUniqueInput
+    create: XOR<TeamCreateWithoutInducementsInput, TeamUncheckedCreateWithoutInducementsInput>
+  }
+
+  export type TeamUpsertWithoutInducementsInput = {
+    update: XOR<TeamUpdateWithoutInducementsInput, TeamUncheckedUpdateWithoutInducementsInput>
+    create: XOR<TeamCreateWithoutInducementsInput, TeamUncheckedCreateWithoutInducementsInput>
+    where?: TeamWhereInput
+  }
+
+  export type TeamUpdateToOneWithWhereWithoutInducementsInput = {
+    where?: TeamWhereInput
+    data: XOR<TeamUpdateWithoutInducementsInput, TeamUncheckedUpdateWithoutInducementsInput>
+  }
+
+  export type TeamUpdateWithoutInducementsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
+    players?: TeamPlayerUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
+    cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
+    cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
+    localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
+    localMatchesAsTeamB?: LocalMatchUpdateManyWithoutTeamBNestedInput
+    cupPairingsHome?: CupPairingUpdateManyWithoutHomeTeamNestedInput
+    cupPairingsAway?: CupPairingUpdateManyWithoutAwayTeamNestedInput
+    matchQueue?: MatchQueueUpdateManyWithoutTeamNestedInput
+    leagueParticipations?: LeagueParticipantUpdateManyWithoutTeamNestedInput
+    leagueInvitations?: LeagueInvitationUpdateManyWithoutInviteeTeamNestedInput
+  }
+
+  export type TeamUncheckedUpdateWithoutInducementsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    ownerId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    roster?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    regionalLeague?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    treasury?: IntFieldUpdateOperationsInput | number
+    rerolls?: IntFieldUpdateOperationsInput | number
+    cheerleaders?: IntFieldUpdateOperationsInput | number
+    assistants?: IntFieldUpdateOperationsInput | number
+    apothecary?: BoolFieldUpdateOperationsInput | boolean
+    dedicatedFans?: IntFieldUpdateOperationsInput | number
+    teamValue?: IntFieldUpdateOperationsInput | number
+    currentValue?: IntFieldUpdateOperationsInput | number
+    initialBudget?: IntFieldUpdateOperationsInput | number
+    startingPspPool?: IntFieldUpdateOperationsInput | number
+    logoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    shareToken?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -170391,6 +172181,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
@@ -170429,6 +172221,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
@@ -170468,6 +172262,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -170506,6 +172301,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -170589,6 +172385,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
@@ -170627,6 +172425,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
@@ -170672,6 +172472,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -170710,6 +172511,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -170783,6 +172585,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
@@ -170821,6 +172625,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
@@ -170900,6 +172706,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
@@ -170938,6 +172746,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
@@ -170990,6 +172800,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
@@ -171028,6 +172840,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
@@ -171115,6 +172929,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
@@ -171153,6 +172969,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
@@ -171236,6 +173054,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -171274,6 +173093,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -171317,6 +173137,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -171355,6 +173176,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -171614,6 +173436,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -171652,6 +173475,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -171701,6 +173525,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -171739,6 +173564,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -172108,6 +173934,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -172146,6 +173973,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -172359,6 +174187,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -172397,6 +174226,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -172588,6 +174418,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -172626,6 +174457,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -172669,6 +174501,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -172707,6 +174540,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -172752,6 +174586,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
@@ -172790,6 +174626,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
@@ -173079,6 +174917,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -173117,6 +174956,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -173166,6 +175006,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -173204,6 +175045,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -173255,6 +175097,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
@@ -173293,6 +175137,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
@@ -175199,6 +177045,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -175237,6 +177084,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -175725,6 +177573,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -175763,6 +177612,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -175803,6 +177653,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
@@ -175841,6 +177693,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
@@ -176186,6 +178040,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchCreateNestedManyWithoutTeamAInput
@@ -176224,6 +178079,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     localMatchesAsTeamA?: LocalMatchUncheckedCreateNestedManyWithoutTeamAInput
@@ -176280,6 +178136,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
@@ -176318,6 +178176,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
@@ -176681,6 +178541,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUpdateManyWithoutTeamANestedInput
@@ -176719,6 +178580,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     localMatchesAsTeamA?: LocalMatchUncheckedUpdateManyWithoutTeamANestedInput
@@ -176814,6 +178676,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     creator: UserCreateNestedOneWithoutCreatedCupsInput
     participants?: CupParticipantCreateNestedManyWithoutCupInput
     pools?: CupPoolCreateNestedManyWithoutCupInput
@@ -176852,6 +178716,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
     participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
     pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
@@ -177118,6 +178984,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
@@ -177156,6 +179024,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
@@ -177398,6 +179268,7 @@ export namespace Prisma {
     owner: UserCreateNestedOneWithoutTeamsInput
     players?: TeamPlayerCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationCreateNestedManyWithoutInviteeTeamInput
@@ -177436,6 +179307,7 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     players?: TeamPlayerUncheckedCreateNestedManyWithoutTeamInput
     starPlayers?: TeamStarPlayerUncheckedCreateNestedManyWithoutTeamInput
+    inducements?: TeamInducementUncheckedCreateNestedManyWithoutTeamInput
     selections?: TeamSelectionUncheckedCreateNestedManyWithoutTeamRefInput
     cupParticipants?: CupParticipantUncheckedCreateNestedManyWithoutTeamInput
     cupInvitations?: CupInvitationUncheckedCreateNestedManyWithoutInviteeTeamInput
@@ -177664,6 +179536,7 @@ export namespace Prisma {
     owner?: UserUpdateOneRequiredWithoutTeamsNestedInput
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -177702,6 +179575,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -189403,6 +191277,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: string | null
     tierStartingPsp?: string | null
     rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
   }
 
   export type CompetitionDocumentCreateManyUploaderInput = {
@@ -189961,6 +191837,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUpdateManyWithoutInviteeTeamNestedInput
@@ -189999,6 +191876,7 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     players?: TeamPlayerUncheckedUpdateManyWithoutTeamNestedInput
     starPlayers?: TeamStarPlayerUncheckedUpdateManyWithoutTeamNestedInput
+    inducements?: TeamInducementUncheckedUpdateManyWithoutTeamNestedInput
     selections?: TeamSelectionUncheckedUpdateManyWithoutTeamRefNestedInput
     cupParticipants?: CupParticipantUncheckedUpdateManyWithoutTeamNestedInput
     cupInvitations?: CupInvitationUncheckedUpdateManyWithoutInviteeTeamNestedInput
@@ -190090,6 +191968,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUpdateManyWithoutCupNestedInput
     pools?: CupPoolUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
@@ -190127,6 +192007,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
     participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
     pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
@@ -190164,6 +192046,8 @@ export namespace Prisma {
     rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
     tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
     rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CompetitionDocumentUpdateWithoutUploaderInput = {
@@ -191562,6 +193446,14 @@ export namespace Prisma {
     hiredAt?: Date | string
   }
 
+  export type TeamInducementCreateManyTeamInput = {
+    id?: string
+    slug: string
+    quantity: number
+    unitCost: number
+    createdAt?: Date | string
+  }
+
   export type TeamSelectionCreateManyTeamRefInput = {
     id?: string
     matchId: string
@@ -191846,6 +193738,30 @@ export namespace Prisma {
     starPlayerSlug?: StringFieldUpdateOperationsInput | string
     cost?: IntFieldUpdateOperationsInput | number
     hiredAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamInducementUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamInducementUncheckedUpdateWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TeamInducementUncheckedUpdateManyWithoutTeamInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    quantity?: IntFieldUpdateOperationsInput | number
+    unitCost?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type TeamSelectionUpdateWithoutTeamRefInput = {

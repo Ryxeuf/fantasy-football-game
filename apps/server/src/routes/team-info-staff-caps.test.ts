@@ -285,6 +285,8 @@ describe("handlePutTeamInfo — budget et tresorerie du brouillon", () => {
       }),
       [{ position: "orc_trois_quart_orque" }],
       [],
+      // Coups de pouce achetés à la création : aucun sur ce brouillon.
+      [],
     );
   });
 

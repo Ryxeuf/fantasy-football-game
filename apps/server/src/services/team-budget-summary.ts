@@ -45,6 +45,11 @@ export interface TeamBudgetSummary {
   readonly advancementsCost: number;
   /** Coût des Star Players recrutés. */
   readonly starPlayersCost: number;
+  /**
+   * Coups de pouce achetés à la création (prix figés). Compte au budget de
+   * construction mais PAS dans la VE/VEA.
+   */
+  readonly inducementsCost: number;
   /** Cheerleaders + assistants + apothicaire. */
   readonly staffCost: number;
   /** Relances d'équipe. */
@@ -55,8 +60,8 @@ export interface TeamBudgetSummary {
    */
   readonly dedicatedFansCost: number;
   /**
-   * OR réellement engagé : embauches + Star Players + staff + relances +
-   * fans dévoués. Exclut les surcoûts d'avancement (`advancementsCost`),
+   * OR réellement engagé : embauches + Star Players + coups de pouce +
+   * staff + relances + fans dévoués. Exclut les surcoûts d'avancement (`advancementsCost`),
    * qui ne se paient pas en or.
    */
   readonly totalSpent: number;
@@ -66,6 +71,13 @@ export interface TeamBudgetSummary {
    * une équipe a été éditée en admin au-delà de son budget.
    */
   readonly remaining: number;
+  /**
+   * Part du reliquat VERSABLE en trésorerie : `max(0, remaining)`, et 0 sous
+   * règlement de tournoi — « l'or non dépensé à la création est perdu ».
+   * C'est elle que créditent la création et la resynchronisation d'un
+   * brouillon, jamais `remaining` directement.
+   */
+  readonly treasuryCredit: number;
   /** Trésorerie réelle de l'équipe (po) — la monnaie d'après-création. */
   readonly treasury: number;
   /** VE — Valeur d'Équipe. */
@@ -89,6 +101,12 @@ interface BudgetTeamRow {
   readonly dedicatedFans: number;
   readonly initialBudget: number;
   readonly treasury: number;
+  /**
+   * Règlement de tournoi de l'équipe : sous règlement, l'or non dépensé à la
+   * création est PERDU (cf. `treasuryCredit`). Optionnel : absent des
+   * lectures qui ne le sélectionnent pas.
+   */
+  readonly tournamentRuleset?: string | null;
 }
 
 interface BudgetPlayerRow {
@@ -101,6 +119,22 @@ interface BudgetPlayerRow {
 
 interface BudgetStarPlayerRow {
   readonly cost?: number | null;
+}
+
+/** Coup de pouce acheté à la création (`TeamInducement`), prix figé. */
+interface BudgetInducementRow {
+  readonly quantity: number;
+  readonly unitCost: number;
+}
+
+/** Coût total des coups de pouce achetés à la création (po). */
+export function inducementsPurchaseCost(
+  inducements: readonly BudgetInducementRow[],
+): number {
+  return inducements.reduce(
+    (sum, row) => sum + Math.max(0, row.quantity) * Math.max(0, row.unitCost),
+    0,
+  );
 }
 
 /**
@@ -124,6 +158,9 @@ export async function buildTeamBudgetSummary(
   team: BudgetTeamRow,
   players: readonly BudgetPlayerRow[],
   starPlayers: readonly BudgetStarPlayerRow[] = [],
+  // Coups de pouce achetés À LA CRÉATION (coupe en mode `build`, règlement
+  // de tournoi) : payés sur le budget d'or, jamais dans la VE.
+  inducements: readonly BudgetInducementRow[] = [],
 ): Promise<TeamBudgetSummary> {
   const ruleset = (team.ruleset as Ruleset) ?? DEFAULT_RULESET;
   const format: GameFormat = isGameFormat(team.format) ? team.format : 'bb11';
@@ -148,9 +185,11 @@ export async function buildTeamBudgetSummary(
   // paient en PSP (pool de construction, SPP de match) — les compter ici
   // affichait un « Budget restant » négatif sur une équipe construite au
   // budget exact, et `syncDraftTreasury` ramenait sa trésorerie à 0.
+  const inducementsCost = inducementsPurchaseCost(inducements);
   const totalSpent =
     breakdown.playersHireCost +
     starPlayersCost +
+    inducementsCost +
     breakdown.staffCost +
     breakdown.rerollsCost +
     dedicatedFansCost;
@@ -161,11 +200,15 @@ export async function buildTeamBudgetSummary(
     playersHireCost: breakdown.playersHireCost,
     advancementsCost: breakdown.advancementsCost,
     starPlayersCost,
+    inducementsCost,
     staffCost: breakdown.staffCost,
     rerollsCost: breakdown.rerollsCost,
     dedicatedFansCost,
     totalSpent,
     remaining: initialBudget - totalSpent,
+    treasuryCredit: team.tournamentRuleset
+      ? 0
+      : Math.max(0, initialBudget - totalSpent),
     treasury: team.treasury,
     teamValue: breakdown.teamValue,
     currentValue: breakdown.currentValue,
@@ -224,7 +267,7 @@ export async function creditInitialTreasury(
 ): Promise<number> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
-    include: { players: true, starPlayers: true },
+    include: { players: true, starPlayers: true, inducements: true },
   });
   if (!team || team.treasury !== 0) return team?.treasury ?? 0;
 
@@ -233,8 +276,9 @@ export async function creditInitialTreasury(
     team,
     team.players,
     team.starPlayers,
+    team.inducements ?? [],
   );
-  const treasury = Math.max(0, summary.remaining);
+  const treasury = summary.treasuryCredit;
   if (treasury === 0) return 0;
 
   const auditDb = prisma as unknown as TeamAuditPrismaLike;
@@ -280,7 +324,7 @@ export async function syncDraftTreasury(
 ): Promise<number> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
-    include: { players: true, starPlayers: true },
+    include: { players: true, starPlayers: true, inducements: true },
   });
   if (!team) return 0;
 
@@ -289,8 +333,9 @@ export async function syncDraftTreasury(
     team,
     team.players,
     team.starPlayers,
+    team.inducements ?? [],
   );
-  const treasury = Math.max(0, summary.remaining);
+  const treasury = summary.treasuryCredit;
   if (treasury === team.treasury) return treasury;
 
   const auditDb = prisma as unknown as TeamAuditPrismaLike;
@@ -318,6 +363,8 @@ interface PrismaLikeForTreasury {
       | (BudgetTeamRow & {
           players: BudgetPlayerRow[];
           starPlayers: BudgetStarPlayerRow[];
+          /** Absent d'un mock antérieur aux coups de pouce de création. */
+          inducements?: BudgetInducementRow[];
         })
       | null
     >;

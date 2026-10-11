@@ -105,6 +105,11 @@ export interface SheetStarPlayer {
   skills?: string;
   slug?: string;
   cost?: number;
+  /**
+   * Coupe — Star Player du roster D'INSCRIPTION (acheté à la création de
+   * l'équipe). Optionnel : absent des réponses antérieures.
+   */
+  registered?: boolean;
 }
 
 /** Règle qui fait naître un joueur relevé pendant le match. */
@@ -251,6 +256,49 @@ export interface SheetTeam {
   raiseDead?: RaiseDeadInfo;
   /** Trois-quart relevé pendant ce match, s'il y en a un. */
   raisedDead?: SheetRaisedDead | null;
+  /**
+   * Coupe en mode `build` : coups de pouce achetés à la création, figés au
+   * roster d'inscription (rappel, pas de saisie). Optionnel : rétro-compat.
+   */
+  registeredInducements?: RegisteredInducement[];
+}
+
+/** Coup de pouce acheté à la création d'une équipe de coupe. */
+export interface RegisteredInducement {
+  slug: string;
+  name: string;
+  quantity: number;
+  unitCost: number;
+}
+
+/**
+ * Rappel en LECTURE SEULE des coups de pouce achetés à la création (coupe en
+ * mode `build`) : ils valent pour la rencontre, sans rien à saisir. Rendu
+ * dans l'en-tête de l'équipe, donc visible dans les deux modes de saisie.
+ */
+export function RegisteredInducementsStrip({
+  team,
+  side,
+  align = "left",
+}: {
+  team: SheetTeam | null;
+  side: "home" | "away";
+  align?: "left" | "right";
+}) {
+  const list = team?.registeredInducements;
+  if (!list) return null;
+  return (
+    <p
+      data-testid={`registered-inducements-${side}`}
+      className={`mt-1 text-[11px] text-slate-500 ${align === "right" ? "text-right" : ""}`}
+      title="Coups de pouce achetés à la création de l'équipe : ils valent pour chaque rencontre de la coupe."
+    >
+      🎁{" "}
+      {list.length === 0
+        ? "Aucun coup de pouce"
+        : list.map((i) => `${i.name} ×${i.quantity}`).join(" · ")}
+    </p>
+  );
 }
 
 // ───────────────────────────── DONNÉES DE RÉFÉRENCE ──────────────────────────
@@ -477,7 +525,7 @@ export function PlayerSelect({
       ))}
       {starPlayers.map((sp) => (
         <option key={sp.id} value={sp.id}>
-          {`⭐ ${sp.name} — ${sp.positionName}`}
+          {`⭐ ${sp.name} — ${sp.positionName}${sp.registered ? " (inscrit)" : ""}`}
         </option>
       ))}
       {raisedDead.map((r) => (
@@ -892,6 +940,7 @@ function InducementEditor({
   catalogue,
   starPlayers,
   budget,
+  cupBudget = false,
 }: {
   list: Inducement[];
   onChange: (l: Inducement[]) => void;
@@ -900,6 +949,11 @@ function InducementEditor({
   catalogue: InducementOption[];
   starPlayers: StarPlayerOption[];
   budget: TeamBudget;
+  /**
+   * Coupe : la trésorerie n'est jamais débitée, elle n'entre donc pas dans
+   * le budget — seule la petite monnaie (écart de VEA) se dépense.
+   */
+  cupBudget?: boolean;
 }) {
   const [pick, setPick] = useState("");
 
@@ -962,9 +1016,18 @@ function InducementEditor({
           />
         </div>
         <div className="flex justify-between text-[11px] text-slate-500">
-          <span>
-            Petite Monnaie {formatGold(budget.pettyCash)} + cagnotte{" "}
-            {formatGold(budget.treasury)}
+          <span data-testid={`${testId}-budget-detail`}>
+            {cupBudget ? (
+              <>
+                Petite Monnaie {formatGold(budget.pettyCash)} (écart de VEA,
+                pas de trésorerie en coupe)
+              </>
+            ) : (
+              <>
+                Petite Monnaie {formatGold(budget.pettyCash)} + cagnotte{" "}
+                {formatGold(budget.treasury)}
+              </>
+            )}
           </span>
           <span
             className={overBudget ? "font-semibold text-red-600" : ""}
@@ -1093,6 +1156,8 @@ export function PreMatchPanel({
   onSave,
   reference,
   forfeitOnly = false,
+  cupBudget = false,
+  inducementsLocked = false,
 }: {
   initial: PreMatchValues;
   homeName: string;
@@ -1109,6 +1174,16 @@ export function PreMatchPanel({
    * popularité, coups de pouce et prières sont retirés, pas redessinés.
    */
   forfeitOnly?: boolean;
+  /**
+   * Feuille de COUPE : le budget de coups de pouce est la seule petite
+   * monnaie, sans trésorerie ni dépense adverse ajoutée à l'outsider.
+   */
+  cupBudget?: boolean;
+  /**
+   * Coupe en `build` (coups de pouce achetés à la création) ou `none` :
+   * l'avant-match ne vend rien, l'éditeur de coups de pouce disparaît.
+   */
+  inducementsLocked?: boolean;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -1152,12 +1227,13 @@ export function PreMatchPanel({
   // adverse (règle officielle : la CTV de la plus forte inclut ses achats).
   const spentH = sumInducements(indH);
   const spentA = sumInducements(indA);
+  // En coupe, ni trésorerie ni dépense adverse : le budget servi fait foi.
   const effectiveMaxHome =
     reference.budget.home.maxBudget +
-    (reference.budget.home.pettyCash > 0 ? spentA : 0);
+    (!cupBudget && reference.budget.home.pettyCash > 0 ? spentA : 0);
   const effectiveMaxAway =
     reference.budget.away.maxBudget +
-    (reference.budget.away.pettyCash > 0 ? spentH : 0);
+    (!cupBudget && reference.budget.away.pettyCash > 0 ? spentH : 0);
   const overHome = spentH > effectiveMaxHome;
   const overAway = spentA > effectiveMaxAway;
   const overBudget = overHome || overAway;
@@ -1399,15 +1475,18 @@ export function PreMatchPanel({
                     pas temporisé)
                   </span>
                 </label>
-                <InducementEditor
-                  list={c.ind}
-                  onChange={c.setInd}
-                  disabled={disabled}
-                  testId={`inducements-${c.side}`}
-                  catalogue={c.catalogue}
-                  starPlayers={c.stars}
-                  budget={c.budget}
-                />
+                {!inducementsLocked && (
+                  <InducementEditor
+                    list={c.ind}
+                    onChange={c.setInd}
+                    disabled={disabled}
+                    testId={`inducements-${c.side}`}
+                    catalogue={c.catalogue}
+                    starPlayers={c.stars}
+                    budget={c.budget}
+                    cupBudget={cupBudget}
+                  />
+                )}
                 <PrayersEditor
                   list={c.prayers}
                   onChange={c.setPrayers}

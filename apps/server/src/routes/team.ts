@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authUser } from "../middleware/authUser";
-import { validate } from "../middleware/validate";
+import { validate, validateQuery } from "../middleware/validate";
 import {
   createFromRosterSchema,
   buildTeamSchema,
@@ -17,7 +17,9 @@ import {
   updateInitialBudgetSchema,
   renameTeamSchema,
   updateTeamDescriptionSchema,
+  buildInducementsQuerySchema,
 } from "../schemas/team.schemas";
+import { handleGetBuildInducements } from "./team-build-inducements-handler";
 import { chooseTeamSchema } from "../schemas/match.schemas";
 import { handleSetTeamShare, shareTeamSchema } from "./team-share-handlers";
 
@@ -63,6 +65,14 @@ router.get("/name-generator", handleGenerateTeamNameImpl);
 router.get("/available", authUser, handleListAvailableTeamsImpl);
 router.get("/mine", authUser, handleListMyTeamsImpl);
 router.get("/rosters/:id", authUser, handleGetRosterImpl);
+// Catalogue des coups de pouce achetables au build (coupe en mode `build`
+// ou règlement de tournoi). Monté AVANT `/:id`, qui l'avalerait.
+router.get(
+  "/build-inducements",
+  authUser,
+  validateQuery(buildInducementsQuerySchema),
+  handleGetBuildInducements,
+);
 
 // Endpoint pour choisir une equipe pour un match (S25.5x — ApiResponse<T>)
 // S27.8.26 — Handlers de selection / detail (choose / get-detail)

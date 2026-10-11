@@ -201,3 +201,53 @@ describe("valeurs par défaut", () => {
     expect(parsed.definition.regionalLeagueChoice).toBeUndefined();
   });
 });
+
+describe("remises et plafond Arme Secrète des coups de pouce", () => {
+  it("conserve prix réduit et plafond à l'aller-retour", () => {
+    const parsed = parseDefinition(serializeDefinition(NAF_WORLD_CUP_2027));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    const bribe = parsed.definition.allowedInducements.find(
+      (r) => r.slug === "bribe",
+    );
+    expect(bribe).toMatchObject({
+      discountCost: 50_000,
+      maxWithSecretWeaponStar: 2,
+    });
+  });
+
+  it("refuse un prix réduit supérieur au prix du règlement", () => {
+    const parsed = parseDefinition(
+      validInput({
+        allowedInducements: [
+          { slug: "bribe", cost: 100_000, discountCost: 150_000 },
+        ],
+      }),
+    );
+    expect(parsed.ok).toBe(false);
+    if (parsed.ok) return;
+    expect(parsed.issues[0].path).toBe("allowedInducements.0.discountCost");
+    expect(parsed.issues[0].message).toMatch(/prix réduit/i);
+  });
+
+  it("refuse un prix réduit ou un plafond négatif", () => {
+    for (const rule of [
+      { slug: "bribe", cost: 100_000, discountCost: -1 },
+      { slug: "bribe", cost: 100_000, maxWithSecretWeaponStar: -1 },
+    ]) {
+      const parsed = parseDefinition(validInput({ allowedInducements: [rule] }));
+      expect(parsed.ok).toBe(false);
+    }
+  });
+
+  it("accepte un prix réduit égal au prix (remise nulle)", () => {
+    const parsed = parseDefinition(
+      validInput({
+        allowedInducements: [
+          { slug: "bribe", cost: 100_000, discountCost: 100_000 },
+        ],
+      }),
+    );
+    expect(parsed.ok).toBe(true);
+  });
+});

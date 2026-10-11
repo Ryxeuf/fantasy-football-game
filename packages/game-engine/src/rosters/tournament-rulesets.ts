@@ -69,6 +69,19 @@ export interface TournamentInducementRule {
   readonly cost: number;
   /** Quantité max (undefined = limite du catalogue). */
   readonly max?: number;
+  /**
+   * Prix réduit imposé par le règlement, en po. Il s'applique aux équipes
+   * que le CATALOGUE officiel désigne pour la remise de ce coup de pouce
+   * (`discountRule` / `discountRoster`, cf. `qualifiesForInducementDiscount`)
+   * : le règlement fixe le montant, pas les bénéficiaires. Absent = le prix
+   * du règlement vaut pour toutes les équipes.
+   */
+  readonly discountCost?: number;
+  /**
+   * Quantité max quand l'équipe recrute un Star Player portant Arme Secrète
+   * (`secret-weapon`). Absent = aucun plafond conditionnel.
+   */
+  readonly maxWithSecretWeaponStar?: number;
   /** Précision FR (coût réduit conditionnel, restriction de roster…). */
   readonly noteFr?: string;
 }
@@ -261,6 +274,8 @@ export const NAF_WORLD_CUP_2027: TournamentRulesetDefinition = {
     {
       slug: "bribe",
       cost: 100_000,
+      discountCost: 50_000,
+      maxWithSecretWeaponStar: 2,
       noteFr:
         "50 000 po pour les équipes Corruption et Pots-de-vin. Recruter un " +
         "Star Player à Arme Secrète abaisse la limite de Pots-de-vin à 2.",
@@ -273,6 +288,7 @@ export const NAF_WORLD_CUP_2027: TournamentRulesetDefinition = {
     {
       slug: "halfling_master_chef",
       cost: 300_000,
+      discountCost: 100_000,
       noteFr: "100 000 po pour les équipes Halflings.",
     },
   ],

@@ -2577,6 +2577,72 @@ describe("Lot G — league-match-sheet", () => {
       expect(kegs?.cost).toBe(50_000);
       expect(kegs?.maxQuantity).toBe(2);
     });
+
+    it("sous règlement, applique ses remises aux équipes que le catalogue désigne", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: {
+          season: {
+            league: {
+              id: "L1",
+              creatorId: COMMISH,
+              allowedInducements: null,
+              tournamentRuleset: "naf_world_cup_2027",
+            },
+          },
+        },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      const elevenPlayers = (prefix: string) =>
+        Array.from({ length: 11 }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `${prefix}${i + 1}`,
+          position: "lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Gobbos",
+          roster: "goblin",
+          currentValue: 1_000_000,
+          treasury: 0,
+          owner: { coachName: "Snik" },
+          players: elevenPlayers("h"),
+        },
+        {
+          id: "team-away",
+          name: "Petits Pieds",
+          roster: "halfling",
+          currentValue: 1_000_000,
+          treasury: 0,
+          owner: { coachName: "Bilbo" },
+          players: elevenPlayers("a"),
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: COMMISH });
+
+      const find = (side: "home" | "away", slug: string) =>
+        out.reference.inducements[side].find((i) => i.slug === slug);
+      // Goblin = Chantage et Corruption : 50 000 po et 6 au plus.
+      expect(find("home", "bribe")).toMatchObject({
+        cost: 50_000,
+        maxQuantity: 6,
+      });
+      // Halflings : Chef Cuistot à 100 000 po ; les Gobelins le paient 300 000.
+      expect(find("away", "halfling_master_chef")?.cost).toBe(100_000);
+      expect(find("home", "halfling_master_chef")?.cost).toBe(300_000);
+      expect(find("away", "bribe")?.cost).toBe(100_000);
+    });
   });
 
   // Lot H — liste des matchs a valider pour le commissaire.
@@ -4255,6 +4321,69 @@ describe("FR17 — filtrage des coups de pouce par allowlist ligue", () => {
         "infamous_coaching_staff",
       ]),
     );
+  });
+});
+
+describe("budget de coups de pouce d'une COUPE : jamais la trésorerie", () => {
+  function team(currentValue: number, treasury: number) {
+    return {
+      teamId: `t-${currentValue}`,
+      name: "Équipe",
+      roster: "human",
+      raceName: "Humains",
+      coachName: "Coach",
+      teamValue: currentValue,
+      currentValue,
+      treasury,
+      players: [],
+    };
+  }
+  const NO_DEAD = new Set<string>();
+
+  it("favori à 300 000 po de trésorerie figée : budget nul", async () => {
+    const ref = await buildMatchSheetReference(
+      { home: team(1_100_000, 300_000), away: team(1_020_000, 0) },
+      null,
+      { home: 0, away: 0 },
+      null,
+      NO_DEAD,
+      { kind: "cup" },
+    );
+    expect(ref.budget.home).toMatchObject({
+      treasury: 0,
+      pettyCash: 0,
+      maxBudget: 0,
+    });
+  });
+
+  it("outsider : l'écart de VEA, sans complément de trésorerie ni dépense adverse", async () => {
+    const ref = await buildMatchSheetReference(
+      { home: team(1_100_000, 0), away: team(1_020_000, 200_000) },
+      null,
+      { home: 60_000, away: 0 },
+      null,
+      NO_DEAD,
+      { kind: "cup" },
+    );
+    expect(ref.budget.away).toMatchObject({
+      treasury: 0,
+      pettyCash: 80_000,
+      maxBudget: 80_000,
+    });
+  });
+
+  it("ligue : comportement inchangé (bonus d'outsider et trésorerie)", async () => {
+    const ref = await buildMatchSheetReference(
+      { home: team(1_100_000, 300_000), away: team(1_020_000, 200_000) },
+      null,
+      { home: 60_000, away: 0 },
+    );
+    expect(ref.budget.home).toMatchObject({ treasury: 300_000, maxBudget: 300_000 });
+    // 80k d'écart + 60k dépensés par le favori + min(50k, 200k).
+    expect(ref.budget.away).toMatchObject({
+      pettyCash: 140_000,
+      maxBudget: 190_000,
+    });
   });
 });
 

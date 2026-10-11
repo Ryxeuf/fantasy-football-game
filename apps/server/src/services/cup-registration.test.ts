@@ -9,8 +9,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('../prisma', () => ({
   prisma: {
     cup: { findUnique: vi.fn() },
-    team: { findFirst: vi.fn() },
+    team: { findFirst: vi.fn(), findUnique: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
+    teamInducement: { findMany: vi.fn() },
+    teamStarPlayer: { findMany: vi.fn() },
     roster: { findFirst: vi.fn() },
     cupParticipant: { create: vi.fn() },
   },
@@ -24,9 +26,19 @@ vi.mock('./cup-roster-snapshot', () => ({
   captureRosterSnapshot: vi.fn(),
 }));
 
+vi.mock('./team-budget-summary', () => ({
+  buildTeamBudgetSummary: vi.fn(),
+}));
+
+vi.mock('./inducement-options', () => ({
+  buildInducementCatalogue: vi.fn(),
+}));
+
 import { prisma } from '../prisma';
 import { getTeamEngagement } from './team-competition-status';
 import { captureRosterSnapshot } from './cup-roster-snapshot';
+import { buildTeamBudgetSummary } from './team-budget-summary';
+import { buildInducementCatalogue } from './inducement-options';
 import {
   registerTeamToCup,
   CupRegistrationError,
@@ -35,6 +47,13 @@ import {
 const cupFind = prisma.cup.findUnique as unknown as ReturnType<typeof vi.fn>;
 const teamFind = prisma.team.findFirst as unknown as ReturnType<typeof vi.fn>;
 const rosterFind = prisma.roster.findFirst as unknown as ReturnType<typeof vi.fn>;
+const teamInducementFind = prisma.teamInducement
+  .findMany as unknown as ReturnType<typeof vi.fn>;
+const teamStarFind = prisma.teamStarPlayer
+  .findMany as unknown as ReturnType<typeof vi.fn>;
+const catalogueMock = buildInducementCatalogue as unknown as ReturnType<
+  typeof vi.fn
+>;
 const participantCreate = prisma.cupParticipant
   .create as unknown as ReturnType<typeof vi.fn>;
 
@@ -76,6 +95,8 @@ beforeEach(() => {
   });
   (captureRosterSnapshot as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   rosterFind.mockResolvedValue(null);
+  teamInducementFind.mockResolvedValue([]);
+  teamStarFind.mockResolvedValue([]);
   participantCreate.mockImplementation(async ({ data }) => ({
     id: 'P1',
     ...data,
@@ -152,5 +173,184 @@ describe('registerTeamToCup — règlement de tournoi', () => {
     });
     expect(out.participantId).toBe('P1');
     expect(out.pspPoolGranted).toBe(0);
+  });
+});
+
+describe('registerTeamToCup — budget de la coupe contre la dépense de construction', () => {
+  const summary = buildTeamBudgetSummary as unknown as ReturnType<typeof vi.fn>;
+  const teamUnique = prisma.team.findUnique as unknown as ReturnType<
+    typeof vi.fn
+  >;
+
+  beforeEach(() => {
+    cupFind.mockResolvedValue(baseCup({ tierBudgets: { I: 1000 } }));
+    rosterFind.mockResolvedValue({ tier: 'I', budget: 1000 });
+    teamFind.mockResolvedValue(baseTeam({ teamValue: 1_000_000 }));
+    teamUnique.mockResolvedValue({
+      ...baseTeam({ teamValue: 1_000_000 }),
+      players: [],
+      starPlayers: [{ starPlayerSlug: 'griff_oberwald', cost: 150_000 }],
+      inducements: [],
+    });
+  });
+
+  it('refuse une VE de 1 000k qui a payé 150k de Star Players hors VE', async () => {
+    summary.mockResolvedValue({ totalSpent: 1_150_000 });
+
+    const err = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    }).catch((e: unknown) => e);
+
+    expect((err as CupRegistrationError).code).toBe('budget_exceeded');
+    expect((err as Error).message).toMatch(/1150k/);
+    expect((err as Error).message).toMatch(/Star Players/);
+    expect((err as Error).message).toMatch(/1000k/);
+    expect(participantCreate).not.toHaveBeenCalled();
+    // La dépense se calcule sur le roster actif, ses Star Players et ses
+    // coups de pouce de création.
+    expect(summary).toHaveBeenCalledWith(
+      prisma,
+      expect.objectContaining({ id: 'T1' }),
+      [],
+      [{ starPlayerSlug: 'griff_oberwald', cost: 150_000 }],
+      [],
+    );
+  });
+
+  it('accepte une équipe dont la dépense tient dans le budget', async () => {
+    summary.mockResolvedValue({ totalSpent: 990_000 });
+
+    const out = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    });
+
+    expect(out.participantId).toBe('P1');
+  });
+
+  it("ne calcule aucune dépense quand la coupe ne fixe pas de budget", async () => {
+    cupFind.mockResolvedValue(baseCup());
+
+    await registerTeamToCup({ cupId: 'C1', teamId: 'T1', userId: 'U1' });
+
+    expect(summary).not.toHaveBeenCalled();
+  });
+});
+
+describe('registerTeamToCup — coups de pouce achetés à la création', () => {
+  const MASCOT = { slug: 'team_mascot', quantity: 1 };
+  const CATALOGUE = [
+    { slug: 'team_mascot', name: "Mascotte d'Équipe", cost: 25_000, maxQuantity: 1 },
+    { slug: 'bribe', name: 'Pots-de-vin', cost: 100_000, maxQuantity: 3 },
+  ];
+
+  it("refuse une équipe porteuse de coups de pouce dans une coupe en avant-match", async () => {
+    cupFind.mockResolvedValue(baseCup({ inducementMode: 'match' }));
+    teamFind.mockResolvedValue(baseTeam());
+    teamInducementFind.mockResolvedValue([MASCOT]);
+
+    const err = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(CupRegistrationError);
+    expect((err as CupRegistrationError).code).toBe('inducement_not_allowed');
+    expect((err as Error).message).toMatch(/avant-match/);
+    expect((err as Error).message).toMatch(/Adapter à la coupe/);
+    expect(participantCreate).not.toHaveBeenCalled();
+  });
+
+  it('une coupe antérieure (mode absent) se lit en avant-match : refus aussi', async () => {
+    cupFind.mockResolvedValue(baseCup());
+    teamFind.mockResolvedValue(baseTeam());
+    teamInducementFind.mockResolvedValue([MASCOT]);
+
+    await expect(
+      registerTeamToCup({ cupId: 'C1', teamId: 'T1', userId: 'U1' }),
+    ).rejects.toMatchObject({ code: 'inducement_not_allowed' });
+  });
+
+  it("refuse en coupe sans coup de pouce (`none`)", async () => {
+    cupFind.mockResolvedValue(baseCup({ inducementMode: 'none' }));
+    teamFind.mockResolvedValue(baseTeam());
+    teamInducementFind.mockResolvedValue([MASCOT]);
+
+    const err = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    }).catch((e: unknown) => e);
+    expect((err as CupRegistrationError).code).toBe('inducement_not_allowed');
+    expect((err as Error).message).toMatch(/aucun coup de pouce/);
+  });
+
+  it('refuse en build un coup de pouce hors de la liste autorisée', async () => {
+    cupFind.mockResolvedValue(
+      baseCup({ inducementMode: 'build', allowedInducements: ['bribe'] }),
+    );
+    teamFind.mockResolvedValue(baseTeam({ regionalLeague: 'badlands_brawl' }));
+    teamInducementFind.mockResolvedValue([MASCOT]);
+    teamStarFind.mockResolvedValue([{ starPlayerSlug: 'morg_n_thorg' }]);
+    catalogueMock.mockResolvedValue(CATALOGUE.filter((c) => c.slug === 'bribe'));
+
+    const err = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    }).catch((e: unknown) => e);
+    expect((err as CupRegistrationError).code).toBe('inducement_not_allowed');
+    expect((err as Error).message).toMatch(/team_mascot/);
+    expect((err as Error).message).toMatch(/Adapter à la coupe/);
+    // Le catalogue effectif est celui de LA COUPE pour CE roster.
+    expect(catalogueMock).toHaveBeenCalledWith({
+      roster: 'orc',
+      ruleset: 'season_3',
+      regionalLeague: 'badlands_brawl',
+      pack: null,
+      allowlist: { allowed: ['bribe'], extras: [] },
+      hiredStarSlugs: ['morg_n_thorg'],
+    });
+  });
+
+  it('refuse en build une quantité au-delà du plafond de la coupe', async () => {
+    cupFind.mockResolvedValue(baseCup({ inducementMode: 'build' }));
+    teamFind.mockResolvedValue(baseTeam());
+    teamInducementFind.mockResolvedValue([{ slug: 'bribe', quantity: 4 }]);
+    catalogueMock.mockResolvedValue(CATALOGUE);
+
+    await expect(
+      registerTeamToCup({ cupId: 'C1', teamId: 'T1', userId: 'U1' }),
+    ).rejects.toMatchObject({ code: 'inducement_not_allowed' });
+  });
+
+  it('accepte en build des coups de pouce compatibles', async () => {
+    cupFind.mockResolvedValue(baseCup({ inducementMode: 'build' }));
+    teamFind.mockResolvedValue(baseTeam());
+    teamInducementFind.mockResolvedValue([MASCOT, { slug: 'bribe', quantity: 2 }]);
+    catalogueMock.mockResolvedValue(CATALOGUE);
+
+    const out = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    });
+    expect(out.participantId).toBe('P1');
+  });
+
+  it("une équipe sans coup de pouce ne déclenche aucun calcul de catalogue", async () => {
+    cupFind.mockResolvedValue(baseCup({ inducementMode: 'none' }));
+    teamFind.mockResolvedValue(baseTeam());
+
+    const out = await registerTeamToCup({
+      cupId: 'C1',
+      teamId: 'T1',
+      userId: 'U1',
+    });
+    expect(out.participantId).toBe('P1');
+    expect(catalogueMock).not.toHaveBeenCalled();
   });
 });

@@ -11,6 +11,10 @@
 
 import { prisma } from '../prisma';
 import { ACTIVE_PLAYER_WHERE } from './player-status';
+import type { Ruleset } from '@bb/game-engine';
+import { loadInducementCatalogue } from './inducement-repository';
+import { nameTeamInducements } from './build-inducements';
+import type { SnapshotInducement } from './snapshot-inducements';
 
 /** Joueur figé dans le snapshot. */
 export interface SnapshotPlayer {
@@ -33,6 +37,8 @@ export interface SnapshotStarPlayer {
   readonly starPlayerSlug: string;
   readonly cost: number;
 }
+
+export type { SnapshotInducement } from './snapshot-inducements';
 
 /** Snapshot complet d'une équipe. */
 export interface RosterSnapshot {
@@ -57,6 +63,11 @@ export interface RosterSnapshot {
   readonly dedicatedFans: number;
   readonly players: readonly SnapshotPlayer[];
   readonly starPlayers: readonly SnapshotStarPlayer[];
+  /**
+   * Coups de pouce achetés à la création. Optionnel : absent des snapshots
+   * antérieurs, qui se lisent « aucun coup de pouce ».
+   */
+  readonly inducements?: readonly SnapshotInducement[];
 }
 
 /** Forme minimale d'équipe attendue par `buildRosterSnapshot` (pure). */
@@ -88,6 +99,8 @@ export interface TeamForSnapshot {
     advancements: string;
   }>;
   readonly starPlayers: ReadonlyArray<{ starPlayerSlug: string; cost: number }>;
+  /** Coups de pouce de création, déjà nommés (cf. `captureRosterSnapshot`). */
+  readonly inducements?: ReadonlyArray<SnapshotInducement>;
 }
 
 /**
@@ -130,8 +143,16 @@ export function buildRosterSnapshot(
       starPlayerSlug: sp.starPlayerSlug,
       cost: sp.cost,
     })),
+    inducements: (team.inducements ?? []).map((ind) => ({
+      slug: ind.slug,
+      name: ind.name,
+      quantity: ind.quantity,
+      unitCost: ind.unitCost,
+    })),
   };
 }
+
+export { parseSnapshotInducements } from './snapshot-inducements';
 
 /**
  * Charge une équipe et renvoie son snapshot sérialisable, ou `null` si
@@ -160,10 +181,31 @@ export async function captureRosterSnapshot(
         orderBy: { number: 'asc' },
       },
       starPlayers: true,
+      inducements: true,
     },
   });
   if (!team) return null;
-  return buildRosterSnapshot(team as unknown as TeamForSnapshot, Date.now());
+  const inducements = (team as { inducements?: ReadonlyArray<{
+    slug: string;
+    quantity: number;
+    unitCost: number;
+  }> }).inducements ?? [];
+  // Libellés figés avec le snapshot : best-effort, le slug suffit à défaut.
+  let catalogue: ReadonlyArray<{ slug: string; displayNameFr: string }> = [];
+  if (inducements.length > 0) {
+    try {
+      catalogue = await loadInducementCatalogue(team.ruleset as Ruleset);
+    } catch {
+      catalogue = [];
+    }
+  }
+  return buildRosterSnapshot(
+    {
+      ...(team as unknown as TeamForSnapshot),
+      inducements: nameTeamInducements(inducements, catalogue),
+    },
+    Date.now(),
+  );
 }
 
 /**

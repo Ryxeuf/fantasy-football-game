@@ -1260,6 +1260,27 @@ if (process.env.TEST_SQLITE === "1") {
           skills: ["contagieux", "decay"],
         },
       ];
+      // Gobelins : porteurs de « Chantage et Corruption » — la remise des
+      // Pots-de-vin (50 000 po) du règlement NAF World Cup 2027, achetés à la
+      // création d'une équipe de coupe. La règle est lue EN BASE, comme la
+      // prod (`Roster.specialRules`, catalogue compilé en repli).
+      const GOBLIN_LINEMEN = [
+        {
+          slug: "goblin_gobelin",
+          displayName: "Trois-quart Gobelin",
+          cost: 40,
+          max: 16,
+          ma: 6,
+          st: 2,
+          ag: 3,
+          pa: 4,
+          av: 8,
+          keywords: "Gobelin, Trois-quart",
+          primarySkills: "A,K",
+          secondarySkills: "G,P,K",
+          skills: ["dodge", "right-stuff", "stunty"],
+        },
+      ];
       for (const ruleset of rulesets) {
         const skillIdBySlug = new Map<string, string>();
         for (const sk of ORC_SKILLS) {
@@ -1346,6 +1367,20 @@ if (process.env.TEST_SQLITE === "1") {
           },
         });
         await seedLinemen(nurgle.id, NURGLE_LINEMEN);
+        const goblin = await prisma.roster.upsert({
+          where: { slug_ruleset: { slug: "goblin", ruleset } },
+          update: { budget: 1000, specialRules: "chantage_et_corruption" },
+          create: {
+            slug: "goblin",
+            ruleset,
+            name: "Gobelins",
+            nameEn: "Goblin",
+            budget: 1000,
+            tier: "IV",
+            specialRules: "chantage_et_corruption",
+          },
+        });
+        await seedLinemen(goblin.id, GOBLIN_LINEMEN);
       }
 
       // Seed les feature flags de base. Les pages /play, /lobby, /waiting,
@@ -1414,6 +1449,34 @@ if (process.env.TEST_SQLITE === "1") {
       // une fixture disponible. `hirableBy: "all"` (diverge du statique
       // "old_world_classic") pour rester recrutable quel que soit le roster
       // de test utilisé — c'est une fixture, pas une donnée de jeu réelle.
+      // Scrappa Sorehead : Star Player que le règlement NAF World Cup 2027 ne
+      // bannit pas (Griff, si) — recruté à la création d'une équipe de coupe
+      // à règlement. Même posture de fixture : `hirableBy: "all"`.
+      for (const ruleset of rulesets) {
+        const scrappa = await prisma.starPlayer.upsert({
+          where: { slug_ruleset: { slug: "scrappa_sorehead", ruleset } },
+          update: { cost: 130000 },
+          create: {
+            slug: "scrappa_sorehead",
+            ruleset,
+            displayName: "Scrappa Sorehead",
+            cost: 130000,
+            ma: 7,
+            st: 2,
+            ag: 3,
+            pa: 5,
+            av: 8,
+          },
+        });
+        const scrappaHirable = await prisma.starPlayerHirableBy.findFirst({
+          where: { starPlayerId: scrappa.id, rule: "all" },
+        });
+        if (!scrappaHirable) {
+          await prisma.starPlayerHirableBy.create({
+            data: { starPlayerId: scrappa.id, rule: "all", rosterId: null },
+          });
+        }
+      }
       for (const ruleset of rulesets) {
         const starPlayer = await prisma.starPlayer.upsert({
           where: { slug_ruleset: { slug: "griff_oberwald", ruleset } },
@@ -1444,7 +1507,13 @@ if (process.env.TEST_SQLITE === "1") {
       return res.json({
         ok: true,
         rulesets,
-        rosters: [...rosters.map((r) => r.slug), "orc", "undead", "nurgle"],
+        rosters: [
+          ...rosters.map((r) => r.slug),
+          "orc",
+          "undead",
+          "nurgle",
+          "goblin",
+        ],
         flags: flagSeeds.map((f) => f.key),
       });
     } catch (e: unknown) {

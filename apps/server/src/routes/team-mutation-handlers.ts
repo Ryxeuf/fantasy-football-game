@@ -130,7 +130,7 @@ export async function handlePutTeamInfo(
   try {
     const team = await prisma.team.findFirst({
       where: teamAccessWhere(req, teamId),
-      include: { players: true, starPlayers: true },
+      include: { players: true, starPlayers: true, inducements: true },
     });
 
     if (!team) {
@@ -193,6 +193,7 @@ export async function handlePutTeamInfo(
       },
       team.players ?? [],
       team.starPlayers ?? [],
+      team.inducements ?? [],
     );
     if (summary.remaining < 0) {
       sendError(

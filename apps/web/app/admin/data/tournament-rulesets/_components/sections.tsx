@@ -685,6 +685,20 @@ export function InducementsSection({ def, errors, onChange }: SectionProps) {
       <div className="space-y-1.5">
         {catalogue.map((d) => {
           const rule = chosen.get(d.slug);
+          const index = def.allowedInducements.findIndex(
+            (r) => r.slug === d.slug,
+          );
+          const ruleErrors = (field: string) =>
+            errors.get(`allowedInducements.${index}.${field}`);
+          // La remise d'un règlement ne vaut que pour les équipes que le
+          // catalogue désigne : sans remise au catalogue, rien à saisir.
+          const discountFor = d.discountRule
+            ? `règle « ${d.discountRule} »`
+            : d.discountRoster
+              ? `roster « ${d.discountRoster} »`
+              : null;
+          const optionalNumber = (value: string): number | undefined =>
+            value === "" ? undefined : Number(value);
           return (
             <div
               key={d.slug}
@@ -735,6 +749,41 @@ export function InducementsSection({ def, errors, onChange }: SectionProps) {
                       className="mt-0.5 block w-28 rounded border border-gray-300 px-2 py-1 text-sm"
                     />
                   </label>
+                  {discountFor && (
+                    <label className="text-xs text-gray-600">
+                      Prix réduit (po)
+                      <input
+                        type="number"
+                        aria-label={`Prix réduit ${d.slug}`}
+                        value={rule.discountCost ?? ""}
+                        placeholder="aucun"
+                        title={`Appliqué aux équipes de la remise du catalogue (${discountFor})`}
+                        onChange={(e) =>
+                          patch(d.slug, {
+                            discountCost: optionalNumber(e.target.value),
+                          })
+                        }
+                        className={`mt-0.5 block w-32 rounded border px-2 py-1 text-sm ${ruleErrors("discountCost") ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+                      />
+                    </label>
+                  )}
+                  <label className="text-xs text-gray-600">
+                    Max avec Arme Secrète
+                    <input
+                      type="number"
+                      aria-label={`Max avec Arme Secrète ${d.slug}`}
+                      value={rule.maxWithSecretWeaponStar ?? ""}
+                      placeholder="aucun"
+                      onChange={(e) =>
+                        patch(d.slug, {
+                          maxWithSecretWeaponStar: optionalNumber(
+                            e.target.value,
+                          ),
+                        })
+                      }
+                      className={`mt-0.5 block w-28 rounded border px-2 py-1 text-sm ${ruleErrors("maxWithSecretWeaponStar") ? "border-red-400 bg-red-50" : "border-gray-300"}`}
+                    />
+                  </label>
                   <label className="min-w-[12rem] flex-1 text-xs text-gray-600">
                     Précision affichée
                     <input
@@ -747,6 +796,18 @@ export function InducementsSection({ def, errors, onChange }: SectionProps) {
                       className="mt-0.5 block w-full rounded border border-gray-300 px-2 py-1 text-sm"
                     />
                   </label>
+                  {(["cost", "max", "discountCost", "maxWithSecretWeaponStar"] as const)
+                    .filter((field) => ruleErrors(field))
+                    .map((field) => (
+                      <p
+                        key={field}
+                        role="alert"
+                        data-testid={`error-allowedInducements.${index}.${field}`}
+                        className="basis-full text-xs font-medium text-red-600"
+                      >
+                        {ruleErrors(field)}
+                      </p>
+                    ))}
                 </div>
               )}
             </div>

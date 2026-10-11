@@ -373,6 +373,15 @@ exports.Prisma.TeamStarPlayerScalarFieldEnum = {
   hiredAt: 'hiredAt'
 };
 
+exports.Prisma.TeamInducementScalarFieldEnum = {
+  id: 'id',
+  teamId: 'teamId',
+  slug: 'slug',
+  quantity: 'quantity',
+  unitCost: 'unitCost',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.RosterScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
@@ -573,7 +582,9 @@ exports.Prisma.CupScalarFieldEnum = {
   tierBudgets: 'tierBudgets',
   rosterBudgetOverrides: 'rosterBudgetOverrides',
   tierStartingPsp: 'tierStartingPsp',
-  rosterStartingPspOverrides: 'rosterStartingPspOverrides'
+  rosterStartingPspOverrides: 'rosterStartingPspOverrides',
+  inducementMode: 'inducementMode',
+  allowedInducements: 'allowedInducements'
 };
 
 exports.Prisma.CupParticipantScalarFieldEnum = {
@@ -1583,6 +1594,7 @@ exports.Prisma.ModelName = {
   TeamPlayer: 'TeamPlayer',
   TeamPlayerStatusEvent: 'TeamPlayerStatusEvent',
   TeamStarPlayer: 'TeamStarPlayer',
+  TeamInducement: 'TeamInducement',
   Roster: 'Roster',
   RosterStaffConfig: 'RosterStaffConfig',
   Skill: 'Skill',

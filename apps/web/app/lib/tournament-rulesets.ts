@@ -133,31 +133,42 @@ export function useTournamentRulesets(): UseTournamentRulesets {
 export function useTournamentRulesetLabel(
   slug: string | null | undefined,
 ): string | null {
-  const [label, setLabel] = useState<string | null>(slug ?? null);
+  const definition = useTournamentRulesetDefinition(slug);
+  if (!slug) return null;
+  return definition?.shortLabel ?? slug;
+}
+
+/**
+ * Définition d'UN règlement par son slug (liste de coups de pouce, prix…),
+ * `null` tant qu'elle n'est pas chargée ou si le slug est inconnu. `?slug=`
+ * accepte aussi les règlements désactivés : une équipe ou une coupe créée
+ * sous un règlement retiré des listes doit continuer à le lire.
+ */
+export function useTournamentRulesetDefinition(
+  slug: string | null | undefined,
+): TournamentRulesetDefinition | null {
+  const [definition, setDefinition] =
+    useState<TournamentRulesetDefinition | null>(null);
 
   useEffect(() => {
-    if (!slug) {
-      setLabel(null);
-      return;
-    }
+    setDefinition(null);
+    if (!slug) return;
     let cancelled = false;
-    setLabel(slug);
-    // `?slug=` accepte aussi les règlements désactivés : une équipe créée
-    // sous un règlement retiré des listes doit continuer à l'afficher.
     apiRequest<RulesetsResponse>(
       `/api/tournament-rulesets?slug=${encodeURIComponent(slug)}`,
     )
       .then((r) => {
         if (cancelled) return;
-        setLabel(r.rulesets?.[0]?.definition.shortLabel ?? slug);
+        const row = r.rulesets?.[0];
+        setDefinition(row ? hydrate(row.definition) : null);
       })
       .catch(() => {
-        if (!cancelled) setLabel(slug);
+        if (!cancelled) setDefinition(null);
       });
     return () => {
       cancelled = true;
     };
   }, [slug]);
 
-  return label;
+  return definition;
 }

@@ -7,7 +7,11 @@ vi.mock("../utils/star-player-repository", () => ({
 import { getStarPlayerBySlugDb } from "../utils/star-player-repository";
 import {
   deriveSheetStarPlayers,
+  deriveSideStarPlayers,
   isSheetStarPlayerId,
+  parseFrozenStarPlayers,
+  registeredStarPlayerSlugs,
+  sheetCompetitionKind,
   isSyntheticSheetPlayerId,
   parseStarPlayerInducements,
   sheetStarPlayerSide,
@@ -158,5 +162,122 @@ describe("isSheetStarPlayerId / isSyntheticSheetPlayerId", () => {
     expect(isSyntheticSheetPlayerId("raised-home-1")).toBe(true);
     expect(isSyntheticSheetPlayerId("clx123")).toBe(false);
     expect(isSyntheticSheetPlayerId(null)).toBe(false);
+  });
+});
+
+describe("deriveSideStarPlayers", () => {
+  const MORG = {
+    ...GRIFF,
+    slug: "morg_n_thorg",
+    displayName: "Morg 'n' Thorg",
+    cost: 380_000,
+  };
+  const frozen = {
+    roster: "human",
+    players: [],
+    starPlayers: [{ starPlayerSlug: "morg_n_thorg", cost: 380_000 }],
+  };
+  const griffInducement = [
+    { slug: "star_player", starPlayerSlug: "griff_oberwald", cost: 280_000 },
+  ];
+
+  it("coupe : aligne les Star Players du roster figé (achetés au build)", async () => {
+    mockGet.mockResolvedValue(MORG);
+    const out = await deriveSideStarPlayers({
+      side: "home",
+      inducements: null,
+      frozenSnapshot: frozen,
+      competitionKind: "cup",
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({
+      id: "star-home-morg_n_thorg",
+      name: "Morg 'n' Thorg",
+      registered: true,
+    });
+  });
+
+  it("coupe : lit aussi le snapshot sérialisé du miroir SQLite", async () => {
+    mockGet.mockResolvedValue(MORG);
+    const out = await deriveSideStarPlayers({
+      side: "away",
+      inducements: undefined,
+      frozenSnapshot: JSON.stringify(frozen),
+      competitionKind: "cup",
+    });
+    expect(out.map((s) => s.id)).toEqual(["star-away-morg_n_thorg"]);
+  });
+
+  it("coupe : fusionne figés et avant-match, sans doublon", async () => {
+    mockGet.mockImplementation(async (slug: string) =>
+      slug === "griff_oberwald" ? GRIFF : MORG,
+    );
+    const out = await deriveSideStarPlayers({
+      side: "home",
+      inducements: [
+        ...griffInducement,
+        { slug: "star_player", starPlayerSlug: "morg_n_thorg", cost: 1 },
+      ],
+      frozenSnapshot: frozen,
+      competitionKind: "cup",
+    });
+    expect(out.map((s) => s.slug)).toEqual(["morg_n_thorg", "griff_oberwald"]);
+    expect(out[0].registered).toBe(true);
+    expect(out[1].registered).toBeUndefined();
+    // Numéros distincts, hors des numéros de maillot.
+    expect(new Set(out.map((s) => s.number)).size).toBe(2);
+  });
+
+  it("avant-match seul : identique à la dérivation historique", async () => {
+    mockGet.mockResolvedValue(GRIFF);
+    const out = await deriveSideStarPlayers({
+      side: "home",
+      inducements: griffInducement,
+      competitionKind: "cup",
+    });
+    expect(out.map((s) => s.id)).toEqual(["star-home-griff_oberwald"]);
+  });
+
+  it("ligue : ignore les Star Players du roster figé", async () => {
+    mockGet.mockResolvedValue(GRIFF);
+    const out = await deriveSideStarPlayers({
+      side: "home",
+      inducements: griffInducement,
+      frozenSnapshot: frozen,
+      competitionKind: "league",
+    });
+    expect(out.map((s) => s.slug)).toEqual(["griff_oberwald"]);
+  });
+
+  it("snapshot sans `starPlayers` ou illisible : aucun Star Player figé", async () => {
+    expect(
+      await deriveSideStarPlayers({
+        side: "home",
+        inducements: null,
+        frozenSnapshot: { roster: "human", players: [] },
+        competitionKind: "cup",
+      }),
+    ).toEqual([]);
+    expect(parseFrozenStarPlayers("{pas du json")).toEqual([]);
+    expect(parseFrozenStarPlayers(null)).toEqual([]);
+    expect(mockGet).not.toHaveBeenCalled();
+  });
+});
+
+describe("registeredStarPlayerSlugs / sheetCompetitionKind", () => {
+  it("ne lit les Star Players figés qu'en coupe", () => {
+    const frozen = { starPlayers: [{ starPlayerSlug: "griff_oberwald", cost: 1 }] };
+    expect(
+      registeredStarPlayerSlugs({ frozenSnapshot: frozen, competitionKind: "cup" }),
+    ).toEqual(["griff_oberwald"]);
+    expect(
+      registeredStarPlayerSlugs({ frozenSnapshot: frozen, competitionKind: "league" }),
+    ).toEqual([]);
+  });
+
+  it("une feuille de coupe porte `cupPairingId`", () => {
+    expect(sheetCompetitionKind({ cupPairingId: "cp1" })).toBe("cup");
+    expect(sheetCompetitionKind({ cupPairingId: null })).toBe("league");
+    expect(sheetCompetitionKind({})).toBe("league");
   });
 });

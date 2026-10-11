@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
@@ -9,6 +9,16 @@ import PendingCupInvitations from "./PendingCupInvitations";
 import PendingCompetitionDocuments from "../components/PendingCompetitionDocuments";
 import { uploadPendingCompetitionDocuments } from "../lib/competition-documents";
 import { SheetEntryModeField } from "./SheetEntryModeField";
+import { CupInducementModeField } from "./CupInducementModeField";
+import {
+  coerceCupInducementMode,
+  defaultCupInducementSlugs,
+  normalizeCupAllowedInducements,
+  packInducementSlugs,
+  showsAllowedInducements,
+  type CupInducementMode,
+} from "./inducement-mode";
+import { ALLOWED_INDUCEMENT_OPTIONS } from "../components/AllowedInducementsField";
 import type { SheetEntryMode } from "../lib/sheet-entry-profile";
 import {
   getRosterName,
@@ -126,6 +136,15 @@ export default function CupsPage() {
   // défaut quand le champ manque).
   const [newCupSheetEntryMode, setNewCupSheetEntryMode] =
     useState<SheetEntryMode>("simplified");
+  // Coups de pouce : une coupe BB11 neuve les vend à la création (le serveur
+  // applique le même défaut, impose `build` sous règlement, le refuse en Sept).
+  const [newCupInducementMode, setNewCupInducementMode] =
+    useState<CupInducementMode>("build");
+  // Liste du commissaire : `null` = liste par défaut (règlement, sinon tout
+  // le catalogue) ; un changement de règlement la remet à `null`.
+  const [newCupAllowedInducements, setNewCupAllowedInducements] = useState<
+    string[] | null
+  >(null);
   // Règles avancées de composition (mode coupe).
   const [newCupDescription, setNewCupDescription] = useState("");
   // Documents officiels choisis avant la creation : la coupe n'ayant pas
@@ -196,6 +215,30 @@ export default function CupsPage() {
       setNewCupTournamentRuleset("");
     }
   }, [newCupRuleset, newCupFormat, newCupTournamentRuleset, rulesetsBySlug]);
+
+  const inducementContext = useMemo(
+    () => ({
+      format: newCupFormat,
+      hasTournamentRuleset: Boolean(newCupTournamentRuleset),
+    }),
+    [newCupFormat, newCupTournamentRuleset],
+  );
+  // Format ou règlement changé : le mode suit s'il n'est plus proposé.
+  useEffect(() => {
+    setNewCupInducementMode((mode) =>
+      coerceCupInducementMode(mode, inducementContext),
+    );
+  }, [inducementContext]);
+  // Un autre règlement, c'est une autre liste par défaut : la liste repart.
+  useEffect(() => {
+    setNewCupAllowedInducements(null);
+  }, [newCupTournamentRuleset]);
+  const newCupPackInducements = newCupTournamentRuleset
+    ? (rulesetsBySlug.get(newCupTournamentRuleset)?.allowedInducements ?? null)
+    : null;
+  const newCupPackSlugs = newCupTournamentRuleset
+    ? packInducementSlugs(newCupPackInducements)
+    : null;
 
   const loadTeams = async () => {
     try {
@@ -293,6 +336,16 @@ export default function CupsPage() {
         },
         // resurrectionMode : forcé côté serveur (seul mode disponible).
         sheetEntryMode: newCupSheetEntryMode,
+        inducementMode: newCupInducementMode,
+        allowedInducements: showsAllowedInducements(newCupInducementMode)
+          ? (normalizeCupAllowedInducements(
+              newCupAllowedInducements,
+              defaultCupInducementSlugs(
+                newCupPackSlugs,
+                ALLOWED_INDUCEMENT_OPTIONS.map((o) => o.slug),
+              ),
+            ) ?? undefined)
+          : undefined,
         tierBudgets: toNumberMap(tierBudgets),
         tierStartingPsp: toNumberMap(tierStartingPsp),
         rosterBudgetOverrides:
@@ -654,6 +707,22 @@ export default function CupsPage() {
                 ♻️ Mode résurrection (même roster à chaque match, aucun PSP gagné) —
                 seul mode disponible actuellement.
               </p>
+
+              <CupInducementModeField
+                value={newCupInducementMode}
+                onChange={setNewCupInducementMode}
+                allowed={newCupAllowedInducements}
+                onAllowedChange={setNewCupAllowedInducements}
+                context={inducementContext}
+                packInducements={newCupPackInducements}
+                rulesetLabel={
+                  newCupTournamentRuleset
+                    ? (rulesetsBySlug.get(newCupTournamentRuleset)?.shortLabel ??
+                      null)
+                    : null
+                }
+                disabled={creating}
+              />
 
               <div>
                 <p className="text-xs font-medium text-gray-600 mb-1">

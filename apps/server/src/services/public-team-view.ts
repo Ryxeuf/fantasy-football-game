@@ -161,7 +161,13 @@ export async function buildPublicTeamView(
       resolveStaffConfigBySlug(team.roster, ruleset, format),
     ),
     optionalEnrichment('resume budgetaire', () =>
-      buildTeamBudgetSummary(prisma, team, team.players, team.starPlayers),
+      buildTeamBudgetSummary(
+        prisma,
+        team,
+        team.players,
+        team.starPlayers,
+        team.inducements ?? [],
+      ),
     ),
     optionalEnrichment('valeurs par joueur', () =>
       computePlayerValuesFor(prisma, team, team.players),

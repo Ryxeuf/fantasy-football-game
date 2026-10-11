@@ -242,3 +242,74 @@ describe("tiers par roster", () => {
     expect(Object.keys(onSave.mock.calls[0][0].rosterRules)).toEqual(["orc"]);
   });
 });
+
+describe("coups de pouce : prix réduit et plafond Arme Secrète", () => {
+  it("enregistre le prix réduit et le plafond saisis", async () => {
+    const onSave = renderEditor();
+    fireEvent.click(screen.getByTestId("tab-inducements"));
+    fireEvent.change(screen.getByLabelText("Prix réduit bribe"), {
+      target: { value: "50000" },
+    });
+    fireEvent.change(screen.getByLabelText("Max avec Arme Secrète bribe"), {
+      target: { value: "2" },
+    });
+    fireEvent.click(screen.getByTestId("ruleset-save"));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0].allowedInducements).toEqual([
+      {
+        slug: "bribe",
+        cost: 100_000,
+        discountCost: 50_000,
+        maxWithSecretWeaponStar: 2,
+      },
+    ]);
+  });
+
+  it("vider le prix réduit le retire de la règle", async () => {
+    const onSave = renderEditor();
+    fireEvent.click(screen.getByTestId("tab-inducements"));
+    const input = screen.getByLabelText("Prix réduit bribe");
+    fireEvent.change(input, { target: { value: "50000" } });
+    fireEvent.change(input, { target: { value: "" } });
+    fireEvent.click(screen.getByTestId("ruleset-save"));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(
+      onSave.mock.calls[0][0].allowedInducements[0].discountCost,
+    ).toBeUndefined();
+  });
+
+  it("restitue au pied du coup de pouce l'erreur d'un prix réduit trop élevé", async () => {
+    validateRuleset.mockRejectedValue(
+      new RulesetApiError("invalide", [
+        {
+          path: "allowedInducements.0.discountCost",
+          message: "Le prix réduit ne peut pas dépasser le prix du règlement",
+        },
+      ]),
+    );
+    renderEditor();
+    fireEvent.click(screen.getByTestId("ruleset-check"));
+    fireEvent.click(screen.getByTestId("tab-inducements"));
+
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("error-allowedInducements.0.discountCost")
+          .textContent,
+      ).toMatch(/prix réduit/i),
+    );
+  });
+
+  it("ne propose pas de prix réduit sans remise au catalogue", () => {
+    renderEditor();
+    fireEvent.click(screen.getByTestId("tab-inducements"));
+    fireEvent.click(
+      screen
+        .getByTestId("inducement-team_mascot")
+        .querySelector("input[type=checkbox]") as HTMLInputElement,
+    );
+    expect(screen.queryByLabelText("Prix réduit team_mascot")).toBeNull();
+    expect(screen.getByLabelText("Max avec Arme Secrète team_mascot")).toBeTruthy();
+  });
+});

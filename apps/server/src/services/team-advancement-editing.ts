@@ -422,11 +422,11 @@ export async function setInitialBudget(
   return getTeamPspPoolState(teamId, ownerId, options);
 }
 
-/** Or déjà engagé (embauches + staff + Star Players), en po. */
+/** Or déjà engagé (embauches + staff + Star Players + coups de pouce), en po. */
 async function committedGoldForTeam(teamId: string): Promise<number> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
-    include: { players: true, starPlayers: true },
+    include: { players: true, starPlayers: true, inducements: true },
   });
   if (!team) return 0;
   const summary = await buildTeamBudgetSummary(
@@ -438,6 +438,8 @@ async function committedGoldForTeam(teamId: string): Promise<number> {
     (team as any).players,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (team as any).starPlayers,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (team as any).inducements ?? [],
   );
   return summary.totalSpent;
 }

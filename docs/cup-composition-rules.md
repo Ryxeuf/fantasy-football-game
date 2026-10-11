@@ -23,21 +23,96 @@ Le commissaire peut moduler la construction des équipes d'une coupe :
 - **Parcours d'inscription** :
   - **Flow A — inscrire tel quel** : l'équipe existante doit déjà respecter le
     budget + PSP de la coupe ; vérifiée à l'inscription (`POST /cup/:id/register`).
+    Le budget se compare à la **dépense de construction**
+    (`buildTeamBudgetSummary.totalSpent` : embauches, relances, staff, fans
+    dévoués, Star Players, coups de pouce de création), jamais à la VE — les Star Players n'entrent pas
+    dans la VE, une équipe de VE 1 000k ayant payé 150k de stars passait
+    sous un budget de 1 000k.
   - **Flow B — construire pour la coupe** : builder avec `?cupId=`, budget/pool/
     ruleset/format imposés et verrouillés, équipe auto-inscrite (`POST /team/build`).
   - **Clone & adapter** : builder avec `?cupId=…&fromTeamId=…` — préremplit la
     compo/staff/stars depuis une équipe de base, applique le budget + PSP de la
     coupe (surplus à dépenser), crée une **copie** inscrite ; l'équipe de base
     reste libre. Les advancements de la base ne sont pas recopiés (chacun repart
-    du pool de PSP de la coupe).
+    du pool de PSP de la coupe). Ses coups de pouce le sont, s'ils sont
+    autorisés par la coupe (cf. ci-dessous).
+- **Coups de pouce** : achetés à la création (`build`), en avant-match
+  (`match`) ou interdits (`none`) — section dédiée ci-dessous.
+
+## Coups de pouce : `build` / `match` / `none`
+
+Une coupe rejoue son roster d'inscription à chaque ronde (résurrection) : un
+coup de pouce acheté en avant-match se rachète donc à chaque ronde, sur un
+budget d'écart de VEA. Les tournois (NAF World Cup…) font l'inverse : on les
+paie UNE fois sur le budget de construction et ils valent pour toute la
+compétition. D'où `Cup.inducementMode` :
+
+| Mode | Achat | Feuille de match |
+|---|---|---|
+| `build` | au build, sur le budget d'or (`TeamInducement`) | rappel en lecture seule, aucun achat (400 `inducements_locked`) |
+| `match` | en avant-match, Petite Monnaie = écart de VEA | éditeur habituel, **sans trésorerie** |
+| `none` | jamais | aucun achat (400) ; les Star Players d'inscription jouent |
+
+- **Défauts, sans backfill** (`services/cup-inducement-mode`, pur) : colonne
+  nullable SANS `@default` — `null` (coupe antérieure) se lit `match`. Une
+  coupe BB11 NEUVE naît `build` (écrit par `POST /cup`), une coupe de Sept ne
+  peut pas l'être (400 `build_not_allowed_in_sevens`), un règlement de
+  tournoi impose `build` quoi qu'on demande. `resolveCupInducementMode` donne
+  le mode EFFECTIF, servi par `rulesConfig.inducementMode`.
+- **Liste du commissaire** (`Cup.allowedInducements`), qui FAIT FOI, règlement
+  compris (`resolveCupInducementList`, pur) :
+  - `null` : liste par défaut — celle du règlement (ses prix, remise d'équipe
+    et plafond « Arme Secrète » compris), sinon tout le catalogue ;
+  - `[...]` : exactement ces coups de pouce. Sous règlement, ceux qu'il liste
+    gardent ses prix ; ceux qu'il ne liste pas sont des AJOUTS, vendus au prix
+    du catalogue pour le roster (`applyPackInducementRules`, `extras`) ;
+  - `[]` explicite : aucun coup de pouce — sous règlement, `build` étant
+    imposé, c'est la seule façon d'en jouer sans.
+
+  Elle se règle à la création et depuis `cups/[id]/edit`, par
+  `PATCH /cup/:id/rules`, tant que les inscriptions sont ouvertes ; elle
+  s'applique au catalogue du builder, à `POST /team/build`, à l'inscription
+  telle quelle ET à la feuille d'une coupe en avant-match. Une liste égale à
+  la liste par défaut s'enregistre `null`, pour suivre les éditions admin du
+  règlement. Les LIGUES gardent l'intersection : leur liste ne fait que
+  restreindre celle du règlement.
+- **Un seul catalogue de build** (`services/inducement-options` →
+  `buildInducementCatalogue`) : prix pour CE roster, liste de la coupe ou du
+  règlement, hors Star Players (recrutés à part) et hors coups de pouce à coût
+  variable. Servi au builder (`GET /team/build-inducements`) ET relu par
+  `POST /team/build`, qui tarife lui-même : un prix envoyé par le client est
+  ignoré (`resolveBuildInducements`).
+- **Sous règlement, l'or non dépensé est PERDU** (trésorerie 0,
+  `treasuryCredit`) ; sans règlement, il part en trésorerie comme avant.
+- **Snapshot** : `captureRosterSnapshot` fige les coups de pouce
+  (`RosterSnapshot.inducements`, nommés). Une équipe modifiée après coup ne
+  change rien aux rencontres de la coupe ; un snapshot antérieur se lit sans
+  coup de pouce (`parseSnapshotInducements`).
+- **Inscription telle quelle** : une équipe porteuse de coups de pouce n'entre
+  qu'en coupe `build`, et seulement s'ils tiennent dans le catalogue effectif
+  de la coupe (liste, plafonds) — sinon 422 `inducement_not_allowed`, qui
+  oriente vers « Adapter à la coupe ».
+- **Adapter à la coupe** : les coups de pouce de l'équipe de base que la coupe
+  autorise sont repris au prix de la COUPE (bornés à son plafond), les autres
+  listés comme écartés.
+
+Piège : une coupe n'a **pas de trésorerie**. Le budget d'avant-match d'une
+coupe en `match` est l'écart de VEA (Petite Monnaie) seul — la trésorerie
+affichée par l'équipe est celle de sa vie hors coupe et se rejouerait à
+chaque ronde, comme tout le reste du roster d'inscription.
 
 ## Modèle de données (`prisma/schema.prisma`)
 
 - `Cup` : `resurrectionMode Boolean`, `tierBudgets Json?`,
   `rosterBudgetOverrides Json?`, `tierStartingPsp Json?`,
   `rosterStartingPspOverrides Json?` (maps kpo / PSP).
-- `CupParticipant` : `rosterSnapshot Json?` (roster figé à l'inscription),
-  `pspPoolGranted Int`.
+- `Cup` : `inducementMode String?` (`build` | `match` | `none`, `null` =
+  `match`), `allowedInducements Json?` (slugs ; `null` = liste par défaut,
+  `[]` = aucun coup de pouce).
+- `CupParticipant` : `rosterSnapshot Json?` (roster figé à l'inscription,
+  Star Players et coups de pouce compris), `pspPoolGranted Int`.
+- `TeamInducement` : coups de pouce achetés à la création (`slug`,
+  `quantity`, `unitCost` payé), unique par équipe × slug.
 - `Team` : `startingPspPool Int` (pool alloué au build ; PSP dépensés = Σ coûts
   des advancements des joueurs — les joueurs restent à `spp = 0`).
 
@@ -69,14 +144,23 @@ persisté. Le roster live reste identique au snapshot d'inscription.
 
 ## Frontend
 
-- `cups/page.tsx` — section « Règles de composition » à la création.
-- `cups/[id]/page.tsx` — affichage des règles + bouton « Construire pour cette
-  coupe » (Flow B).
+- `cups/page.tsx` — section « Règles de composition » à la création, dont le
+  régime des coups de pouce (`CupInducementModeField` : `build` présélectionné
+  en BB11, imposé et grisé sous règlement, absent en Sept) et la liste
+  autorisée (`AllowedInducementsField`, partagé avec `LeagueForm`) : cases
+  parties de la liste par défaut, mention « NAF WC 2027 · 25k » sur celles du
+  règlement, « Revenir à la liste du règlement ».
+- `cups/[id]/edit/page.tsx` — même bloc, tant que les inscriptions sont
+  ouvertes (`PATCH /cup/:id/rules`), lecture seule ensuite.
+- `cups/[id]/page.tsx` — affichage des règles (mode et liste des coups de
+  pouce compris) + bouton « Construire pour cette coupe » (Flow B).
 - `me/teams/new/page.tsx` — mode « édition avancée » (budget custom + pool),
   `?cupId=` verrouille budget + pool ; allocateur de PSP
   (`BuildAdvancementAllocator.tsx`).
+- `me/teams/new/BuildInducementPicker.tsx` — section « Coups de pouce » du
+  builder (coupe en `build` ou règlement), catalogue servi par le serveur.
 - `me/teams/[id]/page.tsx` — budget de départ + bloc PSP (pool / dépensés /
-  disponibles).
+  disponibles) + coups de pouce de création (`TeamInducementsPanel`).
 
 ## Invitations de coupe
 
@@ -108,9 +192,14 @@ dans `GET /cup/:id` (`playerLeaderboards`), affiché sur le détail coupe. Exclu
 
 ## Endpoints
 
-- `POST /cup` — accepte la config de composition + `description`.
+- `POST /cup` — accepte la config de composition + `description`,
+  `inducementMode`, `allowedInducements`.
 - `PATCH /cup/:id/rules` — met à jour la config (créateur/admin, avant validation).
 - `GET /cup/:id` — expose `rulesConfig`.
-- `POST /cup/:id/register` — Flow A : valide budget + PSP (si la coupe définit
-  ces règles) et capture le snapshot.
-- `POST /team/build` — champs `cupId?`, `startingPspPool?`, `advancements?`.
+- `POST /cup/:id/register` — Flow A : valide les coups de pouce (régime et
+  catalogue de la coupe), le budget (sur la dépense de construction) + PSP
+  (si la coupe définit ces règles) et capture le snapshot.
+- `POST /team/build` — champs `cupId?`, `startingPspPool?`, `advancements?`,
+  `inducements?` (`[{ slug, quantity }]`, tarifés par le serveur).
+- `GET /team/build-inducements` — catalogue de build pour un roster, une coupe
+  (`cupId`) ou un règlement, `stars` pour le plafond « Arme Secrète ».

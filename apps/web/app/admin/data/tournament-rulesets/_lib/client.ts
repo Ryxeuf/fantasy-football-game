@@ -107,6 +107,10 @@ export interface EditableDefinition {
     slug: string;
     cost: number;
     max?: number;
+    /** Prix réduit pour les équipes que le catalogue désigne (remise). */
+    discountCost?: number;
+    /** Quantité max avec un Star Player à Arme Secrète. */
+    maxWithSecretWeaponStar?: number;
     noteFr?: string;
   }>;
   scoring: { win: number; draw: number; loss: number; concession: number };

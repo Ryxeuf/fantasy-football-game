@@ -27,6 +27,7 @@ interface FakeTeam {
   dedicatedFans: number;
   initialBudget: number;
   treasury: number;
+  tournamentRuleset?: string | null;
 }
 
 function team(overrides: Partial<FakeTeam> = {}): FakeTeam {
@@ -110,6 +111,28 @@ describe("buildTeamBudgetSummary", () => {
     expect(summary.starPlayersCost).toBe(250_000);
     expect(summary.totalSpent).toBe(550_000 + 250_000);
     expect(summary.teamValue).toBe(550_000);
+  });
+
+  it("compte les coups de pouce de création au budget mais pas dans la VE", async () => {
+    const withInducements = await buildTeamBudgetSummary(
+      db(),
+      team(),
+      players(11),
+      [],
+      [
+        { quantity: 1, unitCost: 25_000 },
+        { quantity: 2, unitCost: 50_000 },
+      ],
+    );
+    const without = await buildTeamBudgetSummary(db(), team(), players(11));
+
+    expect(withInducements.inducementsCost).toBe(125_000);
+    expect(withInducements.totalSpent).toBe(550_000 + 125_000);
+    expect(withInducements.remaining).toBe(1_000_000 - 675_000);
+    // VE et VEA identiques à la même équipe sans coups de pouce.
+    expect(withInducements.teamValue).toBe(without.teamValue);
+    expect(withInducements.currentValue).toBe(without.currentValue);
+    expect(without.inducementsCost).toBe(0);
   });
 
   it("compte les surcoûts d'avancement dans le coût des joueurs", async () => {
@@ -232,6 +255,28 @@ describe("creditInitialTreasury", () => {
     });
   });
 
+  it("ne crédite que le reliquat après les coups de pouce de création", async () => {
+    const update = vi.fn().mockResolvedValue({});
+    const prisma = {
+      team: {
+        findUnique: vi.fn().mockResolvedValue({
+          ...team(),
+          players: players(11),
+          starPlayers: [],
+          inducements: [{ quantity: 1, unitCost: 25_000 }],
+        }),
+        update,
+      },
+      skill: { findMany: vi.fn().mockResolvedValue([]) },
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const credited = await creditInitialTreasury(prisma as any, "team-1");
+
+    // 1 000k − 550k de joueurs − 25k de Mascotte.
+    expect(credited).toBe(425_000);
+  });
+
   it("ne touche pas une trésorerie déjà non nulle", async () => {
     const { prisma, update } = prismaFor(team({ treasury: 42_000 }));
 
@@ -247,6 +292,49 @@ describe("creditInitialTreasury", () => {
 
     await expect(creditInitialTreasury(prisma, "team-1")).resolves.toBe(0);
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it("sous règlement de tournoi, l'or non dépensé est perdu", async () => {
+    // 1 080k de budget, 11 joueurs à 50k + 1 relance : reliquat positif.
+    const { prisma, update } = prismaFor(
+      team({ initialBudget: 1080, tournamentRuleset: "naf_world_cup_2027" }),
+    );
+
+    await expect(creditInitialTreasury(prisma, "team-1")).resolves.toBe(0);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("sans règlement, le reliquat est versé (40 000 po)", async () => {
+    const { prisma } = prismaFor(team({ initialBudget: 590 }));
+    // 590k − 11 × 50k = 40k.
+    await expect(creditInitialTreasury(prisma, "team-1")).resolves.toBe(40_000);
+  });
+});
+
+describe("treasuryCredit", () => {
+  it("vaut le reliquat positif sans règlement, 0 sous règlement", async () => {
+    const free = await buildTeamBudgetSummary(db(), team(), players(11));
+    expect(free.remaining).toBe(450_000);
+    expect(free.treasuryCredit).toBe(450_000);
+
+    const naf = await buildTeamBudgetSummary(
+      db(),
+      team({ tournamentRuleset: "naf_world_cup_2027" }),
+      players(11),
+    );
+    // Le reliquat reste affiché, mais rien n'est versable.
+    expect(naf.remaining).toBe(450_000);
+    expect(naf.treasuryCredit).toBe(0);
+  });
+
+  it("jamais négatif", async () => {
+    const over = await buildTeamBudgetSummary(
+      db(),
+      team({ initialBudget: 500 }),
+      players(11),
+    );
+    expect(over.remaining).toBe(-50_000);
+    expect(over.treasuryCredit).toBe(0);
   });
 });
 
@@ -318,6 +406,18 @@ describe("syncDraftTreasury", () => {
     expect(update).toHaveBeenCalledWith({
       where: { id: "team-1" },
       data: { treasury: 50_000 },
+    });
+  });
+
+  it("brouillon sous règlement : la trésorerie revient à 0, même éditée", async () => {
+    const { prisma, update } = prismaFor(
+      team({ treasury: 30_000, tournamentRuleset: "naf_world_cup_2027" }),
+    );
+
+    await expect(syncDraftTreasury(prisma, "team-1")).resolves.toBe(0);
+    expect(update).toHaveBeenCalledWith({
+      where: { id: "team-1" },
+      data: { treasury: 0 },
     });
   });
 

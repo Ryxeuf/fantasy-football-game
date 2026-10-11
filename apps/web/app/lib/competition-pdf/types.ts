@@ -223,6 +223,12 @@ export interface PdfSheetTeam {
     apothecary: boolean;
   } | null;
   players: PdfSheetPlayer[];
+  /**
+   * Coupe en mode `build` : coups de pouce achetés à la création, figés à
+   * l'inscription. Présent ⇒ la feuille les rappelle et ne propose aucune
+   * case d'achat.
+   */
+  registeredInducements?: PdfSheetInducement[];
 }
 
 export interface PdfSheetEvent {
