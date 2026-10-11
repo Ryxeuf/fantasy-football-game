@@ -4,6 +4,7 @@ import { isEnabled } from "../services/featureFlags";
 import { JWT_SECRET } from "../config";
 import { normalizeRoles } from "../utils/roles";
 import { AuthenticatedRequest } from "./authUser";
+import { resolveRequestApiKey } from "./apiKeyAuth";
 import { serverLog } from "../utils/server-log";
 
 /**
@@ -28,7 +29,20 @@ export function requireFeatureFlag(key: string) {
     let userId: string | undefined = authedUser?.id;
     let roles: string[] = authedUser?.roles ?? [];
 
-    if (!userId) {
+    // Clé API d'administration : même résolution (mémorisée) que `authUser`.
+    // Une clé refusée évalue le flag sans contexte, comme un token invalide.
+    const apiKeyResolution = userId ? null : resolveRequestApiKey(req);
+    if (apiKeyResolution) {
+      try {
+        const evaluation = await apiKeyResolution;
+        if (evaluation.ok) {
+          userId = evaluation.identity.userId;
+          roles = evaluation.identity.roles;
+        }
+      } catch {
+        // `authUser` rendra l'erreur si la route l'exige.
+      }
+    } else if (!userId) {
       const header = req.headers.authorization || "";
       const [, token] = header.split(" ");
       if (token) {

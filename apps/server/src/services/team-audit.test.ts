@@ -258,6 +258,23 @@ describe("recordTeamAudit", () => {
     expect(db.teamAuditEvent.create).not.toHaveBeenCalled();
   });
 
+  it("trace la clé API portée par le contexte, et rien pour une session", async () => {
+    const db = makeDb();
+    await runWithAuditContext(
+      createAuditContext({ actorUserId: "admin-1", apiKeyId: "key-1" }),
+      () => recordTeamAudit(db, { teamId: "team-1", action: "team.update" }),
+    );
+    await runWithAuditContext(
+      createAuditContext({ actorUserId: "admin-1" }),
+      () => recordTeamAudit(db, { teamId: "team-1", action: "team.update" }),
+    );
+    const [withKey, withoutKey] = db.teamAuditEvent.create.mock.calls.map(
+      (c: [{ data: { apiKeyId: string | null } }]) => c[0].data,
+    );
+    expect(withKey.apiKeyId).toBe("key-1");
+    expect(withoutKey.apiKeyId).toBeNull();
+  });
+
   it("préfère l'acteur explicite au contexte ambiant", async () => {
     const db = makeDb();
     await runWithAuditContext(

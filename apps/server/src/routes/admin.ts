@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { sessionOnly } from "../middleware/sessionOnly";
 import { normalizeRoles } from "../utils/roles";
 import { validate, validateQuery } from "../middleware/validate";
 import { generateTempPassword } from "../services/temp-password";
@@ -723,8 +724,11 @@ router.post("/users/:id/password-reset", async (req, res) => {
  * Gardes : on refuse de s'impersonner soi-meme, un compte soft-delete ou un
  * compte banni (memes regles que /auth/login qui rejetterait ces comptes).
  * L'action est tracee dans l'audit log (jamais le token en clair).
+ *
+ * Refusee a une cle API (`sessionOnly`) : le JWT emis survivrait a la
+ * revocation de la cle (change OpenSpec `admin-api-keys`).
  */
-router.post("/users/:id/impersonate", async (req, res) => {
+router.post("/users/:id/impersonate", sessionOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const adminId = (req as AuthenticatedRequest).user?.id;

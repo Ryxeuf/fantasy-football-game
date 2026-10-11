@@ -386,6 +386,7 @@ export async function recordTeamAudit(
       actorRole,
       actorLabel,
       impersonatorId: input.actor?.impersonatorId ?? ctx?.impersonatorId ?? null,
+      apiKeyId: ctx?.apiKeyId ?? null,
       source: input.source ?? ctx?.source ?? "job",
       route: input.route ?? ctx?.route ?? null,
       ipAddress: ctx?.ipAddress ?? null,
