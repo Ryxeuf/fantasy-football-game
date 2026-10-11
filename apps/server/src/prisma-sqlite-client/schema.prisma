@@ -95,6 +95,7 @@ model User {
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
   passwordResetTokens         PasswordResetToken[]
+  apiKeys                     ApiKey[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
@@ -147,6 +148,24 @@ model RefreshToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyPrefix   String
+  keyHash     String    @unique
+  scope       String    @default("read")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  lastUsedIp  String?
+  revokedAt   DateTime?
+  revokedById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model PasswordResetToken {
@@ -2083,6 +2102,7 @@ model AuditLog {
   newValue  String?
   ipAddress String?
   userAgent String?
+  apiKeyId  String?
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
@@ -2107,6 +2127,7 @@ model TeamAuditEvent {
   actorRole      String   @default("system")
   actorLabel     String?
   impersonatorId String?
+  apiKeyId       String?
   source         String   @default("http")
   route          String?
   ipAddress      String?

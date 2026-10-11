@@ -172,6 +172,21 @@ exports.Prisma.RefreshTokenScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.ApiKeyScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  keyPrefix: 'keyPrefix',
+  keyHash: 'keyHash',
+  scope: 'scope',
+  userId: 'userId',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
+  lastUsedIp: 'lastUsedIp',
+  revokedAt: 'revokedAt',
+  revokedById: 'revokedById',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.PasswordResetTokenScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -1332,6 +1347,7 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   newValue: 'newValue',
   ipAddress: 'ipAddress',
   userAgent: 'userAgent',
+  apiKeyId: 'apiKeyId',
   createdAt: 'createdAt'
 };
 
@@ -1348,6 +1364,7 @@ exports.Prisma.TeamAuditEventScalarFieldEnum = {
   actorRole: 'actorRole',
   actorLabel: 'actorLabel',
   impersonatorId: 'impersonatorId',
+  apiKeyId: 'apiKeyId',
   source: 'source',
   route: 'route',
   ipAddress: 'ipAddress',
@@ -1580,6 +1597,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   EloSnapshot: 'EloSnapshot',
   RefreshToken: 'RefreshToken',
+  ApiKey: 'ApiKey',
   PasswordResetToken: 'PasswordResetToken',
   KofiTransaction: 'KofiTransaction',
   TutorialCompletion: 'TutorialCompletion',
