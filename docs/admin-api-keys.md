@@ -60,6 +60,10 @@ garde-fou : `POST /admin/api-keys` DOIT être refusé (403). Aucune vérificatio
 n'écrit quoi que ce soit ; le secret n'est jamais affiché (`nak_***`). Sans
 clé, les vérifications authentifiées sont « ignorées » sur 401.
 
+`NUFFLE_API_URL` doit être en `https://` (`http://` toléré sur localhost
+seulement) et sans identifiants : la clé ne part jamais en clair ni vers un
+autre hôte que celui annoncé.
+
 `smoke:remote` pose `NODE_USE_ENV_PROXY=1` : le `fetch` natif de Node 22 ne
 suit le proxy HTTPS des environnements cloud qu'avec cette variable (sans effet
 ailleurs).

@@ -127,9 +127,31 @@ export function redact(text: string, secret: string | null): string {
   return text.split(secret).join("nak_***");
 }
 
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * URL de base du serveur visé. La clé part en `Authorization` : on refuse
+ * tout ce qui l'enverrait en clair (HTTP hors poste local) ou ailleurs
+ * qu'à l'hôte annoncé (identifiants dans l'URL).
+ */
 export function normalizeBaseUrl(raw: string | undefined): string {
   const value = (raw ?? "").trim() || DEFAULT_API_URL;
-  return value.replace(/\/+$/, "");
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(`NUFFLE_API_URL invalide : ${value}`);
+  }
+  if (url.username || url.password) {
+    throw new Error("NUFFLE_API_URL ne doit pas contenir d'identifiants");
+  }
+  const local = LOCAL_HOSTS.has(url.hostname);
+  if (url.protocol !== "https:" && !(local && url.protocol === "http:")) {
+    throw new Error(
+      "NUFFLE_API_URL doit être en https:// (http:// toléré sur localhost seulement)",
+    );
+  }
+  return `${url.origin}${url.pathname}`.replace(/\/+$/, "");
 }
 
 type FetchLike = (

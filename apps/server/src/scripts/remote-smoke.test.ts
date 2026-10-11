@@ -129,6 +129,16 @@ describe("utilitaires", () => {
     expect(normalizeBaseUrl(undefined)).toBe(DEFAULT_API_URL);
     expect(normalizeBaseUrl("  ")).toBe(DEFAULT_API_URL);
     expect(normalizeBaseUrl("https://api.example.test//")).toBe("https://api.example.test");
+    expect(normalizeBaseUrl("https://example.test/api/")).toBe("https://example.test/api");
+    expect(normalizeBaseUrl("http://localhost:18002")).toBe("http://localhost:18002");
+    expect(normalizeBaseUrl("http://127.0.0.1:8201/")).toBe("http://127.0.0.1:8201");
+  });
+
+  it("refuse une URL qui enverrait la clé en clair ou à un tiers", () => {
+    expect(() => normalizeBaseUrl("http://api.example.test")).toThrow(/https/);
+    expect(() => normalizeBaseUrl("ftp://api.example.test")).toThrow(/https/);
+    expect(() => normalizeBaseUrl("https://user:pass@api.example.test")).toThrow(/identifiants/);
+    expect(() => normalizeBaseUrl("pas une url")).toThrow(/invalide/);
   });
 
   it("masque le secret, et rien sans secret", () => {
