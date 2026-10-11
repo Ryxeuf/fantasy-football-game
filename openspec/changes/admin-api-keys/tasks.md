@@ -15,6 +15,7 @@
 - [x] 3.2 `requireFeatureFlag` et l'auth optionnelle locale de `routes/feature-flags` reconnaissent la clé — vérifier : tests.
 - [x] 3.3 Middleware `sessionOnly` posé sur l'impersonation et sur `PUT /auth/me`, `PUT /auth/me/password`, `DELETE /auth/me` ; `GET /auth/me` annonce la clé utilisée — vérifier : tests de route.
 - [x] 3.4 (revue sécurité) `sessionOnly` aussi sur `PATCH /admin/users/:id/role`, `POST /admin/users/:id/password-reset`, `PATCH /admin/users/:id/valid` — vérifier : `admin-session-only.test.ts`.
+- [x] 3.5 (revue sécurité) `sessionOnly` refuse aussi une session d'impersonation (`impersonation_not_allowed`) — vérifier : tests du middleware et de `POST /admin/api-keys`.
 
 ## 4. Traçabilité (serveur)
 

@@ -293,6 +293,19 @@ describe("une clé API ne gère pas les clés", () => {
   });
 });
 
+describe("une impersonation ne gère pas les clés", () => {
+  it("POST /admin/api-keys ⇒ 403, aucune clé créée au nom de l'admin impersonné", async () => {
+    const token = jwt.sign(
+      { sub: "admin-2", roles: ["admin"], act: "admin-1", imp: true },
+      JWT_SECRET,
+    );
+    const res = await call("POST", "/admin/api-keys", { auth: token, body: { name: "x" } });
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("impersonation_not_allowed");
+    expect(db.apiKey.create).not.toHaveBeenCalled();
+  });
+});
+
 describe("/auth avec une clé API", () => {
   const SECRET = `nak_${"B".repeat(43)}`;
 

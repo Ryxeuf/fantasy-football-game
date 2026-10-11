@@ -616,7 +616,9 @@ visé. Quatre règles qui ne se voient pas dans un seul fichier :
   un rôle (compte jetable promu admin), réinitialiser un mot de passe (rendu
   en clair), changer la validité d'un compte, modifier le profil / le mot de
   passe / désactiver le compte courant. Toute nouvelle route qui ÉMET un
-  accès (token, mot de passe, rôle, invitation d'admin…) le pose.
+  accès (token, mot de passe, rôle, invitation d'admin…) le pose. Il refuse
+  aussi une IMPERSONATION : une clé créée en impersonnant un admin lui serait
+  attribuée et survivrait au TTL d'1 h.
 - **Portée `read` = méthodes sûres, y compris sous `optionalAuthUser`** : un
   POST avec une clé en lecture seule est un 403, jamais une écriture faite en
   anonyme.

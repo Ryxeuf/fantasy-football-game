@@ -92,7 +92,10 @@ les actions réservées à une session interactive (ci-dessous).
   validité d'un compte (`PATCH /admin/users/:id/valid`), `PUT /auth/me`,
   `PUT /auth/me/password`, `DELETE /auth/me`. Une clé fuitée ne peut pas se
   perpétuer en fabriquant un autre accès (compte promu, mot de passe rendu en
-  clair, JWT d'impersonation), ni exclure son propriétaire.
+  clair, JWT d'impersonation), ni exclure son propriétaire. Les mêmes routes
+  sont refusées pendant une impersonation (403 `impersonation_not_allowed`) :
+  une clé créée en impersonnant un admin lui serait attribuée et survivrait
+  au TTL d'1 h.
 - **Révocation immédiate** : aucune mise en cache côté serveur.
 - **Traçabilité** : `AuditLog.apiKeyId` et `TeamAuditEvent.apiKeyId` (via le
   contexte d'audit) ; le journal d'audit admin affiche un badge « 🔑 clé API ».

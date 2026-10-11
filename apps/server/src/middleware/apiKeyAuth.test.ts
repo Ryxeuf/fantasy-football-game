@@ -220,6 +220,17 @@ describe("sessionOnly", () => {
     expect(response.json.mock.calls[0][0].code).toBe("interactive_session_required");
   });
 
+  it("refuse une session d'impersonation (elle survivrait à son TTL d'1 h)", () => {
+    const request = req({});
+    request.user = { id: "admin-2", roles: ["admin"], impersonatorId: "admin-1" };
+    const response = res();
+    const next = vi.fn();
+    sessionOnly(request, response as never, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(response.status).toHaveBeenCalledWith(403);
+    expect(response.json.mock.calls[0][0].code).toBe("impersonation_not_allowed");
+  });
+
   it("laisse passer une session JWT", () => {
     const request = req({});
     request.user = { id: "admin-1", roles: ["admin"] };

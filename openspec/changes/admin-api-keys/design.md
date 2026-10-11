@@ -129,6 +129,12 @@ requête est authentifiée par clé. Routes concernées :
 Le reste d'une clé `write` a le pouvoir de son propriétaire : c'est écrit
 dans la doc et rappelé dans le formulaire.
 
+Même garde pour une session d'IMPERSONATION (403
+`impersonation_not_allowed`) : l'impersonation est bornée à 1 h non
+renouvelable, et une clé créée en impersonnant un admin lui serait
+attribuée (propriétaire = admin impersonné) tout en survivant à ce TTL.
+`sessionOnly` exige donc la session du TITULAIRE du compte.
+
 ### D8 — Expiration optionnelle, 90 jours par défaut dans l'UI
 
 `expiresInDays` ∈ [1, 365] ou `null` (sans expiration). L'UI propose
