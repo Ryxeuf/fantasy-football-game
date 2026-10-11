@@ -259,6 +259,15 @@ function AuditLogRow({
         </td>
         <td className="px-3 py-2 font-mono text-xs text-gray-700">
           {entry.userId ?? <span className="text-gray-400">systeme</span>}
+          {entry.apiKeyId && (
+            <span
+              data-testid={`audit-api-key-${entry.id}`}
+              title={`Action passée par la clé API ${entry.apiKeyId}`}
+              className="ml-2 inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-sans text-[11px] font-semibold whitespace-nowrap"
+            >
+              🔑 clé API
+            </span>
+          )}
         </td>
         <td className="px-3 py-2">
           <code className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">

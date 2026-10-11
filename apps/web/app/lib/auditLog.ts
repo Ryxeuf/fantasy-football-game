@@ -18,6 +18,11 @@ export interface AuditLogEntry {
   newValue: string | null;
   ipAddress: string | null;
   userAgent: string | null;
+  /**
+   * Clé API par laquelle l'action est passée (`null` = session). Optionnel
+   * pour rester lisible face à un serveur antérieur aux clés API.
+   */
+  apiKeyId?: string | null;
   createdAt: string;
 }
 
