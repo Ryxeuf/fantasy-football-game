@@ -118,6 +118,7 @@ function buildSections(): ReadonlyArray<NavSection> {
       icon: "⚙️",
       items: [
         { href: "/admin/feature-flags", label: "Feature flags", icon: "🚩" },
+        { href: "/admin/api-keys", label: "Clés API", icon: "🔑" },
         { href: "/admin/audit-log", label: "Journal d'audit", icon: "📜" },
         {
           href: "/admin/team-journal",

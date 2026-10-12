@@ -13,6 +13,7 @@
     "test": "turbo run test --continue",
     "test:coverage": "turbo run test:coverage --continue",
     "test:integration": "npx vitest --config tests/integration/vitest.config.ts tests/integration",
+    "smoke:remote": "NODE_USE_ENV_PROXY=1 tsx apps/server/src/scripts/remote-smoke.ts",
     "changeset": "changeset",
     "changeset:version": "changeset version && pnpm install",
     "changeset:publish": "echo 'No registry publish (private)'; exit 0",

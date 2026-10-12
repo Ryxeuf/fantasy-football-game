@@ -126,6 +126,7 @@ model User {
   kofiTransactions            KofiTransaction[]
   refreshTokens               RefreshToken[]
   passwordResetTokens         PasswordResetToken[]
+  apiKeys                     ApiKey[]
   eloSnapshots                EloSnapshot[]
   tutorialCompletions         TutorialCompletion[]
   proSpectatorFollows         ProSpectatorFollow[]
@@ -203,6 +204,43 @@ model RefreshToken {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+/// Clé API d'administration (change OpenSpec `admin-api-keys`).
+///
+/// Sert aux clients automatisés (agent Claude Code, script de recette, CI) :
+/// `Authorization: Bearer nak_…` ou `X-API-Key: nak_…`. La requête s'exécute
+/// au nom du propriétaire, avec ses rôles RELUS en base — une clé ne porte
+/// aucun rôle. Le secret (32 octets base64url, préfixé `nak_`) n'est affiché
+/// qu'à la création : seule son empreinte SHA-256 est stockée, comme
+/// `PasswordResetToken`.
+model ApiKey {
+  id          String    @id @default(cuid())
+  /// Libellé choisi par l'admin (« Claude Code — recette prod »).
+  name        String
+  /// 12 premiers caractères du secret (`nak_Ab12Cd34`), pour reconnaître la
+  /// clé dans l'admin et les logs sans jamais réafficher le secret.
+  keyPrefix   String
+  /// SHA-256 hex du secret. Lookup direct `where: { keyHash }`.
+  keyHash     String    @unique
+  /// "read" (GET/HEAD/OPTIONS seulement) | "write" (tout ce que peut le
+  /// propriétaire, hors actions réservées à une session interactive).
+  scope       String    @default("read")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// Propriétaire : l'admin qui l'a créée, et au nom de qui elle agit.
+  userId      String
+  /// null = sans expiration.
+  expiresAt   DateTime?
+  /// Dernier usage, échantillonné (au plus une écriture par minute).
+  lastUsedAt  DateTime?
+  lastUsedIp  String?
+  /// null = active. Une clé révoquée ne se réactive pas.
+  revokedAt   DateTime?
+  /// Admin qui a révoqué la clé.
+  revokedById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
 }
 
 /// Lot P.C.1 — token de password reset self-service. Genere a la
@@ -3056,6 +3094,9 @@ model AuditLog {
   ipAddress String?
   /// User-Agent source (debug + forensic).
   userAgent String?
+  /// Clé API par laquelle l'action est passée (null = session interactive,
+  /// donc tout l'historique antérieur aux clés).
+  apiKeyId  String?
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
@@ -3111,6 +3152,8 @@ model TeamAuditEvent {
   actorLabel    String?
   /// Admin à l'origine d'une session d'impersonation (claim `act`).
   impersonatorId String?
+  /// Clé API par laquelle l'action est passée (null = session interactive).
+  apiKeyId      String?
 
   /// Origine : "http" | "job" | "script" | "test".
   source        String   @default("http")

@@ -29,6 +29,11 @@ export type EloSnapshot = $Result.DefaultSelection<Prisma.$EloSnapshotPayload>
  */
 export type RefreshToken = $Result.DefaultSelection<Prisma.$RefreshTokenPayload>
 /**
+ * Model ApiKey
+ * 
+ */
+export type ApiKey = $Result.DefaultSelection<Prisma.$ApiKeyPayload>
+/**
  * Model PasswordResetToken
  * 
  */
@@ -726,6 +731,16 @@ export class PrismaClient<
     * ```
     */
   get refreshToken(): Prisma.RefreshTokenDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.apiKey`: Exposes CRUD operations for the **ApiKey** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ApiKeys
+    * const apiKeys = await prisma.apiKey.findMany()
+    * ```
+    */
+  get apiKey(): Prisma.ApiKeyDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.passwordResetToken`: Exposes CRUD operations for the **PasswordResetToken** model.
@@ -2089,6 +2104,7 @@ export namespace Prisma {
     User: 'User',
     EloSnapshot: 'EloSnapshot',
     RefreshToken: 'RefreshToken',
+    ApiKey: 'ApiKey',
     PasswordResetToken: 'PasswordResetToken',
     KofiTransaction: 'KofiTransaction',
     TutorialCompletion: 'TutorialCompletion',
@@ -2199,7 +2215,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "teamInducement" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "apiKey" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "teamInducement" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2422,6 +2438,80 @@ export namespace Prisma {
           count: {
             args: Prisma.RefreshTokenCountArgs<ExtArgs>
             result: $Utils.Optional<RefreshTokenCountAggregateOutputType> | number
+          }
+        }
+      }
+      ApiKey: {
+        payload: Prisma.$ApiKeyPayload<ExtArgs>
+        fields: Prisma.ApiKeyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ApiKeyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ApiKeyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>
+          }
+          findFirst: {
+            args: Prisma.ApiKeyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ApiKeyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>
+          }
+          findMany: {
+            args: Prisma.ApiKeyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>[]
+          }
+          create: {
+            args: Prisma.ApiKeyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>
+          }
+          createMany: {
+            args: Prisma.ApiKeyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ApiKeyCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>[]
+          }
+          delete: {
+            args: Prisma.ApiKeyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>
+          }
+          update: {
+            args: Prisma.ApiKeyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>
+          }
+          deleteMany: {
+            args: Prisma.ApiKeyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ApiKeyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ApiKeyUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>[]
+          }
+          upsert: {
+            args: Prisma.ApiKeyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ApiKeyPayload>
+          }
+          aggregate: {
+            args: Prisma.ApiKeyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateApiKey>
+          }
+          groupBy: {
+            args: Prisma.ApiKeyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ApiKeyGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ApiKeyCountArgs<ExtArgs>
+            result: $Utils.Optional<ApiKeyCountAggregateOutputType> | number
           }
         }
       }
@@ -9332,6 +9422,7 @@ export namespace Prisma {
     user?: UserOmit
     eloSnapshot?: EloSnapshotOmit
     refreshToken?: RefreshTokenOmit
+    apiKey?: ApiKeyOmit
     passwordResetToken?: PasswordResetTokenOmit
     kofiTransaction?: KofiTransactionOmit
     tutorialCompletion?: TutorialCompletionOmit
@@ -9519,6 +9610,7 @@ export namespace Prisma {
     kofiTransactions: number
     refreshTokens: number
     passwordResetTokens: number
+    apiKeys: number
     eloSnapshots: number
     tutorialCompletions: number
     proSpectatorFollows: number
@@ -9558,6 +9650,7 @@ export namespace Prisma {
     kofiTransactions?: boolean | UserCountOutputTypeCountKofiTransactionsArgs
     refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
     passwordResetTokens?: boolean | UserCountOutputTypeCountPasswordResetTokensArgs
+    apiKeys?: boolean | UserCountOutputTypeCountApiKeysArgs
     eloSnapshots?: boolean | UserCountOutputTypeCountEloSnapshotsArgs
     tutorialCompletions?: boolean | UserCountOutputTypeCountTutorialCompletionsArgs
     proSpectatorFollows?: boolean | UserCountOutputTypeCountProSpectatorFollowsArgs
@@ -9695,6 +9788,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountPasswordResetTokensArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: PasswordResetTokenWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountApiKeysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ApiKeyWhereInput
   }
 
   /**
@@ -11701,6 +11801,7 @@ export namespace Prisma {
     kofiTransactions?: boolean | User$kofiTransactionsArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
     passwordResetTokens?: boolean | User$passwordResetTokensArgs<ExtArgs>
+    apiKeys?: boolean | User$apiKeysArgs<ExtArgs>
     eloSnapshots?: boolean | User$eloSnapshotsArgs<ExtArgs>
     tutorialCompletions?: boolean | User$tutorialCompletionsArgs<ExtArgs>
     proSpectatorFollows?: boolean | User$proSpectatorFollowsArgs<ExtArgs>
@@ -11855,6 +11956,7 @@ export namespace Prisma {
     kofiTransactions?: boolean | User$kofiTransactionsArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
     passwordResetTokens?: boolean | User$passwordResetTokensArgs<ExtArgs>
+    apiKeys?: boolean | User$apiKeysArgs<ExtArgs>
     eloSnapshots?: boolean | User$eloSnapshotsArgs<ExtArgs>
     tutorialCompletions?: boolean | User$tutorialCompletionsArgs<ExtArgs>
     proSpectatorFollows?: boolean | User$proSpectatorFollowsArgs<ExtArgs>
@@ -11901,6 +12003,7 @@ export namespace Prisma {
       kofiTransactions: Prisma.$KofiTransactionPayload<ExtArgs>[]
       refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
       passwordResetTokens: Prisma.$PasswordResetTokenPayload<ExtArgs>[]
+      apiKeys: Prisma.$ApiKeyPayload<ExtArgs>[]
       eloSnapshots: Prisma.$EloSnapshotPayload<ExtArgs>[]
       tutorialCompletions: Prisma.$TutorialCompletionPayload<ExtArgs>[]
       proSpectatorFollows: Prisma.$ProSpectatorFollowPayload<ExtArgs>[]
@@ -12433,6 +12536,7 @@ export namespace Prisma {
     kofiTransactions<T extends User$kofiTransactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$kofiTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$KofiTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     refreshTokens<T extends User$refreshTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     passwordResetTokens<T extends User$passwordResetTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$passwordResetTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PasswordResetTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    apiKeys<T extends User$apiKeysArgs<ExtArgs> = {}>(args?: Subset<T, User$apiKeysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     eloSnapshots<T extends User$eloSnapshotsArgs<ExtArgs> = {}>(args?: Subset<T, User$eloSnapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EloSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     tutorialCompletions<T extends User$tutorialCompletionsArgs<ExtArgs> = {}>(args?: Subset<T, User$tutorialCompletionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TutorialCompletionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     proSpectatorFollows<T extends User$proSpectatorFollowsArgs<ExtArgs> = {}>(args?: Subset<T, User$proSpectatorFollowsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ProSpectatorFollowPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -13280,6 +13384,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: PasswordResetTokenScalarFieldEnum | PasswordResetTokenScalarFieldEnum[]
+  }
+
+  /**
+   * User.apiKeys
+   */
+  export type User$apiKeysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    where?: ApiKeyWhereInput
+    orderBy?: ApiKeyOrderByWithRelationInput | ApiKeyOrderByWithRelationInput[]
+    cursor?: ApiKeyWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ApiKeyScalarFieldEnum | ApiKeyScalarFieldEnum[]
   }
 
   /**
@@ -15997,6 +16125,1153 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: RefreshTokenInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ApiKey
+   */
+
+  export type AggregateApiKey = {
+    _count: ApiKeyCountAggregateOutputType | null
+    _min: ApiKeyMinAggregateOutputType | null
+    _max: ApiKeyMaxAggregateOutputType | null
+  }
+
+  export type ApiKeyMinAggregateOutputType = {
+    id: string | null
+    name: string | null
+    keyPrefix: string | null
+    keyHash: string | null
+    scope: string | null
+    userId: string | null
+    expiresAt: Date | null
+    lastUsedAt: Date | null
+    lastUsedIp: string | null
+    revokedAt: Date | null
+    revokedById: string | null
+    createdAt: Date | null
+  }
+
+  export type ApiKeyMaxAggregateOutputType = {
+    id: string | null
+    name: string | null
+    keyPrefix: string | null
+    keyHash: string | null
+    scope: string | null
+    userId: string | null
+    expiresAt: Date | null
+    lastUsedAt: Date | null
+    lastUsedIp: string | null
+    revokedAt: Date | null
+    revokedById: string | null
+    createdAt: Date | null
+  }
+
+  export type ApiKeyCountAggregateOutputType = {
+    id: number
+    name: number
+    keyPrefix: number
+    keyHash: number
+    scope: number
+    userId: number
+    expiresAt: number
+    lastUsedAt: number
+    lastUsedIp: number
+    revokedAt: number
+    revokedById: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ApiKeyMinAggregateInputType = {
+    id?: true
+    name?: true
+    keyPrefix?: true
+    keyHash?: true
+    scope?: true
+    userId?: true
+    expiresAt?: true
+    lastUsedAt?: true
+    lastUsedIp?: true
+    revokedAt?: true
+    revokedById?: true
+    createdAt?: true
+  }
+
+  export type ApiKeyMaxAggregateInputType = {
+    id?: true
+    name?: true
+    keyPrefix?: true
+    keyHash?: true
+    scope?: true
+    userId?: true
+    expiresAt?: true
+    lastUsedAt?: true
+    lastUsedIp?: true
+    revokedAt?: true
+    revokedById?: true
+    createdAt?: true
+  }
+
+  export type ApiKeyCountAggregateInputType = {
+    id?: true
+    name?: true
+    keyPrefix?: true
+    keyHash?: true
+    scope?: true
+    userId?: true
+    expiresAt?: true
+    lastUsedAt?: true
+    lastUsedIp?: true
+    revokedAt?: true
+    revokedById?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ApiKeyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ApiKey to aggregate.
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ApiKeys to fetch.
+     */
+    orderBy?: ApiKeyOrderByWithRelationInput | ApiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ApiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ApiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ApiKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ApiKeys
+    **/
+    _count?: true | ApiKeyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ApiKeyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ApiKeyMaxAggregateInputType
+  }
+
+  export type GetApiKeyAggregateType<T extends ApiKeyAggregateArgs> = {
+        [P in keyof T & keyof AggregateApiKey]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateApiKey[P]>
+      : GetScalarType<T[P], AggregateApiKey[P]>
+  }
+
+
+
+
+  export type ApiKeyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ApiKeyWhereInput
+    orderBy?: ApiKeyOrderByWithAggregationInput | ApiKeyOrderByWithAggregationInput[]
+    by: ApiKeyScalarFieldEnum[] | ApiKeyScalarFieldEnum
+    having?: ApiKeyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ApiKeyCountAggregateInputType | true
+    _min?: ApiKeyMinAggregateInputType
+    _max?: ApiKeyMaxAggregateInputType
+  }
+
+  export type ApiKeyGroupByOutputType = {
+    id: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope: string
+    userId: string
+    expiresAt: Date | null
+    lastUsedAt: Date | null
+    lastUsedIp: string | null
+    revokedAt: Date | null
+    revokedById: string | null
+    createdAt: Date
+    _count: ApiKeyCountAggregateOutputType | null
+    _min: ApiKeyMinAggregateOutputType | null
+    _max: ApiKeyMaxAggregateOutputType | null
+  }
+
+  type GetApiKeyGroupByPayload<T extends ApiKeyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ApiKeyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ApiKeyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ApiKeyGroupByOutputType[P]>
+            : GetScalarType<T[P], ApiKeyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ApiKeySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    keyPrefix?: boolean
+    keyHash?: boolean
+    scope?: boolean
+    userId?: boolean
+    expiresAt?: boolean
+    lastUsedAt?: boolean
+    lastUsedIp?: boolean
+    revokedAt?: boolean
+    revokedById?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["apiKey"]>
+
+  export type ApiKeySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    keyPrefix?: boolean
+    keyHash?: boolean
+    scope?: boolean
+    userId?: boolean
+    expiresAt?: boolean
+    lastUsedAt?: boolean
+    lastUsedIp?: boolean
+    revokedAt?: boolean
+    revokedById?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["apiKey"]>
+
+  export type ApiKeySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    name?: boolean
+    keyPrefix?: boolean
+    keyHash?: boolean
+    scope?: boolean
+    userId?: boolean
+    expiresAt?: boolean
+    lastUsedAt?: boolean
+    lastUsedIp?: boolean
+    revokedAt?: boolean
+    revokedById?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["apiKey"]>
+
+  export type ApiKeySelectScalar = {
+    id?: boolean
+    name?: boolean
+    keyPrefix?: boolean
+    keyHash?: boolean
+    scope?: boolean
+    userId?: boolean
+    expiresAt?: boolean
+    lastUsedAt?: boolean
+    lastUsedIp?: boolean
+    revokedAt?: boolean
+    revokedById?: boolean
+    createdAt?: boolean
+  }
+
+  export type ApiKeyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "keyPrefix" | "keyHash" | "scope" | "userId" | "expiresAt" | "lastUsedAt" | "lastUsedIp" | "revokedAt" | "revokedById" | "createdAt", ExtArgs["result"]["apiKey"]>
+  export type ApiKeyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ApiKeyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ApiKeyIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ApiKeyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ApiKey"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      name: string
+      keyPrefix: string
+      keyHash: string
+      scope: string
+      userId: string
+      expiresAt: Date | null
+      lastUsedAt: Date | null
+      lastUsedIp: string | null
+      revokedAt: Date | null
+      revokedById: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["apiKey"]>
+    composites: {}
+  }
+
+  type ApiKeyGetPayload<S extends boolean | null | undefined | ApiKeyDefaultArgs> = $Result.GetResult<Prisma.$ApiKeyPayload, S>
+
+  type ApiKeyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ApiKeyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ApiKeyCountAggregateInputType | true
+    }
+
+  export interface ApiKeyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ApiKey'], meta: { name: 'ApiKey' } }
+    /**
+     * Find zero or one ApiKey that matches the filter.
+     * @param {ApiKeyFindUniqueArgs} args - Arguments to find a ApiKey
+     * @example
+     * // Get one ApiKey
+     * const apiKey = await prisma.apiKey.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ApiKeyFindUniqueArgs>(args: SelectSubset<T, ApiKeyFindUniqueArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ApiKey that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ApiKeyFindUniqueOrThrowArgs} args - Arguments to find a ApiKey
+     * @example
+     * // Get one ApiKey
+     * const apiKey = await prisma.apiKey.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ApiKeyFindUniqueOrThrowArgs>(args: SelectSubset<T, ApiKeyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ApiKey that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyFindFirstArgs} args - Arguments to find a ApiKey
+     * @example
+     * // Get one ApiKey
+     * const apiKey = await prisma.apiKey.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ApiKeyFindFirstArgs>(args?: SelectSubset<T, ApiKeyFindFirstArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ApiKey that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyFindFirstOrThrowArgs} args - Arguments to find a ApiKey
+     * @example
+     * // Get one ApiKey
+     * const apiKey = await prisma.apiKey.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ApiKeyFindFirstOrThrowArgs>(args?: SelectSubset<T, ApiKeyFindFirstOrThrowArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ApiKeys that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ApiKeys
+     * const apiKeys = await prisma.apiKey.findMany()
+     * 
+     * // Get first 10 ApiKeys
+     * const apiKeys = await prisma.apiKey.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const apiKeyWithIdOnly = await prisma.apiKey.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ApiKeyFindManyArgs>(args?: SelectSubset<T, ApiKeyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ApiKey.
+     * @param {ApiKeyCreateArgs} args - Arguments to create a ApiKey.
+     * @example
+     * // Create one ApiKey
+     * const ApiKey = await prisma.apiKey.create({
+     *   data: {
+     *     // ... data to create a ApiKey
+     *   }
+     * })
+     * 
+     */
+    create<T extends ApiKeyCreateArgs>(args: SelectSubset<T, ApiKeyCreateArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ApiKeys.
+     * @param {ApiKeyCreateManyArgs} args - Arguments to create many ApiKeys.
+     * @example
+     * // Create many ApiKeys
+     * const apiKey = await prisma.apiKey.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ApiKeyCreateManyArgs>(args?: SelectSubset<T, ApiKeyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ApiKeys and returns the data saved in the database.
+     * @param {ApiKeyCreateManyAndReturnArgs} args - Arguments to create many ApiKeys.
+     * @example
+     * // Create many ApiKeys
+     * const apiKey = await prisma.apiKey.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ApiKeys and only return the `id`
+     * const apiKeyWithIdOnly = await prisma.apiKey.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ApiKeyCreateManyAndReturnArgs>(args?: SelectSubset<T, ApiKeyCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ApiKey.
+     * @param {ApiKeyDeleteArgs} args - Arguments to delete one ApiKey.
+     * @example
+     * // Delete one ApiKey
+     * const ApiKey = await prisma.apiKey.delete({
+     *   where: {
+     *     // ... filter to delete one ApiKey
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ApiKeyDeleteArgs>(args: SelectSubset<T, ApiKeyDeleteArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ApiKey.
+     * @param {ApiKeyUpdateArgs} args - Arguments to update one ApiKey.
+     * @example
+     * // Update one ApiKey
+     * const apiKey = await prisma.apiKey.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ApiKeyUpdateArgs>(args: SelectSubset<T, ApiKeyUpdateArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ApiKeys.
+     * @param {ApiKeyDeleteManyArgs} args - Arguments to filter ApiKeys to delete.
+     * @example
+     * // Delete a few ApiKeys
+     * const { count } = await prisma.apiKey.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ApiKeyDeleteManyArgs>(args?: SelectSubset<T, ApiKeyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ApiKeys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ApiKeys
+     * const apiKey = await prisma.apiKey.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ApiKeyUpdateManyArgs>(args: SelectSubset<T, ApiKeyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ApiKeys and returns the data updated in the database.
+     * @param {ApiKeyUpdateManyAndReturnArgs} args - Arguments to update many ApiKeys.
+     * @example
+     * // Update many ApiKeys
+     * const apiKey = await prisma.apiKey.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ApiKeys and only return the `id`
+     * const apiKeyWithIdOnly = await prisma.apiKey.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ApiKeyUpdateManyAndReturnArgs>(args: SelectSubset<T, ApiKeyUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ApiKey.
+     * @param {ApiKeyUpsertArgs} args - Arguments to update or create a ApiKey.
+     * @example
+     * // Update or create a ApiKey
+     * const apiKey = await prisma.apiKey.upsert({
+     *   create: {
+     *     // ... data to create a ApiKey
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ApiKey we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ApiKeyUpsertArgs>(args: SelectSubset<T, ApiKeyUpsertArgs<ExtArgs>>): Prisma__ApiKeyClient<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ApiKeys.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyCountArgs} args - Arguments to filter ApiKeys to count.
+     * @example
+     * // Count the number of ApiKeys
+     * const count = await prisma.apiKey.count({
+     *   where: {
+     *     // ... the filter for the ApiKeys we want to count
+     *   }
+     * })
+    **/
+    count<T extends ApiKeyCountArgs>(
+      args?: Subset<T, ApiKeyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ApiKeyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ApiKey.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ApiKeyAggregateArgs>(args: Subset<T, ApiKeyAggregateArgs>): Prisma.PrismaPromise<GetApiKeyAggregateType<T>>
+
+    /**
+     * Group by ApiKey.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ApiKeyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ApiKeyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ApiKeyGroupByArgs['orderBy'] }
+        : { orderBy?: ApiKeyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ApiKeyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetApiKeyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ApiKey model
+   */
+  readonly fields: ApiKeyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ApiKey.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ApiKeyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ApiKey model
+   */
+  interface ApiKeyFieldRefs {
+    readonly id: FieldRef<"ApiKey", 'String'>
+    readonly name: FieldRef<"ApiKey", 'String'>
+    readonly keyPrefix: FieldRef<"ApiKey", 'String'>
+    readonly keyHash: FieldRef<"ApiKey", 'String'>
+    readonly scope: FieldRef<"ApiKey", 'String'>
+    readonly userId: FieldRef<"ApiKey", 'String'>
+    readonly expiresAt: FieldRef<"ApiKey", 'DateTime'>
+    readonly lastUsedAt: FieldRef<"ApiKey", 'DateTime'>
+    readonly lastUsedIp: FieldRef<"ApiKey", 'String'>
+    readonly revokedAt: FieldRef<"ApiKey", 'DateTime'>
+    readonly revokedById: FieldRef<"ApiKey", 'String'>
+    readonly createdAt: FieldRef<"ApiKey", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ApiKey findUnique
+   */
+  export type ApiKeyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * Filter, which ApiKey to fetch.
+     */
+    where: ApiKeyWhereUniqueInput
+  }
+
+  /**
+   * ApiKey findUniqueOrThrow
+   */
+  export type ApiKeyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * Filter, which ApiKey to fetch.
+     */
+    where: ApiKeyWhereUniqueInput
+  }
+
+  /**
+   * ApiKey findFirst
+   */
+  export type ApiKeyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * Filter, which ApiKey to fetch.
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ApiKeys to fetch.
+     */
+    orderBy?: ApiKeyOrderByWithRelationInput | ApiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ApiKeys.
+     */
+    cursor?: ApiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ApiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ApiKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ApiKeys.
+     */
+    distinct?: ApiKeyScalarFieldEnum | ApiKeyScalarFieldEnum[]
+  }
+
+  /**
+   * ApiKey findFirstOrThrow
+   */
+  export type ApiKeyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * Filter, which ApiKey to fetch.
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ApiKeys to fetch.
+     */
+    orderBy?: ApiKeyOrderByWithRelationInput | ApiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ApiKeys.
+     */
+    cursor?: ApiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ApiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ApiKeys.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ApiKeys.
+     */
+    distinct?: ApiKeyScalarFieldEnum | ApiKeyScalarFieldEnum[]
+  }
+
+  /**
+   * ApiKey findMany
+   */
+  export type ApiKeyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * Filter, which ApiKeys to fetch.
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ApiKeys to fetch.
+     */
+    orderBy?: ApiKeyOrderByWithRelationInput | ApiKeyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ApiKeys.
+     */
+    cursor?: ApiKeyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ApiKeys from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ApiKeys.
+     */
+    skip?: number
+    distinct?: ApiKeyScalarFieldEnum | ApiKeyScalarFieldEnum[]
+  }
+
+  /**
+   * ApiKey create
+   */
+  export type ApiKeyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ApiKey.
+     */
+    data: XOR<ApiKeyCreateInput, ApiKeyUncheckedCreateInput>
+  }
+
+  /**
+   * ApiKey createMany
+   */
+  export type ApiKeyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ApiKeys.
+     */
+    data: ApiKeyCreateManyInput | ApiKeyCreateManyInput[]
+  }
+
+  /**
+   * ApiKey createManyAndReturn
+   */
+  export type ApiKeyCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * The data used to create many ApiKeys.
+     */
+    data: ApiKeyCreateManyInput | ApiKeyCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ApiKey update
+   */
+  export type ApiKeyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ApiKey.
+     */
+    data: XOR<ApiKeyUpdateInput, ApiKeyUncheckedUpdateInput>
+    /**
+     * Choose, which ApiKey to update.
+     */
+    where: ApiKeyWhereUniqueInput
+  }
+
+  /**
+   * ApiKey updateMany
+   */
+  export type ApiKeyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ApiKeys.
+     */
+    data: XOR<ApiKeyUpdateManyMutationInput, ApiKeyUncheckedUpdateManyInput>
+    /**
+     * Filter which ApiKeys to update
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * Limit how many ApiKeys to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ApiKey updateManyAndReturn
+   */
+  export type ApiKeyUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * The data used to update ApiKeys.
+     */
+    data: XOR<ApiKeyUpdateManyMutationInput, ApiKeyUncheckedUpdateManyInput>
+    /**
+     * Filter which ApiKeys to update
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * Limit how many ApiKeys to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ApiKey upsert
+   */
+  export type ApiKeyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ApiKey to update in case it exists.
+     */
+    where: ApiKeyWhereUniqueInput
+    /**
+     * In case the ApiKey found by the `where` argument doesn't exist, create a new ApiKey with this data.
+     */
+    create: XOR<ApiKeyCreateInput, ApiKeyUncheckedCreateInput>
+    /**
+     * In case the ApiKey was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ApiKeyUpdateInput, ApiKeyUncheckedUpdateInput>
+  }
+
+  /**
+   * ApiKey delete
+   */
+  export type ApiKeyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
+    /**
+     * Filter which ApiKey to delete.
+     */
+    where: ApiKeyWhereUniqueInput
+  }
+
+  /**
+   * ApiKey deleteMany
+   */
+  export type ApiKeyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ApiKeys to delete
+     */
+    where?: ApiKeyWhereInput
+    /**
+     * Limit how many ApiKeys to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ApiKey without action
+   */
+  export type ApiKeyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ApiKey
+     */
+    select?: ApiKeySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ApiKey
+     */
+    omit?: ApiKeyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ApiKeyInclude<ExtArgs> | null
   }
 
 
@@ -108941,6 +110216,7 @@ export namespace Prisma {
     newValue: string | null
     ipAddress: string | null
     userAgent: string | null
+    apiKeyId: string | null
     createdAt: Date | null
   }
 
@@ -108954,6 +110230,7 @@ export namespace Prisma {
     newValue: string | null
     ipAddress: string | null
     userAgent: string | null
+    apiKeyId: string | null
     createdAt: Date | null
   }
 
@@ -108967,6 +110244,7 @@ export namespace Prisma {
     newValue: number
     ipAddress: number
     userAgent: number
+    apiKeyId: number
     createdAt: number
     _all: number
   }
@@ -108982,6 +110260,7 @@ export namespace Prisma {
     newValue?: true
     ipAddress?: true
     userAgent?: true
+    apiKeyId?: true
     createdAt?: true
   }
 
@@ -108995,6 +110274,7 @@ export namespace Prisma {
     newValue?: true
     ipAddress?: true
     userAgent?: true
+    apiKeyId?: true
     createdAt?: true
   }
 
@@ -109008,6 +110288,7 @@ export namespace Prisma {
     newValue?: true
     ipAddress?: true
     userAgent?: true
+    apiKeyId?: true
     createdAt?: true
     _all?: true
   }
@@ -109094,6 +110375,7 @@ export namespace Prisma {
     newValue: string | null
     ipAddress: string | null
     userAgent: string | null
+    apiKeyId: string | null
     createdAt: Date
     _count: AuditLogCountAggregateOutputType | null
     _min: AuditLogMinAggregateOutputType | null
@@ -109124,6 +110406,7 @@ export namespace Prisma {
     newValue?: boolean
     ipAddress?: boolean
     userAgent?: boolean
+    apiKeyId?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["auditLog"]>
 
@@ -109137,6 +110420,7 @@ export namespace Prisma {
     newValue?: boolean
     ipAddress?: boolean
     userAgent?: boolean
+    apiKeyId?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["auditLog"]>
 
@@ -109150,6 +110434,7 @@ export namespace Prisma {
     newValue?: boolean
     ipAddress?: boolean
     userAgent?: boolean
+    apiKeyId?: boolean
     createdAt?: boolean
   }, ExtArgs["result"]["auditLog"]>
 
@@ -109163,10 +110448,11 @@ export namespace Prisma {
     newValue?: boolean
     ipAddress?: boolean
     userAgent?: boolean
+    apiKeyId?: boolean
     createdAt?: boolean
   }
 
-  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "entity" | "entityId" | "oldValue" | "newValue" | "ipAddress" | "userAgent" | "createdAt", ExtArgs["result"]["auditLog"]>
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "entity" | "entityId" | "oldValue" | "newValue" | "ipAddress" | "userAgent" | "apiKeyId" | "createdAt", ExtArgs["result"]["auditLog"]>
 
   export type $AuditLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "AuditLog"
@@ -109181,6 +110467,7 @@ export namespace Prisma {
       newValue: string | null
       ipAddress: string | null
       userAgent: string | null
+      apiKeyId: string | null
       createdAt: Date
     }, ExtArgs["result"]["auditLog"]>
     composites: {}
@@ -109614,6 +110901,7 @@ export namespace Prisma {
     readonly newValue: FieldRef<"AuditLog", 'String'>
     readonly ipAddress: FieldRef<"AuditLog", 'String'>
     readonly userAgent: FieldRef<"AuditLog", 'String'>
+    readonly apiKeyId: FieldRef<"AuditLog", 'String'>
     readonly createdAt: FieldRef<"AuditLog", 'DateTime'>
   }
     
@@ -110022,6 +111310,7 @@ export namespace Prisma {
     actorRole: string | null
     actorLabel: string | null
     impersonatorId: string | null
+    apiKeyId: string | null
     source: string | null
     route: string | null
     ipAddress: string | null
@@ -110051,6 +111340,7 @@ export namespace Prisma {
     actorRole: string | null
     actorLabel: string | null
     impersonatorId: string | null
+    apiKeyId: string | null
     source: string | null
     route: string | null
     ipAddress: string | null
@@ -110080,6 +111370,7 @@ export namespace Prisma {
     actorRole: number
     actorLabel: number
     impersonatorId: number
+    apiKeyId: number
     source: number
     route: number
     ipAddress: number
@@ -110129,6 +111420,7 @@ export namespace Prisma {
     actorRole?: true
     actorLabel?: true
     impersonatorId?: true
+    apiKeyId?: true
     source?: true
     route?: true
     ipAddress?: true
@@ -110158,6 +111450,7 @@ export namespace Prisma {
     actorRole?: true
     actorLabel?: true
     impersonatorId?: true
+    apiKeyId?: true
     source?: true
     route?: true
     ipAddress?: true
@@ -110187,6 +111480,7 @@ export namespace Prisma {
     actorRole?: true
     actorLabel?: true
     impersonatorId?: true
+    apiKeyId?: true
     source?: true
     route?: true
     ipAddress?: true
@@ -110303,6 +111597,7 @@ export namespace Prisma {
     actorRole: string
     actorLabel: string | null
     impersonatorId: string | null
+    apiKeyId: string | null
     source: string
     route: string | null
     ipAddress: string | null
@@ -110351,6 +111646,7 @@ export namespace Prisma {
     actorRole?: boolean
     actorLabel?: boolean
     impersonatorId?: boolean
+    apiKeyId?: boolean
     source?: boolean
     route?: boolean
     ipAddress?: boolean
@@ -110380,6 +111676,7 @@ export namespace Prisma {
     actorRole?: boolean
     actorLabel?: boolean
     impersonatorId?: boolean
+    apiKeyId?: boolean
     source?: boolean
     route?: boolean
     ipAddress?: boolean
@@ -110409,6 +111706,7 @@ export namespace Prisma {
     actorRole?: boolean
     actorLabel?: boolean
     impersonatorId?: boolean
+    apiKeyId?: boolean
     source?: boolean
     route?: boolean
     ipAddress?: boolean
@@ -110438,6 +111736,7 @@ export namespace Prisma {
     actorRole?: boolean
     actorLabel?: boolean
     impersonatorId?: boolean
+    apiKeyId?: boolean
     source?: boolean
     route?: boolean
     ipAddress?: boolean
@@ -110454,7 +111753,7 @@ export namespace Prisma {
     note?: boolean
   }
 
-  export type TeamAuditEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "createdAt" | "correlationId" | "step" | "action" | "entity" | "entityId" | "actorUserId" | "actorRole" | "actorLabel" | "impersonatorId" | "source" | "route" | "ipAddress" | "userAgent" | "changes" | "before" | "after" | "details" | "treasury" | "teamValue" | "currentValue" | "treasuryDelta" | "teamValueDelta" | "note", ExtArgs["result"]["teamAuditEvent"]>
+  export type TeamAuditEventOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "createdAt" | "correlationId" | "step" | "action" | "entity" | "entityId" | "actorUserId" | "actorRole" | "actorLabel" | "impersonatorId" | "apiKeyId" | "source" | "route" | "ipAddress" | "userAgent" | "changes" | "before" | "after" | "details" | "treasury" | "teamValue" | "currentValue" | "treasuryDelta" | "teamValueDelta" | "note", ExtArgs["result"]["teamAuditEvent"]>
 
   export type $TeamAuditEventPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "TeamAuditEvent"
@@ -110472,6 +111771,7 @@ export namespace Prisma {
       actorRole: string
       actorLabel: string | null
       impersonatorId: string | null
+      apiKeyId: string | null
       source: string
       route: string | null
       ipAddress: string | null
@@ -110921,6 +112221,7 @@ export namespace Prisma {
     readonly actorRole: FieldRef<"TeamAuditEvent", 'String'>
     readonly actorLabel: FieldRef<"TeamAuditEvent", 'String'>
     readonly impersonatorId: FieldRef<"TeamAuditEvent", 'String'>
+    readonly apiKeyId: FieldRef<"TeamAuditEvent", 'String'>
     readonly source: FieldRef<"TeamAuditEvent", 'String'>
     readonly route: FieldRef<"TeamAuditEvent", 'String'>
     readonly ipAddress: FieldRef<"TeamAuditEvent", 'String'>
@@ -126165,6 +127466,24 @@ export namespace Prisma {
   export type RefreshTokenScalarFieldEnum = (typeof RefreshTokenScalarFieldEnum)[keyof typeof RefreshTokenScalarFieldEnum]
 
 
+  export const ApiKeyScalarFieldEnum: {
+    id: 'id',
+    name: 'name',
+    keyPrefix: 'keyPrefix',
+    keyHash: 'keyHash',
+    scope: 'scope',
+    userId: 'userId',
+    expiresAt: 'expiresAt',
+    lastUsedAt: 'lastUsedAt',
+    lastUsedIp: 'lastUsedIp',
+    revokedAt: 'revokedAt',
+    revokedById: 'revokedById',
+    createdAt: 'createdAt'
+  };
+
+  export type ApiKeyScalarFieldEnum = (typeof ApiKeyScalarFieldEnum)[keyof typeof ApiKeyScalarFieldEnum]
+
+
   export const PasswordResetTokenScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
@@ -127556,6 +128875,7 @@ export namespace Prisma {
     newValue: 'newValue',
     ipAddress: 'ipAddress',
     userAgent: 'userAgent',
+    apiKeyId: 'apiKeyId',
     createdAt: 'createdAt'
   };
 
@@ -127575,6 +128895,7 @@ export namespace Prisma {
     actorRole: 'actorRole',
     actorLabel: 'actorLabel',
     impersonatorId: 'impersonatorId',
+    apiKeyId: 'apiKeyId',
     source: 'source',
     route: 'route',
     ipAddress: 'ipAddress',
@@ -127992,6 +129313,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
     passwordResetTokens?: PasswordResetTokenListRelationFilter
+    apiKeys?: ApiKeyListRelationFilter
     eloSnapshots?: EloSnapshotListRelationFilter
     tutorialCompletions?: TutorialCompletionListRelationFilter
     proSpectatorFollows?: ProSpectatorFollowListRelationFilter
@@ -128067,6 +129389,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionOrderByRelationAggregateInput
     refreshTokens?: RefreshTokenOrderByRelationAggregateInput
     passwordResetTokens?: PasswordResetTokenOrderByRelationAggregateInput
+    apiKeys?: ApiKeyOrderByRelationAggregateInput
     eloSnapshots?: EloSnapshotOrderByRelationAggregateInput
     tutorialCompletions?: TutorialCompletionOrderByRelationAggregateInput
     proSpectatorFollows?: ProSpectatorFollowOrderByRelationAggregateInput
@@ -128145,6 +129468,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
     passwordResetTokens?: PasswordResetTokenListRelationFilter
+    apiKeys?: ApiKeyListRelationFilter
     eloSnapshots?: EloSnapshotListRelationFilter
     tutorialCompletions?: TutorialCompletionListRelationFilter
     proSpectatorFollows?: ProSpectatorFollowListRelationFilter
@@ -128371,6 +129695,96 @@ export namespace Prisma {
     expiresAt?: DateTimeWithAggregatesFilter<"RefreshToken"> | Date | string
     revokedAt?: DateTimeNullableWithAggregatesFilter<"RefreshToken"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"RefreshToken"> | Date | string
+  }
+
+  export type ApiKeyWhereInput = {
+    AND?: ApiKeyWhereInput | ApiKeyWhereInput[]
+    OR?: ApiKeyWhereInput[]
+    NOT?: ApiKeyWhereInput | ApiKeyWhereInput[]
+    id?: StringFilter<"ApiKey"> | string
+    name?: StringFilter<"ApiKey"> | string
+    keyPrefix?: StringFilter<"ApiKey"> | string
+    keyHash?: StringFilter<"ApiKey"> | string
+    scope?: StringFilter<"ApiKey"> | string
+    userId?: StringFilter<"ApiKey"> | string
+    expiresAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    lastUsedAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    lastUsedIp?: StringNullableFilter<"ApiKey"> | string | null
+    revokedAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    revokedById?: StringNullableFilter<"ApiKey"> | string | null
+    createdAt?: DateTimeFilter<"ApiKey"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ApiKeyOrderByWithRelationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    keyPrefix?: SortOrder
+    keyHash?: SortOrder
+    scope?: SortOrder
+    userId?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
+    lastUsedIp?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    revokedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type ApiKeyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    keyHash?: string
+    AND?: ApiKeyWhereInput | ApiKeyWhereInput[]
+    OR?: ApiKeyWhereInput[]
+    NOT?: ApiKeyWhereInput | ApiKeyWhereInput[]
+    name?: StringFilter<"ApiKey"> | string
+    keyPrefix?: StringFilter<"ApiKey"> | string
+    scope?: StringFilter<"ApiKey"> | string
+    userId?: StringFilter<"ApiKey"> | string
+    expiresAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    lastUsedAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    lastUsedIp?: StringNullableFilter<"ApiKey"> | string | null
+    revokedAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    revokedById?: StringNullableFilter<"ApiKey"> | string | null
+    createdAt?: DateTimeFilter<"ApiKey"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "keyHash">
+
+  export type ApiKeyOrderByWithAggregationInput = {
+    id?: SortOrder
+    name?: SortOrder
+    keyPrefix?: SortOrder
+    keyHash?: SortOrder
+    scope?: SortOrder
+    userId?: SortOrder
+    expiresAt?: SortOrderInput | SortOrder
+    lastUsedAt?: SortOrderInput | SortOrder
+    lastUsedIp?: SortOrderInput | SortOrder
+    revokedAt?: SortOrderInput | SortOrder
+    revokedById?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: ApiKeyCountOrderByAggregateInput
+    _max?: ApiKeyMaxOrderByAggregateInput
+    _min?: ApiKeyMinOrderByAggregateInput
+  }
+
+  export type ApiKeyScalarWhereWithAggregatesInput = {
+    AND?: ApiKeyScalarWhereWithAggregatesInput | ApiKeyScalarWhereWithAggregatesInput[]
+    OR?: ApiKeyScalarWhereWithAggregatesInput[]
+    NOT?: ApiKeyScalarWhereWithAggregatesInput | ApiKeyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ApiKey"> | string
+    name?: StringWithAggregatesFilter<"ApiKey"> | string
+    keyPrefix?: StringWithAggregatesFilter<"ApiKey"> | string
+    keyHash?: StringWithAggregatesFilter<"ApiKey"> | string
+    scope?: StringWithAggregatesFilter<"ApiKey"> | string
+    userId?: StringWithAggregatesFilter<"ApiKey"> | string
+    expiresAt?: DateTimeNullableWithAggregatesFilter<"ApiKey"> | Date | string | null
+    lastUsedAt?: DateTimeNullableWithAggregatesFilter<"ApiKey"> | Date | string | null
+    lastUsedIp?: StringNullableWithAggregatesFilter<"ApiKey"> | string | null
+    revokedAt?: DateTimeNullableWithAggregatesFilter<"ApiKey"> | Date | string | null
+    revokedById?: StringNullableWithAggregatesFilter<"ApiKey"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"ApiKey"> | Date | string
   }
 
   export type PasswordResetTokenWhereInput = {
@@ -135754,6 +137168,7 @@ export namespace Prisma {
     newValue?: StringNullableFilter<"AuditLog"> | string | null
     ipAddress?: StringNullableFilter<"AuditLog"> | string | null
     userAgent?: StringNullableFilter<"AuditLog"> | string | null
+    apiKeyId?: StringNullableFilter<"AuditLog"> | string | null
     createdAt?: DateTimeFilter<"AuditLog"> | Date | string
   }
 
@@ -135767,6 +137182,7 @@ export namespace Prisma {
     newValue?: SortOrderInput | SortOrder
     ipAddress?: SortOrderInput | SortOrder
     userAgent?: SortOrderInput | SortOrder
+    apiKeyId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
   }
 
@@ -135783,6 +137199,7 @@ export namespace Prisma {
     newValue?: StringNullableFilter<"AuditLog"> | string | null
     ipAddress?: StringNullableFilter<"AuditLog"> | string | null
     userAgent?: StringNullableFilter<"AuditLog"> | string | null
+    apiKeyId?: StringNullableFilter<"AuditLog"> | string | null
     createdAt?: DateTimeFilter<"AuditLog"> | Date | string
   }, "id">
 
@@ -135796,6 +137213,7 @@ export namespace Prisma {
     newValue?: SortOrderInput | SortOrder
     ipAddress?: SortOrderInput | SortOrder
     userAgent?: SortOrderInput | SortOrder
+    apiKeyId?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     _count?: AuditLogCountOrderByAggregateInput
     _max?: AuditLogMaxOrderByAggregateInput
@@ -135815,6 +137233,7 @@ export namespace Prisma {
     newValue?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     ipAddress?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     userAgent?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    apiKeyId?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"AuditLog"> | Date | string
   }
 
@@ -135834,6 +137253,7 @@ export namespace Prisma {
     actorRole?: StringFilter<"TeamAuditEvent"> | string
     actorLabel?: StringNullableFilter<"TeamAuditEvent"> | string | null
     impersonatorId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    apiKeyId?: StringNullableFilter<"TeamAuditEvent"> | string | null
     source?: StringFilter<"TeamAuditEvent"> | string
     route?: StringNullableFilter<"TeamAuditEvent"> | string | null
     ipAddress?: StringNullableFilter<"TeamAuditEvent"> | string | null
@@ -135863,6 +137283,7 @@ export namespace Prisma {
     actorRole?: SortOrder
     actorLabel?: SortOrderInput | SortOrder
     impersonatorId?: SortOrderInput | SortOrder
+    apiKeyId?: SortOrderInput | SortOrder
     source?: SortOrder
     route?: SortOrderInput | SortOrder
     ipAddress?: SortOrderInput | SortOrder
@@ -135895,6 +137316,7 @@ export namespace Prisma {
     actorRole?: StringFilter<"TeamAuditEvent"> | string
     actorLabel?: StringNullableFilter<"TeamAuditEvent"> | string | null
     impersonatorId?: StringNullableFilter<"TeamAuditEvent"> | string | null
+    apiKeyId?: StringNullableFilter<"TeamAuditEvent"> | string | null
     source?: StringFilter<"TeamAuditEvent"> | string
     route?: StringNullableFilter<"TeamAuditEvent"> | string | null
     ipAddress?: StringNullableFilter<"TeamAuditEvent"> | string | null
@@ -135924,6 +137346,7 @@ export namespace Prisma {
     actorRole?: SortOrder
     actorLabel?: SortOrderInput | SortOrder
     impersonatorId?: SortOrderInput | SortOrder
+    apiKeyId?: SortOrderInput | SortOrder
     source?: SortOrder
     route?: SortOrderInput | SortOrder
     ipAddress?: SortOrderInput | SortOrder
@@ -135961,6 +137384,7 @@ export namespace Prisma {
     actorRole?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
     actorLabel?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
     impersonatorId?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
+    apiKeyId?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
     source?: StringWithAggregatesFilter<"TeamAuditEvent"> | string
     route?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
     ipAddress?: StringNullableWithAggregatesFilter<"TeamAuditEvent"> | string | null
@@ -137094,6 +138518,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -137169,6 +138594,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -137244,6 +138670,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -137319,6 +138746,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -137575,6 +139003,110 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
     revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ApiKeyCreateInput = {
+    id?: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope?: string
+    expiresAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    lastUsedIp?: string | null
+    revokedAt?: Date | string | null
+    revokedById?: string | null
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutApiKeysInput
+  }
+
+  export type ApiKeyUncheckedCreateInput = {
+    id?: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope?: string
+    userId: string
+    expiresAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    lastUsedIp?: string | null
+    revokedAt?: Date | string | null
+    revokedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ApiKeyUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutApiKeysNestedInput
+  }
+
+  export type ApiKeyUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ApiKeyCreateManyInput = {
+    id?: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope?: string
+    userId: string
+    expiresAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    lastUsedIp?: string | null
+    revokedAt?: Date | string | null
+    revokedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ApiKeyUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ApiKeyUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -145877,6 +147409,7 @@ export namespace Prisma {
     newValue?: string | null
     ipAddress?: string | null
     userAgent?: string | null
+    apiKeyId?: string | null
     createdAt?: Date | string
   }
 
@@ -145890,6 +147423,7 @@ export namespace Prisma {
     newValue?: string | null
     ipAddress?: string | null
     userAgent?: string | null
+    apiKeyId?: string | null
     createdAt?: Date | string
   }
 
@@ -145903,6 +147437,7 @@ export namespace Prisma {
     newValue?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -145916,6 +147451,7 @@ export namespace Prisma {
     newValue?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -145929,6 +147465,7 @@ export namespace Prisma {
     newValue?: string | null
     ipAddress?: string | null
     userAgent?: string | null
+    apiKeyId?: string | null
     createdAt?: Date | string
   }
 
@@ -145942,6 +147479,7 @@ export namespace Prisma {
     newValue?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -145955,6 +147493,7 @@ export namespace Prisma {
     newValue?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
     userAgent?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -145971,6 +147510,7 @@ export namespace Prisma {
     actorRole?: string
     actorLabel?: string | null
     impersonatorId?: string | null
+    apiKeyId?: string | null
     source?: string
     route?: string | null
     ipAddress?: string | null
@@ -146000,6 +147540,7 @@ export namespace Prisma {
     actorRole?: string
     actorLabel?: string | null
     impersonatorId?: string | null
+    apiKeyId?: string | null
     source?: string
     route?: string | null
     ipAddress?: string | null
@@ -146029,6 +147570,7 @@ export namespace Prisma {
     actorRole?: StringFieldUpdateOperationsInput | string
     actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
     impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     source?: StringFieldUpdateOperationsInput | string
     route?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
@@ -146058,6 +147600,7 @@ export namespace Prisma {
     actorRole?: StringFieldUpdateOperationsInput | string
     actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
     impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     source?: StringFieldUpdateOperationsInput | string
     route?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
@@ -146087,6 +147630,7 @@ export namespace Prisma {
     actorRole?: string
     actorLabel?: string | null
     impersonatorId?: string | null
+    apiKeyId?: string | null
     source?: string
     route?: string | null
     ipAddress?: string | null
@@ -146116,6 +147660,7 @@ export namespace Prisma {
     actorRole?: StringFieldUpdateOperationsInput | string
     actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
     impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     source?: StringFieldUpdateOperationsInput | string
     route?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
@@ -146145,6 +147690,7 @@ export namespace Prisma {
     actorRole?: StringFieldUpdateOperationsInput | string
     actorLabel?: NullableStringFieldUpdateOperationsInput | string | null
     impersonatorId?: NullableStringFieldUpdateOperationsInput | string | null
+    apiKeyId?: NullableStringFieldUpdateOperationsInput | string | null
     source?: StringFieldUpdateOperationsInput | string
     route?: NullableStringFieldUpdateOperationsInput | string | null
     ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
@@ -147453,6 +148999,12 @@ export namespace Prisma {
     none?: PasswordResetTokenWhereInput
   }
 
+  export type ApiKeyListRelationFilter = {
+    every?: ApiKeyWhereInput
+    some?: ApiKeyWhereInput
+    none?: ApiKeyWhereInput
+  }
+
   export type EloSnapshotListRelationFilter = {
     every?: EloSnapshotWhereInput
     some?: EloSnapshotWhereInput
@@ -147626,6 +149178,10 @@ export namespace Prisma {
   }
 
   export type PasswordResetTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ApiKeyOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -147976,6 +149532,51 @@ export namespace Prisma {
     userId?: SortOrder
     expiresAt?: SortOrder
     revokedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ApiKeyCountOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    keyPrefix?: SortOrder
+    keyHash?: SortOrder
+    scope?: SortOrder
+    userId?: SortOrder
+    expiresAt?: SortOrder
+    lastUsedAt?: SortOrder
+    lastUsedIp?: SortOrder
+    revokedAt?: SortOrder
+    revokedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ApiKeyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    keyPrefix?: SortOrder
+    keyHash?: SortOrder
+    scope?: SortOrder
+    userId?: SortOrder
+    expiresAt?: SortOrder
+    lastUsedAt?: SortOrder
+    lastUsedIp?: SortOrder
+    revokedAt?: SortOrder
+    revokedById?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ApiKeyMinOrderByAggregateInput = {
+    id?: SortOrder
+    name?: SortOrder
+    keyPrefix?: SortOrder
+    keyHash?: SortOrder
+    scope?: SortOrder
+    userId?: SortOrder
+    expiresAt?: SortOrder
+    lastUsedAt?: SortOrder
+    lastUsedIp?: SortOrder
+    revokedAt?: SortOrder
+    revokedById?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -153057,6 +154658,7 @@ export namespace Prisma {
     newValue?: SortOrder
     ipAddress?: SortOrder
     userAgent?: SortOrder
+    apiKeyId?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -153070,6 +154672,7 @@ export namespace Prisma {
     newValue?: SortOrder
     ipAddress?: SortOrder
     userAgent?: SortOrder
+    apiKeyId?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -153083,6 +154686,7 @@ export namespace Prisma {
     newValue?: SortOrder
     ipAddress?: SortOrder
     userAgent?: SortOrder
+    apiKeyId?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -153099,6 +154703,7 @@ export namespace Prisma {
     actorRole?: SortOrder
     actorLabel?: SortOrder
     impersonatorId?: SortOrder
+    apiKeyId?: SortOrder
     source?: SortOrder
     route?: SortOrder
     ipAddress?: SortOrder
@@ -153137,6 +154742,7 @@ export namespace Prisma {
     actorRole?: SortOrder
     actorLabel?: SortOrder
     impersonatorId?: SortOrder
+    apiKeyId?: SortOrder
     source?: SortOrder
     route?: SortOrder
     ipAddress?: SortOrder
@@ -153166,6 +154772,7 @@ export namespace Prisma {
     actorRole?: SortOrder
     actorLabel?: SortOrder
     impersonatorId?: SortOrder
+    apiKeyId?: SortOrder
     source?: SortOrder
     route?: SortOrder
     ipAddress?: SortOrder
@@ -153931,6 +155538,13 @@ export namespace Prisma {
     connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
   }
 
+  export type ApiKeyCreateNestedManyWithoutUserInput = {
+    create?: XOR<ApiKeyCreateWithoutUserInput, ApiKeyUncheckedCreateWithoutUserInput> | ApiKeyCreateWithoutUserInput[] | ApiKeyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ApiKeyCreateOrConnectWithoutUserInput | ApiKeyCreateOrConnectWithoutUserInput[]
+    createMany?: ApiKeyCreateManyUserInputEnvelope
+    connect?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+  }
+
   export type EloSnapshotCreateNestedManyWithoutUserInput = {
     create?: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput> | EloSnapshotCreateWithoutUserInput[] | EloSnapshotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: EloSnapshotCreateOrConnectWithoutUserInput | EloSnapshotCreateOrConnectWithoutUserInput[]
@@ -154192,6 +155806,13 @@ export namespace Prisma {
     connectOrCreate?: PasswordResetTokenCreateOrConnectWithoutUserInput | PasswordResetTokenCreateOrConnectWithoutUserInput[]
     createMany?: PasswordResetTokenCreateManyUserInputEnvelope
     connect?: PasswordResetTokenWhereUniqueInput | PasswordResetTokenWhereUniqueInput[]
+  }
+
+  export type ApiKeyUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ApiKeyCreateWithoutUserInput, ApiKeyUncheckedCreateWithoutUserInput> | ApiKeyCreateWithoutUserInput[] | ApiKeyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ApiKeyCreateOrConnectWithoutUserInput | ApiKeyCreateOrConnectWithoutUserInput[]
+    createMany?: ApiKeyCreateManyUserInputEnvelope
+    connect?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
   }
 
   export type EloSnapshotUncheckedCreateNestedManyWithoutUserInput = {
@@ -154592,6 +156213,20 @@ export namespace Prisma {
     update?: PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput | PasswordResetTokenUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: PasswordResetTokenUpdateManyWithWhereWithoutUserInput | PasswordResetTokenUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
+  }
+
+  export type ApiKeyUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ApiKeyCreateWithoutUserInput, ApiKeyUncheckedCreateWithoutUserInput> | ApiKeyCreateWithoutUserInput[] | ApiKeyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ApiKeyCreateOrConnectWithoutUserInput | ApiKeyCreateOrConnectWithoutUserInput[]
+    upsert?: ApiKeyUpsertWithWhereUniqueWithoutUserInput | ApiKeyUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ApiKeyCreateManyUserInputEnvelope
+    set?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    disconnect?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    delete?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    connect?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    update?: ApiKeyUpdateWithWhereUniqueWithoutUserInput | ApiKeyUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ApiKeyUpdateManyWithWhereWithoutUserInput | ApiKeyUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ApiKeyScalarWhereInput | ApiKeyScalarWhereInput[]
   }
 
   export type EloSnapshotUpdateManyWithoutUserNestedInput = {
@@ -155117,6 +156752,20 @@ export namespace Prisma {
     deleteMany?: PasswordResetTokenScalarWhereInput | PasswordResetTokenScalarWhereInput[]
   }
 
+  export type ApiKeyUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ApiKeyCreateWithoutUserInput, ApiKeyUncheckedCreateWithoutUserInput> | ApiKeyCreateWithoutUserInput[] | ApiKeyUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ApiKeyCreateOrConnectWithoutUserInput | ApiKeyCreateOrConnectWithoutUserInput[]
+    upsert?: ApiKeyUpsertWithWhereUniqueWithoutUserInput | ApiKeyUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ApiKeyCreateManyUserInputEnvelope
+    set?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    disconnect?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    delete?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    connect?: ApiKeyWhereUniqueInput | ApiKeyWhereUniqueInput[]
+    update?: ApiKeyUpdateWithWhereUniqueWithoutUserInput | ApiKeyUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ApiKeyUpdateManyWithWhereWithoutUserInput | ApiKeyUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ApiKeyScalarWhereInput | ApiKeyScalarWhereInput[]
+  }
+
   export type EloSnapshotUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<EloSnapshotCreateWithoutUserInput, EloSnapshotUncheckedCreateWithoutUserInput> | EloSnapshotCreateWithoutUserInput[] | EloSnapshotUncheckedCreateWithoutUserInput[]
     connectOrCreate?: EloSnapshotCreateOrConnectWithoutUserInput | EloSnapshotCreateOrConnectWithoutUserInput[]
@@ -155447,6 +157096,20 @@ export namespace Prisma {
     upsert?: UserUpsertWithoutRefreshTokensInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutRefreshTokensInput, UserUpdateWithoutRefreshTokensInput>, UserUncheckedUpdateWithoutRefreshTokensInput>
+  }
+
+  export type UserCreateNestedOneWithoutApiKeysInput = {
+    create?: XOR<UserCreateWithoutApiKeysInput, UserUncheckedCreateWithoutApiKeysInput>
+    connectOrCreate?: UserCreateOrConnectWithoutApiKeysInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutApiKeysNestedInput = {
+    create?: XOR<UserCreateWithoutApiKeysInput, UserUncheckedCreateWithoutApiKeysInput>
+    connectOrCreate?: UserCreateOrConnectWithoutApiKeysInput
+    upsert?: UserUpsertWithoutApiKeysInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutApiKeysInput, UserUpdateWithoutApiKeysInput>, UserUncheckedUpdateWithoutApiKeysInput>
   }
 
   export type UserCreateNestedOneWithoutPasswordResetTokensInput = {
@@ -161862,6 +163525,43 @@ export namespace Prisma {
     data: PasswordResetTokenCreateManyUserInput | PasswordResetTokenCreateManyUserInput[]
   }
 
+  export type ApiKeyCreateWithoutUserInput = {
+    id?: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope?: string
+    expiresAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    lastUsedIp?: string | null
+    revokedAt?: Date | string | null
+    revokedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ApiKeyUncheckedCreateWithoutUserInput = {
+    id?: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope?: string
+    expiresAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    lastUsedIp?: string | null
+    revokedAt?: Date | string | null
+    revokedById?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ApiKeyCreateOrConnectWithoutUserInput = {
+    where: ApiKeyWhereUniqueInput
+    create: XOR<ApiKeyCreateWithoutUserInput, ApiKeyUncheckedCreateWithoutUserInput>
+  }
+
+  export type ApiKeyCreateManyUserInputEnvelope = {
+    data: ApiKeyCreateManyUserInput | ApiKeyCreateManyUserInput[]
+  }
+
   export type EloSnapshotCreateWithoutUserInput = {
     id?: string
     rating: number
@@ -163068,6 +164768,40 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"PasswordResetToken"> | Date | string
   }
 
+  export type ApiKeyUpsertWithWhereUniqueWithoutUserInput = {
+    where: ApiKeyWhereUniqueInput
+    update: XOR<ApiKeyUpdateWithoutUserInput, ApiKeyUncheckedUpdateWithoutUserInput>
+    create: XOR<ApiKeyCreateWithoutUserInput, ApiKeyUncheckedCreateWithoutUserInput>
+  }
+
+  export type ApiKeyUpdateWithWhereUniqueWithoutUserInput = {
+    where: ApiKeyWhereUniqueInput
+    data: XOR<ApiKeyUpdateWithoutUserInput, ApiKeyUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ApiKeyUpdateManyWithWhereWithoutUserInput = {
+    where: ApiKeyScalarWhereInput
+    data: XOR<ApiKeyUpdateManyMutationInput, ApiKeyUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type ApiKeyScalarWhereInput = {
+    AND?: ApiKeyScalarWhereInput | ApiKeyScalarWhereInput[]
+    OR?: ApiKeyScalarWhereInput[]
+    NOT?: ApiKeyScalarWhereInput | ApiKeyScalarWhereInput[]
+    id?: StringFilter<"ApiKey"> | string
+    name?: StringFilter<"ApiKey"> | string
+    keyPrefix?: StringFilter<"ApiKey"> | string
+    keyHash?: StringFilter<"ApiKey"> | string
+    scope?: StringFilter<"ApiKey"> | string
+    userId?: StringFilter<"ApiKey"> | string
+    expiresAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    lastUsedAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    lastUsedIp?: StringNullableFilter<"ApiKey"> | string | null
+    revokedAt?: DateTimeNullableFilter<"ApiKey"> | Date | string | null
+    revokedById?: StringNullableFilter<"ApiKey"> | string | null
+    createdAt?: DateTimeFilter<"ApiKey"> | Date | string
+  }
+
   export type EloSnapshotUpsertWithWhereUniqueWithoutUserInput = {
     where: EloSnapshotWhereUniqueInput
     update: XOR<EloSnapshotUpdateWithoutUserInput, EloSnapshotUncheckedUpdateWithoutUserInput>
@@ -163750,6 +165484,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
@@ -163824,6 +165559,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
@@ -163914,6 +165650,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
@@ -163988,6 +165725,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
@@ -164061,6 +165799,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -164135,6 +165874,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -164225,6 +165965,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -164298,6 +166039,323 @@ export namespace Prisma {
     friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserCreateWithoutApiKeysInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutApiKeysInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutApiKeysInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutApiKeysInput, UserUncheckedCreateWithoutApiKeysInput>
+  }
+
+  export type UserUpsertWithoutApiKeysInput = {
+    update: XOR<UserUpdateWithoutApiKeysInput, UserUncheckedUpdateWithoutApiKeysInput>
+    create: XOR<UserCreateWithoutApiKeysInput, UserUncheckedCreateWithoutApiKeysInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutApiKeysInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutApiKeysInput, UserUncheckedUpdateWithoutApiKeysInput>
+  }
+
+  export type UserUpdateWithoutApiKeysInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutApiKeysInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
@@ -164373,6 +166431,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -164447,6 +166506,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -164537,6 +166597,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -164611,6 +166672,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -164685,6 +166747,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -164759,6 +166822,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -164849,6 +166913,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -164923,6 +166988,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -164998,6 +167064,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
@@ -165072,6 +167139,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
@@ -165162,6 +167230,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
@@ -165236,6 +167305,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
@@ -165309,6 +167379,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -165383,6 +167454,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -165473,6 +167545,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -165547,6 +167620,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -165621,6 +167695,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -165695,6 +167770,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -165774,6 +167850,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -165848,6 +167925,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -165938,6 +168016,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -166012,6 +168091,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -166097,6 +168177,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -166171,6 +168252,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -166305,6 +168387,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -166379,6 +168462,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -166498,6 +168582,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -166572,6 +168657,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -166646,6 +168732,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -166720,6 +168807,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -166799,6 +168887,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -166873,6 +168962,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -167177,6 +169267,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -167251,6 +169342,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -167815,6 +169907,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -167889,6 +169982,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -168133,6 +170227,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -168207,6 +170302,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -168370,6 +170466,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -168444,6 +170541,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -169077,6 +171175,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -169151,6 +171250,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -171525,6 +173625,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -171599,6 +173700,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -171927,6 +174029,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -172001,6 +174104,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -173804,6 +175908,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -173878,6 +175983,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -174051,6 +176157,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -174125,6 +176232,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -174288,6 +176396,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -174362,6 +176471,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -174781,6 +176891,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -174855,6 +176966,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -175389,6 +177501,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -175463,6 +177576,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -175692,6 +177806,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -175766,6 +177881,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -176763,6 +178879,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -176837,6 +178954,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -176916,6 +179034,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -176990,6 +179109,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -177279,6 +179399,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -177353,6 +179474,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -177438,6 +179560,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -177512,6 +179635,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -177758,6 +179882,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -177832,6 +179957,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -177911,6 +180037,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -177985,6 +180112,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -178247,6 +180375,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -178321,6 +180450,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -178406,6 +180536,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -178480,6 +180611,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -178780,6 +180912,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -178854,6 +180987,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -179094,6 +181228,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -179168,6 +181303,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -180780,6 +182916,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -180854,6 +182991,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -180991,6 +183129,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -181065,6 +183204,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -184424,6 +186564,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proWallet?: ProWalletCreateNestedOneWithoutUserInput
@@ -184498,6 +186639,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
@@ -184637,6 +186779,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUpdateOneWithoutUserNestedInput
@@ -184711,6 +186854,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
@@ -184840,6 +186984,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -184914,6 +187059,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -185029,6 +187175,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -185103,6 +187250,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -185492,6 +187640,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -185566,6 +187715,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -185685,6 +187835,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -185759,6 +187910,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -185932,6 +188084,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -186006,6 +188159,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -186096,6 +188250,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -186170,6 +188325,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -186377,6 +188533,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -186451,6 +188608,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -186592,6 +188750,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -186666,6 +188825,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -186812,6 +188972,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -186886,6 +189047,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -187015,6 +189177,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -187089,6 +189252,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -187163,6 +189327,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -187237,6 +189402,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -187379,6 +189545,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -187453,6 +189620,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -187586,6 +189754,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -187660,6 +189829,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -187783,6 +189953,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -187857,6 +190028,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -187958,6 +190130,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -188032,6 +190205,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -188222,6 +190396,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -188296,6 +190471,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -188484,6 +190660,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -188558,6 +190735,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -188775,6 +190953,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -188849,6 +191028,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -189175,6 +191355,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -189249,6 +191430,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -189483,6 +191665,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -189557,6 +191740,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -189816,6 +192000,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -189890,6 +192075,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -190015,6 +192201,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -190089,6 +192276,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -190230,6 +192418,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -190304,6 +192493,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -190467,6 +192657,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -190541,6 +192732,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -190615,6 +192807,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -190689,6 +192882,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -190779,6 +192973,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -190853,6 +193048,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -190927,6 +193123,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
@@ -191001,6 +193198,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
     passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
     tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
@@ -191091,6 +193289,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -191165,6 +193364,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
@@ -191404,6 +193604,20 @@ export namespace Prisma {
     expiresAt: Date | string
     usedAt?: Date | string | null
     requestIp?: string | null
+    createdAt?: Date | string
+  }
+
+  export type ApiKeyCreateManyUserInput = {
+    id?: string
+    name: string
+    keyPrefix: string
+    keyHash: string
+    scope?: string
+    expiresAt?: Date | string | null
+    lastUsedAt?: Date | string | null
+    lastUsedIp?: string | null
+    revokedAt?: Date | string | null
+    revokedById?: string | null
     createdAt?: Date | string
   }
 
@@ -192436,6 +194650,48 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ApiKeyUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ApiKeyUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ApiKeyUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    keyPrefix?: StringFieldUpdateOperationsInput | string
+    keyHash?: StringFieldUpdateOperationsInput | string
+    scope?: StringFieldUpdateOperationsInput | string
+    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastUsedIp?: NullableStringFieldUpdateOperationsInput | string | null
+    revokedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    revokedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type EloSnapshotUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     rating?: IntFieldUpdateOperationsInput | number
@@ -193222,6 +195478,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
@@ -193296,6 +195553,7 @@ export namespace Prisma {
     kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
     passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
     tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
     proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput

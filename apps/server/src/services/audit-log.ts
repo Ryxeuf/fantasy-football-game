@@ -49,6 +49,11 @@ export interface RecordAdminActionInput {
   ipAddress?: string | null;
   /** User-Agent source. */
   userAgent?: string | null;
+  /**
+   * Clé API par laquelle l'action est passée (`null` = session interactive).
+   * Rempli par `recordAdminActionFromRequest` depuis `req.user.apiKey`.
+   */
+  apiKeyId?: string | null;
 }
 
 type AuditJsonInput = Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue;
@@ -99,6 +104,7 @@ export async function recordAdminAction(
       newValue: serializeValue(input.newValue),
       ipAddress: input.ipAddress ?? null,
       userAgent: input.userAgent ?? null,
+      apiKeyId: input.apiKeyId ?? null,
     },
   });
 }
@@ -127,7 +133,10 @@ export function extractRequestContext(
 export async function recordAdminActionFromRequest(
   prisma: PrismaClient,
   req: AuthenticatedRequest,
-  partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
+  partial: Omit<
+    RecordAdminActionInput,
+    "userId" | "ipAddress" | "userAgent" | "apiKeyId"
+  >,
 ): Promise<void> {
   const ctx = extractRequestContext(req);
   await recordAdminAction(prisma, {
@@ -135,6 +144,7 @@ export async function recordAdminActionFromRequest(
     ...partial,
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
+    apiKeyId: req.user?.apiKey?.id ?? null,
   });
 }
 
@@ -149,7 +159,10 @@ export async function recordAdminActionFromRequest(
 export async function safeRecordAdminActionFromRequest(
   prisma: PrismaClient,
   req: AuthenticatedRequest,
-  partial: Omit<RecordAdminActionInput, "userId" | "ipAddress" | "userAgent">,
+  partial: Omit<
+    RecordAdminActionInput,
+    "userId" | "ipAddress" | "userAgent" | "apiKeyId"
+  >,
   options?: { logError?: (message: string, err: unknown) => void },
 ): Promise<void> {
   try {

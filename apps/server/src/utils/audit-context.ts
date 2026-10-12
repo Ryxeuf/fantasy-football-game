@@ -11,8 +11,8 @@
  * et `recordTeamAudit` le lit.
  *
  * Le store est MUTABLE sur deux champs seulement :
- *  - `actorUserId` / `actorRoles` / `impersonatorId`, remplis par
- *    `authUser` qui s'exécute APRÈS le middleware d'audit ;
+ *  - `actorUserId` / `actorRoles` / `impersonatorId` / `apiKeyId`, remplis
+ *    par `authUser` qui s'exécute APRÈS le middleware d'audit ;
  *  - `step`, compteur d'étape incrémenté à chaque écriture du journal.
  *
  * Aucune I/O ici : module pur, testable sans Express ni Prisma.
@@ -49,6 +49,8 @@ export interface AuditContext {
   actorUserId: string | null;
   actorRoles: readonly string[];
   impersonatorId: string | null;
+  /** Clé API par laquelle la requête est authentifiée (`null` = session). */
+  apiKeyId: string | null;
   /** Compteur d'étape, incrémenté par `nextAuditStep()`. */
   step: number;
 }
@@ -64,6 +66,7 @@ export interface CreateAuditContextInput {
   actorUserId?: string | null;
   actorRoles?: readonly string[];
   impersonatorId?: string | null;
+  apiKeyId?: string | null;
 }
 
 /** Construit un store d'audit neuf (compteur d'étape à 0). */
@@ -79,6 +82,7 @@ export function createAuditContext(
     actorUserId: input.actorUserId ?? null,
     actorRoles: input.actorRoles ?? [],
     impersonatorId: input.impersonatorId ?? null,
+    apiKeyId: input.apiKeyId ?? null,
     step: 0,
   };
 }
@@ -123,12 +127,14 @@ export function setAuditActor(actor: {
   userId: string | null;
   roles?: readonly string[];
   impersonatorId?: string | null;
+  apiKeyId?: string | null;
 }): void {
   const ctx = storage.getStore();
   if (!ctx) return;
   ctx.actorUserId = actor.userId;
   ctx.actorRoles = actor.roles ?? [];
   ctx.impersonatorId = actor.impersonatorId ?? null;
+  ctx.apiKeyId = actor.apiKeyId ?? null;
 }
 
 /**

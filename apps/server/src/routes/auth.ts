@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { prisma } from "../prisma";
 import bcrypt from "bcryptjs";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { sessionOnly } from "../middleware/sessionOnly";
 import { normalizeRoles } from "../utils/roles";
 import { validate } from "../middleware/validate";
 import {
@@ -298,7 +299,7 @@ export async function handleLogout(req: Request, res: Response): Promise<Respons
 router.post("/logout", handleLogout);
 
 // Désactiver le compte courant (suppression logique)
-router.delete("/me", authUser, async (req: AuthenticatedRequest, res) => {
+router.delete("/me", authUser, sessionOnly, async (req: AuthenticatedRequest, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.id },
@@ -459,6 +460,16 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
       if (actor) impersonatedBy = actor;
     }
 
+    // Requête authentifiée par clé API : on annonce la clé (jamais le
+    // secret) — c'est ce que le smoke test distant vérifie en premier.
+    const apiKey = req.user?.apiKey
+      ? {
+          name: req.user.apiKey.name,
+          keyPrefix: req.user.apiKey.keyPrefix,
+          scope: req.user.apiKey.scope,
+        }
+      : null;
+
     const publicUser = {
       ...user,
       roles,
@@ -467,6 +478,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         supporterActiveUntil: user.supporterActiveUntil,
       }),
       impersonatedBy,
+      apiKey,
     };
 
     res.json({ user: publicUser });
@@ -477,7 +489,7 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
 });
 
 // Mettre à jour le profil utilisateur
-router.put("/me", authUser, validate(updateProfileSchema), async (req: AuthenticatedRequest, res) => {
+router.put("/me", authUser, sessionOnly, validate(updateProfileSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { email, coachName, firstName, lastName, dateOfBirth, discordUserId } = req.body;
 
@@ -545,7 +557,7 @@ router.put("/me", authUser, validate(updateProfileSchema), async (req: Authentic
 });
 
 // Changer le mot de passe
-router.put("/me/password", authUser, validate(changePasswordSchema), async (req: AuthenticatedRequest, res) => {
+router.put("/me/password", authUser, sessionOnly, validate(changePasswordSchema), async (req: AuthenticatedRequest, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     

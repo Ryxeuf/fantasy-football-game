@@ -19,9 +19,18 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// `apiKey` est posé par un test pour simuler une requête authentifiée par
+// clé API (change OpenSpec `admin-api-keys`).
+const authState = vi.hoisted(() => ({ apiKey: undefined as unknown }));
+
 vi.mock("../middleware/authUser", () => ({
   authUser: (req: any, _res: any, next: any) => {
-    req.user = { id: "admin-1", role: "admin", roles: ["admin"] };
+    req.user = {
+      id: "admin-1",
+      role: "admin",
+      roles: ["admin"],
+      ...(authState.apiKey ? { apiKey: authState.apiKey } : {}),
+    };
     return next();
   },
 }));
@@ -100,6 +109,7 @@ async function postImpersonate(userId: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  authState.apiKey = undefined;
 });
 
 describe("POST /admin/users/:id/impersonate", () => {
@@ -155,6 +165,18 @@ describe("POST /admin/users/:id/impersonate", () => {
     expect(auditCall.newValue).toEqual({ impersonatorId: "admin-1" });
     // Le token ne doit jamais apparaitre dans l'audit.
     expect(JSON.stringify(auditCall)).not.toContain(res.body.token);
+  });
+
+  it("refuse 403 a une cle API, meme en ecriture, sans emettre de token", async () => {
+    authState.apiKey = { id: "key-1", name: "CI", keyPrefix: "nak_x", scope: "write" };
+
+    const res = await postImpersonate("user-99");
+
+    expect(res.status).toBe(403);
+    expect(res.body.code).toBe("interactive_session_required");
+    expect(res.body.token).toBeUndefined();
+    expect(mockedPrisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mockedAudit).not.toHaveBeenCalled();
   });
 
   it("refuse 400 si l'admin tente de s'impersonner lui-meme", async () => {

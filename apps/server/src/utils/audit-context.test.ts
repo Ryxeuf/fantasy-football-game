@@ -83,6 +83,17 @@ describe("setAuditActor", () => {
     });
   });
 
+  it("porte la clé API quand la requête est authentifiée par clé", () => {
+    runWithAuditContext(createAuditContext(), () => {
+      expect(getAuditContext()?.apiKeyId).toBeNull();
+      setAuditActor({ userId: "admin-1", roles: ["admin"], apiKeyId: "key-1" });
+      expect(getAuditContext()?.apiKeyId).toBe("key-1");
+      // Un acteur posé ensuite sans clé (session) l'efface.
+      setAuditActor({ userId: "admin-1", roles: ["admin"] });
+      expect(getAuditContext()?.apiKeyId).toBeNull();
+    });
+  });
+
   it("est un no-op hors contexte (routes montées avant le middleware)", () => {
     expect(() => setAuditActor({ userId: "u1" })).not.toThrow();
   });

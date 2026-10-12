@@ -26,6 +26,7 @@ interface CallArgs {
     newValue: string | null | typeof Prisma.JsonNull;
     ipAddress: string | null;
     userAgent: string | null;
+    apiKeyId: string | null;
   };
 }
 
@@ -252,6 +253,43 @@ describe("recordAdminActionFromRequest", () => {
     expect(args.data.ipAddress).toBe("192.168.1.10");
     expect(args.data.userAgent).toBe("Mozilla/5.0");
     expect(args.data.newValue).toBe('{"role":"ADMIN"}');
+  });
+
+  it("trace la cle API quand la requete est authentifiee par cle", async () => {
+    const create = vi.fn(async () => undefined);
+    const prisma = { auditLog: { create } } as never;
+    const req = {
+      ip: "203.0.113.7",
+      headers: {},
+      user: {
+        id: "admin-42",
+        roles: ["admin"],
+        apiKey: { id: "key-1", name: "CI", keyPrefix: "nak_Ab12Cd34", scope: "write" },
+      },
+    } as never;
+    await recordAdminActionFromRequest(prisma, req, {
+      action: "user.role.update",
+      entity: "User",
+    });
+    const args = (create.mock.calls[0] as unknown as [CallArgs])[0];
+    expect(args.data.userId).toBe("admin-42");
+    expect(args.data.apiKeyId).toBe("key-1");
+  });
+
+  it("ne trace aucune cle pour une session interactive", async () => {
+    const create = vi.fn(async () => undefined);
+    const prisma = { auditLog: { create } } as never;
+    const req = {
+      ip: "203.0.113.7",
+      headers: {},
+      user: { id: "admin-42", roles: ["admin"] },
+    } as never;
+    await recordAdminActionFromRequest(prisma, req, {
+      action: "user.role.update",
+      entity: "User",
+    });
+    const args = (create.mock.calls[0] as unknown as [CallArgs])[0];
+    expect(args.data.apiKeyId).toBeNull();
   });
 
   it("fallback userId=null si la requete n'a pas user", async () => {

@@ -3,6 +3,19 @@ import jwt from "jsonwebtoken";
 import { normalizeRoles } from "../utils/roles";
 import { setAuditActor } from "../utils/audit-context";
 import { JWT_SECRET } from "../config";
+import type { ApiKeyScope } from "../services/api-key-rules";
+import {
+  authenticateRequestApiKey,
+  resolveRequestApiKey,
+} from "./apiKeyAuth";
+
+/** Clé API par laquelle la requête est authentifiée (jamais le secret). */
+export interface AuthenticatedApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  scope: ApiKeyScope;
+}
 
 export interface AuthenticatedUser {
   id: string;
@@ -14,6 +27,12 @@ export interface AuthenticatedUser {
    * une session normale.
    */
   impersonatorId?: string;
+  /**
+   * Quand la requête est authentifiée par une clé API d'administration
+   * (`Authorization: Bearer nak_…` / `X-API-Key`). Absent pour une session
+   * JWT. Cf. `sessionOnly` et `docs/admin-api-keys.md`.
+   */
+  apiKey?: AuthenticatedApiKey;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -25,6 +44,13 @@ export function authUser(
   res: Response,
   next: NextFunction,
 ) {
+  // Clé API d'administration : aiguillée AVANT `jwt.verify` (un JWT
+  // commence par `eyJ`, une clé par `nak_`). Le chemin JWT reste synchrone.
+  const apiKeyResolution = resolveRequestApiKey(req);
+  if (apiKeyResolution) {
+    return authenticateRequestApiKey(req, res, next, apiKeyResolution, false);
+  }
+
   const header = req.headers.authorization || "";
   const [, token] = header.split(" ");
   if (!token) return res.status(401).json({ error: "Non authentifié" });
@@ -68,12 +94,20 @@ export function authUser(
  * Sert aux endpoints PUBLICS dont la RÉPONSE dépend du rôle du lecteur —
  * typiquement le bracket de playoffs, visible de tous une fois publié mais
  * réservé au commissaire tant qu'il ne l'est pas.
+ *
+ * Seule exception au « ne rejette jamais » : une clé API en lecture seule
+ * sur une méthode d'écriture (403).
  */
 export function optionalAuthUser(
   req: AuthenticatedRequest,
-  _res: Response,
+  res: Response,
   next: NextFunction,
 ) {
+  const apiKeyResolution = resolveRequestApiKey(req);
+  if (apiKeyResolution) {
+    return authenticateRequestApiKey(req, res, next, apiKeyResolution, true);
+  }
+
   const header = req.headers.authorization || "";
   const [, token] = header.split(" ");
   if (!token) return next();

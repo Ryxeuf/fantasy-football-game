@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../prisma";
 import { authUser } from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
+import { sessionOnly } from "../middleware/sessionOnly";
 import { normalizeRoles } from "../utils/roles";
 import { validate, validateQuery } from "../middleware/validate";
 import { generateTempPassword } from "../services/temp-password";
@@ -248,8 +249,10 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-// Route pour modifier le rôle d'un utilisateur
-router.patch("/users/:id/role", validate(updateUserRoleSchema), async (req, res) => {
+// Route pour modifier le rôle d'un utilisateur.
+// Refusée à une clé API (`sessionOnly`) : promouvoir un compte jetable
+// donnerait un accès admin qui survit à la révocation de la clé.
+router.patch("/users/:id/role", sessionOnly, validate(updateUserRoleSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { role, roles } = req.body;
@@ -353,8 +356,10 @@ router.patch("/users/:id/patreon", validate(updateUserPatreonSchema), async (req
   }
 });
 
-// Route pour modifier le statut de validation d'un utilisateur
-router.patch("/users/:id/valid", validate(updateUserValidSchema), async (req, res) => {
+// Route pour modifier le statut de validation d'un utilisateur.
+// Refusée à une clé API (`sessionOnly`) : une clé fuitée pourrait sinon
+// désactiver son propre propriétaire et l'exclure.
+router.patch("/users/:id/valid", sessionOnly, validate(updateUserValidSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { valid } = req.body;
@@ -649,8 +654,11 @@ router.post("/users/:id/unban", async (req, res) => {
  *
  * Audit log strict : trace l'identite admin via safeAudit. Le password
  * temporaire n'est jamais persiste en clair.
+ *
+ * Refuse a une cle API (`sessionOnly`) : le mot de passe rendu en clair
+ * ouvrirait un compte (possiblement admin) qui survit a la revocation.
  */
-router.post("/users/:id/password-reset", async (req, res) => {
+router.post("/users/:id/password-reset", sessionOnly, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -723,8 +731,11 @@ router.post("/users/:id/password-reset", async (req, res) => {
  * Gardes : on refuse de s'impersonner soi-meme, un compte soft-delete ou un
  * compte banni (memes regles que /auth/login qui rejetterait ces comptes).
  * L'action est tracee dans l'audit log (jamais le token en clair).
+ *
+ * Refusee a une cle API (`sessionOnly`) : le JWT emis survivrait a la
+ * revocation de la cle (change OpenSpec `admin-api-keys`).
  */
-router.post("/users/:id/impersonate", async (req, res) => {
+router.post("/users/:id/impersonate", sessionOnly, async (req, res) => {
   try {
     const { id } = req.params;
     const adminId = (req as AuthenticatedRequest).user?.id;

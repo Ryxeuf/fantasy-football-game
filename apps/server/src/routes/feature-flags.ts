@@ -1,9 +1,10 @@
-import { Router, Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { Router } from "express";
+import {
+  authUser,
+  optionalAuthUser,
+  AuthenticatedRequest,
+} from "../middleware/authUser";
 import { adminOnly } from "../middleware/adminOnly";
-import { JWT_SECRET } from "../config";
-import { normalizeRoles } from "../utils/roles";
 import { validate } from "../middleware/validate";
 import {
   createFeatureFlagSchema,
@@ -34,41 +35,10 @@ function errorMessage(error: unknown): string {
 // Routeur utilisateur : /api/feature-flags
 // ---------------------------------------------------------------------------
 
-/**
- * Auth optionnelle : si un token Bearer valide est fourni, peuple `req.user`.
- * Sinon, laisse passer la requête (visiteur anonyme). Utile pour /me qui
- * doit également servir les flags globalement activés aux pages publiques
- * (/leaderboard, etc. wrappées par `<OnlinePlayGate>`).
- */
-function optionalAuthUser(
-  req: AuthenticatedRequest,
-  _res: Response,
-  next: NextFunction,
-): void {
-  const header = req.headers.authorization || "";
-  const [, token] = header.split(" ");
-  if (!token) return next();
-  try {
-    const payload = jwt.verify(token, JWT_SECRET) as {
-      sub?: string;
-      role?: string;
-      roles?: string[] | string;
-    };
-    const roles = normalizeRoles(payload?.roles ?? payload?.role);
-    req.user = {
-      id: payload?.sub ?? "",
-      role: roles[0],
-      roles,
-    };
-  } catch {
-    // Token invalide → traite comme anonyme (n'écrase pas req.user existant).
-  }
-  next();
-}
-
 export const userFeatureFlagsRouter = Router();
 
-// Note: /me accepte les visiteurs anonymes. Les pages publiques (ex.
+// Note: /me accepte les visiteurs anonymes (auth optionnelle partagée :
+// token de session OU clé API d'administration). Les pages publiques (ex.
 // /leaderboard) sont gatées par <OnlinePlayGate> et doivent pouvoir
 // récupérer les flags globalement activés sans token. Avec un token
 // valide, on retourne en plus les overrides utilisateur.
