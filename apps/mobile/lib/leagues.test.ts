@@ -7,10 +7,14 @@ import {
   formatLeagueSeasonStatusLabel,
   formatLeagueRulesetLabel,
   isValidLeagueStatus,
+  leagueDetailPath,
+  leaguesListPath,
   parseLeagueListResponse,
   parseLeagueDetailResponse,
   parseSeasonDetailResponse,
   parseStandingsResponse,
+  seasonDetailPath,
+  seasonStandingsPath,
   type League,
 } from "./leagues";
 
@@ -348,5 +352,85 @@ describe("parseStandingsResponse", () => {
     });
     expect(standings).toHaveLength(1);
     expect(standings[0].teamId).toBe("ok");
+  });
+});
+
+describe("chemins de l'API des ligues", () => {
+  // Le serveur ne monte les ligues que sous `/leagues` : le singulier
+  // `/league` répondait 404 et vidait les deux écrans Ligues.
+  it("liste : /leagues, filtre de statut encodé", () => {
+    expect(leaguesListPath("all")).toBe("/leagues");
+    expect(leaguesListPath("in_progress")).toBe("/leagues?status=in_progress");
+  });
+
+  it("détail, saison et classement : /leagues/...", () => {
+    expect(leagueDetailPath("l 1")).toBe("/leagues/l%201");
+    expect(seasonDetailPath("s1")).toBe("/leagues/seasons/s1");
+    expect(seasonStandingsPath("s1")).toBe("/leagues/seasons/s1/standings");
+  });
+});
+
+describe("enveloppe { success, data } du serveur", () => {
+  // `GET /leagues`, `/leagues/:id`, `/leagues/seasons/:id(/standings)`
+  // répondent `{ success: true, data: {...} }` (cf. `apiSuccess` côté serveur).
+  it("liste : lit data.leagues", () => {
+    const leagues = parseLeagueListResponse({
+      success: true,
+      data: { leagues: [makeLeague({ id: "l9" })] },
+      meta: { total: 1, limit: 50, page: 0 },
+    });
+    expect(leagues.map((l) => l.id)).toEqual(["l9"]);
+  });
+
+  it("détail : lit data.league", () => {
+    const detail = parseLeagueDetailResponse({
+      success: true,
+      data: {
+        league: {
+          ...makeLeague({ id: "l2" }),
+          creator: { id: "u1", coachName: "Grim" },
+          seasons: [{ id: "s1", seasonNumber: 1, name: "S1", status: "in_progress" }],
+        },
+      },
+    });
+    expect(detail?.id).toBe("l2");
+    expect(detail?.seasons.map((s) => s.id)).toEqual(["s1"]);
+  });
+
+  it("saison : lit data.season", () => {
+    const season = parseSeasonDetailResponse({
+      success: true,
+      data: { season: { id: "s1", seasonNumber: 1, name: "S1", leagueId: "l1" } },
+    });
+    expect(season?.id).toBe("s1");
+  });
+
+  it("classement : lit data.standings et les TD servis par le serveur", () => {
+    const standings = parseStandingsResponse({
+      success: true,
+      data: {
+        seasonId: "s1",
+        standings: [
+          {
+            teamId: "t1",
+            points: 6,
+            wins: 2,
+            draws: 0,
+            losses: 0,
+            touchdownsFor: 5,
+            touchdownsAgainst: 1,
+          },
+        ],
+      },
+    });
+    expect(standings).toHaveLength(1);
+    expect(standings[0].goalsFor).toBe(5);
+    expect(standings[0].goalsAgainst).toBe(1);
+  });
+
+  it("une réponse en échec n'est pas dépliée", () => {
+    expect(
+      parseLeagueListResponse({ success: false, error: "Ligue introuvable" }),
+    ).toEqual([]);
   });
 });

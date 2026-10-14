@@ -18,6 +18,7 @@ import {
   filterLeaguesByStatus,
   formatLeagueRulesetLabel,
   formatLeagueStatusLabel,
+  leaguesListPath,
   parseLeagueListResponse,
   type League,
   type LeagueStatusFilter,
@@ -50,9 +51,7 @@ export default function LeaguesListScreen() {
   const fetchLeagues = useCallback(async () => {
     try {
       setError(null);
-      const path =
-        filter === "all" ? "/league" : `/league?status=${encodeURIComponent(filter)}`;
-      const response = await apiGet(path);
+      const response = await apiGet(leaguesListPath(filter));
       setLeagues(parseLeagueListResponse(response));
     } catch (err: unknown) {
       if (

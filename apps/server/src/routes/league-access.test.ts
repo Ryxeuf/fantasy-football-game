@@ -21,7 +21,7 @@ import jwt from "jsonwebtoken";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    league: { findUnique: vi.fn() },
+    league: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn() },
     leagueSeason: { findUnique: vi.fn() },
     leaguePairing: { findUnique: vi.fn() },
     leagueParticipant: { count: vi.fn() },
@@ -92,7 +92,7 @@ import { listPoolsForSeason } from "../services/league-pool";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const db = prisma as unknown as {
-  league: { findUnique: MockFn };
+  league: { findUnique: MockFn; findMany: MockFn; count: MockFn };
   leagueSeason: { findUnique: MockFn };
   leaguePairing: { findUnique: MockFn };
   leagueParticipant: { count: MockFn };
@@ -488,5 +488,49 @@ describe("POST /leagues/seasons/:seasonId/join", () => {
       seasonId: "season-1",
       teamId: "team-1",
     });
+  });
+});
+
+describe("GET /leagues — le listing n'expose pas les ligues privées des autres", () => {
+  /** `where` passé à `prisma.league.findMany` par le VRAI `listLeagues`. */
+  async function listWhere(
+    query: string,
+    token: string,
+  ): Promise<Record<string, unknown>> {
+    db.league.findMany.mockResolvedValue([]);
+    db.league.count.mockResolvedValue(0);
+    const res = await request("GET", `/leagues${query}`, { token });
+    expect(res.status).toBe(200);
+    const args = db.league.findMany.mock.calls[0]?.[0] as {
+      where: Record<string, unknown>;
+    };
+    return args.where;
+  }
+
+  it("publicOnly=false d'un coach : la règle de visibilité s'applique quand même", async () => {
+    const where = await listWhere("?publicOnly=false", tokenFor(STRANGER));
+    expect(where.OR).toEqual(
+      expect.arrayContaining([
+        { isPublic: true },
+        { creatorId: STRANGER },
+      ]),
+    );
+  });
+
+  it("publicOnly=false + creatorId d'un coach : seulement les ligues PUBLIQUES du créateur", async () => {
+    const where = await listWhere(
+      `?publicOnly=false&creatorId=${COMMISH}`,
+      tokenFor(STRANGER),
+    );
+    expect(where).toMatchObject({ creatorId: COMMISH, isPublic: true });
+  });
+
+  it("publicOnly=false d'un admin : aucun filtre de visibilité", async () => {
+    const where = await listWhere(
+      "?publicOnly=false",
+      tokenFor(ADMIN, ["user", "admin"]),
+    );
+    expect(where).not.toHaveProperty("OR");
+    expect(where).not.toHaveProperty("isPublic");
   });
 });

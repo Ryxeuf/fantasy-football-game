@@ -30,6 +30,7 @@ import {
   hasPendingLeagueInvitation,
   isLeaguePairingHiddenFrom,
   isLeagueVisibleTo,
+  listingPublicOnlyFor,
   type LeagueViewer,
 } from "./league-access";
 
@@ -254,5 +255,24 @@ describe("isLeaguePairingHiddenFrom", () => {
     await expect(
       isLeaguePairingHiddenFrom("cup-pairing", STRANGER),
     ).resolves.toBe(false);
+  });
+});
+
+describe("listingPublicOnlyFor (portée d'un listing)", () => {
+  it("publicOnly=false n'est honoré que pour un admin", () => {
+    expect(listingPublicOnlyFor(false, ADMIN)).toBe(false);
+  });
+
+  it("publicOnly=false d'un coach retombe sur la vue par défaut (ses ligues + publiques)", () => {
+    expect(listingPublicOnlyFor(false, STRANGER)).toBeUndefined();
+    expect(listingPublicOnlyFor(false, COMMISH)).toBeUndefined();
+    expect(listingPublicOnlyFor(false, ANONYMOUS)).toBeUndefined();
+  });
+
+  it("publicOnly=true et absent passent tels quels, admin ou non", () => {
+    expect(listingPublicOnlyFor(true, STRANGER)).toBe(true);
+    expect(listingPublicOnlyFor(undefined, STRANGER)).toBeUndefined();
+    expect(listingPublicOnlyFor(true, ADMIN)).toBe(true);
+    expect(listingPublicOnlyFor(undefined, ADMIN)).toBeUndefined();
   });
 });

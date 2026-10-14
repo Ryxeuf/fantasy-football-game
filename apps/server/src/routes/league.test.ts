@@ -291,11 +291,31 @@ describe("Route: GET /leagues (list)", () => {
         string,
         string
       >,
-    });
+      user: { id: "admin-1", roles: ["user", "admin"] },
+    } as Partial<AuthenticatedRequest>);
     const res = createRes();
     await handleListLeagues(req, res);
     expect(mockService.listLeagues).toHaveBeenCalledWith(
       expect.objectContaining({ status: "open", publicOnly: false }),
+    );
+  });
+
+  it("ignores publicOnly=false for a non-admin coach: private leagues stay hidden", async () => {
+    // `publicOnly=false` lève tout filtre de visibilité dans `listLeagues` :
+    // honoré pour un coach, il listait les ligues privées des autres.
+    mockService.listLeagues.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 50,
+      offset: 0,
+    });
+    const req = createReq({
+      query: { publicOnly: false } as unknown as Record<string, string>,
+    });
+    const res = createRes();
+    await handleListLeagues(req, res);
+    expect(mockService.listLeagues).toHaveBeenCalledWith(
+      expect.objectContaining({ publicOnly: undefined, viewerId: "user-1" }),
     );
   });
 });
