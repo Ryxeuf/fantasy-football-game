@@ -16,9 +16,12 @@ import {
   formatLeagueRulesetLabel,
   formatLeagueSeasonStatusLabel,
   formatLeagueStatusLabel,
+  leagueDetailPath,
   parseLeagueDetailResponse,
   parseSeasonDetailResponse,
   parseStandingsResponse,
+  seasonDetailPath,
+  seasonStandingsPath,
   type LeagueDetail,
   type LeagueSeasonDetail,
   type StandingRow,
@@ -59,7 +62,7 @@ export default function LeagueDetailScreen() {
     if (!leagueId) return;
     try {
       setError(null);
-      const response = await apiGet(`/league/${leagueId}`);
+      const response = await apiGet(leagueDetailPath(leagueId));
       const parsed = parseLeagueDetailResponse(response);
       if (!parsed) throw new Error(t("leagues.detail.notFound"));
       setLeague(parsed);
@@ -82,8 +85,8 @@ export default function LeagueDetailScreen() {
         setSeasonLoading(true);
         setSeasonError(null);
         const [seasonRes, standingsRes] = await Promise.all([
-          apiGet(`/league/seasons/${seasonId}`),
-          apiGet(`/league/seasons/${seasonId}/standings`),
+          apiGet(seasonDetailPath(seasonId)),
+          apiGet(seasonStandingsPath(seasonId)),
         ]);
         setSeason(parseSeasonDetailResponse(seasonRes));
         setStandings(parseStandingsResponse(standingsRes));

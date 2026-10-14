@@ -174,6 +174,45 @@ function asBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+/**
+ * Racine des routes de ligue côté serveur. Le serveur ne monte QUE `/leagues`
+ * (`app.use("/leagues", …)`) : le singulier `/league` répondait 404.
+ */
+const LEAGUES_API_BASE = "/leagues";
+
+export function leaguesListPath(filter: LeagueStatusFilter): string {
+  return filter === "all"
+    ? LEAGUES_API_BASE
+    : `${LEAGUES_API_BASE}?status=${encodeURIComponent(filter)}`;
+}
+
+export function leagueDetailPath(leagueId: string): string {
+  return `${LEAGUES_API_BASE}/${encodeURIComponent(leagueId)}`;
+}
+
+export function seasonDetailPath(seasonId: string): string {
+  return `${LEAGUES_API_BASE}/seasons/${encodeURIComponent(seasonId)}`;
+}
+
+export function seasonStandingsPath(seasonId: string): string {
+  return `${seasonDetailPath(seasonId)}/standings`;
+}
+
+/**
+ * Les routes de ligue répondent `{ success: true, data }` (`apiSuccess` côté
+ * serveur). On déplie `data` ; une réponse sans enveloppe passe telle quelle,
+ * une réponse en échec ne fournit rien.
+ */
+function unwrapApiData(response: unknown): Record<string, unknown> {
+  if (!response || typeof response !== "object") return {};
+  const raw = response as Record<string, unknown>;
+  if (raw.success === false) return {};
+  if (raw.success === true && raw.data && typeof raw.data === "object") {
+    return raw.data as Record<string, unknown>;
+  }
+  return raw;
+}
+
 function parseAllowedRosters(value: unknown): string[] | null {
   if (value === null || value === undefined) return null;
   if (!Array.isArray(value)) return null;
@@ -205,7 +244,7 @@ function parseLeague(value: unknown): League | null {
 }
 
 export function parseLeagueListResponse(response: unknown): League[] {
-  const raw = (response ?? {}) as Record<string, unknown>;
+  const raw = unwrapApiData(response);
   const list = Array.isArray(raw.leagues) ? raw.leagues : [];
   return list.map(parseLeague).filter((l): l is League => l !== null);
 }
@@ -245,8 +284,7 @@ function parseSeasonSummary(value: unknown): LeagueSeasonSummary | null {
 export function parseLeagueDetailResponse(
   response: unknown,
 ): LeagueDetail | null {
-  if (!response || typeof response !== "object") return null;
-  const raw = response as Record<string, unknown>;
+  const raw = unwrapApiData(response);
   const league = parseLeague(raw.league);
   if (!league) return null;
   const leagueRaw = raw.league as Record<string, unknown>;
@@ -302,8 +340,7 @@ function parseParticipant(value: unknown): LeagueParticipantDetail | null {
 export function parseSeasonDetailResponse(
   response: unknown,
 ): LeagueSeasonDetail | null {
-  if (!response || typeof response !== "object") return null;
-  const raw = response as Record<string, unknown>;
+  const raw = unwrapApiData(response);
   const seasonRaw = (raw.season ?? null) as Record<string, unknown> | null;
   if (!seasonRaw) return null;
   const id = asString(seasonRaw.id, "");
@@ -341,13 +378,14 @@ function parseStandingRow(value: unknown): StandingRow | null {
     wins: asNumber(raw.wins, 0),
     draws: asNumber(raw.draws, 0),
     losses: asNumber(raw.losses, 0),
-    goalsFor: asNumber(raw.goalsFor, 0),
-    goalsAgainst: asNumber(raw.goalsAgainst, 0),
+    // Le serveur sert des touchdowns (`touchdownsFor/Against`).
+    goalsFor: asNumber(raw.goalsFor, asNumber(raw.touchdownsFor, 0)),
+    goalsAgainst: asNumber(raw.goalsAgainst, asNumber(raw.touchdownsAgainst, 0)),
   };
 }
 
 export function parseStandingsResponse(response: unknown): StandingRow[] {
-  const raw = (response ?? {}) as Record<string, unknown>;
+  const raw = unwrapApiData(response);
   const list = Array.isArray(raw.standings) ? raw.standings : [];
   return list.map(parseStandingRow).filter((s): s is StandingRow => s !== null);
 }
