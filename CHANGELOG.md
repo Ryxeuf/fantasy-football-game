@@ -1,3 +1,18 @@
+## [1.257.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.1...v1.257.2) (2026-10-14)
+
+
+### 🐛 Bug Fixes
+
+* **leagues:** fuite des ligues privées + mobile ; proposition my-competitions ([#1073](https://github.com/Ryxeuf/fantasy-football-game/issues/1073)) ([6036479](https://github.com/Ryxeuf/fantasy-football-game/commit/60364799b44faa8441eec7003afe557089781263))
+
+
+### 📝 Documentation
+
+* **openspec:** proposition admin-api-keys ([#1072](https://github.com/Ryxeuf/fantasy-football-game/issues/1072)) ([6a0086e](https://github.com/Ryxeuf/fantasy-football-game/commit/6a0086ea353821c15bf15d0769cf8f31778f5dd5))
+* **openspec:** proposition cup-build-inducements ([#1071](https://github.com/Ryxeuf/fantasy-football-game/issues/1071)) ([0ac872f](https://github.com/Ryxeuf/fantasy-football-game/commit/0ac872f296b92ec590611d9d70487161527368d0))
+* **openspec:** proposition cup-sheet-entry-mode ([#1070](https://github.com/Ryxeuf/fantasy-football-game/issues/1070)) ([1362b14](https://github.com/Ryxeuf/fantasy-football-game/commit/1362b14cfe34de755862d02e0ab6d2849a14ac2d))
+* **openspec:** sync et archive de playoff-pool-quota-clarity ([#1069](https://github.com/Ryxeuf/fantasy-football-game/issues/1069)) ([4f48326](https://github.com/Ryxeuf/fantasy-football-game/commit/4f48326de1805b34fa3a9da7ad49d618365803af))
+
 ## [1.257.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.0...v1.257.1) (2026-10-07)
 
 
