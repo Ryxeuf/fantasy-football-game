@@ -265,6 +265,7 @@ import {
   findVisibleLeague,
   findVisibleSeasonLeague,
   isLeaguePairingHiddenFrom,
+  listingPublicOnlyFor,
   type LeagueViewer,
   type LeagueVisibilityRow,
 } from "../services/league-access";
@@ -660,7 +661,9 @@ export async function handleListLeagues(
     const { items, total, limit, offset } = await listLeagues({
       creatorId: query.creatorId,
       status: query.status,
-      publicOnly: query.publicOnly,
+      // `publicOnly=false` (aucun filtre) est réservé aux admins : honoré pour
+      // un coach, il listait les ligues privées des autres.
+      publicOnly: listingPublicOnlyFor(query.publicOnly, leagueViewerOf(req)),
       // L'utilisateur courant voit ses propres ligues privées (créées ou
       // rejointes) en plus des ligues publiques.
       viewerId: req.user?.id,

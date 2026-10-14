@@ -69,6 +69,21 @@ export function isLeagueVisibleTo(
 }
 
 /**
+ * Portée EFFECTIVE d'un listing de ligues. `publicOnly=false` lève tout filtre
+ * de visibilité (vue d'administration) : il n'est honoré que pour un admin.
+ * Pour tout autre lecteur, il retombe sur la vue par défaut — ligues publiques
+ * plus celles dont il est commissaire, inscrit ou invité — au lieu de lister
+ * les ligues privées des autres.
+ */
+export function listingPublicOnlyFor(
+  requested: boolean | undefined,
+  viewer: LeagueViewer,
+): boolean | undefined {
+  if (requested === false && !viewer.isAdmin) return undefined;
+  return requested;
+}
+
+/**
  * Invitation en attente adressée nommément au coach (`inviteeUserId`). Même
  * critère que le listing `listLeagues` : le statut seul, l'expiration étant
  * matérialisée par le balayage qui passe les invitations à `expired`.

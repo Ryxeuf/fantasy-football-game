@@ -502,7 +502,8 @@ export async function listLeagues(filter: ListLeaguesFilter) {
   }
   // Visibilite :
   //  - publicOnly === true  -> uniquement les ligues publiques
-  //  - publicOnly === false -> toutes les ligues (usage admin)
+  //  - publicOnly === false -> toutes les ligues (admin seulement : la route
+  //    le ramène à `undefined` pour un coach, cf. `listingPublicOnlyFor`)
   //  - non precise (defaut, page /leagues) -> ligues publiques + ligues
   //    privees dont le viewer est createur, participant, OU invite
   //    (invitation en attente). Sans ca, une ligue passee en prive
