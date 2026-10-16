@@ -34,6 +34,9 @@ services:
     pull_policy: always
     restart: unless-stopped
     container_name: nufflearena_web
+    # tini en PID 1 : node n'est plus PID 1 (il ignorerait SIGTERM faute de
+    # handler, `docker stop` attendrait 10 s puis SIGKILL). Cf. CMD du Dockerfile.
+    init: true
     environment:
       - NODE_ENV=production
       - PORT=3100
@@ -77,6 +80,8 @@ services:
     pull_policy: always
     restart: unless-stopped
     container_name: nufflearena_server
+    # tini en PID 1 (cf. service web).
+    init: true
     environment:
       - NODE_ENV=production
       - API_PORT=8201

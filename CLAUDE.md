@@ -1696,6 +1696,17 @@ etre ajoute a `DOWNSTREAM_WORKFLOWS` dans `auto-merge.yml` **et** exposer
 un trigger `workflow_dispatch`, sinon il ne tournera jamais sur les PR
 auto-mergees.
 
+### Images de prod : node lancé DIRECTEMENT, jamais par `pnpm run`
+
+`pnpm --filter … run` / `pnpm exec` et la CLI `tsx` restent parents INACTIFS
+du vrai processus toute la vie du conteneur : ~48 Mo de mémoire anonyme côté
+server, ~50 Mo côté web (mesuré sur les images de prod, 2026-10-16), que le
+noyau pousse en swap (alerte `HostSwapSaturated` du serveur OVH). Les CMD font
+`cd apps/<app> && exec node …` (loader `--import tsx` côté server ; le `cd`
+garde le cwd que lisent dotenv et les `process.cwd()` du web) et le compose de
+prod pose `init: true` (sinon node en PID 1 ignore SIGTERM). Garde :
+`apps/server/src/prod-runtime-command.test.ts`.
+
 ### supertest n'est pas dans les deps
 Pour tester un Express handler en isolation, utiliser
 `http.createServer(express())` + `http.request` natif au lieu de
