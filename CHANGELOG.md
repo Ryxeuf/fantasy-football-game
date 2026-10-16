@@ -1,3 +1,10 @@
+## [1.257.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.2...v1.257.3) (2026-10-16)
+
+
+### ⚡ Performance Improvements
+
+* **deploy:** lancer node directement dans les images de prod ([#1074](https://github.com/Ryxeuf/fantasy-football-game/issues/1074)) ([07e4a39](https://github.com/Ryxeuf/fantasy-football-game/commit/07e4a39d5834344bc7f1ea208aa31c2943893cc0))
+
 ## [1.257.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.1...v1.257.2) (2026-10-14)
 
 
