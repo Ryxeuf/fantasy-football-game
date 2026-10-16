@@ -91,4 +91,8 @@ EXPOSE 3100
 HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=6 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3100/ || exit 1
 
-CMD ["pnpm", "--filter", "@bb/web", "exec", "next", "start", "-p", "3100"]
+# node lance DIRECTEMENT, sans `pnpm exec` : pnpm restait parent inactif
+# du serveur Next (~50 Mo de memoire anonyme mesures sur l'image de prod).
+# Le `cd` est obligatoire : le code lit des fichiers via process.cwd()
+# (data/, public/, assets/). PID 1 = tini (`init: true` en prod).
+CMD ["sh", "-c", "cd apps/web && exec node node_modules/next/dist/bin/next start -p 3100"]

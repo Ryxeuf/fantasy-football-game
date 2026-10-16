@@ -59,4 +59,11 @@ HEALTHCHECK --interval=10s --timeout=3s --start-period=45s --retries=6 \
 # command — they are executed explicitly by scripts/db-migrate.sh before
 # the swap, so the container starts fast and the deploy script controls
 # the migration timing.
-CMD ["pnpm", "--filter", "@bb/server", "run", "dev:nowatch"]
+#
+# node est lance DIRECTEMENT (loader tsx via --import), jamais par
+# `pnpm run` ni par la CLI `tsx` : chacun laisse un processus parent inactif
+# pour toute la vie du conteneur (~48 Mo de memoire anonyme mesures sur
+# l'image de prod, que le noyau finit par pousser en swap). `exec` remplace
+# le shell ; le `cd` garde le cwd que `pnpm --filter` donnait (dotenv lit
+# ../../prisma/.env). PID 1 = tini (`init: true` dans docker-compose.prod.yml).
+CMD ["sh", "-c", "cd apps/server && exec node --import tsx src/index.ts"]
