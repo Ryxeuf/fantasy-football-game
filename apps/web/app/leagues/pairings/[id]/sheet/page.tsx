@@ -73,6 +73,7 @@ import {
 import { RosterSection } from "./_components/RosterSection";
 import { MatchSheetPdfButton } from "./_components/MatchSheetPdfButton";
 import TeamLogo from "../../../../components/TeamLogo";
+import TeamRosterLink from "../../../[id]/TeamRosterLink";
 import {
   competitionBackLabel,
   competitionHref,
@@ -910,6 +911,9 @@ export default function MatchSheetPage() {
   // Une coupe se joue en résurrection : ni fin de match, ni évolutions.
   const isCup = isCupCompetition(data.competitionKind);
   const inducementsLocked = preMatchInducementsLocked(data);
+  // Fiche de roster depuis les noms : en coupe, tout visiteur de la coupe ;
+  // en ligue, la porte de la fiche (commissaire ou coach du match).
+  const canViewRosters = isCup || data.viewerRole !== "none";
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4" data-testid="match-sheet">
@@ -986,7 +990,17 @@ export default function MatchSheetPage() {
                 size={20}
                 title={home?.name}
               />
-              <span className="truncate">{home?.name ?? "Domicile"}</span>
+              <span className="truncate">
+                <TeamRosterLink
+                  competition={isCup ? "cup" : "league"}
+                  leagueId={data.leagueId}
+                  teamId={home?.teamId ?? ""}
+                  canViewRoster={canViewRosters}
+                  testIdSuffix="sheet-home"
+                >
+                  {home?.name ?? "Domicile"}
+                </TeamRosterLink>
+              </span>
             </div>
             <span
               className="ml-auto mt-1 block h-1 w-12 rounded-full"
@@ -1014,7 +1028,17 @@ export default function MatchSheetPage() {
                 size={20}
                 title={away?.name}
               />
-              <span className="truncate">{away?.name ?? "Extérieur"}</span>
+              <span className="truncate">
+                <TeamRosterLink
+                  competition={isCup ? "cup" : "league"}
+                  leagueId={data.leagueId}
+                  teamId={away?.teamId ?? ""}
+                  canViewRoster={canViewRosters}
+                  testIdSuffix="sheet-away"
+                >
+                  {away?.name ?? "Extérieur"}
+                </TeamRosterLink>
+              </span>
             </div>
             <span
               className="mt-1 block h-1 w-12 rounded-full"
