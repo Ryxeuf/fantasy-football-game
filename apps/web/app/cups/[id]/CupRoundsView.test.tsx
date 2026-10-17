@@ -395,5 +395,25 @@ describe("CupRoundsView", () => {
       screen.getByTestId("team-roster-link-cup-pairing-home-e").getAttribute("href"),
     ).toBe("/cups/cup-1/teams/e");
   });
+
+  it("annonce une feuille soumise, à moitié ou en entier", () => {
+    renderView({
+      rounds: [
+        round([
+          { ...OPEN, matchSheet: { status: "submitted_home" } },
+          { ...OPEN, id: "p4", tableNumber: 4, matchSheet: { status: "both_submitted" } },
+          // Brouillon : rien à annoncer, la rencontre reste « à jouer ».
+          { ...OPEN, id: "p5", tableNumber: 5, matchSheet: { status: "draft" } },
+        ]),
+      ],
+    });
+    expect(screen.getByTestId("cup-pairing-sheet-pending-p2").textContent).toBe(
+      "En attente validation (1/2)",
+    );
+    expect(screen.getByTestId("cup-pairing-sheet-pending-p4").textContent).toBe(
+      "En attente validation",
+    );
+    expect(screen.queryByTestId("cup-pairing-sheet-pending-p5")).toBeNull();
+  });
 });
 

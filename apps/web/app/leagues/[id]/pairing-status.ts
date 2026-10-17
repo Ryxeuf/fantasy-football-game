@@ -85,3 +85,28 @@ export function fromDateTimeLocalValue(value: string): string | null {
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString();
 }
+
+/**
+ * Feuille saisie par les coachs mais pas encore validée par le
+ * commissaire : le statut du pairing reste « Programmé » (il ne bascule
+ * qu'à la validation), ce qui ne dit rien au coach qui vient de saisir.
+ * On expose donc un libellé dédié, dérivé du `status` de la feuille.
+ *
+ * Retourne `null` quand il n'y a rien à signaler (pas de feuille,
+ * brouillon, déjà validée ou invalidée).
+ */
+export function matchSheetPendingLabel(
+  sheetStatus: string | null | undefined,
+): string | null {
+  switch (sheetStatus) {
+    case "both_submitted":
+      return "En attente validation";
+    // Un seul des deux coachs a validé sa saisie : la feuille attend
+    // toujours le commissaire, mais elle n'est pas encore complète.
+    case "submitted_home":
+    case "submitted_away":
+      return "En attente validation (1/2)";
+    default:
+      return null;
+  }
+}

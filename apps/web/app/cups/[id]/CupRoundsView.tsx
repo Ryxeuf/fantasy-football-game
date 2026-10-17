@@ -8,7 +8,10 @@ import MatchCard, {
   type MatchCardTeam,
 } from "../../components/competition/MatchCard";
 import ScheduleEditor from "../../components/competition/ScheduleEditor";
-import { formatPlannedDate } from "../../leagues/[id]/pairing-status";
+import {
+  formatPlannedDate,
+  matchSheetPendingLabel,
+} from "../../leagues/[id]/pairing-status";
 import { matchSheetHref } from "../../lib/competition-links";
 import {
   availableTeams,
@@ -57,6 +60,8 @@ export interface CupPairingView {
     scoreTeamA: number | null;
     scoreTeamB: number | null;
   } | null;
+  /** Statut de la feuille de match (absent : API antérieure). */
+  matchSheet?: { status: string } | null;
 }
 
 export interface CupRoundView {
@@ -532,8 +537,20 @@ function CupPairingCard({
   const planned =
     pairing.status === "scheduled" ? formatPlannedDate(pairing.scheduledAt, language) : null;
 
+  // Feuille saisie, pas encore validée : le statut de la rencontre reste
+  // « À jouer » jusqu'à la validation — le libellé de la ligue le dit.
+  const pendingLabel = open ? matchSheetPendingLabel(pairing.matchSheet?.status) : null;
+
   const status: MatchCardStatus = isBye
     ? { label: t.cups.swissStatusBye, tone: "neutral", testId: `cup-pairing-status-${pairing.id}` }
+    : pendingLabel
+      ? {
+          label: pendingLabel,
+          tone: "pending",
+          testId: `cup-pairing-sheet-pending-${pairing.id}`,
+          title:
+            "Feuille de match saisie par les coachs, en attente de validation par le commissaire",
+        }
     : pairing.status === "played"
       ? { label: t.cups.swissStatusPlayed, tone: "played", testId: `cup-pairing-status-${pairing.id}` }
       : pairing.status === "cancelled"
