@@ -1,6 +1,14 @@
 # cup-calendar
 
-## ADDED Requirements
+## Purpose
+
+Le calendrier d'une coupe pour ses coachs et son commissaire, comme celui
+d'une ligue : « Mes prochains matchs », relance des coachs d'une ronde en
+retard, et notification de la date convenue d'une rencontre.
+
+Change d'origine : `cup-league-parity` (#1077, archivé le 2026-10-17).
+
+## Requirements
 
 ### Requirement: Mes prochains matchs de coupe
 
@@ -23,9 +31,15 @@ notification interne.
 
 ### Requirement: Date convenue notifiée
 
-Quand un coach pose la date prévue d'une rencontre de coupe, l'autre coach
-DOIT être notifié.
+Quand la date prévue d'une rencontre de coupe est posée ou retirée — par un
+de ses coachs ou par le commissaire —, les coachs de la rencontre autres que
+l'auteur DOIVENT être notifiés (notification interne menant à la coupe). Un
+exempt ne notifie personne.
 
 #### Scenario: Date posée
 - WHEN le coach domicile fixe la date de sa rencontre
 - THEN le coach extérieur DOIT recevoir une notification
+
+#### Scenario: Date posée par le commissaire
+- WHEN le commissaire, qui ne joue pas la rencontre, en fixe la date
+- THEN les deux coachs DOIVENT être notifiés

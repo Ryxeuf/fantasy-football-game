@@ -46,3 +46,24 @@ UNE notification de bilan.
 #### Scenario: Validation puis invalidation
 - WHEN une feuille réglée est invalidée
 - THEN ses pronostics DOIVENT redevenir en attente et le classement les ignorer
+
+### Requirement: Pronostics de coupe à l'écran
+
+Une coupe DOIT tenir ses pronostics sur UNE page, `/cups/:id/predictions` :
+le classement (onglets Coachs / Tribunes) puis chaque ronde, avec les mêmes
+cartes que la ligue et une ancre par ronde (`pronos-ronde-N`). La page de la
+coupe DOIT résumer en une ligne ce qui reste à pronostiquer et la place du
+lecteur, et chaque ronde du calendrier DOIT porter un bouton vers ses
+pronostics. La portée DOIT se choisir à la création d'une coupe (défaut
+« membres ») et se modifier depuis son édition ; l'édition NE DOIT écrire la
+portée que si elle change, pour qu'une coupe antérieure garde sa portée
+absente — et l'invitation de son commissaire à l'activer.
+
+#### Scenario: Une ronde à pronostiquer
+- WHEN un membre ouvre une coupe dont la ronde 2 a une rencontre ouverte qu'il n'a pas pronostiquée
+- THEN la page DOIT annoncer « Ronde 2 : 1 rencontre à pronostiquer » avec un lien vers `/cups/:id/predictions#pronos-ronde-2`
+
+#### Scenario: Coupe antérieure éditée
+- WHEN le commissaire enregistre l'édition d'une coupe antérieure sans toucher aux pronostics
+- THEN la portée NE DOIT PAS être écrite
+
