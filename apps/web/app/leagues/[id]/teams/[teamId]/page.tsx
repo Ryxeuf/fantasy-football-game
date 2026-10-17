@@ -346,6 +346,12 @@ export default function LeagueTeamRosterPage() {
                     <th className="px-2 py-2 text-right">PA</th>
                     <th className="px-2 py-2 text-right">AV</th>
                     <th className="px-2 py-2 text-left">Compétences</th>
+                    <th
+                      className="px-2 py-2 text-right"
+                      title="Matchs joués, toutes compétitions (ligue, coupe, en ligne)"
+                    >
+                      MJ
+                    </th>
                     <th className="px-2 py-2 text-right" title="Touchdowns marqués">TD</th>
                     <th className="px-2 py-2 text-right" title="Éliminations provoquées sur Blocage">Élim.</th>
                     <th className="px-2 py-2 text-right" title="Passes complétées">Pas.</th>
@@ -434,6 +440,12 @@ export default function LeagueTeamRosterPage() {
                             position={p.position}
                             useDirectParsing
                           />
+                        </td>
+                        <td
+                          className="px-2 py-2 text-right tabular-nums"
+                          data-testid={`player-matches-${p.id}`}
+                        >
+                          {p.matchesPlayed ?? 0}
                         </td>
                         <td className="px-2 py-2 text-right tabular-nums">
                           {p.totalTouchdowns ?? 0}

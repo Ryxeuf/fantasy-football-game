@@ -21,6 +21,9 @@ vi.mock("../prisma", () => ({
     roster: { findFirst: vi.fn() },
     teamPlayer: { findMany: vi.fn() },
     leagueMatchEvent: { findMany: vi.fn() },
+    // Carrière toutes compétitions (player-career-loader).
+    leagueMatchSheet: { findMany: vi.fn() },
+    match: { findMany: vi.fn() },
   },
 }));
 
@@ -71,6 +74,8 @@ const mockPrisma = prisma as unknown as {
   roster: { findFirst: ReturnType<typeof vi.fn> };
   teamPlayer: { findMany: ReturnType<typeof vi.fn> };
   leagueMatchEvent: { findMany: ReturnType<typeof vi.fn> };
+  leagueMatchSheet: { findMany: ReturnType<typeof vi.fn> };
+  match: { findMany: ReturnType<typeof vi.fn> };
 };
 const mockGetTeamForEdit = getTeamForEdit as ReturnType<typeof vi.fn>;
 const mockUpdateTeamValues = updateTeamValues as unknown as ReturnType<
@@ -207,6 +212,9 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
       { actorPlayerId: "pl1" },
       { actorPlayerId: "pl2" },
     ]);
+    // Aucune feuille validée par défaut : la carrière = compteurs.
+    mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+    mockPrisma.match.findMany.mockResolvedValue([]);
   });
 
   it("ligue privée : introuvable (404) pour un coach qui n'en fait pas partie", async () => {
@@ -274,10 +282,49 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           kind: "aggression",
-          matchSheet: { pairing: { round: { season: { leagueId: "L1" } } } },
+          // Feuilles validées seulement.
+          matchSheet: {
+            status: "validated",
+            pairing: { round: { season: { leagueId: "L1" } } },
+          },
         }),
       }),
     );
+  });
+
+  it("ajoute aux compteurs la carrière de coupe (rien n'en est persisté)", async () => {
+    // 1er findMany = compteurs du handler ; 2e = joueurs lus par le
+    // chargeur de carrière.
+    const statsRows = await mockPrisma.teamPlayer.findMany();
+    mockPrisma.teamPlayer.findMany.mockReset();
+    mockPrisma.teamPlayer.findMany
+      .mockResolvedValueOnce(statsRows)
+      .mockResolvedValueOnce([
+        { id: "pl1", teamId: "T1", number: 7, name: "Griff", position: "human_blitzer" },
+        { id: "pl2", teamId: "T1", number: 3, name: "Boris", position: "human_lineman" },
+      ]);
+    mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+      {
+        pairingId: null,
+        cupPairingId: "cp-1",
+        forfeitSide: null,
+        motmPlayerIds: [],
+        rosterSnapshotHome: { players: [{ id: "pl1" }, { id: "pl2" }] },
+        rosterSnapshotAway: null,
+        pairing: null,
+        cupPairing: { homeTeamId: "T1", awayTeamId: "T2" },
+        events: [{ kind: "touchdown", team: "home", actorPlayerId: "pl1" }],
+      },
+    ]);
+
+    const res = createRes();
+    await handleGetLeagueTeamRoster(createReq(), res);
+
+    const [griff, boris] = (
+      res.payload as { data: { players: Array<Record<string, unknown>> } }
+    ).data.players;
+    expect(griff).toMatchObject({ totalTouchdowns: 5, matchesPlayed: 7 });
+    expect(boris).toMatchObject({ totalTouchdowns: 0, matchesPlayed: 6 });
   });
 
   it("sert des VE/VEA fraîchement recalculées (la VEA exclut les absents)", async () => {
