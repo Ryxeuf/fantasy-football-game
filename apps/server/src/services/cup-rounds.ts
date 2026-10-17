@@ -32,6 +32,7 @@ import { generateSwissRound, type SwissRoundResult } from "./swiss-pairing";
 import { generateRandomRound } from "./random-pairing";
 import type { CupRoundSystem } from "./cup-round-systems";
 import { createInAppNotification } from "./in-app-notifications";
+import { notifyCupRoundPredictionResults } from "./cup-predictions-settlement";
 import { serverLog } from "../utils/server-log";
 
 export type CupRoundErrorCode =
@@ -938,6 +939,10 @@ export async function cancelCupPairing(input: {
     select: { id: true },
   });
   const roundCompleted = await maybeCompleteCupRound(pairing.round.id);
+  // Une annulation peut compléter la ronde : bilan des pronostics (une fois).
+  if (roundCompleted) {
+    await notifyCupRoundPredictionResults(pairing.round.id);
+  }
   return { pairingId: pairing.id, status: "cancelled", roundCompleted };
 }
 

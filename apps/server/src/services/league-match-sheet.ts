@@ -224,6 +224,12 @@ import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository"
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
 import { markPairingPredictionsClosed } from "./league-predictions-settlement";
 import {
+  markCupPairingPredictionsClosed,
+  notifyCupRoundPredictionResultsForPairing,
+  settleCupPredictionsForResult,
+  unsettleCupPredictions,
+} from "./cup-predictions-settlement";
+import {
   getDeclaredRegionalRules,
   getRosterFromDb,
 } from "../utils/roster-helpers";
@@ -1034,6 +1040,8 @@ export async function addEvent(input: {
   // rouvre pas). Best-effort, ne lève jamais.
   if (ctx.kind === "league") {
     await markPairingPredictionsClosed(ctx.pairingId);
+  } else {
+    await markCupPairingPredictionsClosed(ctx.pairingId);
   }
   return created;
 }
@@ -1906,6 +1914,8 @@ export async function submitByCoach(input: {
   // les coachs qui remplissent la feuille après coup). Best-effort.
   if (ctx.kind === "league") {
     await markPairingPredictionsClosed(ctx.pairingId);
+  } else {
+    await markCupPairingPredictionsClosed(ctx.pairingId);
   }
 
   // Lot H — quand les 2 coachs ont soumis, alerte le commissaire
@@ -2729,6 +2739,18 @@ export async function validateByCommissioner(input: {
         scoreAway,
       },
     });
+    // Pronostics : l'issue et le score réel sont copiés (un forfait est
+    // réglé « void »), puis, si la ronde vient de se compléter, chaque
+    // pronostiqueur reçoit son bilan. Best-effort, ne lèvent jamais.
+    await settleCupPredictionsForResult({
+      cupPairingId: ctx.pairingId,
+      scoreHome,
+      scoreAway,
+      forfeit: forfeitSide === "home" || forfeitSide === "away",
+    });
+    if (settled.roundCompleted) {
+      await notifyCupRoundPredictionResultsForPairing(ctx.pairingId);
+    }
     serverLog.info(
       `[cup-match-sheet] validated pairing=${ctx.pairingId} match=${settled.localMatchId}`,
     );
@@ -3293,6 +3315,8 @@ export async function invalidateMatchSheet(input: {
   // retirer suffit — le classement, entierement derive, revient de lui-meme.
   if (ctx.kind === "cup") {
     await revertCupMatchSheet({ cupPairingId: ctx.pairingId });
+    // Les pronostics redeviennent en attente ; la rencontre reste fermée.
+    await unsettleCupPredictions(ctx.pairingId);
     const updatedCup = await prisma.leagueMatchSheet.update({
       where: { id: sheet.id },
       data: {
