@@ -28,6 +28,7 @@ import {
 import { dynamicRoute } from "../../lib/typed-route";
 import { groupCupRoundByPool } from "./round-pools";
 import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
+import { RoundFollowupButton } from "../../leagues/[id]/RoundFollowupButton";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -440,6 +441,14 @@ export default function CupRoundsView({
                       ) : null}
                     </div>
                   </div>
+                  {/* Relance des coachs en retard : commissaire, ronde ouverte. */}
+                  {isCommissioner && isRoundOpen(round) ? (
+                    <RoundFollowupButton
+                      competition="cup"
+                      roundId={round.id}
+                      roundNumber={round.roundNumber}
+                    />
+                  ) : null}
                 </header>
                 <div className="space-y-3 p-3 sm:p-4">
                   {groups === null ? (

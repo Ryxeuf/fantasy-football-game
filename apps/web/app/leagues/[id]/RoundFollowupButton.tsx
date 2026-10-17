@@ -41,12 +41,23 @@ export interface RoundFollowupButtonProps {
   readonly roundId: string;
   /** Numéro de journée, pour le libellé accessible du bouton. */
   readonly roundNumber: number;
+  /**
+   * Ligue (défaut) ou coupe : seuls la route et le vocabulaire changent
+   * (« journée » / « ronde ») — les règles de relance sont les mêmes.
+   */
+  readonly competition?: "league" | "cup";
 }
 
 export function RoundFollowupButton({
   roundId,
   roundNumber,
+  competition = "league",
 }: RoundFollowupButtonProps) {
+  const endpoint =
+    competition === "cup"
+      ? `/cup/rounds/${roundId}/remind`
+      : `/leagues/rounds/${roundId}/remind`;
+  const unit = competition === "cup" ? "ronde" : "journée";
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<ReminderRunResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +67,9 @@ export function RoundFollowupButton({
     setError(null);
     setResult(null);
     try {
-      const body = await apiRequest<ReminderRunResult>(
-        `/leagues/rounds/${roundId}/remind`,
-        { method: "POST" },
-      );
+      const body = await apiRequest<ReminderRunResult>(endpoint, {
+        method: "POST",
+      });
       setResult(body);
     } catch (e: unknown) {
       setError(
@@ -68,7 +78,7 @@ export function RoundFollowupButton({
     } finally {
       setSending(false);
     }
-  }, [roundId]);
+  }, [endpoint]);
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -77,7 +87,7 @@ export function RoundFollowupButton({
         onClick={send}
         disabled={sending}
         data-testid={`round-followup-${roundId}`}
-        aria-label={`Relancer les coachs de la journée ${roundNumber}`}
+        aria-label={`Relancer les coachs de la ${unit} ${roundNumber}`}
         title="Écrire aux coachs dont le match n'est pas planifié, ou dont la feuille n'est pas arrivée"
         className="inline-flex items-center gap-1 rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-900 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
       >

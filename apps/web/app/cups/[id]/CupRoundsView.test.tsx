@@ -415,5 +415,19 @@ describe("CupRoundsView", () => {
     );
     expect(screen.queryByTestId("cup-pairing-sheet-pending-p5")).toBeNull();
   });
+
+  it("propose la relance au commissaire sur une ronde ouverte seulement", () => {
+    renderView({
+      rounds: [round([OPEN]), round([PLAYED], { id: "r2", roundNumber: 2 })],
+      isCommissioner: true,
+    });
+    expect(screen.getByTestId("round-followup-r1")).toBeTruthy();
+    expect(screen.queryByTestId("round-followup-r2")).toBeNull();
+  });
+
+  it("ne propose pas la relance à un coach", () => {
+    renderView({ rounds: [round([OPEN])] });
+    expect(screen.queryByTestId("round-followup-r1")).toBeNull();
+  });
 });
 
