@@ -10,9 +10,10 @@
  *    P2002 -> 409 selon la cible.
  *  - `GET /team/:id` — `handleGetTeamDetail` : detail d'une equipe
  *    avec players, starPlayers enrichis, current match selection,
- *    et statistiques aggregees sur les `localMatch` (pending /
+ *    statistiques aggregees sur les `localMatch` (pending /
  *    waiting / inProgress / completed / cancelled, wins / draws /
- *    losses, touchdowns for / against / diff).
+ *    losses, touchdowns for / against / diff) et bilan toutes
+ *    competitions (`matchStats` : ligue + coupe + amical).
  *
  * Helpers leaf uniquement : `prisma`, `sendError`/`sendSuccess`,
  * `getStarPlayerBySlug` from `@bb/game-engine`, `serverLog`. Aucun
@@ -51,6 +52,11 @@ import {
   isAdminRequest,
   teamAccessWhere,
 } from '../services/team-edit-access';
+import {
+  buildTeamMatchStats,
+  summarizeLocalMatchStats,
+  type LeagueCounterSums,
+} from '../services/team-match-stats';
 
 /**
  * S27.8.26 — `POST /team/choose`
@@ -142,6 +148,8 @@ export async function handleChooseTeam(
  *  - currentMatch (premiere selection en cours)
  *  - localMatchStats : stats agregees sur les 500 dernieres
  *    `LocalMatch` (counts par status + bilan completed)
+ *  - matchStats : bilan TOUTES competitions (ligue + coupe + amical),
+ *    celui qu'affiche la fiche d'equipe (`services/team-match-stats`)
  */
 export async function handleGetTeamDetail(
   req: AuthenticatedRequest,
@@ -201,81 +209,39 @@ export async function handleGetTeamDetail(
         teamBId: true,
         scoreTeamA: true,
         scoreTeamB: true,
+        cupId: true,
+        cupPairingId: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 500,
     });
+    const localMatchStats = summarizeLocalMatchStats(team.id, localMatches);
 
-    let pending = 0;
-    let waitingForPlayer = 0;
-    let inProgress = 0;
-    let completed = 0;
-    let cancelled = 0;
-
-    let wins = 0;
-    let draws = 0;
-    let losses = 0;
-    let touchdownsFor = 0;
-    let touchdownsAgainst = 0;
-
-    for (const match of localMatches) {
-      switch (match.status) {
-        case 'pending':
-          pending += 1;
-          break;
-        case 'waiting_for_player':
-          waitingForPlayer += 1;
-          break;
-        case 'in_progress':
-          inProgress += 1;
-          break;
-        case 'completed':
-          completed += 1;
-          break;
-        case 'cancelled':
-          cancelled += 1;
-          break;
-        default:
-          break;
-      }
-
-      if (match.status === 'completed') {
-        const isTeamA = match.teamAId === team.id;
-        const myScore = isTeamA
-          ? (match.scoreTeamA ?? 0)
-          : (match.scoreTeamB ?? 0);
-        const oppScore = isTeamA
-          ? (match.scoreTeamB ?? 0)
-          : (match.scoreTeamA ?? 0);
-
-        touchdownsFor += myScore;
-        touchdownsAgainst += oppScore;
-
-        if (myScore > oppScore) {
-          wins += 1;
-        } else if (myScore < oppScore) {
-          losses += 1;
-        } else {
-          draws += 1;
-        }
-      }
+    // Les rencontres de LIGUE ne passent jamais par `LocalMatch` : leur
+    // résultat vit dans les compteurs du participant (ceux du classement).
+    // Sans eux, une équipe qui a joué une saison entière affichait 0 match.
+    // Enrichissement d'affichage : la fiche se sert sans, comme le pool de PSP.
+    let leagueSums: LeagueCounterSums | null = null;
+    try {
+      const aggregate = await prisma.leagueParticipant.aggregate({
+        where: { teamId: team.id },
+        _sum: {
+          wins: true,
+          draws: true,
+          losses: true,
+          touchdownsFor: true,
+          touchdownsAgainst: true,
+        },
+      });
+      leagueSums = aggregate?._sum ?? null;
+    } catch (e: unknown) {
+      serverLog.error('[team-detail] bilan de ligue', e);
     }
-
-    const localMatchStats = {
-      total: localMatches.length,
-      pending,
-      waitingForPlayer,
-      inProgress,
-      completed,
-      cancelled,
-      matchesPlayed: completed,
-      wins,
-      draws,
-      losses,
-      touchdownsFor,
-      touchdownsAgainst,
-      touchdownDiff: touchdownsFor - touchdownsAgainst,
-    };
+    const matchStats = buildTeamMatchStats({
+      teamId: team.id,
+      localMatches,
+      leagueSums,
+    });
 
     // Config staff résolue (DB par roster × format, sinon défaut) — permet aux
     // vues équipe d'afficher des coûts cohérents avec l'admin.
@@ -417,6 +383,7 @@ export async function handleGetTeamDetail(
       },
       currentMatch: selection?.match || null,
       localMatchStats,
+      matchStats,
     });
   } catch (e: unknown) {
     serverLog.error("Erreur lors de la recuperation de l'equipe:", e);
