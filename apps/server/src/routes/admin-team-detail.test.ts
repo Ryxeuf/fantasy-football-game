@@ -20,6 +20,10 @@ vi.mock("../prisma", () => ({
     },
     leagueParticipant: { findMany: vi.fn() },
     cupParticipant: { findMany: vi.fn() },
+    // Carrière toutes compétitions (player-career-loader).
+    teamPlayer: { findMany: vi.fn() },
+    leagueMatchSheet: { findMany: vi.fn() },
+    match: { findMany: vi.fn() },
   },
 }));
 
@@ -56,6 +60,9 @@ const mockedPrisma = prisma as unknown as {
   team: { findUnique: ReturnType<typeof vi.fn>; findMany: ReturnType<typeof vi.fn> };
   leagueParticipant: { findMany: ReturnType<typeof vi.fn> };
   cupParticipant: { findMany: ReturnType<typeof vi.fn> };
+  teamPlayer: { findMany: ReturnType<typeof vi.fn> };
+  leagueMatchSheet: { findMany: ReturnType<typeof vi.fn> };
+  match: { findMany: ReturnType<typeof vi.fn> };
 };
 const mockedStarPlayer = vi.mocked(getStarPlayerBySlugDb);
 
@@ -136,6 +143,9 @@ const TEAM = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mockedPrisma.teamPlayer.findMany.mockResolvedValue([]);
+  mockedPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+  mockedPrisma.match.findMany.mockResolvedValue([]);
 });
 
 describe("GET /admin/teams/:id", () => {
@@ -291,5 +301,37 @@ describe("GET /admin/teams/:id — compétitions", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.competitions).toEqual({ leagues: [], cups: [] });
+  });
+
+  it("sert la carrière des joueurs toutes compétitions (coupe comprise)", async () => {
+    mockedPrisma.team.findUnique.mockResolvedValue({ ...TEAM, starPlayers: [] });
+    mockedPrisma.team.findMany.mockResolvedValue([]);
+    mockedPrisma.leagueParticipant.findMany.mockResolvedValue([]);
+    mockedPrisma.cupParticipant.findMany.mockResolvedValue([]);
+    mockedPrisma.teamPlayer.findMany.mockResolvedValue([
+      { id: "p1", teamId: "team-1", number: 2, name: "Juninhorc", position: "black_orc_orque_noir" },
+    ]);
+    mockedPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+      {
+        pairingId: null,
+        cupPairingId: "cp-1",
+        forfeitSide: null,
+        motmPlayerIds: [],
+        rosterSnapshotHome: null,
+        rosterSnapshotAway: { players: [{ id: "p1" }] },
+        pairing: null,
+        cupPairing: { homeTeamId: "other", awayTeamId: "team-1" },
+        events: [{ kind: "touchdown", team: "away", actorPlayerId: "p1" }],
+      },
+    ]);
+
+    const res = await get("/teams/team-1");
+
+    expect(res.status).toBe(200);
+    expect(res.body.team.playerCareers.p1).toMatchObject({
+      matchesPlayed: 1,
+      touchdowns: 1,
+      cup: { matchesPlayed: 1, touchdowns: 1 },
+    });
   });
 });

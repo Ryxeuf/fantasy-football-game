@@ -263,6 +263,40 @@ describe("AdminTeamDetailPage", () => {
     );
   });
 
+  it("affiche les matchs de la carrière toutes compétitions", async () => {
+    mockApi({
+      team: {
+        ...TEAM,
+        playerCareers: {
+          p2: {
+            matchesPlayed: 7,
+            touchdowns: 2,
+            casualties: 1,
+            completions: 0,
+            interceptions: 0,
+            mvpAwards: 0,
+            spp: 6,
+          },
+        },
+      },
+    });
+    renderPage();
+
+    const cell = await screen.findByTestId("admin-player-career-p2");
+    expect(cell.textContent).toContain("6");
+    expect(cell.textContent).toContain("7 m.");
+    // Joueur absent de la carrière servie : compteurs bruts.
+    expect(screen.getByTestId("admin-player-career-p1").textContent).toContain("0 m.");
+  });
+
+  it("retombe sur les compteurs bruts face à une API antérieure", async () => {
+    mockApi();
+    renderPage();
+
+    const cell = await screen.findByTestId("admin-player-career-p2");
+    expect(cell.textContent).toContain("3 m.");
+  });
+
   it("affiche les Star Players avec leur nom", async () => {
     mockApi();
     renderPage();
