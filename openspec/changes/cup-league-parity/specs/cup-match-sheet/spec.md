@@ -24,4 +24,4 @@ chaque feuille de coupe.
 
 #### Scenario: Notification d'une coupe
 - WHEN la seconde soumission d'une feuille de coupe est enregistrée
-- THEN le commissaire DOIT recevoir « Match à valider : <domicile> vs <extérieur> » menant à la page de la coupe
+- THEN le commissaire DOIT recevoir « Match à valider : <domicile> vs <extérieur> » menant à `/cups/:id/pending-validations`

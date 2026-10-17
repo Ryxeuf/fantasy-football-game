@@ -23,9 +23,15 @@ notification interne.
 
 ### Requirement: Date convenue notifiée
 
-Quand un coach pose la date prévue d'une rencontre de coupe, l'autre coach
-DOIT être notifié.
+Quand la date prévue d'une rencontre de coupe est posée ou retirée — par un
+de ses coachs ou par le commissaire —, les coachs de la rencontre autres que
+l'auteur DOIVENT être notifiés (notification interne menant à la coupe). Un
+exempt ne notifie personne.
 
 #### Scenario: Date posée
 - WHEN le coach domicile fixe la date de sa rencontre
 - THEN le coach extérieur DOIT recevoir une notification
+
+#### Scenario: Date posée par le commissaire
+- WHEN le commissaire, qui ne joue pas la rencontre, en fixe la date
+- THEN les deux coachs DOIVENT être notifiés
