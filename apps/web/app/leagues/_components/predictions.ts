@@ -181,8 +181,64 @@ export function seasonPredictionLeaderboardPath(seasonId: string): string {
   return `/leagues/seasons/${seasonId}/predictions/leaderboard`;
 }
 
-export function pairingPredictionPath(pairingId: string): string {
-  return `/leagues/pairings/${pairingId}/prediction`;
+/**
+ * Compétition des pronostics : la ligue (défaut) ou la coupe. Les règles et
+ * les écrans sont les mêmes ; seules les routes et le vocabulaire changent.
+ */
+export type PredictionCompetition = "league" | "cup";
+
+export function pairingPredictionPath(
+  pairingId: string,
+  competition: PredictionCompetition = "league",
+): string {
+  return competition === "cup"
+    ? `/cup/pairings/${pairingId}/prediction`
+    : `/leagues/pairings/${pairingId}/prediction`;
+}
+
+/** Clôture manuelle d'une rencontre (coach de la rencontre, commissaire). */
+export function pairingPredictionsClosePath(
+  pairingId: string,
+  competition: PredictionCompetition = "league",
+): string {
+  return competition === "cup"
+    ? `/cup/pairings/${pairingId}/predictions/close`
+    : `/leagues/pairings/${pairingId}/predictions/close`;
+}
+
+/** Clôture manuelle d'une journée / ronde entière (commissaire). */
+export function roundPredictionsClosePath(
+  roundId: string,
+  competition: PredictionCompetition = "league",
+): string {
+  return competition === "cup"
+    ? `/cup/rounds/${roundId}/predictions/close`
+    : `/leagues/rounds/${roundId}/predictions/close`;
+}
+
+export function cupPredictionsPath(cupId: string): string {
+  return `/cup/${cupId}/predictions`;
+}
+
+export function cupPredictionLeaderboardPath(cupId: string): string {
+  return `/cup/${cupId}/predictions/leaderboard`;
+}
+
+/** Pronostics d'une coupe : mêmes rencontres et viewer qu'une saison. */
+export interface CupPredictionsView {
+  readonly cupId: string;
+  readonly cupName: string;
+  readonly scope: PredictionScope;
+  readonly scopeConfigured: boolean;
+  readonly viewer: SeasonPredictionsView["viewer"];
+  readonly rounds: ReadonlyArray<Omit<RoundPredictionsView, "startDate">>;
+}
+
+export interface CupPredictionLeaderboardView {
+  readonly cupId: string;
+  readonly scope: PredictionScope;
+  readonly coach: readonly LeaderboardEntryView[];
+  readonly stands: readonly LeaderboardEntryView[];
 }
 
 // ---------------------------------------------------------------------------
@@ -309,6 +365,20 @@ export const GRADE_LABELS: Readonly<Record<PredictionGrade, string>> = {
   wrong: "Raté",
 };
 
+/**
+ * Pourquoi le lecteur ne peut pas (ou plus) pronostiquer une rencontre, dans
+ * le vocabulaire de la compétition.
+ */
+export function eligibilityMessage(
+  reason: Exclude<PredictionEligibility, "ok">,
+  competition: PredictionCompetition = "league",
+): string {
+  const message = ELIGIBILITY_MESSAGES[reason];
+  return competition === "cup"
+    ? message.replace("cette ligue", "cette coupe").replace("de la ligue", "de la coupe")
+    : message;
+}
+
 /** Pourquoi le lecteur ne peut pas (ou plus) pronostiquer une rencontre. */
 export const ELIGIBILITY_MESSAGES: Readonly<
   Record<Exclude<PredictionEligibility, "ok">, string>
@@ -326,11 +396,15 @@ export const GROUP_LABELS: Readonly<Record<PredictionGroup, string>> = {
   stands: "Tribunes",
 };
 
-export function roundLabel(round: {
-  readonly roundNumber: number;
-  readonly name: string | null;
-}): string {
-  return round.name?.trim() || `Journée ${round.roundNumber}`;
+export function roundLabel(
+  round: {
+    readonly roundNumber: number;
+    readonly name: string | null;
+  },
+  competition: PredictionCompetition = "league",
+): string {
+  const unit = competition === "cup" ? "Ronde" : "Journée";
+  return round.name?.trim() || `${unit} ${round.roundNumber}`;
 }
 
 /** « 2 pts », « 1 pt », « 0 pt ». */
