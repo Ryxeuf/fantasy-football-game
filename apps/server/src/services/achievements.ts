@@ -22,8 +22,9 @@ import {
   summarizeCompetitionAchievementStats,
   type CompetitionAchievementStats,
   type CupMatchForAchievements,
-  type LeagueTeamSums,
+  type LeagueMatchForAchievements,
 } from "./achievement-competition-stats";
+import { OFFLINE_MATCH_MODE } from "./match-modes";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -446,16 +447,28 @@ async function computeCompetitionStats(
     })) as Array<{ id: string; roster: string }>;
     if (teams.length === 0) return EMPTY_COMPETITION_STATS;
     const teamIds = teams.map((t) => t.id);
-    const [leagueSums, cupMatches] = (await Promise.all([
-      (prisma as any).leagueParticipant.groupBy({
-        by: ["teamId"],
-        where: { teamId: { in: teamIds } },
-        _sum: {
-          wins: true,
-          draws: true,
-          losses: true,
-          touchdownsFor: true,
-          casualtiesFor: true,
+    const [leagueRows, cupMatches] = (await Promise.all([
+      // Résultats de ligue validés (feuille ou saisie du commissaire) : leur
+      // Match offline. Un forfait n'en crée pas — cf. module.
+      (prisma as any).match.findMany({
+        where: {
+          mode: OFFLINE_MATCH_MODE,
+          leagueScoredAt: { not: null },
+          leaguePairing: {
+            OR: [
+              { homeParticipant: { teamId: { in: teamIds } } },
+              { awayParticipant: { teamId: { in: teamIds } } },
+            ],
+          },
+        },
+        select: {
+          offlineResultInput: true,
+          leaguePairing: {
+            select: {
+              homeParticipant: { select: { teamId: true } },
+              awayParticipant: { select: { teamId: true } },
+            },
+          },
         },
       }),
       (prisma as any).localMatch.findMany({
@@ -481,8 +494,22 @@ async function computeCompetitionStats(
           },
         },
       }),
-    ])) as [LeagueTeamSums[], CupMatchForAchievements[]];
-    return summarizeCompetitionAchievementStats({ teams, leagueSums, cupMatches });
+    ])) as [
+      Array<{
+        offlineResultInput: unknown;
+        leaguePairing: {
+          homeParticipant: { teamId: string } | null;
+          awayParticipant: { teamId: string } | null;
+        } | null;
+      }>,
+      CupMatchForAchievements[],
+    ];
+    const leagueMatches: LeagueMatchForAchievements[] = leagueRows.map((m) => ({
+      homeTeamId: m.leaguePairing?.homeParticipant?.teamId ?? null,
+      awayTeamId: m.leaguePairing?.awayParticipant?.teamId ?? null,
+      offlineResultInput: m.offlineResultInput,
+    }));
+    return summarizeCompetitionAchievementStats({ teams, leagueMatches, cupMatches });
   } catch (e: unknown) {
     serverLog.error(`[achievements] stats de competition indisponibles user=${userId}`, e);
     return EMPTY_COMPETITION_STATS;

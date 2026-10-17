@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { summarizeCompetitionAchievementStats } from "./achievement-competition-stats";
+import {
+  leagueResultFromOfflineSnapshot,
+  summarizeCompetitionAchievementStats,
+} from "./achievement-competition-stats";
+
+function leagueMatch(
+  homeTeamId: string | null,
+  awayTeamId: string | null,
+  scoreHome: number,
+  scoreAway: number,
+  casualtiesHome = 0,
+  casualtiesAway = 0,
+) {
+  return {
+    homeTeamId,
+    awayTeamId,
+    offlineResultInput: {
+      input: { scoreHome, scoreAway, casualtiesHome, casualtiesAway, playerStats: [] },
+    },
+  };
+}
 
 const teams = [
   { id: "T1", roster: "bretonnian" },
@@ -7,32 +27,42 @@ const teams = [
 ];
 
 describe("summarizeCompetitionAchievementStats", () => {
-  it("additionne la ligue (compteurs du classement) par équipe", () => {
+  it("additionne chaque résultat de ligue validé (Match offline), côté domicile ou extérieur", () => {
     const stats = summarizeCompetitionAchievementStats({
       teams,
-      leagueSums: [
-        { teamId: "T1", _sum: { wins: 3, draws: 1, losses: 2, touchdownsFor: 9, casualtiesFor: 4 } },
-        { teamId: "T2", _sum: { wins: 0, draws: 0, losses: 1, touchdownsFor: 1, casualtiesFor: 0 } },
+      leagueMatches: [
+        leagueMatch("T1", "X", 2, 1, 3, 0),
+        leagueMatch("Y", "T1", 1, 1, 0, 1),
+        leagueMatch("T2", "Z", 0, 2),
       ],
       cupMatches: [],
     });
     expect(stats).toMatchObject({
-      matchesPlayed: 7,
-      wins: 3,
+      matchesPlayed: 3,
+      wins: 1,
       draws: 1,
-      losses: 3,
-      touchdowns: 10,
+      losses: 1,
+      touchdowns: 3,
       casualties: 4,
     });
     expect([...stats.rostersPlayed].sort()).toEqual(["bretonnian", "orc"]);
-    expect(stats.winsByRoster.get("bretonnian")).toBe(3);
+    expect(stats.winsByRoster.get("bretonnian")).toBe(1);
     expect(stats.winsByRoster.has("orc")).toBe(false);
+  });
+
+  it("ignore un résultat sans score lisible (pas de match prouvé)", () => {
+    const stats = summarizeCompetitionAchievementStats({
+      teams,
+      leagueMatches: [{ homeTeamId: "T1", awayTeamId: "X", offlineResultInput: null }],
+      cupMatches: [],
+    });
+    expect(stats.matchesPlayed).toBe(0);
   });
 
   it("compte chaque rencontre de coupe matérialisée, côté A ou B", () => {
     const stats = summarizeCompetitionAchievementStats({
       teams,
-      leagueSums: [],
+      leagueMatches: [],
       cupMatches: [
         {
           teamAId: "T1",
@@ -64,10 +94,7 @@ describe("summarizeCompetitionAchievementStats", () => {
   it("ignore les équipes qui ne sont pas au coach et une équipe sans match", () => {
     const stats = summarizeCompetitionAchievementStats({
       teams,
-      leagueSums: [
-        { teamId: "ETRANGERE", _sum: { wins: 5, draws: 0, losses: 0, touchdownsFor: 10, casualtiesFor: 3 } },
-        { teamId: "T2", _sum: null },
-      ],
+      leagueMatches: [leagueMatch("ETRANGERE", "AUTRE", 5, 0, 3, 0)],
       cupMatches: [
         { teamAId: "X", teamBId: "Y", scoreTeamA: 3, scoreTeamB: 0, actions: [] },
       ],
@@ -75,5 +102,24 @@ describe("summarizeCompetitionAchievementStats", () => {
     expect(stats.matchesPlayed).toBe(0);
     expect(stats.touchdowns).toBe(0);
     expect(stats.rostersPlayed.size).toBe(0);
+  });
+});
+
+describe("leagueResultFromOfflineSnapshot", () => {
+  it("lit score et sorties, objet natif ou chaîne", () => {
+    const snap = { input: { scoreHome: 2, scoreAway: 1, casualtiesHome: 3 } };
+    expect(leagueResultFromOfflineSnapshot(snap)).toEqual({
+      scoreHome: 2,
+      scoreAway: 1,
+      casualtiesHome: 3,
+      casualtiesAway: 0,
+    });
+    expect(leagueResultFromOfflineSnapshot(JSON.stringify(snap))?.scoreHome).toBe(2);
+  });
+
+  it("rend null sans score", () => {
+    expect(leagueResultFromOfflineSnapshot(null)).toBeNull();
+    expect(leagueResultFromOfflineSnapshot("{oops")).toBeNull();
+    expect(leagueResultFromOfflineSnapshot({ input: { scoreHome: 1 } })).toBeNull();
   });
 });
