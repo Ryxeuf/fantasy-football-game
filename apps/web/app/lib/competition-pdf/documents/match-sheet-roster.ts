@@ -4,7 +4,12 @@
  * jeu à cocher au fil du match (TD, passes, sorties, blessure…).
  */
 
-import type { MatchSheetDocument, PdfSheetPlayer, PdfSheetTeam } from "../types";
+import type {
+  MatchSheetDocument,
+  PdfSheetInducement,
+  PdfSheetPlayer,
+  PdfSheetTeam,
+} from "../types";
 import { contentWidth, drawSectionTitle, type PdfPage } from "../layout";
 import { BODY_STYLES, HEAD_STYLES, drawTable, lastTableBottom } from "../tables";
 import { PDF_COLORS, formatGoldPdf, hexToRgb, pdfSafe, setText } from "../theme";
@@ -73,6 +78,28 @@ function identityLine(team: PdfSheetTeam): string {
   return parts.map((s) => pdfSafe(s)).join("   |   ");
 }
 
+/**
+ * Coups de pouce dont l'équipe dispose pour CE match : ceux de l'inscription
+ * (coupe en `build`) puis ceux achetés en avant-match. Ils n'étaient imprimés
+ * qu'en page 1 : la page de l'équipe, celle qu'on a sous les yeux pendant le
+ * match, n'en disait rien (ni Star Player engagé, ni pot-de-vin, ni relance).
+ */
+export function teamMatchInducements(
+  doc: MatchSheetDocument,
+  side: "home" | "away",
+): PdfSheetInducement[] {
+  const team = side === "home" ? doc.home : doc.away;
+  const bought =
+    (side === "home" ? doc.prefill?.inducementsHome : doc.prefill?.inducementsAway) ?? [];
+  return [...(team.registeredInducements ?? []), ...bought];
+}
+
+/** « Coups de pouce : Pot-de-vin ×2 · Mascotte d'Équipe ×1 », `null` sans achat. */
+export function inducementsLine(list: readonly PdfSheetInducement[]): string | null {
+  if (list.length === 0) return null;
+  return pdfSafe(`Coups de pouce : ${list.map((i) => `${i.name} ×${i.qty}`).join(" · ")}`);
+}
+
 export function drawRosterPage(
   page: PdfPage,
   y: number,
@@ -91,11 +118,21 @@ export function drawRosterPage(
   pdf.text(identityLine(team), page.margin, y);
   y += 3;
 
+  const width = contentWidth(page);
+  const inducements = inducementsLine(teamMatchInducements(doc, side));
+  if (inducements) {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(7.6);
+    setText(pdf, PDF_COLORS.INK);
+    const lines = pdf.splitTextToSize(inducements, width) as string[];
+    pdf.text(lines, page.margin, y + 1);
+    y += lines.length * 3.2 + 1;
+  }
+
   const tally = tallyColumnsFor(doc);
   const withSpp = doc.rules.spp;
   const fixed = 7 + 22 + 7 * 5; // # + poste + M F AG CP AR
   const tallyW = tally.reduce((n, c) => n + c.width, 0) + (withSpp ? 9 + 9 : 0);
-  const width = contentWidth(page);
   const flex = width - fixed - tallyW;
   const nameW = Math.max(30, flex * 0.36);
   const skillsW = flex - nameW;
