@@ -84,6 +84,7 @@ import cupMatchSheetRoutes from "./routes/cup-match-sheet";
 import cupPoolRoutes from "./routes/cup-pools";
 import cupPlayoffRoutes from "./routes/cup-playoffs";
 import cupTeamRosterRoutes from "./routes/cup-team-roster";
+import cupLeaderboardRoutes from "./routes/cup-leaderboards";
 import localMatchRoutes from "./routes/local-match";
 import matchmakingRoutes from "./routes/matchmaking";
 import leaderboardRoutes from "./routes/leaderboard";
@@ -400,6 +401,8 @@ app.use("/cup", cupPoolRoutes);
 app.use("/cup", cupPlayoffRoutes);
 // Fiche de roster d'un inscrit : `/cup/:id/teams/:teamId/roster-view`.
 app.use("/cup", cupTeamRosterRoutes);
+// Statistiques à la demande : `/cup/:id/leaderboards?topN=`.
+app.use("/cup", cupLeaderboardRoutes);
 app.use("/cup", cupRoutes);
 // Partie offline : gatee comme la partie en ligne. Le flag est OFF par
 // defaut (cf. services/featureFlags.OFFLINE_MATCH_FLAG) — la saisie d'un
