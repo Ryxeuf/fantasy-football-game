@@ -18,6 +18,7 @@ import {
   SURCHARGE_PER_ADVANCEMENT,
 } from "@bb/game-engine";
 import { buildTeamPlayerCardData, encodeCardPayload } from "../../../lib/player-card/card-model";
+import { resolvePlayerCareer } from "../../../lib/player-career";
 import { formatPlusStat } from "../../../lib/format-stats";
 import {
   buildSkillAccessByPosition,
@@ -429,6 +430,10 @@ export default function TeamDetailPage() {
     // et comme la VE — une carte qui annonce le tarif de recrue d'un joueur
     // deux fois amélioré est fausse.
     const cost = playerValuePo(p);
+    // Carrière TOUTES compétitions servie par le serveur : les compteurs
+    // bruts du joueur ignorent la coupe et les matchs de ligue sans
+    // évènement (la carte affichait « 0 match » après toute une coupe).
+    const career = resolvePlayerCareer(p, team.playerCareers);
     const cardData = buildTeamPlayerCardData(
       {
         name: p.name,
@@ -439,10 +444,10 @@ export default function TeamDetailPage() {
         pa: p.pa ?? null,
         av: p.av,
         skills: p.skills ?? "",
-        spp: p.spp,
-        matchesPlayed: p.matchesPlayed,
-        totalTouchdowns: p.totalTouchdowns,
-        totalCasualties: p.totalCasualties,
+        spp: career.spp,
+        matchesPlayed: career.matchesPlayed,
+        totalTouchdowns: career.touchdowns,
+        totalCasualties: career.casualties,
         dead: !!p.dead,
         firedAt: p.firedAt ?? null,
         // Photo pleine résolution sur la carte (URL relative résolue par

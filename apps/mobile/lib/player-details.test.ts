@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  applyServedCareer,
   parsePlayerAdvancements,
   formatSpp,
   formatStatValue,
@@ -247,5 +248,40 @@ describe("computePlayerStatus", () => {
       missNextMatch: true,
     });
     expect(computePlayerStatus(player)).toBe("dead");
+  });
+});
+
+describe("applyServedCareer", () => {
+  it("remplace les compteurs bruts par la carrière toutes compétitions", () => {
+    const player = buildPlayer({ spp: 4, matchesPlayed: 1, totalTouchdowns: 1 });
+    const merged = applyServedCareer(player, {
+      p1: {
+        matchesPlayed: 5,
+        touchdowns: 3,
+        casualties: 2,
+        completions: 1,
+        interceptions: 1,
+        mvpAwards: 1,
+        spp: 4,
+      },
+    });
+    expect(merged).toMatchObject({
+      spp: 4,
+      matchesPlayed: 5,
+      totalTouchdowns: 3,
+      totalCasualties: 2,
+      totalCompletions: 1,
+      totalInterceptions: 1,
+      totalMvpAwards: 1,
+    });
+    // Pas de mutation de l'objet d'origine.
+    expect(player.matchesPlayed).toBe(1);
+  });
+
+  it("garde les compteurs bruts face à un serveur antérieur", () => {
+    const player = buildPlayer({ matchesPlayed: 2 });
+    expect(applyServedCareer(player, undefined)).toBe(player);
+    expect(applyServedCareer(player, { other: { matchesPlayed: 9 } })).toBe(player);
+    expect(applyServedCareer(player, { p1: { touchdowns: 9 } })).toBe(player);
   });
 });
