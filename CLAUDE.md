@@ -1604,6 +1604,20 @@ et le pool de l'éditeur proposait les compétences déjà apprises. Seul le
 tirage `random-primary` les excluait. Garde en place : refus serveur
 `skill-already-owned`, vérifié AVANT tout le reste de la branche compétence.
 
+### `LocalMatch` n'est PAS « les matchs d'une équipe »
+
+La fiche d'équipe (`GET /team/:id`) bâtissait ses statistiques sur les seuls
+`LocalMatch` : une équipe ayant joué une saison de ligue entière affichait
+« 0 match », et la validation d'une feuille n'y changeait rien (2026-10-17).
+Un résultat de LIGUE ne se matérialise jamais en `LocalMatch` : il vit dans
+les compteurs du `LeagueParticipant` (ceux du classement, forfaits compris).
+Seule la COUPE matérialise sa rencontre en `LocalMatch` (`cupId` /
+`cupPairingId`), et la saisie manuelle est fermée (`offline_match`).
+`services/team-match-stats` (pur) fait la somme ligue + coupe + amical, servie
+en `matchStats` ; `localMatchStats` reste pour la rétro-compat. Tout nouveau
+bilan d'équipe en part. Hors périmètre : les amicaux EN LIGNE (`Match` +
+`TeamSelection`, score dans le dernier `Turn`), servis par la page carrière.
+
 ### `nextLevelSpp(spp)` est **strictement** > spp (K)
 La fonction retourne le premier seuil **au-dessus** de `spp`. Donc
 `spp >= nextLevelSpp(spp)` est **toujours faux**. Ne **jamais** s'en
