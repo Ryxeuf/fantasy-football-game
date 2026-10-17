@@ -7,6 +7,19 @@ export interface ProfileCounts {
   createdMatches: number;
   teamSelections: number;
   createdLocalMatches: number;
+  /**
+   * Rencontres de coupe des équipes du coach (créées au nom du commissaire,
+   * absentes de `matches`). 0 face à une API antérieure.
+   */
+  cupMatchesPlayed: number;
+}
+
+/**
+ * « Matchs joués » du profil : parties en ligne et feuilles de ligue
+ * (`matches`), plus les rencontres de coupe de ses équipes.
+ */
+export function matchesPlayedTotal(counts: ProfileCounts): number {
+  return counts.matches + counts.cupMatchesPlayed;
 }
 
 export interface UserProfile {
@@ -57,6 +70,7 @@ const EMPTY_COUNTS: ProfileCounts = {
   createdMatches: 0,
   teamSelections: 0,
   createdLocalMatches: 0,
+  cupMatchesPlayed: 0,
 };
 
 export function getInitials(
@@ -155,6 +169,8 @@ function parseCounts(raw: unknown): ProfileCounts {
       typeof v.teamSelections === "number" ? v.teamSelections : 0,
     createdLocalMatches:
       typeof v.createdLocalMatches === "number" ? v.createdLocalMatches : 0,
+    cupMatchesPlayed:
+      typeof v.cupMatchesPlayed === "number" ? v.cupMatchesPlayed : 0,
   };
 }
 

@@ -31,6 +31,8 @@ type UserProfile = {
     createdMatches: number;
     teamSelections: number;
     createdLocalMatches?: number;
+    /** Rencontres de coupe de ses équipes (créées par le commissaire). */
+    cupMatchesPlayed?: number;
   };
 };
 
@@ -455,7 +457,17 @@ export default function ProfilePage() {
               <div className="text-3xl font-bold text-green-700">
                 {profile._count.matches}
               </div>
-              <div className="text-sm text-gray-600 mt-1">Parties jouées (en ligne)</div>
+              {/* Le compteur inclut le match offline de chaque feuille de
+                  LIGUE validée : « en ligne » seul était faux. */}
+              <div className="text-sm text-gray-600 mt-1">Parties jouées (ligue et en ligne)</div>
+            </div>
+          )}
+          {(profile._count?.cupMatchesPlayed ?? 0) > 0 && (
+            <div className="bg-green-50 p-4 rounded-lg" data-testid="profile-cup-matches">
+              <div className="text-3xl font-bold text-green-700">
+                {profile._count.cupMatchesPlayed}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Rencontres de coupe jouées</div>
             </div>
           )}
           {(profile._count?.createdMatches ?? 0) > 0 && (

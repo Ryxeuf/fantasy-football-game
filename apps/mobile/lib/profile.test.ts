@@ -3,6 +3,7 @@ import {
   buildProfileUpdatePayload,
   formatDateFr,
   getInitials,
+  matchesPlayedTotal,
   parseProfileResponse,
   validatePasswordChange,
   validateProfileUpdate,
@@ -31,6 +32,7 @@ function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
       createdMatches: 0,
       teamSelections: 0,
       createdLocalMatches: 0,
+      cupMatchesPlayed: 0,
     },
     ...overrides,
   };
@@ -273,7 +275,24 @@ describe("parseProfileResponse", () => {
       createdMatches: 0,
       teamSelections: 0,
       createdLocalMatches: 0,
+      cupMatchesPlayed: 0,
     });
+  });
+
+  it("lit les rencontres de coupe et les ajoute aux matchs joués", () => {
+    const profile = parseProfileResponse({
+      user: {
+        id: "u1",
+        email: "c@x.com",
+        coachName: "Coach",
+        role: "user",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-02-01T00:00:00.000Z",
+        _count: { matches: 3, cupMatchesPlayed: 4 },
+      },
+    });
+    expect(profile!.counts.cupMatchesPlayed).toBe(4);
+    expect(matchesPlayedTotal(profile!.counts)).toBe(7);
   });
 
   it("normalises role into roles when roles is absent", () => {
