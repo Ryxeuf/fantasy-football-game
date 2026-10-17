@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  predictionScopeOptions,
   describePrediction,
   draftFromPrediction,
   formatClosesAt,
@@ -195,3 +196,13 @@ describe("pronostics par compétition", () => {
   });
 });
 
+
+describe("predictionScopeOptions", () => {
+  it("parle de la coupe sans changer les valeurs", () => {
+    const cup = predictionScopeOptions("cup");
+    expect(cup.map((o) => o.value)).toEqual(["off", "members", "open"]);
+    expect(cup[1].label).toBe("Membres de la coupe");
+    expect(cup[2].description).toContain("qui voit la coupe");
+    expect(predictionScopeOptions()[1].label).toBe("Membres de la ligue");
+  });
+});

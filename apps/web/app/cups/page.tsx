@@ -9,6 +9,11 @@ import PendingCupInvitations from "./PendingCupInvitations";
 import PendingCompetitionDocuments from "../components/PendingCompetitionDocuments";
 import { uploadPendingCompetitionDocuments } from "../lib/competition-documents";
 import { SheetEntryModeField } from "./SheetEntryModeField";
+import { PredictionsScopeField } from "../leagues/_components/PredictionsScopeField";
+import {
+  DEFAULT_PREDICTION_SCOPE,
+  type PredictionScope,
+} from "../leagues/_components/predictions";
 import { CupInducementModeField } from "./CupInducementModeField";
 import {
   coerceCupInducementMode,
@@ -136,6 +141,10 @@ export default function CupsPage() {
   // défaut quand le champ manque).
   const [newCupSheetEntryMode, setNewCupSheetEntryMode] =
     useState<SheetEntryMode>("simplified");
+  // Pronostics : une coupe neuve les ouvre à ses membres (même défaut que le
+  // serveur, et qu'une ligue).
+  const [newCupPredictionsScope, setNewCupPredictionsScope] =
+    useState<PredictionScope>(DEFAULT_PREDICTION_SCOPE);
   // Coups de pouce : une coupe BB11 neuve les vend à la création (le serveur
   // applique le même défaut, impose `build` sous règlement, le refuse en Sept).
   const [newCupInducementMode, setNewCupInducementMode] =
@@ -336,6 +345,7 @@ export default function CupsPage() {
         },
         // resurrectionMode : forcé côté serveur (seul mode disponible).
         sheetEntryMode: newCupSheetEntryMode,
+        predictionsScope: newCupPredictionsScope,
         inducementMode: newCupInducementMode,
         allowedInducements: showsAllowedInducements(newCupInducementMode)
           ? (normalizeCupAllowedInducements(
@@ -577,6 +587,15 @@ export default function CupsPage() {
               <SheetEntryModeField
                 value={newCupSheetEntryMode}
                 onChange={setNewCupSheetEntryMode}
+                disabled={creating}
+              />
+            </div>
+            <div className="pt-2 border-t border-gray-200">
+              <PredictionsScopeField
+                competition="cup"
+                value={newCupPredictionsScope}
+                onChange={setNewCupPredictionsScope}
+                isPublic={newCupIsPublic}
                 disabled={creating}
               />
             </div>

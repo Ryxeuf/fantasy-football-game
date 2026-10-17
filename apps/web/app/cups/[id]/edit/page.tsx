@@ -9,6 +9,11 @@ import {
 } from "../tie-break-labels";
 import { TieBreakOrderEditor } from "../../../components/TieBreakOrderEditor";
 import { SheetEntryModeField } from "../../SheetEntryModeField";
+import { PredictionsScopeField } from "../../../leagues/_components/PredictionsScopeField";
+import {
+  parsePredictionScope,
+  type PredictionScope,
+} from "../../../leagues/_components/predictions";
 import type { SheetEntryMode } from "../../../lib/sheet-entry-profile";
 import { CupInducementModeField } from "../../CupInducementModeField";
 import { CupInducementRulesSummary } from "../../CupInducementRulesSummary";
@@ -62,6 +67,8 @@ interface CupForEdit {
   tieBreakRules?: string[];
   /** Absent (serveur antérieur) = saisie complète. */
   sheetEntryMode?: SheetEntryMode;
+  /** Portée EFFECTIVE des pronostics (`off` sur une coupe antérieure). */
+  predictionsScope?: string;
   format?: string;
   tournamentRuleset?: string | null;
   validated?: boolean;
@@ -112,6 +119,8 @@ export default function CupEditPage() {
   });
   const [tieBreak, setTieBreak] = useState<string[]>([]);
   const [sheetEntryMode, setSheetEntryMode] = useState<SheetEntryMode>("full");
+  const [predictionsScope, setPredictionsScope] =
+    useState<PredictionScope>("off");
   const [inducementMode, setInducementMode] =
     useState<CupInducementMode>("match");
   const [allowedInducements, setAllowedInducements] = useState<
@@ -134,6 +143,7 @@ export default function CupEditPage() {
       setSheetEntryMode(
         res.cup.sheetEntryMode === "simplified" ? "simplified" : "full",
       );
+      setPredictionsScope(parsePredictionScope(res.cup.predictionsScope));
       setInducementMode(
         parseCupInducementMode(res.cup.rulesConfig?.inducementMode) ?? "match",
       );
@@ -203,6 +213,12 @@ export default function CupEditPage() {
         tieBreakRules: tieBreak.length > 0 ? tieBreak : null,
         // Modifiable coupe lancée : il ne gouverne que le formulaire.
         sheetEntryMode,
+        // Modifiable à tout moment, comme en ligue : aucun point n'en dépend.
+        // N'est écrite que si elle change — une coupe antérieure à la
+        // fonctionnalité garde sa colonne vide (et l'invitation à l'activer).
+        ...(predictionsScope !== parsePredictionScope(cup?.predictionsScope)
+          ? { predictionsScope }
+          : {}),
       };
       for (const field of SCORING_FIELDS) {
         const raw = scoring[field.key];
@@ -365,6 +381,15 @@ export default function CupEditPage() {
           <SheetEntryModeField
             value={sheetEntryMode}
             onChange={setSheetEntryMode}
+          />
+        </section>
+
+        <section className="rounded-lg border bg-white p-4">
+          <PredictionsScopeField
+            competition="cup"
+            value={predictionsScope}
+            onChange={setPredictionsScope}
+            isPublic={isPublic}
           />
         </section>
 

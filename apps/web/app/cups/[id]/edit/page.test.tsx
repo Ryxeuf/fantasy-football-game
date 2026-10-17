@@ -134,6 +134,54 @@ describe("édition d'une coupe", () => {
     );
   });
 
+  it("préremplit la portée des pronostics, une coupe antérieure étant sans pronostics", async () => {
+    apiRequest.mockResolvedValue({ cup: CUP });
+    const { unmount } = render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    expect(
+      (screen.getByTestId("cup-predictions-scope-off") as HTMLInputElement).checked,
+    ).toBe(true);
+    unmount();
+
+    apiRequest.mockResolvedValue({ cup: { ...CUP, predictionsScope: "open" } });
+    render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    expect(
+      (screen.getByTestId("cup-predictions-scope-open") as HTMLInputElement).checked,
+    ).toBe(true);
+  });
+
+  it("n'écrit la portée que si elle change, coupe lancée comprise", async () => {
+    apiRequest.mockResolvedValue({ cup: { ...CUP, status: "en_cours" } });
+    const { unmount } = render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    fireEvent.click(screen.getByTestId("cup-edit-submit"));
+    await waitFor(() => expect(push).toHaveBeenCalled());
+    const untouched = apiRequest.mock.calls.find(
+      (c) => (c[1] as { method?: string } | undefined)?.method === "PATCH",
+    );
+    // Coupe antérieure : la colonne reste vide, l'invitation à activer aussi.
+    expect(JSON.parse((untouched![1] as { body: string }).body)).not.toHaveProperty(
+      "predictionsScope",
+    );
+    unmount();
+
+    apiRequest.mockReset();
+    push.mockReset();
+    apiRequest.mockResolvedValue({ cup: { ...CUP, status: "en_cours" } });
+    render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    fireEvent.click(screen.getByTestId("cup-predictions-scope-members"));
+    fireEvent.click(screen.getByTestId("cup-edit-submit"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/cups/cup-1"));
+    const patch = apiRequest.mock.calls.find(
+      (c) => (c[1] as { method?: string } | undefined)?.method === "PATCH",
+    );
+    expect(JSON.parse((patch![1] as { body: string }).body).predictionsScope).toBe(
+      "members",
+    );
+  });
+
   it("affiche l'erreur serveur sans quitter l'écran", async () => {
     apiRequest.mockImplementation((path: string, init?: { method?: string }) => {
       if (init?.method === "PATCH") return Promise.reject(new Error("Coupe archivée"));
