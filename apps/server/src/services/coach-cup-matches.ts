@@ -14,6 +14,9 @@
 /** Filtre Prisma `LocalMatch` (PUR, testé à part). */
 export function cupMatchesPlayedWhere(userId: string) {
   return {
+    // Jouées : une rencontre en attente ou annulée (ancienne saisie
+    // manuelle) n'a pas eu lieu — même filtre que le bilan d'équipe.
+    status: "completed",
     creatorId: { not: userId },
     AND: [
       { OR: [{ cupId: { not: null } }, { cupPairingId: { not: null } }] },
