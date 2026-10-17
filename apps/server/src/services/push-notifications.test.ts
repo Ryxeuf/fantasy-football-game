@@ -112,6 +112,7 @@ import {
   sendFriendMatchStartedPush,
   sendLeagueRoundReminderPush,
   sendLeagueMatchValidationPush,
+  pendingValidationsUrl,
   buildLeagueRoundReminderBody,
   clearExpoSubscriptions,
 } from "./push-notifications";
@@ -502,6 +503,31 @@ describe("push ligue → notification interne", () => {
       url: "/leagues/lg-1/pending-validations",
       meta: { leagueId: "lg-1", pairingId: "p-9" },
     });
+  });
+
+  it("sendLeagueMatchValidationPush pointe la page de la COUPE pour une feuille de coupe", () => {
+    sendLeagueMatchValidationPush({
+      commissionerUserId: "commish",
+      leagueId: "cup-1",
+      pairingId: "cp-9",
+      homeTeamName: "Orcs",
+      awayTeamName: "Rats",
+      competitionKind: "cup",
+    });
+    expect(mockInApp).toHaveBeenCalledWith({
+      userId: "commish",
+      kind: "league.match_validation",
+      title: "Match à valider",
+      body: "Match a valider : Orcs vs Rats",
+      url: "/cups/cup-1/pending-validations",
+      meta: { cupId: "cup-1", pairingId: "cp-9" },
+    });
+  });
+
+  it("pendingValidationsUrl suit la compétition (ligue par défaut)", () => {
+    expect(pendingValidationsUrl("cup", "c1")).toBe("/cups/c1/pending-validations");
+    expect(pendingValidationsUrl("league", "l1")).toBe("/leagues/l1/pending-validations");
+    expect(pendingValidationsUrl(undefined, "l1")).toBe("/leagues/l1/pending-validations");
   });
 
   it("buildLeagueRoundReminderBody : avec et sans deadline", () => {

@@ -1929,6 +1929,30 @@ export async function submitByCoach(input: {
 async function notifyCommissionerSheetReady(
   ctx: PairingContext,
 ): Promise<void> {
+  // Une feuille de COUPE : les équipes se lisent sur la rencontre de coupe
+  // (la rencontre de ligue n'existe pas — d'où un « ? vs ? ») et le lien
+  // pointe la coupe.
+  if (ctx.kind === "cup") {
+    const cupPairing = (await prisma.cupPairing.findUnique({
+      where: { id: ctx.pairingId },
+      select: {
+        homeTeam: { select: { name: true } },
+        awayTeam: { select: { name: true } },
+      },
+    })) as {
+      homeTeam: { name: string } | null;
+      awayTeam: { name: string } | null;
+    } | null;
+    sendLeagueMatchValidationPush({
+      commissionerUserId: ctx.creatorId,
+      leagueId: ctx.leagueId,
+      pairingId: ctx.pairingId,
+      homeTeamName: cupPairing?.homeTeam?.name ?? "?",
+      awayTeamName: cupPairing?.awayTeam?.name ?? "?",
+      competitionKind: "cup",
+    });
+    return;
+  }
   const pairing = (await prisma.leaguePairing.findUnique({
     where: { id: ctx.pairingId },
     select: {

@@ -522,16 +522,32 @@ export function sendLeagueRoundReminderPush(
  */
 export interface LeagueMatchValidationInput {
   readonly commissionerUserId: string;
+  /** Id de la compétition : ligue, ou coupe quand `competitionKind = "cup"`. */
   readonly leagueId: string;
   readonly pairingId: string;
   readonly homeTeamName: string;
   readonly awayTeamName: string;
+  /**
+   * Compétition de la rencontre (défaut : ligue). Une feuille de COUPE
+   * pointe la page de sa coupe — `/leagues/<id de coupe>` est une 404.
+   */
+  readonly competitionKind?: "league" | "cup";
+}
+
+/** Page « Matchs à valider » de la compétition (cible de la notification). */
+export function pendingValidationsUrl(
+  competitionKind: "league" | "cup" | undefined,
+  competitionId: string,
+): string {
+  return competitionKind === "cup"
+    ? `/cups/${competitionId}/pending-validations`
+    : `/leagues/${competitionId}/pending-validations`;
 }
 
 export function sendLeagueMatchValidationPush(
   input: LeagueMatchValidationInput,
 ): void {
-  const url = `/leagues/${input.leagueId}/pending-validations`;
+  const url = pendingValidationsUrl(input.competitionKind, input.leagueId);
   const body = `Match a valider : ${input.homeTeamName} vs ${input.awayTeamName}`;
   // Historique interne, indépendant de la préférence push (cf. ci-dessus).
   void createInAppNotification({
@@ -540,7 +556,10 @@ export function sendLeagueMatchValidationPush(
     title: "Match à valider",
     body,
     url,
-    meta: { leagueId: input.leagueId, pairingId: input.pairingId },
+    meta:
+      input.competitionKind === "cup"
+        ? { cupId: input.leagueId, pairingId: input.pairingId }
+        : { leagueId: input.leagueId, pairingId: input.pairingId },
   });
   shouldSendNotification(
     input.commissionerUserId,
