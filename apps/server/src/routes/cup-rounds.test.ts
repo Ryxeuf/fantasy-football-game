@@ -22,6 +22,9 @@ vi.mock("../services/cup-rounds", () => ({
   },
 }));
 vi.mock("../prisma", () => ({ prisma: {} }));
+vi.mock("../services/cup-round-followup-notify", () => ({
+  sendCupRoundFollowups: vi.fn(),
+}));
 
 import type { Response } from "express";
 import {
@@ -35,8 +38,10 @@ import {
   handleGenerateCupRound,
   handleGenerateSwissRound,
   handleListCupRounds,
+  handleRemindCupRound,
   handleScheduleCupPairing,
 } from "./cup-rounds";
+import { sendCupRoundFollowups } from "../services/cup-round-followup-notify";
 import type { AuthenticatedRequest } from "../middleware/authUser";
 
 type MockFn = ReturnType<typeof vi.fn>;
@@ -168,4 +173,27 @@ describe("POST /cup/:id/rounds — systèmes d'appariement", () => {
     await handleGenerateCupRound(makeReq() as AuthenticatedRequest, res);
     expect(res.status).toHaveBeenCalledWith(403);
   });
+
+  it("relance une ronde au nom de l'acteur, refus traduit en 403", async () => {
+    const remind = sendCupRoundFollowups as unknown as MockFn;
+    remind.mockResolvedValue({ reminders: [], coachesNotified: 0, pairingsChecked: 2 });
+    const res = makeRes();
+    await handleRemindCupRound(
+      makeReq({ params: { roundId: "r1" }, get: () => undefined } as never),
+      res,
+    );
+    expect(remind).toHaveBeenCalledWith(
+      expect.objectContaining({ roundId: "r1", actor: { userId: "u1", isAdmin: true } }),
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+
+    remind.mockRejectedValue(new CupRoundError("forbidden", "Seul le commissaire"));
+    const denied = makeRes();
+    await handleRemindCupRound(
+      makeReq({ params: { roundId: "r1" }, get: () => undefined } as never),
+      denied,
+    );
+    expect(denied.status).toHaveBeenCalledWith(403);
+  });
 });
+

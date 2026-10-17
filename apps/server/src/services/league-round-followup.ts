@@ -105,15 +105,34 @@ export const REMINDER_SUBJECTS: Readonly<Record<ReminderReason, string>> = {
   sheet_overdue: "Feuille de match attendue",
 };
 
+/**
+ * Compétition relancée. Une COUPE parle de « ronde », pas de « journée » :
+ * seul le vocabulaire change, le message du commissaire reste le même.
+ */
+export type ReminderCompetition = "league" | "cup";
+
+/** Corps du message pour la compétition (`REMINDER_BODIES` en ligue). */
+export function reminderBody(
+  reason: ReminderReason,
+  competition: ReminderCompetition = "league",
+): string {
+  const body = REMINDER_BODIES[reason];
+  return competition === "cup"
+    ? body.replace("de la journée en cours", "de la ronde en cours")
+    : body;
+}
+
 export interface ReminderContext {
-  /** Nom de la ligue (« Ligue du Mordorbihan »). */
+  /** Nom de la ligue (« Ligue du Mordorbihan »), ou de la coupe. */
   readonly leagueName: string;
-  /** Numéro de journée (`LeagueRound.roundNumber`). */
+  /** Numéro de journée (`LeagueRound.roundNumber`) ou de ronde. */
   readonly roundNumber: number;
   /** Libellé de la rencontre (« Reikland vs Skavenblight »). */
   readonly matchLabel: string;
   /** Lien web absolu vers la ligue, si l'origine est connue. */
   readonly leagueUrl?: string | null;
+  /** Ligue par défaut. */
+  readonly competition?: ReminderCompetition;
 }
 
 /**
@@ -125,17 +144,20 @@ export function buildReminderEmailText(
   reason: ReminderReason,
   context: ReminderContext,
 ): string {
-  const header = `${context.leagueName} — Journée ${context.roundNumber}\n${context.matchLabel}`;
+  const cup = context.competition === "cup";
+  const unit = cup ? "Ronde" : "Journée";
+  const header = `${context.leagueName} — ${unit} ${context.roundNumber}\n${context.matchLabel}`;
   const link = context.leagueUrl
-    ? `\n\nVoir la journée : ${context.leagueUrl}`
+    ? `\n\nVoir la ${cup ? "ronde" : "journée"} : ${context.leagueUrl}`
     : "";
-  return `${header}\n\n${REMINDER_BODIES[reason]}${link}`;
+  return `${header}\n\n${reminderBody(reason, context.competition)}${link}`;
 }
 
 /** Objet de l'e-mail : motif + ligue, pour qu'il se lise dans une boîte. */
 export function buildReminderSubject(
   reason: ReminderReason,
-  context: Pick<ReminderContext, "leagueName" | "roundNumber">,
+  context: Pick<ReminderContext, "leagueName" | "roundNumber" | "competition">,
 ): string {
-  return `[${context.leagueName}] J${context.roundNumber} — ${REMINDER_SUBJECTS[reason]}`;
+  const short = context.competition === "cup" ? "R" : "J";
+  return `[${context.leagueName}] ${short}${context.roundNumber} — ${REMINDER_SUBJECTS[reason]}`;
 }

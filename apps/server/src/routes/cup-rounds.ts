@@ -9,6 +9,7 @@
  *   DELETE /cup/:id/rounds/last             supprime la dernière ronde (commissaire)
  *   PATCH  /cup/pairings/:pairingId/schedule date prévisionnelle (coachs / commissaire)
  *   POST   /cup/pairings/:pairingId/cancel  annule une rencontre (commissaire)
+ *   POST   /cup/rounds/:roundId/remind      relance les coachs en retard (commissaire)
  *
  * L'autorisation vit dans `services/cup-rounds` (créateur ou admin, coachs
  * impliqués pour la date) ; ici on ne fait que mapper les erreurs typées.
@@ -39,6 +40,8 @@ import {
   generateCupRoundSchema,
   type GenerateCupRoundBody,
 } from "../schemas/cup-round.schemas";
+import { sendCupRoundFollowups } from "../services/cup-round-followup-notify";
+import { resolveWebOrigin } from "../config";
 
 function actorFromRequest(
   req: AuthenticatedRequest,
@@ -167,7 +170,31 @@ export async function handleCancelCupPairing(
   }
 }
 
+/**
+ * POST /cup/rounds/:roundId/remind — relance d'une ronde : les coachs dont la
+ * rencontre n'est pas planifiée, ou dont la date est passée sans feuille.
+ * Sans corps, comme en ligue : les cas et les textes sont la règle.
+ */
+export async function handleRemindCupRound(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const actor = actorFromRequest(req, res);
+  if (!actor) return;
+  try {
+    const out = await sendCupRoundFollowups({
+      roundId: req.params.roundId,
+      actor,
+      baseUrl: resolveWebOrigin(req.get("Origin")),
+    });
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    cupRoundError(res, e);
+  }
+}
+
 const router = Router();
+router.post("/rounds/:roundId/remind", authUser, handleRemindCupRound);
 router.get("/:id/rounds", authUser, handleListCupRounds);
 router.post(
   "/:id/rounds",
