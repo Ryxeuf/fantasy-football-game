@@ -552,62 +552,15 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(404).json({ error: "Coupe introuvable" });
     }
 
-    // Corriger l'incohérence : si la coupe est validée mais le statut est "ouverte", la mettre à jour
+    // Corriger l'incohérence : si la coupe est validée mais le statut est "ouverte", la mettre à jour.
+    // Pas de rechargement : il perdait les poules et le logo des inscrits,
+    // et le classement par poule sortait vide sur cette seule réponse.
     if (cup.validated && cup.status === "ouverte") {
-      cup = await prisma.cup.update({
+      await prisma.cup.update({
         where: { id: cup.id },
         data: { status: "en_cours" },
-        include: {
-          creator: {
-            select: {
-              id: true,
-              coachName: true,
-              // Audit round 7 (CRITICAL/PII) : email retire du select public.
-            },
-          },
-          participants: {
-            include: {
-              team: {
-                select: {
-                  id: true,
-                  name: true,
-                  roster: true,
-                  logoUrl: true,
-                  owner: {
-                    select: {
-                      id: true,
-                      coachName: true,
-                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
-                    },
-                  },
-                },
-              },
-            },
-          },
-          localMatches: {
-            where: { status: "completed" },
-            include: {
-              teamA: {
-                select: {
-                  id: true,
-                  name: true,
-                  roster: true,
-                  logoUrl: true,
-                },
-              },
-              teamB: {
-                select: {
-                  id: true,
-                  name: true,
-                  roster: true,
-                  logoUrl: true,
-                },
-              },
-              actions: true,
-            },
-          },
-        },
       });
+      cup = { ...cup, status: "en_cours" };
     }
 
     // Récupérer les équipes de l'utilisateur pour vérifier s'il a une équipe inscrite
@@ -668,6 +621,8 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         name: p.team.name,
         roster: p.team.roster,
         ruleset: p.team.ruleset,
+        /** Logo uploadé par le coach (null => logo dérivé du roster). */
+        logoUrl: p.team.logoUrl ?? null,
         owner: p.team.owner,
         /**
          * Identifiant de l'INSCRIPTION (et non de l'équipe) : c'est lui que
@@ -743,6 +698,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           name: m.teamA.name,
           roster: m.teamA.roster,
           ruleset: m.teamA.ruleset,
+          logoUrl: m.teamA.logoUrl ?? null,
         },
         teamB: m.teamB
           ? {
@@ -750,6 +706,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
               name: m.teamB.name,
               roster: m.teamB.roster,
               ruleset: m.teamB.ruleset,
+              logoUrl: m.teamB.logoUrl ?? null,
             }
           : null,
         scoreTeamA: m.scoreTeamA ?? null,
