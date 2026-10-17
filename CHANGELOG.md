@@ -1,3 +1,10 @@
+## [1.258.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.5...v1.258.0) (2026-10-17)
+
+
+### ✨ Features
+
+* **cup:** une coupe offre ce qu'offre une ligue — rosters, PDF, feuilles, stats, pronostics ([#1077](https://github.com/Ryxeuf/fantasy-football-game/issues/1077)) ([7855cef](https://github.com/Ryxeuf/fantasy-football-game/commit/7855cefd88c173ca78ede26ba120c8272f5b6c44))
+
 ## [1.257.5](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.4...v1.257.5) (2026-10-17)
 
 
