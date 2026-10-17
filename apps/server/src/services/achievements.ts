@@ -18,6 +18,12 @@ import {
   type UserPredictionStats,
 } from "./league-predictions-core";
 import { serverLog } from "../utils/server-log";
+import {
+  summarizeCompetitionAchievementStats,
+  type CompetitionAchievementStats,
+  type CupMatchForAchievements,
+  type LeagueTeamSums,
+} from "./achievement-competition-stats";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -379,6 +385,8 @@ interface RawSelection {
   match: {
     id: string;
     status: string;
+    /** Match de LIGUE déjà reporté au classement : compté par la ligue. */
+    leagueScoredAt?: Date | string | null;
     turns: Array<{ payload: unknown }>;
     teamSelections: Array<{ id: string; userId: string }>;
   };
@@ -413,6 +421,74 @@ function parseGameState(raw: unknown): RawGameState | null {
   return gs as RawGameState;
 }
 
+const EMPTY_COMPETITION_STATS: CompetitionAchievementStats = {
+  matchesPlayed: 0,
+  wins: 0,
+  draws: 0,
+  losses: 0,
+  touchdowns: 0,
+  casualties: 0,
+  rostersPlayed: new Set(),
+  winsByRoster: new Map(),
+};
+
+/**
+ * Ligue + coupe des équipes du coach (cf. `achievement-competition-stats`).
+ * Best-effort : un échec prive des seuls succès de compétition.
+ */
+async function computeCompetitionStats(
+  userId: string,
+): Promise<CompetitionAchievementStats> {
+  try {
+    const teams = (await (prisma as any).team.findMany({
+      where: { ownerId: userId },
+      select: { id: true, roster: true },
+    })) as Array<{ id: string; roster: string }>;
+    if (teams.length === 0) return EMPTY_COMPETITION_STATS;
+    const teamIds = teams.map((t) => t.id);
+    const [leagueSums, cupMatches] = (await Promise.all([
+      (prisma as any).leagueParticipant.groupBy({
+        by: ["teamId"],
+        where: { teamId: { in: teamIds } },
+        _sum: {
+          wins: true,
+          draws: true,
+          losses: true,
+          touchdownsFor: true,
+          casualtiesFor: true,
+        },
+      }),
+      (prisma as any).localMatch.findMany({
+        where: {
+          status: "completed",
+          AND: [
+            { OR: [{ cupId: { not: null } }, { cupPairingId: { not: null } }] },
+            { OR: [{ teamAId: { in: teamIds } }, { teamBId: { in: teamIds } }] },
+          ],
+        },
+        select: {
+          teamAId: true,
+          teamBId: true,
+          scoreTeamA: true,
+          scoreTeamB: true,
+          actions: {
+            select: {
+              playerTeam: true,
+              actionType: true,
+              armorBroken: true,
+              opponentState: true,
+            },
+          },
+        },
+      }),
+    ])) as [LeagueTeamSums[], CupMatchForAchievements[]];
+    return summarizeCompetitionAchievementStats({ teams, leagueSums, cupMatches });
+  } catch (e: unknown) {
+    serverLog.error(`[achievements] stats de competition indisponibles user=${userId}`, e);
+    return EMPTY_COMPETITION_STATS;
+  }
+}
+
 export async function computeUserStats(
   userId: string,
 ): Promise<UserAchievementStats> {
@@ -440,8 +516,13 @@ export async function computeUserStats(
   const rostersPlayed = new Set<string>();
   const winsByRoster = new Map<string, number>();
 
-  for (const sel of selections) {
-    if (!sel.match || sel.match.status !== "ended") continue;
+  // Un match de LIGUE joué en ligne et déjà reporté au classement est compté
+  // par la ligue (`computeCompetitionStats`) : pas deux fois.
+  const onlineSelections = selections.filter(
+    (s) => s.match?.status === "ended" && !s.match.leagueScoredAt,
+  );
+
+  for (const sel of onlineSelections) {
     const allSels = sel.match.teamSelections;
     if (allSels.length < 2) continue;
     const teamSide: "A" | "B" = allSels[0].id === sel.id ? "A" : "B";
@@ -500,13 +581,20 @@ export async function computeUserStats(
     serverLog.error(`[achievements] stats de pronostic indisponibles user=${userId}`, e);
   }
 
+  // Ligue et coupe : le cœur du site, joué sur table et saisi sur feuille.
+  const competition = await computeCompetitionStats(userId);
+  for (const roster of competition.rostersPlayed) rostersPlayed.add(roster);
+  for (const [roster, count] of competition.winsByRoster) {
+    winsByRoster.set(roster, (winsByRoster.get(roster) ?? 0) + count);
+  }
+
   return {
-    matchesPlayed: selections.filter((s) => s.match?.status === "ended").length,
-    wins,
-    draws,
-    losses,
-    touchdowns,
-    casualties,
+    matchesPlayed: onlineSelections.length + competition.matchesPlayed,
+    wins: wins + competition.wins,
+    draws: draws + competition.draws,
+    losses: losses + competition.losses,
+    touchdowns: touchdowns + competition.touchdowns,
+    casualties: casualties + competition.casualties,
     friendsCount,
     rostersPlayed,
     winsByRoster,
