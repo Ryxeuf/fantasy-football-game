@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PREDICTION_SCOPES } from "../services/league-predictions-rules";
 import { SHEET_ENTRY_MODES } from "../services/sheet-entry-mode";
 import { CUP_INDUCEMENT_MODES } from "../services/cup-inducement-mode";
 
@@ -140,6 +141,9 @@ export const createCupSchema = z
     // Mode de saisie de la feuille de match. Absent = saisie SIMPLIFIÉE pour
     // une coupe neuve (posé par le handler, la colonne n'a pas de défaut).
     sheetEntryMode: sheetEntryModeSchema.optional(),
+    // Portée des pronostics. Absent = « members » pour une coupe neuve
+    // (posé par le handler, la colonne n'a pas de défaut : null = off).
+    predictionsScope: z.enum(PREDICTION_SCOPES).optional(),
   })
   .refine(
     (data) =>
@@ -183,6 +187,11 @@ export const updateCupSchema = z.object({
    * gouverne que le formulaire, rien de persisté n'en dépend.
    */
   sheetEntryMode: sheetEntryModeSchema.optional(),
+  /**
+   * Portée des pronostics. Règle de LECTURE : modifiable à tout moment
+   * (aussi par `PATCH /cup/:id/predictions-scope`).
+   */
+  predictionsScope: z.enum(PREDICTION_SCOPES).optional(),
 });
 
 export type UpdateCupInput = z.infer<typeof updateCupSchema>;

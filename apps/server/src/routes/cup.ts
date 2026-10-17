@@ -36,6 +36,7 @@ import {
 import { serverLog } from "../utils/server-log";
 import { parseNumberMap, type CupRulesConfig } from "../services/cup-rules";
 import { parseSheetEntryMode } from "../services/sheet-entry-mode";
+import { parsePredictionScope } from "../services/league-predictions-rules";
 import {
   modeToWrite,
   parseCupAllowedInducements,
@@ -647,6 +648,13 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       sheetEntryMode: parseSheetEntryMode(
         (cup as unknown as { sheetEntryMode?: unknown }).sheetEntryMode,
       ),
+      /** Portée EFFECTIVE des pronostics (`null` en base = off). */
+      predictionsScope: parsePredictionScope(
+        (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
+      ),
+      /** Faux sur une coupe antérieure (colonne à `null`) : flag brut. */
+      predictionsScopeConfigured:
+        (cup as unknown as { predictionsScope?: unknown }).predictionsScope != null,
       standings: standingsResult.teamStats,
       /**
        * Classements par poule. Vide quand la coupe n'a pas de poules —
@@ -875,6 +883,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         // `@default` : `db push` poserait le défaut sur les coupes existantes,
         // qui doivent rester en saisie complète (null).
         sheetEntryMode: body.sheetEntryMode ?? "simplified",
+        // Pronostics ouverts aux membres sur une coupe neuve ; une coupe
+        // existante (null) reste « off » sans backfill.
+        predictionsScope: body.predictionsScope ?? "members",
         inducementMode: inducementMode.mode,
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
@@ -927,6 +938,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
       rulesConfig: formatCupRules(cup),
       sheetEntryMode: parseSheetEntryMode(
         (cup as unknown as { sheetEntryMode?: unknown }).sheetEntryMode,
+      ),
+      predictionsScope: parsePredictionScope(
+        (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
       ),
     };
 
@@ -1086,6 +1100,10 @@ router.patch(
       if (body.sheetEntryMode !== undefined) {
         data.sheetEntryMode = body.sheetEntryMode;
       }
+      // Portée des pronostics : règle de lecture, aucun verrou.
+      if (body.predictionsScope !== undefined) {
+        data.predictionsScope = body.predictionsScope;
+      }
       if (body.playoffSize !== undefined) {
         // Le bracket est SEEDÉ à sa génération : en changer la taille après
         // coup laisserait des rondes dont le nombre ne correspond plus.
@@ -1124,6 +1142,7 @@ router.patch(
           tieBreakRules: true,
           playoffSize: true,
           sheetEntryMode: true,
+          predictionsScope: true,
         },
       });
 
@@ -1132,6 +1151,7 @@ router.patch(
           ...updated,
           tieBreakRules: parseCupTieBreakRules(updated.tieBreakRules),
           sheetEntryMode: parseSheetEntryMode(updated.sheetEntryMode),
+          predictionsScope: parsePredictionScope(updated.predictionsScope),
         },
       });
     } catch (e: unknown) {
