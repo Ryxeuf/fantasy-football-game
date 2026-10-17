@@ -113,10 +113,14 @@ describe("E2E API — pronostics de coupe", () => {
       awayScore: 0,
     });
     expect(saved.status).toBe(200);
-    // Le commissaire (membre) pronostique l'inverse.
-    const commishIsOnP1 =
-      commish.userId === p1.homeTeam.ownerId || commish.userId === p1.awayTeam!.ownerId;
-    if (!commishIsOnP1) {
+    // Le commissaire (membre) pronostique l'inverse — sauf s'il joue p1, ou
+    // s'il EST l'outsider (le tirage est aléatoire) : son second pronostic
+    // écraserait le premier.
+    const commishPredictsAway =
+      commish.userId !== p1.homeTeam.ownerId &&
+      commish.userId !== p1.awayTeam!.ownerId &&
+      commish.userId !== outsider.userId;
+    if (commishPredictsAway) {
       expect(
         (await rawPut(`/cup/pairings/${p1.id}/prediction`, commish.token, { pick: "away" }))
           .status,
@@ -162,7 +166,7 @@ describe("E2E API — pronostics de coupe", () => {
     );
     const mine = board.coach.find((e) => e.userId === outsider.userId)!;
     expect(mine).toMatchObject({ points: 5, correct: 1, exact: 1 });
-    if (!commishIsOnP1) {
+    if (commishPredictsAway) {
       expect(board.coach.find((e) => e.userId === commish.userId)!.points).toBe(0);
     }
 
@@ -204,7 +208,8 @@ describe("E2E API — pronostics de coupe", () => {
     expect(bilan?.url).toBe(`/cups/${cupId}/predictions`);
 
     // 4. Portée : commissaire seul ; « off » ne sert plus rien.
-    const refused = await rawPatch(`/cup/${cupId}/predictions-scope`, outsider.token, {
+    // Un coach qui n'est PAS le commissaire (l'outsider peut l'être).
+    const refused = await rawPatch(`/cup/${cupId}/predictions-scope`, coaches[1].token, {
       scope: "open",
     });
     expect(refused.status).toBe(403);
