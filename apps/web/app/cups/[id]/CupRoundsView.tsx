@@ -396,6 +396,7 @@ export default function CupRoundsView({
             return (
               <li
                 key={round.id}
+                id={`ronde-${round.roundNumber}`}
                 data-testid={`cup-round-${round.id}`}
                 className={`overflow-hidden rounded-2xl border border-gray-200 border-l-4 bg-white shadow-sm ${
                   roundAccent[status] ?? "border-l-gray-300"

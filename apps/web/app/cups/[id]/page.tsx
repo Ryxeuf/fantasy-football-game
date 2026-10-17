@@ -15,6 +15,7 @@ import CupStandings from "./CupStandings";
 import CupPoolsManagerPanel from "./CupPoolsManagerPanel";
 import CupPlayoffBracketView from "./CupPlayoffBracketView";
 import CupPdfExports from "./CupPdfExports";
+import CupNextMatchesPanel from "./CupNextMatchesPanel";
 import {
   poolIdByTeamId,
   poolNamesById,
@@ -268,6 +269,8 @@ export default function CupDetailPage() {
   // Un admin gere les documents officiels de n'importe quelle coupe (le
   // serveur l'autorise deja) : sans ce flag, l'UI le lui cacherait.
   const [currentUserIsAdmin, setCurrentUserIsAdmin] = useState(false);
+  // Lecteur connecté : sert « Vos prochains matchs ».
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const rulesetLabels: Record<string, string> = {
     season_2: "Saison 2",
     season_3: "Saison 3",
@@ -298,6 +301,7 @@ export default function CupDetailPage() {
         window.location.href = "/login";
         return;
       }
+      setCurrentUserId(typeof me.user.id === "string" ? me.user.id : null);
       setCurrentUserIsAdmin(
         Array.isArray(me.user.roles)
           ? me.user.roles.includes("admin")
@@ -932,6 +936,13 @@ export default function CupDetailPage() {
                     ...cup,
                     participantPools: poolIdByTeamId(cup.participants ?? []),
                   }}
+                />
+              </div>
+              <div className="mb-4">
+                <CupNextMatchesPanel
+                  cupId={cup.id}
+                  rounds={cup.rounds ?? []}
+                  currentUserId={currentUserId}
                 />
               </div>
               <CupRoundsView
