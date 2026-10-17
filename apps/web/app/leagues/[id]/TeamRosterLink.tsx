@@ -2,14 +2,25 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import {
+  teamRosterHref,
+  type CompetitionKind,
+} from "../../lib/competition-links";
+import { dynamicRoute } from "../../lib/typed-route";
 
 interface TeamRosterLinkProps {
-  /** Ligue de consultation. `null`/absent => pas de lien (rendu neutre). */
+  /** Compétition de consultation. `null`/absent => pas de lien (rendu neutre). */
   leagueId?: string | null;
+  /**
+   * Ligue (défaut) ou coupe : la fiche d'une coupe montre le roster
+   * d'INSCRIPTION, celui que rejoue chaque rencontre.
+   */
+  competition?: CompetitionKind;
   teamId: string;
   /**
-   * Consultation du roster autorisée (commissaire ou coach inscrit) —
+   * Consultation du roster autorisée. Ligue : commissaire ou coach inscrit,
    * même porte que le bouton « Voir le roster » de SeasonParticipants.
+   * Coupe : tout visiteur de la coupe (même porte que `GET /cup/:id`).
    */
   canViewRoster?: boolean;
   /** Suffixe du `data-testid` : `team-roster-link-<testIdSuffix>`. */
@@ -19,7 +30,7 @@ interface TeamRosterLinkProps {
 }
 
 /**
- * Rend un nom d'équipe cliquable vers sa fiche de roster de ligue.
+ * Rend un nom d'équipe cliquable vers sa fiche de roster (ligue ou coupe).
  *
  * Le roster n'était atteignable que depuis la liste des participants
  * (bouton « Voir le roster ») : depuis le calendrier ou le classement, il
@@ -31,6 +42,7 @@ interface TeamRosterLinkProps {
  */
 export default function TeamRosterLink({
   leagueId,
+  competition = "league",
   teamId,
   canViewRoster = false,
   testIdSuffix,
@@ -42,7 +54,7 @@ export default function TeamRosterLink({
   }
   return (
     <Link
-      href={`/leagues/${leagueId}/teams/${teamId}`}
+      href={dynamicRoute(teamRosterHref(competition, leagueId, teamId))}
       data-testid={`team-roster-link-${testIdSuffix ?? teamId}`}
       title="Voir le roster de cette équipe"
       className={`hover:underline underline-offset-2${className ? ` ${className}` : ""}`}
