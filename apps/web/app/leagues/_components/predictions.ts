@@ -53,6 +53,21 @@ export const PREDICTION_SCOPE_OPTIONS: ReadonlyArray<{
   },
 ];
 
+/**
+ * Options de portée dans le vocabulaire de la compétition : « Membres de la
+ * coupe », « … qui voit la coupe ». Mêmes valeurs, mêmes règles.
+ */
+export function predictionScopeOptions(
+  competition: "league" | "cup" = "league",
+): typeof PREDICTION_SCOPE_OPTIONS {
+  if (competition === "league") return PREDICTION_SCOPE_OPTIONS;
+  return PREDICTION_SCOPE_OPTIONS.map((o) => ({
+    ...o,
+    label: o.label.replace("la ligue", "la coupe"),
+    description: o.description.replace("la ligue", "la coupe"),
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Types de l'API
 // ---------------------------------------------------------------------------
