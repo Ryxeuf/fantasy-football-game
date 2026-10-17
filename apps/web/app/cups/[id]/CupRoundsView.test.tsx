@@ -381,4 +381,19 @@ describe("CupRoundsView", () => {
     expect(screen.getByTestId("cup-rounds-empty").textContent).toContain("Validez la coupe");
     expect((screen.getByTestId("cup-swiss-generate") as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it("rend le nom de chaque équipe cliquable vers son roster de coupe", () => {
+    renderView({ rounds: [round([PLAYED, BYE])] });
+    expect(
+      screen.getByTestId("team-roster-link-cup-pairing-home-a").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/a");
+    expect(
+      screen.getByTestId("team-roster-link-cup-pairing-away-b").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/b");
+    // L'exempt aussi : son roster reste consultable.
+    expect(
+      screen.getByTestId("team-roster-link-cup-pairing-home-e").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/e");
+  });
 });
+

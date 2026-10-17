@@ -24,6 +24,7 @@ import {
 } from "./round-system-copy";
 import { dynamicRoute } from "../../lib/typed-route";
 import { groupCupRoundByPool } from "./round-pools";
+import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -485,7 +486,11 @@ interface CupPairingCardProps {
   onChanged: () => void;
 }
 
-function toCardTeam(team: CupPairingTeamView, side: "home" | "away"): MatchCardTeam {
+function toCardTeam(
+  cupId: string,
+  team: CupPairingTeamView,
+  side: "home" | "away",
+): MatchCardTeam {
   return {
     name: team.name,
     roster: team.roster,
@@ -493,6 +498,18 @@ function toCardTeam(team: CupPairingTeamView, side: "home" | "away"): MatchCardT
     coachName: team.coachName,
     testId: `cup-pairing-team-${side}`,
     coachTestId: `cup-pairing-coach-${side}`,
+    // Le nom mène au roster d'inscription de l'équipe, comme en ligue.
+    renderName: (name) => (
+      <TeamRosterLink
+        competition="cup"
+        leagueId={cupId}
+        teamId={team.id}
+        canViewRoster
+        testIdSuffix={`cup-pairing-${side}-${team.id}`}
+      >
+        {name}
+      </TeamRosterLink>
+    ),
   };
 }
 
@@ -542,8 +559,8 @@ function CupPairingCard({
   return (
     <MatchCard
       testId={`cup-pairing-${pairing.id}`}
-      home={toCardTeam(pairing.homeTeam, "home")}
-      away={pairing.awayTeam ? toCardTeam(pairing.awayTeam, "away") : null}
+      home={toCardTeam(cupId, pairing.homeTeam, "home")}
+      away={pairing.awayTeam ? toCardTeam(cupId, pairing.awayTeam, "away") : null}
       byeLabel={t.cups.swissByeLabel}
       scoreLabel={scoreLabel}
       scoreTestId={scoreLabel ? `cup-pairing-score-${pairing.id}` : undefined}

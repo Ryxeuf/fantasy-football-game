@@ -1,5 +1,6 @@
 "use client";
 import TeamLogo from "../../components/TeamLogo";
+import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
 
 /**
  * Tableau de classement d'une coupe.
@@ -40,12 +41,18 @@ interface CupStandingsProps {
    * pas où passe la barre.
    */
   readonly qualifies?: number;
+  /**
+   * Coupe de consultation : le nom de chaque équipe mène à sa fiche de
+   * roster. Absent => noms en texte (rendu historique).
+   */
+  readonly cupId?: string | null;
 }
 
 export default function CupStandings({
   standings,
   testId = "cup-standings",
   qualifies = 0,
+  cupId = null,
 }: CupStandingsProps) {
   if (standings.length === 0) return null;
   // Colonne « Ex. » masquée tant qu'aucune équipe n'a été exemptée : elle ne
@@ -102,7 +109,15 @@ export default function CupStandings({
                       size={22}
                       className="shrink-0"
                     />
-                    {team.teamName}
+                    <TeamRosterLink
+                      competition="cup"
+                      leagueId={cupId}
+                      teamId={team.teamId}
+                      canViewRoster
+                      testIdSuffix={`standings-${team.teamId}`}
+                    >
+                      {team.teamName}
+                    </TeamRosterLink>
                   </span>
                 </td>
                 <td className="px-2 py-1 text-center">{team.matchesPlayed}</td>

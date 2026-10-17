@@ -97,4 +97,21 @@ describe("CupBracketView (S27.1j)", () => {
     const node = screen.getByTestId("cup-bracket-match-m-completed");
     expect(node.getAttribute("data-winner")).toBe("A");
   });
+
+  it("mène des noms au roster de coupe quand la coupe est connue", () => {
+    render(<CupBracketView matches={[completedMatch]} cupId="C1" />);
+    expect(
+      screen.getByTestId("team-roster-link-bracket-m-completed-a").getAttribute("href"),
+    ).toBe("/cups/C1/teams/tA");
+    expect(
+      screen.getByTestId("team-roster-link-bracket-m-completed-b").getAttribute("href"),
+    ).toBe("/cups/C1/teams/tB");
+  });
+
+  it("laisse les noms en texte sans coupe de consultation", () => {
+    render(<CupBracketView matches={[completedMatch]} />);
+    expect(screen.queryByTestId("team-roster-link-bracket-m-completed-a")).toBeNull();
+    expect(screen.getByText("Skaven Stars")).toBeTruthy();
+  });
 });
+
