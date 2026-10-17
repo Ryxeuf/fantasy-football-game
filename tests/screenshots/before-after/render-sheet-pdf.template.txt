@@ -1,0 +1,25 @@
+/**
+ * Gabarit — rend la feuille de rencontre PDF d'une réponse `GET …/sheet`.
+ *
+ * Le module PDF vit dans `apps/web` (alias et jsPDF de l'app) : copier ce
+ * fichier en `apps/web/app/lib/competition-pdf/zz-render.test.ts` de la
+ * version voulue, puis
+ *
+ *   SHEET_DIR=/tmp/seed-apres npx vitest run app/lib/competition-pdf/zz-render.test.ts
+ *
+ * Chaque `<nom>.json` du dossier donne `<nom>.pdf`. Retirer la copie ensuite.
+ */
+import { it } from "vitest";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { matchSheetToPdf } from "./adapters/match-sheet";
+import { renderCompetitionPdf } from "./render";
+
+const DIR = process.env.SHEET_DIR ?? ".";
+
+it("rend les feuilles", () => {
+  for (const file of readdirSync(DIR).filter((f) => f.endsWith("-sheet.json"))) {
+    const data = JSON.parse(readFileSync(`${DIR}/${file}`, "utf-8"));
+    const pdf = renderCompetitionPdf({ kind: "match-sheet", data: matchSheetToPdf(data) });
+    writeFileSync(`${DIR}/${file.replace(".json", ".pdf")}`, Buffer.from(pdf.output("arraybuffer")));
+  }
+});
