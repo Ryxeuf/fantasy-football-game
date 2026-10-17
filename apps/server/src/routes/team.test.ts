@@ -46,6 +46,9 @@ vi.mock("../prisma", () => ({
     },
     leagueParticipant: {
       findMany: vi.fn(() => Promise.resolve([])),
+      // GET /team/:id : bilan de ligue de la fiche (sommes nulles = aucune
+      // participation).
+      aggregate: vi.fn(() => Promise.resolve({ _sum: {} })),
     },
     // resolveStaffConfigBySlug : fallback defaultStaffConfig(slug, format)
     // quand le roster n'est pas mocké (undefined).
@@ -2735,6 +2738,9 @@ describe("Route: GET /team/:id (S25.5ae)", () => {
       localMatchFindMany: prismaMock.localMatch.findMany as ReturnType<
         typeof vi.fn
       >,
+      leagueAggregate: prismaMock.leagueParticipant.aggregate as ReturnType<
+        typeof vi.fn
+      >,
     };
   }
 
@@ -2873,6 +2879,105 @@ describe("Route: GET /team/:id (S25.5ae)", () => {
       // wins TA=1, loss TA=4, draw TA=1 -> 6
       touchdownsAgainst: 6,
       touchdownDiff: 0,
+    });
+  });
+
+  it("matchStats compte les rencontres de LIGUE, absentes des LocalMatch", async () => {
+    const { teamFindFirst, selectionFindFirst, localMatchFindMany, leagueAggregate } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    // Une victoire de coupe matérialisée en LocalMatch + une partie amicale.
+    localMatchFindMany.mockResolvedValue([
+      {
+        id: "lm-cup",
+        status: "completed",
+        teamAId: "team-1",
+        teamBId: "other",
+        scoreTeamA: 2,
+        scoreTeamB: 0,
+        cupId: "cup-1",
+        cupPairingId: "cp-1",
+      },
+      {
+        id: "lm-friendly",
+        status: "completed",
+        teamAId: "other",
+        teamBId: "team-1",
+        scoreTeamA: 1,
+        scoreTeamB: 1,
+        cupId: null,
+        cupPairingId: null,
+      },
+    ]);
+    leagueAggregate.mockResolvedValueOnce({
+      _sum: {
+        wins: 3,
+        draws: 0,
+        losses: 2,
+        touchdownsFor: 8,
+        touchdownsAgainst: 6,
+      },
+    });
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    expect(leagueAggregate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { teamId: "team-1" } }),
+    );
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        // Contrat historique inchangé : les seuls LocalMatch.
+        localMatchStats: { completed: 2, wins: 1, draws: 1, losses: 0 },
+        matchStats: {
+          played: 7,
+          wins: 4,
+          draws: 1,
+          losses: 2,
+          touchdownsFor: 11,
+          touchdownsAgainst: 7,
+          touchdownDiff: 4,
+          bySource: {
+            league: { played: 5 },
+            cup: { played: 1 },
+            friendly: { played: 1 },
+          },
+        },
+      },
+    });
+  });
+
+  it("sert la fiche si la lecture du bilan de ligue échoue", async () => {
+    const { teamFindFirst, selectionFindFirst, localMatchFindMany, leagueAggregate } =
+      await getMocks();
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      players: [],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    localMatchFindMany.mockResolvedValue([]);
+    leagueAggregate.mockRejectedValueOnce(new Error("db down"));
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: { matchStats: { played: 0, bySource: { league: { played: 0 } } } },
     });
   });
 

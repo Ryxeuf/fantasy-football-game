@@ -57,6 +57,13 @@ interface StandingsDTO {
     touchdownsFor: number;
   }>;
 }
+interface TeamMatchStatsDTO {
+  played: number;
+  wins: number;
+  touchdownsFor: number;
+  touchdownsAgainst: number;
+  bySource: { league: { played: number } };
+}
 interface TeamDetailDTO {
   team: {
     treasury: number;
@@ -69,6 +76,7 @@ interface TeamDetailDTO {
       firedAt: string | null;
     }>;
   };
+  matchStats: TeamMatchStatsDTO;
 }
 interface ValidateDTO {
   sheet: { status: string };
@@ -240,9 +248,18 @@ describe("E2E API — feuille de match : saisie 2 coachs -> validation -> revers
 
     // Equipe home : tresorerie (150k - 100k achats = 50k), relance +1,
     // joueur cree, joueur licencie, SPP appliques.
-    const home = unwrap(
+    const homeDetail = unwrap(
       await get<{ data: TeamDetailDTO }>(`/team/${homeTeamId}`, homeToken),
-    ).team;
+    );
+    const home = homeDetail.team;
+    // La fiche d'equipe compte la rencontre de LIGUE (absente des LocalMatch).
+    expect(homeDetail.matchStats).toMatchObject({
+      played: 1,
+      wins: 1,
+      touchdownsFor: 2,
+      touchdownsAgainst: 1,
+      bySource: { league: { played: 1 } },
+    });
     expect(home.treasury).toBe(50000);
     expect(home.rerolls).toBe(1);
     const recrue = home.players.find((p) => p.name === "Recrue");
@@ -282,9 +299,11 @@ describe("E2E API — feuille de match : saisie 2 coachs -> validation -> revers
 
     // Reversion exacte : tresorerie 0, relance 0, joueur cree supprime,
     // licencie re-active, standings remis a zero.
-    const homeAfter = unwrap(
+    const homeAfterDetail = unwrap(
       await get<{ data: TeamDetailDTO }>(`/team/${homeTeamId}`, homeToken),
-    ).team;
+    );
+    const homeAfter = homeAfterDetail.team;
+    expect(homeAfterDetail.matchStats).toMatchObject({ played: 0, wins: 0 });
     expect(homeAfter.treasury).toBe(0);
     expect(homeAfter.rerolls).toBe(0);
     expect(homeAfter.players).toHaveLength(11);

@@ -40,6 +40,8 @@ import TeamShareToggle from "./TeamShareToggle";
 import FirstTeamWelcomeBanner from "./FirstTeamWelcomeBanner";
 import RosterBadge from "../../../components/RosterBadge";
 import CaptainPanel from "./CaptainPanel";
+import TeamMatchStatsPanel from "./TeamMatchStatsPanel";
+import { resolveTeamMatchStats } from "./team-match-stats";
 import TeamLogo from "../../../components/TeamLogo";
 import TeamLogoUploader from "../components/TeamLogoUploader";
 
@@ -219,6 +221,7 @@ export default function TeamDetailPage() {
           team: { roster: string; ruleset?: string };
           currentMatch: unknown;
           localMatchStats: unknown;
+          matchStats?: unknown;
         }>(`/team/${id}?lang=${language === "en" ? "en" : "fr"}`);
         if (cancelled) return;
         setData(d);
@@ -338,6 +341,7 @@ export default function TeamDetailPage() {
         team: unknown;
         currentMatch: unknown;
         localMatchStats: unknown;
+        matchStats?: unknown;
       }>(`/team/${id}`);
       setData(d);
     } catch {
@@ -478,7 +482,7 @@ export default function TeamDetailPage() {
     team?.tournamentRuleset ?? null,
   );
   const match = data?.currentMatch;
-  const localMatchStats = data?.localMatchStats;
+  const teamMatchStats = resolveTeamMatchStats(data);
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
 
   // A11 — accès compétences (primaire/secondaire) indexés par position, plus
@@ -1024,56 +1028,8 @@ export default function TeamDetailPage() {
             </div>
           </div>
 
-          {/* Statistiques de l'équipe */}
-          {localMatchStats && (
-            <div className="bg-white rounded-lg border overflow-hidden">
-              <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
-                <h2 className="text-base sm:text-lg font-semibold">
-                  {t.teams.teamStatsTitle}
-                </h2>
-              </div>
-              <div className="p-4 sm:p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-                  <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="text-xs sm:text-sm text-blue-600 font-medium">
-                      {t.teams.teamStatsLocalMatches}
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold text-blue-900">
-                      {localMatchStats.total}
-                    </div>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-green-50 rounded-lg border border-green-200">
-                    <div className="text-xs sm:text-sm text-green-600 font-medium">
-                      {t.teams.teamStatsCompleted}
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold text-green-900">
-                      {localMatchStats.completed}
-                    </div>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-purple-50 rounded-lg border border-purple-200">
-                    <div className="text-xs sm:text-sm text-purple-600 font-medium">
-                      {t.teams.teamStatsRecord}
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold text-purple-900 font-mono">
-                      {localMatchStats.wins} / {localMatchStats.draws} / {localMatchStats.losses}
-                    </div>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <div className="text-xs sm:text-sm text-orange-600 font-medium">
-                      {t.teams.teamStatsTouchdowns}
-                    </div>
-                    <div className="text-xl sm:text-2xl font-bold text-orange-900 font-mono">
-                      {localMatchStats.touchdownsFor} / {localMatchStats.touchdownsAgainst}{" "}
-                      <span className="text-sm">
-                        ({localMatchStats.touchdownDiff >= 0 ? "+" : ""}
-                        {localMatchStats.touchdownDiff})
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Statistiques de l'équipe (ligue + coupe + amicaux) */}
+          {teamMatchStats && <TeamMatchStatsPanel stats={teamMatchStats} />}
 
           <div className="bg-white rounded-lg border overflow-hidden">
             <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
