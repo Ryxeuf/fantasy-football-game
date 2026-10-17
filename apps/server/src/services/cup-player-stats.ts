@@ -83,6 +83,39 @@ interface Accumulator {
 
 const BLOCK_TYPES = new Set(['blocage', 'blitz']);
 
+/** Geste qu'une action de coupe crédite à son AUTEUR. */
+export type CupActorGesture =
+  | 'touchdown'
+  | 'casualty'
+  | 'aggressionCasualty'
+  | 'completion'
+  | 'interception';
+
+/**
+ * Ce qu'une action rapporte à son auteur — LA définition, partagée par les
+ * classements individuels de la coupe et la carrière d'un joueur
+ * (`player-career-stats`). Une sortie au contact exige l'armure passée ET la
+ * cible sortie ; une agression ne compte que si elle sort sa cible.
+ */
+export function cupActorGesture(
+  action: Pick<CupPlayerActionLike, 'actionType' | 'armorBroken' | 'opponentState'>,
+): CupActorGesture | null {
+  if (action.actionType === 'td') return 'touchdown';
+  if (action.actionType === 'passe') return 'completion';
+  if (action.actionType === 'interception') return 'interception';
+  if (
+    BLOCK_TYPES.has(action.actionType) &&
+    action.armorBroken &&
+    action.opponentState === 'elimine'
+  ) {
+    return 'casualty';
+  }
+  if (action.actionType === 'aggression' && action.opponentState === 'elimine') {
+    return 'aggressionCasualty';
+  }
+  return null;
+}
+
 function ensure(
   map: Map<string, Accumulator>,
   playerId: string,
@@ -146,21 +179,12 @@ export function computeCupPlayerLeaderboards(
       // Comptage côté acteur.
       if (actorTeam && action.playerId) {
         const acc = ensure(actors, action.playerId, action.playerName, actorTeam);
-        if (action.actionType === 'td') acc.scorer += 1;
-        else if (action.actionType === 'passe') acc.passer += 1;
-        else if (action.actionType === 'interception') acc.interceptor += 1;
-        else if (
-          BLOCK_TYPES.has(action.actionType) &&
-          action.armorBroken &&
-          action.opponentState === 'elimine'
-        ) {
-          acc.basher += 1;
-        } else if (
-          action.actionType === 'aggression' &&
-          action.opponentState === 'elimine'
-        ) {
-          acc.aggressor += 1;
-        }
+        const gesture = cupActorGesture(action);
+        if (gesture === 'touchdown') acc.scorer += 1;
+        else if (gesture === 'completion') acc.passer += 1;
+        else if (gesture === 'interception') acc.interceptor += 1;
+        else if (gesture === 'casualty') acc.basher += 1;
+        else if (gesture === 'aggressionCasualty') acc.aggressor += 1;
       }
 
       // Sac de frappe : la victime d'une sortie (contact ou agression).
