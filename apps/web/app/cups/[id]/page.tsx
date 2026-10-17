@@ -1120,9 +1120,18 @@ export default function CupDetailPage() {
           )}
           {cup.actionAwards && (
             <div className="pt-6 border-t border-gray-200 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Podiums par type d'action
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Podiums par type d'action
+                </h2>
+                <Link
+                  href={dynamicRoute(`/cups/${cup.id}/stats`)}
+                  data-testid="cup-stats-link-awards"
+                  className="text-sm font-medium text-nuffle-bronze hover:underline"
+                >
+                  📊 Tops par équipe →
+                </Link>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Le Pichichi du TD */}
                 {cup.actionAwards.topScorers &&
@@ -1436,9 +1445,18 @@ export default function CupDetailPage() {
           (c) => (cup.playerLeaderboards?.[c.key]?.length ?? 0) > 0,
         ) && (
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
-              Classements individuels
-            </h2>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Classements individuels
+              </h2>
+              <Link
+                href={dynamicRoute(`/cups/${cup.id}/stats`)}
+                data-testid="cup-stats-link"
+                className="text-sm font-medium text-nuffle-bronze hover:underline"
+              >
+                📊 Toutes les statistiques →
+              </Link>
+            </div>
             <p className="text-xs text-gray-500 mb-4">
               Agrégés depuis les actions saisies. Pas de « future star » (PSP)
               ni de « MVP » en coupe.
