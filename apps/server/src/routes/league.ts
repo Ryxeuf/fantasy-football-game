@@ -35,21 +35,7 @@ import {
   isLeagueParticipant,
   LeagueWithdrawError,
 } from "../services/league";
-import {
-  getPositionBySlug,
-  TEAM_ROSTERS,
-  getPlayerCost,
-  calculateAdvancementsSurcharge,
-  DEFAULT_RULESET,
-  type Ruleset,
-} from "@bb/game-engine";
-import {
-  resolveSpecialRules,
-  resolveRegionalLeagues,
-} from "./public-rosters";
-import { loadTeamRulesCatalogue } from "../services/team-rules-catalogue";
-import { displayedRegionalLeagues } from "../services/roster-regional-rules";
-import { loadAdvancementSchedule } from "../services/advancement-schedule-repository";
+import { loadRosterViewMeta } from "../services/team-roster-view";
 import {
   startSeason,
   regenerateSchedule,
@@ -58,12 +44,7 @@ import {
   requireLeagueCreator,
 } from "../services/league-scheduler";
 import { recordForfeit } from "../services/league-forfeit";
-import { getEliteSkillSlugs } from "../services/elite-skills";
-import {
-  resolvePositionMetaForTeam,
-  updateTeamValues,
-} from "../utils/team-values";
-import { getRosterFromDb } from "../utils/roster-helpers";
+import { updateTeamValues } from "../utils/team-values";
 import { buildPlayerCareerTotals } from "../services/player-career-loader";
 import { serverLog } from "../utils/server-log";
 import {
@@ -1819,71 +1800,21 @@ export async function handleGetLeagueTeamRoster(
     } catch {
       // Modèle events indisponible : agressions non calculées.
     }
-    // Valeur d'un joueur : meme regle que la VE d'equipe
-    // (`utils/team-values`) — cout de base du poste + surcout des
-    // ameliorations achetees (dont +10k par competence Elite). Expose en po.
-    //
-    // Le cout de base vient de `Position.cost` (base), pas du catalogue
-    // compile : sinon la « valeur du joueur » affichee ici diverge de la VE
-    // persistee sur `Team.teamValue`, qui est deja calculee en base (M1).
-    const teamRuleset = (out.team.ruleset ?? DEFAULT_RULESET) as Ruleset;
-    const eliteSlugs = await getEliteSkillSlugs(prisma, teamRuleset);
-    const positionMeta = await resolvePositionMetaForTeam(
-      prisma,
-      out.team.roster,
-      teamRuleset,
-    );
-    // Lot 6.2 — barème de l'édition de l'équipe (repli compilé).
-    const advancementSchedule = await loadAdvancementSchedule(teamRuleset);
-    const playerValue = (position: string, advancementsJson: string | null) => {
-      const base =
-        positionMeta.get(position)?.cost ??
-        getPlayerCost(position, out.team.roster, teamRuleset);
-      let surcharge = 0;
-      try {
-        const parsed = JSON.parse(advancementsJson || "[]");
-        if (Array.isArray(parsed)) {
-          surcharge = calculateAdvancementsSurcharge(
-            parsed.map(
-              (a: { type?: string; stat?: string; skillSlug?: string }) => ({
-                type: a?.type as never,
-                stat: a?.stat as never,
-                isElite:
-                  typeof a?.skillSlug === "string" &&
-                  eliteSlugs.has(a.skillSlug),
-              }),
-            ),
-            // Lot 6.2 — surcoûts au barème de l'édition de l'équipe.
-            advancementSchedule,
-          );
-        }
-      } catch {
-        // Advancements illisibles : on s'en tient au cout de base.
-      }
-      return base + surcharge;
-    };
-
-    // Libelles de poste servis par la base (`Position.displayName`) : le
-    // catalogue compile affichait des noms perimes, ou le slug brut pour un
-    // poste cree en admin (M1).
-    const rosterPayload = await getRosterFromDb(
-      out.team.roster,
-      "fr",
-      teamRuleset,
-    ).catch(() => null);
-    const positionNames = new Map(
-      (rosterPayload?.positions ?? []).map((pos) => [pos.slug, pos.displayName]),
-    );
+    // Valeur d'un joueur, libellés de poste, race, règles spéciales et Ligue
+    // retenue : résolution PARTAGÉE avec la fiche de roster d'une coupe.
+    const regionalLeague = meta?.regionalLeague ?? null;
+    const view = await loadRosterViewMeta({
+      roster: out.team.roster,
+      ruleset: out.team.ruleset,
+      regionalLeague,
+    });
     const players = out.players.map((p: { id: string; position: string }) => {
       const s = statsById.get(p.id);
       const career = careers.get(p.id);
       return {
         ...p,
-        value: playerValue(p.position, s?.advancements ?? null),
-        positionName:
-          positionNames.get(p.position) ??
-          getPositionBySlug(p.position)?.displayName ??
-          p.position,
+        value: view.playerValue(p.position, s?.advancements ?? null),
+        positionName: view.positionName(p.position),
         totalTouchdowns: career?.touchdowns ?? s?.totalTouchdowns ?? 0,
         totalCasualties: career?.casualties ?? s?.totalCasualties ?? 0,
         totalCompletions: career?.completions ?? s?.totalCompletions ?? 0,
@@ -1904,44 +1835,7 @@ export async function handleGetLeagueTeamRoster(
         statusSource: s?.statusSource ?? null,
       };
     });
-    // Nom de race depuis `Roster.name` (base), repli catalogue.
-    const raceName =
-      rosterPayload?.name ??
-      (TEAM_ROSTERS as Record<string, { name?: string }>)[out.team.roster]
-        ?.name ??
-      out.team.roster;
-
-    // A11 — règles spéciales + type de ligue sur la fiche roster de ligue
-    // (certaines impactent les PSP, ex. Bagarreurs Brutaux). Résolution
-    // identique aux pages équipe publiques (public-rosters).
-    const ruleset = (out.team.ruleset ?? "season_3") as Ruleset;
-    const rosterRow = (await prisma.roster.findFirst({
-      where: { slug: out.team.roster, ruleset: ruleset as never },
-      select: { specialRules: true, regionalRules: true },
-    })) as { specialRules: unknown; regionalRules: unknown } | null;
-    // Lot 6.5 — libellés servis par la base (`TeamSpecialRule`,
-    // `RegionalLeague`), repli sur le catalogue compilé.
-    const rulesCatalogue = await loadTeamRulesCatalogue(ruleset);
-    const specialRules = resolveSpecialRules(
-      rosterRow?.specialRules ?? null,
-      false,
-      rulesCatalogue,
-    );
-    // A159 — le ROSTER ouvre plusieurs Ligues, mais l'ÉQUIPE n'en retient
-    // qu'une à sa création : seule celle-ci est servie (toutes pour une
-    // équipe antérieure à la règle, ou si le choix a quitté le catalogue).
-    const rosterLeagues = resolveRegionalLeagues(
-      rosterRow?.regionalRules ?? null,
-      out.team.roster,
-      ruleset,
-      false,
-      rulesCatalogue,
-    );
-    const regionalLeague = meta?.regionalLeague ?? null;
-    const regionalLeagues = displayedRegionalLeagues(
-      rosterLeagues,
-      regionalLeague,
-    );
+    const { raceName, specialRules, regionalLeagues } = view;
 
     sendSuccess(res, {
       team: {
