@@ -34,6 +34,8 @@ import { packInducementSlugs, parseCupInducementMode } from "../inducement-mode"
 import { useCupPredictions } from "../../leagues/_components/useSeasonPredictions";
 import { cupRoundPredictionLinks } from "../../leagues/_components/prediction-rounds";
 import { CupPredictionsSummary } from "./CupPredictionsSummary";
+import { CupChampionBanner } from "./CupChampionBanner";
+import { cupChampion, cupOracles } from "./cup-champion";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -415,6 +417,14 @@ export default function CupDetailPage() {
   const rc = cup.rulesConfig;
   const sheetsToValidate = cupSheetsAwaitingValidation(cup.rounds ?? []);
   const predictionLinks = cupRoundPredictionLinks(predictions.view, cup.id);
+  const champion = cupChampion({
+    status: cup.status,
+    rounds: cup.rounds ?? [],
+    standings: cup.standings ?? [],
+    coachNameByTeamId: Object.fromEntries(
+      (cup.participants ?? []).map((p) => [p.id, p.owner.coachName]),
+    ),
+  });
   const cupAdjusted = Boolean(
     rc &&
       (Object.keys(rc.tierBudgets).length > 0 ||
@@ -541,6 +551,14 @@ export default function CupDetailPage() {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Palmarès : champion et Oracle d'une coupe jouée (récap de saison
+          d'une ligue). */}
+      <CupChampionBanner
+        cupId={cup.id}
+        champion={champion}
+        oracles={champion ? cupOracles(predictions.board?.coach) : []}
+      />
 
       {/* Documents officiels (règlement, affiche...). Dépôt réservé au
           créateur de la coupe — et aux admins, reconnus côté serveur. */}
