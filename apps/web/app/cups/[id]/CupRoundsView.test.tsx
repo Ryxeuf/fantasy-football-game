@@ -84,6 +84,7 @@ function renderView(props: {
   poolNamesById?: Record<string, string>;
   poolIdByTeamId?: Record<string, string | null>;
   preferredPoolId?: string | null;
+  predictionLinks?: Record<string, { href: string; label: string; state: "todo" | "done" | "open" | "closed" }>;
 }) {
   const onChanged = vi.fn();
   render(
@@ -99,6 +100,7 @@ function renderView(props: {
         poolNamesById={props.poolNamesById}
         poolIdByTeamId={props.poolIdByTeamId}
         preferredPoolId={props.preferredPoolId}
+        predictionLinks={props.predictionLinks}
         onChanged={onChanged}
       />
     </LanguageProvider>,
@@ -122,6 +124,24 @@ describe("CupRoundsView", () => {
     apiRequest.mockReset();
     apiRequest.mockResolvedValue({});
     push.mockReset();
+  });
+
+  it("chaque ronde porte son bouton 🔮 vers ses pronostics, comme une journée de ligue", () => {
+    renderView({
+      rounds: [round([PLAYED, OPEN, BYE])],
+      predictionLinks: {
+        r1: { href: "/cups/cup-1/predictions#pronos-ronde-1", label: "Pronostiquer (1)", state: "todo" },
+      },
+    });
+    const button = screen.getByTestId("cup-round-predictions-r1");
+    expect(button.getAttribute("href")).toBe("/cups/cup-1/predictions#pronos-ronde-1");
+    expect(button.textContent).toContain("Pronostiquer (1)");
+    expect(button.getAttribute("data-state")).toBe("todo");
+  });
+
+  it("aucun bouton 🔮 sans pronostics", () => {
+    renderView({ rounds: [round([PLAYED, OPEN, BYE])] });
+    expect(screen.queryByTestId("cup-round-predictions-r1")).toBeNull();
   });
 
   it("affiche score, exempt, table et statut de chaque rencontre", () => {
@@ -381,4 +401,53 @@ describe("CupRoundsView", () => {
     expect(screen.getByTestId("cup-rounds-empty").textContent).toContain("Validez la coupe");
     expect((screen.getByTestId("cup-swiss-generate") as HTMLButtonElement).disabled).toBe(true);
   });
+
+  it("rend le nom de chaque équipe cliquable vers son roster de coupe", () => {
+    renderView({ rounds: [round([PLAYED, BYE])] });
+    expect(
+      screen.getByTestId("team-roster-link-cup-pairing-home-a").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/a");
+    expect(
+      screen.getByTestId("team-roster-link-cup-pairing-away-b").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/b");
+    // L'exempt aussi : son roster reste consultable.
+    expect(
+      screen.getByTestId("team-roster-link-cup-pairing-home-e").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/e");
+  });
+
+  it("annonce une feuille soumise, à moitié ou en entier", () => {
+    renderView({
+      rounds: [
+        round([
+          { ...OPEN, matchSheet: { status: "submitted_home" } },
+          { ...OPEN, id: "p4", tableNumber: 4, matchSheet: { status: "both_submitted" } },
+          // Brouillon : rien à annoncer, la rencontre reste « à jouer ».
+          { ...OPEN, id: "p5", tableNumber: 5, matchSheet: { status: "draft" } },
+        ]),
+      ],
+    });
+    expect(screen.getByTestId("cup-pairing-sheet-pending-p2").textContent).toBe(
+      "En attente validation (1/2)",
+    );
+    expect(screen.getByTestId("cup-pairing-sheet-pending-p4").textContent).toBe(
+      "En attente validation",
+    );
+    expect(screen.queryByTestId("cup-pairing-sheet-pending-p5")).toBeNull();
+  });
+
+  it("propose la relance au commissaire sur une ronde ouverte seulement", () => {
+    renderView({
+      rounds: [round([OPEN]), round([PLAYED], { id: "r2", roundNumber: 2 })],
+      isCommissioner: true,
+    });
+    expect(screen.getByTestId("round-followup-r1")).toBeTruthy();
+    expect(screen.queryByTestId("round-followup-r2")).toBeNull();
+  });
+
+  it("ne propose pas la relance à un coach", () => {
+    renderView({ rounds: [round([OPEN])] });
+    expect(screen.queryByTestId("round-followup-r1")).toBeNull();
+  });
 });
+

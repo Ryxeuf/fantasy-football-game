@@ -5,6 +5,7 @@ import {
   buildReminderSubject,
   selectReminderTargets,
   type ReminderPairing,
+  reminderBody,
 } from "./league-round-followup";
 
 const NOW = new Date("2026-09-09T12:00:00.000Z");
@@ -171,4 +172,17 @@ describe("rédaction des relances", () => {
       }),
     ).toBe("[Ligue du Mordorbihan] J3 — Feuille de match attendue");
   });
+
+  it("parle de RONDE pour une coupe, sans toucher au texte de la ligue", () => {
+    expect(reminderBody("not_scheduled", "cup")).toContain("de la ronde en cours");
+    expect(reminderBody("not_scheduled")).toBe(REMINDER_BODIES.not_scheduled);
+    expect(
+      buildReminderSubject("sheet_overdue", {
+        leagueName: "Coupe",
+        roundNumber: 3,
+        competition: "cup",
+      }),
+    ).toBe("[Coupe] R3 — Feuille de match attendue");
+  });
 });
+

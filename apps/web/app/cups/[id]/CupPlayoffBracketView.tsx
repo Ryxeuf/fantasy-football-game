@@ -23,6 +23,7 @@ import {
   type PoolQuotaView,
 } from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
+import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
 import {
   canEditSeeds,
   currentSeeds,
@@ -180,7 +181,7 @@ export default function CupPlayoffBracketView({
               {stageTitle(stage.stage, t)}
             </h3>
             {stage.rounds.map((round) => (
-              <RoundCard key={round.id} round={round} />
+              <RoundCard key={round.id} cupId={cupId} round={round} />
             ))}
           </div>
         ))}
@@ -199,7 +200,13 @@ function stageTitle(stage: BracketStage, t: Translations): string {
       : t.cups.playoffsStageFinal;
 }
 
-function RoundCard({ round }: { readonly round: CupBracketRound }) {
+function RoundCard({
+  cupId,
+  round,
+}: {
+  readonly cupId: string;
+  readonly round: CupBracketRound;
+}) {
   const { t } = useLanguage();
   const tbd = t.cups.playoffsTbd;
   return (
@@ -224,9 +231,16 @@ function RoundCard({ round }: { readonly round: CupBracketRound }) {
           </span>
         ) : null}
       </div>
-      <SideRow team={round.homeTeam} side="home" tbd={tbd} placeholder={false} />
+      <SideRow
+        cupId={cupId}
+        team={round.homeTeam}
+        side="home"
+        tbd={tbd}
+        placeholder={false}
+      />
       <div className="text-center text-xs text-gray-400">vs</div>
       <SideRow
+        cupId={cupId}
         team={round.awayTeam}
         side="away"
         tbd={tbd}
@@ -246,11 +260,13 @@ function RoundCard({ round }: { readonly round: CupBracketRound }) {
 }
 
 function SideRow({
+  cupId,
   team,
   side,
   tbd,
   placeholder,
 }: {
+  readonly cupId: string;
   readonly team: CupBracketTeam | null;
   readonly side: "home" | "away";
   readonly tbd: string;
@@ -278,7 +294,17 @@ function SideRow({
         className="shrink-0"
       />
       <span className="min-w-0 flex-1 truncate">
-        <span className="font-medium text-nuffle-anthracite">{team.name}</span>
+        <span className="font-medium text-nuffle-anthracite">
+          <TeamRosterLink
+            competition="cup"
+            leagueId={cupId}
+            teamId={team.id}
+            canViewRoster
+            testIdSuffix={`playoff-${side}-${team.id}`}
+          >
+            {team.name}
+          </TeamRosterLink>
+        </span>
         {team.coachName ? (
           <span className="ml-1 text-xs text-gray-500">({team.coachName})</span>
         ) : null}

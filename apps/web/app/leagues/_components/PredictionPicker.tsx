@@ -8,6 +8,7 @@ import {
   pickLabel,
   validatePredictionDraft,
   type PairingPredictionsView,
+  type PredictionCompetition,
   type PredictionDraft,
   type PredictionPick,
 } from "./predictions";
@@ -25,6 +26,8 @@ interface PredictionPickerProps {
   onChanged: () => void;
   /** Ferme la saisie sans rien envoyer (modification d'un pronostic posé). */
   onCancel?: () => void;
+  /** Ligue (défaut) ou coupe : la route d'écriture suit. */
+  competition?: PredictionCompetition;
 }
 
 const PICKS: readonly PredictionPick[] = ["home", "draw", "away"];
@@ -38,6 +41,7 @@ export function PredictionPicker({
   pairing,
   onChanged,
   onCancel,
+  competition = "league",
 }: PredictionPickerProps) {
   const [draft, setDraft] = useState<PredictionDraft>(() =>
     draftFromPrediction(pairing.myPrediction),
@@ -71,7 +75,7 @@ export function PredictionPicker({
     setBusy(true);
     setError(null);
     try {
-      await apiRequest(pairingPredictionPath(id), {
+      await apiRequest(pairingPredictionPath(id, competition), {
         method: "PUT",
         body: JSON.stringify(checked.body),
       });
@@ -82,13 +86,13 @@ export function PredictionPicker({
     } finally {
       setBusy(false);
     }
-  }, [draft, id, onChanged]);
+  }, [draft, id, competition, onChanged]);
 
   const handleDelete = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
-      await apiRequest(pairingPredictionPath(id), { method: "DELETE" });
+      await apiRequest(pairingPredictionPath(id, competition), { method: "DELETE" });
       setDraft(draftFromPrediction(null));
       setSaved(false);
       onChanged();
@@ -97,7 +101,7 @@ export function PredictionPicker({
     } finally {
       setBusy(false);
     }
-  }, [id, onChanged]);
+  }, [id, competition, onChanged]);
 
   return (
     <div data-testid={`prediction-picker-${id}`} className="space-y-2">

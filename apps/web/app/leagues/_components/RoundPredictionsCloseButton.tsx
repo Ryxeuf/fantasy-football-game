@@ -1,7 +1,11 @@
 "use client";
 import { useCallback, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
-import type { RoundPredictionsView } from "./predictions";
+import {
+  roundPredictionsClosePath,
+  type PredictionCompetition,
+  type RoundPredictionsView,
+} from "./predictions";
 
 /**
  * Clôture manuelle des pronostics d'une journée entière (commissaire).
@@ -10,9 +14,12 @@ import type { RoundPredictionsView } from "./predictions";
 export function RoundPredictionsCloseButton({
   round,
   onChanged,
+  competition = "league",
 }: {
-  round: RoundPredictionsView;
+  round: Pick<RoundPredictionsView, "id">;
   onChanged: () => void;
+  /** Ligue (défaut) ou coupe : la route et le libellé suivent. */
+  competition?: PredictionCompetition;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +28,7 @@ export function RoundPredictionsCloseButton({
     setBusy(true);
     setError(null);
     try {
-      await apiRequest(`/leagues/rounds/${round.id}/predictions/close`, {
+      await apiRequest(roundPredictionsClosePath(round.id, competition), {
         method: "POST",
       });
       onChanged();
@@ -30,7 +37,7 @@ export function RoundPredictionsCloseButton({
     } finally {
       setBusy(false);
     }
-  }, [round.id, onChanged]);
+  }, [round.id, competition, onChanged]);
 
   return (
     <span className="inline-flex items-center gap-2">
@@ -41,7 +48,7 @@ export function RoundPredictionsCloseButton({
         onClick={handleClose}
         className="text-xs text-gray-600 underline hover:text-gray-800 disabled:opacity-50"
       >
-        Clore les pronostics de la journée
+        {`Clore les pronostics de la ${competition === "cup" ? "ronde" : "journée"}`}
       </button>
       {error ? (
         <span role="alert" className="text-xs text-red-700">

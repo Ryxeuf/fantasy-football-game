@@ -39,6 +39,17 @@ describe("RoundFollowupButton", () => {
     );
   });
 
+  it("relance une RONDE de coupe sur la route de la coupe", async () => {
+    apiRequest.mockResolvedValue({ reminders: [], coachesNotified: 0, pairingsChecked: 1 });
+    render(<RoundFollowupButton roundId="r-9" roundNumber={2} competition="cup" />);
+    const button = screen.getByTestId("round-followup-r-9");
+    expect(button.getAttribute("aria-label")).toBe("Relancer les coachs de la ronde 2");
+    fireEvent.click(button);
+    await waitFor(() =>
+      expect(apiRequest).toHaveBeenCalledWith("/cup/rounds/r-9/remind", { method: "POST" }),
+    );
+  });
+
   it("dit qu'il n'y avait rien à relancer plutôt que de rester muet", async () => {
     apiRequest.mockResolvedValue({
       reminders: [],

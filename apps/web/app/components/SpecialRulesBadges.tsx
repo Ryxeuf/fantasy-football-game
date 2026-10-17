@@ -38,8 +38,14 @@ export default function SpecialRulesBadges({
   const handleLeave = () => setHovered(null);
 
   if (!rules || rules.length === 0) {
+    // Le libellé reste : un « Aucune » isolé ne dit pas de quoi il parle.
     return (
       <span className="text-gray-400 text-sm">
+        {withLabel && (
+          <span className="text-xs text-gray-500 mr-1">
+            {language === "fr" ? "Règles spéciales :" : "Special rules:"}
+          </span>
+        )}
         {language === "fr" ? "Aucune" : "None"}
       </span>
     );

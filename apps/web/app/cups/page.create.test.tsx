@@ -88,3 +88,29 @@ describe("création d'une coupe — mode de saisie de la feuille", () => {
     await waitFor(() => expect(createBody().sheetEntryMode).toBe("full"));
   });
 });
+
+describe("création d'une coupe — pronostics", () => {
+  it("ouvre les pronostics aux membres par défaut et l'envoie", async () => {
+    await openForm();
+    expect(
+      (screen.getByTestId("cup-predictions-scope-members") as HTMLInputElement)
+        .checked,
+    ).toBe(true);
+    expect(screen.getByTestId("cup-form-predictions").textContent).toContain(
+      "Membres de la coupe",
+    );
+
+    fireEvent.submit(screen.getByLabelText(/Nom de la coupe/).closest("form")!);
+
+    await waitFor(() => expect(createBody().predictionsScope).toBe("members"));
+  });
+
+  it("envoie la portée choisie (ouverte à tous)", async () => {
+    await openForm();
+    fireEvent.click(screen.getByTestId("cup-predictions-scope-open"));
+
+    fireEvent.submit(screen.getByLabelText(/Nom de la coupe/).closest("form")!);
+
+    await waitFor(() => expect(createBody().predictionsScope).toBe("open"));
+  });
+});

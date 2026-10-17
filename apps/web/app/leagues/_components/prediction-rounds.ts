@@ -10,7 +10,9 @@
 import {
   roundLabel,
   viewerEntry,
+  type CupPredictionsView,
   type LeaderboardEntryView,
+  type PredictionCompetition,
   type PredictionGroup,
   type RoundPredictionsView,
   type SeasonPredictionLeaderboardView,
@@ -26,6 +28,15 @@ export function seasonPredictionsPagePath(
   seasonId: string,
 ): string {
   return `/leagues/${leagueId}/seasons/${seasonId}/predictions`;
+}
+
+/** Pronostics d'une coupe : UNE page, chaque ronde y a son ancre. */
+export function cupPredictionsPagePath(cupId: string): string {
+  return `/cups/${cupId}/predictions`;
+}
+
+export function cupRoundPredictionsAnchor(roundNumber: number): string {
+  return `pronos-ronde-${roundNumber}`;
 }
 
 export function roundPredictionsPagePath(
@@ -63,7 +74,7 @@ export interface RoundPredictionStatus {
  * rencontre, ou seulement des affiches à venir de bracket).
  */
 export function roundPredictionStatus(
-  round: RoundPredictionsView,
+  round: Pick<RoundPredictionsView, "pairings">,
 ): RoundPredictionStatus | null {
   const real = round.pairings.filter((p) => !p.placeholder);
   if (real.length === 0) return null;
@@ -120,6 +131,29 @@ export function roundPredictionLinks(
   return links;
 }
 
+/**
+ * Lien de chaque ronde d'une coupe vers son ancre sur la page des
+ * pronostics, indexé par id de ronde. Vide si la coupe n'a pas de
+ * pronostics : le calendrier n'affiche alors aucun bouton.
+ */
+export function cupRoundPredictionLinks(
+  view: Pick<CupPredictionsView, "scope" | "rounds"> | null,
+  cupId: string,
+): Readonly<Record<string, RoundPredictionLink>> {
+  if (!view || view.scope === "off") return {};
+  const links: Record<string, RoundPredictionLink> = {};
+  for (const round of view.rounds) {
+    const status = roundPredictionStatus(round);
+    if (!status) continue;
+    links[round.id] = {
+      href: `${cupPredictionsPagePath(cupId)}#${cupRoundPredictionsAnchor(round.roundNumber)}`,
+      label: roundPredictionLabel(status),
+      state: status.state,
+    };
+  }
+  return links;
+}
+
 // ---------------------------------------------------------------------------
 // Navigation entre journées
 // ---------------------------------------------------------------------------
@@ -148,9 +182,11 @@ export function adjacentRounds(
 // Résumé d'une ligne pour la fiche de ligue
 // ---------------------------------------------------------------------------
 
-export interface PredictionsDigest {
+export interface PredictionsDigest<
+  R extends DigestRound = RoundPredictionsView,
+> {
   /** Première journée où le lecteur a encore quelque chose à saisir. */
-  readonly nextRound: RoundPredictionsView | null;
+  readonly nextRound: R | null;
   readonly nextRoundLabel: string | null;
   /** Rencontres à pronostiquer dans cette journée. */
   readonly todo: number;
@@ -159,11 +195,22 @@ export interface PredictionsDigest {
   readonly group: PredictionGroup;
 }
 
-export function predictionsDigest(
-  view: SeasonPredictionsView,
-  board: SeasonPredictionLeaderboardView | null,
-): PredictionsDigest {
-  let nextRound: RoundPredictionsView | null = null;
+/** Ce que le résumé lit d'une journée (ligue) ou d'une ronde (coupe). */
+type DigestRound = Pick<RoundPredictionsView, "roundNumber" | "name" | "pairings">;
+
+/**
+ * Résumé d'une ligne : la première journée à saisir et la place du lecteur.
+ * Partagé par la fiche de ligue et la page d'une coupe (`competition`).
+ */
+export function predictionsDigest<R extends DigestRound>(
+  view: {
+    readonly rounds: readonly R[];
+    readonly viewer: Pick<SeasonPredictionsView["viewer"], "group">;
+  },
+  board: Pick<SeasonPredictionLeaderboardView, "coach" | "stands"> | null,
+  competition: PredictionCompetition = "league",
+): PredictionsDigest<R> {
+  let nextRound: R | null = null;
   let todo = 0;
   for (const round of view.rounds) {
     const status = roundPredictionStatus(round);
@@ -176,7 +223,7 @@ export function predictionsDigest(
   const group = view.viewer.group ?? "coach";
   return {
     nextRound,
-    nextRoundLabel: nextRound ? roundLabel(nextRound) : null,
+    nextRoundLabel: nextRound ? roundLabel(nextRound, competition) : null,
     todo,
     standing: board ? viewerEntry(board[group]) : null,
     group,

@@ -39,3 +39,16 @@ export function matchSheetHref(kind: unknown, pairingId: string): string {
     ? `/cups/pairings/${pairingId}/sheet`
     : `/leagues/pairings/${pairingId}/sheet`;
 }
+
+/**
+ * Fiche de roster (lecture seule) d'une équipe de la compétition. En ligue,
+ * l'équipe telle qu'elle vit ; en coupe, son roster d'INSCRIPTION, celui que
+ * rejoue chaque rencontre.
+ */
+export function teamRosterHref(
+  kind: unknown,
+  competitionId: string,
+  teamId: string,
+): string {
+  return `${competitionHref(kind, competitionId)}/teams/${teamId}`;
+}

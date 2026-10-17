@@ -36,6 +36,7 @@ import {
 import { serverLog } from "../utils/server-log";
 import { parseNumberMap, type CupRulesConfig } from "../services/cup-rules";
 import { parseSheetEntryMode } from "../services/sheet-entry-mode";
+import { parsePredictionScope } from "../services/league-predictions-rules";
 import {
   modeToWrite,
   parseCupAllowedInducements,
@@ -552,62 +553,15 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       return res.status(404).json({ error: "Coupe introuvable" });
     }
 
-    // Corriger l'incohérence : si la coupe est validée mais le statut est "ouverte", la mettre à jour
+    // Corriger l'incohérence : si la coupe est validée mais le statut est "ouverte", la mettre à jour.
+    // Pas de rechargement : il perdait les poules et le logo des inscrits,
+    // et le classement par poule sortait vide sur cette seule réponse.
     if (cup.validated && cup.status === "ouverte") {
-      cup = await prisma.cup.update({
+      await prisma.cup.update({
         where: { id: cup.id },
         data: { status: "en_cours" },
-        include: {
-          creator: {
-            select: {
-              id: true,
-              coachName: true,
-              // Audit round 7 (CRITICAL/PII) : email retire du select public.
-            },
-          },
-          participants: {
-            include: {
-              team: {
-                select: {
-                  id: true,
-                  name: true,
-                  roster: true,
-                  logoUrl: true,
-                  owner: {
-                    select: {
-                      id: true,
-                      coachName: true,
-                      // Audit round 7 (CRITICAL/PII) : email retire du select public.
-                    },
-                  },
-                },
-              },
-            },
-          },
-          localMatches: {
-            where: { status: "completed" },
-            include: {
-              teamA: {
-                select: {
-                  id: true,
-                  name: true,
-                  roster: true,
-                  logoUrl: true,
-                },
-              },
-              teamB: {
-                select: {
-                  id: true,
-                  name: true,
-                  roster: true,
-                  logoUrl: true,
-                },
-              },
-              actions: true,
-            },
-          },
-        },
       });
+      cup = { ...cup, status: "en_cours" };
     }
 
     // Récupérer les équipes de l'utilisateur pour vérifier s'il a une équipe inscrite
@@ -668,6 +622,8 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
         name: p.team.name,
         roster: p.team.roster,
         ruleset: p.team.ruleset,
+        /** Logo uploadé par le coach (null => logo dérivé du roster). */
+        logoUrl: p.team.logoUrl ?? null,
         owner: p.team.owner,
         /**
          * Identifiant de l'INSCRIPTION (et non de l'équipe) : c'est lui que
@@ -692,6 +648,13 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       sheetEntryMode: parseSheetEntryMode(
         (cup as unknown as { sheetEntryMode?: unknown }).sheetEntryMode,
       ),
+      /** Portée EFFECTIVE des pronostics (`null` en base = off). */
+      predictionsScope: parsePredictionScope(
+        (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
+      ),
+      /** Faux sur une coupe antérieure (colonne à `null`) : flag brut. */
+      predictionsScopeConfigured:
+        (cup as unknown as { predictionsScope?: unknown }).predictionsScope != null,
       standings: standingsResult.teamStats,
       /**
        * Classements par poule. Vide quand la coupe n'a pas de poules —
@@ -743,6 +706,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           name: m.teamA.name,
           roster: m.teamA.roster,
           ruleset: m.teamA.ruleset,
+          logoUrl: m.teamA.logoUrl ?? null,
         },
         teamB: m.teamB
           ? {
@@ -750,6 +714,7 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
               name: m.teamB.name,
               roster: m.teamB.roster,
               ruleset: m.teamB.ruleset,
+              logoUrl: m.teamB.logoUrl ?? null,
             }
           : null,
         scoreTeamA: m.scoreTeamA ?? null,
@@ -918,6 +883,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         // `@default` : `db push` poserait le défaut sur les coupes existantes,
         // qui doivent rester en saisie complète (null).
         sheetEntryMode: body.sheetEntryMode ?? "simplified",
+        // Pronostics ouverts aux membres sur une coupe neuve ; une coupe
+        // existante (null) reste « off » sans backfill.
+        predictionsScope: body.predictionsScope ?? "members",
         inducementMode: inducementMode.mode,
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
@@ -970,6 +938,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
       rulesConfig: formatCupRules(cup),
       sheetEntryMode: parseSheetEntryMode(
         (cup as unknown as { sheetEntryMode?: unknown }).sheetEntryMode,
+      ),
+      predictionsScope: parsePredictionScope(
+        (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
       ),
     };
 
@@ -1129,6 +1100,10 @@ router.patch(
       if (body.sheetEntryMode !== undefined) {
         data.sheetEntryMode = body.sheetEntryMode;
       }
+      // Portée des pronostics : règle de lecture, aucun verrou.
+      if (body.predictionsScope !== undefined) {
+        data.predictionsScope = body.predictionsScope;
+      }
       if (body.playoffSize !== undefined) {
         // Le bracket est SEEDÉ à sa génération : en changer la taille après
         // coup laisserait des rondes dont le nombre ne correspond plus.
@@ -1167,6 +1142,7 @@ router.patch(
           tieBreakRules: true,
           playoffSize: true,
           sheetEntryMode: true,
+          predictionsScope: true,
         },
       });
 
@@ -1175,6 +1151,7 @@ router.patch(
           ...updated,
           tieBreakRules: parseCupTieBreakRules(updated.tieBreakRules),
           sheetEntryMode: parseSheetEntryMode(updated.sheetEntryMode),
+          predictionsScope: parsePredictionScope(updated.predictionsScope),
         },
       });
     } catch (e: unknown) {

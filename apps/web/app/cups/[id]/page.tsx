@@ -15,18 +15,27 @@ import CupStandings from "./CupStandings";
 import CupPoolsManagerPanel from "./CupPoolsManagerPanel";
 import CupPlayoffBracketView from "./CupPlayoffBracketView";
 import CupPdfExports from "./CupPdfExports";
+import CupNextMatchesPanel from "./CupNextMatchesPanel";
 import {
   poolIdByTeamId,
   poolNamesById,
   preferredPoolIdFor,
 } from "./round-pools";
 import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
+import { cupSheetsAwaitingValidation } from "./pending-sheets";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
 import { dynamicRoute } from "../../lib/typed-route";
 import { CupInducementRulesSummary } from "../CupInducementRulesSummary";
+import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
+import { teamRosterHref } from "../../lib/competition-links";
 import { packInducementSlugs, parseCupInducementMode } from "../inducement-mode";
+import { useCupPredictions } from "../../leagues/_components/useSeasonPredictions";
+import { cupRoundPredictionLinks } from "../../leagues/_components/prediction-rounds";
+import { CupPredictionsSummary } from "./CupPredictionsSummary";
+import { CupChampionBanner } from "./CupChampionBanner";
+import { cupChampion, cupOracles } from "./cup-champion";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -112,7 +121,7 @@ type Cup = {
   creator: {
     id: string;
     coachName: string;
-    email: string;
+    email?: string;
   };
   creatorId: string;
   /** Description libre saisie à la création (absente = rien à afficher). */
@@ -137,7 +146,7 @@ type Cup = {
     owner: {
       id: string;
       coachName: string;
-      email: string;
+      email?: string;
     };
   }>;
   createdAt: string;
@@ -265,6 +274,10 @@ export default function CupDetailPage() {
   // Un admin gere les documents officiels de n'importe quelle coupe (le
   // serveur l'autorise deja) : sans ce flag, l'UI le lui cacherait.
   const [currentUserIsAdmin, setCurrentUserIsAdmin] = useState(false);
+  // Lecteur connecté : sert « Vos prochains matchs ».
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // Pronostics : résumé d'une ligne + bouton 🔮 de chaque ronde.
+  const predictions = useCupPredictions(cupId);
   const rulesetLabels: Record<string, string> = {
     season_2: "Saison 2",
     season_3: "Saison 3",
@@ -295,6 +308,7 @@ export default function CupDetailPage() {
         window.location.href = "/login";
         return;
       }
+      setCurrentUserId(typeof me.user.id === "string" ? me.user.id : null);
       setCurrentUserIsAdmin(
         Array.isArray(me.user.roles)
           ? me.user.roles.includes("admin")
@@ -401,6 +415,16 @@ export default function CupDetailPage() {
   // l'inscription d'une équipe existante passe forcément par une adaptation
   // (clone) ; sinon on peut inscrire l'équipe telle quelle.
   const rc = cup.rulesConfig;
+  const sheetsToValidate = cupSheetsAwaitingValidation(cup.rounds ?? []);
+  const predictionLinks = cupRoundPredictionLinks(predictions.view, cup.id);
+  const champion = cupChampion({
+    status: cup.status,
+    rounds: cup.rounds ?? [],
+    standings: cup.standings ?? [],
+    coachNameByTeamId: Object.fromEntries(
+      (cup.participants ?? []).map((p) => [p.id, p.owner.coachName]),
+    ),
+  });
   const cupAdjusted = Boolean(
     rc &&
       (Object.keys(rc.tierBudgets).length > 0 ||
@@ -527,6 +551,14 @@ export default function CupDetailPage() {
           <span>{error}</span>
         </div>
       )}
+
+      {/* Palmarès : champion et Oracle d'une coupe jouée (récap de saison
+          d'une ligue). */}
+      <CupChampionBanner
+        cupId={cup.id}
+        champion={champion}
+        oracles={champion ? cupOracles(predictions.board?.coach) : []}
+      />
 
       {/* Documents officiels (règlement, affiche...). Dépôt réservé au
           créateur de la coupe — et aux admins, reconnus côté serveur. */}
@@ -833,7 +865,15 @@ export default function CupDetailPage() {
                         />
                         <div className="min-w-0">
                           <div className="font-medium text-gray-900">
-                            {participant.name}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={participant.id}
+                              canViewRoster
+                              testIdSuffix={`participant-${participant.id}`}
+                            >
+                              {participant.name}
+                            </TeamRosterLink>
                           </div>
                           <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
                             <RosterBadge slug={participant.roster} />
@@ -841,9 +881,16 @@ export default function CupDetailPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {participant.owner.email}
-                      </div>
+                      {/* Même point d'entrée que le bouton de la ligue. */}
+                      <Link
+                        href={dynamicRoute(
+                          teamRosterHref("cup", cup.id, participant.id),
+                        )}
+                        data-testid={`cup-view-roster-${participant.id}`}
+                        className="mt-2 inline-block rounded border border-gray-300 bg-white px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                      >
+                        👥 Voir le roster
+                      </Link>
                       {isMyTeam &&
                         cup.status === "ouverte" &&
                         !cup.validated && (
@@ -893,12 +940,41 @@ export default function CupDetailPage() {
             <div className="pt-6 border-t border-gray-200">
               {/* Exports imprimables : ronde, classement, tops, calendrier,
                   play-offs, statistiques. */}
-              <div className="mb-4 flex justify-end">
+              <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+                {/* Raccourci du commissaire : feuilles soumises par les deux
+                    coachs, en attente de sa validation (même page que la
+                    cible de la notification). */}
+                {(cup.isCreator === true || currentUserIsAdmin) &&
+                  sheetsToValidate > 0 && (
+                    <Link
+                      href={dynamicRoute(`/cups/${cup.id}/pending-validations`)}
+                      data-testid="cup-pending-validations-link"
+                      className="mr-auto rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                    >
+                      📝 {sheetsToValidate} feuille
+                      {sheetsToValidate > 1 ? "s" : ""} à valider
+                    </Link>
+                  )}
                 <CupPdfExports
                   cup={{
                     ...cup,
                     participantPools: poolIdByTeamId(cup.participants ?? []),
                   }}
+                />
+              </div>
+              <div className="mb-4">
+                <CupPredictionsSummary
+                  cupId={cup.id}
+                  view={predictions.view}
+                  board={predictions.board}
+                  error={predictions.error}
+                />
+              </div>
+              <div className="mb-4">
+                <CupNextMatchesPanel
+                  cupId={cup.id}
+                  rounds={cup.rounds ?? []}
+                  currentUserId={currentUserId}
                 />
               </div>
               <CupRoundsView
@@ -918,8 +994,11 @@ export default function CupDetailPage() {
                   cup.participants ?? [],
                   cup.userParticipatingTeamIds ?? [],
                 )}
+                predictionLinks={predictionLinks}
                 onChanged={() => {
                   void loadCup();
+                  // Une ronde générée, annulée ou close change les pronostics.
+                  void predictions.reload();
                 }}
               />
             </div>
@@ -946,12 +1025,13 @@ export default function CupDetailPage() {
                         standings={pool.standings}
                         testId={`cup-standings-${pool.poolId}`}
                         qualifies={pool.qualifiesForPlayoffs}
+                        cupId={cup.id}
                       />
                     </div>
                   ))}
                 </div>
               ) : (
-                <CupStandings standings={cup.standings} />
+                <CupStandings standings={cup.standings} cupId={cup.id} />
               )}
             </div>
           )}
@@ -976,7 +1056,7 @@ export default function CupDetailPage() {
           {/* S27.1j — bracket visuel additif (vue chronologique) */}
           {cup.matches && cup.matches.length > 0 && (
             <div className="pt-6 border-t border-gray-200">
-              <CupBracketView matches={cup.matches} />
+              <CupBracketView matches={cup.matches} cupId={cup.id} />
             </div>
           )}
           {cup.matches && cup.matches.length > 0 && (
@@ -1004,7 +1084,15 @@ export default function CupDetailPage() {
                           className="shrink-0"
                         />
                         <span className="font-medium text-gray-900">
-                          {match.teamA.name}
+                          <TeamRosterLink
+                            competition="cup"
+                            leagueId={cup.id}
+                            teamId={match.teamA.id}
+                            canViewRoster
+                            testIdSuffix={`match-${match.id}-a`}
+                          >
+                            {match.teamA.name}
+                          </TeamRosterLink>
                         </span>
                         <span className="text-xs text-gray-500">vs</span>
                         {match.teamB ? (
@@ -1016,7 +1104,19 @@ export default function CupDetailPage() {
                           />
                         ) : null}
                         <span className="font-medium text-gray-900">
-                          {match.teamB?.name || "??"}
+                          {match.teamB ? (
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={match.teamB.id}
+                              canViewRoster
+                              testIdSuffix={`match-${match.id}-b`}
+                            >
+                              {match.teamB.name}
+                            </TeamRosterLink>
+                          ) : (
+                            "??"
+                          )}
                         </span>
                         {match.status === "completed" &&
                           match.scoreTeamA !== null &&
@@ -1055,9 +1155,18 @@ export default function CupDetailPage() {
           )}
           {cup.actionAwards && (
             <div className="pt-6 border-t border-gray-200 space-y-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Podiums par type d'action
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Podiums par type d'action
+                </h2>
+                <Link
+                  href={dynamicRoute(`/cups/${cup.id}/stats`)}
+                  data-testid="cup-stats-link-awards"
+                  className="text-sm font-medium text-nuffle-bronze hover:underline"
+                >
+                  📊 Tops par équipe →
+                </Link>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Le Pichichi du TD */}
                 {cup.actionAwards.topScorers &&
@@ -1078,7 +1187,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} TD
@@ -1107,7 +1224,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} TD encaissé
@@ -1137,7 +1262,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} élimination
@@ -1167,7 +1300,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} passe{entry.value > 1 ? "s" : ""}
@@ -1196,7 +1337,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} agression{entry.value > 1 ? "s" : ""}
@@ -1225,7 +1374,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} sortie{entry.value > 1 ? "s" : ""}{" "}
@@ -1255,7 +1412,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} victime{entry.value > 1 ? "s" : ""}
@@ -1284,7 +1449,15 @@ export default function CupDetailPage() {
                               size={20}
                               className="shrink-0"
                             />
-                            {entry.teamName}
+                            <TeamRosterLink
+                              competition="cup"
+                              leagueId={cup.id}
+                              teamId={entry.teamId}
+                              canViewRoster
+                              testIdSuffix={`award-${entry.teamId}`}
+                            >
+                              {entry.teamName}
+                            </TeamRosterLink>
                           </span>
                           <span className="font-semibold text-gray-800">
                             {entry.value} TD encaissé
@@ -1307,9 +1480,18 @@ export default function CupDetailPage() {
           (c) => (cup.playerLeaderboards?.[c.key]?.length ?? 0) > 0,
         ) && (
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
-              Classements individuels
-            </h2>
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Classements individuels
+              </h2>
+              <Link
+                href={dynamicRoute(`/cups/${cup.id}/stats`)}
+                data-testid="cup-stats-link"
+                className="text-sm font-medium text-nuffle-bronze hover:underline"
+              >
+                📊 Toutes les statistiques →
+              </Link>
+            </div>
             <p className="text-xs text-gray-500 mb-4">
               Agrégés depuis les actions saisies. Pas de « future star » (PSP)
               ni de « MVP » en coupe.
@@ -1345,7 +1527,16 @@ export default function CupDetailPage() {
                             </span>
                             <span className="text-gray-500">
                               {" "}
-                              · {row.teamName}
+                              ·{" "}
+                              <TeamRosterLink
+                                competition="cup"
+                                leagueId={cup.id}
+                                teamId={row.teamId}
+                                canViewRoster
+                                testIdSuffix={`leader-${cat.key}-${row.playerId}`}
+                              >
+                                {row.teamName}
+                              </TeamRosterLink>
                             </span>
                           </span>
                           <span className="font-semibold text-gray-800 ml-2">

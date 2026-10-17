@@ -40,6 +40,14 @@ describe("notificationIcon", () => {
     expect(notificationIcon("cup.deleted")).toBe("🗑️");
     expect(notificationIcon("something.else")).toBe("🔔");
   });
+
+  it("donne aux notifications de coupe le pictogramme de leur geste", () => {
+    expect(notificationIcon("cup.round_pairing")).toBe("📅");
+    expect(notificationIcon("cup.pairing_scheduled")).toBe("📅");
+    expect(notificationIcon("league.pairing_scheduled")).toBe("📅");
+    expect(notificationIcon("cup.round_followup")).toBe("⏰");
+    expect(notificationIcon("cup.predictions_settled")).toBe("🔮");
+  });
 });
 
 describe("safeInternalUrl", () => {

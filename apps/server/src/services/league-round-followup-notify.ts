@@ -30,9 +30,10 @@ import { sendPushToUser } from "./push-notifications";
 import {
   buildReminderEmailText,
   buildReminderSubject,
-  REMINDER_BODIES,
+  reminderBody,
   REMINDER_SUBJECTS,
   selectReminderTargets,
+  type ReminderCompetition,
   type ReminderReason,
 } from "./league-round-followup";
 
@@ -81,7 +82,7 @@ export interface ReminderRunResult {
   readonly pairingsChecked: number;
 }
 
-interface SideRow {
+export interface SideRow {
   team: {
     ownerId: string;
     name: string;
@@ -173,21 +174,79 @@ export async function sendRoundFollowups(
     : null;
   const inAppUrl = `/leagues/${league.id}#journee-${round.roundNumber}`;
 
+  const { reminders, coachesNotified } = await dispatchRoundFollowups({
+    competition: "league",
+    competitionName: league.name,
+    roundId: round.id,
+    roundNumber: round.roundNumber,
+    inAppUrl,
+    emailUrl: leagueUrl,
+    meta: { leagueId: league.id },
+    targets: targets.map(({ pairing, reason }) => ({
+      pairingId: pairing.id,
+      reason,
+      home: pairing.homeParticipant,
+      away: pairing.awayParticipant,
+    })),
+  });
+
+  serverLog.info(
+    `[league-round-followup] round=${round.id} (J${round.roundNumber}) — ` +
+      `${reminders.length}/${pairings.length} rencontre(s) relancée(s), ` +
+      `${coachesNotified} coach(s) prévenu(s)`,
+  );
+
+  return {
+    roundId: round.id,
+    roundNumber: round.roundNumber,
+    leagueId: league.id,
+    reminders,
+    coachesNotified,
+    pairingsChecked: pairings.length,
+  };
+}
+
+/** Rencontre retenue, ramenée à ce que l'envoi lit (ligue ou coupe). */
+export interface FollowupTarget {
+  readonly pairingId: string;
+  readonly reason: ReminderReason;
+  readonly home: SideRow;
+  readonly away: SideRow;
+}
+
+/**
+ * Envoie les relances retenues aux DEUX coachs de chaque rencontre — partie
+ * commune à la ligue et à la coupe (`cup-round-followup-notify`), qui ne
+ * diffèrent que par leur chargement, leurs liens et leur vocabulaire.
+ */
+export async function dispatchRoundFollowups(input: {
+  readonly competition: ReminderCompetition;
+  readonly competitionName: string;
+  readonly roundId: string;
+  readonly roundNumber: number;
+  readonly inAppUrl: string;
+  readonly emailUrl: string | null;
+  /** Identifiant de la compétition dans le `meta` des notifications. */
+  readonly meta: Readonly<Record<string, string>>;
+  readonly targets: readonly FollowupTarget[];
+}): Promise<{ reminders: SentReminder[]; coachesNotified: number }> {
+  const cup = input.competition === "cup";
+  const shortRound = `${cup ? "R" : "J"}${input.roundNumber}`;
   const reminders: SentReminder[] = [];
   const everyCoach = new Set<string>();
 
-  for (const { pairing, reason } of targets) {
-    const home = pairing.homeParticipant;
-    const away = pairing.awayParticipant;
+  for (const { pairingId, reason, home, away } of input.targets) {
     const matchLabel = `${home.team.name} vs ${away.team.name}`;
     const context = {
-      leagueName: league.name,
-      roundNumber: round.roundNumber,
+      leagueName: input.competitionName,
+      roundNumber: input.roundNumber,
       matchLabel,
-      leagueUrl,
+      leagueUrl: input.emailUrl,
+      competition: input.competition,
     };
     const subject = buildReminderSubject(reason, context);
     const text = buildReminderEmailText(reason, context);
+    const body = reminderBody(reason, input.competition);
 
     // Le même coach peut posséder les deux équipes (ligue de test) : une
     // seule relance dans ce cas.
@@ -201,14 +260,14 @@ export async function sendRoundFollowups(
 
     // 1. Historique interne — jamais bloquant (ne throw pas).
     await createInAppNotifications(userIds, {
-      kind: "league.round_followup",
-      title: `${REMINDER_SUBJECTS[reason]} — J${round.roundNumber}`,
-      body: REMINDER_BODIES[reason],
-      url: inAppUrl,
+      kind: cup ? "cup.round_followup" : "league.round_followup",
+      title: `${REMINDER_SUBJECTS[reason]} — ${shortRound}`,
+      body,
+      url: input.inAppUrl,
       meta: {
-        leagueId: league.id,
-        roundId: round.id,
-        pairingId: pairing.id,
+        ...input.meta,
+        roundId: input.roundId,
+        pairingId,
         reason,
       },
     });
@@ -218,16 +277,19 @@ export async function sendRoundFollowups(
       userIds.map(async (userId) => {
         try {
           await sendPushToUser(userId, {
-            title: `${REMINDER_SUBJECTS[reason]} — ${league.name}`,
-            body: REMINDER_BODIES[reason],
+            title: `${REMINDER_SUBJECTS[reason]} — ${input.competitionName}`,
+            body,
             icon: "/images/favicon-optimized.png",
-            url: inAppUrl,
-            tag: `league-round-reminder-${round.id}-${pairing.id}`,
-            data: { kind: "leagueRoundFollowup", url: inAppUrl },
+            url: input.inAppUrl,
+            tag: `${input.competition}-round-reminder-${input.roundId}-${pairingId}`,
+            data: {
+              kind: cup ? "cupRoundFollowup" : "leagueRoundFollowup",
+              url: input.inAppUrl,
+            },
           });
         } catch (e: unknown) {
           serverLog.error(
-            `[league-round-followup] push failed for user ${userId}`,
+            `[${input.competition}-round-followup] push failed for user ${userId}`,
             e,
           );
         }
@@ -246,7 +308,7 @@ export async function sendRoundFollowups(
           if (result.delivered) emailsDelivered += 1;
         } catch (e: unknown) {
           serverLog.error(
-            `[league-round-followup] email failed for ${side.team.ownerId}`,
+            `[${input.competition}-round-followup] email failed for ${side.team.ownerId}`,
             e,
           );
         }
@@ -254,7 +316,7 @@ export async function sendRoundFollowups(
     );
 
     reminders.push({
-      pairingId: pairing.id,
+      pairingId,
       reason,
       matchLabel,
       coaches: sides.map(coachLabel),
@@ -262,18 +324,5 @@ export async function sendRoundFollowups(
     });
   }
 
-  serverLog.info(
-    `[league-round-followup] round=${round.id} (J${round.roundNumber}) — ` +
-      `${reminders.length}/${pairings.length} rencontre(s) relancée(s), ` +
-      `${everyCoach.size} coach(s) prévenu(s)`,
-  );
-
-  return {
-    roundId: round.id,
-    roundNumber: round.roundNumber,
-    leagueId: league.id,
-    reminders,
-    coachesNotified: everyCoach.size,
-    pairingsChecked: pairings.length,
-  };
+  return { reminders, coachesNotified: everyCoach.size };
 }

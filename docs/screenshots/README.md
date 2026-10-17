@@ -32,3 +32,25 @@ tests, capturée à la génération.
 |---|---|---|
 | A158 | `a158-preuve-tests-playoff.png` | Bracket qui avance jusqu'à la finale, invalidation d'une demi-finale, refus maintenu sur un match régulier. |
 | E45 + A138/A156/A157 | `e45-preuve-tests-psp-reception.png` | Les 8 cas du parcours FDM, sur une base réelle. |
+
+## Parité ligue ↔ coupe (change `cup-league-parity`)
+
+Captures de l'application RÉELLE, avant (`main` à `2327482`) et après, sur le
+même jeu de données. Régénérables : [`tests/screenshots/before-after/`](../../tests/screenshots/before-after).
+
+| Point | Capture | Ce qu'elle montre |
+|---|---|---|
+| Feuille PDF | `cup-parity-pdf-ligue.png` | La page de l'équipe rappelle ses coups de pouce d'avant-match (Star Player, Prières, Coachs Assistants). |
+| Feuille PDF | `cup-parity-pdf-coupe.png` | Même rappel pour les coups de pouce achetés à la création d'une équipe de coupe (Pots-de-vin, Mascotte). |
+| Rosters | `cup-parity-inscrits.png` | Chaque inscrit : nom cliquable et bouton « Voir le roster ». |
+| Rosters | `cup-parity-roster.png` | `/cups/:id/teams/:teamId` : 404 avant ; fiche du roster d'inscription et statistiques de la coupe après. |
+| Feuilles de match | `cup-parity-rondes.png` | La rencontre soumise par les deux coachs annoncée « En attente validation » (au lieu de « À jouer »), raccourci « 1 feuille à valider », résumé des pronostics, boutons Pronos et Relancer de la ronde. |
+| Feuilles de match | `cup-parity-a-valider.png` | Page « Matchs à valider » d'une coupe (404 avant). |
+| Stats | `cup-parity-stats.png` | `/cups/:id/stats` : top N au choix, joueurs et équipes (404 avant). |
+| Pronostics | `cup-parity-pronostics.png` | `/cups/:id/predictions` : classement Coachs / Tribunes, pronostics des autres une fois la rencontre close (404 avant). |
+| Palmarès | `cup-parity-palmares.png` | Une coupe terminée annonce son champion (lien vers son roster) et son Oracle. |
+
+Les liens de roster ajoutés au classement, aux rondes, aux play-offs, au
+bracket, aux matchs, aux podiums et aux tops ne se voient pas sur une capture
+(ils ne se soulignent qu'au survol) : ils sont attestés par les tests de
+chaque composant et `page.roster-links.test.tsx`.

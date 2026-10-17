@@ -12,6 +12,7 @@
  */
 
 import TeamLogo from "../../components/TeamLogo";
+import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
 
 interface CupBracketTeam {
   id: string;
@@ -36,6 +37,8 @@ interface CupBracketMatch {
 
 interface CupBracketViewProps {
   matches?: CupBracketMatch[];
+  /** Coupe de consultation : les noms mènent au roster. Absent => texte. */
+  cupId?: string | null;
 }
 
 function pickWinner(
@@ -50,6 +53,7 @@ function pickWinner(
 
 export default function CupBracketView({
   matches,
+  cupId = null,
 }: CupBracketViewProps): JSX.Element | null {
   if (!matches || matches.length === 0) return null;
 
@@ -100,7 +104,15 @@ export default function CupBracketView({
                     size={20}
                     className="shrink-0"
                   />
-                  {m.teamA.name}
+                  <TeamRosterLink
+                    competition="cup"
+                    leagueId={cupId}
+                    teamId={m.teamA.id}
+                    canViewRoster
+                    testIdSuffix={`bracket-${m.id}-a`}
+                  >
+                    {m.teamA.name}
+                  </TeamRosterLink>
                 </span>
                 <span className="text-sm text-gray-600">
                   {m.status === "completed" &&
@@ -126,7 +138,19 @@ export default function CupBracketView({
                       className="shrink-0"
                     />
                   ) : null}
-                  {m.teamB?.name ?? "—"}
+                  {m.teamB ? (
+                    <TeamRosterLink
+                      competition="cup"
+                      leagueId={cupId}
+                      teamId={m.teamB.id}
+                      canViewRoster
+                      testIdSuffix={`bracket-${m.id}-b`}
+                    >
+                      {m.teamB.name}
+                    </TeamRosterLink>
+                  ) : (
+                    "—"
+                  )}
                 </span>
               </div>
             </li>

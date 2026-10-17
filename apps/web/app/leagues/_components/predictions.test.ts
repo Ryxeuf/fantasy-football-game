@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  predictionScopeOptions,
   describePrediction,
   draftFromPrediction,
   formatClosesAt,
@@ -12,6 +13,12 @@ import {
   validatePredictionDraft,
   viewerEntry,
   type LeaderboardEntryView,
+  pairingPredictionPath,
+  pairingPredictionsClosePath,
+  roundPredictionsClosePath,
+  eligibilityMessage,
+  cupPredictionsPath,
+  cupPredictionLeaderboardPath,
 } from "./predictions";
 
 describe("parsePredictionScope", () => {
@@ -167,5 +174,35 @@ describe("viewerEntry", () => {
   it("retrouve la ligne du lecteur, ou rien", () => {
     expect(viewerEntry([entry("a", false), entry("b", true)])?.userId).toBe("b");
     expect(viewerEntry([entry("a", false)])).toBeNull();
+  });
+});
+
+describe("pronostics par compétition", () => {
+  it("route l'écriture et les clôtures sur la coupe", () => {
+    expect(pairingPredictionPath("p1")).toBe("/leagues/pairings/p1/prediction");
+    expect(pairingPredictionPath("p1", "cup")).toBe("/cup/pairings/p1/prediction");
+    expect(pairingPredictionsClosePath("p1", "cup")).toBe("/cup/pairings/p1/predictions/close");
+    expect(roundPredictionsClosePath("r1")).toBe("/leagues/rounds/r1/predictions/close");
+    expect(roundPredictionsClosePath("r1", "cup")).toBe("/cup/rounds/r1/predictions/close");
+    expect(cupPredictionsPath("c1")).toBe("/cup/c1/predictions");
+    expect(cupPredictionLeaderboardPath("c1")).toBe("/cup/c1/predictions/leaderboard");
+  });
+
+  it("parle de ronde et de coupe pour une coupe", () => {
+    expect(roundLabel({ roundNumber: 2, name: null }, "cup")).toBe("Ronde 2");
+    expect(roundLabel({ roundNumber: 2, name: null })).toBe("Journée 2");
+    expect(eligibilityMessage("not-member", "cup")).toBe("Réservé aux membres de la coupe.");
+    expect(eligibilityMessage("not-member")).toBe("Réservé aux membres de la ligue.");
+  });
+});
+
+
+describe("predictionScopeOptions", () => {
+  it("parle de la coupe sans changer les valeurs", () => {
+    const cup = predictionScopeOptions("cup");
+    expect(cup.map((o) => o.value)).toEqual(["off", "members", "open"]);
+    expect(cup[1].label).toBe("Membres de la coupe");
+    expect(cup[2].description).toContain("qui voit la coupe");
+    expect(predictionScopeOptions()[1].label).toBe("Membres de la ligue");
   });
 });

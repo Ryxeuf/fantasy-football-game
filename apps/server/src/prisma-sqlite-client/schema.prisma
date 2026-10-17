@@ -819,7 +819,9 @@ model Cup {
 
   // Mode de saisie de la feuille (miroir SQLite de schema.prisma) :
   // "full" | "simplified", null = complète. Pas de @default (cf. PG).
-  sheetEntryMode String?
+  sheetEntryMode   String?
+  /// Portée des pronostics (miroir SQLite de schema.prisma).
+  predictionsScope String?
 
   // Playoffs de coupe (miroir SQLite de schema.prisma).
   playoffSize       Int      @default(0)
@@ -901,26 +903,28 @@ model CupPool {
 }
 
 model CupRound {
-  id          String    @id @default(cuid())
-  cup         Cup       @relation(fields: [cupId], references: [id], onDelete: Cascade)
-  cupId       String
-  roundNumber Int
-  name        String?
+  id                    String    @id @default(cuid())
+  cup                   Cup       @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId                 String
+  roundNumber           Int
+  name                  String?
   /// Système d'appariement ayant produit la ronde :
   ///   "swiss"  — appariement suisse sur le classement courant ;
   ///   "random" — tirage au sort (typiquement la 1re ronde) ;
   ///   "manual" — rencontres posées à la main par le commissaire.
   /// Valeur libre côté base : une ronde antérieure vaut "swiss" (défaut),
   /// aucun backfill n'est nécessaire.
-  system      String    @default("swiss")
+  system                String    @default("swiss")
   /// Bracket de play-off (miroir SQLite de schema.prisma).
-  kind        String    @default("regular")
-  bracketSlot String?
+  kind                  String    @default("regular")
+  bracketSlot           String?
   /// "pending" | "in_progress" | "completed"
-  status      String    @default("pending")
-  scheduledAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  status                String    @default("pending")
+  scheduledAt           DateTime?
+  /// Bilan des pronostics envoyé (miroir SQLite de schema.prisma).
+  predictionsNotifiedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   pairings CupPairing[]
 
@@ -934,24 +938,27 @@ model CupRound {
 /// (cf. `cupScoring`, `byes`). Le match local qui matérialise la rencontre
 /// est rattaché par `LocalMatch.cupPairingId` à sa création.
 model CupPairing {
-  id          String            @id @default(cuid())
-  round       CupRound          @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  roundId     String
+  id                  String                  @id @default(cuid())
+  round               CupRound                @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId             String
   /// Ordre d'affichage (table 1 = tête de classement).
-  tableNumber Int               @default(1)
-  homeTeam    Team              @relation("CupPairingHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
-  homeTeamId  String
-  awayTeam    Team?             @relation("CupPairingAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
-  awayTeamId  String?
+  tableNumber         Int                     @default(1)
+  homeTeam            Team                    @relation("CupPairingHome", fields: [homeTeamId], references: [id], onDelete: Cascade)
+  homeTeamId          String
+  awayTeam            Team?                   @relation("CupPairingAway", fields: [awayTeamId], references: [id], onDelete: Cascade)
+  awayTeamId          String?
   /// "scheduled" | "in_progress" | "played" | "bye" | "cancelled"
-  status      String            @default("scheduled")
+  status              String                  @default("scheduled")
   /// Date prévisionnelle convenue par les coachs (ou le commissaire).
-  scheduledAt DateTime?
-  localMatch  LocalMatch?
+  scheduledAt         DateTime?
+  localMatch          LocalMatch?
   /// Feuille de match de coupe (miroir SQLite de schema.prisma).
-  matchSheet  LeagueMatchSheet?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  matchSheet          LeagueMatchSheet?
+  /// Pronostics de coupe (miroir SQLite de schema.prisma).
+  predictionsClosedAt DateTime?
+  predictions         CompetitionPrediction[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
 
   @@index([roundId])
   @@index([homeTeamId])
@@ -1424,10 +1431,12 @@ model LeaguePairing {
 
 /// Pronostic de rencontre de compétition (mirror PG, cf. schema.prisma).
 model CompetitionPrediction {
-  id              String        @id @default(cuid())
-  pairing         LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId       String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  pairing         LeaguePairing? @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId       String?
+  cupPairing      CupPairing?    @relation(fields: [cupPairingId], references: [id], onDelete: Cascade)
+  cupPairingId    String?
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   pick            String
   homeScore       Int?
@@ -1436,10 +1445,11 @@ model CompetitionPrediction {
   resultHomeScore Int?
   resultAwayScore Int?
   settledAt       DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@unique([pairingId, userId])
+  @@unique([cupPairingId, userId])
   @@index([userId])
 }
 

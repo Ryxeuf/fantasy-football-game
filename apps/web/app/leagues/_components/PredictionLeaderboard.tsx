@@ -15,7 +15,8 @@ import {
  */
 
 interface PredictionLeaderboardProps {
-  board: SeasonPredictionLeaderboardView;
+  /** Classement d'une saison de ligue ou d'une coupe : seuls les onglets comptent. */
+  board: Pick<SeasonPredictionLeaderboardView, "coach" | "stands">;
   /** Onglet ouvert au départ — celui du lecteur quand il en a un. */
   initialTab?: PredictionGroup;
   /** Lignes montrées ; celle du lecteur s'ajoute si elle est plus bas. */

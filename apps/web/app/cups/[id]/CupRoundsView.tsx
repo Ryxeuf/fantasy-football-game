@@ -8,7 +8,10 @@ import MatchCard, {
   type MatchCardTeam,
 } from "../../components/competition/MatchCard";
 import ScheduleEditor from "../../components/competition/ScheduleEditor";
-import { formatPlannedDate } from "../../leagues/[id]/pairing-status";
+import {
+  formatPlannedDate,
+  matchSheetPendingLabel,
+} from "../../leagues/[id]/pairing-status";
 import { matchSheetHref } from "../../lib/competition-links";
 import {
   availableTeams,
@@ -24,6 +27,10 @@ import {
 } from "./round-system-copy";
 import { dynamicRoute } from "../../lib/typed-route";
 import { groupCupRoundByPool } from "./round-pools";
+import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
+import { RoundFollowupButton } from "../../leagues/[id]/RoundFollowupButton";
+import { RoundPredictionsButton } from "../../leagues/_components/RoundPredictionsButton";
+import type { RoundPredictionLink } from "../../leagues/_components/prediction-rounds";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -56,6 +63,8 @@ export interface CupPairingView {
     scoreTeamA: number | null;
     scoreTeamB: number | null;
   } | null;
+  /** Statut de la feuille de match (absent : API antérieure). */
+  matchSheet?: { status: string } | null;
 }
 
 export interface CupRoundView {
@@ -100,6 +109,11 @@ interface CupRoundsViewProps {
   poolIdByTeamId?: Readonly<Record<string, string | null>>;
   /** Poule du coach connecté : remontée en tête de chaque ronde. */
   preferredPoolId?: string | null;
+  /**
+   * Bouton 🔮 de chaque ronde vers ses pronostics, indexé par id de ronde.
+   * Absent / vide = coupe sans pronostics : aucun bouton.
+   */
+  predictionLinks?: Readonly<Record<string, RoundPredictionLink>>;
   /** Rappelé après toute mutation (rechargement de la coupe). */
   onChanged: () => void;
 }
@@ -143,6 +157,7 @@ export default function CupRoundsView({
   poolNamesById = {},
   poolIdByTeamId = {},
   preferredPoolId = null,
+  predictionLinks = {},
   onChanged,
 }: CupRoundsViewProps) {
   const { t, language } = useLanguage();
@@ -390,6 +405,7 @@ export default function CupRoundsView({
             return (
               <li
                 key={round.id}
+                id={`ronde-${round.roundNumber}`}
                 data-testid={`cup-round-${round.id}`}
                 className={`overflow-hidden rounded-2xl border border-gray-200 border-l-4 bg-white shadow-sm ${
                   roundAccent[status] ?? "border-l-gray-300"
@@ -432,6 +448,22 @@ export default function CupRoundsView({
                         </div>
                       ) : null}
                     </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {predictionLinks[round.id] ? (
+                      <RoundPredictionsButton
+                        testId={`cup-round-predictions-${round.id}`}
+                        link={predictionLinks[round.id]}
+                      />
+                    ) : null}
+                    {/* Relance des coachs en retard : commissaire, ronde ouverte. */}
+                    {isCommissioner && isRoundOpen(round) ? (
+                      <RoundFollowupButton
+                        competition="cup"
+                        roundId={round.id}
+                        roundNumber={round.roundNumber}
+                      />
+                    ) : null}
                   </div>
                 </header>
                 <div className="space-y-3 p-3 sm:p-4">
@@ -485,7 +517,11 @@ interface CupPairingCardProps {
   onChanged: () => void;
 }
 
-function toCardTeam(team: CupPairingTeamView, side: "home" | "away"): MatchCardTeam {
+function toCardTeam(
+  cupId: string,
+  team: CupPairingTeamView,
+  side: "home" | "away",
+): MatchCardTeam {
   return {
     name: team.name,
     roster: team.roster,
@@ -493,6 +529,18 @@ function toCardTeam(team: CupPairingTeamView, side: "home" | "away"): MatchCardT
     coachName: team.coachName,
     testId: `cup-pairing-team-${side}`,
     coachTestId: `cup-pairing-coach-${side}`,
+    // Le nom mène au roster d'inscription de l'équipe, comme en ligue.
+    renderName: (name) => (
+      <TeamRosterLink
+        competition="cup"
+        leagueId={cupId}
+        teamId={team.id}
+        canViewRoster
+        testIdSuffix={`cup-pairing-${side}-${team.id}`}
+      >
+        {name}
+      </TeamRosterLink>
+    ),
   };
 }
 
@@ -515,8 +563,20 @@ function CupPairingCard({
   const planned =
     pairing.status === "scheduled" ? formatPlannedDate(pairing.scheduledAt, language) : null;
 
+  // Feuille saisie, pas encore validée : le statut de la rencontre reste
+  // « À jouer » jusqu'à la validation — le libellé de la ligue le dit.
+  const pendingLabel = open ? matchSheetPendingLabel(pairing.matchSheet?.status) : null;
+
   const status: MatchCardStatus = isBye
     ? { label: t.cups.swissStatusBye, tone: "neutral", testId: `cup-pairing-status-${pairing.id}` }
+    : pendingLabel
+      ? {
+          label: pendingLabel,
+          tone: "pending",
+          testId: `cup-pairing-sheet-pending-${pairing.id}`,
+          title:
+            "Feuille de match saisie par les coachs, en attente de validation par le commissaire",
+        }
     : pairing.status === "played"
       ? { label: t.cups.swissStatusPlayed, tone: "played", testId: `cup-pairing-status-${pairing.id}` }
       : pairing.status === "cancelled"
@@ -542,8 +602,8 @@ function CupPairingCard({
   return (
     <MatchCard
       testId={`cup-pairing-${pairing.id}`}
-      home={toCardTeam(pairing.homeTeam, "home")}
-      away={pairing.awayTeam ? toCardTeam(pairing.awayTeam, "away") : null}
+      home={toCardTeam(cupId, pairing.homeTeam, "home")}
+      away={pairing.awayTeam ? toCardTeam(cupId, pairing.awayTeam, "away") : null}
       byeLabel={t.cups.swissByeLabel}
       scoreLabel={scoreLabel}
       scoreTestId={scoreLabel ? `cup-pairing-score-${pairing.id}` : undefined}

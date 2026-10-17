@@ -286,9 +286,9 @@ function pairingForActor(overrides: Record<string, unknown> = {}) {
     localMatch: null,
     homeTeamId: "a",
     awayTeamId: "b",
-    homeTeam: { ownerId: "owner-a" },
-    awayTeam: { ownerId: "owner-b" },
-    round: { id: "r1", cupId: "cup-1", cup: { creatorId: "commish" } },
+    homeTeam: { ownerId: "owner-a", name: "Orcs", owner: { coachName: "Grim" } },
+    awayTeam: { ownerId: "owner-b", name: "Rats", owner: { coachName: "Skritt" } },
+    round: { id: "r1", cupId: "cup-1", roundNumber: 2, cup: { creatorId: "commish" } },
     ...overrides,
   };
 }
@@ -304,6 +304,39 @@ describe("scheduleCupPairing / cancelCupPairing", () => {
     await expect(
       scheduleCupPairing({ pairingId: "p1", actor: STRANGER, scheduledAt: date }),
     ).rejects.toMatchObject({ code: "forbidden" });
+  });
+
+  it("notifie l'AUTRE coach de la date convenue, vers la coupe", async () => {
+    m.pairingFindUnique.mockResolvedValue(pairingForActor());
+    const date = new Date("2026-09-20T18:00:00Z");
+    const out = await scheduleCupPairing({
+      pairingId: "p1",
+      actor: { userId: "owner-b", isAdmin: false },
+      scheduledAt: date,
+    });
+    expect(out.notified).toBe(1);
+    expect(m.notify).toHaveBeenCalledTimes(1);
+    const payload = m.notify.mock.calls[0][0] as {
+      userId: string;
+      kind: string;
+      url: string;
+      body: string;
+    };
+    expect(payload.userId).toBe("owner-a");
+    expect(payload.kind).toBe("cup.pairing_scheduled");
+    expect(payload.url).toBe("/cups/cup-1");
+    expect(payload.body).toContain("Skritt propose de jouer Orcs vs Rats (R2) le");
+
+    // Le commissaire pose la date : les DEUX coachs sont prévenus.
+    m.notify.mockClear();
+    await scheduleCupPairing({ pairingId: "p1", actor: COMMISH, scheduledAt: null });
+    expect(m.notify.mock.calls.map((c) => (c[0] as { userId: string }).userId).sort()).toEqual([
+      "owner-a",
+      "owner-b",
+    ]);
+    expect((m.notify.mock.calls[0][0] as { body: string }).body).toBe(
+      "Le commissaire a retiré la date prévue pour Orcs vs Rats (R2)",
+    );
   });
 
   it("refuse la date sur un exempt ou une rencontre terminée", async () => {

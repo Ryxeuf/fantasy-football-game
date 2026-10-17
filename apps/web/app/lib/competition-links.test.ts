@@ -4,6 +4,7 @@ import {
   competitionHref,
   isCupCompetition,
   matchSheetHref,
+  teamRosterHref,
 } from "./competition-links";
 
 describe("competition-links", () => {
@@ -37,5 +38,11 @@ describe("competition-links", () => {
     expect(matchSheetHref("cup", "p1")).toBe("/cups/pairings/p1/sheet");
     expect(matchSheetHref("league", "p1")).toBe("/leagues/pairings/p1/sheet");
     expect(matchSheetHref(undefined, "p1")).toBe("/leagues/pairings/p1/sheet");
+  });
+
+  it("pointe la fiche de roster d'une équipe dans sa compétition", () => {
+    expect(teamRosterHref("cup", "c1", "t1")).toBe("/cups/c1/teams/t1");
+    expect(teamRosterHref("league", "L1", "t1")).toBe("/leagues/L1/teams/t1");
+    expect(teamRosterHref(undefined, "L1", "t1")).toBe("/leagues/L1/teams/t1");
   });
 });

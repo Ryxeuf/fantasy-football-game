@@ -237,6 +237,20 @@ describe("CupPlayoffBracketView", () => {
     expect(sides[0].textContent).toContain("À déterminer");
   });
 
+  it("mène du nom d'une équipe du bracket à son roster de coupe", async () => {
+    apiRequest.mockResolvedValue(
+      response({ playoffSize: 2, rounds: [bracketRound("final", 8)] }),
+    );
+    renderView();
+    await screen.findByTestId("cup-playoffs");
+    expect(
+      screen.getByTestId("team-roster-link-playoff-home-a").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/a");
+    expect(
+      screen.getByTestId("team-roster-link-playoff-away-b").getAttribute("href"),
+    ).toBe("/cups/cup-1/teams/b");
+  });
+
   it("affiche le score d'une rencontre jouée et le lien vers sa FEUILLE", async () => {
     apiRequest.mockResolvedValue(
       response({

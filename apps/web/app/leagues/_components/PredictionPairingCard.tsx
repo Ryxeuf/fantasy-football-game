@@ -3,16 +3,18 @@ import { useCallback, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
 import { PredictionPicker } from "./PredictionPicker";
 import {
-  ELIGIBILITY_MESSAGES,
   GRADE_LABELS,
   GROUP_LABELS,
   PREDICTION_PICKS,
   describePrediction,
+  eligibilityMessage,
   formatClosesAt,
+  pairingPredictionsClosePath,
   pickLabel,
   pickShare,
   pointsLabel,
   type PairingPredictionsView,
+  type PredictionCompetition,
   type PredictionGrade,
 } from "./predictions";
 
@@ -30,6 +32,8 @@ interface PredictionPairingCardProps {
   onChanged: () => void;
   /** Liste nominative des pronostics après clôture (page complète). */
   showOthers?: boolean;
+  /** Ligue (défaut) ou coupe : routes et vocabulaire suivent. */
+  competition?: PredictionCompetition;
 }
 
 const GRADE_STYLES: Readonly<Record<PredictionGrade, string>> = {
@@ -79,6 +83,7 @@ export function PredictionPairingCard({
   pairing,
   onChanged,
   showOthers = false,
+  competition = "league",
 }: PredictionPairingCardProps) {
   const [editing, setEditing] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -89,7 +94,7 @@ export function PredictionPairingCard({
     setClosing(true);
     setCloseError(null);
     try {
-      await apiRequest(`/leagues/pairings/${pairing.id}/predictions/close`, {
+      await apiRequest(pairingPredictionsClosePath(pairing.id, competition), {
         method: "POST",
       });
       onChanged();
@@ -98,7 +103,7 @@ export function PredictionPairingCard({
     } finally {
       setClosing(false);
     }
-  }, [pairing.id, onChanged]);
+  }, [pairing.id, competition, onChanged]);
 
   const handleSaved = useCallback(() => {
     setEditing(false);
@@ -115,7 +120,7 @@ export function PredictionPairingCard({
     pairing.eligibility === "closed" ||
     pairing.eligibility === "predictions-off"
       ? null
-      : ELIGIBILITY_MESSAGES[pairing.eligibility];
+      : eligibilityMessage(pairing.eligibility, competition);
 
   return (
     <li
@@ -162,6 +167,7 @@ export function PredictionPairingCard({
       {showPicker ? (
         <PredictionPicker
           pairing={pairing}
+          competition={competition}
           onChanged={handleSaved}
           onCancel={pairing.myPrediction ? () => setEditing(false) : undefined}
         />

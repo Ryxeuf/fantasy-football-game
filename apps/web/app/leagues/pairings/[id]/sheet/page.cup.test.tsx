@@ -136,4 +136,35 @@ describe("feuille de match — compétition d'origine", () => {
     );
     expect(screen.getByTestId("tab-after")).toBeTruthy();
   });
+
+  it("mène des noms d'équipe au roster de la compétition", async () => {
+    apiRequest.mockResolvedValue(
+      sheetResponse({ competitionKind: "cup", leagueId: "cup-9" }),
+    );
+    render(<MatchSheetPage />);
+    const home = await screen.findByTestId("team-roster-link-sheet-home");
+    expect(home.getAttribute("href")).toBe("/cups/cup-9/teams/t1");
+    expect(
+      screen.getByTestId("team-roster-link-sheet-away").getAttribute("href"),
+    ).toBe("/cups/cup-9/teams/t2");
+  });
+
+  it("en ligue, ne lie le roster qu'aux membres du match", async () => {
+    apiRequest.mockResolvedValue(
+      sheetResponse({ competitionKind: "league", leagueId: "lg-1" }),
+    );
+    const { unmount } = render(<MatchSheetPage />);
+    expect(
+      (await screen.findByTestId("team-roster-link-sheet-home")).getAttribute("href"),
+    ).toBe("/leagues/lg-1/teams/t1");
+    unmount();
+
+    apiRequest.mockResolvedValue(
+      sheetResponse({ competitionKind: "league", leagueId: "lg-1", viewerRole: "none" }),
+    );
+    render(<MatchSheetPage />);
+    await screen.findByTestId("back-to-league");
+    expect(screen.queryByTestId("team-roster-link-sheet-home")).toBeNull();
+  });
 });
+
