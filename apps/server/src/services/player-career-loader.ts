@@ -14,6 +14,7 @@
  */
 
 import { prisma } from "../prisma";
+import { OFFLINE_MATCH_MODE } from "./match-modes";
 import type { CupSheetEvent } from "./cup-sheet-actions";
 import {
   applyCareerAdjustment,
@@ -44,8 +45,9 @@ interface SheetRow {
   readonly events: readonly CupSheetEvent[];
 }
 
-interface OfflineMatchRow {
+interface ScoredMatchRow {
   readonly leaguePairingId: string | null;
+  readonly mode: string | null;
   readonly offlineResultInput: unknown;
 }
 
@@ -113,26 +115,29 @@ export async function loadCompetitionCareerAdjustments(
 
   if (sheets.length === 0) return new Map();
 
-  // Ligue : le snapshot du Match offline le plus récent de chaque rencontre
-  // comptée (une revalidation en crée un nouveau, l'ancien est décompté).
+  // Ligue : le Match qui a noté chaque rencontre (au plus un :
+  // `leaguePairingId` est unique, une invalidation supprime le Match offline).
+  // Offline : son snapshot dit qui la validation a crédité. En ligne : la fin
+  // de partie a crédité chaque joueur aligné, rien à ajouter.
   const leaguePairingIds = sheets
     .filter((s) => s.pairingId && !s.cupPairingId)
     .map((s) => s.pairingId as string);
-  const persistedByPairing = new Map<string, string[] | null>();
+  const persistedByPairing = new Map<string, string[] | "all" | null>();
   if (leaguePairingIds.length > 0) {
     const matches = (await db.match.findMany({
       where: {
         leaguePairingId: { in: leaguePairingIds },
         leagueScoredAt: { not: null },
       },
-      select: { leaguePairingId: true, offlineResultInput: true },
-      orderBy: { createdAt: "desc" },
-    })) as OfflineMatchRow[];
+      select: { leaguePairingId: true, mode: true, offlineResultInput: true },
+    })) as ScoredMatchRow[];
     for (const m of matches) {
-      if (!m.leaguePairingId || persistedByPairing.has(m.leaguePairingId)) continue;
+      if (!m.leaguePairingId) continue;
       persistedByPairing.set(
         m.leaguePairingId,
-        persistedPlayerIdsFromOfflineSnapshot(m.offlineResultInput),
+        m.mode === OFFLINE_MATCH_MODE
+          ? persistedPlayerIdsFromOfflineSnapshot(m.offlineResultInput)
+          : "all",
       );
     }
   }

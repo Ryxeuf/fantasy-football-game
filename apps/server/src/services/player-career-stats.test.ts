@@ -211,6 +211,14 @@ describe("computeCompetitionCareerAdjustments — ligue", () => {
     expect(adjustments.get("h2")?.cup).toEqual(EMPTY_CAREER_COUNTERS);
   });
 
+  it("rencontre notée par un match EN LIGNE : chaque aligné a déjà son match", () => {
+    const adjustments = computeCompetitionCareerAdjustments({
+      players,
+      sheets: [leagueSheet({ persistedPlayerIds: "all" })],
+    });
+    expect(adjustments.size).toBe(0);
+  });
+
   it("sans snapshot de validation, rejoue la règle : ligne de stats ou JDM", () => {
     const adjustments = computeCompetitionCareerAdjustments({
       players,

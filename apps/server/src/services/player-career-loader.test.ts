@@ -88,14 +88,10 @@ describe("loadCompetitionCareerAdjustments", () => {
       players,
       sheets: [cupSheet, leagueSheet],
       matches: [
-        // Le plus récent fait foi (revalidation).
         {
           leaguePairingId: "lp-1",
+          mode: "offline",
           offlineResultInput: { input: { playerStats: [{ teamPlayerId: "h1" }] } },
-        },
-        {
-          leaguePairingId: "lp-1",
-          offlineResultInput: { input: { playerStats: [] } },
         },
       ],
     });
@@ -116,6 +112,18 @@ describe("loadCompetitionCareerAdjustments", () => {
     });
     expect(adjustments.get("h2")?.leagueMatchesNotPersisted).toBe(1);
     expect(adjustments.get("h2")?.cup.matchesPlayed).toBe(1);
+  });
+});
+
+describe("loadCompetitionCareerAdjustments — rencontre notée en ligne", () => {
+  it("n'ajoute aucun match : la fin de partie en ligne a crédité chaque aligné", async () => {
+    const db = fakeDb({
+      players,
+      sheets: [leagueSheet],
+      matches: [{ leaguePairingId: "lp-1", mode: "realtime", offlineResultInput: null }],
+    });
+    const adjustments = await loadCompetitionCareerAdjustments([HOME], db);
+    expect(adjustments.size).toBe(0);
   });
 });
 

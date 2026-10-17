@@ -92,8 +92,10 @@ export interface CareerSheet {
    * Ligue : joueurs déjà crédités d'un match par la validation — les lignes
    * du snapshot `Match.offlineResultInput`. `null` = snapshot absent (feuille
    * antérieure) : on rejoue alors la règle de la validation sur le journal.
+   * `"all"` = rencontre notée par un match EN LIGNE, qui crédite déjà un
+   * match à chaque joueur aligné (`persistMatchSPP`) : rien à ajouter.
    */
-  readonly persistedPlayerIds?: readonly string[] | null;
+  readonly persistedPlayerIds?: readonly string[] | "all" | null;
 }
 
 /** Ce que les feuilles ajoutent aux compteurs persistés d'un joueur. */
@@ -284,6 +286,7 @@ export function computeCompetitionCareerAdjustments(input: {
 
   for (const sheet of input.sheets) {
     if (sheet.forfeit) continue;
+    if (sheet.kind === "league" && sheet.persistedPlayerIds === "all") continue;
     const sides = [
       { teamId: sheet.homeTeamId, snapshot: sheet.rosterSnapshotHome },
       { teamId: sheet.awayTeamId, snapshot: sheet.rosterSnapshotAway },
@@ -295,7 +298,7 @@ export function computeCompetitionCareerAdjustments(input: {
     const motm = new Set(stringArray(sheet.motmPlayerIds));
     const persisted =
       sheet.kind === "league"
-        ? sheet.persistedPlayerIds
+        ? Array.isArray(sheet.persistedPlayerIds)
           ? new Set(sheet.persistedPlayerIds)
           : leaguePersistedFallback(sheet)
         : null;
