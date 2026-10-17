@@ -128,4 +128,55 @@ describe("page coupe — noms d'équipe vers leur roster", () => {
       "/cups/C1/teams/a",
     );
   });
+
+  it("offre au commissaire le raccourci des feuilles à valider", async () => {
+    const withPending = {
+      ...CUP,
+      isCreator: true,
+      rounds: [
+        {
+          id: "r1",
+          roundNumber: 1,
+          name: null,
+          system: "random",
+          kind: "regular",
+          bracketSlot: null,
+          status: "in_progress",
+          scheduledAt: null,
+          createdAt: "2026-10-01T10:00:00.000Z",
+          pairings: [
+            {
+              id: "cp1",
+              tableNumber: 1,
+              status: "scheduled",
+              scheduledAt: null,
+              homeTeam: { ...team("a", "Orcs"), logoUrl: null, ownerId: "o-a", coachName: "A" },
+              awayTeam: { ...team("b", "Rats"), logoUrl: null, ownerId: "o-b", coachName: "B" },
+              localMatch: null,
+              matchSheet: { status: "both_submitted" },
+            },
+          ],
+        },
+      ],
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => ({
+        ok: true,
+        json: async () =>
+          url.endsWith("/auth/me")
+            ? { user: { id: "o-a", roles: [] } }
+            : { cup: withPending },
+      })),
+    );
+    render(
+      <LanguageProvider>
+        <CupDetailPage />
+      </LanguageProvider>,
+    );
+    const link = await screen.findByTestId("cup-pending-validations-link");
+    expect(link.getAttribute("href")).toBe("/cups/C1/pending-validations");
+    expect(link.textContent).toContain("1 feuille à valider");
+  });
 });
+

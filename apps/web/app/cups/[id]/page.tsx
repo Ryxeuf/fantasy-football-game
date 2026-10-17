@@ -21,6 +21,7 @@ import {
   preferredPoolIdFor,
 } from "./round-pools";
 import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
+import { cupSheetsAwaitingValidation } from "./pending-sheets";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
@@ -403,6 +404,7 @@ export default function CupDetailPage() {
   // l'inscription d'une équipe existante passe forcément par une adaptation
   // (clone) ; sinon on peut inscrire l'équipe telle quelle.
   const rc = cup.rulesConfig;
+  const sheetsToValidate = cupSheetsAwaitingValidation(cup.rounds ?? []);
   const cupAdjusted = Boolean(
     rc &&
       (Object.keys(rc.tierBudgets).length > 0 ||
@@ -910,7 +912,21 @@ export default function CupDetailPage() {
             <div className="pt-6 border-t border-gray-200">
               {/* Exports imprimables : ronde, classement, tops, calendrier,
                   play-offs, statistiques. */}
-              <div className="mb-4 flex justify-end">
+              <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+                {/* Raccourci du commissaire : feuilles soumises par les deux
+                    coachs, en attente de sa validation (même page que la
+                    cible de la notification). */}
+                {(cup.isCreator === true || currentUserIsAdmin) &&
+                  sheetsToValidate > 0 && (
+                    <Link
+                      href={dynamicRoute(`/cups/${cup.id}/pending-validations`)}
+                      data-testid="cup-pending-validations-link"
+                      className="mr-auto rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                    >
+                      📝 {sheetsToValidate} feuille
+                      {sheetsToValidate > 1 ? "s" : ""} à valider
+                    </Link>
+                  )}
                 <CupPdfExports
                   cup={{
                     ...cup,
