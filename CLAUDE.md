@@ -1615,8 +1615,52 @@ Seule la COUPE matérialise sa rencontre en `LocalMatch` (`cupId` /
 `cupPairingId`), et la saisie manuelle est fermée (`offline_match`).
 `services/team-match-stats` (pur) fait la somme ligue + coupe + amical, servie
 en `matchStats` ; `localMatchStats` reste pour la rétro-compat. Tout nouveau
-bilan d'équipe en part. Hors périmètre : les amicaux EN LIGNE (`Match` +
-`TeamSelection`, score dans le dernier `Turn`), servis par la page carrière.
+bilan d'équipe en part — sa lecture vit dans `team-match-stats-loader`,
+partagé par la fiche d'équipe et la page carrière. Hors périmètre : les
+amicaux EN LIGNE (`Match` + `TeamSelection`, score dans le dernier `Turn`),
+servis par la page carrière.
+
+### Les compteurs de `TeamPlayer` ne sont PAS la carrière d'un joueur
+
+Même famille, côté joueur (2026-10-17, carte joueur à « 0 match » après toute
+une coupe). `matchesPlayed` / `totalTouchdowns` / `totalCasualties`… ignorent :
+
+- la **coupe**, par construction : une feuille de coupe n'écrit RIEN sur les
+  équipes (`CUP_SHEET_RULES`) ;
+- les matchs de **ligue joués sans évènement** : la validation ne crédite un
+  match qu'aux joueurs ayant une ligne de stats (ou JDM).
+
+La carrière se DÉRIVE à la lecture et s'AJOUTE aux compteurs
+(`services/player-career-stats`, pur ; `player-career-loader`, trois lectures
+sans N+1) : rien à persister, rien à défaire à l'invalidation, l'historique
+couvert sans backfill. Qui a joué = version du match figée
+(`rosterSnapshotHome/Away`, qui porte désormais l'`id` de chaque joueur ;
+repli numéro + nom + poste, unique, pour les snapshots antérieurs) + joueurs
+cités par le journal (victimes comprises) + JDM ; un forfait n'est pas joué.
+Côté ligue, l'écart se mesure contre les lignes du snapshot de validation
+(`Match.offlineResultInput.playerStats`) — jamais contre une ré-application
+de la règle, qui a pu changer depuis. Les gestes de coupe passent par
+`sheetEventsToLocalMatchActions` + `cupActorGesture` : mêmes chiffres que les
+classements individuels de la coupe.
+
+Servie en `team.playerCareers` (fiche coach, fiche admin) et appliquée par la
+page carrière, le roster de ligue, les moyennes par poste ; côté web,
+`lib/player-career.resolvePlayerCareer` (repli sur les compteurs bruts).
+**Tout nouvel écran de stats joueur en part.** `spp` reste le SOLDE de PSP
+(une coupe n'en rapporte pas, une évolution en consomme).
+
+Corollaires de la même vague :
+
+- **un lecteur d'évènements de feuille filtre `status: "validated"`** —
+  classements individuels, colonnes étendues du classement (P, Agr, SP,
+  Exclu), agressions du roster de ligue comptaient brouillons et feuilles
+  invalidées, que le classement et les PSP ignorent ;
+- les **succès** (« Jouer / Gagner N matchs »…) comptent la ligue et la coupe
+  des équipes du coach (`achievement-competition-stats`) ; un match en ligne
+  déjà reporté au classement (`leagueScoredAt`) n'est compté qu'une fois ;
+- les **compteurs du coach** (`/auth/me` → `_count.cupMatchesPlayed`) : le
+  `LocalMatch` d'une coupe est créé au nom du commissaire, le coach n'en
+  voyait aucun.
 
 ### `nextLevelSpp(spp)` est **strictement** > spp (K)
 La fonction retourne le premier seuil **au-dessus** de `spp`. Donc
