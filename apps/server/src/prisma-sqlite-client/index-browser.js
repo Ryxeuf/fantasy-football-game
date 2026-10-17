@@ -591,6 +591,7 @@ exports.Prisma.CupScalarFieldEnum = {
   passPoints: 'passPoints',
   tieBreakRules: 'tieBreakRules',
   sheetEntryMode: 'sheetEntryMode',
+  predictionsScope: 'predictionsScope',
   playoffSize: 'playoffSize',
   playoffsPublished: 'playoffsPublished',
   resurrectionMode: 'resurrectionMode',
@@ -633,6 +634,7 @@ exports.Prisma.CupRoundScalarFieldEnum = {
   bracketSlot: 'bracketSlot',
   status: 'status',
   scheduledAt: 'scheduledAt',
+  predictionsNotifiedAt: 'predictionsNotifiedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -645,6 +647,7 @@ exports.Prisma.CupPairingScalarFieldEnum = {
   awayTeamId: 'awayTeamId',
   status: 'status',
   scheduledAt: 'scheduledAt',
+  predictionsClosedAt: 'predictionsClosedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -897,6 +900,7 @@ exports.Prisma.LeaguePairingScalarFieldEnum = {
 exports.Prisma.CompetitionPredictionScalarFieldEnum = {
   id: 'id',
   pairingId: 'pairingId',
+  cupPairingId: 'cupPairingId',
   userId: 'userId',
   pick: 'pick',
   homeScore: 'homeScore',

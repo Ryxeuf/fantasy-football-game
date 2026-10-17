@@ -820,6 +820,8 @@ model Cup {
   // Mode de saisie de la feuille (miroir SQLite de schema.prisma) :
   // "full" | "simplified", null = complète. Pas de @default (cf. PG).
   sheetEntryMode String?
+  /// Portée des pronostics (miroir SQLite de schema.prisma).
+  predictionsScope String?
 
   // Playoffs de coupe (miroir SQLite de schema.prisma).
   playoffSize       Int      @default(0)
@@ -919,6 +921,8 @@ model CupRound {
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
   scheduledAt DateTime?
+  /// Bilan des pronostics envoyé (miroir SQLite de schema.prisma).
+  predictionsNotifiedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -950,6 +954,9 @@ model CupPairing {
   localMatch  LocalMatch?
   /// Feuille de match de coupe (miroir SQLite de schema.prisma).
   matchSheet  LeagueMatchSheet?
+  /// Pronostics de coupe (miroir SQLite de schema.prisma).
+  predictionsClosedAt DateTime?
+  predictions CompetitionPrediction[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -1424,10 +1431,12 @@ model LeaguePairing {
 
 /// Pronostic de rencontre de compétition (mirror PG, cf. schema.prisma).
 model CompetitionPrediction {
-  id              String        @id @default(cuid())
-  pairing         LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId       String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  pairing         LeaguePairing? @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId       String?
+  cupPairing      CupPairing?    @relation(fields: [cupPairingId], references: [id], onDelete: Cascade)
+  cupPairingId    String?
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   pick            String
   homeScore       Int?
@@ -1440,6 +1449,7 @@ model CompetitionPrediction {
   updatedAt       DateTime      @updatedAt
 
   @@unique([pairingId, userId])
+  @@unique([cupPairingId, userId])
   @@index([userId])
 }
 

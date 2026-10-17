@@ -226,7 +226,10 @@ export async function computeUserPredictionStats(
   userId: string,
 ): Promise<UserPredictionStats> {
   const rows = (await prisma.competitionPrediction.findMany({
-    where: { userId },
+    // Pronostics de LIGUE seulement : une prédiction de coupe n'a pas de
+    // saison (et pas de `pairing`), elle n'entre ni dans ces totaux ni dans
+    // le titre d'Oracle d'une saison.
+    where: { userId, pairingId: { not: null } },
     select: {
       pick: true,
       homeScore: true,

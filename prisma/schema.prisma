@@ -1082,6 +1082,13 @@ model Cup {
   /// (`POST /cup`) qui écrit "simplified" pour une coupe neuve.
   sheetEntryMode String?
 
+  /// Portée des pronostics : "off" | "members" | "open" (cf.
+  /// `league-predictions-rules`). null = coupe antérieure → "off", sans
+  /// backfill. PAS de `@default` : `POST /cup` écrit "members" pour une
+  /// coupe neuve. Règle de LECTURE, modifiable à tout moment
+  /// (`PATCH /cup/:id/predictions-scope`).
+  predictionsScope String?
+
   /// S27.1 — Mensualisation : edition canonique "Nuffle Cup {Mois} {YYYY}".
   /// Les deux champs sont nullable pour rester retro-compatibles avec les
   /// cups existantes (privees / non programmees). Quand fournis, ils
@@ -1234,6 +1241,9 @@ model CupRound {
   /// "pending" | "in_progress" | "completed"
   status      String    @default("pending")
   scheduledAt DateTime?
+  /// Bilan des pronostics de la ronde envoyé (une fois) — réclamé AVANT
+  /// l'envoi, miroir de `LeagueRound.predictionsNotifiedAt`.
+  predictionsNotifiedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -1266,6 +1276,11 @@ model CupPairing {
   /// Feuille de match de coupe (1-1, optionnelle) : MÊME modèle que la
   /// ligue, rattaché par l'autre FK (cf. `LeagueMatchSheet`).
   matchSheet  LeagueMatchSheet?
+  /// Clôture des pronostics, WRITE-ONCE (miroir de
+  /// `LeaguePairing.predictionsClosedAt`) : premier évènement de la feuille,
+  /// première soumission, résultat ou clôture manuelle.
+  predictionsClosedAt DateTime?
+  predictions CompetitionPrediction[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -1971,12 +1986,16 @@ model LeaguePairing {
   @@index([awayParticipantId])
 }
 
-/// Pronostic d'un utilisateur sur une rencontre de COMPÉTITION (ligue en v1).
+/// Pronostic d'un utilisateur sur une rencontre de COMPÉTITION.
 ///
-/// Nom GÉNÉRIQUE dès le départ : les coupes ajouteront un `cupPairingId`
-/// nullable (patron `CompetitionDocument`). Renommer un modèle sous
-/// `db push`, c'est DROP + CREATE — `LeagueMatchSheet` a dû garder son nom
-/// pour cette raison.
+/// Rattachement POLYMORPHE (`pairingId` XOR `cupPairingId`), patron de
+/// `LeagueMatchSheet` / `CompetitionDocument` : une seule table, les mêmes
+/// règles pures (`league-predictions-rules`) pour la ligue et la coupe.
+/// L'invariant « exactement une des deux FK » est tenu par les services
+/// (`league-predictions`, `cup-predictions`), seuls chemins d'écriture.
+/// `pairingId` est passée NULLABLE : `db push` conserve les valeurs, aucun
+/// pronostic de ligue n'est touché. Renommer un modèle sous `db push`, c'est
+/// DROP + CREATE — d'où le nom générique dès le départ.
 ///
 /// On stocke le RÉSULTAT, jamais les points : la note (exact / outcome /
 /// wrong) et les points sont recalculés à la lecture par le module pur
@@ -1988,10 +2007,13 @@ model LeaguePairing {
 /// null. Forfaits et annulations ne s'écrivent pas : le statut du pairing
 /// suffit à les sortir du classement.
 model CompetitionPrediction {
-  id              String        @id @default(cuid())
-  pairing         LeaguePairing @relation(fields: [pairingId], references: [id], onDelete: Cascade)
-  pairingId       String
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String         @id @default(cuid())
+  pairing         LeaguePairing? @relation(fields: [pairingId], references: [id], onDelete: Cascade)
+  pairingId       String?
+  /// Rencontre de COUPE (null pour une rencontre de ligue).
+  cupPairing      CupPairing?    @relation(fields: [cupPairingId], references: [id], onDelete: Cascade)
+  cupPairingId    String?
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   /// "home" | "draw" | "away".
   pick            String
@@ -2008,6 +2030,7 @@ model CompetitionPrediction {
   updatedAt       DateTime      @updatedAt
 
   @@unique([pairingId, userId])
+  @@unique([cupPairingId, userId])
   @@index([userId])
 }
 
