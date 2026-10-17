@@ -1,3 +1,10 @@
+## [1.257.4](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.3...v1.257.4) (2026-10-17)
+
+
+### 🐛 Bug Fixes
+
+* **team:** les statistiques de la fiche d'équipe comptent les matchs de ligue ([#1075](https://github.com/Ryxeuf/fantasy-football-game/issues/1075)) ([852f512](https://github.com/Ryxeuf/fantasy-football-game/commit/852f512449684c01f9e78a6a8b16dd82ea0c362d))
+
 ## [1.257.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.2...v1.257.3) (2026-10-16)
 
 
