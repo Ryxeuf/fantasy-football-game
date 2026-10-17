@@ -2,6 +2,8 @@
  * Fabriques de vues de pronostics pour les tests (panneau, page, cartes).
  */
 import type {
+  CupPredictionLeaderboardView,
+  CupPredictionsView,
   LeaderboardEntryView,
   PairingPredictionsView,
   RoundPredictionsView,
@@ -102,6 +104,39 @@ export function makeBoard(
 ): SeasonPredictionLeaderboardView {
   return {
     seasonId: "season-1",
+    scope: "members",
+    coach: [makeEntry()],
+    stands: [],
+    ...overrides,
+  };
+}
+
+/** Vue de coupe : mêmes rencontres, rondes sans date, `cupId`/`cupName`. */
+export function makeCupView(
+  overrides: Partial<CupPredictionsView> = {},
+): CupPredictionsView {
+  const { startDate: _startDate, ...round } = makeRound();
+  return {
+    cupId: "cup-1",
+    cupName: "Coupe du Chaos",
+    scope: "members",
+    scopeConfigured: true,
+    viewer: {
+      userId: "u-viewer",
+      isCommissioner: false,
+      isMember: true,
+      group: "coach",
+    },
+    rounds: [round],
+    ...overrides,
+  };
+}
+
+export function makeCupBoard(
+  overrides: Partial<CupPredictionLeaderboardView> = {},
+): CupPredictionLeaderboardView {
+  return {
+    cupId: "cup-1",
     scope: "members",
     coach: [makeEntry()],
     stands: [],

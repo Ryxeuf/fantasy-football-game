@@ -6,8 +6,8 @@ vi.mock("../../lib/api-client", () => ({
   apiRequest: (...args: unknown[]) => apiRequest(...args),
 }));
 
-import { useSeasonPredictions } from "./useSeasonPredictions";
-import { makeBoard, makeView } from "./predictions.fixtures";
+import { useCupPredictions, useSeasonPredictions } from "./useSeasonPredictions";
+import { makeBoard, makeCupBoard, makeCupView, makeView } from "./predictions.fixtures";
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -66,5 +66,19 @@ describe("useSeasonPredictions", () => {
       await result.current.reload();
     });
     expect(apiRequest.mock.calls.length).toBe(before + 2);
+  });
+});
+
+describe("useCupPredictions", () => {
+  it("charge les rondes et le classement d'une coupe", async () => {
+    apiRequest.mockImplementation(async (path: string) =>
+      path.endsWith("/leaderboard") ? makeCupBoard() : makeCupView(),
+    );
+    const { result } = renderHook(() => useCupPredictions("cup-1"));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.view?.cupName).toBe("Coupe du Chaos");
+    expect(result.current.board?.cupId).toBe("cup-1");
+    expect(apiRequest).toHaveBeenCalledWith("/cup/cup-1/predictions");
+    expect(apiRequest).toHaveBeenCalledWith("/cup/cup-1/predictions/leaderboard");
   });
 });

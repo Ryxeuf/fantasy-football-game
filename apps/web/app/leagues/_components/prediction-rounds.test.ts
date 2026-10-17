@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   adjacentRounds,
+  cupPredictionsPagePath,
+  cupRoundPredictionLinks,
   predictionsDigest,
   rankLabel,
   roundPredictionLabel,
@@ -11,6 +13,7 @@ import {
 } from "./prediction-rounds";
 import {
   makeBoard,
+  makeCupView,
   makeEntry,
   makePairing,
   makeRound,
@@ -185,6 +188,48 @@ describe("predictionsDigest", () => {
     expect(digest.todo).toBe(0);
     expect(digest.standing).toBeNull();
     expect(digest.group).toBe("coach");
+  });
+});
+
+describe("pronostics de coupe", () => {
+  it("une seule page, une ancre par ronde", () => {
+    expect(cupPredictionsPagePath("cup-1")).toBe("/cups/cup-1/predictions");
+    const links = cupRoundPredictionLinks(
+      makeCupView({
+        rounds: [
+          { ...makeRound({ id: "r1", roundNumber: 1 }) },
+          {
+            ...makeRound({
+              id: "r2",
+              roundNumber: 2,
+              pairings: [makePairing({ closed: true, eligibility: "closed" })],
+            }),
+          },
+        ],
+      }),
+      "cup-1",
+    );
+    expect(links.r1).toEqual({
+      href: "/cups/cup-1/predictions#pronos-ronde-1",
+      label: "Pronostiquer (1)",
+      state: "todo",
+    });
+    expect(links.r2.label).toBe("Résultats des pronos");
+  });
+
+  it("aucun bouton sans pronostics", () => {
+    expect(cupRoundPredictionLinks(makeCupView({ scope: "off" }), "cup-1")).toEqual({});
+    expect(cupRoundPredictionLinks(null, "cup-1")).toEqual({});
+  });
+
+  it("le résumé parle de ronde", () => {
+    const digest = predictionsDigest(
+      makeCupView({ rounds: [makeRound({ roundNumber: 3 })] }),
+      null,
+      "cup",
+    );
+    expect(digest.nextRoundLabel).toBe("Ronde 3");
+    expect(digest.todo).toBe(1);
   });
 });
 

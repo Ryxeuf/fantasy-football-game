@@ -2,16 +2,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
 import {
+  cupPredictionLeaderboardPath,
+  cupPredictionsPath,
   seasonPredictionLeaderboardPath,
   seasonPredictionsPath,
+  type CupPredictionLeaderboardView,
+  type CupPredictionsView,
   type SeasonPredictionLeaderboardView,
   type SeasonPredictionsView,
 } from "./predictions";
 
 /**
- * Vue des pronostics d'une saison + son classement, partagée par la fiche
- * de ligue (résumé + boutons du calendrier), la page de saison et la page
- * d'une journée.
+ * Vue des pronostics d'une saison (ou d'une coupe) + son classement,
+ * partagée par la fiche de la compétition (résumé + boutons du calendrier),
+ * la page des pronostics et la page d'une journée.
  *
  * - le classement est secondaire : son échec n'empêche pas de pronostiquer ;
  * - seule la DERNIÈRE requête écrit (un rechargement lent n'écrase pas un
@@ -20,34 +24,36 @@ import {
  *   afficher la saison précédente étiquetée comme la nouvelle, alors que
  *   `reload` (après un pronostic) garde l'affichage pour ne pas clignoter.
  */
-export interface SeasonPredictionsState {
-  readonly view: SeasonPredictionsView | null;
-  readonly board: SeasonPredictionLeaderboardView | null;
+export interface PredictionsState<V, B> {
+  readonly view: V | null;
+  readonly board: B | null;
   readonly error: string | null;
   readonly loading: boolean;
   readonly reload: () => Promise<void>;
 }
 
-export function useSeasonPredictions(
-  seasonId: string | null | undefined,
-): SeasonPredictionsState {
-  const [view, setView] = useState<SeasonPredictionsView | null>(null);
-  const [board, setBoard] = useState<SeasonPredictionLeaderboardView | null>(
-    null,
-  );
+export type SeasonPredictionsState = PredictionsState<
+  SeasonPredictionsView,
+  SeasonPredictionLeaderboardView
+>;
+
+function usePredictions<V, B>(
+  viewPath: string | null,
+  boardPath: string | null,
+): PredictionsState<V, B> {
+  const [view, setView] = useState<V | null>(null);
+  const [board, setBoard] = useState<B | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const requestRef = useRef(0);
 
   const reload = useCallback(async () => {
-    if (!seasonId) return;
+    if (!viewPath || !boardPath) return;
     const request = ++requestRef.current;
     try {
       const [v, b] = await Promise.all([
-        apiRequest<SeasonPredictionsView>(seasonPredictionsPath(seasonId)),
-        apiRequest<SeasonPredictionLeaderboardView>(
-          seasonPredictionLeaderboardPath(seasonId),
-        ).catch(() => null),
+        apiRequest<V>(viewPath),
+        apiRequest<B>(boardPath).catch(() => null),
       ]);
       if (request !== requestRef.current) return;
       setView(v);
@@ -59,19 +65,38 @@ export function useSeasonPredictions(
     } finally {
       if (request === requestRef.current) setLoading(false);
     }
-  }, [seasonId]);
+  }, [viewPath, boardPath]);
 
   useEffect(() => {
     setView(null);
     setBoard(null);
     setError(null);
-    if (!seasonId) {
+    if (!viewPath) {
       setLoading(false);
       return;
     }
     setLoading(true);
     reload();
-  }, [seasonId, reload]);
+  }, [viewPath, reload]);
 
   return { view, board, error, loading, reload };
+}
+
+export function useSeasonPredictions(
+  seasonId: string | null | undefined,
+): SeasonPredictionsState {
+  return usePredictions<SeasonPredictionsView, SeasonPredictionLeaderboardView>(
+    seasonId ? seasonPredictionsPath(seasonId) : null,
+    seasonId ? seasonPredictionLeaderboardPath(seasonId) : null,
+  );
+}
+
+/** Même chose pour une coupe : ses rondes et son classement. */
+export function useCupPredictions(
+  cupId: string | null | undefined,
+): PredictionsState<CupPredictionsView, CupPredictionLeaderboardView> {
+  return usePredictions<CupPredictionsView, CupPredictionLeaderboardView>(
+    cupId ? cupPredictionsPath(cupId) : null,
+    cupId ? cupPredictionLeaderboardPath(cupId) : null,
+  );
 }

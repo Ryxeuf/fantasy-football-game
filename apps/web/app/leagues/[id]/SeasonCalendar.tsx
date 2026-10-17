@@ -29,6 +29,7 @@ import type {
 } from "./types";
 import { dynamicRoute } from "../../lib/typed-route";
 import type { RoundPredictionLink } from "../_components/prediction-rounds";
+import { RoundPredictionsButton } from "../_components/RoundPredictionsButton";
 
 // Sprint Ligues v2 PR2 — calendrier interactif (ligue 100% physique).
 // Une carte par journée ; chaque rencontre est une `MatchCard` (les deux
@@ -216,39 +217,6 @@ const ROUND_CHIP: Record<string, string> = {
   in_progress: "bg-amber-100 text-amber-800",
   completed: "bg-emerald-100 text-emerald-800",
 };
-
-const PREDICTION_BUTTON_STYLES: Readonly<
-  Record<RoundPredictionLink["state"], string>
-> = {
-  todo: "border-nuffle-gold bg-nuffle-gold text-white hover:bg-nuffle-gold/90",
-  done: "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100",
-  open: "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
-  closed: "border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
-};
-
-/**
- * Bouton 🔮 d'une journée : mène à la page des pronostics de CETTE
- * journée. Son libellé dit ce qui attend le lecteur (à pronostiquer, fait,
- * résultats) — le détail ne s'affiche plus dans le calendrier.
- */
-function RoundPredictionsButton({
-  roundId,
-  link,
-}: {
-  roundId: string;
-  link: RoundPredictionLink;
-}) {
-  return (
-    <Link
-      href={dynamicRoute(link.href)}
-      data-testid={`league-round-predictions-${roundId}`}
-      data-state={link.state}
-      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium ${PREDICTION_BUTTON_STYLES[link.state]}`}
-    >
-      <span aria-hidden>🔮</span> {link.label}
-    </Link>
-  );
-}
 
 export function SeasonCalendar({
   rounds,
@@ -491,7 +459,7 @@ export function SeasonCalendar({
                   ) : null}
                   {predictionLinks?.[round.id] ? (
                     <RoundPredictionsButton
-                      roundId={round.id}
+                      testId={`league-round-predictions-${round.id}`}
                       link={predictionLinks[round.id]}
                     />
                   ) : null}
