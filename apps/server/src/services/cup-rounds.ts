@@ -770,6 +770,13 @@ export async function deleteLastCupRound(input: {
   return { deleted: true, roundNumber: last.roundNumber };
 }
 
+interface PairingTeamForActor {
+  ownerId: string;
+  /** Pour les notifications (date convenue). */
+  name: string;
+  owner: { coachName: string | null } | null;
+}
+
 interface PairingForActor {
   id: string;
   status: string;
@@ -777,10 +784,19 @@ interface PairingForActor {
   localMatch: { id: string } | null;
   homeTeamId: string;
   awayTeamId: string | null;
-  homeTeam: { ownerId: string };
-  awayTeam: { ownerId: string } | null;
-  round: { id: string; cupId: string; cup: { creatorId: string } };
+  homeTeam: PairingTeamForActor;
+  awayTeam: PairingTeamForActor | null;
+  round: {
+    id: string;
+    cupId: string;
+    roundNumber: number;
+    cup: { creatorId: string };
+  };
 }
+
+const PAIRING_TEAM_FOR_ACTOR = {
+  select: { ownerId: true, name: true, owner: { select: { coachName: true } } },
+} as const;
 
 async function loadPairingForActor(pairingId: string): Promise<PairingForActor> {
   const pairing = (await prisma.cupPairing.findUnique({
@@ -791,9 +807,16 @@ async function loadPairingForActor(pairingId: string): Promise<PairingForActor> 
       localMatch: { select: { id: true } },
       homeTeamId: true,
       awayTeamId: true,
-      homeTeam: { select: { ownerId: true } },
-      awayTeam: { select: { ownerId: true } },
-      round: { select: { id: true, cupId: true, cup: { select: { creatorId: true } } } },
+      homeTeam: PAIRING_TEAM_FOR_ACTOR,
+      awayTeam: PAIRING_TEAM_FOR_ACTOR,
+      round: {
+        select: {
+          id: true,
+          cupId: true,
+          roundNumber: true,
+          cup: { select: { creatorId: true } },
+        },
+      },
     },
   })) as PairingForActor | null;
   if (!pairing) throw new CupRoundError("pairing_not_found", "Rencontre introuvable");
@@ -808,7 +831,7 @@ export async function scheduleCupPairing(input: {
   pairingId: string;
   actor: CupActor;
   scheduledAt: Date | null;
-}): Promise<{ pairingId: string; scheduledAt: Date | null }> {
+}): Promise<{ pairingId: string; scheduledAt: Date | null; notified: number }> {
   const pairing = await loadPairingForActor(input.pairingId);
   const involved =
     pairing.homeTeam.ownerId === input.actor.userId ||
@@ -832,7 +855,62 @@ export async function scheduleCupPairing(input: {
     data: { scheduledAt: input.scheduledAt },
     select: { id: true },
   });
-  return { pairingId: pairing.id, scheduledAt: input.scheduledAt };
+  const notified = await notifyCupPairingScheduled(pairing, input);
+  return { pairingId: pairing.id, scheduledAt: input.scheduledAt, notified };
+}
+
+function formatDateFr(date: Date): string {
+  return date.toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Europe/Paris",
+  });
+}
+
+/**
+ * Date convenue : notifie les AUTRES coachs de la rencontre, comme en ligue
+ * (`league-pairing-schedule`). Jamais bloquant — la date est déjà écrite.
+ */
+async function notifyCupPairingScheduled(
+  pairing: PairingForActor,
+  input: { actor: CupActor; scheduledAt: Date | null },
+): Promise<number> {
+  const away = pairing.awayTeam;
+  if (!away) return 0;
+  const home = pairing.homeTeam;
+  const actorLabel =
+    input.actor.userId === home.ownerId
+      ? home.owner?.coachName ?? home.name
+      : input.actor.userId === away.ownerId
+        ? away.owner?.coachName ?? away.name
+        : "Le commissaire";
+  const matchLabel = `${home.name} vs ${away.name} (R${pairing.round.roundNumber})`;
+  const body = input.scheduledAt
+    ? `${actorLabel} propose de jouer ${matchLabel} le ${formatDateFr(input.scheduledAt)}`
+    : `${actorLabel} a retiré la date prévue pour ${matchLabel}`;
+  const recipients = Array.from(
+    new Set([home.ownerId, away.ownerId].filter((id) => id !== input.actor.userId)),
+  );
+  let notified = 0;
+  for (const userId of recipients) {
+    const created = await createInAppNotification({
+      userId,
+      kind: "cup.pairing_scheduled",
+      title: input.scheduledAt ? "Rencontre planifiée" : "Date de rencontre retirée",
+      body,
+      url: `/cups/${pairing.round.cupId}`,
+      meta: {
+        cupId: pairing.round.cupId,
+        pairingId: pairing.id,
+        scheduledAt: input.scheduledAt?.toISOString() ?? null,
+      },
+    });
+    if (created) notified += 1;
+  }
+  return notified;
 }
 
 /** Annulation d'une rencontre par le commissaire (forfait double, retrait…). */

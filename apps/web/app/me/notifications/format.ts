@@ -52,10 +52,13 @@ export function formatRelativeTime(
 export function notificationIcon(kind: string): string {
   if (kind.endsWith(".deleted")) return "🗑️";
   if (kind.endsWith(".archived")) return "📦";
-  if (kind === "league.match_validation") return "📝";
-  if (kind === "league.round_pairing") return "📅";
-  if (kind === "league.round_followup") return "⏰";
-  if (kind === "league.predictions_settled") return "🔮";
+  // Même pictogramme pour la ligue et la coupe : c'est le geste qui compte.
+  if (kind.endsWith(".match_validation")) return "📝";
+  if (kind.endsWith(".round_pairing") || kind.endsWith(".pairing_scheduled")) {
+    return "📅";
+  }
+  if (kind.endsWith(".round_followup")) return "⏰";
+  if (kind.endsWith(".predictions_settled")) return "🔮";
   if (kind.startsWith("league.")) return "🏅";
   if (kind.startsWith("cup.")) return "🏆";
   if (kind.startsWith("friend.")) return "🤝";
