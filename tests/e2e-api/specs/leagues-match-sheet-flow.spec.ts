@@ -75,6 +75,8 @@ interface TeamDetailDTO {
       spp: number;
       firedAt: string | null;
     }>;
+    /** Carrière toutes compétitions par joueur. */
+    playerCareers?: Record<string, { matchesPlayed: number; touchdowns: number }>;
   };
   matchStats: TeamMatchStatsDTO;
 }
@@ -271,6 +273,18 @@ describe("E2E API — feuille de match : saisie 2 coachs -> validation -> revers
     expect(firedNow[0].id).toBe(firedPlayer);
     expect(home.players.find((p) => p.id === mvp)!.spp).toBeGreaterThan(0);
     expect(home.players.find((p) => p.id === tdScorer)!.spp).toBeGreaterThan(0);
+    // Carrière : un match pour le marqueur (crédité par la validation, pas
+    // une seconde fois par la dérivation), et pour l'aligné SANS évènement,
+    // que la validation ne créditait pas.
+    const benchwarmer = homePlayers[3].id;
+    expect(home.playerCareers?.[tdScorer]).toMatchObject({
+      matchesPlayed: 1,
+      touchdowns: 2,
+    });
+    expect(home.playerCareers?.[benchwarmer]).toMatchObject({
+      matchesPlayed: 1,
+      touchdowns: 0,
+    });
 
     // Le licencie n'apparait plus dans les pickers.
     const afterFire = unwrap(
@@ -304,6 +318,11 @@ describe("E2E API — feuille de match : saisie 2 coachs -> validation -> revers
     );
     const homeAfter = homeAfterDetail.team;
     expect(homeAfterDetail.matchStats).toMatchObject({ played: 0, wins: 0 });
+    // La carrière revient d'elle-même : feuille invalidée = plus comptée.
+    expect(homeAfter.playerCareers?.[tdScorer]).toMatchObject({ matchesPlayed: 0 });
+    expect(homeAfter.playerCareers?.[benchwarmer]).toMatchObject({
+      matchesPlayed: 0,
+    });
     expect(homeAfter.treasury).toBe(0);
     expect(homeAfter.rerolls).toBe(0);
     expect(homeAfter.players).toHaveLength(11);

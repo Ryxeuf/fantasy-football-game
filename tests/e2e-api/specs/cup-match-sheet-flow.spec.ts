@@ -77,6 +77,13 @@ interface CupDTO {
     }>;
   };
 }
+interface CareerDTO {
+  matchesPlayed: number;
+  touchdowns: number;
+  casualties: number;
+  spp: number;
+  cup: { matchesPlayed: number; touchdowns: number; casualties: number };
+}
 interface TeamDTO {
   team: {
     treasury: number;
@@ -87,6 +94,8 @@ interface TeamDTO {
       dead: boolean;
       missNextMatch: boolean;
     }>;
+    /** Carrière toutes compétitions, coupe comprise (rien n'en est persisté). */
+    playerCareers?: Record<string, CareerDTO>;
   };
 }
 
@@ -215,6 +224,28 @@ describe("E2E API — feuille de match de coupe", () => {
     );
     expect(afterAway.players.some((p) => p.dead)).toBe(false);
     expect(afterAway.players.some((p) => p.missNextMatch)).toBe(false);
+
+    // La CARRIÈRE des joueurs, elle, compte la rencontre : la carte joueur
+    // affichait « 0 match, 0 TD » après toute une coupe.
+    expect(afterHome.playerCareers?.[scorer.id]).toMatchObject({
+      matchesPlayed: 1,
+      touchdowns: 2,
+      spp: 0,
+      cup: { matchesPlayed: 1, touchdowns: 2 },
+    });
+    expect(afterHome.playerCareers?.[home.players[1].id]).toMatchObject({
+      matchesPlayed: 1,
+      casualties: 1,
+    });
+    // Aligné sans évènement (la version du match le liste) : il a joué.
+    expect(afterHome.playerCareers?.[home.players[2].id]).toMatchObject({
+      matchesPlayed: 1,
+      touchdowns: 0,
+    });
+    // La victime aussi a joué, côté adverse.
+    expect(afterAway.playerCareers?.[victim.id]).toMatchObject({
+      matchesPlayed: 1,
+    });
   });
 
   it("s'invalide et rend le classement à son état d'avant", async () => {
