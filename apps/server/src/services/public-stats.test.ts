@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { gatherPublicStats, type StatsCountClient } from "./public-stats";
+import {
+  PLAYED_LEAGUE_SHEETS_WHERE,
+  gatherPublicStats,
+  type StatsCountClient,
+} from "./public-stats";
 
 function makeDb(values: Record<string, number>): StatsCountClient {
   const c = (n: number) => vi.fn().mockResolvedValue(n);
@@ -10,6 +14,7 @@ function makeDb(values: Record<string, number>): StatsCountClient {
     team: { count: c(values.team ?? 0) },
     user: { count: c(values.user ?? 0) },
     localMatch: { count: c(values.localMatch ?? 0) },
+    leagueMatchSheet: { count: c(values.leagueMatchSheet ?? 0) },
   };
 }
 
@@ -49,5 +54,19 @@ describe("gatherPublicStats", () => {
     expect(db.team.count).toHaveBeenCalledWith();
     expect(db.user.count).toHaveBeenCalledWith();
     expect(db.localMatch.count).toHaveBeenCalledWith();
+  });
+
+  it("compte aussi les rencontres de ligue (feuilles validées jouées)", async () => {
+    const db = makeDb({ localMatch: 10, leagueMatchSheet: 25 });
+    const stats = await gatherPublicStats(db);
+    expect(stats.matchesTracked).toBe(35);
+    expect(db.leagueMatchSheet.count).toHaveBeenCalledWith({
+      where: PLAYED_LEAGUE_SHEETS_WHERE,
+    });
+    expect(PLAYED_LEAGUE_SHEETS_WHERE).toEqual({
+      status: "validated",
+      pairingId: { not: null },
+      forfeitSide: null,
+    });
   });
 });

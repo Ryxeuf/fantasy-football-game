@@ -25,6 +25,7 @@ import {
   adminMatchCancelSchema,
   adminUserBanSchema,
 } from "../schemas/admin.schemas";
+import { buildPlayerCareerTotals } from "../services/player-career-loader";
 import { serverLog } from "../utils/server-log";
 import {
   safeRecordAdminActionFromRequest,
@@ -1662,7 +1663,7 @@ router.get("/teams/:id", async (req, res) => {
       return res.status(404).json({ error: "Équipe non trouvée" });
     }
 
-    const [starPlayers, ownerTeams, competitions] = await Promise.all([
+    const [starPlayers, ownerTeams, competitions, careers] = await Promise.all([
       enrichTeamStarPlayers(team.starPlayers, team.ruleset as Ruleset),
       listOwnerTeams(team.ownerId),
       // Optionnel : un échec ne doit pas masquer la fiche (liens seulement).
@@ -1670,9 +1671,22 @@ router.get("/teams/:id", async (req, res) => {
         serverLog.error("[admin] team competitions failed:", e);
         return { leagues: [], cups: [] };
       }),
+      // Carrière TOUTES compétitions (coupe et matchs de ligue sans évènement
+      // compris), la même que la fiche coach. Best-effort.
+      buildPlayerCareerTotals([team.id], team.players, (e: unknown) =>
+        serverLog.error("[admin] team player careers failed:", e),
+      ),
     ]);
 
-    res.json({ team: { ...team, starPlayers }, ownerTeams, competitions });
+    res.json({
+      team: {
+        ...team,
+        starPlayers,
+        playerCareers: Object.fromEntries(careers),
+      },
+      ownerTeams,
+      competitions,
+    });
   } catch (e) {
     serverLog.error(e);
     res.status(500).json({ error: "Erreur lors de la récupération de l'équipe" });

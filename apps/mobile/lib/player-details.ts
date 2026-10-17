@@ -168,3 +168,32 @@ export function computePlayerStatus(
   if ((player.nigglingInjuries ?? 0) > 0) return "injured";
   return "fit";
 }
+
+/**
+ * Carrière TOUTES compétitions servie par `GET /team/:id`
+ * (`team.playerCareers`). Les compteurs bruts du joueur ignorent la coupe
+ * (une feuille de coupe n'écrit rien sur les équipes) et les matchs de ligue
+ * joués sans évènement : on les remplace par la carrière servie, et on garde
+ * les bruts face à un serveur antérieur. Le solde de PSP reste celui du
+ * joueur (une coupe n'en rapporte pas).
+ */
+export function applyServedCareer(
+  player: TeamPlayerWithProgression,
+  playerCareers: Record<string, unknown> | null | undefined,
+): TeamPlayerWithProgression {
+  const raw = playerCareers?.[player.id];
+  if (!raw || typeof raw !== "object") return player;
+  const c = raw as Record<string, unknown>;
+  if (typeof c.matchesPlayed !== "number") return player;
+  const num = (v: unknown, fallback: number): number =>
+    typeof v === "number" && Number.isFinite(v) ? v : fallback;
+  return {
+    ...player,
+    matchesPlayed: num(c.matchesPlayed, player.matchesPlayed),
+    totalTouchdowns: num(c.touchdowns, player.totalTouchdowns),
+    totalCasualties: num(c.casualties, player.totalCasualties),
+    totalCompletions: num(c.completions, player.totalCompletions),
+    totalInterceptions: num(c.interceptions, player.totalInterceptions),
+    totalMvpAwards: num(c.mvpAwards, player.totalMvpAwards),
+  };
+}

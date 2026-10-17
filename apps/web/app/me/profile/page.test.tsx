@@ -85,4 +85,38 @@ describe("ProfilePage — ELO display", () => {
 
     expect(screen.getByText("1000")).toBeTruthy();
   });
+
+  it("affiche les rencontres de coupe jouées par ses équipes", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          user: {
+            ...mockProfile.user,
+            _count: { ...mockProfile.user._count, cupMatchesPlayed: 4 },
+          },
+        }),
+    });
+
+    render(<ProfilePage />);
+
+    const tile = await screen.findByTestId("profile-cup-matches");
+    expect(tile.textContent).toContain("4");
+    expect(tile.textContent).toContain("Rencontres de coupe jouées");
+    expect(screen.getByText("Parties jouées (ligue et en ligne)")).toBeTruthy();
+  });
+
+  it("masque la tuile coupe sans rencontre (ou API antérieure)", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockProfile),
+    });
+
+    render(<ProfilePage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Coach Alpha")).toBeTruthy();
+    });
+    expect(screen.queryByTestId("profile-cup-matches")).toBeNull();
+  });
 });

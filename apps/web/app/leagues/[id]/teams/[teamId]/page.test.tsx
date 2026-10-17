@@ -125,9 +125,12 @@ describe("LeagueTeamRosterPage", () => {
     );
 
     // En-têtes des colonnes stats.
-    for (const header of ["TD", "Élim.", "Pas.", "Int.", "Agr.", "PSP", "Valeur", "Blessures", "Dispo"]) {
+    for (const header of ["MJ", "TD", "Élim.", "Pas.", "Int.", "Agr.", "PSP", "Valeur", "Blessures", "Dispo"]) {
       expect(screen.getByText(header)).toBeTruthy();
     }
+    // Matchs joués (toutes compétitions), servis mais jamais affichés avant.
+    expect(screen.getByTestId("player-matches-pl1").textContent).toBe("6");
+    expect(screen.getByTestId("player-matches-pl2").textContent).toBe("5");
 
     // Griff : disponible, sans blessure durable.
     expect(

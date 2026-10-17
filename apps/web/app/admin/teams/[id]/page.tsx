@@ -26,6 +26,7 @@ import TeamCompetitionsPanel, {
   type AdminTeamCompetitions,
 } from "./TeamCompetitionsPanel";
 import { formatPlusStat } from "../../../lib/format-stats";
+import { resolvePlayerCareer } from "../../../lib/player-career";
 import KeywordChips from "../../../components/KeywordChips";
 import SkillTooltip from "../../../me/teams/components/SkillTooltip";
 import SkillAccessBadges from "../../../me/teams/components/SkillAccessBadges";
@@ -75,6 +76,11 @@ interface AdminTeamDetail {
   };
   readonly players: AdminTeamPlayer[];
   readonly starPlayers: TeamStarPlayerView[];
+  /**
+   * Carrière TOUTES compétitions par id de joueur (coupe et matchs de ligue
+   * sans évènement compris). Optionnel : absent d'une API antérieure.
+   */
+  readonly playerCareers?: Record<string, unknown>;
 }
 
 /** Étape du journal, réduite à ce que l'aperçu affiche. */
@@ -607,11 +613,19 @@ export default function AdminTeamDetailPage() {
                       <td className="p-3 text-center font-mono">
                         {formatPlusStat(p.av)}
                       </td>
-                      <td className="p-3 text-center font-mono text-xs">
+                      <td
+                        className="p-3 text-center font-mono text-xs"
+                        data-testid={`admin-player-career-${p.id}`}
+                      >
                         {p.spp ?? 0}
                         <span className="text-gray-400">
                           {" "}
-                          / {p.matchesPlayed ?? 0} m.
+                          /{" "}
+                          {
+                            resolvePlayerCareer(p, team.playerCareers)
+                              .matchesPlayed
+                          }{" "}
+                          m.
                         </span>
                       </td>
                       <td className="p-3">

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeCupPlayerLeaderboards,
+  cupActorGesture,
   type CupMatchForPlayerStats,
   type CupPlayerActionLike,
 } from './cup-player-stats';
@@ -101,5 +102,29 @@ describe('computeCupPlayerLeaderboards', () => {
     };
     const lb = computeCupPlayerLeaderboards([match], 2);
     expect(lb.topScorers).toHaveLength(2);
+  });
+});
+
+describe('cupActorGesture', () => {
+  const action = (actionType: string, armorBroken = false, opponentState: string | null = null) => ({
+    actionType,
+    armorBroken,
+    opponentState,
+  });
+
+  it('crédite le geste de chaque action comptée', () => {
+    expect(cupActorGesture(action('td'))).toBe('touchdown');
+    expect(cupActorGesture(action('passe'))).toBe('completion');
+    expect(cupActorGesture(action('interception'))).toBe('interception');
+    expect(cupActorGesture(action('blocage', true, 'elimine'))).toBe('casualty');
+    expect(cupActorGesture(action('blitz', true, 'elimine'))).toBe('casualty');
+    expect(cupActorGesture(action('aggression', true, 'elimine'))).toBe('aggressionCasualty');
+  });
+
+  it("ne crédite rien sans sortie ni geste compté", () => {
+    expect(cupActorGesture(action('blocage', false, 'elimine'))).toBeNull();
+    expect(cupActorGesture(action('blocage', true, 'ko'))).toBeNull();
+    expect(cupActorGesture(action('aggression', false, null))).toBeNull();
+    expect(cupActorGesture(action('sprint'))).toBeNull();
   });
 });

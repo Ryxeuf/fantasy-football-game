@@ -3,6 +3,8 @@
  */
 
 import { getDisplayName, getDisplayNames, getRerollCost, parseSkillSlugs, getSkillBySlug, type RosterStaffConfig } from '@bb/game-engine';
+import { resolvePlayerCareer } from '../../../lib/player-career';
+import { rosterPdfTrackingCells } from './roster-pdf-cells';
 
 interface TeamData {
   name: string;
@@ -18,6 +20,8 @@ interface TeamData {
   dedicatedFans?: number;
   /** Config staff résolue (DB par roster × format). Coûts en po. */
   staffConfig?: RosterStaffConfig;
+  /** Carrière toutes compétitions par id de joueur (`GET /team/:id`). */
+  playerCareers?: Record<string, unknown>;
 }
 
 const ROSTER_DISPLAY_NAMES: Record<string, string> = {
@@ -198,10 +202,12 @@ export async function exportTeamToPDF(
         `${player.av}+`,
         skillsText,
         `${Math.round(getPlayerCost(player.position, team.roster) / 1000)}`,
-        '', // PSP
-        '', // RPM
-        '', // BP
-        '', // RC
+        // PSP, RPM, BP, RC (fr) / SPP, TDS, CAS, INT (en) — cf. module.
+        ...rosterPdfTrackingCells(
+          player,
+          resolvePlayerCareer(player, team.playerCareers),
+          language,
+        ),
         `${Math.round(playerValue(player) / 1000)}`, // Valeur actuelle
       ];
     });

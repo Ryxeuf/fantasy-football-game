@@ -64,6 +64,7 @@ import {
   updateTeamValues,
 } from "../utils/team-values";
 import { getRosterFromDb } from "../utils/roster-helpers";
+import { buildPlayerCareerTotals } from "../services/player-career-loader";
 import { serverLog } from "../utils/server-log";
 import {
   recordOfflineLeagueResult,
@@ -1774,6 +1775,15 @@ export async function handleGetLeagueTeamRoster(
       statusSource: string | null;
     }>;
     const statsById = new Map(statsRows.map((r) => [r.id, r]));
+    // Carrière TOUTES compétitions : les compteurs ci-dessus ignorent la
+    // coupe (une feuille de coupe n'écrit rien sur les équipes) et les
+    // matchs de ligue joués sans évènement. Même source que la carte joueur
+    // et la fiche d'équipe ; best-effort, repli sur les compteurs.
+    const careers = await buildPlayerCareerTotals(
+      [teamId],
+      statsRows,
+      (e: unknown) => serverLog.error("[league] carriere roster-view", e),
+    );
     // Agressions par joueur, dérivées des events (tolérant : le modèle
     // LeagueMatchEvent est absent du schéma SQLite de test → compte 0).
     const aggressionsById = new Map<string, number>();
@@ -1790,7 +1800,12 @@ export async function handleGetLeagueTeamRoster(
         where: {
           kind: "aggression",
           actorPlayerId: { in: playerIds },
-          matchSheet: { pairing: { round: { season: { leagueId } } } },
+          // Feuilles VALIDÉES seulement : un brouillon ou une feuille
+          // invalidée ne compte ni au classement, ni ici.
+          matchSheet: {
+            status: "validated",
+            pairing: { round: { season: { leagueId } } },
+          },
         },
         select: { actorPlayerId: true },
       })) as Array<{ actorPlayerId: string | null }>;
@@ -1861,6 +1876,7 @@ export async function handleGetLeagueTeamRoster(
     );
     const players = out.players.map((p: { id: string; position: string }) => {
       const s = statsById.get(p.id);
+      const career = careers.get(p.id);
       return {
         ...p,
         value: playerValue(p.position, s?.advancements ?? null),
@@ -1868,12 +1884,13 @@ export async function handleGetLeagueTeamRoster(
           positionNames.get(p.position) ??
           getPositionBySlug(p.position)?.displayName ??
           p.position,
-        totalTouchdowns: s?.totalTouchdowns ?? 0,
-        totalCasualties: s?.totalCasualties ?? 0,
-        totalCompletions: s?.totalCompletions ?? 0,
-        totalInterceptions: s?.totalInterceptions ?? 0,
+        totalTouchdowns: career?.touchdowns ?? s?.totalTouchdowns ?? 0,
+        totalCasualties: career?.casualties ?? s?.totalCasualties ?? 0,
+        totalCompletions: career?.completions ?? s?.totalCompletions ?? 0,
+        totalInterceptions:
+          career?.interceptions ?? s?.totalInterceptions ?? 0,
         aggressions: aggressionsById.get(p.id) ?? 0,
-        matchesPlayed: s?.matchesPlayed ?? 0,
+        matchesPlayed: career?.matchesPlayed ?? s?.matchesPlayed ?? 0,
         missNextMatch: s?.missNextMatch ?? false,
         nigglingInjuries: s?.nigglingInjuries ?? 0,
         statReductions: {

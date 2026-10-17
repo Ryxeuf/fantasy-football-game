@@ -23,6 +23,7 @@ import {
   ensureKofiLinkCode,
 } from "../services/kofi-claim";
 import { isSupporter } from "../services/kofi";
+import { countCupMatchesPlayed } from "../services/coach-cup-matches";
 import { serverLog } from "../utils/server-log";
 import { CORS_ORIGINS } from "../config";
 import { redactEmail, userTag } from "../utils/redact";
@@ -470,8 +471,18 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         }
       : null;
 
+    // Rencontres de coupe de ses équipes : créées au nom du commissaire, elles
+    // n'entraient dans aucun compteur du coach. Best-effort.
+    let cupMatchesPlayed = 0;
+    try {
+      cupMatchesPlayed = await countCupMatchesPlayed(prisma, user.id);
+    } catch (e: unknown) {
+      serverLog.error("[auth/me] rencontres de coupe", e);
+    }
+
     const publicUser = {
       ...user,
+      _count: { ...user._count, cupMatchesPlayed },
       roles,
       isSupporter: isSupporter({
         patreon: user.patreon,

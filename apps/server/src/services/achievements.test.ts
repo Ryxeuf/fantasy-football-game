@@ -15,6 +15,17 @@ vi.mock("../prisma", () => ({
     league: {
       count: vi.fn(),
     },
+    // Ligue + coupe des équipes du coach (achievement-competition-stats).
+    team: {
+      findMany: vi.fn(async () => []),
+    },
+    // Résultats de ligue validés : leur Match offline.
+    match: {
+      findMany: vi.fn(async () => []),
+    },
+    localMatch: {
+      findMany: vi.fn(async () => []),
+    },
   },
 }));
 
@@ -291,6 +302,132 @@ describe("unlockAchievements", () => {
     await expect(unlockAchievements("user-1", ["first-match"])).rejects.toThrow(
       "db down",
     );
+  });
+});
+
+describe("getUserAchievements — ligue et coupe", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockPredictionStats.mockResolvedValue({
+      correct: 0,
+      exact: 0,
+      oracleTitles: 0,
+      standsOracleTitles: 0,
+    });
+    mockPrisma.userAchievement.findMany.mockResolvedValue([]);
+    mockPrisma.friendship.count.mockResolvedValue(0);
+    mockPrisma.league.count.mockResolvedValue(0);
+    mockPrisma.userAchievement.upsert.mockResolvedValue({ count: 0 });
+  });
+
+  it("un coach de ligue et de coupe débloque les succès de match sans jouer en ligne", async () => {
+    mockPrisma.teamSelection.findMany.mockResolvedValue([]);
+    mockPrisma.team.findMany.mockResolvedValueOnce([
+      { id: "T1", roster: "skaven" },
+    ]);
+    mockPrisma.match.findMany.mockResolvedValueOnce([
+      {
+        offlineResultInput: {
+          input: { scoreHome: 2, scoreAway: 1, casualtiesHome: 2, casualtiesAway: 0 },
+        },
+        leaguePairing: {
+          homeParticipant: { teamId: "T1" },
+          awayParticipant: { teamId: "X" },
+        },
+      },
+      {
+        offlineResultInput: {
+          input: { scoreHome: 3, scoreAway: 1, casualtiesHome: 0, casualtiesAway: 0 },
+        },
+        leaguePairing: {
+          homeParticipant: { teamId: "X" },
+          awayParticipant: { teamId: "T1" },
+        },
+      },
+    ]);
+    mockPrisma.localMatch.findMany.mockResolvedValueOnce([
+      {
+        teamAId: "T1",
+        teamBId: "X",
+        scoreTeamA: 2,
+        scoreTeamB: 0,
+        actions: [
+          { playerTeam: "A", actionType: "blocage", armorBroken: true, opponentState: "elimine" },
+        ],
+      },
+    ]);
+
+    const result = await getUserAchievements("user-1");
+
+    expect(mockPrisma.team.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { ownerId: "user-1" } }),
+    );
+    // Ligue lue sur les Match offline des résultats validés : un forfait
+    // (aucun Match offline) ne fait gagner ni match ni TD.
+    expect(mockPrisma.match.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          mode: "offline",
+          leagueScoredAt: { not: null },
+        }),
+      }),
+    );
+    expect(result.stats).toMatchObject({
+      matchesPlayed: 3,
+      wins: 2,
+      losses: 1,
+      touchdowns: 5,
+      casualties: 3,
+    });
+    expect(result.stats.winsByRoster).toEqual({ skaven: 2 });
+    expect(result.newlyUnlocked).toEqual(
+      expect.arrayContaining([
+        "first-match",
+        "first-win",
+        "first-td",
+        "first-cas",
+        "roster-skaven",
+      ]),
+    );
+  });
+
+  it("ne compte pas un forfait en ligne reporté au classement", async () => {
+    mockPrisma.teamSelection.findMany.mockResolvedValue([
+      {
+        id: "s-1",
+        userId: "user-1",
+        teamRef: { roster: "skaven" },
+        match: {
+          id: "m-1",
+          status: "ended",
+          // Reporté au classement : compté par la ligue.
+          leagueScoredAt: new Date(),
+          turns: [{ payload: { gameState: { score: { teamA: 2, teamB: 0 } } } }],
+          teamSelections: [
+            { id: "s-1", userId: "user-1" },
+            { id: "s-2", userId: "user-x" },
+          ],
+        },
+      },
+    ]);
+    mockPrisma.team.findMany.mockResolvedValueOnce([{ id: "T1", roster: "skaven" }]);
+
+    const result = await getUserAchievements("user-1");
+
+    // Forfait en ligne reporté au classement : ni en ligne, ni en ligue
+    // (pas de Match offline) — aucun match joué.
+    expect(result.stats).toMatchObject({ matchesPlayed: 0, wins: 0, touchdowns: 0 });
+  });
+
+  it("garde les succès en ligne si la lecture des compétitions échoue", async () => {
+    mockPrisma.teamSelection.findMany.mockResolvedValue([]);
+    mockPrisma.team.findMany.mockRejectedValueOnce(new Error("db down"));
+    mockPrisma.friendship.count.mockResolvedValue(1);
+
+    const result = await getUserAchievements("user-1");
+
+    expect(result.stats).toMatchObject({ matchesPlayed: 0 });
+    expect(result.newlyUnlocked).toContain("first-friend");
   });
 });
 

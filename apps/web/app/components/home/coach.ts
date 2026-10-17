@@ -17,7 +17,27 @@ export interface CoachUser {
     readonly teams?: number;
     readonly matches?: number;
     readonly createdLocalMatches?: number;
+    /**
+     * Rencontres de coupe des équipes du coach qu'il n'a pas créées (la
+     * feuille validée les matérialise au nom du commissaire). Optionnel :
+     * absent d'une API antérieure.
+     */
+    readonly cupMatchesPlayed?: number;
   } | null;
+}
+
+/**
+ * « Matchs suivis » de l'accueil : parties en ligne et feuilles de ligue
+ * (`matches`), matchs locaux créés, et rencontres de coupe de ses équipes —
+ * ces dernières n'entraient dans aucun compteur du coach.
+ */
+export function coachMatchesTracked(user: CoachUser): number {
+  const counts = user._count;
+  return (
+    (counts?.matches ?? 0) +
+    (counts?.createdLocalMatches ?? 0) +
+    (counts?.cupMatchesPlayed ?? 0)
+  );
 }
 
 /** Nom d'affichage du coach : coachName > name > firstName > email (local part). */

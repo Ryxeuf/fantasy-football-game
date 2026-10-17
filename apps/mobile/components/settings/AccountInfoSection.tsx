@@ -3,6 +3,7 @@ import { InfoRow, StatCard } from "./SettingsFields";
 import { settingsStyles as styles } from "../../app/settings.styles";
 import { useTranslation } from "../../lib/i18n-context";
 import {
+  matchesPlayedTotal,
   formatDateFr,
   isAdmin,
   type UserProfile,
@@ -24,7 +25,7 @@ export function StatsSection({ profile }: { profile: UserProfile }) {
         />
         <StatCard
           label={t("settings.stats.matchesPlayed")}
-          value={String(profile.counts.matches)}
+          value={String(matchesPlayedTotal(profile.counts))}
         />
         <StatCard
           label={t("settings.stats.matchesCreated")}

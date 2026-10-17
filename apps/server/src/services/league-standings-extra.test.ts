@@ -73,7 +73,7 @@ describe("F1 — computeSeasonStandings : colonnes étendues", () => {
         status: "played",
         homeParticipantId: "p1",
         awayParticipantId: "p2",
-        matchSheet: { id: "sheet-1" },
+        matchSheet: { id: "sheet-1", status: "validated" },
       },
       {
         status: "forfeit_away",

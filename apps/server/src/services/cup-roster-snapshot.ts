@@ -18,6 +18,12 @@ import type { SnapshotInducement } from './snapshot-inducements';
 
 /** Joueur figé dans le snapshot. */
 export interface SnapshotPlayer {
+  /**
+   * `TeamPlayer.id`. Optionnel : absent des snapshots antérieurs (et des
+   * journaliers bakés, qui n'ont pas de ligne). Permet de savoir QUI a joué
+   * une rencontre sans deviner par numéro + nom (`player-career-stats`).
+   */
+  readonly id?: string;
   readonly name: string;
   readonly position: string;
   readonly number: number;
@@ -86,6 +92,7 @@ export interface TeamForSnapshot {
   readonly apothecary: boolean;
   readonly dedicatedFans: number;
   readonly players: ReadonlyArray<{
+    id?: string;
     name: string;
     position: string;
     number: number;
@@ -127,6 +134,7 @@ export function buildRosterSnapshot(
     apothecary: team.apothecary,
     dedicatedFans: team.dedicatedFans,
     players: team.players.map((p) => ({
+      ...(typeof p.id === 'string' ? { id: p.id } : {}),
       name: p.name,
       position: p.position,
       number: p.number,

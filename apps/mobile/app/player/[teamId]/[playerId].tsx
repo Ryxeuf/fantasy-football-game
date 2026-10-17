@@ -12,6 +12,7 @@ import { apiGet, ApiError } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth-context";
 import { useTranslation } from "../../../lib/i18n-context";
 import {
+  applyServedCareer,
   canAffordAdvancement,
   computeInjurySummary,
   computePlayerStatus,
@@ -68,7 +69,9 @@ export default function PlayerDetailScreen() {
         setError(t("players.detail.notFound"));
         return;
       }
-      setPlayer(match);
+      // Carrière toutes compétitions (coupe et matchs de ligue sans
+      // évènement compris), servie à côté des compteurs bruts.
+      setPlayer(applyServedCareer(match, team.playerCareers));
       setError(null);
     } catch (err: unknown) {
       if (

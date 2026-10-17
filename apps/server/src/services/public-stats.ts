@@ -24,13 +24,24 @@ export interface PublicStats {
   teamsCreated: number;
   /** Comptes coachs (activité). */
   coaches: number;
-  /** Matchs sur table suivis (activité). */
+  /**
+   * Matchs sur table suivis (activité) : les `LocalMatch` (coupe matérialisée
+   * par sa feuille, parties offline) PLUS les feuilles de LIGUE validées —
+   * une rencontre de ligue ne devient jamais un `LocalMatch`, elle manquait.
+   */
   matchesTracked: number;
 }
 
 interface CountArgs {
-  where?: { ruleset?: string };
+  where?: Record<string, unknown>;
 }
+
+/** Feuilles de LIGUE validées et jouées (un forfait n'est pas un match). */
+export const PLAYED_LEAGUE_SHEETS_WHERE = {
+  status: "validated",
+  pairingId: { not: null },
+  forfeitSide: null,
+} as const;
 
 /** Sous-ensemble structurel de PrismaClient : juste les `.count()` utiles. */
 export interface StatsCountClient {
@@ -40,19 +51,35 @@ export interface StatsCountClient {
   team: { count(args?: CountArgs): Promise<number> };
   user: { count(args?: CountArgs): Promise<number> };
   localMatch: { count(args?: CountArgs): Promise<number> };
+  leagueMatchSheet: { count(args?: CountArgs): Promise<number> };
 }
 
 export async function gatherPublicStats(db: StatsCountClient): Promise<PublicStats> {
   const ruleset = { where: { ruleset: CURRENT_RULESET } };
-  const [rosters, starPlayers, skills, teamsCreated, coaches, matchesTracked] =
-    await Promise.all([
-      db.roster.count(ruleset),
-      db.starPlayer.count(ruleset),
-      db.skill.count(ruleset),
-      db.team.count(),
-      db.user.count(),
-      db.localMatch.count(),
-    ]);
+  const [
+    rosters,
+    starPlayers,
+    skills,
+    teamsCreated,
+    coaches,
+    localMatches,
+    leagueSheets,
+  ] = await Promise.all([
+    db.roster.count(ruleset),
+    db.starPlayer.count(ruleset),
+    db.skill.count(ruleset),
+    db.team.count(),
+    db.user.count(),
+    db.localMatch.count(),
+    db.leagueMatchSheet.count({ where: PLAYED_LEAGUE_SHEETS_WHERE }),
+  ]);
 
-  return { rosters, starPlayers, skills, teamsCreated, coaches, matchesTracked };
+  return {
+    rosters,
+    starPlayers,
+    skills,
+    teamsCreated,
+    coaches,
+    matchesTracked: localMatches + leagueSheets,
+  };
 }

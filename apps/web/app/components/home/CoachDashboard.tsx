@@ -7,7 +7,7 @@ import {
   ONLINE_PLAY_FLAG,
 } from "../../lib/featureFlagKeys";
 import { apiRequest } from "../../lib/api-client";
-import { coachDisplayName, type CoachUser } from "./coach";
+import { coachDisplayName, coachMatchesTracked, type CoachUser } from "./coach";
 import RosterBadge from "../RosterBadge";
 import {
   EmblemRosters,
@@ -135,8 +135,7 @@ export default function CoachDashboard({ user }: CoachDashboardProps) {
   }, [language]);
 
   const teamCount = teams.length || user._count?.teams || 0;
-  const matchesTracked =
-    (user._count?.matches ?? 0) + (user._count?.createdLocalMatches ?? 0);
+  const matchesTracked = coachMatchesTracked(user);
 
   const quickActions: ReadonlyArray<QuickAction> = [
     {

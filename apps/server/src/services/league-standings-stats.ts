@@ -161,6 +161,18 @@ export function foldSeasonExtraStats(
   return result;
 }
 
+/**
+ * Feuille dont les évènements comptent au classement : la VALIDÉE, et elle
+ * seule. Victoires, TD et sorties du classement ne lisent que les feuilles
+ * validées ; les colonnes étendues ne peuvent pas compter, elles, un
+ * brouillon en cours de saisie ou une feuille invalidée.
+ */
+export function countedMatchSheetId(
+  sheet: { readonly id: string; readonly status?: string | null } | null,
+): string | null {
+  return sheet && sheet.status === "validated" ? sheet.id : null;
+}
+
 interface GroupedEventRow {
   matchSheetId: string;
   kind: string;
@@ -181,20 +193,20 @@ export async function aggregateSeasonExtraStats(
       status: true,
       homeParticipantId: true,
       awayParticipantId: true,
-      matchSheet: { select: { id: true } },
+      matchSheet: { select: { id: true, status: true } },
     },
   })) as Array<{
     status: string;
     homeParticipantId: string;
     awayParticipantId: string;
-    matchSheet: { id: string } | null;
+    matchSheet: { id: string; status: string } | null;
   }>;
 
   const rows: StandingsPairingRow[] = pairings.map((p) => ({
     status: p.status,
     homeParticipantId: p.homeParticipantId,
     awayParticipantId: p.awayParticipantId,
-    matchSheetId: p.matchSheet?.id ?? null,
+    matchSheetId: countedMatchSheetId(p.matchSheet),
   }));
 
   const matchSheetIds = rows

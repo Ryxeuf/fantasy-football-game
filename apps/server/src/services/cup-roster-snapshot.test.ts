@@ -73,6 +73,21 @@ describe('buildRosterSnapshot', () => {
   });
 });
 
+describe('buildRosterSnapshot — id des joueurs', () => {
+  it("fige l'id de chaque joueur : la carrière sait QUI a joué", () => {
+    const snap = buildRosterSnapshot(
+      { ...team, players: [{ ...team.players[0], id: 'tp-1' }] },
+      1,
+    );
+    expect(snap.players[0].id).toBe('tp-1');
+  });
+
+  it("n'invente pas d'id quand l'équipe n'en fournit pas", () => {
+    const snap = buildRosterSnapshot(team, 1);
+    expect('id' in snap.players[0]).toBe(false);
+  });
+});
+
 describe('captureRosterSnapshot — filtre des joueurs', () => {
   beforeEach(() => {
     vi.clearAllMocks();

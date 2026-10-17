@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import {
@@ -9,6 +9,9 @@ import {
   type TeamPlayerForStats,
 } from "../services/career-stats";
 import { serverLog } from "../utils/server-log";
+import { buildPlayerCareerTotals } from "../services/player-career-loader";
+import { loadTeamMatchStats } from "../services/team-match-stats-loader";
+import type { TeamMatchStats } from "../services/team-match-stats";
 
 const router = Router();
 
@@ -19,163 +22,187 @@ const router = Router();
  *  - aggregated team record over ended online matches (W/L/D, TDs, casualties,
  *    completions, interceptions)
  *  - per-match history (most recent first)
- *  - per-player career stats (already maintained on TeamPlayer rows by
- *    `persistMatchSPP`)
+ *  - per-player career stats ALL competitions: TeamPlayer counters (online
+ *    matches via `persistMatchSPP`, league sheets) + cup sheets + league
+ *    matches played without any event (`services/player-career-stats`)
+ *  - `matchStats` : team record ALL competitions (league + cup + friendly),
+ *    the one the team page shows (`services/team-match-stats-loader`)
  */
-router.get(
-  "/team/:teamId",
-  authUser,
-  async (req: AuthenticatedRequest, res) => {
-    const teamId = req.params.teamId;
-    const userId = req.user!.id;
+export async function handleGetTeamCareer(
+  req: AuthenticatedRequest,
+  res: Response,
+) {
+  const teamId = req.params.teamId;
+  const userId = req.user!.id;
 
-    try {
-      const team = await prisma.team.findFirst({
-        where: { id: teamId, ownerId: userId },
-        include: { players: true },
-      });
-      if (!team) {
-        return res.status(404).json({ error: "Equipe introuvable" });
-      }
+  try {
+    const team = await prisma.team.findFirst({
+      where: { id: teamId, ownerId: userId },
+      include: { players: true },
+    });
+    if (!team) {
+      return res.status(404).json({ error: "Equipe introuvable" });
+    }
 
-      const selections = await prisma.teamSelection.findMany({
-        where: { teamId: team.id },
-        orderBy: { createdAt: "desc" },
-        include: {
-          match: {
-            select: {
-              id: true,
-              status: true,
-              createdAt: true,
-            },
-          },
-        },
-      });
-
-      const endedSelections = selections.filter(
-        (sel: any) => sel.match?.status === "ended",
-      );
-
-      const records: TeamMatchRecord[] = [];
-      const history: Array<{
-        matchId: string;
-        createdAt: Date;
-        endedAt: Date | null;
-        teamSide: "A" | "B";
-        myScore: number;
-        opponentScore: number;
-        outcome: "win" | "draw" | "loss";
-        opponentCoachName: string | null;
-        opponentTeamName: string | null;
-        opponentRoster: string | null;
-      }> = [];
-
-      for (const sel of endedSelections) {
-        const matchId = sel.match.id;
-
-        // Fetch side (A vs B) using creation order of teamSelections for this match
-        const allSelections = await prisma.teamSelection.findMany({
-          where: { matchId },
-          orderBy: { createdAt: "asc" },
+    const selections = await prisma.teamSelection.findMany({
+      where: { teamId: team.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        match: {
           select: {
             id: true,
-            userId: true,
-            teamId: true,
+            status: true,
             createdAt: true,
-            team: true,
-            user: { select: { coachName: true } },
-            teamRef: { select: { name: true, roster: true } },
           },
-        });
-        if (allSelections.length < 2) continue;
-        const teamSide: "A" | "B" =
-          allSelections[0].id === sel.id ? "A" : "B";
-        const opponentSel =
-          teamSide === "A" ? allSelections[1] : allSelections[0];
-
-        // Pull the final gameState snapshot from the last turn
-        const lastTurn = await prisma.turn.findFirst({
-          where: { matchId },
-          orderBy: { number: "desc" },
-          select: { payload: true, createdAt: true },
-        });
-        const payload = ((lastTurn as any)?.payload ?? {}) as {
-          gameState?: unknown;
-        };
-        const rawGs = payload.gameState;
-        const gameState = typeof rawGs === "string" ? JSON.parse(rawGs) : rawGs;
-
-        const record = buildTeamMatchRecord(teamSide, gameState ?? null, {
-          matchId,
-          createdAt: sel.match.createdAt,
-          endedAt: lastTurn?.createdAt ?? null,
-          opponentCoachName: opponentSel?.user?.coachName ?? null,
-          opponentTeamName:
-            opponentSel?.teamRef?.name ?? opponentSel?.team ?? null,
-          opponentRoster: opponentSel?.teamRef?.roster ?? null,
-        });
-        records.push(record);
-
-        const myScore = teamSide === "A" ? record.scoreA : record.scoreB;
-        const opponentScore = teamSide === "A" ? record.scoreB : record.scoreA;
-        const outcome: "win" | "draw" | "loss" =
-          myScore > opponentScore
-            ? "win"
-            : myScore < opponentScore
-              ? "loss"
-              : "draw";
-
-        history.push({
-          matchId,
-          createdAt: record.createdAt,
-          endedAt: record.endedAt,
-          teamSide,
-          myScore,
-          opponentScore,
-          outcome,
-          opponentCoachName: record.opponentCoachName,
-          opponentTeamName: record.opponentTeamName,
-          opponentRoster: record.opponentRoster,
-        });
-      }
-
-      const teamRecord = aggregateTeamCareer(records);
-
-      const players = team.players.map((p: any) =>
-        toPlayerCareerStats({
-          id: p.id,
-          name: p.name,
-          number: p.number,
-          position: p.position,
-          spp: p.spp ?? 0,
-          matchesPlayed: p.matchesPlayed ?? 0,
-          totalTouchdowns: p.totalTouchdowns ?? 0,
-          totalCasualties: p.totalCasualties ?? 0,
-          totalCompletions: p.totalCompletions ?? 0,
-          totalInterceptions: p.totalInterceptions ?? 0,
-          totalMvpAwards: p.totalMvpAwards ?? 0,
-          nigglingInjuries: p.nigglingInjuries ?? 0,
-          advancements: p.advancements ?? "[]",
-          dead: p.dead ?? false,
-        } satisfies TeamPlayerForStats),
-      );
-
-      return res.json({
-        team: {
-          id: team.id,
-          name: team.name,
-          roster: team.roster,
-          ruleset: team.ruleset,
         },
-        record: teamRecord,
-        history,
-        players,
+      },
+    });
+
+    const endedSelections = selections.filter(
+      (sel: any) => sel.match?.status === "ended",
+    );
+
+    const records: TeamMatchRecord[] = [];
+    const history: Array<{
+      matchId: string;
+      createdAt: Date;
+      endedAt: Date | null;
+      teamSide: "A" | "B";
+      myScore: number;
+      opponentScore: number;
+      outcome: "win" | "draw" | "loss";
+      opponentCoachName: string | null;
+      opponentTeamName: string | null;
+      opponentRoster: string | null;
+    }> = [];
+
+    for (const sel of endedSelections) {
+      const matchId = sel.match.id;
+
+      // Fetch side (A vs B) using creation order of teamSelections for this match
+      const allSelections = await prisma.teamSelection.findMany({
+        where: { matchId },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          userId: true,
+          teamId: true,
+          createdAt: true,
+          team: true,
+          user: { select: { coachName: true } },
+          teamRef: { select: { name: true, roster: true } },
+        },
       });
-    } catch (e: any) {
-      serverLog.error("Erreur lors du calcul des stats de carriere:", e);
-      return res.status(500).json({ error: "Erreur serveur" });
+      if (allSelections.length < 2) continue;
+      const teamSide: "A" | "B" =
+        allSelections[0].id === sel.id ? "A" : "B";
+      const opponentSel =
+        teamSide === "A" ? allSelections[1] : allSelections[0];
+
+      // Pull the final gameState snapshot from the last turn
+      const lastTurn = await prisma.turn.findFirst({
+        where: { matchId },
+        orderBy: { number: "desc" },
+        select: { payload: true, createdAt: true },
+      });
+      const payload = ((lastTurn as any)?.payload ?? {}) as {
+        gameState?: unknown;
+      };
+      const rawGs = payload.gameState;
+      const gameState = typeof rawGs === "string" ? JSON.parse(rawGs) : rawGs;
+
+      const record = buildTeamMatchRecord(teamSide, gameState ?? null, {
+        matchId,
+        createdAt: sel.match.createdAt,
+        endedAt: lastTurn?.createdAt ?? null,
+        opponentCoachName: opponentSel?.user?.coachName ?? null,
+        opponentTeamName:
+          opponentSel?.teamRef?.name ?? opponentSel?.team ?? null,
+        opponentRoster: opponentSel?.teamRef?.roster ?? null,
+      });
+      records.push(record);
+
+      const myScore = teamSide === "A" ? record.scoreA : record.scoreB;
+      const opponentScore = teamSide === "A" ? record.scoreB : record.scoreA;
+      const outcome: "win" | "draw" | "loss" =
+        myScore > opponentScore
+          ? "win"
+          : myScore < opponentScore
+            ? "loss"
+            : "draw";
+
+      history.push({
+        matchId,
+        createdAt: record.createdAt,
+        endedAt: record.endedAt,
+        teamSide,
+        myScore,
+        opponentScore,
+        outcome,
+        opponentCoachName: record.opponentCoachName,
+        opponentTeamName: record.opponentTeamName,
+        opponentRoster: record.opponentRoster,
+      });
     }
-  },
-);
+
+    const teamRecord = aggregateTeamCareer(records);
+
+    // Bilan TOUTES compétitions : le palmarès ci-dessus ne compte que les
+    // matchs en ligne — une équipe de ligue ou de coupe y était à 0.
+    // Enrichissement d'affichage : la page se sert sans.
+    let matchStats: TeamMatchStats | null = null;
+    try {
+      matchStats = (await loadTeamMatchStats(team.id)).matchStats;
+    } catch (e: unknown) {
+      serverLog.error("[career-stats] bilan toutes competitions", e);
+    }
+
+    // Carrière de chaque joueur toutes compétitions : les compteurs de
+    // TeamPlayer ignorent la coupe et les matchs de ligue sans évènement.
+    const careers = await buildPlayerCareerTotals(
+      [team.id],
+      team.players,
+      (e: unknown) => serverLog.error("[career-stats] carriere des joueurs", e),
+    );
+
+    const players = team.players.map((p: any) => {
+      const career = careers.get(p.id);
+      return toPlayerCareerStats({
+        id: p.id,
+        name: p.name,
+        number: p.number,
+        position: p.position,
+        spp: p.spp ?? 0,
+        matchesPlayed: career?.matchesPlayed ?? p.matchesPlayed ?? 0,
+        totalTouchdowns: career?.touchdowns ?? p.totalTouchdowns ?? 0,
+        totalCasualties: career?.casualties ?? p.totalCasualties ?? 0,
+        totalCompletions: career?.completions ?? p.totalCompletions ?? 0,
+        totalInterceptions: career?.interceptions ?? p.totalInterceptions ?? 0,
+        totalMvpAwards: career?.mvpAwards ?? p.totalMvpAwards ?? 0,
+        nigglingInjuries: p.nigglingInjuries ?? 0,
+        advancements: p.advancements ?? "[]",
+        dead: p.dead ?? false,
+      } satisfies TeamPlayerForStats);
+    });
+
+    return res.json({
+      team: {
+        id: team.id,
+        name: team.name,
+        roster: team.roster,
+        ruleset: team.ruleset,
+      },
+      record: teamRecord,
+      matchStats,
+      history,
+      players,
+    });
+  } catch (e: any) {
+    serverLog.error("Erreur lors du calcul des stats de carriere:", e);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
+}
+
+router.get("/team/:teamId", authUser, handleGetTeamCareer);
 
 export default router;
