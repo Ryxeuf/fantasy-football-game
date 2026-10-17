@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  countedMatchSheetId,
   foldSeasonExtraStats,
   EMPTY_EXTRA_STATS,
   TRACKED_EVENT_KINDS,
@@ -196,5 +197,15 @@ describe("TRACKED_EVENT_KINDS", () => {
       "interception",
       "pass_complete",
     ]);
+  });
+});
+
+describe("countedMatchSheetId", () => {
+  it("ne compte que la feuille validée", () => {
+    expect(countedMatchSheetId({ id: "s1", status: "validated" })).toBe("s1");
+    expect(countedMatchSheetId({ id: "s1", status: "draft" })).toBeNull();
+    expect(countedMatchSheetId({ id: "s1", status: "submitted" })).toBeNull();
+    expect(countedMatchSheetId({ id: "s1", status: "invalidated" })).toBeNull();
+    expect(countedMatchSheetId(null)).toBeNull();
   });
 });

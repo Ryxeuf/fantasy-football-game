@@ -256,6 +256,38 @@ describe("Lot J — league-player-stats", () => {
     });
   });
 
+  describe("feuilles comptées", () => {
+    it("ne lit que les évènements et feuilles VALIDÉS de la saison", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+      await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(mockPrisma.leagueMatchEvent.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            matchSheet: {
+              status: "validated",
+              pairing: { round: { seasonId: "S1" } },
+            },
+          },
+        }),
+      );
+      expect(mockPrisma.leagueMatchSheet.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            status: "validated",
+            pairing: { round: { seasonId: "S1" } },
+          },
+        }),
+      );
+    });
+  });
+
   describe("FR18 — killers / aggressors (events de saison)", () => {
     it("classe killers (casualty+dead) et agresseurs (aggression) par acteur", async () => {
       mockPrisma.leagueParticipant.findMany.mockResolvedValue([

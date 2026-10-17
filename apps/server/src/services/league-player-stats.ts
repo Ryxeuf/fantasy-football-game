@@ -313,7 +313,12 @@ export async function computeLeaderboards(input: {
         };
       }
     ).leagueMatchSheet.findMany({
-      where: { pairing: { round: { seasonId: input.seasonId } } },
+      // Feuilles VALIDÉES seulement : un brouillon en cours de saisie ou une
+      // feuille invalidée ne compte ni au classement, ni aux PSP — ni ici.
+      where: {
+        status: "validated",
+        pairing: { round: { seasonId: input.seasonId } },
+      },
       select: {
         id: true,
         motmPlayerIds: true,
@@ -388,7 +393,10 @@ export async function computeLeaderboards(input: {
       // teamId non filtré ici : `topByCount` ne classe que les joueurs de
       // `players` (déjà restreints à la team quand `teamId` est fourni).
       where: {
-        matchSheet: { pairing: { round: { seasonId: input.seasonId } } },
+        matchSheet: {
+          status: "validated",
+          pairing: { round: { seasonId: input.seasonId } },
+        },
       },
       select: {
         matchSheetId: true,
