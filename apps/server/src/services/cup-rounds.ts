@@ -115,6 +115,11 @@ export interface CupPairingView {
     readonly scoreTeamA: number | null;
     readonly scoreTeamB: number | null;
   } | null;
+  /**
+   * Feuille de match de la rencontre (statut seul) : la carte annonce une
+   * feuille soumise, comme le calendrier d'une ligue. `null` = pas ouverte.
+   */
+  readonly matchSheet: { readonly status: string } | null;
 }
 
 export interface CupRoundView {
@@ -157,6 +162,7 @@ const PAIRING_INCLUDE = {
       scoreTeamB: true,
     },
   },
+  matchSheet: { select: { status: true } },
 } as const;
 
 interface TeamRow {
@@ -182,6 +188,8 @@ interface PairingRow {
     scoreTeamA: number | null;
     scoreTeamB: number | null;
   } | null;
+  /** Absente d'un double de test antérieur : lue avec repli. */
+  matchSheet?: { status: string } | null;
 }
 
 interface RoundRow {
@@ -239,6 +247,7 @@ function toRoundView(round: RoundRow): CupRoundView {
               scoreTeamB: p.localMatch.scoreTeamB ?? null,
             }
           : null,
+        matchSheet: p.matchSheet ? { status: p.matchSheet.status } : null,
       })),
   };
 }
