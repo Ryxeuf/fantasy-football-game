@@ -59,6 +59,9 @@ page de l'équipe —, seulement en page 1.
 - **Calendrier** : « Mes prochains matchs » sur la page de la coupe, relance
   d'une ronde par le commissaire, notification de la date convenue à
   l'adversaire.
+- **Palmarès** : une coupe jouée annonce son champion (vainqueur de la
+  finale, sinon premier du classement d'une coupe close) et son Oracle,
+  comme le récap de saison d'une ligue.
 - **Feuille imprimable** : la page de chaque équipe rappelle ses coups de
   pouce (inscription puis avant-match).
 
@@ -68,7 +71,7 @@ page de l'équipe —, seulement en page 1.
 
 - `cup-team-roster` : fiche de roster d'un inscrit et ses points d'entrée.
 - `cup-predictions` : pronostics sur les rencontres d'une coupe.
-- `cup-leaderboards` : statistiques de coupe à la demande.
+- `cup-leaderboards` : statistiques de coupe à la demande, palmarès.
 - `cup-calendar` : prochains matchs, relance de ronde, notification de date.
 
 ### Modified Capabilities
@@ -93,5 +96,6 @@ page de l'équipe —, seulement en page 1.
   feuille de coupe (clôture, règlement, dérèglement) et la ronde (bilan).
 - **Web** : `components/TeamRosterPanel`, pages `/cups/[id]/teams/[teamId]`,
   `/cups/[id]/predictions`, `/cups/[id]/stats`,
-  `/cups/[id]/pending-validations`, liens `TeamRosterLink` par compétition.
+  `/cups/[id]/pending-validations`, liens `TeamRosterLink` par compétition,
+  bandeau de palmarès.
 - Aucune rupture d'API : champs ajoutés, optionnels côté client.

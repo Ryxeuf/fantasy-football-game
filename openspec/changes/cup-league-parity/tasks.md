@@ -13,29 +13,33 @@
 
 ## 3. Feuilles à valider en coupe
 
-- [ ] 3.1 `GET /cup/:id` et `listCupRounds` servent le logo uploadé et le statut de la feuille de chaque rencontre — vérifier : tests de service.
-- [ ] 3.2 Carte de ronde : « En attente validation (1/2) » / « En attente validation » — vérifier : `CupRoundsView.test.tsx`.
-- [ ] 3.3 Notification du commissaire : noms et lien selon la compétition — vérifier : test de `sendLeagueMatchValidationPush` / du service.
-- [ ] 3.4 `PendingValidationsView` partagé ; page `/cups/[id]/pending-validations` ; lien du commissaire sur la coupe — vérifier : tests de rendu (filtre par compétition, « Ronde N », liens).
+- [x] 3.1 `GET /cup/:id` et `listCupRounds` servent le logo uploadé et le statut de la feuille de chaque rencontre — vérifier : tests de service.
+- [x] 3.2 Carte de ronde : « En attente validation (1/2) » / « En attente validation » — vérifier : `CupRoundsView.test.tsx`.
+- [x] 3.3 Notification du commissaire : noms et lien selon la compétition — vérifier : test de `sendLeagueMatchValidationPush` / du service.
+- [x] 3.4 `PendingValidationsView` partagé ; page `/cups/[id]/pending-validations` ; lien du commissaire sur la coupe — vérifier : tests de rendu (filtre par compétition, « Ronde N », liens).
 
 ## 4. Calendrier de coupe
 
-- [ ] 4.1 « Mes prochains matchs » sur la page de coupe — vérifier : test du sélecteur pur et du panneau.
-- [ ] 4.2 Notification de la date convenue à l'autre coach — vérifier : test de `scheduleCupPairing`.
-- [ ] 4.3 Relance d'une ronde (`POST /cup/rounds/:roundId/remind`) + bouton du commissaire — vérifier : tests de service/route et de rendu.
+- [x] 4.1 « Mes prochains matchs » sur la page de coupe — vérifier : test du sélecteur pur et du panneau.
+- [x] 4.2 Notification de la date convenue à l'autre coach — vérifier : test de `scheduleCupPairing`.
+- [x] 4.3 Relance d'une ronde (`POST /cup/rounds/:roundId/remind`) + bouton du commissaire — vérifier : tests de service/route et de rendu.
 
 ## 5. Statistiques de coupe
 
-- [ ] 5.1 `GET /cup/:id/leaderboards?topN=` — vérifier : test de route (bornes, top N).
-- [ ] 5.2 Page `/cups/[id]/stats` + lien depuis la coupe — vérifier : test de rendu.
+- [x] 5.1 `GET /cup/:id/leaderboards?topN=` — vérifier : test de route (bornes, top N).
+- [x] 5.2 Page `/cups/[id]/stats` + lien depuis la coupe — vérifier : test de rendu.
 
 ## 6. Pronostics de coupe
 
-- [ ] 6.1 Schéma : `CompetitionPrediction.cupPairingId` (+ `pairingId` nullable, unicité), `Cup.predictionsScope`, `CupPairing.predictionsClosedAt`, `CupRound.predictionsNotifiedAt` (Postgres + miroir SQLite, client régénéré) ; lectures de ligue filtrées `pairingId not null` — vérifier : typecheck + tests de prédictions de ligue verts.
-- [ ] 6.2 Service `cup-predictions` (lecture, classement, saisie, suppression, portée, clôtures) sur les règles pures — vérifier : tests unitaires.
-- [ ] 6.3 Crochets : clôture (1er évènement, 1re soumission), règlement à la validation (forfait ⇒ void), dérèglement à l'invalidation, bilan de ronde — vérifier : tests + spec e2e `cup-predictions-flow.spec.ts`.
-- [ ] 6.4 Routes `/cup/:id/predictions`, `/cup/:id/predictions/leaderboard`, `/cup/pairings/:id/prediction`, clôtures, portée ; `POST /cup` écrit `members` — vérifier : tests de route.
-- [ ] 6.5 Web : page `/cups/[id]/predictions`, résumé sur la coupe, portée à la création et à l'édition — vérifier : tests de rendu.
+- [x] 6.1 Schéma : `CompetitionPrediction.cupPairingId` (+ `pairingId` nullable, unicité), `Cup.predictionsScope`, `CupPairing.predictionsClosedAt`, `CupRound.predictionsNotifiedAt` (Postgres + miroir SQLite, client régénéré) ; lectures de ligue filtrées `pairingId not null` — vérifier : typecheck + tests de prédictions de ligue verts.
+- [x] 6.2 Service `cup-predictions` (lecture, classement, saisie, suppression, portée, clôtures) sur les règles pures — vérifier : tests unitaires.
+- [x] 6.3 Crochets : clôture (1er évènement, 1re soumission), règlement à la validation (forfait ⇒ void), dérèglement à l'invalidation, bilan de ronde — vérifier : tests + spec e2e `cup-predictions-flow.spec.ts`.
+- [x] 6.4 Routes `/cup/:id/predictions`, `/cup/:id/predictions/leaderboard`, `/cup/pairings/:id/prediction`, clôtures, portée ; `POST /cup` écrit `members` — vérifier : `routes/cup-predictions.test.ts` (chaîne Express réelle).
+- [x] 6.5 Web : page `/cups/[id]/predictions`, résumé sur la coupe, bouton 🔮 par ronde, portée à la création et à l'édition — vérifier : tests de rendu (page, résumé, `CupRoundsView`, création, édition).
+
+## 6 bis. Palmarès
+
+- [x] 6.6 Bandeau champion + Oracle d'une coupe jouée (module pur `cup-champion`) — vérifier : `cup-champion.test.ts`, `CupChampionBanner.test.tsx`.
 
 ## 7. Clôture
 
