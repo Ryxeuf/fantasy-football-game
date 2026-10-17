@@ -17,8 +17,15 @@
 
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
-import { loadCompetitionCareerAdjustments } from "./player-career-loader";
+import { loadCompetitionCareer } from "./player-career-loader";
 import type { CompetitionCareerAdjustment } from "./player-career-stats";
+
+/**
+ * Équipes lues par lot : le filtre des feuilles porte quatre listes `IN`
+ * (domicile / extérieur, ligue / coupe), un roster très joué dépasserait
+ * sinon la borne de paramètres d'une requête.
+ */
+const TEAM_CHUNK_SIZE = 200;
 
 export interface PositionUsage {
   /** Nombre de joueurs créés à ce poste (toutes équipes de coachs confondues). */
@@ -100,18 +107,15 @@ async function loadPositionCareerExtras(
       where: { roster: rosterSlug, ruleset },
       select: { id: true },
     })) as Array<{ id: string }>;
-    const adjustments = await loadCompetitionCareerAdjustments(
-      teams.map((t) => t.id),
-    );
-    if (adjustments.size === 0) return new Map();
-    const players = (await prisma.teamPlayer.findMany({
-      where: { id: { in: [...adjustments.keys()] } },
-      select: { id: true, position: true },
-    })) as Array<{ id: string; position: string }>;
-    return foldCareerExtrasByPosition(
-      adjustments,
-      new Map(players.map((p) => [p.id, p.position])),
-    );
+    const adjustments = new Map<string, CompetitionCareerAdjustment>();
+    const positionByPlayerId = new Map<string, string>();
+    for (let i = 0; i < teams.length; i += TEAM_CHUNK_SIZE) {
+      const chunk = teams.slice(i, i + TEAM_CHUNK_SIZE).map((t) => t.id);
+      const career = await loadCompetitionCareer(chunk);
+      for (const [id, adj] of career.adjustments) adjustments.set(id, adj);
+      for (const p of career.players) positionByPlayerId.set(p.id, p.position);
+    }
+    return foldCareerExtrasByPosition(adjustments, positionByPlayerId);
   } catch (e: unknown) {
     serverLog.error(`[position-usage-stats] carriere des feuilles (${rosterSlug})`, e);
     return new Map();

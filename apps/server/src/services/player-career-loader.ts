@@ -58,22 +58,46 @@ export interface CareerLoaderDb {
   readonly match: { findMany: (args: unknown) => Promise<unknown> };
 }
 
+export interface CompetitionCareer {
+  /** Apport des feuilles, par id de joueur (absent = rien à ajouter). */
+  readonly adjustments: Map<string, CompetitionCareerAdjustment>;
+  /** Joueurs des équipes lues (tous statuts), poste compris. */
+  readonly players: readonly CareerTeamPlayer[];
+}
+
+/** Vrai si l'appelant a déjà chargé TOUS les champs que la résolution lit. */
+function isCareerTeamPlayer(p: unknown): p is CareerTeamPlayer {
+  if (!p || typeof p !== "object") return false;
+  const r = p as Record<string, unknown>;
+  return (
+    typeof r.id === "string" &&
+    typeof r.teamId === "string" &&
+    typeof r.number === "number" &&
+    typeof r.name === "string" &&
+    typeof r.position === "string"
+  );
+}
+
 /**
  * Apport des feuilles validées à la carrière de chaque joueur des équipes
- * `teamIds`. Un joueur absent de la map n'a rien à ajouter.
+ * `teamIds`. `knownPlayers` : TOUS les joueurs de ces équipes (morts et
+ * licenciés compris), quand l'appelant les a déjà chargés — on ne les relit
+ * pas.
  */
-export async function loadCompetitionCareerAdjustments(
+export async function loadCompetitionCareer(
   teamIds: readonly string[],
   db: CareerLoaderDb = prisma as unknown as CareerLoaderDb,
-): Promise<Map<string, CompetitionCareerAdjustment>> {
+  knownPlayers?: readonly CareerTeamPlayer[],
+): Promise<CompetitionCareer> {
   const ids = [...new Set(teamIds)].filter(Boolean);
-  if (ids.length === 0) return new Map();
+  if (ids.length === 0) return { adjustments: new Map(), players: [] };
 
   const [players, sheets] = (await Promise.all([
-    db.teamPlayer.findMany({
-      where: { teamId: { in: ids } },
-      select: { id: true, teamId: true, number: true, name: true, position: true },
-    }),
+    knownPlayers ??
+      db.teamPlayer.findMany({
+        where: { teamId: { in: ids } },
+        select: { id: true, teamId: true, number: true, name: true, position: true },
+      }),
     db.leagueMatchSheet.findMany({
       where: {
         status: "validated",
@@ -113,7 +137,7 @@ export async function loadCompetitionCareerAdjustments(
     }),
   ])) as [CareerTeamPlayer[], SheetRow[]];
 
-  if (sheets.length === 0) return new Map();
+  if (sheets.length === 0) return { adjustments: new Map(), players };
 
   // Ligue : le Match qui a noté chaque rencontre (au plus un :
   // `leaguePairingId` est unique, une invalidation supprime le Match offline).
@@ -162,7 +186,22 @@ export async function loadCompetitionCareerAdjustments(
     };
   });
 
-  return computeCompetitionCareerAdjustments({ sheets: careerSheets, players });
+  return {
+    adjustments: computeCompetitionCareerAdjustments({ sheets: careerSheets, players }),
+    players,
+  };
+}
+
+/**
+ * Apport des feuilles validées à la carrière de chaque joueur des équipes
+ * `teamIds`. Un joueur absent de la map n'a rien à ajouter.
+ */
+export async function loadCompetitionCareerAdjustments(
+  teamIds: readonly string[],
+  db?: CareerLoaderDb,
+  knownPlayers?: readonly CareerTeamPlayer[],
+): Promise<Map<string, CompetitionCareerAdjustment>> {
+  return (await loadCompetitionCareer(teamIds, db, knownPlayers)).adjustments;
 }
 
 /**
@@ -178,8 +217,14 @@ export async function buildPlayerCareerTotals(
   db?: CareerLoaderDb,
 ): Promise<Map<string, PlayerCareerTotals>> {
   let adjustments = new Map<string, CompetitionCareerAdjustment>();
+  // La fiche d'équipe a déjà chargé ses joueurs (tous statuts, poste
+  // compris) : pas de seconde lecture. Un appelant qui n'a chargé que les
+  // compteurs laisse le chargeur les relire.
+  const known = players.every(isCareerTeamPlayer)
+    ? (players as unknown as CareerTeamPlayer[])
+    : undefined;
   try {
-    adjustments = await loadCompetitionCareerAdjustments(teamIds, db);
+    adjustments = await loadCompetitionCareerAdjustments(teamIds, db, known);
   } catch (e: unknown) {
     onError(e);
   }

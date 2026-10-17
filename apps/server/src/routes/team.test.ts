@@ -2994,7 +2994,6 @@ describe("Route: GET /team/:id (S25.5ae)", () => {
     });
     selectionFindFirst.mockResolvedValue(null);
     localMatchFindMany.mockResolvedValue([]);
-    prismaMock.teamPlayer.findMany.mockResolvedValueOnce([knight]);
     prismaMock.leagueMatchSheet.findMany.mockResolvedValueOnce([
       {
         pairingId: null,
@@ -3023,6 +3022,8 @@ describe("Route: GET /team/:id (S25.5ae)", () => {
     const res = createRes();
     await handleGetTeamDetail(req, res);
 
+    // Joueurs déjà chargés par la fiche : le chargeur ne les relit pas.
+    expect(prismaMock.teamPlayer.findMany).not.toHaveBeenCalled();
     expect(res.payload).toMatchObject({
       success: true,
       data: {

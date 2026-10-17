@@ -128,13 +128,10 @@ describe("getRosterPositionStats", () => {
       },
     ]);
     mockedPrisma.team.findMany.mockResolvedValue([{ id: "T1" }]);
-    mockedPrisma.teamPlayer.findMany
-      // Joueurs lus par le chargeur de carrière…
-      .mockResolvedValueOnce([
-        { id: "p1", teamId: "T1", number: 1, name: "Bohémond", position: "Chevalier du Graal" },
-      ])
-      // … puis le poste des joueurs concernés.
-      .mockResolvedValueOnce([{ id: "p1", position: "Chevalier du Graal" }]);
+    // Joueurs lus par le chargeur de carrière, poste compris.
+    mockedPrisma.teamPlayer.findMany.mockResolvedValueOnce([
+      { id: "p1", teamId: "T1", number: 1, name: "Bohémond", position: "Chevalier du Graal" },
+    ]);
     mockedPrisma.leagueMatchSheet.findMany.mockResolvedValue([
       {
         pairingId: null,
@@ -161,6 +158,24 @@ describe("getRosterPositionStats", () => {
       matchesPlayed: 1,
       avgTouchdowns: 2,
     });
+  });
+
+  it("lit les équipes d'un roster très joué par lots", async () => {
+    mockedPrisma.teamPlayer.groupBy.mockResolvedValue([
+      {
+        position: "Blitzer",
+        _count: { _all: 1 },
+        _sum: { spp: 0, totalTouchdowns: 0, totalCasualties: 0, totalMvpAwards: 0, matchesPlayed: 0 },
+      },
+    ]);
+    mockedPrisma.team.findMany.mockResolvedValue(
+      Array.from({ length: 450 }, (_, i) => ({ id: `T${i}` })),
+    );
+    await getRosterPositionStats("human", "season_3");
+    const chunks = mockedPrisma.teamPlayer.findMany.mock.calls.map(
+      ([args]: [{ where: { teamId: { in: string[] } } }]) => args.where.teamId.in.length,
+    );
+    expect(chunks).toEqual([200, 200, 50]);
   });
 
   it("sert les compteurs seuls si les feuilles sont illisibles", async () => {

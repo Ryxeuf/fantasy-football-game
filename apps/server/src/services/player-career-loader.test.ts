@@ -144,6 +144,18 @@ describe("buildPlayerCareerTotals", () => {
     });
   });
 
+  it("ne relit pas les joueurs que l'appelant a déjà chargés", async () => {
+    const db = fakeDb({ players, sheets: [cupSheet] });
+    const totals = await buildPlayerCareerTotals(
+      [HOME],
+      players.map((p) => ({ ...p, matchesPlayed: 0 })),
+      undefined,
+      db,
+    );
+    expect(db.teamPlayer.findMany).not.toHaveBeenCalled();
+    expect(totals.get("h1")?.matchesPlayed).toBe(1);
+  });
+
   it("retombe sur les compteurs persistés si les feuilles sont illisibles", async () => {
     const db = fakeDb({ players });
     db.leagueMatchSheet.findMany.mockRejectedValueOnce(new Error("db down"));
