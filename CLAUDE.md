@@ -1283,6 +1283,43 @@ routes (`league-predictions`) tire `league-access` → `services/league` → la
 chaîne elle-même : le cycle ne casse rien au typecheck, il court-circuite les
 mocks de test (un `vi.mock` de `recordOfflineLeagueResult` ignoré).
 
+### Ce qu'on CONSULTE autour d'une coupe suit la ligue
+
+« Une coupe est une ligue moins ses effets » valait pour la SAISIE, pas pour
+ce qu'on lit autour (audit du 2026-10-17, change `cup-league-parity`) : rosters
+introuvables, ni pronostics, ni page de stats, feuilles soumises affichées
+« À jouer », notification « ? vs ? » vers une URL de ligue. Règles qui en
+sortent :
+
+- **La fiche de roster d'une coupe montre le roster d'INSCRIPTION**
+  (`CupParticipant.rosterSnapshot`, celui que rejoue chaque rencontre), pas
+  l'équipe en direct, avec les stats DÉRIVÉES des `LocalMatch` de la coupe
+  (`services/cup-team-roster`, pur ; repli `live` annoncé sans snapshot). Même
+  porte que `GET /cup/:id`. Mise en page (`components/TeamRosterPanel`) et méta
+  d'affichage (`services/team-roster-view`) PARTAGÉES avec la ligue.
+- **Tout nom d'équipe d'une compétition mène à son roster**
+  (`TeamRosterLink competition=…`, `teamRosterHref(kind, …)`). Un nouvel
+  affichage de nom d'équipe en coupe sans lien est un oubli.
+- **Le pronostic est POLYMORPHE** (`CompetitionPrediction.pairingId` XOR
+  `cupPairingId`, patron de `LeagueMatchSheet`). Toute lecture de pronostics
+  de LIGUE filtre `pairingId: { not: null }` — une prédiction de coupe n'a
+  pas de saison. Côté coupe, les crochets vivent dans la feuille commune
+  (clôture au 1er évènement / à la 1re soumission, règlement à la validation,
+  dérèglement à l'invalidation) et le bilan de ronde part aussi d'une
+  annulation qui complète la ronde. Membres = commissaire + propriétaires des
+  inscrits ; `Cup.predictionsScope` `null` = `off`, la création écrit
+  `members`.
+- **Les composants web se paramètrent par `competition`**, ils ne se clonent
+  pas : chemins d'API, « Ronde N », « membres de la coupe », portée. Une coupe
+  tient ses rondes sur UNE page de pronostics, ancres `pronos-ronde-N`.
+- **Le palmarès d'une coupe se dérive** (`cups/[id]/cup-champion`, pur) :
+  vainqueur de la finale (pas de nul), sinon premier d'une coupe CLOSE ;
+  Oracle = même règle que `leaderboardLeaders`.
+
+Piège de test : un test de page qui mocke `apiRequest` par UNE valeur
+constante casse dès que la page gagne une lecture (`{ teams: [] }` servi aux
+pronostics ⇒ `view.rounds is not iterable`). Mocker par chemin.
+
 ### Poules : rondes COMMUNES, appariement par groupe
 
 Une ronde reste une ronde de la compétition (contrainte unique
@@ -2310,3 +2347,11 @@ edition du `.json`, `pnpm --filter web typecheck` +
   gestion des clés, l'impersonation et le compte courant, `apiKeyId` dans les
   deux journaux, page `/admin/api-keys`, smoke test distant
   `pnpm smoke:remote`. Doc [`docs/admin-api-keys.md`](./docs/admin-api-keys.md).
+- **2026-10-17** : **Une coupe offre ce qu'offre une ligue** (change OpenSpec
+  `cup-league-parity`) — fiche de roster d'inscription et liens depuis tous
+  les noms d'équipe, feuilles à valider (carte, notification, page), « mes
+  prochains matchs », relance de ronde, date convenue notifiée, page de
+  statistiques, pronostics polymorphes (modèle, règlement, routes, pages),
+  palmarès champion + Oracle ; feuille PDF : les coups de pouce rappelés sur
+  la page de chaque équipe. Captures avant / après sur l'application réelle
+  (`tests/screenshots/before-after/`, `docs/screenshots/cup-parity-*`).

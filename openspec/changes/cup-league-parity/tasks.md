@@ -43,5 +43,5 @@
 
 ## 7. Clôture
 
-- [ ] 7.1 Captures avant/après versionnées (`docs/screenshots/`) — vérifier : images relues.
-- [ ] 7.2 CLAUDE.md : patron « fiche de roster de coupe = roster d'inscription » et pronostics polymorphes — vérifier : section relue.
+- [x] 7.1 Captures avant/après versionnées (`docs/screenshots/`) — vérifier : images relues.
+- [x] 7.2 CLAUDE.md : patron « fiche de roster de coupe = roster d'inscription » et pronostics polymorphes — vérifier : section relue.
