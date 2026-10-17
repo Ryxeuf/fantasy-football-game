@@ -1,6 +1,6 @@
 # Suites identifiées hors périmètre des changes archivés
 
-> Dernière mise à jour : 2026-10-10
+> Dernière mise à jour : 2026-10-17
 > Statut : **suites consignées**, non scopées.
 
 Quand un change OpenSpec est archivé, ses tâches « hors périmètre » /
@@ -208,10 +208,9 @@ Source : `league-match-predictions` (archivé 2026-09-27, #1034). Pick'em à
 points par rencontre de ligue, portée `off | members | open`, clôture
 write-once, classement Coachs / Tribunes, Oracle au palmarès. Restent :
 
-- **Les coupes.** Le modèle s'appelle déjà `CompetitionPrediction` : il
-  accueillera un `cupPairingId` nullable (XOR `pairingId`, invariant tenu par
-  le service, patron `CompetitionDocument`) — sans renommage, qui serait un
-  DROP + CREATE sous `db push`.
+- ~~**Les coupes.**~~ Livré par `cup-league-parity` (#1077) :
+  `CompetitionPrediction.cupPairingId` (XOR `pairingId`), spec vivante
+  `openspec/specs/cup-predictions/`.
 - **Les Crowns (phase 2).** Les points restent des points tant qu'aucun puits
   de Crowns n'existe hors Pro League (gelée). Le jour où il en existe un, la
   conversion peut être RÉTROACTIVE (« N Crowns par point, plafond par
@@ -390,6 +389,22 @@ Sans suite : `add-competition-official-documents`, `private-league-visibility`,
 `invalidate-sheet-after-sheet-player-hire`, `home-compact-layout`,
 `home-news-ticker-readability`, `shop-and-crowns-admin`.
 
+## Parité ligue ↔ coupe
+
+Source : `cup-league-parity` (archivé 2026-10-17, #1077). Rosters de coupe,
+feuilles à valider, calendrier, statistiques, pronostics et palmarès alignés
+sur la ligue. Restent :
+
+- **Pronostics de coupe dans les titres et les succès.** L'Oracle d'une
+  coupe s'annonce sur son bandeau de palmarès (dérivé à la lecture), mais il
+  n'est ni persisté au palmarès ni compté par les succès de pronostic : ceux-ci
+  ne lisent que les saisons de ligue (`computeUserPredictionStats` filtre
+  `pairingId: { not: null }`).
+- **Confort du calendrier de coupe.** Le calendrier de ligue filtre ses
+  journées (« toutes / à jouer / jouées », `filterRounds`) et exporte chaque
+  journée en PDF depuis son en-tête (`MatchdayExport`) ; les rondes de coupe
+  n'ont ni filtre ni export par ronde (seulement l'export global de la coupe).
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -409,4 +424,5 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `crowns-earning` | `prisma db push` (table `CrownsReward`), joué par `scripts/deploy.sh`. Rien n'est crédité tant que le flag `crowns` est fermé ; à son ouverture, chaque coach reçoit l'historique de ses feuilles validées et de ses succès (plafonné par saison) plus le bonus de bienvenue, à sa première lecture du solde. |
 | `league-match-predictions` | `prisma db push` (table `CompetitionPrediction`, colonnes `League.predictionsScope`, `LeaguePairing.predictionsClosedAt`, `LeagueRound.predictionsNotifiedAt`, nullables, aucun backfill) — joué automatiquement par `scripts/deploy.sh`. Les ligues existantes démarrent SANS pronostics (`null` ⇒ `off`) : c'est leur commissaire qui les active. |
 | `cup-build-inducements` | `prisma db push` (colonnes `Cup.inducementMode` et `Cup.allowedInducements`, nullables sans `@default` — les coupes existantes restent en avant-match ; table `TeamInducement`), joué par `scripts/deploy.sh`. Puis, dans `/admin/data/tournament-rulesets`, **réinitialiser** (ou éditer) la ligne NAF World Cup 2027 pour y porter la remise des Pots-de-vin (50 000 po) et le plafond « Arme Secrète » (2) : le seed ne réécrit jamais une ligne existante. |
+| `cup-league-parity` | `prisma db push` (`CompetitionPrediction.pairingId` devient nullable, colonne `cupPairingId` + unicité `[cupPairingId, userId]` ; colonnes `Cup.predictionsScope`, `CupPairing.predictionsClosedAt`, `CupRound.predictionsNotifiedAt`, nullables sans `@default`, aucun backfill) — joué par `scripts/deploy.sh`. Les coupes existantes démarrent SANS pronostics (`null` ⇒ `off`) ; leur commissaire est invité à les activer depuis la page de la coupe. |
 | `pro-league-coach-evolution` | `prisma db push` (tables `ProCoach`, `ProCoachMemory`), joué par `scripts/deploy.sh`. Aucun backfill : le coach d'une équipe se crée à son premier match. Variables optionnelles du lot 5 : `PRO_LEAGUE_SIM_WORKERS`, `PRO_LEAGUE_COMPLETION_TICK_MS`, `PRO_LEAGUE_REPLAY_RETENTION_DAYS`. |

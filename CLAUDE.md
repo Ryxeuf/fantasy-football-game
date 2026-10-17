@@ -2348,7 +2348,8 @@ edition du `.json`, `pnpm --filter web typecheck` +
   deux journaux, page `/admin/api-keys`, smoke test distant
   `pnpm smoke:remote`. Doc [`docs/admin-api-keys.md`](./docs/admin-api-keys.md).
 - **2026-10-17** : **Une coupe offre ce qu'offre une ligue** (change OpenSpec
-  `cup-league-parity`) — fiche de roster d'inscription et liens depuis tous
+  `cup-league-parity`, #1077, archivé le 2026-10-17 ; specs vivantes
+  `cup-team-roster`, `cup-predictions`, `cup-leaderboards`, `cup-calendar`) — fiche de roster d'inscription et liens depuis tous
   les noms d'équipe, feuilles à valider (carte, notification, page), « mes
   prochains matchs », relance de ronde, date convenue notifiée, page de
   statistiques, pronostics polymorphes (modèle, règlement, routes, pages),

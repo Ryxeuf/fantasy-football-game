@@ -7,7 +7,7 @@
  * saisie, note, clôture, éligibilité, classement, anonymisation), commun aux
  * deux compétitions. Ce module ne fait qu'assembler les lignes d'une coupe.
  *
- * Ce qui change par rapport à la ligue (cf. `openspec/changes/cup-league-parity`) :
+ * Ce qui change par rapport à la ligue (cf. `openspec/specs/cup-predictions`) :
  *  - membres : commissaire + propriétaires d'une équipe inscrite (un
  *    inscrit n'a pas de statut de retrait : tous sont « actifs ») ;
  *  - un exempt n'est pas une rencontre : il n'est pas servi ; un
