@@ -12,7 +12,13 @@ vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "C1" }),
 }));
 vi.mock("../../lib/api-client", () => ({
-  apiRequest: vi.fn().mockResolvedValue({ teams: [] }),
+  // Équipes du lecteur, et une coupe sans pronostics.
+  apiRequest: vi.fn(async (path: string) =>
+    path.includes("/predictions")
+      ? { scope: "off", scopeConfigured: true, rounds: [], coach: [], stands: [],
+          viewer: { userId: null, isCommissioner: false, isMember: false, group: null } }
+      : { teams: [] },
+  ),
   ApiClientError: class extends Error {},
 }));
 vi.mock("../../lib/tournament-rulesets", () => ({

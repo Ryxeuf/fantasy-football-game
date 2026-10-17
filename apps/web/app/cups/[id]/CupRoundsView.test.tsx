@@ -84,6 +84,7 @@ function renderView(props: {
   poolNamesById?: Record<string, string>;
   poolIdByTeamId?: Record<string, string | null>;
   preferredPoolId?: string | null;
+  predictionLinks?: Record<string, { href: string; label: string; state: "todo" | "done" | "open" | "closed" }>;
 }) {
   const onChanged = vi.fn();
   render(
@@ -99,6 +100,7 @@ function renderView(props: {
         poolNamesById={props.poolNamesById}
         poolIdByTeamId={props.poolIdByTeamId}
         preferredPoolId={props.preferredPoolId}
+        predictionLinks={props.predictionLinks}
         onChanged={onChanged}
       />
     </LanguageProvider>,
@@ -122,6 +124,24 @@ describe("CupRoundsView", () => {
     apiRequest.mockReset();
     apiRequest.mockResolvedValue({});
     push.mockReset();
+  });
+
+  it("chaque ronde porte son bouton 🔮 vers ses pronostics, comme une journée de ligue", () => {
+    renderView({
+      rounds: [round([PLAYED, OPEN, BYE])],
+      predictionLinks: {
+        r1: { href: "/cups/cup-1/predictions#pronos-ronde-1", label: "Pronostiquer (1)", state: "todo" },
+      },
+    });
+    const button = screen.getByTestId("cup-round-predictions-r1");
+    expect(button.getAttribute("href")).toBe("/cups/cup-1/predictions#pronos-ronde-1");
+    expect(button.textContent).toContain("Pronostiquer (1)");
+    expect(button.getAttribute("data-state")).toBe("todo");
+  });
+
+  it("aucun bouton 🔮 sans pronostics", () => {
+    renderView({ rounds: [round([PLAYED, OPEN, BYE])] });
+    expect(screen.queryByTestId("cup-round-predictions-r1")).toBeNull();
   });
 
   it("affiche score, exempt, table et statut de chaque rencontre", () => {

@@ -29,6 +29,8 @@ import { dynamicRoute } from "../../lib/typed-route";
 import { groupCupRoundByPool } from "./round-pools";
 import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
 import { RoundFollowupButton } from "../../leagues/[id]/RoundFollowupButton";
+import { RoundPredictionsButton } from "../../leagues/_components/RoundPredictionsButton";
+import type { RoundPredictionLink } from "../../leagues/_components/prediction-rounds";
 
 /**
  * Rondes d'une coupe : génération par le commissaire (tirage au sort, ronde
@@ -107,6 +109,11 @@ interface CupRoundsViewProps {
   poolIdByTeamId?: Readonly<Record<string, string | null>>;
   /** Poule du coach connecté : remontée en tête de chaque ronde. */
   preferredPoolId?: string | null;
+  /**
+   * Bouton 🔮 de chaque ronde vers ses pronostics, indexé par id de ronde.
+   * Absent / vide = coupe sans pronostics : aucun bouton.
+   */
+  predictionLinks?: Readonly<Record<string, RoundPredictionLink>>;
   /** Rappelé après toute mutation (rechargement de la coupe). */
   onChanged: () => void;
 }
@@ -150,6 +157,7 @@ export default function CupRoundsView({
   poolNamesById = {},
   poolIdByTeamId = {},
   preferredPoolId = null,
+  predictionLinks = {},
   onChanged,
 }: CupRoundsViewProps) {
   const { t, language } = useLanguage();
@@ -441,14 +449,22 @@ export default function CupRoundsView({
                       ) : null}
                     </div>
                   </div>
-                  {/* Relance des coachs en retard : commissaire, ronde ouverte. */}
-                  {isCommissioner && isRoundOpen(round) ? (
-                    <RoundFollowupButton
-                      competition="cup"
-                      roundId={round.id}
-                      roundNumber={round.roundNumber}
-                    />
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {predictionLinks[round.id] ? (
+                      <RoundPredictionsButton
+                        testId={`cup-round-predictions-${round.id}`}
+                        link={predictionLinks[round.id]}
+                      />
+                    ) : null}
+                    {/* Relance des coachs en retard : commissaire, ronde ouverte. */}
+                    {isCommissioner && isRoundOpen(round) ? (
+                      <RoundFollowupButton
+                        competition="cup"
+                        roundId={round.id}
+                        roundNumber={round.roundNumber}
+                      />
+                    ) : null}
+                  </div>
                 </header>
                 <div className="space-y-3 p-3 sm:p-4">
                   {groups === null ? (

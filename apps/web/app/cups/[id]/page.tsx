@@ -31,6 +31,9 @@ import { CupInducementRulesSummary } from "../CupInducementRulesSummary";
 import TeamRosterLink from "../../leagues/[id]/TeamRosterLink";
 import { teamRosterHref } from "../../lib/competition-links";
 import { packInducementSlugs, parseCupInducementMode } from "../inducement-mode";
+import { useCupPredictions } from "../../leagues/_components/useSeasonPredictions";
+import { cupRoundPredictionLinks } from "../../leagues/_components/prediction-rounds";
+import { CupPredictionsSummary } from "./CupPredictionsSummary";
 
 type CupScoringConfig = {
   winPoints: number;
@@ -271,6 +274,8 @@ export default function CupDetailPage() {
   const [currentUserIsAdmin, setCurrentUserIsAdmin] = useState(false);
   // Lecteur connecté : sert « Vos prochains matchs ».
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // Pronostics : résumé d'une ligne + bouton 🔮 de chaque ronde.
+  const predictions = useCupPredictions(cupId);
   const rulesetLabels: Record<string, string> = {
     season_2: "Saison 2",
     season_3: "Saison 3",
@@ -409,6 +414,7 @@ export default function CupDetailPage() {
   // (clone) ; sinon on peut inscrire l'équipe telle quelle.
   const rc = cup.rulesConfig;
   const sheetsToValidate = cupSheetsAwaitingValidation(cup.rounds ?? []);
+  const predictionLinks = cupRoundPredictionLinks(predictions.view, cup.id);
   const cupAdjusted = Boolean(
     rc &&
       (Object.keys(rc.tierBudgets).length > 0 ||
@@ -939,6 +945,14 @@ export default function CupDetailPage() {
                 />
               </div>
               <div className="mb-4">
+                <CupPredictionsSummary
+                  cupId={cup.id}
+                  view={predictions.view}
+                  board={predictions.board}
+                  error={predictions.error}
+                />
+              </div>
+              <div className="mb-4">
                 <CupNextMatchesPanel
                   cupId={cup.id}
                   rounds={cup.rounds ?? []}
@@ -962,8 +976,11 @@ export default function CupDetailPage() {
                   cup.participants ?? [],
                   cup.userParticipatingTeamIds ?? [],
                 )}
+                predictionLinks={predictionLinks}
                 onChanged={() => {
                   void loadCup();
+                  // Une ronde générée, annulée ou close change les pronostics.
+                  void predictions.reload();
                 }}
               />
             </div>
