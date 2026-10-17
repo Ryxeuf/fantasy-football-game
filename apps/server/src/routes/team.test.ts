@@ -12,6 +12,13 @@ vi.mock("../prisma", () => ({
   prisma: {
     match: {
       findUnique: vi.fn(),
+      // Carrière des joueurs (GET /team/:id) : snapshot de validation des
+      // feuilles de ligue.
+      findMany: vi.fn(() => Promise.resolve([])),
+    },
+    // Carrière des joueurs (GET /team/:id) : feuilles validées.
+    leagueMatchSheet: {
+      findMany: vi.fn(() => Promise.resolve([])),
     },
     team: {
       findMany: vi.fn(),
@@ -31,6 +38,7 @@ vi.mock("../prisma", () => ({
       delete: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      findMany: vi.fn(() => Promise.resolve([])),
     },
     teamStarPlayer: {
       deleteMany: vi.fn(),
@@ -2950,6 +2958,84 @@ describe("Route: GET /team/:id (S25.5ae)", () => {
             league: { played: 5 },
             cup: { played: 1 },
             friendly: { played: 1 },
+          },
+        },
+      },
+    });
+  });
+
+  it("playerCareers compte la COUPE, que les compteurs TeamPlayer ignorent", async () => {
+    const { teamFindFirst, selectionFindFirst, localMatchFindMany } =
+      await getMocks();
+    const prismaMock = vi.mocked(await import("../prisma")).prisma as unknown as {
+      teamPlayer: { findMany: ReturnType<typeof vi.fn> };
+      leagueMatchSheet: { findMany: ReturnType<typeof vi.fn> };
+    };
+    const knight = {
+      id: "p-1",
+      teamId: "team-1",
+      number: 1,
+      name: "Sire Bohémond",
+      position: "grail_knight",
+      spp: 0,
+      matchesPlayed: 0,
+      totalTouchdowns: 0,
+      totalCasualties: 0,
+      totalCompletions: 0,
+      totalInterceptions: 0,
+      totalMvpAwards: 0,
+    };
+    teamFindFirst.mockResolvedValue({
+      id: "team-1",
+      ownerId: "user-1",
+      ruleset: "season_3",
+      players: [knight],
+      starPlayers: [],
+    });
+    selectionFindFirst.mockResolvedValue(null);
+    localMatchFindMany.mockResolvedValue([]);
+    prismaMock.teamPlayer.findMany.mockResolvedValueOnce([knight]);
+    prismaMock.leagueMatchSheet.findMany.mockResolvedValueOnce([
+      {
+        pairingId: null,
+        cupPairingId: "cp-1",
+        forfeitSide: null,
+        motmPlayerIds: ["p-1"],
+        rosterSnapshotHome: { players: [{ id: "p-1" }] },
+        rosterSnapshotAway: null,
+        pairing: null,
+        cupPairing: { homeTeamId: "team-1", awayTeamId: "other" },
+        events: [
+          { kind: "touchdown", team: "home", actorPlayerId: "p-1" },
+          {
+            kind: "casualty",
+            team: "home",
+            actorPlayerId: "p-1",
+            targetPlayerId: "x",
+            causeDetail: "block",
+            injurySeverity: "badly_hurt",
+          },
+        ],
+      },
+    ]);
+
+    const req = createReq({ params: { id: "team-1" } });
+    const res = createRes();
+    await handleGetTeamDetail(req, res);
+
+    expect(res.payload).toMatchObject({
+      success: true,
+      data: {
+        team: {
+          playerCareers: {
+            "p-1": {
+              matchesPlayed: 1,
+              touchdowns: 1,
+              casualties: 1,
+              mvpAwards: 1,
+              spp: 0,
+              cup: { matchesPlayed: 1, touchdowns: 1 },
+            },
           },
         },
       },
