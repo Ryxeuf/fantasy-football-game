@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { getDisplayName, type Ruleset } from "@bb/game-engine";
 import { API_BASE } from "../../../../auth-client";
 import RosterBadge from "../../../../components/RosterBadge";
+import {
+  formatTouchdownDiff,
+  resolveTeamMatchStats,
+} from "../team-match-stats";
 
 interface TeamCareerRecord {
   matchesPlayed: number;
@@ -51,6 +55,11 @@ interface PlayerCareerStats {
 interface CareerResponse {
   team: { id: string; name: string; roster: string; ruleset: string };
   record: TeamCareerRecord;
+  /**
+   * Bilan TOUTES compétitions (ligue + coupe + amical), celui de la fiche
+   * d'équipe. Optionnel : absent d'une API antérieure.
+   */
+  matchStats?: unknown;
   history: MatchHistoryEntry[];
   players: PlayerCareerStats[];
 }
@@ -129,6 +138,14 @@ export default function TeamCareerPage() {
   }
 
   const { team, record, history, players } = data;
+  const allCompetitions = resolveTeamMatchStats(data);
+  const breakdown = allCompetitions?.breakdown
+    ? [
+        { label: "Ligue", count: allCompetitions.breakdown.league },
+        { label: "Coupe", count: allCompetitions.breakdown.cup },
+        { label: "Amical", count: allCompetitions.breakdown.friendly },
+      ].filter((entry) => entry.count > 0)
+    : [];
   const sortedPlayers = [...players].sort((a, b) => b.spp - a.spp);
   const winRatePct = (record.winRate * 100).toFixed(1);
   const ruleset = team.ruleset as Ruleset;
@@ -152,6 +169,42 @@ export default function TeamCareerPage() {
           &larr; Retour a la fiche d&apos;equipe
         </a>
       </div>
+
+      {/* Bilan toutes compétitions : la ligue et la coupe n'apparaissent pas
+          dans le palmarès en ligne ci-dessous. */}
+      {allCompetitions && (
+        <section
+          className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3"
+          data-testid="career-all-competitions"
+        >
+          <h2 className="text-lg font-semibold">Bilan toutes competitions</h2>
+          {allCompetitions.played === 0 ? (
+            <p className="text-gray-400 text-sm">
+              Aucun match de ligue, de coupe ou amical pour cette equipe.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Stat label="Matchs joues" value={allCompetitions.played} />
+              <Stat
+                label="V - N - D"
+                value={`${allCompetitions.wins} - ${allCompetitions.draws} - ${allCompetitions.losses}`}
+              />
+              <Stat
+                label="TD (pour / contre)"
+                value={`${allCompetitions.touchdownsFor} / ${allCompetitions.touchdownsAgainst} (${formatTouchdownDiff(allCompetitions.touchdownDiff)})`}
+              />
+              {breakdown.length > 0 && (
+                <Stat
+                  label="Par competition"
+                  value={breakdown
+                    .map((entry) => `${entry.label} ${entry.count}`)
+                    .join(" · ")}
+                />
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Team record */}
       <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3">
@@ -228,6 +281,9 @@ export default function TeamCareerPage() {
       {/* Per-player career */}
       <section className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 space-y-3">
         <h2 className="text-lg font-semibold">Stats de carriere par joueur</h2>
+        <p className="text-xs text-gray-400">
+          Toutes competitions : ligue, coupe et matchs en ligne.
+        </p>
         {sortedPlayers.length === 0 ? (
           <p className="text-gray-400 text-sm">Aucun joueur dans cette equipe.</p>
         ) : (
@@ -257,6 +313,7 @@ export default function TeamCareerPage() {
                   {sortedPlayers.map((p) => (
                     <tr
                       key={p.id}
+                      data-testid={`career-player-${p.id}`}
                       className={`border-b border-gray-800 ${p.dead ? "text-red-400" : ""}`}
                     >
                       <td className="py-2 pr-3 text-gray-400">{p.number}</td>

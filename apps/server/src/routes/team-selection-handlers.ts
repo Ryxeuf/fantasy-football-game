@@ -52,11 +52,7 @@ import {
   isAdminRequest,
   teamAccessWhere,
 } from '../services/team-edit-access';
-import {
-  buildTeamMatchStats,
-  summarizeLocalMatchStats,
-  type LeagueCounterSums,
-} from '../services/team-match-stats';
+import { loadTeamMatchStats } from '../services/team-match-stats-loader';
 import { buildPlayerCareerTotals } from '../services/player-career-loader';
 
 /**
@@ -201,50 +197,7 @@ export async function handleGetTeamDetail(
       include: { match: true },
     });
 
-    const localMatches = await prisma.localMatch.findMany({
-      where: {
-        OR: [{ teamAId: team.id }, { teamBId: team.id }],
-      },
-      select: {
-        id: true,
-        status: true,
-        teamAId: true,
-        teamBId: true,
-        scoreTeamA: true,
-        scoreTeamB: true,
-        cupId: true,
-        cupPairingId: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 500,
-    });
-    const localMatchStats = summarizeLocalMatchStats(team.id, localMatches);
-
-    // Les rencontres de LIGUE ne passent jamais par `LocalMatch` : leur
-    // résultat vit dans les compteurs du participant (ceux du classement).
-    // Sans eux, une équipe qui a joué une saison entière affichait 0 match.
-    // Enrichissement d'affichage : la fiche se sert sans, comme le pool de PSP.
-    let leagueSums: LeagueCounterSums | null = null;
-    try {
-      const aggregate = await prisma.leagueParticipant.aggregate({
-        where: { teamId: team.id },
-        _sum: {
-          wins: true,
-          draws: true,
-          losses: true,
-          touchdownsFor: true,
-          touchdownsAgainst: true,
-        },
-      });
-      leagueSums = aggregate?._sum ?? null;
-    } catch (e: unknown) {
-      serverLog.error('[team-detail] bilan de ligue', e);
-    }
-    const matchStats = buildTeamMatchStats({
-      teamId: team.id,
-      localMatches,
-      leagueSums,
-    });
+    const { localMatchStats, matchStats } = await loadTeamMatchStats(team.id);
 
     // Config staff résolue (DB par roster × format, sinon défaut) — permet aux
     // vues équipe d'afficher des coûts cohérents avec l'admin.
