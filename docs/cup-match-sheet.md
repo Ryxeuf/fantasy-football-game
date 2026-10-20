@@ -80,6 +80,29 @@ n'a aucun effet en coupe, donc le classement et les tops (individuels et par
 - Le profil de chaque mode est défini UNE fois (`apps/web/app/lib/sheet-entry-profile.ts`)
   et lu par la page ET par la feuille papier PDF.
 
+## Double validation des feuilles
+
+Option de coupe `Cup.sheetDoubleValidation` (décochée par défaut, coupes
+existantes comprises — `@default(false)` sans risque : même défaut des deux
+côtés). Choisie à la création, modifiable à tout moment (`PATCH /cup/:id`).
+
+- **Cochée**, `validateByCommissioner` refuse (`409
+  coach_submissions_missing`) tant que les deux coachs n'ont pas soumis la
+  feuille, en nommant l'équipe attendue. Un admin y est soumis comme le
+  commissaire.
+- **Forfait** : la soumission du coach FORFAITAIRE n'est pas attendue — un
+  coach absent bloquerait sinon la ronde. Le coach non forfaitaire, lui, doit
+  soumettre.
+- La règle voyage dans `competitionRules.doubleValidation` (toujours `false`
+  en ligue) ; prédicat pur côté serveur (`services/sheet-double-validation`)
+  et miroir côté web (`leagues/pairings/[id]/sheet/double-validation.ts`) :
+  bandeau, bouton du commissaire désactivé avec l'équipe attendue.
+- **Commissaire qui joue** : les boutons « Valider ma saisie » / « Reprendre
+  la saisie » suivent le CÔTÉ du viewer (`viewerTeamId`), pas son rôle —
+  sinon le créateur d'une coupe ne pourrait jamais soumettre son propre côté.
+- Levier si un coach ne soumet jamais : décocher l'option, ou déclarer le
+  forfait.
+
 ## Rattachement polymorphe
 
 `LeagueMatchSheet` porte DEUX FK nullables : `pairingId` (ligue) XOR

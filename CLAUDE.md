@@ -1382,6 +1382,38 @@ REJOUABLE (un double clic ne produit pas deux rondes, une ronde supprimée puis
 régénérée revient à l'identique) et deux rondes d'une même coupe ne partagent
 pas leur ordre.
 
+### Retirer une équipe d'une coupe : l'inscription, jamais l'historique
+
+Le commissaire ne pouvait retirer AUCUNE équipe (`unregister` réservé au
+propriétaire, inscriptions ouvertes). `services/cup-team-removal` décide en PUR
+(`decideCupTeamRemoval`) : propriétaire tant que les inscriptions sont
+ouvertes, commissaire ou admin tant que la coupe n'est ni terminée ni
+archivée, admin + `force` au-delà. Trois règles qui ne se voient pas en
+lisant un seul fichier :
+
+- **Suppression de `CupParticipant`, pas de statut « retiré »** : un statut
+  aurait dû être appris par la quinzaine de lectures des inscrits (rondes,
+  poules, bracket, pronostics, verrou d'équipe…). Les rencontres référencent
+  l'ÉQUIPE, et le classement est DÉRIVÉ des matchs : l'équipe retirée y garde
+  ses résultats, ses adversaires leurs points, et les générateurs de ronde
+  (partis des inscrits) ne l'apparient plus.
+- **« Au classement » ≠ « inscrite »** : `services/cup-withdrawn-teams`
+  (pur). `registeredStandings` pour ce qui ne vaut que pour les inscrits
+  (têtes de série du bracket — une équipe retirée bien classée était
+  qualifiable —, classements par poule) ; `flagWithdrawnStandings` pour
+  l'écran (`withdrawn: true`, badge « retirée », pas de lien de roster). Tout
+  nouveau lecteur du classement qui sélectionne des ÉQUIPES en part.
+- **Une rencontre ouverte bloque le retrait** (`409`), quel que soit
+  l'acteur : forfait (l'adversaire gagne) ou annulation (personne ne marque)
+  est un choix du commissaire, pas du code.
+
+Même vague, côté feuille : l'option de coupe **double validation**
+(`Cup.sheetDoubleValidation`, cf. `docs/cup-match-sheet.md`) vit dans
+`CompetitionSheetRules.doubleValidation` — le jeu de règles reste le seul
+endroit qui distingue une coupe d'une ligue. Piège découvert en la câblant :
+les boutons de soumission suivaient `viewerRole`, qui vaut `commissioner` pour
+le créateur même quand il JOUE ; ils suivent désormais le côté du viewer.
+
 ### Rattachement POLYMORPHE : deux FK nullables, invariant tenu par le service
 
 `CompetitionDocument` s'accroche a une ligue OU a une coupe
@@ -2356,3 +2388,12 @@ edition du `.json`, `pnpm --filter web typecheck` +
   palmarès champion + Oracle ; feuille PDF : les coups de pouce rappelés sur
   la page de chaque équipe. Captures avant / après sur l'application réelle
   (`tests/screenshots/before-after/`, `docs/screenshots/cup-parity-*`).
+- **2026-10-20** : **Retrait d'équipe par le commissaire et double validation
+  des feuilles de coupe** (change OpenSpec
+  `cup-team-removal-and-sheet-double-validation`) — le commissaire (ou un
+  admin) retire l'équipe d'un coach inscriptions closes et en cours de coupe
+  (bloqué par une rencontre ouverte ; résultats acquis, ligne `withdrawn`,
+  plus d'appariement ni de qualification ; coach notifié
+  `cup.team_removed`) ; option `Cup.sheetDoubleValidation` : le commissaire
+  attend la soumission des deux coachs (hors forfaitaire), bouton désactivé
+  sur la feuille, soumission enfin ouverte au commissaire-coach.
