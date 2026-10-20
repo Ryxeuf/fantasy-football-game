@@ -1,3 +1,15 @@
+## [1.259.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.258.0...v1.259.0) (2026-10-20)
+
+
+### ✨ Features
+
+* **cup:** retrait d'une équipe par le commissaire + double validation des feuilles ([#1079](https://github.com/Ryxeuf/fantasy-football-game/issues/1079)) ([2e3b549](https://github.com/Ryxeuf/fantasy-football-game/commit/2e3b549e92007b1af84b84804e77051666c3dd21))
+
+
+### 📝 Documentation
+
+* **openspec:** sync et archive de cup-league-parity ([#1078](https://github.com/Ryxeuf/fantasy-football-game/issues/1078)) ([d554a0a](https://github.com/Ryxeuf/fantasy-football-game/commit/d554a0a3e8e4c017fe20745af1ea1526e74abd2d))
+
 ## [1.258.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.257.5...v1.258.0) (2026-10-17)
 
 
