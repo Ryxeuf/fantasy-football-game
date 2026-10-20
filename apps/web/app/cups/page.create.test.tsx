@@ -114,3 +114,25 @@ describe("création d'une coupe — pronostics", () => {
     await waitFor(() => expect(createBody().predictionsScope).toBe("open"));
   });
 });
+
+describe("création d'une coupe — double validation des feuilles", () => {
+  it("décoche l'option par défaut et l'envoie", async () => {
+    await openForm();
+    expect(
+      (screen.getByTestId("sheet-double-validation") as HTMLInputElement).checked,
+    ).toBe(false);
+
+    fireEvent.submit(screen.getByLabelText(/Nom de la coupe/).closest("form")!);
+
+    await waitFor(() => expect(createBody().sheetDoubleValidation).toBe(false));
+  });
+
+  it("envoie l'option cochée par le commissaire", async () => {
+    await openForm();
+    fireEvent.click(screen.getByTestId("sheet-double-validation"));
+
+    fireEvent.submit(screen.getByLabelText(/Nom de la coupe/).closest("form")!);
+
+    await waitFor(() => expect(createBody().sheetDoubleValidation).toBe(true));
+  });
+});

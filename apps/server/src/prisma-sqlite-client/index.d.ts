@@ -49429,6 +49429,7 @@ export namespace Prisma {
     tieBreakRules: string | null
     sheetEntryMode: string | null
     predictionsScope: string | null
+    sheetDoubleValidation: boolean | null
     playoffSize: number | null
     playoffsPublished: boolean | null
     resurrectionMode: boolean | null
@@ -49464,6 +49465,7 @@ export namespace Prisma {
     tieBreakRules: string | null
     sheetEntryMode: string | null
     predictionsScope: string | null
+    sheetDoubleValidation: boolean | null
     playoffSize: number | null
     playoffsPublished: boolean | null
     resurrectionMode: boolean | null
@@ -49499,6 +49501,7 @@ export namespace Prisma {
     tieBreakRules: number
     sheetEntryMode: number
     predictionsScope: number
+    sheetDoubleValidation: number
     playoffSize: number
     playoffsPublished: number
     resurrectionMode: number
@@ -49560,6 +49563,7 @@ export namespace Prisma {
     tieBreakRules?: true
     sheetEntryMode?: true
     predictionsScope?: true
+    sheetDoubleValidation?: true
     playoffSize?: true
     playoffsPublished?: true
     resurrectionMode?: true
@@ -49595,6 +49599,7 @@ export namespace Prisma {
     tieBreakRules?: true
     sheetEntryMode?: true
     predictionsScope?: true
+    sheetDoubleValidation?: true
     playoffSize?: true
     playoffsPublished?: true
     resurrectionMode?: true
@@ -49630,6 +49635,7 @@ export namespace Prisma {
     tieBreakRules?: true
     sheetEntryMode?: true
     predictionsScope?: true
+    sheetDoubleValidation?: true
     playoffSize?: true
     playoffsPublished?: true
     resurrectionMode?: true
@@ -49752,6 +49758,7 @@ export namespace Prisma {
     tieBreakRules: string | null
     sheetEntryMode: string | null
     predictionsScope: string | null
+    sheetDoubleValidation: boolean
     playoffSize: number
     playoffsPublished: boolean | null
     resurrectionMode: boolean
@@ -49806,6 +49813,7 @@ export namespace Prisma {
     tieBreakRules?: boolean
     sheetEntryMode?: boolean
     predictionsScope?: boolean
+    sheetDoubleValidation?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -49849,6 +49857,7 @@ export namespace Prisma {
     tieBreakRules?: boolean
     sheetEntryMode?: boolean
     predictionsScope?: boolean
+    sheetDoubleValidation?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -49885,6 +49894,7 @@ export namespace Prisma {
     tieBreakRules?: boolean
     sheetEntryMode?: boolean
     predictionsScope?: boolean
+    sheetDoubleValidation?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -49921,6 +49931,7 @@ export namespace Prisma {
     tieBreakRules?: boolean
     sheetEntryMode?: boolean
     predictionsScope?: boolean
+    sheetDoubleValidation?: boolean
     playoffSize?: boolean
     playoffsPublished?: boolean
     resurrectionMode?: boolean
@@ -49932,7 +49943,7 @@ export namespace Prisma {
     allowedInducements?: boolean
   }
 
-  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "sheetEntryMode" | "predictionsScope" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides" | "inducementMode" | "allowedInducements", ExtArgs["result"]["cup"]>
+  export type CupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "creatorId" | "ruleset" | "format" | "tournamentRuleset" | "validated" | "isPublic" | "status" | "createdAt" | "updatedAt" | "winPoints" | "drawPoints" | "lossPoints" | "forfeitPoints" | "touchdownPoints" | "blockCasualtyPoints" | "foulCasualtyPoints" | "passPoints" | "tieBreakRules" | "sheetEntryMode" | "predictionsScope" | "sheetDoubleValidation" | "playoffSize" | "playoffsPublished" | "resurrectionMode" | "tierBudgets" | "rosterBudgetOverrides" | "tierStartingPsp" | "rosterStartingPspOverrides" | "inducementMode" | "allowedInducements", ExtArgs["result"]["cup"]>
   export type CupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     creator?: boolean | UserDefaultArgs<ExtArgs>
     participants?: boolean | Cup$participantsArgs<ExtArgs>
@@ -49991,6 +50002,10 @@ export namespace Prisma {
        * Portée des pronostics (miroir SQLite de schema.prisma).
        */
       predictionsScope: string | null
+      /**
+       * Double validation des feuilles (miroir SQLite de schema.prisma).
+       */
+      sheetDoubleValidation: boolean
       playoffSize: number
       playoffsPublished: boolean | null
       resurrectionMode: boolean
@@ -50453,6 +50468,7 @@ export namespace Prisma {
     readonly tieBreakRules: FieldRef<"Cup", 'String'>
     readonly sheetEntryMode: FieldRef<"Cup", 'String'>
     readonly predictionsScope: FieldRef<"Cup", 'String'>
+    readonly sheetDoubleValidation: FieldRef<"Cup", 'Boolean'>
     readonly playoffSize: FieldRef<"Cup", 'Int'>
     readonly playoffsPublished: FieldRef<"Cup", 'Boolean'>
     readonly resurrectionMode: FieldRef<"Cup", 'Boolean'>
@@ -128138,6 +128154,7 @@ export namespace Prisma {
     tieBreakRules: 'tieBreakRules',
     sheetEntryMode: 'sheetEntryMode',
     predictionsScope: 'predictionsScope',
+    sheetDoubleValidation: 'sheetDoubleValidation',
     playoffSize: 'playoffSize',
     playoffsPublished: 'playoffsPublished',
     resurrectionMode: 'resurrectionMode',
@@ -132432,6 +132449,7 @@ export namespace Prisma {
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
     sheetEntryMode?: StringNullableFilter<"Cup"> | string | null
     predictionsScope?: StringNullableFilter<"Cup"> | string | null
+    sheetDoubleValidation?: BoolFilter<"Cup"> | boolean
     playoffSize?: IntFilter<"Cup"> | number
     playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
@@ -132474,6 +132492,7 @@ export namespace Prisma {
     tieBreakRules?: SortOrderInput | SortOrder
     sheetEntryMode?: SortOrderInput | SortOrder
     predictionsScope?: SortOrderInput | SortOrder
+    sheetDoubleValidation?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
@@ -132519,6 +132538,7 @@ export namespace Prisma {
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
     sheetEntryMode?: StringNullableFilter<"Cup"> | string | null
     predictionsScope?: StringNullableFilter<"Cup"> | string | null
+    sheetDoubleValidation?: BoolFilter<"Cup"> | boolean
     playoffSize?: IntFilter<"Cup"> | number
     playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
@@ -132561,6 +132581,7 @@ export namespace Prisma {
     tieBreakRules?: SortOrderInput | SortOrder
     sheetEntryMode?: SortOrderInput | SortOrder
     predictionsScope?: SortOrderInput | SortOrder
+    sheetDoubleValidation?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrderInput | SortOrder
     resurrectionMode?: SortOrder
@@ -132604,6 +132625,7 @@ export namespace Prisma {
     tieBreakRules?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     sheetEntryMode?: StringNullableWithAggregatesFilter<"Cup"> | string | null
     predictionsScope?: StringNullableWithAggregatesFilter<"Cup"> | string | null
+    sheetDoubleValidation?: BoolWithAggregatesFilter<"Cup"> | boolean
     playoffSize?: IntWithAggregatesFilter<"Cup"> | number
     playoffsPublished?: BoolNullableWithAggregatesFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolWithAggregatesFilter<"Cup"> | boolean
@@ -142078,6 +142100,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -142120,6 +142143,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -142160,6 +142184,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -142202,6 +142227,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -142243,6 +142269,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -142277,6 +142304,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -142312,6 +142340,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -151704,6 +151733,7 @@ export namespace Prisma {
     tieBreakRules?: SortOrder
     sheetEntryMode?: SortOrder
     predictionsScope?: SortOrder
+    sheetDoubleValidation?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
@@ -151751,6 +151781,7 @@ export namespace Prisma {
     tieBreakRules?: SortOrder
     sheetEntryMode?: SortOrder
     predictionsScope?: SortOrder
+    sheetDoubleValidation?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
@@ -151786,6 +151817,7 @@ export namespace Prisma {
     tieBreakRules?: SortOrder
     sheetEntryMode?: SortOrder
     predictionsScope?: SortOrder
+    sheetDoubleValidation?: SortOrder
     playoffSize?: SortOrder
     playoffsPublished?: SortOrder
     resurrectionMode?: SortOrder
@@ -163390,6 +163422,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -163430,6 +163463,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -164721,6 +164755,7 @@ export namespace Prisma {
     tieBreakRules?: StringNullableFilter<"Cup"> | string | null
     sheetEntryMode?: StringNullableFilter<"Cup"> | string | null
     predictionsScope?: StringNullableFilter<"Cup"> | string | null
+    sheetDoubleValidation?: BoolFilter<"Cup"> | boolean
     playoffSize?: IntFilter<"Cup"> | number
     playoffsPublished?: BoolNullableFilter<"Cup"> | boolean | null
     resurrectionMode?: BoolFilter<"Cup"> | boolean
@@ -174599,6 +174634,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -174640,6 +174676,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -174805,6 +174842,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -174846,6 +174884,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -175007,6 +175046,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -175048,6 +175088,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -175130,6 +175171,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -175171,6 +175213,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -175226,6 +175269,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -175267,6 +175311,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -175361,6 +175406,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -175402,6 +175448,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -177085,6 +177132,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -177126,6 +177174,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -177604,6 +177653,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -177645,6 +177695,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -180178,6 +180229,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -180219,6 +180271,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -180667,6 +180720,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -180708,6 +180762,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -181213,6 +181268,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -181254,6 +181310,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -181525,6 +181582,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -181566,6 +181624,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -193972,6 +194031,7 @@ export namespace Prisma {
     tieBreakRules?: string | null
     sheetEntryMode?: string | null
     predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
     playoffSize?: number
     playoffsPublished?: boolean | null
     resurrectionMode?: boolean
@@ -194679,6 +194739,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -194719,6 +194780,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
@@ -194759,6 +194821,7 @@ export namespace Prisma {
     tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
     sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
     predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
     playoffSize?: IntFieldUpdateOperationsInput | number
     playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
     resurrectionMode?: BoolFieldUpdateOperationsInput | boolean

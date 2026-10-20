@@ -34,6 +34,8 @@ describe("règles par compétition", () => {
       entryMode: "full",
       // Une ligue vend ses coups de pouce en avant-match.
       inducementMode: "match",
+      // Pas de double validation en ligue.
+      doubleValidation: false,
     });
   });
 
@@ -48,10 +50,11 @@ describe("règles par compétition", () => {
       resurrection: true,
       entryMode: "full",
       inducementMode: "match",
+      doubleValidation: false,
     });
   });
 
-  it("cupSheetRules ne change QUE le mode de saisie et le régime des coups de pouce", () => {
+  it("cupSheetRules ne change QUE le mode de saisie, les coups de pouce et la double validation", () => {
     expect(cupSheetRules("full")).toBe(CUP_SHEET_RULES);
     expect(cupSheetRules("simplified")).toEqual({
       ...CUP_SHEET_RULES,
@@ -61,6 +64,11 @@ describe("règles par compétition", () => {
       ...CUP_SHEET_RULES,
       entryMode: "simplified",
       inducementMode: "build",
+    });
+    expect(cupSheetRules("full", "match", false)).toBe(CUP_SHEET_RULES);
+    expect(cupSheetRules("full", "match", true)).toEqual({
+      ...CUP_SHEET_RULES,
+      doubleValidation: true,
     });
   });
 
@@ -211,6 +219,30 @@ describe("resolveCompetitionPairing", () => {
     expect((await resolveCompetitionPairing("cp1"))?.rules.inducementMode).toBe(
       "match",
     );
+  });
+
+  it("sert la double validation de la coupe, absente = décochée", async () => {
+    const cupRow = (cup: Record<string, unknown>) => ({
+      id: "cp1",
+      homeTeamId: "t1",
+      awayTeamId: "t2",
+      homeTeam: { ownerId: "u-home" },
+      awayTeam: { ownerId: "u-away" },
+      round: { cup: { id: "C1", name: "World Cup", creatorId: "u-com", ...cup } },
+    });
+    mockPrisma.leaguePairing.findUnique.mockResolvedValue(null);
+
+    mockPrisma.cupPairing.findUnique.mockResolvedValueOnce(
+      cupRow({ sheetDoubleValidation: true }),
+    );
+    expect((await resolveCompetitionPairing("cp1"))?.rules.doubleValidation).toBe(true);
+    expect(
+      mockPrisma.cupPairing.findUnique.mock.calls[0][0].select.round.select.cup
+        .select,
+    ).toMatchObject({ sheetDoubleValidation: true });
+
+    mockPrisma.cupPairing.findUnique.mockResolvedValueOnce(cupRow({}));
+    expect((await resolveCompetitionPairing("cp1"))?.rules.doubleValidation).toBe(false);
   });
 
   it("lit une coupe sans mode (antérieure au réglage) en saisie complète", async () => {

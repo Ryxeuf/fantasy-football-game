@@ -40,6 +40,7 @@ import { computeCupStandings } from "../cupScoring";
 import type { CupActor } from "./cup-rounds";
 import { cupByesByTeamId, listCupRounds } from "./cup-rounds";
 import { groupCupStandingsByPool } from "./cup-pool";
+import { registeredStandings } from "./cup-withdrawn-teams";
 
 export type CupPlayoffErrorCode =
   | "cup_not_found"
@@ -150,9 +151,17 @@ async function resolveSeeds(
   if (!cup) throw new CupPlayoffError("cup_not_found", "Coupe introuvable");
 
   const rounds = await listCupRounds(cupId);
-  const standings = computeCupStandings(cup, cup.localMatches, {
-    byesByTeamId: cupByesByTeamId(rounds),
-  }).teamStats;
+  // Une équipe RETIRÉE garde sa ligne au classement (ses matchs joués
+  // restent acquis) mais ne se qualifie jamais : seuls les inscrits sont
+  // têtes de série.
+  const standings = registeredStandings(
+    computeCupStandings(cup, cup.localMatches, {
+      byesByTeamId: cupByesByTeamId(rounds),
+    }).teamStats,
+    new Set(
+      (cup.participants as Array<{ team: { id: string } }>).map((p) => p.team.id),
+    ),
+  );
 
   const pools = cup.pools as Array<{
     id: string;

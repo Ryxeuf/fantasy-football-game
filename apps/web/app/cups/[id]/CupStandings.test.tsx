@@ -40,3 +40,23 @@ describe("CupStandings — accès au roster", () => {
     expect(screen.getByText("Orcs")).toBeTruthy();
   });
 });
+
+describe("CupStandings — équipe retirée", () => {
+  it("garde la ligne, la marque « retirée » et ne lie plus vers une fiche disparue", () => {
+    render(
+      <CupStandings
+        standings={[row("t1", "Orcs"), { ...row("gone", "Rats"), withdrawn: true }]}
+        cupId="C1"
+      />,
+    );
+    expect(screen.getByText("Rats")).toBeTruthy();
+    expect(screen.getByTestId("cup-standings-withdrawn-gone").textContent).toBe(
+      "retirée",
+    );
+    expect(screen.queryByTestId("team-roster-link-standings-gone")).toBeNull();
+    expect(screen.queryByTestId("cup-standings-withdrawn-t1")).toBeNull();
+    expect(
+      screen.getByTestId("team-roster-link-standings-t1").getAttribute("href"),
+    ).toBe("/cups/C1/teams/t1");
+  });
+});

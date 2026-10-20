@@ -386,7 +386,8 @@ function domainError(res: Response, e: unknown): void {
               e.code === "invalid_status" ||
               e.code === "invalidation_window_closed" ||
               e.code === "invalidation_failed" ||
-              e.code === "raise_dead_not_allowed"
+              e.code === "raise_dead_not_allowed" ||
+              e.code === "coach_submissions_missing"
             ? 409
             : 400;
     sendError(res, e.message, status);

@@ -1089,6 +1089,14 @@ model Cup {
   /// (`PATCH /cup/:id/predictions-scope`).
   predictionsScope String?
 
+  /// Double validation des feuilles de match : cochée, le commissaire ne
+  /// valide une feuille qu'une fois soumise par ses DEUX coachs (sur un
+  /// forfait, seul le coach non forfaitaire est attendu — cf.
+  /// `services/sheet-double-validation`). Modifiable à tout moment.
+  /// `@default(false)` sans risque : l'existant et le neuf ont le MÊME défaut
+  /// (décoché), `db push` ne change le comportement d'aucune coupe.
+  sheetDoubleValidation Boolean @default(false)
+
   /// S27.1 — Mensualisation : edition canonique "Nuffle Cup {Mois} {YYYY}".
   /// Les deux champs sont nullable pour rester retro-compatibles avec les
   /// cups existantes (privees / non programmees). Quand fournis, ils

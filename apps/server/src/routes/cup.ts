@@ -27,7 +27,13 @@ import {
   type CupRulesConfigInput,
   type CreateCupInput,
   type UpdateCupInput,
+  type UnregisterCupInput,
 } from "../schemas/cup.schemas";
+import {
+  CupTeamRemovalError,
+  cupTeamRemovalStatus,
+  removeTeamFromCup,
+} from "../services/cup-team-removal";
 import { listMonthlyCups } from "../services/cup-monthly-listing";
 import {
   getCurrentMatchOfTheWeek,
@@ -61,6 +67,10 @@ import {
   parseCupTieBreakRules,
 } from "../services/cup-standings-order";
 import { groupCupStandingsByPool } from "../services/cup-pool";
+import {
+  flagWithdrawnStandings,
+  registeredStandings,
+} from "../services/cup-withdrawn-teams";
 import { buildCupListWhere } from "../services/cup-listing";
 
 /** Poule telle que `GET /cup/:id` la charge (ordre + quota). */
@@ -590,6 +600,12 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
           .playoffsPublished ?? null,
     });
 
+    // Inscrits ≠ équipes au classement : une équipe retirée garde la ligne
+    // de ses matchs joués (cf. `services/cup-withdrawn-teams`).
+    const registeredTeamIds = new Set<string>(
+      cup.participants.map((p: { team: { id: string } }) => p.team.id),
+    );
+
     // Calculer le classement de la coupe à partir des matchs terminés
     const standingsResult = computeCupStandings(
       cup as unknown as CupWithParticipantsAndScoring,
@@ -652,16 +668,25 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       predictionsScope: parsePredictionScope(
         (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
       ),
+      /** Double validation des feuilles (le commissaire attend les 2 coachs). */
+      sheetDoubleValidation:
+        (cup as unknown as { sheetDoubleValidation?: boolean | null })
+          .sheetDoubleValidation === true,
       /** Faux sur une coupe antérieure (colonne à `null`) : flag brut. */
       predictionsScopeConfigured:
         (cup as unknown as { predictionsScope?: unknown }).predictionsScope != null,
-      standings: standingsResult.teamStats,
+      /** Une équipe retirée y reste (résultats acquis), `withdrawn: true`. */
+      standings: flagWithdrawnStandings(
+        standingsResult.teamStats,
+        registeredTeamIds,
+      ),
       /**
        * Classements par poule. Vide quand la coupe n'a pas de poules —
-       * l'écran retombe alors sur le seul classement général.
+       * l'écran retombe alors sur le seul classement général. Une équipe
+       * retirée n'a plus de poule : elle n'y figure pas.
        */
       poolStandings: groupCupStandingsByPool(
-        standingsResult.teamStats,
+        registeredStandings(standingsResult.teamStats, registeredTeamIds),
         (cup as unknown as { pools?: CupPoolRow[] }).pools ?? [],
         new Map(
           (
@@ -886,6 +911,8 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         // Pronostics ouverts aux membres sur une coupe neuve ; une coupe
         // existante (null) reste « off » sans backfill.
         predictionsScope: body.predictionsScope ?? "members",
+        // Décochée par défaut, comme les coupes existantes.
+        sheetDoubleValidation: body.sheetDoubleValidation ?? false,
         inducementMode: inducementMode.mode,
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
@@ -942,6 +969,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
       predictionsScope: parsePredictionScope(
         (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
       ),
+      sheetDoubleValidation:
+        (cup as unknown as { sheetDoubleValidation?: boolean | null })
+          .sheetDoubleValidation === true,
     };
 
     res.status(201).json({ cup: formattedCup });
@@ -1104,6 +1134,11 @@ router.patch(
       if (body.predictionsScope !== undefined) {
         data.predictionsScope = body.predictionsScope;
       }
+      // Double validation : aucun verrou, elle ne gouverne que le moment où
+      // le commissaire peut valider (une feuille validée le reste).
+      if (body.sheetDoubleValidation !== undefined) {
+        data.sheetDoubleValidation = body.sheetDoubleValidation;
+      }
       if (body.playoffSize !== undefined) {
         // Le bracket est SEEDÉ à sa génération : en changer la taille après
         // coup laisserait des rondes dont le nombre ne correspond plus.
@@ -1143,6 +1178,7 @@ router.patch(
           playoffSize: true,
           sheetEntryMode: true,
           predictionsScope: true,
+          sheetDoubleValidation: true,
         },
       });
 
@@ -1152,6 +1188,7 @@ router.patch(
           tieBreakRules: parseCupTieBreakRules(updated.tieBreakRules),
           sheetEntryMode: parseSheetEntryMode(updated.sheetEntryMode),
           predictionsScope: parsePredictionScope(updated.predictionsScope),
+          sheetDoubleValidation: updated.sheetDoubleValidation === true,
         },
       });
     } catch (e: unknown) {
@@ -1246,57 +1283,26 @@ router.post(
   },
 );
 
-// POST /cup/:id/unregister - Retirer une équipe d'une coupe
+// POST /cup/:id/unregister - Retirer une équipe d'une coupe : le propriétaire
+// tant que les inscriptions sont ouvertes, le commissaire (ou un admin) à tout
+// moment d'une coupe en cours — cf. `services/cup-team-removal`.
 router.post(
   "/:id/unregister",
   authUser,
   validate(unregisterCupSchema),
   async (req: AuthenticatedRequest, res) => {
     const cupId = req.params.id;
-    const { teamId, force } = req.body;
-    const isAdmin = hasRole(req.user!.roles, "admin");
-    const forceRemove = force === true && isAdmin;
+    const body: UnregisterCupInput = req.body;
 
     try {
-      // Vérifier que la coupe existe
-      const cup = await prisma.cup.findUnique({
-        where: { id: cupId },
-        include: {
-          participants: true,
+      await removeTeamFromCup({
+        cupId,
+        teamId: body.teamId,
+        actor: {
+          userId: req.user!.id,
+          isAdmin: hasRole(req.user!.roles, "admin"),
         },
-      });
-
-      if (!cup) {
-        return res.status(404).json({ error: "Coupe introuvable" });
-      }
-
-      // Vérifier que la coupe est ouverte aux inscriptions (sauf si admin force)
-      if (!forceRemove && (cup.status !== "ouverte" || cup.validated)) {
-        return res
-          .status(400)
-          .json({ error: "Impossible de retirer une équipe d'une coupe fermée" });
-      }
-
-      // Vérifier que l'équipe existe (et appartient à l'utilisateur si ce n'est pas un admin)
-      const team = await prisma.team.findFirst({
-        where: isAdmin ? { id: teamId } : { id: teamId, ownerId: req.user!.id },
-      });
-
-      if (!team) {
-        return res.status(404).json({ error: "Équipe introuvable ou vous n'en êtes pas le propriétaire" });
-      }
-
-      // Vérifier que l'équipe est bien inscrite
-      const participant = cup.participants.find((p: any) => p.teamId === teamId);
-      if (!participant) {
-        return res
-          .status(400)
-          .json({ error: "Cette équipe n'est pas inscrite à cette coupe" });
-      }
-
-      // Retirer l'équipe de la coupe
-      await prisma.cupParticipant.delete({
-        where: { id: participant.id },
+        force: body.force,
       });
 
       // Récupérer la coupe mise à jour
@@ -1355,7 +1361,10 @@ router.post(
         cup: formattedCup,
         message: "Équipe retirée avec succès",
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
+      if (e instanceof CupTeamRemovalError) {
+        return res.status(cupTeamRemovalStatus(e.code)).json({ error: e.message });
+      }
       serverLog.error("Erreur lors du retrait de l'équipe:", e);
       return res.status(500).json({ error: "Erreur serveur" });
     }

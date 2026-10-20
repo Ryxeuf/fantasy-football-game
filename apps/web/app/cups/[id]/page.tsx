@@ -23,6 +23,10 @@ import {
 } from "./round-pools";
 import { CUP_TIE_BREAK_LABELS } from "./tie-break-labels";
 import { cupSheetsAwaitingValidation } from "./pending-sheets";
+import {
+  participantRemovalAction,
+  participantRemovalConfirm,
+} from "./participant-removal";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
 import { getRosterName } from "@bb/game-engine";
@@ -79,6 +83,8 @@ type CupTeamStats = {
   resultPoints: number;
   actionPoints: number;
   totalPoints: number;
+  /** Équipe retirée : matchs joués conservés. Optionnel : API antérieure. */
+  withdrawn?: boolean;
 };
 
 type CupAwardEntry = {
@@ -338,11 +344,9 @@ export default function CupDetailPage() {
     }
   };
 
-  const handleUnregister = async (teamId: string) => {
+  const handleUnregister = async (teamId: string, confirmText: string) => {
     if (!cup) return;
-    if (
-      !confirm("Êtes-vous sûr de vouloir retirer cette équipe de la coupe ?")
-    ) {
+    if (!confirm(confirmText)) {
       return;
     }
     setError(null);
@@ -851,6 +855,15 @@ export default function CupDetailPage() {
                   const isMyTeam =
                     cup.userParticipatingTeamIds?.includes(participant.id) ||
                     false;
+                  // Propriétaire : inscriptions ouvertes ; commissaire / admin :
+                  // toute équipe, tant que la coupe n'est pas terminée.
+                  const removal = participantRemovalAction({
+                    isCommissioner: cup.isCreator === true,
+                    isAdmin: currentUserIsAdmin,
+                    isMyTeam,
+                    status: cup.status,
+                    validated: cup.validated,
+                  });
                   return (
                     <div
                       key={participant.id}
@@ -891,16 +904,25 @@ export default function CupDetailPage() {
                       >
                         👥 Voir le roster
                       </Link>
-                      {isMyTeam &&
-                        cup.status === "ouverte" &&
-                        !cup.validated && (
-                          <button
-                            onClick={() => handleUnregister(participant.id)}
-                            className="mt-2 w-full px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-all"
-                          >
-                            Retirer mon équipe
-                          </button>
-                        )}
+                      {removal && (
+                        <button
+                          onClick={() =>
+                            handleUnregister(
+                              participant.id,
+                              participantRemovalConfirm({
+                                teamName: participant.name,
+                                coachName: participant.owner.coachName,
+                                byCommissioner: removal.byCommissioner,
+                                cupStarted: (cup.rounds ?? []).length > 0,
+                              }),
+                            )
+                          }
+                          data-testid={`cup-remove-team-${participant.id}`}
+                          className="mt-2 w-full px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-medium hover:bg-red-200 transition-all"
+                        >
+                          {removal.label}
+                        </button>
+                      )}
                     </div>
                   );
                 })}

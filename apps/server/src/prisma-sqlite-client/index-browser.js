@@ -592,6 +592,7 @@ exports.Prisma.CupScalarFieldEnum = {
   tieBreakRules: 'tieBreakRules',
   sheetEntryMode: 'sheetEntryMode',
   predictionsScope: 'predictionsScope',
+  sheetDoubleValidation: 'sheetDoubleValidation',
   playoffSize: 'playoffSize',
   playoffsPublished: 'playoffsPublished',
   resurrectionMode: 'resurrectionMode',

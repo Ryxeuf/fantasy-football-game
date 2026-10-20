@@ -70,6 +70,10 @@ import {
   isAdvancementConsumedError,
   REMOVE_CONSUMED_CONFIRM_MESSAGE,
 } from "./invalidate-consumed";
+import {
+  pendingSubmissionSides,
+  pendingSubmissionsLabel,
+} from "./double-validation";
 import { RosterSection } from "./_components/RosterSection";
 import { MatchSheetPdfButton } from "./_components/MatchSheetPdfButton";
 import TeamLogo from "../../../../components/TeamLogo";
@@ -194,6 +198,9 @@ interface SheetResponse {
   sheet: {
     id: string;
     status: string;
+    /** Soumissions des coachs (ISO). Lues par la double validation. */
+    submittedByHomeAt?: string | null;
+    submittedByAwayAt?: string | null;
     events?: MatchEvent[];
     weatherTable?: string | null;
     weather?: string | null;
@@ -261,6 +268,12 @@ interface SheetResponse {
      * antérieur ne le sert pas (avant-match, comportement historique).
      */
     inducementMode?: "build" | "match" | "none";
+    /**
+     * Double validation (réglage de coupe) : le commissaire ne valide
+     * qu'une feuille soumise par les deux coachs (hors forfaitaire).
+     * Optionnel : un serveur antérieur ne le sert pas (pas d'attente).
+     */
+    doubleValidation?: boolean;
   };
   /** Compétition du pairing (lien retour). Optionnel : rétro-compat pré-fix. */
   leagueId?: string;
@@ -874,6 +887,24 @@ export default function MatchSheetPage() {
     status === "both_submitted" ||
     (mySide === "home" && status === "submitted_home") ||
     (mySide === "away" && status === "submitted_away");
+  // Soumission : suit le CÔTÉ du viewer, pas son rôle — un commissaire qui
+  // joue la rencontre (viewerRole = commissioner) soumet aussi SON côté,
+  // sans quoi la double validation ne pourrait jamais aboutir.
+  const canSubmitMySide = isCoach || mySide !== null;
+  const doubleValidation = data?.competitionRules?.doubleValidation === true;
+  const pendingSides =
+    doubleValidation && data
+      ? pendingSubmissionSides({
+          status,
+          submittedByHomeAt: data.sheet.submittedByHomeAt ?? null,
+          submittedByAwayAt: data.sheet.submittedByAwayAt ?? null,
+          forfeitSide: data.sheet.forfeitSide ?? null,
+        })
+      : [];
+  const pendingLabel = pendingSubmissionsLabel(pendingSides, {
+    home: home?.name,
+    away: away?.name,
+  });
 
   if (loading) {
     return (
@@ -974,6 +1005,17 @@ export default function MatchSheetPage() {
           >
             Comprendre les deux modes
           </Link>
+        </p>
+      )}
+      {doubleValidation && status !== "validated" && (
+        <p
+          data-testid="sheet-double-validation-notice"
+          className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-900"
+        >
+          <strong>Double validation.</strong> Chaque coach soumet la feuille
+          (« Valider ma saisie ») avant que le commissaire puisse la valider ;
+          sur un forfait, seul le coach non forfaitaire est attendu.
+          {pendingLabel && <> {pendingLabel}.</>}
         </p>
       )}
       {/* RÉSUMÉ */}
@@ -1868,7 +1910,7 @@ export default function MatchSheetPage() {
 
       {/* Actions de workflow */}
       <section className="flex flex-wrap gap-2">
-        {isCoach && status !== "validated" && (
+        {canSubmitMySide && status !== "validated" && (
           <>
             <button
               type="button"
@@ -1891,15 +1933,26 @@ export default function MatchSheetPage() {
           </>
         )}
         {isCommissioner && status !== "validated" && (
-          <button
-            type="button"
-            className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            onClick={validate}
-            disabled={busy}
-            data-testid="validate-sheet"
-          >
-            Valider le match (commissaire)
-          </button>
+          <>
+            <button
+              type="button"
+              className="rounded bg-amber-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              onClick={validate}
+              disabled={busy || pendingSides.length > 0}
+              title={pendingLabel || undefined}
+              data-testid="validate-sheet"
+            >
+              Valider le match (commissaire)
+            </button>
+            {pendingSides.length > 0 && (
+              <p
+                data-testid="validate-sheet-pending"
+                className="self-center text-xs text-slate-600"
+              >
+                Double validation — {pendingLabel}.
+              </p>
+            )}
+          </>
         )}
         {status === "validated" && (
           <div className="flex flex-wrap items-center gap-2">

@@ -144,6 +144,8 @@ export const createCupSchema = z
     // Portée des pronostics. Absent = « members » pour une coupe neuve
     // (posé par le handler, la colonne n'a pas de défaut : null = off).
     predictionsScope: z.enum(PREDICTION_SCOPES).optional(),
+    // Double validation des feuilles : absent = décochée.
+    sheetDoubleValidation: z.boolean().optional(),
   })
   .refine(
     (data) =>
@@ -192,6 +194,11 @@ export const updateCupSchema = z.object({
    * (aussi par `PATCH /cup/:id/predictions-scope`).
    */
   predictionsScope: z.enum(PREDICTION_SCOPES).optional(),
+  /**
+   * Double validation des feuilles de match. Modifiable à tout moment : elle
+   * ne gouverne que le moment où le commissaire peut valider.
+   */
+  sheetDoubleValidation: z.boolean().optional(),
 });
 
 export type UpdateCupInput = z.infer<typeof updateCupSchema>;
@@ -202,8 +209,11 @@ export const registerCupSchema = z.object({
 
 export const unregisterCupSchema = z.object({
   teamId: z.string().min(1, "teamId requis"),
+  /** Admin seulement : retire aussi d'une coupe terminée ou archivée. */
   force: z.boolean().optional(),
 });
+
+export type UnregisterCupInput = z.infer<typeof unregisterCupSchema>;
 
 const validCupStatuses = ["ouverte", "en_cours", "terminee", "archivee"] as const;
 
