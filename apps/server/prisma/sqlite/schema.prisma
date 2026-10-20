@@ -822,6 +822,8 @@ model Cup {
   sheetEntryMode String?
   /// Portée des pronostics (miroir SQLite de schema.prisma).
   predictionsScope String?
+  /// Double validation des feuilles (miroir SQLite de schema.prisma).
+  sheetDoubleValidation Boolean @default(false)
 
   // Playoffs de coupe (miroir SQLite de schema.prisma).
   playoffSize       Int      @default(0)

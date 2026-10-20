@@ -224,6 +224,11 @@ import { getTournamentRulesetDefinition } from "./tournament-ruleset-repository"
 import { getAvailableStarPlayersDb } from "../utils/star-player-repository";
 import { markPairingPredictionsClosed } from "./league-predictions-settlement";
 import {
+  missingCoachSubmissions,
+  missingSubmissionsMessage,
+  type SheetSubmissionState,
+} from "./sheet-double-validation";
+import {
   markCupPairingPredictionsClosed,
   notifyCupRoundPredictionResultsForPairing,
   settleCupPredictionsForResult,
@@ -628,7 +633,8 @@ export class MatchSheetError extends Error {
       | "raise_dead_invalid_position"
       | "hate_wrong_side"
       | "hate_invalid_candidate"
-      | "hate_invalid_keyword",
+      | "hate_invalid_keyword"
+      | "coach_submissions_missing",
     message: string,
   ) {
     super(message);
@@ -2634,6 +2640,34 @@ function cupPlayerNameResolver(
   return (playerId: string) => names.get(playerId) ?? null;
 }
 
+/**
+ * Double validation (réglage de coupe) : le commissaire ne valide qu'une
+ * feuille soumise par les deux coachs — hors coach forfaitaire. Sans
+ * l'option, rien n'est attendu (comportement historique). Les noms
+ * d'équipe ne sont lus que pour le message de refus.
+ */
+async function ensureCoachSubmissions(
+  ctx: PairingContext,
+  sheet: SheetSubmissionState,
+): Promise<void> {
+  if (!ctx.rules.doubleValidation) return;
+  const missing = missingCoachSubmissions(sheet);
+  if (missing.length === 0) return;
+  const teams = (await prisma.team.findMany({
+    where: { id: { in: [ctx.homeTeamId, ctx.awayTeamId] } },
+    select: { id: true, name: true },
+  })) as Array<{ id: string; name: string }>;
+  const nameOf = (teamId: string) =>
+    teams.find((t) => t.id === teamId)?.name ?? null;
+  throw new MatchSheetError(
+    "coach_submissions_missing",
+    missingSubmissionsMessage(missing, {
+      home: nameOf(ctx.homeTeamId),
+      away: nameOf(ctx.awayTeamId),
+    }),
+  );
+}
+
 export async function validateByCommissioner(input: {
   pairingId: string;
   userId: string;
@@ -2659,6 +2693,7 @@ export async function validateByCommissioner(input: {
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
   }
+  await ensureCoachSubmissions(ctx, sheet as SheetSubmissionState);
 
   const events = (await prisma.leagueMatchEvent.findMany({
     where: { matchSheetId: sheet.id },

@@ -72,6 +72,13 @@ export interface CompetitionSheetRules {
    * lecture seule, aucun achat d'avant-match) ou `none`.
    */
   readonly inducementMode: CupInducementMode;
+  /**
+   * Double validation : le commissaire ne valide qu'une feuille SOUMISE par
+   * les deux coachs (hors coach forfaitaire, cf. `sheet-double-validation`).
+   * Réglage de coupe (`Cup.sheetDoubleValidation`) ; toujours `false` en
+   * ligue. Servi à l'UI, qui désactive le bouton du commissaire.
+   */
+  readonly doubleValidation: boolean;
 }
 
 /** Ligue : la feuille écrit tout, c'est la séquence d'après-match du livre. */
@@ -85,6 +92,7 @@ export const LEAGUE_SHEET_RULES: CompetitionSheetRules = {
   resurrection: false,
   entryMode: "full",
   inducementMode: "match",
+  doubleValidation: false,
 };
 
 /**
@@ -101,20 +109,24 @@ export const CUP_SHEET_RULES: CompetitionSheetRules = {
   resurrection: true,
   entryMode: "full",
   inducementMode: "match",
+  doubleValidation: false,
 };
 
 /**
- * Jeu de règles d'une coupe selon son mode de saisie. Seul `entryMode`
- * change : les effets d'après-match restent ceux de `CUP_SHEET_RULES`.
+ * Jeu de règles d'une coupe selon ses réglages (mode de saisie, régime des
+ * coups de pouce, double validation). Les effets d'après-match restent ceux
+ * de `CUP_SHEET_RULES`.
  */
 export function cupSheetRules(
   mode: SheetEntryMode,
   inducementMode: CupInducementMode = CUP_SHEET_RULES.inducementMode,
+  doubleValidation: boolean = CUP_SHEET_RULES.doubleValidation,
 ): CompetitionSheetRules {
   return mode === CUP_SHEET_RULES.entryMode &&
-    inducementMode === CUP_SHEET_RULES.inducementMode
+    inducementMode === CUP_SHEET_RULES.inducementMode &&
+    doubleValidation === CUP_SHEET_RULES.doubleValidation
     ? CUP_SHEET_RULES
-    : { ...CUP_SHEET_RULES, entryMode: mode, inducementMode };
+    : { ...CUP_SHEET_RULES, entryMode: mode, inducementMode, doubleValidation };
 }
 
 export function sheetRulesFor(kind: CompetitionKind): CompetitionSheetRules {
@@ -231,6 +243,7 @@ type CupPairingRow = FixtureRowFields & {
       creatorId: string;
       sheetEntryMode?: string | null;
       inducementMode?: string | null;
+      sheetDoubleValidation?: boolean | null;
       format?: string | null;
       tournamentRuleset?: string | null;
     };
@@ -314,6 +327,7 @@ export async function resolveCompetitionPairing(
               creatorId: true,
               sheetEntryMode: true,
               inducementMode: true,
+              sheetDoubleValidation: true,
               format: true,
               tournamentRuleset: true,
             },
@@ -344,6 +358,7 @@ export async function resolveCompetitionPairing(
         hasTournamentRuleset: Boolean(cup.tournamentRuleset),
         format: cup.format ?? "bb11",
       }),
+      cup.sheetDoubleValidation === true,
     ),
     fixture: fixtureInfoFromRow(cupPairing),
   };

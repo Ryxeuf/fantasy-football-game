@@ -668,6 +668,10 @@ router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
       predictionsScope: parsePredictionScope(
         (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
       ),
+      /** Double validation des feuilles (le commissaire attend les 2 coachs). */
+      sheetDoubleValidation:
+        (cup as unknown as { sheetDoubleValidation?: boolean | null })
+          .sheetDoubleValidation === true,
       /** Faux sur une coupe antérieure (colonne à `null`) : flag brut. */
       predictionsScopeConfigured:
         (cup as unknown as { predictionsScope?: unknown }).predictionsScope != null,
@@ -907,6 +911,8 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
         // Pronostics ouverts aux membres sur une coupe neuve ; une coupe
         // existante (null) reste « off » sans backfill.
         predictionsScope: body.predictionsScope ?? "members",
+        // Décochée par défaut, comme les coupes existantes.
+        sheetDoubleValidation: body.sheetDoubleValidation ?? false,
         inducementMode: inducementMode.mode,
         tournamentRuleset: pack?.slug ?? null,
         // S27.1i — slot mensuel admin (couple deja valide par Zod).
@@ -963,6 +969,9 @@ router.post("/", authUser, validate(createCupSchema), async (req: AuthenticatedR
       predictionsScope: parsePredictionScope(
         (cup as unknown as { predictionsScope?: unknown }).predictionsScope,
       ),
+      sheetDoubleValidation:
+        (cup as unknown as { sheetDoubleValidation?: boolean | null })
+          .sheetDoubleValidation === true,
     };
 
     res.status(201).json({ cup: formattedCup });
@@ -1125,6 +1134,11 @@ router.patch(
       if (body.predictionsScope !== undefined) {
         data.predictionsScope = body.predictionsScope;
       }
+      // Double validation : aucun verrou, elle ne gouverne que le moment où
+      // le commissaire peut valider (une feuille validée le reste).
+      if (body.sheetDoubleValidation !== undefined) {
+        data.sheetDoubleValidation = body.sheetDoubleValidation;
+      }
       if (body.playoffSize !== undefined) {
         // Le bracket est SEEDÉ à sa génération : en changer la taille après
         // coup laisserait des rondes dont le nombre ne correspond plus.
@@ -1164,6 +1178,7 @@ router.patch(
           playoffSize: true,
           sheetEntryMode: true,
           predictionsScope: true,
+          sheetDoubleValidation: true,
         },
       });
 
@@ -1173,6 +1188,7 @@ router.patch(
           tieBreakRules: parseCupTieBreakRules(updated.tieBreakRules),
           sheetEntryMode: parseSheetEntryMode(updated.sheetEntryMode),
           predictionsScope: parsePredictionScope(updated.predictionsScope),
+          sheetDoubleValidation: updated.sheetDoubleValidation === true,
         },
       });
     } catch (e: unknown) {
