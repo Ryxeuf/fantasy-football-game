@@ -60,6 +60,12 @@ const CUP = {
   playoffsPublished: null,
 };
 
+/** Les équipes classées sont inscrites (une équipe retirée ne l'est plus). */
+const REGISTERED = ["t1", "t2", "t3", "t4", "t5"].map((id) => ({
+  poolId: null,
+  team: { id },
+}));
+
 function standings(teamIds: string[]) {
   return { teamStats: teamIds.map((teamId) => ({ teamId })) };
 }
@@ -75,7 +81,7 @@ beforeEach(() => {
   mockPrisma.cup.findUnique.mockImplementation(
     async (args: { include?: unknown }) =>
       args?.include
-        ? { ...CUP, participants: [], pools: [], localMatches: [] }
+        ? { ...CUP, participants: REGISTERED, pools: [], localMatches: [] }
         : CUP,
   );
   mockPrisma.cupRound.count.mockResolvedValue(0);
@@ -181,6 +187,22 @@ describe("startCupPlayoffs", () => {
     expect(mockPrisma.cup.update).toHaveBeenCalledWith(
       expect.objectContaining({ data: { playoffsPublished: false } }),
     );
+  });
+
+  it("ne qualifie jamais une équipe RETIRÉE, même classée en tête", async () => {
+    // « gone » a été retirée après avoir joué : ses matchs la gardent au
+    // classement, mais elle n'est plus inscrite.
+    vi.mocked(computeCupStandings).mockReturnValue(
+      standings(["gone", "t1", "t2", "t3", "t4"]) as never,
+    );
+    await startCupPlayoffs({ cupId: "cup-1", actor: COMMISH });
+    const pairings = mockPrisma.cupPairing.create.mock.calls.map(
+      (c: unknown[]) => (c[0] as { data: Record<string, unknown> }).data,
+    );
+    expect(pairings.map((p) => [p.homeTeamId, p.awayTeamId])).toEqual([
+      ["t1", "t4"],
+      ["t2", "t3"],
+    ]);
   });
 
   it("refuse tant qu'une rencontre de classement est ouverte", async () => {

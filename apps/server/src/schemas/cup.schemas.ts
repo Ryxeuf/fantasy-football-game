@@ -202,8 +202,11 @@ export const registerCupSchema = z.object({
 
 export const unregisterCupSchema = z.object({
   teamId: z.string().min(1, "teamId requis"),
+  /** Admin seulement : retire aussi d'une coupe terminée ou archivée. */
   force: z.boolean().optional(),
 });
+
+export type UnregisterCupInput = z.infer<typeof unregisterCupSchema>;
 
 const validCupStatuses = ["ouverte", "en_cours", "terminee", "archivee"] as const;
 

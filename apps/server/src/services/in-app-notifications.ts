@@ -32,6 +32,7 @@ export type NotificationKind =
   | "cup.pairing_scheduled"
   | "cup.round_followup"
   | "cup.predictions_settled"
+  | "cup.team_removed"
   | "league.round_pairing"
   | "league.pairing_scheduled"
   | "league.round_followup"
