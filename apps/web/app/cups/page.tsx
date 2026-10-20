@@ -9,6 +9,7 @@ import PendingCupInvitations from "./PendingCupInvitations";
 import PendingCompetitionDocuments from "../components/PendingCompetitionDocuments";
 import { uploadPendingCompetitionDocuments } from "../lib/competition-documents";
 import { SheetEntryModeField } from "./SheetEntryModeField";
+import { SheetDoubleValidationField } from "./SheetDoubleValidationField";
 import { PredictionsScopeField } from "../leagues/_components/PredictionsScopeField";
 import {
   DEFAULT_PREDICTION_SCOPE,
@@ -141,6 +142,8 @@ export default function CupsPage() {
   // défaut quand le champ manque).
   const [newCupSheetEntryMode, setNewCupSheetEntryMode] =
     useState<SheetEntryMode>("simplified");
+  // Double validation des feuilles : décochée par défaut.
+  const [newCupDoubleValidation, setNewCupDoubleValidation] = useState(false);
   // Pronostics : une coupe neuve les ouvre à ses membres (même défaut que le
   // serveur, et qu'une ligue).
   const [newCupPredictionsScope, setNewCupPredictionsScope] =
@@ -345,6 +348,7 @@ export default function CupsPage() {
         },
         // resurrectionMode : forcé côté serveur (seul mode disponible).
         sheetEntryMode: newCupSheetEntryMode,
+        sheetDoubleValidation: newCupDoubleValidation,
         predictionsScope: newCupPredictionsScope,
         inducementMode: newCupInducementMode,
         allowedInducements: showsAllowedInducements(newCupInducementMode)
@@ -589,6 +593,13 @@ export default function CupsPage() {
                 onChange={setNewCupSheetEntryMode}
                 disabled={creating}
               />
+              <div className="mt-2">
+                <SheetDoubleValidationField
+                  checked={newCupDoubleValidation}
+                  onChange={setNewCupDoubleValidation}
+                  disabled={creating}
+                />
+              </div>
             </div>
             <div className="pt-2 border-t border-gray-200">
               <PredictionsScopeField

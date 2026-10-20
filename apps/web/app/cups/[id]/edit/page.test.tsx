@@ -134,6 +134,42 @@ describe("édition d'une coupe", () => {
     );
   });
 
+  it("préremplit la double validation, une coupe sans réglage étant décochée", async () => {
+    apiRequest.mockResolvedValueOnce({ cup: CUP });
+    const { unmount } = render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    expect(
+      (screen.getByTestId("sheet-double-validation") as HTMLInputElement).checked,
+    ).toBe(false);
+    unmount();
+
+    apiRequest.mockResolvedValueOnce({
+      cup: { ...CUP, sheetDoubleValidation: true },
+    });
+    render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+    expect(
+      (screen.getByTestId("sheet-double-validation") as HTMLInputElement).checked,
+    ).toBe(true);
+  });
+
+  it("enregistre la double validation cochée, coupe lancée comprise", async () => {
+    apiRequest.mockResolvedValue({ cup: { ...CUP, status: "en_cours" } });
+    render(<CupEditPage />);
+    await screen.findByTestId("cup-edit");
+
+    fireEvent.click(screen.getByTestId("sheet-double-validation"));
+    fireEvent.click(screen.getByTestId("cup-edit-submit"));
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/cups/cup-1"));
+    const patch = apiRequest.mock.calls.find(
+      (c) => (c[1] as { method?: string } | undefined)?.method === "PATCH",
+    );
+    expect(
+      JSON.parse((patch![1] as { body: string }).body).sheetDoubleValidation,
+    ).toBe(true);
+  });
+
   it("préremplit la portée des pronostics, une coupe antérieure étant sans pronostics", async () => {
     apiRequest.mockResolvedValue({ cup: CUP });
     const { unmount } = render(<CupEditPage />);

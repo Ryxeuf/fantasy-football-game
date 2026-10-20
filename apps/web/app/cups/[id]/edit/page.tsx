@@ -9,6 +9,7 @@ import {
 } from "../tie-break-labels";
 import { TieBreakOrderEditor } from "../../../components/TieBreakOrderEditor";
 import { SheetEntryModeField } from "../../SheetEntryModeField";
+import { SheetDoubleValidationField } from "../../SheetDoubleValidationField";
 import { PredictionsScopeField } from "../../../leagues/_components/PredictionsScopeField";
 import {
   parsePredictionScope,
@@ -67,6 +68,8 @@ interface CupForEdit {
   tieBreakRules?: string[];
   /** Absent (serveur antérieur) = saisie complète. */
   sheetEntryMode?: SheetEntryMode;
+  /** Absent (serveur antérieur) = décochée. */
+  sheetDoubleValidation?: boolean;
   /** Portée EFFECTIVE des pronostics (`off` sur une coupe antérieure). */
   predictionsScope?: string;
   format?: string;
@@ -119,6 +122,7 @@ export default function CupEditPage() {
   });
   const [tieBreak, setTieBreak] = useState<string[]>([]);
   const [sheetEntryMode, setSheetEntryMode] = useState<SheetEntryMode>("full");
+  const [doubleValidation, setDoubleValidation] = useState(false);
   const [predictionsScope, setPredictionsScope] =
     useState<PredictionScope>("off");
   const [inducementMode, setInducementMode] =
@@ -143,6 +147,7 @@ export default function CupEditPage() {
       setSheetEntryMode(
         res.cup.sheetEntryMode === "simplified" ? "simplified" : "full",
       );
+      setDoubleValidation(res.cup.sheetDoubleValidation === true);
       setPredictionsScope(parsePredictionScope(res.cup.predictionsScope));
       setInducementMode(
         parseCupInducementMode(res.cup.rulesConfig?.inducementMode) ?? "match",
@@ -213,6 +218,9 @@ export default function CupEditPage() {
         tieBreakRules: tieBreak.length > 0 ? tieBreak : null,
         // Modifiable coupe lancée : il ne gouverne que le formulaire.
         sheetEntryMode,
+        // Modifiable coupe lancée : elle ne gouverne que le moment où le
+        // commissaire peut valider une feuille.
+        sheetDoubleValidation: doubleValidation,
         // Modifiable à tout moment, comme en ligue : aucun point n'en dépend.
         // N'est écrite que si elle change — une coupe antérieure à la
         // fonctionnalité garde sa colonne vide (et l'invitation à l'activer).
@@ -382,6 +390,12 @@ export default function CupEditPage() {
             value={sheetEntryMode}
             onChange={setSheetEntryMode}
           />
+          <div className="mt-2">
+            <SheetDoubleValidationField
+              checked={doubleValidation}
+              onChange={setDoubleValidation}
+            />
+          </div>
         </section>
 
         <section className="rounded-lg border bg-white p-4">
