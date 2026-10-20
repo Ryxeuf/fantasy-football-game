@@ -29,6 +29,12 @@ export interface CupStandingRow {
   blockCasualties: number;
   foulCasualties: number;
   totalPoints: number;
+  /**
+   * Équipe RETIRÉE par le commissaire : ses matchs joués restent au
+   * classement, mais elle n'est plus inscrite (pas de fiche de roster
+   * d'inscription). Optionnel : API antérieure.
+   */
+  withdrawn?: boolean;
 }
 
 interface CupStandingsProps {
@@ -113,11 +119,20 @@ export default function CupStandings({
                       competition="cup"
                       leagueId={cupId}
                       teamId={team.teamId}
-                      canViewRoster
+                      canViewRoster={!team.withdrawn}
                       testIdSuffix={`standings-${team.teamId}`}
                     >
                       {team.teamName}
                     </TeamRosterLink>
+                    {team.withdrawn && (
+                      <span
+                        data-testid={`${testId}-withdrawn-${team.teamId}`}
+                        title="Équipe retirée de la coupe : ses matchs joués restent comptés"
+                        className="rounded bg-gray-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-gray-600"
+                      >
+                        retirée
+                      </span>
+                    )}
                   </span>
                 </td>
                 <td className="px-2 py-1 text-center">{team.matchesPlayed}</td>
