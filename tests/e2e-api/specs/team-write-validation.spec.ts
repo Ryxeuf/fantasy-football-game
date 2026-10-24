@@ -278,14 +278,16 @@ describe("E2E API — /team/* mutate validations Zod", () => {
       expect(res.status).toBe(400);
     });
 
-    it("dedicatedFans = 0 -> 400", async () => {
+    // 0 fan est légitime hors ligue (aucun fan offert) : la borne basse
+    // métier (0 ou 1) est appliquée par le handler, Zod ne refuse que le négatif.
+    it("dedicatedFans = -1 -> 400", async () => {
       const { token } = await seedAndLogin(
         "alice@tw.test",
         "pwd",
         "Alice",
       );
       const res = await rawPut(`/team/${TEAM_ID}/info`, token, {
-        dedicatedFans: 0,
+        dedicatedFans: -1,
       });
       expect(res.status).toBe(400);
     });

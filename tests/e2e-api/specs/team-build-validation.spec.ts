@@ -16,7 +16,7 @@ import { seedAndLogin } from "../helpers/factories";
  *  - rerolls hors bornes (-1 ou 9) -> 400
  *  - cheerleaders > 12 -> 400
  *  - assistants > 6 -> 400
- *  - dedicatedFans = 0 ou > 6 -> 400
+ *  - dedicatedFans < 0 ou > 6 -> 400 (0 accepté : aucun fan offert hors ligue)
  *  - apothecary type-check (boolean attendu) -> 400
  *  - teamValue hors bornes (< 100 ou > 2000) -> 400
  *  - rerolls non entier (1.5) -> 400
@@ -169,7 +169,7 @@ describe("E2E API — POST /team/build (Zod validation)", () => {
       expect(res.status).toBe(400);
     });
 
-    it("dedicatedFans = 0 -> 400", async () => {
+    it("dedicatedFans = -1 -> 400", async () => {
       const { token } = await seedAndLogin(
         "alice@tb.test",
         "pwd",
@@ -177,7 +177,7 @@ describe("E2E API — POST /team/build (Zod validation)", () => {
       );
       const res = await rawPost("/team/build", token, {
         ...baseBody,
-        dedicatedFans: 0,
+        dedicatedFans: -1,
       });
       expect(res.status).toBe(400);
     });
