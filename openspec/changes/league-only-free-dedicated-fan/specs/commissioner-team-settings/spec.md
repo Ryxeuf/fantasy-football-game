@@ -23,11 +23,11 @@ VE/VEA.
 - THEN la modification DOIT être refusée (`staff_out_of_bounds`, HTTP 400)
 - AND le message DOIT citer les bornes applicables
 
-#### Scenario: Fans d'une équipe inscrite avant le démarrage
-- WHEN le commissaire ramène à 0 les Fans Dévoués d'une équipe inscrite dont
-  le fan offert n'est pas encore accordé (`leagueFreeFan = false`, saison non
-  démarrée)
-- THEN la modification DOIT être acceptée
+#### Scenario: Fans d'une équipe de ligue
+- WHEN le commissaire ramène à 0 les Fans Dévoués d'une équipe dont le fan
+  offert est compté (`leagueFreeFan` à `true` ou `null`)
+- THEN la modification DOIT être refusée (`staff_out_of_bounds`) en citant le
+  minimum de 1
 
 #### Scenario: Refus de l'apothicaire pour un roster qui n'y a pas droit
 - WHEN le commissaire active l'apothicaire sur un roster dont la config

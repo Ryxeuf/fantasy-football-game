@@ -33,35 +33,47 @@ construite seule, puis inscrite à une saison.
   création depuis un roster, équipe de l'IA, coupe ou pas. Le minimum passe à
   0 ; le plafond (6) et le prix unitaire (config staff du roster × format)
   ne changent pas.
-- **Le fan offert est accordé au DÉMARRAGE de la première saison de ligue**
-  de l'équipe (`startSeason`, et `regenerateSchedule` qui démarre aussi une
-  saison) : +1 Fan Dévoué, une seule fois dans la vie de l'équipe. Une équipe
-  déjà au plafond reçoit le prix d'un fan en trésorerie, ce qui revient au
-  même que de l'avoir construite selon la règle de ligue. Chaque octroi est
-  journalisé (`TeamAuditEvent`).
-- **Un marqueur à trois états** sur l'équipe, `Team.leagueFreeFan Boolean?` :
-  `null` pour une équipe antérieure à la règle (son fan offert est déjà
-  compté), `false` pour une équipe neuve qui ne l'a pas encore reçu, `true`
-  une fois qu'elle l'a reçu. C'est la CRÉATION qui écrit `false`, sans
-  `@default` : aucune équipe existante ne change.
+- **Le fan offert est accordé à l'INSCRIPTION en ligue** (`addParticipant` :
+  inscription, acceptation d'invitation, participant de test) : +1 Fan
+  Dévoué, une seule fois tant que l'équipe est en ligue. Une équipe déjà au
+  plafond reçoit le prix d'un fan en trésorerie, ce qui revient au même que
+  de l'avoir construite selon la règle de ligue.
+- **Il est repris quand l'équipe quitte la ligue** : retrait de la saison
+  (`withdrawParticipant`, coach ou admin), suppression par le commissaire
+  (`removeTeamFromLeague`, `removeCoachFromSeason`) et suppression de la ligue
+  (la cascade emporte l'inscription). Seule l'inscription qui a ACCORDÉ le fan
+  le reprend : quitter une seconde saison ne retire pas le fan accordé à la
+  première.
+- **Octroi et reprise sont atomiques avec l'inscription / le retrait**, en
+  écriture conditionnelle, et journalisés (`TeamAuditEvent`,
+  `team.league_free_fan.granted` / `.revoked`).
+- **Deux marqueurs, aucun `@default`** :
+  - `Team.leagueFreeFan Boolean?` : `null` pour une équipe antérieure à la
+    règle (son fan offert est déjà compté), `false` pour une équipe neuve qui
+    ne l'a pas (c'est la CRÉATION qui l'écrit), `true` tant qu'elle l'a reçu ;
+  - `LeagueParticipant.freeFanGrant String?` (`fan` | `refund`) et
+    `freeFanRefund Int?` : ce que CETTE inscription a accordé, pour le
+    reprendre exactement.
+- **Pas de rattrapage de l'existant** : aucune équipe antérieure ne change.
 - **Une seule règle de calcul**, pure et partagée par le serveur et le web
   (`@bb/game-engine`) : fans compris dans le compte, fans payés, coût d'achat,
-  minimum de l'équipe et plan d'octroi. Tous les calculs `n − 1` en dérivent.
+  minimum de l'équipe, plans d'octroi et de reprise. Tous les calculs `n − 1`
+  en dérivent.
 - **0 est un compte légitime** : plus de repli `|| 1` au Facteur de
-  Popularité.
+  Popularité ni à l'affichage.
 - **Écrans** : le builder annonce la règle à côté de la ligne « Fans
-  dévoués » et facture chaque fan ; la fiche d'équipe d'une équipe qui n'a pas
-  reçu son fan offert l'annonce (« offert au démarrage d'une saison de
-  ligue ») ; l'éditeur de staff et les réglages du commissaire appliquent le
-  minimum de l'équipe (0 ou 1).
+  dévoués » et facture chaque fan ; la fiche d'une équipe neuve hors ligue
+  annonce le fan offert à l'inscription en ligue ; l'éditeur de staff et les
+  réglages du commissaire appliquent le minimum de l'équipe (0 ou 1).
 
 ## Capabilities
 
 ### New Capabilities
 
 - `team-dedicated-fans` : nombre de Fans Dévoués à la construction, fan
-  offert des équipes de ligue (moment, unicité, plafond, journal), coût des
-  fans achetés, minimum par équipe, Facteur de Popularité sans repli.
+  offert des équipes de ligue (octroi à l'inscription, reprise au départ,
+  plafond, journal), coût des fans achetés, minimum par équipe, Facteur de
+  Popularité sans repli.
 
 ### Modified Capabilities
 
@@ -70,19 +82,23 @@ construite seule, puis inscrite à une saison.
 
 ## Impact
 
-- **Base** : `Team.leagueFreeFan Boolean?` (sans `@default`) dans
-  `prisma/schema.prisma` et le miroir `apps/server/prisma/sqlite/schema.prisma`.
-  `Team.dedicatedFans @default(1)` est CONSERVÉ : couplé à `leagueFreeFan =
-  null`, il garde la sémantique historique pour tout chemin de création qui
-  n'aurait pas été mis à jour (seeders, endpoints de test).
+- **Base** : `Team.leagueFreeFan Boolean?`, `LeagueParticipant.freeFanGrant
+  String?` et `LeagueParticipant.freeFanRefund Int?` (sans `@default`) dans
+  `prisma/schema.prisma` et le miroir `apps/server/prisma/sqlite/schema.prisma`
+  (client SQLite de test régénéré). `Team.dedicatedFans @default(1)` est
+  CONSERVÉ : couplé à `leagueFreeFan = null`, il garde la sémantique
+  historique pour tout chemin de création qui n'écrirait pas le marqueur
+  (seeders, endpoints de test).
 - **Moteur** : `packages/game-engine/src/rosters/dedicated-fans.ts` (pur).
-- **Serveur** : `routes/team-build-handler`, `routes/team-create-from-roster-handler`,
+- **Serveur** : `services/league-free-fan` (octroi / reprise journalisés),
+  `services/league` (`addParticipant`, `withdrawParticipant`),
+  `services/commissioner-team-removal`, `services/competition-lifecycle`,
+  `routes/team-build-handler`, `routes/team-create-from-roster-handler`,
   `routes/team-roster-save-handler`, `routes/team-mutation-handlers`,
   `services/team-budget-summary`, `services/commissioner-team-settings`,
-  `services/ai-practice`, `routes/league-test-data`, `services/league-scheduler`
-  (octroi), `routes/local-match` (repli), schémas `team.schemas` /
-  `commissioner-team-edit.schemas`, lectures d'équipe (champ `leagueFreeFan`
-  servi, optionnel).
+  `services/ai-practice`, `routes/league-test-data`, `routes/local-match`,
+  schémas `team.schemas` / `commissioner-team-edit.schemas`, lectures
+  d'équipe (champ `leagueFreeFan` servi, optionnel).
 - **Web** : builder `me/teams/new`, `me/teams/staff-cost`, `r/[token]/staff-lines`,
   `TeamInfoDisplay`, `TeamInfoEditor`, fiche / édition / trésorerie d'équipe,
   fiche admin.

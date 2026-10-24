@@ -33,51 +33,98 @@ DOIT être compris entre 0 et le plafond de la config. La création DOIT écrire
 - WHEN un coach demande plus de Fans Dévoués que le plafond de la config
 - THEN la construction DOIT être refusée (400) avec le plafond applicable
 
-### Requirement: Fan Dévoué offert au démarrage de la première saison de ligue
+### Requirement: Fan Dévoué offert à l'inscription en ligue
 
-Au démarrage d'une saison de ligue (`startSeason`, ou `regenerateSchedule`
-quand il passe la saison `in_progress`), chaque participant ACTIF dont
-`leagueFreeFan` vaut `false` DOIT recevoir un Fan Dévoué offert, et
-`leagueFreeFan` DOIT passer à `true` dans la même écriture. Une équipe dont
-`leagueFreeFan` vaut `true` ou `null` NE DOIT rien recevoir. L'octroi DOIT
-être idempotent (écriture conditionnée à `leagueFreeFan = false`) et DOIT être
-journalisé dans le journal d'équipe (`TeamAuditEvent`, action
-`team.league_free_fan`). Un échec d'octroi NE DOIT PAS faire échouer le
-démarrage de la saison.
+L'inscription d'une équipe à une saison de ligue (`addParticipant` :
+inscription, acceptation d'invitation, participant de test) DOIT accorder un
+Fan Dévoué offert à une équipe dont `leagueFreeFan` vaut `false`, passer
+`leagueFreeFan` à `true` et enregistrer sur l'inscription ce qui a été accordé
+(`freeFanGrant = "fan"`), dans la MÊME transaction que la création de
+l'inscription. Une équipe dont `leagueFreeFan` vaut `true` ou `null` NE DOIT
+rien recevoir. L'octroi DOIT être conditionné à `leagueFreeFan = false` (deux
+inscriptions concurrentes n'accordent qu'une fois) et DOIT être journalisé
+(`TeamAuditEvent`, action `team.league_free_fan.granted`).
 
-#### Scenario: Première saison de ligue
-- WHEN une saison démarre avec une équipe neuve (`leagueFreeFan = false`) qui a 2 Fans Dévoués
+#### Scenario: Première inscription en ligue
+- WHEN une équipe neuve (`leagueFreeFan = false`) qui a 2 Fans Dévoués s'inscrit à une saison
 - THEN l'équipe DOIT avoir 3 Fans Dévoués et `leagueFreeFan = true`
+- AND l'inscription DOIT porter `freeFanGrant = "fan"`
 - AND le journal d'équipe DOIT tracer l'octroi avec la saison
 
-#### Scenario: Seconde saison
-- WHEN une saison démarre avec une équipe dont `leagueFreeFan = true`
+#### Scenario: Équipe qui a déjà son fan offert
+- WHEN une équipe `leagueFreeFan = true` s'inscrit à une nouvelle saison
 - THEN ses Fans Dévoués NE DOIVENT PAS changer
+- AND l'inscription NE DOIT porter aucun `freeFanGrant`
 
 #### Scenario: Équipe antérieure à la règle
-- WHEN une saison démarre avec une équipe dont `leagueFreeFan = null`
+- WHEN une équipe `leagueFreeFan = null` s'inscrit à une saison
 - THEN ses Fans Dévoués NE DOIVENT PAS changer (son fan offert est déjà compté)
 
-#### Scenario: Participant retiré avant le démarrage
-- WHEN une équipe inscrite a été retirée de la saison (`withdrawn`) avant son démarrage
-- THEN elle NE DOIT PAS recevoir de fan offert
-
-#### Scenario: Démarrage rejoué
-- WHEN `regenerateSchedule` est appelé après `startSeason` sur la même saison
-- THEN aucun second fan offert NE DOIT être accordé
+#### Scenario: Inscription refusée
+- WHEN l'inscription est refusée (saison fermée, roster non autorisé, équipe déjà engagée, saison complète)
+- THEN aucun Fan Dévoué NE DOIT être accordé
 
 ### Requirement: Équipe au plafond — le prix d'un fan en trésorerie
 
 Si une équipe qui doit recevoir son fan offert a déjà atteint le plafond de
 Fans Dévoués de sa config, ses fans NE DOIVENT PAS dépasser le plafond : sa
 trésorerie DOIT être créditée du prix unitaire d'un Fan Dévoué (config staff
-résolue, en incrément atomique) et `leagueFreeFan` DOIT passer à `true`.
+résolue, en incrément atomique), `leagueFreeFan` DOIT passer à `true` et
+l'inscription DOIT porter `freeFanGrant = "refund"` et le montant crédité
+(`freeFanRefund`).
 
 #### Scenario: Six fans achetés hors ligue
-- WHEN une saison démarre avec une équipe neuve BB11 qui a 6 Fans Dévoués (plafond 6, prix 5 000 po)
+- WHEN une équipe neuve BB11 qui a 6 Fans Dévoués (plafond 6, prix 5 000 po) s'inscrit à une saison
 - THEN l'équipe DOIT garder 6 Fans Dévoués
 - AND sa trésorerie DOIT être créditée de 5 000 po
-- AND le journal d'équipe DOIT tracer un remboursement
+- AND l'inscription DOIT porter `freeFanGrant = "refund"` et `freeFanRefund = 5000`
+
+### Requirement: Fan offert repris quand l'équipe quitte la ligue
+
+Quand une inscription qui porte un `freeFanGrant` est retirée
+(`withdrawParticipant`), supprimée par le commissaire (`removeTeamFromLeague`,
+`removeCoachFromSeason`) ou emportée par la suppression de sa ligue, ce
+qu'elle a accordé DOIT être repris dans la MÊME transaction que le départ,
+`leagueFreeFan` DOIT repasser à `false` et la reprise DOIT être journalisée
+(`team.league_free_fan.revoked`). Une inscription sans `freeFanGrant` NE DOIT
+rien reprendre. La reprise NE DOIT jamais rendre la trésorerie ni les fans
+négatifs : un fan accordé reprend 1 fan s'il en reste ; un remboursement
+reprend son montant si la trésorerie le couvre, sinon 1 fan s'il en reste,
+sinon rien.
+
+#### Scenario: Retrait avant le démarrage
+- WHEN une équipe dont l'inscription porte `freeFanGrant = "fan"` est retirée de la saison
+- THEN elle DOIT perdre 1 Fan Dévoué et repasser `leagueFreeFan = false`
+- AND l'inscription retirée NE DOIT plus porter de `freeFanGrant`
+
+#### Scenario: Suppression par le commissaire
+- WHEN le commissaire supprime une équipe dont l'inscription porte `freeFanGrant = "fan"`
+- THEN elle DOIT perdre 1 Fan Dévoué et repasser `leagueFreeFan = false`
+
+#### Scenario: Suppression de la ligue
+- WHEN une ligue est supprimée alors qu'une de ses inscriptions porte `freeFanGrant = "fan"`
+- THEN l'équipe DOIT perdre 1 Fan Dévoué et repasser `leagueFreeFan = false`
+
+#### Scenario: Départ d'une seconde saison
+- WHEN une équipe dont le fan offert a été accordé par sa saison 1 quitte la saison 2 (inscription sans `freeFanGrant`)
+- THEN ses Fans Dévoués NE DOIVENT PAS changer
+
+#### Scenario: Remboursement repris
+- WHEN une équipe dont l'inscription porte `freeFanGrant = "refund"` et `freeFanRefund = 5000` est retirée avec 8 000 po en trésorerie
+- THEN sa trésorerie DOIT être débitée de 5 000 po
+
+#### Scenario: Remboursement déjà dépensé
+- WHEN la même équipe est retirée avec 2 000 po en trésorerie et 6 Fans Dévoués
+- THEN elle DOIT perdre 1 Fan Dévoué et garder sa trésorerie
+
+#### Scenario: Plus aucun fan à reprendre
+- WHEN une équipe dont l'inscription porte `freeFanGrant = "fan"` est retirée avec 0 Fan Dévoué
+- THEN ses fans DOIVENT rester à 0
+- AND `leagueFreeFan` DOIT repasser à `false`
+
+#### Scenario: Nouvelle inscription après un retrait
+- WHEN une équipe dont le fan offert a été repris s'inscrit à une autre saison
+- THEN elle DOIT recevoir à nouveau son fan offert
 
 ### Requirement: Coût des fans achetés et minimum par équipe
 
@@ -117,9 +164,9 @@ de l'équipe tel quel, 0 compris : aucun repli NE DOIT transformer 0 en 1.
 ### Requirement: La règle est annoncée là où elle s'applique
 
 Le builder DOIT afficher, à côté de la ligne des Fans Dévoués, que chaque fan
-se paie et qu'une équipe de ligue reçoit son premier fan au démarrage de sa
-première saison. La fiche d'une équipe dont `leagueFreeFan` vaut `false`
-DOIT annoncer que le fan offert sera ajouté au démarrage d'une saison de
+se paie et qu'une équipe de ligue reçoit son premier fan à son
+inscription en ligue. La fiche d'une équipe dont `leagueFreeFan` vaut
+`false` DOIT annoncer que le fan offert sera ajouté à son inscription en
 ligue.
 
 #### Scenario: Builder
@@ -129,4 +176,4 @@ ligue.
 
 #### Scenario: Fiche d'une équipe neuve
 - WHEN un coach consulte une équipe `leagueFreeFan = false`
-- THEN la fiche DOIT annoncer le fan offert au démarrage d'une saison de ligue
+- THEN la fiche DOIT annoncer le fan offert à l'inscription en ligue
