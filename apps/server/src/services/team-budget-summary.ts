@@ -15,9 +15,11 @@
  */
 
 import {
+  dedicatedFansPurchaseCost as fansPurchaseCost,
   defaultStaffConfig,
   isGameFormat,
   type GameFormat,
+  type LeagueFreeFanMarker,
   type Ruleset,
 } from '@bb/game-engine';
 import { DEFAULT_RULESET } from '@bb/game-engine';
@@ -99,6 +101,11 @@ interface BudgetTeamRow {
   readonly assistants: number;
   readonly apothecary: boolean;
   readonly dedicatedFans: number;
+  /**
+   * Fan dévoué offert (règle de ligue) : `false` = aucun, chaque fan se paie ;
+   * `true` / `null` / absent = le premier fan est offert.
+   */
+  readonly leagueFreeFan?: boolean | null;
   readonly initialBudget: number;
   readonly treasury: number;
   /**
@@ -138,15 +145,18 @@ export function inducementsPurchaseCost(
 }
 
 /**
- * Coût d'achat des fans dévoués : le premier fan est offert à la création,
- * les suivants coûtent `dedicatedFanCost`. (Leur valeur n'entre pas dans la
- * VE — cf. `calculateStaffCost` dans le moteur.)
+ * Coût d'achat des fans dévoués. Le premier fan n'est offert qu'aux équipes
+ * de LIGUE (`leagueFreeFan` à `true`, ou `null`/absent pour une équipe
+ * historique) ; hors ligue, chacun coûte `dedicatedFanCost`. Règle pure du
+ * moteur (`@bb/game-engine` `dedicated-fans`). Leur valeur n'entre pas dans
+ * la VE — cf. `calculateStaffCost` dans le moteur.
  */
 export function dedicatedFansPurchaseCost(
   dedicatedFans: number,
   dedicatedFanCost: number,
+  leagueFreeFan?: LeagueFreeFanMarker,
 ): number {
-  return Math.max(0, dedicatedFans - 1) * dedicatedFanCost;
+  return fansPurchaseCost(dedicatedFans, dedicatedFanCost, leagueFreeFan);
 }
 
 /**
@@ -173,6 +183,7 @@ export async function buildTeamBudgetSummary(
   const dedicatedFansCost = dedicatedFansPurchaseCost(
     team.dedicatedFans,
     fanCost,
+    team.leagueFreeFan,
   );
 
   const starPlayersCost = starPlayers.reduce(

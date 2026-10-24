@@ -271,6 +271,18 @@ describe('handleCreateFromRoster — règlement de tournoi', () => {
     );
   });
 
+  it('aucun fan offert à la création (règle de ligue) : 0 fan, leagueFreeFan false', async () => {
+    const req = createReq({ body: { name: 'Test', roster: 'orc' } });
+    const res = createRes();
+    await handleCreateFromRoster(req, res);
+    expect(res.statusCode).toBe(201);
+    expect(txCreateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ dedicatedFans: 0, leagueFreeFan: false }),
+      }),
+    );
+  });
+
   it("refuse (400) un Star Player quand le règlement ne l'autorise pas (orc)", async () => {
     const req = createReq({
       body: {

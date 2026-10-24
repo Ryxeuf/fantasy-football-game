@@ -40,6 +40,7 @@ import {
   type AllowedRoster,
   type GameFormat,
   getFormatConstraints,
+  dedicatedFansPurchaseCost,
   defaultBuildBudgetK,
   validateFormatSelection,
   isGameFormat,
@@ -370,7 +371,9 @@ export async function handleBuildTeam(
     const cheerleaders = bodyCheerleaders ?? 0;
     const assistants = bodyAssistants ?? 0;
     const apothecary = bodyApothecary ?? false;
-    const dedicatedFans = bodyDedicatedFans ?? 1;
+    // Aucun fan offert à la construction : le premier Fan Dévoué gratuit est
+    // une règle de LIGUE, accordé à l'inscription (services/league-free-fan).
+    const dedicatedFans = bodyDedicatedFans ?? 0;
 
     const starPlayersToHire = starPlayerSlugs || [];
 
@@ -469,7 +472,7 @@ export async function handleBuildTeam(
         cheerleaders * staff.cheerleaderCost +
         assistants * staff.assistantCost +
         (apothecary ? staff.apothecaryCost : 0) +
-        Math.max(0, dedicatedFans - 1) * staff.dedicatedFanCost) /
+        dedicatedFansPurchaseCost(dedicatedFans, staff.dedicatedFanCost, false)) /
       1000;
 
     let starPlayersCost = 0;
@@ -635,6 +638,8 @@ export async function handleBuildTeam(
           assistants,
           apothecary,
           dedicatedFans,
+          // Équipe neuve : aucun fan offert (null = équipe historique).
+          leagueFreeFan: false,
           currentValue: 0,
           startingPspPool: pspPool,
           tournamentRuleset: pack?.slug ?? null,

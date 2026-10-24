@@ -57,11 +57,11 @@ describe("updateStaffSchema", () => {
     );
   });
 
-  it("exige au moins un fan dévoué", () => {
-    expect(updateStaffSchema.safeParse({ dedicatedFans: 0 }).success).toBe(
+  it("accepte 0 fan dévoué (borne métier appliquée par le service)", () => {
+    expect(updateStaffSchema.safeParse({ dedicatedFans: 0 }).success).toBe(true);
+    expect(updateStaffSchema.safeParse({ dedicatedFans: -1 }).success).toBe(
       false,
     );
-    expect(updateStaffSchema.safeParse({ dedicatedFans: 1 }).success).toBe(true);
   });
 });
 

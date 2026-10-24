@@ -32,8 +32,10 @@ import {
   favouredOfLabel,
   isFavouredOfSlug,
   isGameFormat,
+  minDedicatedFans,
   resolveTeamRegionalRules,
   type GameFormat,
+  type LeagueFreeFanMarker,
   type RosterStaffConfig,
   type Ruleset,
 } from "@bb/game-engine";
@@ -108,10 +110,15 @@ export function staffCostDelta(
 /**
  * Verifie le staff demande contre les plafonds resolus. Retourne le message
  * d'erreur a remonter, ou `null` si tout est legal. Pur.
+ *
+ * Le minimum de fans devoues est celui de l'equipe : 1 si son fan offert est
+ * compte (`leagueFreeFan` a `true`, ou `null`/absent pour une equipe
+ * historique), 0 sinon.
  */
 export function validateStaff(
   staff: TeamStaff,
   config: RosterStaffConfig,
+  leagueFreeFan?: LeagueFreeFanMarker,
 ): { code: "staff_out_of_bounds" | "apothecary_not_allowed"; message: string } | null {
   const caps: ReadonlyArray<{
     value: number;
@@ -134,7 +141,7 @@ export function validateStaff(
     },
     {
       value: staff.dedicatedFans,
-      min: 1,
+      min: minDedicatedFans(leagueFreeFan),
       max: config.maxDedicatedFans,
       label: "fans dévoués",
     },
@@ -172,6 +179,7 @@ interface TeamRow {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  leagueFreeFan: boolean | null;
 }
 
 const TEAM_SELECT = {
@@ -190,6 +198,7 @@ const TEAM_SELECT = {
   assistants: true,
   apothecary: true,
   dedicatedFans: true,
+  leagueFreeFan: true,
 } as const;
 
 async function loadTeam(teamId: string): Promise<TeamRow> {
@@ -405,7 +414,7 @@ export async function updateTeamStaff(
   }
 
   const config = await resolveStaffConfig(team);
-  const invalid = validateStaff(after, config);
+  const invalid = validateStaff(after, config, team.leagueFreeFan);
   if (invalid) {
     throw new CommissionerSettingsError(invalid.code, invalid.message);
   }

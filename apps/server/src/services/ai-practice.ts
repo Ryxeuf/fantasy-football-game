@@ -166,7 +166,9 @@ export async function spawnAITeam(
       cheerleaders: 0,
       assistants: 0,
       apothecary: false,
-      dedicatedFans: 1,
+      // Équipe d'entraînement, hors ligue : aucun fan offert.
+      dedicatedFans: 0,
+      leagueFreeFan: false,
       currentValue: finalTeamValue,
     },
   });

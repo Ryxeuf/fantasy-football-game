@@ -85,10 +85,19 @@ describe("validateStaffAgainstConfig", () => {
     expect(validateStaffAgainstConfig({ cheerleaders: 4 }, tight)).toBeNull();
   });
 
-  it("refuse moins d'un fan devoue", () => {
+  it("refuse moins d'un fan devoue quand le fan offert est compte", () => {
     expect(validateStaffAgainstConfig({ dedicatedFans: 0 }, BB11)).toContain(
       "fans devoues",
     );
+    expect(
+      validateStaffAgainstConfig({ dedicatedFans: 0 }, BB11, true),
+    ).toContain("entre 1 et");
+  });
+
+  it("accepte 0 fan devoue pour une equipe sans fan offert (hors ligue)", () => {
+    expect(
+      validateStaffAgainstConfig({ dedicatedFans: 0 }, BB11, false),
+    ).toBeNull();
   });
 
   it("refuse l'apothicaire pour un roster qui n'y a pas droit", () => {

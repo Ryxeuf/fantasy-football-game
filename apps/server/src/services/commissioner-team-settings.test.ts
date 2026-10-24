@@ -131,10 +131,22 @@ describe("commissioner-team-settings", () => {
       expect(out?.message).toContain("relances");
     });
 
-    it("refuse moins d'un fan dévoué", () => {
+    it("refuse moins d'un fan dévoué quand le fan offert est compté", () => {
       expect(validateStaff({ ...BASE_STAFF, dedicatedFans: 0 }, CONFIG)?.code).toBe(
         "staff_out_of_bounds",
       );
+      expect(
+        validateStaff({ ...BASE_STAFF, dedicatedFans: 0 }, CONFIG, true)?.message,
+      ).toContain("entre 1 et");
+      expect(
+        validateStaff({ ...BASE_STAFF, dedicatedFans: 0 }, CONFIG, null)?.code,
+      ).toBe("staff_out_of_bounds");
+    });
+
+    it("accepte 0 fan dévoué pour une équipe sans fan offert", () => {
+      expect(
+        validateStaff({ ...BASE_STAFF, dedicatedFans: 0 }, CONFIG, false),
+      ).toBeNull();
     });
 
     it("refuse l'apothicaire quand le roster n'y a pas droit", () => {
