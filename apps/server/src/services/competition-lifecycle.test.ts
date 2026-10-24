@@ -20,6 +20,18 @@ vi.mock("../prisma", () => ({
   },
 }));
 
+// Reprise du Fan Dévoué offert : testée dans `league-free-fan.test.ts`. Ici,
+// le wrapper exécute simplement la suppression sur le client mocké.
+vi.mock("./league-free-fan", async () => {
+  const { prisma: client } = await import("../prisma");
+  return {
+    withLeagueFreeFansRevokedForLeague: vi.fn(
+      async (_leagueId: string, op: (db: unknown) => Promise<unknown>) =>
+        op(client),
+    ),
+  };
+});
+
 vi.mock("./in-app-notifications", () => ({
   createInAppNotifications: vi.fn(async (ids: string[]) => ids.length),
 }));
@@ -30,6 +42,7 @@ vi.mock("../utils/server-log", () => ({
 
 import { prisma } from "../prisma";
 import { createInAppNotifications } from "./in-app-notifications";
+import { withLeagueFreeFansRevokedForLeague } from "./league-free-fan";
 import {
   archiveLeague,
   deleteLeague,
@@ -208,6 +221,16 @@ describe("suppression", () => {
       url: null,
       meta: { name: "Open 5 Teams" },
     });
+  });
+
+  it("supprime la ligue à travers la reprise du Fan Dévoué offert", async () => {
+    db.league.delete.mockResolvedValue({});
+    await deleteLeague("lg-1", commissioner);
+    expect(withLeagueFreeFansRevokedForLeague).toHaveBeenCalledWith(
+      "lg-1",
+      expect.any(Function),
+    );
+    expect(db.league.delete).toHaveBeenCalledWith({ where: { id: "lg-1" } });
   });
 
   it("un delete qui échoue ne notifie personne", async () => {

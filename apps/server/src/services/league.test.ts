@@ -7,6 +7,22 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+// Fan Dévoué offert : testé dans `league-free-fan.test.ts`. Ici, les deux
+// points d'entrée délèguent au client mocké (comportement sans octroi) et
+// l'on vérifie seulement qu'inscription et retrait passent par eux.
+vi.mock("./league-free-fan", async () => {
+  const { prisma: client } = await import("../prisma");
+  return {
+    createLeagueParticipant: vi.fn(async (data: unknown) =>
+      (client as any).leagueParticipant.create({ data }),
+    ),
+    withLeagueFreeFanRevoked: vi.fn(
+      async (_departure: unknown, op: (db: unknown) => Promise<unknown>) =>
+        op(client),
+    ),
+  };
+});
+
 vi.mock("../prisma", () => ({
   prisma: {
     league: {
@@ -66,6 +82,10 @@ import {
   getSeasonById,
   LeagueWithdrawError,
 } from "./league";
+import {
+  createLeagueParticipant,
+  withLeagueFreeFanRevoked,
+} from "./league-free-fan";
 
 const mockPrisma = prisma as any;
 
@@ -474,6 +494,26 @@ describe("Rule: League service", () => {
       expect(mockPrisma.leagueParticipant.create).toHaveBeenCalledWith({
         data: expect.objectContaining({ seasonId, teamId }),
       });
+    });
+
+    it("inscrit par createLeagueParticipant, avec l'équipe chargée (fan offert)", async () => {
+      mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+        id: seasonId,
+        status: "draft",
+        league: { maxParticipants: 16 },
+      });
+      const loadedTeam = { id: teamId, dedicatedFans: 0, leagueFreeFan: false };
+      mockPrisma.team.findUnique.mockResolvedValue(loadedTeam);
+      mockPrisma.leagueParticipant.findUnique.mockResolvedValue(null);
+      mockPrisma.leagueParticipant.count.mockResolvedValue(0);
+      mockPrisma.leagueParticipant.create.mockResolvedValue({ id: "p-1" });
+
+      await addParticipant({ seasonId, teamId });
+
+      expect(createLeagueParticipant).toHaveBeenCalledWith(
+        { seasonId, teamId, seasonElo: 1000, status: "active" },
+        loadedTeam,
+      );
     });
 
     it("rejects when the season is full", async () => {
@@ -1222,6 +1262,14 @@ describe("Rule: League service", () => {
         data: { status: "withdrawn" },
       });
       expect(out).toMatchObject({ status: "withdrawn" });
+      // Le retrait reprend le Fan Dévoué offert par cette inscription.
+      expect(withLeagueFreeFanRevoked).toHaveBeenCalledWith(
+        {
+          participants: [expect.objectContaining({ id: participantId, teamId })],
+          reason: "withdrawn",
+        },
+        expect.any(Function),
+      );
     });
 
     it("autorise le retrait sur saison scheduled", async () => {
