@@ -28760,6 +28760,7 @@ export namespace Prisma {
     assistants: number | null
     apothecary: boolean | null
     dedicatedFans: number | null
+    leagueFreeFan: boolean | null
     teamValue: number | null
     currentValue: number | null
     initialBudget: number | null
@@ -28787,6 +28788,7 @@ export namespace Prisma {
     assistants: number | null
     apothecary: boolean | null
     dedicatedFans: number | null
+    leagueFreeFan: boolean | null
     teamValue: number | null
     currentValue: number | null
     initialBudget: number | null
@@ -28814,6 +28816,7 @@ export namespace Prisma {
     assistants: number
     apothecary: number
     dedicatedFans: number
+    leagueFreeFan: number
     teamValue: number
     currentValue: number
     initialBudget: number
@@ -28867,6 +28870,7 @@ export namespace Prisma {
     assistants?: true
     apothecary?: true
     dedicatedFans?: true
+    leagueFreeFan?: true
     teamValue?: true
     currentValue?: true
     initialBudget?: true
@@ -28894,6 +28898,7 @@ export namespace Prisma {
     assistants?: true
     apothecary?: true
     dedicatedFans?: true
+    leagueFreeFan?: true
     teamValue?: true
     currentValue?: true
     initialBudget?: true
@@ -28921,6 +28926,7 @@ export namespace Prisma {
     assistants?: true
     apothecary?: true
     dedicatedFans?: true
+    leagueFreeFan?: true
     teamValue?: true
     currentValue?: true
     initialBudget?: true
@@ -29035,6 +29041,7 @@ export namespace Prisma {
     assistants: number
     apothecary: boolean
     dedicatedFans: number
+    leagueFreeFan: boolean | null
     teamValue: number
     currentValue: number
     initialBudget: number
@@ -29081,6 +29088,7 @@ export namespace Prisma {
     assistants?: boolean
     apothecary?: boolean
     dedicatedFans?: boolean
+    leagueFreeFan?: boolean
     teamValue?: boolean
     currentValue?: boolean
     initialBudget?: boolean
@@ -29123,6 +29131,7 @@ export namespace Prisma {
     assistants?: boolean
     apothecary?: boolean
     dedicatedFans?: boolean
+    leagueFreeFan?: boolean
     teamValue?: boolean
     currentValue?: boolean
     initialBudget?: boolean
@@ -29151,6 +29160,7 @@ export namespace Prisma {
     assistants?: boolean
     apothecary?: boolean
     dedicatedFans?: boolean
+    leagueFreeFan?: boolean
     teamValue?: boolean
     currentValue?: boolean
     initialBudget?: boolean
@@ -29179,6 +29189,7 @@ export namespace Prisma {
     assistants?: boolean
     apothecary?: boolean
     dedicatedFans?: boolean
+    leagueFreeFan?: boolean
     teamValue?: boolean
     currentValue?: boolean
     initialBudget?: boolean
@@ -29190,7 +29201,7 @@ export namespace Prisma {
     deletedAt?: boolean
   }
 
-  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "tournamentRuleset" | "regionalLeague" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "description" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
+  export type TeamOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ownerId" | "name" | "roster" | "ruleset" | "format" | "tournamentRuleset" | "regionalLeague" | "createdAt" | "treasury" | "rerolls" | "cheerleaders" | "assistants" | "apothecary" | "dedicatedFans" | "leagueFreeFan" | "teamValue" | "currentValue" | "initialBudget" | "startingPspPool" | "logoUrl" | "description" | "isPublic" | "shareToken" | "deletedAt", ExtArgs["result"]["team"]>
   export type TeamInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | UserDefaultArgs<ExtArgs>
     players?: boolean | Team$playersArgs<ExtArgs>
@@ -29249,6 +29260,15 @@ export namespace Prisma {
       assistants: number
       apothecary: boolean
       dedicatedFans: number
+      /**
+       * Fan Dévoué OFFERT, règle de LIGUE (cf. @bb/game-engine `dedicated-fans`).
+       * Pas de @default : `db push` le pose null sur l'existant, la création écrit
+       * false. null  = équipe antérieure à la règle, fan offert DÉJÀ compté dans
+       * dedicatedFans ; false = aucun fan offert (équipe neuve hors ligue) ;
+       * true  = fan offert accordé par une inscription en ligue (repris si elle
+       * part, cf. LeagueParticipant.freeFanGrant).
+       */
+      leagueFreeFan: boolean | null
       teamValue: number
       currentValue: number
       initialBudget: number
@@ -29710,6 +29730,7 @@ export namespace Prisma {
     readonly assistants: FieldRef<"Team", 'Int'>
     readonly apothecary: FieldRef<"Team", 'Boolean'>
     readonly dedicatedFans: FieldRef<"Team", 'Int'>
+    readonly leagueFreeFan: FieldRef<"Team", 'Boolean'>
     readonly teamValue: FieldRef<"Team", 'Int'>
     readonly currentValue: FieldRef<"Team", 'Int'>
     readonly initialBudget: FieldRef<"Team", 'Int'>
@@ -70566,6 +70587,7 @@ export namespace Prisma {
     touchdownsAgainst: number | null
     casualtiesFor: number | null
     casualtiesAgainst: number | null
+    freeFanRefund: number | null
   }
 
   export type LeagueParticipantSumAggregateOutputType = {
@@ -70578,6 +70600,7 @@ export namespace Prisma {
     touchdownsAgainst: number | null
     casualtiesFor: number | null
     casualtiesAgainst: number | null
+    freeFanRefund: number | null
   }
 
   export type LeagueParticipantMinAggregateOutputType = {
@@ -70597,6 +70620,8 @@ export namespace Prisma {
     joinedAt: Date | null
     mecenePlayed: boolean | null
     mecenePlayedAt: Date | null
+    freeFanGrant: string | null
+    freeFanRefund: number | null
     poolId: string | null
   }
 
@@ -70617,6 +70642,8 @@ export namespace Prisma {
     joinedAt: Date | null
     mecenePlayed: boolean | null
     mecenePlayedAt: Date | null
+    freeFanGrant: string | null
+    freeFanRefund: number | null
     poolId: string | null
   }
 
@@ -70637,6 +70664,8 @@ export namespace Prisma {
     joinedAt: number
     mecenePlayed: number
     mecenePlayedAt: number
+    freeFanGrant: number
+    freeFanRefund: number
     poolId: number
     _all: number
   }
@@ -70652,6 +70681,7 @@ export namespace Prisma {
     touchdownsAgainst?: true
     casualtiesFor?: true
     casualtiesAgainst?: true
+    freeFanRefund?: true
   }
 
   export type LeagueParticipantSumAggregateInputType = {
@@ -70664,6 +70694,7 @@ export namespace Prisma {
     touchdownsAgainst?: true
     casualtiesFor?: true
     casualtiesAgainst?: true
+    freeFanRefund?: true
   }
 
   export type LeagueParticipantMinAggregateInputType = {
@@ -70683,6 +70714,8 @@ export namespace Prisma {
     joinedAt?: true
     mecenePlayed?: true
     mecenePlayedAt?: true
+    freeFanGrant?: true
+    freeFanRefund?: true
     poolId?: true
   }
 
@@ -70703,6 +70736,8 @@ export namespace Prisma {
     joinedAt?: true
     mecenePlayed?: true
     mecenePlayedAt?: true
+    freeFanGrant?: true
+    freeFanRefund?: true
     poolId?: true
   }
 
@@ -70723,6 +70758,8 @@ export namespace Prisma {
     joinedAt?: true
     mecenePlayed?: true
     mecenePlayedAt?: true
+    freeFanGrant?: true
+    freeFanRefund?: true
     poolId?: true
     _all?: true
   }
@@ -70830,6 +70867,8 @@ export namespace Prisma {
     joinedAt: Date
     mecenePlayed: boolean
     mecenePlayedAt: Date | null
+    freeFanGrant: string | null
+    freeFanRefund: number | null
     poolId: string | null
     _count: LeagueParticipantCountAggregateOutputType | null
     _avg: LeagueParticipantAvgAggregateOutputType | null
@@ -70869,6 +70908,8 @@ export namespace Prisma {
     joinedAt?: boolean
     mecenePlayed?: boolean
     mecenePlayedAt?: boolean
+    freeFanGrant?: boolean
+    freeFanRefund?: boolean
     poolId?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
@@ -70895,6 +70936,8 @@ export namespace Prisma {
     joinedAt?: boolean
     mecenePlayed?: boolean
     mecenePlayedAt?: boolean
+    freeFanGrant?: boolean
+    freeFanRefund?: boolean
     poolId?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
@@ -70918,6 +70961,8 @@ export namespace Prisma {
     joinedAt?: boolean
     mecenePlayed?: boolean
     mecenePlayedAt?: boolean
+    freeFanGrant?: boolean
+    freeFanRefund?: boolean
     poolId?: boolean
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
@@ -70941,10 +70986,12 @@ export namespace Prisma {
     joinedAt?: boolean
     mecenePlayed?: boolean
     mecenePlayedAt?: boolean
+    freeFanGrant?: boolean
+    freeFanRefund?: boolean
     poolId?: boolean
   }
 
-  export type LeagueParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "teamId" | "seasonElo" | "wins" | "draws" | "losses" | "points" | "touchdownsFor" | "touchdownsAgainst" | "casualtiesFor" | "casualtiesAgainst" | "status" | "joinedAt" | "mecenePlayed" | "mecenePlayedAt" | "poolId", ExtArgs["result"]["leagueParticipant"]>
+  export type LeagueParticipantOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "seasonId" | "teamId" | "seasonElo" | "wins" | "draws" | "losses" | "points" | "touchdownsFor" | "touchdownsAgainst" | "casualtiesFor" | "casualtiesAgainst" | "status" | "joinedAt" | "mecenePlayed" | "mecenePlayedAt" | "freeFanGrant" | "freeFanRefund" | "poolId", ExtArgs["result"]["leagueParticipant"]>
   export type LeagueParticipantInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     season?: boolean | LeagueSeasonDefaultArgs<ExtArgs>
     team?: boolean | TeamDefaultArgs<ExtArgs>
@@ -70990,6 +71037,14 @@ export namespace Prisma {
       joinedAt: Date
       mecenePlayed: boolean
       mecenePlayedAt: Date | null
+      /**
+       * "fan" | "refund" ; null = l'inscription n'a rien accordé.
+       */
+      freeFanGrant: string | null
+      /**
+       * Montant crédité en trésorerie (po) quand freeFanGrant = "refund".
+       */
+      freeFanRefund: number | null
       poolId: string | null
     }, ExtArgs["result"]["leagueParticipant"]>
     composites: {}
@@ -71435,6 +71490,8 @@ export namespace Prisma {
     readonly joinedAt: FieldRef<"LeagueParticipant", 'DateTime'>
     readonly mecenePlayed: FieldRef<"LeagueParticipant", 'Boolean'>
     readonly mecenePlayedAt: FieldRef<"LeagueParticipant", 'DateTime'>
+    readonly freeFanGrant: FieldRef<"LeagueParticipant", 'String'>
+    readonly freeFanRefund: FieldRef<"LeagueParticipant", 'Int'>
     readonly poolId: FieldRef<"LeagueParticipant", 'String'>
   }
     
@@ -127828,6 +127885,7 @@ export namespace Prisma {
     assistants: 'assistants',
     apothecary: 'apothecary',
     dedicatedFans: 'dedicatedFans',
+    leagueFreeFan: 'leagueFreeFan',
     teamValue: 'teamValue',
     currentValue: 'currentValue',
     initialBudget: 'initialBudget',
@@ -128476,6 +128534,8 @@ export namespace Prisma {
     joinedAt: 'joinedAt',
     mecenePlayed: 'mecenePlayed',
     mecenePlayedAt: 'mecenePlayedAt',
+    freeFanGrant: 'freeFanGrant',
+    freeFanRefund: 'freeFanRefund',
     poolId: 'poolId'
   };
 
@@ -130760,6 +130820,7 @@ export namespace Prisma {
     assistants?: IntFilter<"Team"> | number
     apothecary?: BoolFilter<"Team"> | boolean
     dedicatedFans?: IntFilter<"Team"> | number
+    leagueFreeFan?: BoolNullableFilter<"Team"> | boolean | null
     teamValue?: IntFilter<"Team"> | number
     currentValue?: IntFilter<"Team"> | number
     initialBudget?: IntFilter<"Team"> | number
@@ -130801,6 +130862,7 @@ export namespace Prisma {
     assistants?: SortOrder
     apothecary?: SortOrder
     dedicatedFans?: SortOrder
+    leagueFreeFan?: SortOrderInput | SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
     initialBudget?: SortOrder
@@ -130846,6 +130908,7 @@ export namespace Prisma {
     assistants?: IntFilter<"Team"> | number
     apothecary?: BoolFilter<"Team"> | boolean
     dedicatedFans?: IntFilter<"Team"> | number
+    leagueFreeFan?: BoolNullableFilter<"Team"> | boolean | null
     teamValue?: IntFilter<"Team"> | number
     currentValue?: IntFilter<"Team"> | number
     initialBudget?: IntFilter<"Team"> | number
@@ -130886,6 +130949,7 @@ export namespace Prisma {
     assistants?: SortOrder
     apothecary?: SortOrder
     dedicatedFans?: SortOrder
+    leagueFreeFan?: SortOrderInput | SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
     initialBudget?: SortOrder
@@ -130921,6 +130985,7 @@ export namespace Prisma {
     assistants?: IntWithAggregatesFilter<"Team"> | number
     apothecary?: BoolWithAggregatesFilter<"Team"> | boolean
     dedicatedFans?: IntWithAggregatesFilter<"Team"> | number
+    leagueFreeFan?: BoolNullableWithAggregatesFilter<"Team"> | boolean | null
     teamValue?: IntWithAggregatesFilter<"Team"> | number
     currentValue?: IntWithAggregatesFilter<"Team"> | number
     initialBudget?: IntWithAggregatesFilter<"Team"> | number
@@ -134230,6 +134295,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
     mecenePlayed?: BoolFilter<"LeagueParticipant"> | boolean
     mecenePlayedAt?: DateTimeNullableFilter<"LeagueParticipant"> | Date | string | null
+    freeFanGrant?: StringNullableFilter<"LeagueParticipant"> | string | null
+    freeFanRefund?: IntNullableFilter<"LeagueParticipant"> | number | null
     poolId?: StringNullableFilter<"LeagueParticipant"> | string | null
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
@@ -134255,6 +134322,8 @@ export namespace Prisma {
     joinedAt?: SortOrder
     mecenePlayed?: SortOrder
     mecenePlayedAt?: SortOrderInput | SortOrder
+    freeFanGrant?: SortOrderInput | SortOrder
+    freeFanRefund?: SortOrderInput | SortOrder
     poolId?: SortOrderInput | SortOrder
     season?: LeagueSeasonOrderByWithRelationInput
     team?: TeamOrderByWithRelationInput
@@ -134284,6 +134353,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
     mecenePlayed?: BoolFilter<"LeagueParticipant"> | boolean
     mecenePlayedAt?: DateTimeNullableFilter<"LeagueParticipant"> | Date | string | null
+    freeFanGrant?: StringNullableFilter<"LeagueParticipant"> | string | null
+    freeFanRefund?: IntNullableFilter<"LeagueParticipant"> | number | null
     poolId?: StringNullableFilter<"LeagueParticipant"> | string | null
     season?: XOR<LeagueSeasonScalarRelationFilter, LeagueSeasonWhereInput>
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
@@ -134309,6 +134380,8 @@ export namespace Prisma {
     joinedAt?: SortOrder
     mecenePlayed?: SortOrder
     mecenePlayedAt?: SortOrderInput | SortOrder
+    freeFanGrant?: SortOrderInput | SortOrder
+    freeFanRefund?: SortOrderInput | SortOrder
     poolId?: SortOrderInput | SortOrder
     _count?: LeagueParticipantCountOrderByAggregateInput
     _avg?: LeagueParticipantAvgOrderByAggregateInput
@@ -134337,6 +134410,8 @@ export namespace Prisma {
     joinedAt?: DateTimeWithAggregatesFilter<"LeagueParticipant"> | Date | string
     mecenePlayed?: BoolWithAggregatesFilter<"LeagueParticipant"> | boolean
     mecenePlayedAt?: DateTimeNullableWithAggregatesFilter<"LeagueParticipant"> | Date | string | null
+    freeFanGrant?: StringNullableWithAggregatesFilter<"LeagueParticipant"> | string | null
+    freeFanRefund?: IntNullableWithAggregatesFilter<"LeagueParticipant"> | number | null
     poolId?: StringNullableWithAggregatesFilter<"LeagueParticipant"> | string | null
   }
 
@@ -140148,6 +140223,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -140189,6 +140265,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -140228,6 +140305,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -140269,6 +140347,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -140309,6 +140388,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -140335,6 +140415,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -140362,6 +140443,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -144098,6 +144180,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
@@ -144122,6 +144206,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
@@ -144142,6 +144228,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
@@ -144166,6 +144254,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
@@ -144188,6 +144278,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
   }
 
@@ -144206,6 +144298,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type LeagueParticipantUncheckedUpdateManyInput = {
@@ -144225,6 +144319,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -150383,6 +150479,11 @@ export namespace Prisma {
     not?: NestedEnumFormatFilter<$PrismaModel> | $Enums.Format
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type TeamPlayerListRelationFilter = {
     every?: TeamPlayerWhereInput
     some?: TeamPlayerWhereInput
@@ -150469,6 +150570,7 @@ export namespace Prisma {
     assistants?: SortOrder
     apothecary?: SortOrder
     dedicatedFans?: SortOrder
+    leagueFreeFan?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
     initialBudget?: SortOrder
@@ -150508,6 +150610,7 @@ export namespace Prisma {
     assistants?: SortOrder
     apothecary?: SortOrder
     dedicatedFans?: SortOrder
+    leagueFreeFan?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
     initialBudget?: SortOrder
@@ -150535,6 +150638,7 @@ export namespace Prisma {
     assistants?: SortOrder
     apothecary?: SortOrder
     dedicatedFans?: SortOrder
+    leagueFreeFan?: SortOrder
     teamValue?: SortOrder
     currentValue?: SortOrder
     initialBudget?: SortOrder
@@ -150576,6 +150680,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumFormatFilter<$PrismaModel>
     _max?: NestedEnumFormatFilter<$PrismaModel>
+  }
+
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type IntNullableFilter<$PrismaModel = never> = {
@@ -151684,11 +151796,6 @@ export namespace Prisma {
     eliteSkillSurcharge?: SortOrder
   }
 
-  export type BoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
   export type CupPoolListRelationFilter = {
     every?: CupPoolWhereInput
     some?: CupPoolWhereInput
@@ -151839,14 +151946,6 @@ export namespace Prisma {
     foulCasualtyPoints?: SortOrder
     passPoints?: SortOrder
     playoffSize?: SortOrder
-  }
-
-  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type CupScalarRelationFilter = {
@@ -152845,6 +152944,8 @@ export namespace Prisma {
     joinedAt?: SortOrder
     mecenePlayed?: SortOrder
     mecenePlayedAt?: SortOrder
+    freeFanGrant?: SortOrder
+    freeFanRefund?: SortOrder
     poolId?: SortOrder
   }
 
@@ -152858,6 +152959,7 @@ export namespace Prisma {
     touchdownsAgainst?: SortOrder
     casualtiesFor?: SortOrder
     casualtiesAgainst?: SortOrder
+    freeFanRefund?: SortOrder
   }
 
   export type LeagueParticipantMaxOrderByAggregateInput = {
@@ -152877,6 +152979,8 @@ export namespace Prisma {
     joinedAt?: SortOrder
     mecenePlayed?: SortOrder
     mecenePlayedAt?: SortOrder
+    freeFanGrant?: SortOrder
+    freeFanRefund?: SortOrder
     poolId?: SortOrder
   }
 
@@ -152897,6 +153001,8 @@ export namespace Prisma {
     joinedAt?: SortOrder
     mecenePlayed?: SortOrder
     mecenePlayedAt?: SortOrder
+    freeFanGrant?: SortOrder
+    freeFanRefund?: SortOrder
     poolId?: SortOrder
   }
 
@@ -152910,6 +153016,7 @@ export namespace Prisma {
     touchdownsAgainst?: SortOrder
     casualtiesFor?: SortOrder
     casualtiesAgainst?: SortOrder
+    freeFanRefund?: SortOrder
   }
 
   export type LeagueRoundSeasonIdRoundNumberCompoundUniqueInput = {
@@ -158014,6 +158121,10 @@ export namespace Prisma {
     set?: $Enums.Format
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type UserUpdateOneRequiredWithoutTeamsNestedInput = {
     create?: XOR<UserCreateWithoutTeamsInput, UserUncheckedCreateWithoutTeamsInput>
     connectOrCreate?: UserCreateOrConnectWithoutTeamsInput
@@ -159034,10 +159145,6 @@ export namespace Prisma {
     connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutCupInput | CompetitionDocumentCreateOrConnectWithoutCupInput[]
     createMany?: CompetitionDocumentCreateManyCupInputEnvelope
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
-  }
-
-  export type NullableBoolFieldUpdateOperationsInput = {
-    set?: boolean | null
   }
 
   export type UserUpdateOneRequiredWithoutCreatedCupsNestedInput = {
@@ -163016,6 +163123,11 @@ export namespace Prisma {
     not?: NestedEnumFormatFilter<$PrismaModel> | $Enums.Format
   }
 
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type NestedEnumRulesetWithAggregatesFilter<$PrismaModel = never> = {
     equals?: $Enums.Ruleset | EnumRulesetFieldRefInput<$PrismaModel>
     in?: $Enums.Ruleset[]
@@ -163034,6 +163146,14 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumFormatFilter<$PrismaModel>
     _max?: NestedEnumFormatFilter<$PrismaModel>
+  }
+
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -163078,19 +163198,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumAdvancementKindFilter<$PrismaModel>
     _max?: NestedEnumAdvancementKindFilter<$PrismaModel>
-  }
-
-  export type NestedBoolNullableFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
-  }
-
-  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
-    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedBoolNullableFilter<$PrismaModel>
-    _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
   export type NestedBigIntNullableFilter<$PrismaModel = never> = {
@@ -163302,6 +163409,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -163341,6 +163449,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -164673,6 +164782,7 @@ export namespace Prisma {
     assistants?: IntFilter<"Team"> | number
     apothecary?: BoolFilter<"Team"> | boolean
     dedicatedFans?: IntFilter<"Team"> | number
+    leagueFreeFan?: BoolNullableFilter<"Team"> | boolean | null
     teamValue?: IntFilter<"Team"> | number
     currentValue?: IntFilter<"Team"> | number
     initialBudget?: IntFilter<"Team"> | number
@@ -170370,6 +170480,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -170410,6 +170521,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -170696,6 +170808,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -170736,6 +170849,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -171382,6 +171496,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
@@ -171404,6 +171520,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
@@ -171944,6 +172062,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFilter<"LeagueParticipant"> | Date | string
     mecenePlayed?: BoolFilter<"LeagueParticipant"> | boolean
     mecenePlayedAt?: DateTimeNullableFilter<"LeagueParticipant"> | Date | string | null
+    freeFanGrant?: StringNullableFilter<"LeagueParticipant"> | string | null
+    freeFanRefund?: IntNullableFilter<"LeagueParticipant"> | number | null
     poolId?: StringNullableFilter<"LeagueParticipant"> | string | null
   }
 
@@ -171978,6 +172098,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -172018,6 +172139,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -172107,6 +172229,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -172147,6 +172270,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -172386,6 +172510,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -172426,6 +172551,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -172480,6 +172606,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -172520,6 +172647,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -172558,6 +172686,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -172598,6 +172727,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -172652,6 +172782,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -172692,6 +172823,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -174713,6 +174845,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -174753,6 +174886,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -174927,6 +175061,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -174967,6 +175102,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -175531,6 +175667,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -175571,6 +175708,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -175614,6 +175752,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -175654,6 +175793,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -175954,6 +176094,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -175994,6 +176135,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -176043,6 +176185,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -176083,6 +176226,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -176470,6 +176614,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -176510,6 +176655,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -176725,6 +176871,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -176765,6 +176912,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -176958,6 +177106,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -176998,6 +177147,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -177041,6 +177191,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -177081,6 +177232,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -177467,6 +177619,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -177507,6 +177660,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -177556,6 +177710,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -177596,6 +177751,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -178502,6 +178658,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
@@ -178524,6 +178682,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
@@ -179016,6 +179176,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
@@ -179039,6 +179201,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
@@ -179611,6 +179775,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -179651,6 +179816,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -180143,6 +180309,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -180183,6 +180350,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -180618,6 +180786,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -180658,6 +180827,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -181127,6 +181297,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -181167,6 +181338,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -181866,6 +182038,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -181906,6 +182079,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -182134,6 +182308,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -182174,6 +182349,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -182651,6 +182827,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     awayPairings?: LeaguePairingCreateNestedManyWithoutAwayParticipantInput
@@ -182674,6 +182852,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
     awayPairings?: LeaguePairingUncheckedCreateNestedManyWithoutAwayParticipantInput
   }
@@ -182698,6 +182878,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     season: LeagueSeasonCreateNestedOneWithoutParticipantsInput
     team: TeamCreateNestedOneWithoutLeagueParticipationsInput
     homePairings?: LeaguePairingCreateNestedManyWithoutHomeParticipantInput
@@ -182721,6 +182903,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
     homePairings?: LeaguePairingUncheckedCreateNestedManyWithoutHomeParticipantInput
   }
@@ -183016,6 +183200,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
@@ -183039,6 +183225,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
@@ -183069,6 +183257,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
@@ -183092,6 +183282,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
   }
@@ -193989,6 +194181,7 @@ export namespace Prisma {
     assistants?: number
     apothecary?: boolean
     dedicatedFans?: number
+    leagueFreeFan?: boolean | null
     teamValue?: number
     currentValue?: number
     initialBudget?: number
@@ -194603,6 +194796,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -194642,6 +194836,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -194681,6 +194876,7 @@ export namespace Prisma {
     assistants?: IntFieldUpdateOperationsInput | number
     apothecary?: BoolFieldUpdateOperationsInput | boolean
     dedicatedFans?: IntFieldUpdateOperationsInput | number
+    leagueFreeFan?: NullableBoolFieldUpdateOperationsInput | boolean | null
     teamValue?: IntFieldUpdateOperationsInput | number
     currentValue?: IntFieldUpdateOperationsInput | number
     initialBudget?: IntFieldUpdateOperationsInput | number
@@ -196416,6 +196612,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
   }
 
@@ -196975,6 +197173,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
@@ -196997,6 +197197,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
@@ -197018,6 +197220,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -198252,6 +198456,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
     poolId?: string | null
   }
 
@@ -198340,6 +198546,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUpdateManyWithoutAwayParticipantNestedInput
@@ -198362,6 +198570,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
@@ -198383,6 +198593,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     poolId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -198629,6 +198841,8 @@ export namespace Prisma {
     joinedAt?: Date | string
     mecenePlayed?: boolean
     mecenePlayedAt?: Date | string | null
+    freeFanGrant?: string | null
+    freeFanRefund?: number | null
   }
 
   export type LeagueRoundCreateManyPoolInput = {
@@ -198661,6 +198875,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     season?: LeagueSeasonUpdateOneRequiredWithoutParticipantsNestedInput
     team?: TeamUpdateOneRequiredWithoutLeagueParticipationsNestedInput
     homePairings?: LeaguePairingUpdateManyWithoutHomeParticipantNestedInput
@@ -198684,6 +198900,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
     homePairings?: LeaguePairingUncheckedUpdateManyWithoutHomeParticipantNestedInput
     awayPairings?: LeaguePairingUncheckedUpdateManyWithoutAwayParticipantNestedInput
   }
@@ -198705,6 +198923,8 @@ export namespace Prisma {
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     mecenePlayed?: BoolFieldUpdateOperationsInput | boolean
     mecenePlayedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    freeFanGrant?: NullableStringFieldUpdateOperationsInput | string | null
+    freeFanRefund?: NullableIntFieldUpdateOperationsInput | number | null
   }
 
   export type LeagueRoundUpdateWithoutPoolInput = {
