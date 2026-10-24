@@ -43,7 +43,7 @@ construite seule, puis inscrite à une saison.
   (`removeTeamFromLeague`, `removeCoachFromSeason`) et suppression de la ligue
   (la cascade emporte l'inscription). Seule l'inscription qui a ACCORDÉ le fan
   le reprend : quitter une seconde saison ne retire pas le fan accordé à la
-  première.
+  première, et si l'équipe reste inscrite ailleurs, l'octroi y est transféré.
 - **Octroi et reprise sont atomiques avec l'inscription / le retrait**, en
   écriture conditionnelle, et journalisés (`TeamAuditEvent`,
   `team.league_free_fan.granted` / `.revoked`).

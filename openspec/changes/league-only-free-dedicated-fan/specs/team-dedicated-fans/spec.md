@@ -122,6 +122,11 @@ sinon rien.
 - THEN ses fans DOIVENT rester à 0
 - AND `leagueFreeFan` DOIT repasser à `false`
 
+#### Scenario: L'équipe reste en ligue ailleurs
+- WHEN l'inscription qui porte l'octroi part alors que l'équipe a une autre inscription active hors de la ligue supprimée
+- THEN l'octroi DOIT être reporté sur cette inscription
+- AND les Fans Dévoués et la trésorerie de l'équipe NE DOIVENT PAS changer
+
 #### Scenario: Nouvelle inscription après un retrait
 - WHEN une équipe dont le fan offert a été repris s'inscrit à une autre saison
 - THEN elle DOIT recevoir à nouveau son fan offert

@@ -115,6 +115,12 @@ transaction. Sans inscription concernée, `op` s'exécute seul, comme avant.
 
 Dans tous les cas `Team.leagueFreeFan` repasse à `false` (écriture
 conditionnée à `true`) : une nouvelle inscription accordera à nouveau le fan.
+
+**Transfert plutôt que reprise** quand l'équipe reste en ligue : si elle a
+une autre inscription active (autre saison, autre ligue — hors ligue
+supprimée), l'octroi est reporté sur celle-ci et l'équipe ne perd rien. Cas
+typique : une ligue terminée est supprimée alors que l'équipe joue déjà
+ailleurs — son fan offert y était porté par la première inscription.
 Une trésorerie ne devient jamais négative (même règle que les débits
 commissaire). Le journal `team.league_free_fan.revoked` porte l'accordé, ce
 qui a été repris et la raison du départ.
