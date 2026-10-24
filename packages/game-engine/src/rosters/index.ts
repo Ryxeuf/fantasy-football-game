@@ -219,6 +219,23 @@ export {
 // Config staff par roster ET par format (source DB ; défaut dérivé des constantes)
 export { defaultStaffConfig, type RosterStaffConfig } from "./staff-config";
 
+// Fans Dévoués : le premier fan offert est une règle de ligue
+export {
+  dedicatedFansPurchaseCost,
+  includedFreeDedicatedFans,
+  minDedicatedFans,
+  paidDedicatedFans,
+  parseLeagueFreeFanGrant,
+  planLeagueFreeFanGrant,
+  planLeagueFreeFanRevoke,
+  type LeagueFreeFanGrantInput,
+  type LeagueFreeFanGrantKind,
+  type LeagueFreeFanGrantPlan,
+  type LeagueFreeFanMarker,
+  type LeagueFreeFanRevokeInput,
+  type LeagueFreeFanRevokePlan,
+} from "./dedicated-fans";
+
 // A36 — Plafond combiné de Gros Bras (Big Guy) par équipe
 export { bigGuyLimitForRoster } from "./big-guy-limits";
 
