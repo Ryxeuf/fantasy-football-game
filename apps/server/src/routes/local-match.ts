@@ -561,9 +561,10 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       .filter((p: any) => !p.dead)
       .map(toLocalTeamPlayerData);
     
-    // Récupérer les fans dévoués des équipes
-    const dedicatedFansA = localMatch.teamA.dedicatedFans || 1;
-    const dedicatedFansB = localMatch.teamB.dedicatedFans || 1;
+    // Récupérer les fans dévoués des équipes. 0 est un compte légitime (aucun
+    // fan offert hors ligue) : pas de repli `|| 1`, qui l'aurait gonflé.
+    const dedicatedFansA = localMatch.teamA.dedicatedFans ?? 0;
+    const dedicatedFansB = localMatch.teamB.dedicatedFans ?? 0;
     
     // Initialiser l'état du jeu en phase pré-match.
     // H.6 — propagate roster slugs so the client renderer can pick per-roster colors.

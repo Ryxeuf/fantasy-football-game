@@ -95,6 +95,11 @@ export interface PublicTeamView {
   readonly assistants: number;
   readonly apothecary: boolean;
   readonly dedicatedFans: number;
+  /**
+   * Fan Dévoué offert (règle de ligue) : `false` = aucun, chaque fan est
+   * payé ; `true` / `null` = le premier fan est offert.
+   */
+  readonly leagueFreeFan: boolean | null;
   readonly logoUrl: string | null;
   readonly description: string | null;
   readonly players: readonly PublicTeamPlayerView[];
@@ -191,6 +196,7 @@ export async function buildPublicTeamView(
     assistants: team.assistants,
     apothecary: team.apothecary,
     dedicatedFans: team.dedicatedFans,
+    leagueFreeFan: team.leagueFreeFan ?? null,
     logoUrl: team.logoUrl ?? null,
     description: team.description ?? null,
     players: team.players.map(toPlayerView),
