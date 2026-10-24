@@ -15,7 +15,7 @@
  * Module PUR : testable sans rendu React.
  */
 
-import { getRerollCost } from "@bb/game-engine";
+import { dedicatedFansPurchaseCost, getRerollCost } from "@bb/game-engine";
 
 /** Défauts édition 2025, alignés sur `TeamInfoDisplay`. */
 const DEFAULT_CHEERLEADER_COST = 10000;
@@ -45,6 +45,8 @@ export interface StaffLinesInput {
   readonly assistants: number;
   readonly apothecary: boolean;
   readonly dedicatedFans: number;
+  /** Fan Dévoué offert (`false` = aucun, chaque fan se paie). */
+  readonly leagueFreeFan?: boolean | null;
   readonly staffConfig?: StaffCostConfig;
   readonly budgetSummary?: StaffBudgetLike;
 }
@@ -64,14 +66,16 @@ function costOrNull(cost: number): number | null {
 }
 
 /**
- * Les Fans Dévoués : le premier est offert à la création, les suivants se
- * paient. Même règle que `dedicatedFansPurchaseCost` côté serveur.
+ * Les Fans Dévoués : le premier n'est offert qu'aux équipes de LIGUE
+ * (`leagueFreeFan` à `true`, ou absent/`null` pour une équipe historique) ;
+ * hors ligue, chacun se paie. Règle pure du moteur, celle du serveur.
  */
 export function dedicatedFansCostPo(
   dedicatedFans: number,
   unitCost: number,
+  leagueFreeFan?: boolean | null,
 ): number {
-  return Math.max(0, dedicatedFans - 1) * unitCost;
+  return dedicatedFansPurchaseCost(dedicatedFans, unitCost, leagueFreeFan);
 }
 
 /**
@@ -120,7 +124,11 @@ export function buildStaffLines(input: StaffLinesInput): StaffLine[] {
       value: String(input.dedicatedFans),
       costPo: costOrNull(
         input.budgetSummary?.dedicatedFansCost ??
-          dedicatedFansCostPo(input.dedicatedFans, dedicatedFanCost),
+          dedicatedFansCostPo(
+            input.dedicatedFans,
+            dedicatedFanCost,
+            input.leagueFreeFan,
+          ),
       ),
     },
   ];

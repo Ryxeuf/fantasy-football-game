@@ -47,6 +47,19 @@ describe("buildStaffLines", () => {
     expect(dedicatedFansCostPo(1, 5_000)).toBe(0);
   });
 
+  it("hors ligue (aucun fan offert), chaque fan se paie", () => {
+    expect(dedicatedFansCostPo(2, 5_000, false)).toBe(10_000);
+    const lines = buildStaffLines({
+      ...BASE,
+      dedicatedFans: 2,
+      leagueFreeFan: false,
+      staffConfig: CONFIG,
+    });
+    expect(lineOf(lines, "dedicatedFans").costPo).toBe(
+      2 * (CONFIG.dedicatedFanCost ?? 0),
+    );
+  });
+
   it("préfère les totaux déjà calculés par le serveur", () => {
     const lines = buildStaffLines({
       ...BASE,

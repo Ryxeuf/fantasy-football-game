@@ -277,6 +277,8 @@ export interface TeamSettingsView {
     readonly currentValue: number;
     readonly tournamentRuleset: string | null;
     readonly tournamentRulesetLabel: string | null;
+    /** Fan Dévoué offert : fixe le minimum de fans (1 s'il est compté, 0 sinon). */
+    readonly leagueFreeFan: boolean | null;
   };
   readonly staff: TeamStaff;
   readonly staffConfig: RosterStaffConfig;
@@ -357,6 +359,7 @@ export async function getTeamSettings(input: {
       currentValue: team.currentValue,
       tournamentRuleset: team.tournamentRuleset,
       tournamentRulesetLabel: pack?.shortLabel ?? null,
+      leagueFreeFan: team.leagueFreeFan ?? null,
     },
     staff: staffOf(team),
     staffConfig,

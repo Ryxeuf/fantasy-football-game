@@ -84,6 +84,8 @@ interface PublicTeam {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  /** Fan Dévoué offert (optionnel : serveur antérieur ⇒ lu comme `null`). */
+  leagueFreeFan?: boolean | null;
   /** Fluff saisi par le coach. Sert de texte d'aperçu au partage. */
   description?: string | null;
   logoUrl?: string | null;
@@ -198,6 +200,7 @@ export default async function PublicRosterPage({ params }: { params: { token: st
     assistants: team.assistants,
     apothecary: team.apothecary,
     dedicatedFans: team.dedicatedFans,
+    leagueFreeFan: team.leagueFreeFan,
     staffConfig: team.staffConfig,
     budgetSummary: team.budgetSummary,
   });

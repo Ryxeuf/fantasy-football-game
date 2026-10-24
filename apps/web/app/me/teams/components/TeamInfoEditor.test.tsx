@@ -126,12 +126,25 @@ describe("TeamInfoEditor — plafonds", () => {
     expect(screen.getByTestId("staff-rerolls-value").textContent).toBe("6");
   });
 
-  it("les fans dévoués ne descendent pas sous 1", () => {
+  it("les fans dévoués ne descendent pas sous 1 quand le fan offert est compté", () => {
     renderEditor({ initialInfo: { ...BASE_INFO, dedicatedFans: 1 } });
     expect(
       (screen.getByTestId("staff-dedicated-fans-dec") as HTMLButtonElement)
         .disabled,
     ).toBe(true);
+  });
+
+  it("hors ligue (aucun fan offert), les fans dévoués descendent à 0", () => {
+    renderEditor({
+      initialInfo: { ...BASE_INFO, dedicatedFans: 1, leagueFreeFan: false },
+    });
+    const dec = screen.getByTestId("staff-dedicated-fans-dec") as HTMLButtonElement;
+    expect(dec.disabled).toBe(false);
+    fireEvent.click(dec);
+    expect(screen.getByTestId("staff-dedicated-fans-value").textContent).toBe("0");
+    expect(screen.getByTestId("staff-dedicated-fans").textContent).toContain(
+      "0 à",
+    );
   });
 });
 

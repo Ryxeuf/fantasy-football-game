@@ -2059,7 +2059,9 @@ export default function TeamEditPage() {
             cheerleaders: team.cheerleaders || 0,
             assistants: team.assistants || 0,
             apothecary: team.apothecary || false,
-            dedicatedFans: team.dedicatedFans || 1,
+            // 0 est légitime : hors ligue, aucun fan n'est offert.
+            dedicatedFans: team.dedicatedFans ?? 0,
+            leagueFreeFan: team.leagueFreeFan,
             roster: team.roster,
           }}
           roster={team.roster}

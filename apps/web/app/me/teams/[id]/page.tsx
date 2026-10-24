@@ -12,6 +12,7 @@ import TeamInfoDisplay from "../components/TeamInfoDisplay";
 import StarPlayersPanel from "../components/StarPlayersPanel";
 import TeamInducementsPanel from "../components/TeamInducementsPanel";
 import {
+  dedicatedFansPurchaseCost,
   getPlayerCost,
   getDisplayName,
   getRerollCost,
@@ -141,8 +142,11 @@ function resolveBudgetSummary(team: any): TeamBudgetSummary {
     (team?.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000) +
     (team?.assistants || 0) * (sc?.assistantCost ?? 10000) +
     (team?.apothecary ? (sc?.apothecaryCost ?? 50000) : 0);
-  const dedicatedFansCost =
-    Math.max(0, (team?.dedicatedFans || 1) - 1) * (sc?.dedicatedFanCost ?? 5000);
+  const dedicatedFansCost = dedicatedFansPurchaseCost(
+    team?.dedicatedFans ?? 0,
+    sc?.dedicatedFanCost ?? 5000,
+    team?.leagueFreeFan,
+  );
   const initialBudget = (team?.initialBudget || 0) * 1000;
   // `playersCost` du repli est déjà un coût d'embauche (le calcul local
   // n'ajoute aucun surcoût d'avancement) : les deux postes coïncident donc.
@@ -1434,7 +1438,9 @@ export default function TeamDetailPage() {
             cheerleaders: team.cheerleaders || 0,
             assistants: team.assistants || 0,
             apothecary: team.apothecary || false,
-            dedicatedFans: team.dedicatedFans || 1,
+            // 0 est légitime : hors ligue, aucun fan n'est offert.
+            dedicatedFans: team.dedicatedFans ?? 0,
+            leagueFreeFan: team.leagueFreeFan,
             teamValue: team.teamValue || 0,
             currentValue: team.currentValue || 0,
             roster: team.roster,

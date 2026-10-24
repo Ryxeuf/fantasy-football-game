@@ -608,6 +608,8 @@
     "goldBreakdownHint": "Les compétences et améliorations se paient en PSP, jamais en or : elles augmentent la VE mais n'entament pas le budget.",
     "dedicatedFansCost": "Fans dévoués payants ({count}) — hors VE",
     "dedicatedFansOutOfTvHint": "Les Fans Dévoués coûtent de l'or mais n'entrent ni dans la VE ni dans la VEA.",
+    "dedicatedFansLeagueGiftHint": "Aucun fan offert : le premier Fan Dévoué gratuit est une règle de ligue, ajouté à l'inscription en ligue.",
+    "dedicatedFansBuildHint": "Chaque Fan Dévoué se paie. Une équipe inscrite en ligue reçoit son premier fan gratuitement à l'inscription (repris si elle quitte la ligue) ; hors compétition et en coupe, il n'y en a pas.",
     "veaGapTitle": "Pourquoi la VEA diffère de la VE",
     "veaGapCheapLinemen": "Trois-quarts à vil prix (embauches à 0)",
     "veaGapUnavailable": "Joueurs indisponibles au prochain match",

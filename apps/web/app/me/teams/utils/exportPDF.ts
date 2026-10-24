@@ -2,7 +2,7 @@
  * Utilitaire pour exporter un roster d'équipe en PDF
  */
 
-import { getDisplayName, getDisplayNames, getRerollCost, parseSkillSlugs, getSkillBySlug, type RosterStaffConfig } from '@bb/game-engine';
+import { dedicatedFansPurchaseCost, getDisplayName, getDisplayNames, getRerollCost, parseSkillSlugs, getSkillBySlug, type RosterStaffConfig } from '@bb/game-engine';
 import { resolvePlayerCareer } from '../../../lib/player-career';
 import { rosterPdfTrackingCells } from './roster-pdf-cells';
 
@@ -18,6 +18,8 @@ interface TeamData {
   assistants?: number;
   apothecary?: boolean;
   dedicatedFans?: number;
+  /** Fan Dévoué offert (règle de ligue) : `false` = aucun. */
+  leagueFreeFan?: boolean | null;
   /** Config staff résolue (DB par roster × format). Coûts en po. */
   staffConfig?: RosterStaffConfig;
   /** Carrière toutes compétitions par id de joueur (`GET /team/:id`). */
@@ -175,7 +177,12 @@ export async function exportTeamToPDF(
   const cheerleadersCost = (team.cheerleaders || 0) * (sc?.cheerleaderCost ?? 10000);
   const assistantsCost = (team.assistants || 0) * (sc?.assistantCost ?? 10000);
   const fansCount = typeof team.dedicatedFans === 'number' ? team.dedicatedFans : 0;
-  const fansCost = Math.max(0, fansCount - 1) * (sc?.dedicatedFanCost ?? 10000);
+  // Le premier fan n'est offert qu'aux équipes de ligue (`leagueFreeFan`).
+  const fansCost = dedicatedFansPurchaseCost(
+    fansCount,
+    sc?.dedicatedFanCost ?? 10000,
+    team.leagueFreeFan,
+  );
   const apothecaryCost = team.apothecary ? (sc?.apothecaryCost ?? 50000) : 0;
 
   const rosterTotal = totalCost + rerollsCost + cheerleadersCost + assistantsCost + fansCost + apothecaryCost;

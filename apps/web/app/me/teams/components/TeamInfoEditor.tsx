@@ -8,6 +8,7 @@ import { computeStaffSpend } from "../staff-cost";
 import {
   defaultStaffConfig,
   isGameFormat,
+  minDedicatedFans,
   type GameFormat,
   type RosterStaffConfig,
 } from "@bb/game-engine";
@@ -18,6 +19,12 @@ interface TeamInfo {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  /**
+   * Fan Dévoué offert (règle de ligue) : `false` = aucun, chaque fan se paie
+   * et l'équipe peut descendre à 0 ; `true` / `null` / absent = le premier est
+   * offert (minimum 1).
+   */
+  leagueFreeFan?: boolean | null;
   roster?: string; // Roster pour calculer le coût des relances
 }
 
@@ -103,7 +110,7 @@ export default function TeamInfoEditor({
           staff.maxAssistants,
         ),
         dedicatedFans: Math.min(
-          Math.max(1, prev.dedicatedFans || 1),
+          Math.max(minDedicatedFans(prev.leagueFreeFan), prev.dedicatedFans ?? 0),
           staff.maxDedicatedFans,
         ),
         apothecary: staff.apothecaryAllowed ? prev.apothecary : false,
@@ -132,6 +139,11 @@ export default function TeamInfoEditor({
   }, [info, staff, initialBudgetK, playersCost, starPlayersCost]);
 
   const displayedPlayersCost = (playersCost || 0) + (starPlayersCost || 0);
+  const minFans = minDedicatedFans(info.leagueFreeFan);
+  const fansRule =
+    minFans === 1
+      ? "le 1er est offert"
+      : "le 1er est offert à l'inscription en ligue";
 
   // Remonte l'etat courant du staff a la page hote (resume budgetaire).
   useEffect(() => {
@@ -304,12 +316,12 @@ export default function TeamInfoEditor({
 
           <StaffRow
             label={t.teams.dedicatedFans}
-            unitCost={`${kpo(staff.dedicatedFanCost, unit)} · 1 à ${staff.maxDedicatedFans} (le 1er est offert)`}
+            unitCost={`${kpo(staff.dedicatedFanCost, unit)} · ${minFans} à ${staff.maxDedicatedFans} (${fansRule})`}
             testId="staff-dedicated-fans"
           >
             <QuantityStepper
               value={info.dedicatedFans}
-              min={1}
+              min={minFans}
               max={staff.maxDedicatedFans}
               onChange={(v) => updateInfo("dedicatedFans", v)}
               disabled={disabled}

@@ -51,6 +51,8 @@ interface EditableTeam {
   readonly assistants: number;
   readonly apothecary: boolean;
   readonly dedicatedFans: number;
+  /** Fan Dévoué offert (règle de ligue), servi par `GET /team/:id`. */
+  readonly leagueFreeFan?: boolean | null;
   readonly deletedAt?: string | null;
   readonly players: LoadedPlayer[];
   readonly starPlayers?: ReadonlyArray<{ cost: number }>;
@@ -317,6 +319,7 @@ export default function AdminTeamEditPage() {
               assistants: team.assistants,
               apothecary: team.apothecary,
               dedicatedFans: team.dedicatedFans,
+              leagueFreeFan: team.leagueFreeFan,
               roster: team.roster,
             }}
             roster={team.roster}
