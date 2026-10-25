@@ -28,8 +28,21 @@ vi.mock("./player-status", () => ({
   removeInactivePlayerFromRoster: vi.fn(),
 }));
 
+// Reprise du Fan Dévoué offert : testée dans league-free-fan ; ici on vérifie
+// que la suppression passe par elle, avec les inscriptions qui partent.
+vi.mock("./league-free-fan", async () => {
+  const { prisma: client } = await import("../prisma");
+  return {
+    withLeagueFreeFanRevoked: vi.fn(
+      async (_departure: unknown, op: (db: unknown) => Promise<unknown>) =>
+        op(client),
+    ),
+  };
+});
+
 import { prisma } from "../prisma";
 import { removeInactivePlayerFromRoster } from "./player-status";
+import { withLeagueFreeFanRevoked } from "./league-free-fan";
 import {
   removeTeamFromLeague,
   removePlayerFromTeam,
@@ -54,6 +67,9 @@ describe("commissioner-team-removal", () => {
     mockPrisma.leaguePairing.findFirst.mockResolvedValue(null);
     mockPrisma.leagueInvitation.updateMany.mockResolvedValue({ count: 0 });
     mockRemoveInactive.mockResolvedValue({ removed: true, teamId: "T1" });
+    vi.mocked(withLeagueFreeFanRevoked).mockImplementation(
+      async (_departure, op) => op(mockPrisma),
+    );
   });
 
   describe("hasTeamPlayedInLeague", () => {
@@ -173,6 +189,13 @@ describe("commissioner-team-removal", () => {
       expect(mockPrisma.leagueParticipant.delete).toHaveBeenCalledWith({
         where: { id: "PART1" },
       });
+      expect(withLeagueFreeFanRevoked).toHaveBeenCalledWith(
+        {
+          participants: [expect.objectContaining({ id: "PART1", teamId: "T1" })],
+          reason: "removed_by_commissioner",
+        },
+        expect.any(Function),
+      );
       expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
@@ -459,6 +482,10 @@ describe("commissioner-team-removal", () => {
       expect(mockPrisma.leagueParticipant.deleteMany).toHaveBeenCalledWith({
         where: { id: { in: ["PART1", "PART2"] } },
       });
+      expect(withLeagueFreeFanRevoked).toHaveBeenCalledWith(
+        expect.objectContaining({ reason: "removed_by_commissioner" }),
+        expect.any(Function),
+      );
       expect(mockPrisma.leagueInvitation.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({

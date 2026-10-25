@@ -337,7 +337,9 @@ export async function handleCreateFromRoster(
         cheerleaders: 0,
         assistants: 0,
         apothecary: false,
-        dedicatedFans: 1,
+        // Aucun fan offert hors ligue (accordé à l'inscription en ligue).
+        dedicatedFans: 0,
+        leagueFreeFan: false,
         currentValue: 0,
         tournamentRuleset: pack?.slug ?? null,
       },

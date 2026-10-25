@@ -15,6 +15,24 @@ describe("computeStaffSpend", () => {
     );
   });
 
+  it("hors ligue (leagueFreeFan = false), chaque fan dévoué se paie", () => {
+    expect(
+      computeStaffSpend({ dedicatedFans: 2, leagueFreeFan: false }, BB11)
+        .dedicatedFansCost,
+    ).toBe(2 * BB11.dedicatedFanCost);
+    expect(
+      computeStaffSpend({ dedicatedFans: 0, leagueFreeFan: false }, BB11)
+        .dedicatedFansCost,
+    ).toBe(0);
+  });
+
+  it("équipe de ligue (fan accordé) : le premier reste offert", () => {
+    expect(
+      computeStaffSpend({ dedicatedFans: 2, leagueFreeFan: true }, BB11)
+        .dedicatedFansCost,
+    ).toBe(BB11.dedicatedFanCost);
+  });
+
   it("applique les coûts unitaires de la config fournie", () => {
     const spend = computeStaffSpend(
       {

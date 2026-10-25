@@ -1593,6 +1593,7 @@ router.get("/teams", validateQuery(adminTeamsQuerySchema), async (req, res) => {
         assistants: true,
         apothecary: true,
         dedicatedFans: true,
+        leagueFreeFan: true,
         createdAt: true,
         // Sans ce champ l'UI ne peut pas distinguer une équipe supprimée
         // d'une équipe vivante quand le filtre remonte les deux.

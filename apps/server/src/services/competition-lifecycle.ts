@@ -26,6 +26,7 @@
 
 import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
+import { withLeagueFreeFansRevokedForLeague } from "./league-free-fan";
 import {
   createInAppNotifications,
   type InAppNotificationPayload,
@@ -236,7 +237,11 @@ async function remove(
       : await listCupParticipantUserIds(id);
 
   if (kind === "league") {
-    await prisma.league.delete({ where: { id } });
+    // La cascade emporte les inscriptions : le Fan Dévoué offert qu'elles
+    // avaient accordé est repris (ou suit l'équipe dans une autre ligue).
+    await withLeagueFreeFansRevokedForLeague(id, (db) =>
+      db.league.delete({ where: { id } }),
+    );
   } else {
     await prisma.cup.delete({ where: { id } });
   }

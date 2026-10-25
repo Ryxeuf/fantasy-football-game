@@ -1307,7 +1307,7 @@ export default function AdminUsersPage() {
                   </div>
                   <div className="bg-purple-50 p-3 rounded">
                     <div className="text-gray-600">Fans dévoués</div>
-                    <div className="text-2xl font-bold">{teamDetails.dedicatedFans || 1}</div>
+                    <div className="text-2xl font-bold">{teamDetails.dedicatedFans ?? 0}</div>
                   </div>
                 </div>
                 {teamDetails.apothecary && (

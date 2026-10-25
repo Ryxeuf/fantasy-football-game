@@ -72,6 +72,35 @@ describe("TeamInfoDisplay — titre de section", () => {
     expect(screen.queryByTestId("staff-dedicated-fans-cost")).toBeNull();
   });
 
+  it("hors ligue : chaque fan est payant, et le fan offert de ligue est annoncé", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay
+          info={{
+            ...INFO,
+            dedicatedFans: 1,
+            leagueFreeFan: false,
+            dedicatedFansCost: 5_000,
+          }}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByTestId("staff-dedicated-fans-cost")).toBeTruthy();
+    expect(screen.getByText(/Fans dévoués payants \(1\)/)).toBeTruthy();
+    expect(
+      screen.getByTestId("dedicated-fans-league-gift-hint").textContent,
+    ).toContain("inscription en ligue");
+  });
+
+  it("équipe de ligue ou historique : pas de mention du fan à venir", () => {
+    render(
+      <LanguageProvider>
+        <TeamInfoDisplay info={{ ...INFO, dedicatedFans: 2, leagueFreeFan: true }} />
+      </LanguageProvider>,
+    );
+    expect(screen.queryByTestId("dedicated-fans-league-gift-hint")).toBeNull();
+  });
+
   it("le total staff & relances ignore les fans dévoués", () => {
     const renderWithFans = (dedicatedFans: number) => {
       const { container, unmount } = render(

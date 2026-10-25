@@ -25,6 +25,7 @@ interface FakeTeam {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  leagueFreeFan?: boolean | null;
   initialBudget: number;
   treasury: number;
   tournamentRuleset?: string | null;
@@ -72,9 +73,28 @@ describe("dedicatedFansPurchaseCost", () => {
     expect(dedicatedFansPurchaseCost(3, 5_000)).toBe(10_000);
     expect(dedicatedFansPurchaseCost(0, 5_000)).toBe(0);
   });
+
+  it("hors ligue (leagueFreeFan = false), chaque fan se paie", () => {
+    expect(dedicatedFansPurchaseCost(3, 5_000, false)).toBe(15_000);
+    expect(dedicatedFansPurchaseCost(0, 5_000, false)).toBe(0);
+  });
+
+  it("équipe de ligue (fan accordé) : le premier reste offert", () => {
+    expect(dedicatedFansPurchaseCost(3, 5_000, true)).toBe(10_000);
+  });
 });
 
 describe("buildTeamBudgetSummary", () => {
+  it("équipe hors ligue (leagueFreeFan = false) : chaque fan est facturé", async () => {
+    const summary = await buildTeamBudgetSummary(
+      db(),
+      team({ dedicatedFans: 3, leagueFreeFan: false }),
+      players(11),
+      [],
+    );
+    expect(summary.dedicatedFansCost).toBe(15_000);
+  });
+
   it("détaille les postes et le reliquat en po", async () => {
     const summary = await buildTeamBudgetSummary(
       db(),

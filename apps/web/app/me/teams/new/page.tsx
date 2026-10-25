@@ -48,6 +48,8 @@ import {
   countNonLinemen,
   validateFormatSelection,
   defaultStaffConfig,
+  dedicatedFansPurchaseCost,
+  paidDedicatedFans,
   type RosterStaffConfig,
   getTournamentRosterRules,
   tournamentStarPlayerSppTax,
@@ -169,7 +171,9 @@ export default function NewTeamBuilder() {
   const [cheerleaders, setCheerleaders] = useState(0);
   const [assistants, setAssistants] = useState(0);
   const [apothecary, setApothecary] = useState(false);
-  const [dedicatedFans, setDedicatedFans] = useState(1);
+  // Aucun fan offert à la construction : le premier Fan Dévoué gratuit est
+  // une règle de LIGUE, accordé à l'inscription en ligue (côté serveur).
+  const [dedicatedFans, setDedicatedFans] = useState(0);
 
   // Règlement de tournoi (slug @bb/game-engine, null = aucun — défaut).
   // Impose édition + format + budget d'or + pool de SPP du tier du roster,
@@ -595,6 +599,7 @@ export default function NewTeamBuilder() {
         assistants?: number;
         apothecary?: boolean;
         dedicatedFans?: number;
+        leagueFreeFan?: boolean | null;
       };
     }>(`/team/${fromTeamId}`)
       .then(({ team }) => {
@@ -609,7 +614,11 @@ export default function NewTeamBuilder() {
         setCheerleaders(team.cheerleaders ?? 0);
         setAssistants(team.assistants ?? 0);
         setApothecary(Boolean(team.apothecary));
-        setDedicatedFans(team.dedicatedFans ?? 1);
+        // La copie reprend les fans PAYÉS de la source : son éventuel fan
+        // offert de ligue ne se clone pas (il deviendrait un fan facturé).
+        setDedicatedFans(
+          paidDedicatedFans(team.dedicatedFans ?? 0, team.leagueFreeFan),
+        );
         const cloneStars = (team.starPlayers || [])
           .map((s) => s.slug)
           .filter((s): s is string => Boolean(s));
@@ -673,7 +682,8 @@ export default function NewTeamBuilder() {
       cheerleaders * (staff.cheerleaderCost / 1000) +
       assistants * (staff.assistantCost / 1000) +
       (apothecary ? staff.apothecaryCost / 1000 : 0) +
-      Math.max(0, dedicatedFans - 1) * (staff.dedicatedFanCost / 1000),
+      // Équipe neuve : chaque fan se paie (aucun fan offert hors ligue).
+      dedicatedFansPurchaseCost(dedicatedFans, staff.dedicatedFanCost / 1000, false),
     [rerolls, rerollUnitCost, cheerleaders, assistants, apothecary, dedicatedFans, staff],
   );
   // Coût des Star Players recrutés, en kpo (le sélecteur remonte des po).
@@ -1740,12 +1750,12 @@ export default function NewTeamBuilder() {
 
             <StaffRow
               label={t.teams.dedicatedFans}
-              unitCost={`${staff.dedicatedFanCost / 1000}${t.teams.kpo}`}
+              unitCost={`${staff.dedicatedFanCost / 1000}${t.teams.kpo} · ${t.teams.dedicatedFansBuildHint}`}
               testId="staff-dedicated-fans"
             >
               <QuantityStepper
                 value={dedicatedFans}
-                min={1}
+                min={0}
                 max={staff.maxDedicatedFans}
                 onChange={setDedicatedFans}
                 label={t.teams.dedicatedFans}

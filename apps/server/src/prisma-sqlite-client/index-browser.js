@@ -317,6 +317,7 @@ exports.Prisma.TeamScalarFieldEnum = {
   assistants: 'assistants',
   apothecary: 'apothecary',
   dedicatedFans: 'dedicatedFans',
+  leagueFreeFan: 'leagueFreeFan',
   teamValue: 'teamValue',
   currentValue: 'currentValue',
   initialBudget: 'initialBudget',
@@ -863,6 +864,8 @@ exports.Prisma.LeagueParticipantScalarFieldEnum = {
   joinedAt: 'joinedAt',
   mecenePlayed: 'mecenePlayed',
   mecenePlayedAt: 'mecenePlayedAt',
+  freeFanGrant: 'freeFanGrant',
+  freeFanRefund: 'freeFanRefund',
   poolId: 'poolId'
 };
 

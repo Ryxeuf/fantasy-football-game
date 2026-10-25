@@ -117,7 +117,10 @@ export async function handleAddTestParticipant(
         cheerleaders: 0,
         assistants: 0,
         apothecary: false,
-        dedicatedFans: 1,
+        // Équipe neuve : son fan offert lui est accordé par l'inscription
+        // ci-dessous (`addParticipant`), comme pour une vraie équipe.
+        dedicatedFans: 0,
+        leagueFreeFan: false,
         currentValue: 0,
       },
     });

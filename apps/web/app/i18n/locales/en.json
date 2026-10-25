@@ -608,6 +608,8 @@
     "goldBreakdownHint": "Skills and advancements are paid in SPP, never in gold: they raise TV but do not eat into the budget.",
     "dedicatedFansCost": "Paid dedicated fans ({count}) — outside TV",
     "dedicatedFansOutOfTvHint": "Dedicated Fans cost gold but count towards neither TV nor CAV.",
+    "dedicatedFansLeagueGiftHint": "No free fan: the first free Dedicated Fan is a league rule, added when the team joins a league.",
+    "dedicatedFansBuildHint": "Every Dedicated Fan is paid for. A team registered in a league gets its first fan for free on registration (taken back if it leaves the league); outside competitions and in cups, there is none.",
     "veaGapTitle": "Why CAV differs from TV",
     "veaGapCheapLinemen": "Cheap Linemen (hiring cost waived)",
     "veaGapUnavailable": "Players unavailable for the next match",

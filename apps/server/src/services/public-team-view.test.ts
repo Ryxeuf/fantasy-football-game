@@ -155,6 +155,13 @@ describe('buildPublicTeamView', () => {
     expect(view).not.toHaveProperty('isPublic');
   });
 
+  it('expose le marqueur du Fan Dévoué offert (null pour une équipe historique)', async () => {
+    expect((await buildPublicTeamView(teamRow())).leagueFreeFan).toBeNull();
+    expect(
+      (await buildPublicTeamView(teamRow({ leagueFreeFan: false }))).leagueFreeFan,
+    ).toBe(false);
+  });
+
   it('expose le logo, le fluff et les Star Players', async () => {
     const view = await buildPublicTeamView(
       teamRow({ logoUrl: '/images/team-logos/rats.png' }),

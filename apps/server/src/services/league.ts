@@ -24,6 +24,11 @@ import { prisma } from "../prisma";
 import { parseTournamentRuleset } from "../utils/tournament-ruleset-helpers";
 import { deriveSeasonEloFromGlobal } from "./season-elo";
 import { getTeamEngagement } from "./team-competition-status";
+import {
+  createLeagueParticipant,
+  withLeagueFreeFanRevoked,
+  type FreeFanTeam,
+} from "./league-free-fan";
 import { isLeagueThemeSlug, type LeagueThemeSlug } from "./league-themes";
 import {
   aggregateSeasonExtraStats,
@@ -461,14 +466,18 @@ export async function addParticipant(input: AddParticipantInput) {
     }
   }
 
-  return prisma.leagueParticipant.create({
-    data: {
+  // Le premier Fan Dévoué gratuit est une règle de LIGUE : l'inscription
+  // l'accorde à une équipe qui ne l'a pas (`leagueFreeFan = false`), dans la
+  // même transaction que la création de l'inscription.
+  return createLeagueParticipant(
+    {
       seasonId: input.seasonId,
       teamId: input.teamId,
       seasonElo,
       status: "active",
     },
-  });
+    team as unknown as FreeFanTeam,
+  );
 }
 
 export async function createRound(input: CreateRoundInput) {
@@ -1349,8 +1358,14 @@ export async function withdrawParticipant(input: {
     );
   }
 
-  return prisma.leagueParticipant.update({
-    where: { id: existing.id },
-    data: { status: "withdrawn" },
-  });
+  // Une équipe qui quitte la ligue perd le Fan Dévoué offert que cette
+  // inscription lui avait accordé (repris dans la même transaction).
+  return withLeagueFreeFanRevoked(
+    { participants: [existing], reason: "withdrawn" },
+    (db) =>
+      db.leagueParticipant.update({
+        where: { id: existing.id },
+        data: { status: "withdrawn" },
+      }),
+  );
 }

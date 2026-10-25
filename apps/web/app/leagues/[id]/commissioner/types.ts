@@ -89,6 +89,8 @@ export interface TeamSettings {
     currentValue: number;
     tournamentRuleset: string | null;
     tournamentRulesetLabel: string | null;
+    /** Fan Dévoué offert (optionnel : serveur antérieur ⇒ lu comme `null`). */
+    leagueFreeFan?: boolean | null;
   };
   staff: TeamStaff;
   staffConfig: StaffConfig;

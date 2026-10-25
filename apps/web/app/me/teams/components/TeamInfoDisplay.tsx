@@ -1,6 +1,10 @@
 "use client";
 
-import { getRerollCost, type RosterStaffConfig } from "@bb/game-engine";
+import {
+  getRerollCost,
+  paidDedicatedFans,
+  type RosterStaffConfig,
+} from "@bb/game-engine";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface TeamInfo {
@@ -10,6 +14,11 @@ interface TeamInfo {
   assistants: number;
   apothecary: boolean;
   dedicatedFans: number;
+  /**
+   * Fan Dévoué offert (règle de ligue) : `false` = aucun, chaque fan est
+   * payé ; `true` / `null` / absent = le premier est offert.
+   */
+  leagueFreeFan?: boolean | null;
   teamValue?: number; // VE - Valeur d'Équipe (calculée)
   currentValue?: number; // VEA - Valeur d'Équipe Actuelle (calculée)
   roster?: string; // Roster pour calculer le coût des relances
@@ -33,7 +42,7 @@ interface TeamInfo {
   /** Relances d'équipe (po), calculées par le serveur. */
   rerollsCost?: number;
   /**
-   * Fans dévoués ACHETÉS (le premier est offert). Payés en or mais hors
+   * Fans dévoués ACHETÉS (hors fan offert de ligue). Payés en or mais hors
    * VE/VEA : la carte les listait comme un effectif sans jamais dire ce
    * qu'ils avaient coûté, ni pourquoi ils manquaient au total staff.
    */
@@ -75,6 +84,7 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
       (info.apothecary ? apothecaryCost : 0);
   const staffRerollsCost = staffOnlyCost + rerollsCost;
   const dedicatedFansCost = info.dedicatedFansCost ?? 0;
+  const paidFans = paidDedicatedFans(info.dedicatedFans, info.leagueFreeFan);
   const unavailablePlayersCost = info.unavailablePlayersCost ?? 0;
   const cheapLinemenWaived = info.cheapLinemenWaived ?? 0;
 
@@ -156,6 +166,14 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
               {info.dedicatedFans}
             </span>
           </div>
+          {info.leagueFreeFan === false ? (
+            <p
+              className="text-[11px] text-gray-500 pt-1"
+              data-testid="dedicated-fans-league-gift-hint"
+            >
+              {t.teams.dedicatedFansLeagueGiftHint}
+            </p>
+          ) : null}
         </div>
 
         {/* Calcul des coûts */}
@@ -188,13 +206,13 @@ export default function TeamInfoDisplay({ info }: TeamInfoDisplayProps) {
                 total (ils n'en font pas partie) — absents de ce bloc, ils
                 creusaient un écart inexpliqué entre le budget dépensé et le
                 total staff. */}
-            {info.dedicatedFans > 1 ? (
+            {paidFans > 0 ? (
               <>
                 <div className="flex justify-between text-gray-500">
                   <span>
                     {t.teams.dedicatedFansCost.replace(
                       "{count}",
-                      Math.max(0, info.dedicatedFans - 1).toString(),
+                      paidFans.toString(),
                     )}
                   </span>
                   <span

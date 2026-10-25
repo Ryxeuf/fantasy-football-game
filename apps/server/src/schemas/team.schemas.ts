@@ -51,7 +51,9 @@ export const buildTeamSchema = z.object({
   cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
   assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
   apothecary: z.boolean().optional(),
-  dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être entre 1 et 6").max(6, "Le nombre de fans dévoués doit être entre 1 et 6").optional(),
+  // Hors ligue, aucun fan n'est offert : 0 est un compte légitime. Le fan
+  // offert d'une équipe de ligue est accordé à l'inscription (league-free-fan).
+  dedicatedFans: z.number().int().min(0, "Le nombre de fans dévoués doit être entre 0 et 6").max(6, "Le nombre de fans dévoués doit être entre 0 et 6").optional(),
   // Case « Édition avancée » du builder : conditionne le recrutement de
   // Star Players (refusé hors mode avancé / hors coupe).
   advancedEdition: z.boolean().optional(),
@@ -154,7 +156,9 @@ export const updateTeamInfoSchema = z.object({
   cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être positif").max(99).optional(),
   assistants: z.number().int().min(0, "Le nombre d'assistants doit être positif").max(99).optional(),
   apothecary: z.boolean().optional(),
-  dedicatedFans: z.number().int().min(1, "Le nombre de fans dévoués doit être au moins de 1").max(99).optional(),
+  // Borne basse métier (0 hors ligue, 1 si le fan offert est compté) appliquée
+  // par le handler : elle dépend de `Team.leagueFreeFan`.
+  dedicatedFans: z.number().int().min(0, "Le nombre de fans dévoués doit être positif").max(99).optional(),
 });
 export type UpdateTeamInfoBody = z.infer<typeof updateTeamInfoSchema>;
 

@@ -169,6 +169,31 @@ describe("Onglet staff", () => {
     });
   });
 
+  it("fans dévoués : minimum 1 quand le fan offert est compté, 0 sinon", async () => {
+    await openTab("staff");
+    await waitFor(() => expect(screen.getByTestId("staff-panel")).toBeTruthy());
+    expect(
+      (screen.getByTestId("staff-dedicatedFans-minus") as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("fans dévoués d'une équipe sans fan offert : on peut descendre à 0", async () => {
+    mockApi(
+      settings({ team: { ...settings().team, leagueFreeFan: false } }),
+    );
+    await openTab("staff");
+    await waitFor(() => expect(screen.getByTestId("staff-panel")).toBeTruthy());
+    const minus = screen.getByTestId(
+      "staff-dedicatedFans-minus",
+    ) as HTMLButtonElement;
+    expect(minus.disabled).toBe(false);
+    fireEvent.click(minus);
+    expect(
+      (screen.getByTestId("staff-dedicatedFans") as HTMLInputElement).value,
+    ).toBe("0");
+  });
+
   it("désactive l'apothicaire quand le roster n'y a pas droit", async () => {
     mockApi(
       settings({

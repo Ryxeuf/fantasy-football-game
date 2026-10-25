@@ -679,9 +679,15 @@ describe("Team schemas", () => {
       ).toThrow();
     });
 
-    it("rejects dedicatedFans < 1", () => {
+    it("accepts 0 dedicatedFans (no free fan outside a league)", () => {
+      expect(
+        buildTeamSchema.parse({ ...baseBody, dedicatedFans: 0 }).dedicatedFans,
+      ).toBe(0);
+    });
+
+    it("rejects negative dedicatedFans", () => {
       expect(() =>
-        buildTeamSchema.parse({ ...baseBody, dedicatedFans: 0 }),
+        buildTeamSchema.parse({ ...baseBody, dedicatedFans: -1 }),
       ).toThrow();
     });
 

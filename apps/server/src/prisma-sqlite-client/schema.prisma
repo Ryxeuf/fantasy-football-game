@@ -388,12 +388,19 @@ model Team {
   leagueInvitations    LeagueInvitation[]
 
   // Informations d'équipe Blood Bowl
-  treasury      Int     @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
-  rerolls       Int     @default(0) // Nombre de relances (0-8)
-  cheerleaders  Int     @default(0) // Nombre de cheerleaders (0-12)
-  assistants    Int     @default(0) // Nombre d'assistants (0-6)
-  apothecary    Boolean @default(false) // Présence d'un apothicaire
-  dedicatedFans Int     @default(1) // Nombre de fans dévoués (1-6)
+  treasury      Int      @default(0) // Trésorerie en pièces d'or (calculée automatiquement)
+  rerolls       Int      @default(0) // Nombre de relances (0-8)
+  cheerleaders  Int      @default(0) // Nombre de cheerleaders (0-12)
+  assistants    Int      @default(0) // Nombre d'assistants (0-6)
+  apothecary    Boolean  @default(false) // Présence d'un apothicaire
+  dedicatedFans Int      @default(1) // Nombre de fans dévoués (0-6), cf. leagueFreeFan
+  /// Fan Dévoué OFFERT, règle de LIGUE (cf. @bb/game-engine `dedicated-fans`).
+  /// Pas de @default : `db push` le pose null sur l'existant, la création écrit
+  /// false. null  = équipe antérieure à la règle, fan offert DÉJÀ compté dans
+  /// dedicatedFans ; false = aucun fan offert (équipe neuve hors ligue) ;
+  /// true  = fan offert accordé par une inscription en ligue (repris si elle
+  /// part, cf. LeagueParticipant.freeFanGrant).
+  leagueFreeFan Boolean?
 
   // Valeurs calculées automatiquement selon les règles Blood Bowl
   teamValue     Int @default(0) // VE - Valeur d'Équipe (calculée)
@@ -1350,6 +1357,13 @@ model LeagueParticipant {
   // L2.B.5 — Coup de mecene : bonus tresorerie 1x par saison.
   mecenePlayed   Boolean   @default(false)
   mecenePlayedAt DateTime?
+
+  // Fan Dévoué offert accordé par CETTE inscription, pour le reprendre
+  // exactement si elle est retirée ou supprimée (services/league-free-fan).
+  /// "fan" | "refund" ; null = l'inscription n'a rien accordé.
+  freeFanGrant  String?
+  /// Montant crédité en trésorerie (po) quand freeFanGrant = "refund".
+  freeFanRefund Int?
 
   // Sprint Ligues v2 — back-relations vers les pairings (home/away)
   homePairings LeaguePairing[] @relation("LeaguePairingHome")

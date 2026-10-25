@@ -1414,6 +1414,39 @@ endroit qui distingue une coupe d'une ligue. Piège découvert en la câblant :
 les boutons de soumission suivaient `viewerRole`, qui vaut `commissioner` pour
 le créateur même quand il JOUE ; ils suivent désormais le côté du viewer.
 
+### Le Fan Dévoué offert est une règle de LIGUE : accordé à l'inscription, repris au départ
+
+Le site offrait le premier Fan Dévoué à TOUTE équipe construite (builder,
+coupe, création depuis un roster, IA) et facturait `n − 1` fans partout.
+C'est une règle de ligue : hors compétition et en coupe, chaque fan se paie
+(0 par défaut). Change OpenSpec `league-only-free-dedicated-fan`.
+
+- **Le compte stocké ne se lit qu'avec son marqueur.** `Team.leagueFreeFan
+  Boolean?` à trois états, sans `@default` : `null` = équipe antérieure (son
+  fan offert est DÉJÀ dans `dedicatedFans`), `false` = aucun (écrit par la
+  création), `true` = accordé par une inscription en ligue. Sans lui,
+  `dedicatedFans = 1` veut dire « 1 offert » ou « 1 acheté », et une équipe
+  historique recevrait un SECOND fan en rejoignant une ligue. Tout calcul de
+  coût ou de minimum passe par la règle pure `@bb/game-engine`
+  `dedicated-fans` (`dedicatedFansPurchaseCost`, `minDedicatedFans`…), jamais
+  par un `n − 1` ou un `|| 1` : 0 fan est un compte légitime.
+- **Octroi à l'inscription, reprise au départ, PAR inscription.**
+  `services/league-free-fan` : `addParticipant` accorde (+1 fan, ou le prix
+  d'un fan en trésorerie au plafond) dans la même transaction que
+  l'inscription, et l'inscription mémorise ce qu'elle a accordé
+  (`LeagueParticipant.freeFanGrant` / `freeFanRefund`). Retrait, suppression
+  par le commissaire et suppression de la ligue passent par
+  `withLeagueFreeFanRevoked`, qui reprend EXACTEMENT cela (jamais de compte
+  négatif : un remboursement dépensé se reprend en fan) — ou le TRANSFÈRE à
+  une autre inscription de l'équipe si elle reste en ligue. Quitter une
+  seconde saison ne retire donc pas le fan accordé par la première.
+- **Tout nouveau chemin qui crée ou supprime une inscription de ligue** passe
+  par ces deux points d'entrée, et tout nouveau chemin de création d'équipe
+  écrit `leagueFreeFan: false` (un oubli retombe sur `(1, null)`, la
+  sémantique historique, grâce au `@default(1)` conservé de `dedicatedFans`).
+- Pas de rattrapage de l'existant (décision du propriétaire, 2026-10-24) :
+  les équipes `null` gardent leur compte, à l'inscription comme au départ.
+
 ### Rattachement POLYMORPHE : deux FK nullables, invariant tenu par le service
 
 `CompetitionDocument` s'accroche a une ligue OU a une coupe
@@ -2397,3 +2430,12 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `cup.team_removed`) ; option `Cup.sheetDoubleValidation` : le commissaire
   attend la soumission des deux coachs (hors forfaitaire), bouton désactivé
   sur la feuille, soumission enfin ouverte au commissaire-coach.
+- **2026-10-24** : **Le Fan Dévoué offert est réservé aux équipes de ligue**
+  (change OpenSpec `league-only-free-dedicated-fan`) — construction à 0 fan,
+  chaque fan facturé (builder, coupe, création depuis un roster, IA) ; fan
+  offert accordé à l'inscription en ligue (prix d'un fan en trésorerie au
+  plafond) et repris au retrait, à la suppression par le commissaire ou de la
+  ligue (transféré si l'équipe reste en ligue ailleurs) ; marqueurs
+  `Team.leagueFreeFan` (trois états) et `LeagueParticipant.freeFanGrant` ;
+  règle pure partagée serveur / web ; plus de repli `|| 1`. Sans rattrapage
+  de l'existant.

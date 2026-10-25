@@ -43,6 +43,7 @@ import {
   type TeamAuditPrismaLike,
 } from "./team-audit";
 import { removeInactivePlayerFromRoster } from "./player-status";
+import { withLeagueFreeFanRevoked } from "./league-free-fan";
 
 export type CommissionerRemovalErrorCode =
   | "season_not_found"
@@ -127,7 +128,12 @@ export async function removeTeamFromLeague(input: RemoveTeamInput) {
     where: {
       seasonId_teamId: { seasonId: input.seasonId, teamId: input.teamId },
     },
-    select: { id: true, team: { select: { name: true } } },
+    select: {
+      id: true,
+      freeFanGrant: true,
+      freeFanRefund: true,
+      team: { select: { name: true } },
+    },
   });
   if (!participant) {
     throw new CommissionerRemovalError(
@@ -150,7 +156,14 @@ export async function removeTeamFromLeague(input: RemoveTeamInput) {
     );
   }
 
-  await prisma.leagueParticipant.delete({ where: { id: participant.id } });
+  // Le Fan Dévoué offert par cette inscription est repris avec elle.
+  await withLeagueFreeFanRevoked(
+    {
+      participants: [{ ...participant, teamId: input.teamId }],
+      reason: "removed_by_commissioner",
+    },
+    (db) => db.leagueParticipant.delete({ where: { id: participant.id } }),
+  );
 
   await appendAudit({
     leagueId: input.leagueId,
@@ -203,10 +216,18 @@ export async function removeCoachFromSeason(input: RemoveCoachInput) {
       seasonId: input.seasonId,
       team: { ownerId: input.coachUserId },
     },
-    select: { id: true, teamId: true, team: { select: { name: true } } },
+    select: {
+      id: true,
+      teamId: true,
+      freeFanGrant: true,
+      freeFanRefund: true,
+      team: { select: { name: true } },
+    },
   })) as ReadonlyArray<{
     id: string;
     teamId: string;
+    freeFanGrant?: string | null;
+    freeFanRefund?: number | null;
     team: { name: string } | null;
   }>;
   if (participants.length === 0) {
@@ -234,9 +255,13 @@ export async function removeCoachFromSeason(input: RemoveCoachInput) {
     }
   }
 
-  await prisma.leagueParticipant.deleteMany({
-    where: { id: { in: participants.map((p) => p.id) } },
-  });
+  await withLeagueFreeFanRevoked(
+    { participants, reason: "removed_by_commissioner" },
+    (db) =>
+      db.leagueParticipant.deleteMany({
+        where: { id: { in: participants.map((p) => p.id) } },
+      }),
+  );
 
   // Annulation best-effort des invitations en attente du coach sur la
   // ligue (ciblant cette saison ou ligue-wide) pour que le retrait soit

@@ -149,7 +149,7 @@ export default function TeamTreasuryPage() {
             cheerleaders: team.cheerleaders || 0,
             assistants: team.assistants || 0,
             apothecary: team.apothecary || false,
-            dedicatedFans: team.dedicatedFans || 1,
+            dedicatedFans: team.dedicatedFans ?? 0,
             staffConfig: team.staffConfig,
             players: (team.players || []).map((p: any) => ({
               id: p.id,

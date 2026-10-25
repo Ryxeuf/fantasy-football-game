@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { minDedicatedFans } from "@bb/game-engine";
 import { apiRequest } from "../../../lib/api-client";
 import { formatGold, formatGoldDelta, staffCostDelta } from "./roster-helpers";
 import type { StaffConfig, TeamSettings, TeamStaff } from "./types";
@@ -26,7 +27,7 @@ interface Props {
 interface CounterSpec {
   key: "rerolls" | "cheerleaders" | "assistants" | "dedicatedFans";
   label: string;
-  min: number;
+  min: (s: TeamSettings) => number;
   max: (c: StaffConfig) => number;
   cost: (c: StaffConfig) => number;
 }
@@ -35,28 +36,29 @@ const COUNTERS: readonly CounterSpec[] = [
   {
     key: "rerolls",
     label: "Relances",
-    min: 0,
+    min: () => 0,
     max: (c) => c.maxRerolls,
     cost: (c) => c.rerollCost,
   },
   {
     key: "cheerleaders",
     label: "Cheerleaders",
-    min: 0,
+    min: () => 0,
     max: (c) => c.maxCheerleaders,
     cost: (c) => c.cheerleaderCost,
   },
   {
     key: "assistants",
     label: "Assistants",
-    min: 0,
+    min: () => 0,
     max: (c) => c.maxAssistants,
     cost: (c) => c.assistantCost,
   },
   {
     key: "dedicatedFans",
     label: "Fans dévoués",
-    min: 1,
+    // 1 si le fan offert (règle de ligue) est compté, 0 sinon.
+    min: (s) => minDedicatedFans(s.team.leagueFreeFan),
     max: (c) => c.maxDedicatedFans,
     cost: (c) => c.dedicatedFanCost,
   },
@@ -121,7 +123,7 @@ export function StaffTab({ leagueId, teamId, settings, busy, run }: Props) {
               label={spec.label}
               value={draft[spec.key]}
               current={staff[spec.key]}
-              min={spec.min}
+              min={spec.min(settings)}
               max={spec.max(staffConfig)}
               unitCost={spec.cost(staffConfig)}
               disabled={busy}

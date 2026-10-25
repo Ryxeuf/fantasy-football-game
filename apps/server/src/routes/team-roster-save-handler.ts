@@ -28,6 +28,7 @@ import {
   type GameFormat,
   type Ruleset,
   DEFAULT_RULESET,
+  dedicatedFansPurchaseCost,
   getFormatConstraints,
   isGameFormat,
 } from '@bb/game-engine';
@@ -146,7 +147,12 @@ export async function handleSaveRoster(
       team.cheerleaders * staffCfg.cheerleaderCost +
       team.assistants * staffCfg.assistantCost +
       (team.apothecary ? staffCfg.apothecaryCost : 0) +
-      Math.max(0, team.dedicatedFans - 1) * staffCfg.dedicatedFanCost;
+      // Le premier fan n'est offert qu'en ligue (`leagueFreeFan`).
+      dedicatedFansPurchaseCost(
+        team.dedicatedFans,
+        staffCfg.dedicatedFanCost,
+        team.leagueFreeFan,
+      );
     const starCostPo = (team.starPlayers as Array<{ cost: number | null }>).reduce(
       (s, sp) => s + (sp.cost ?? 0),
       0,

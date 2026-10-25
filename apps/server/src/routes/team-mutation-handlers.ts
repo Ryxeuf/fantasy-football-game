@@ -50,7 +50,9 @@ import {
 import {
   DEFAULT_RULESET,
   isGameFormat,
+  minDedicatedFans,
   type GameFormat,
+  type LeagueFreeFanMarker,
   type Ruleset,
   type RosterStaffConfig,
 } from '@bb/game-engine';
@@ -64,11 +66,15 @@ import type { UpdateTeamInfoBody } from '../schemas/team.schemas';
  * 3 assistants, et certains rosters n'ont pas droit a l'apothicaire. Les
  * ecrire en dur dans le schema Zod laissait passer des valeurs illegales.
  *
+ * Le minimum de fans devoues est celui de l'equipe (`minDedicatedFans`) :
+ * 1 si son fan offert est compte, 0 pour une equipe neuve hors ligue.
+ *
  * Retourne le message d'erreur a renvoyer, ou `null` si tout est legal.
  */
 export function validateStaffAgainstConfig(
   body: UpdateTeamInfoBody,
   staff: RosterStaffConfig,
+  leagueFreeFan?: LeagueFreeFanMarker,
 ): string | null {
   const caps: ReadonlyArray<{
     value: number | undefined;
@@ -91,7 +97,7 @@ export function validateStaffAgainstConfig(
     },
     {
       value: body.dedicatedFans,
-      min: 1,
+      min: minDedicatedFans(leagueFreeFan),
       max: staff.maxDedicatedFans,
       label: 'fans devoues',
     },
@@ -171,7 +177,11 @@ export async function handlePutTeamInfo(
       (team.ruleset as Ruleset) ?? DEFAULT_RULESET,
       format,
     );
-    const staffError = validateStaffAgainstConfig(body, staff);
+    const staffError = validateStaffAgainstConfig(
+      body,
+      staff,
+      (team as { leagueFreeFan?: boolean | null }).leagueFreeFan,
+    );
     if (staffError) {
       sendError(res, staffError, 400);
       return;

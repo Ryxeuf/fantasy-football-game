@@ -89,7 +89,8 @@ export const updateStaffSchema = z
     cheerleaders: z.number().int().min(0).max(99).optional(),
     assistants: z.number().int().min(0).max(99).optional(),
     apothecary: z.boolean().optional(),
-    dedicatedFans: z.number().int().min(1).max(99).optional(),
+    // Borne basse métier (minimum de l'équipe, 0 ou 1) appliquée par le service.
+    dedicatedFans: z.number().int().min(0).max(99).optional(),
     /** Debiter (ou crediter) la tresorerie du differentiel de cout. */
     chargeTreasury: z.boolean().optional(),
     reason: z.string().max(500).optional(),
