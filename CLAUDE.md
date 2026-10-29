@@ -1899,6 +1899,16 @@ garde le cwd que lisent dotenv et les `process.cwd()` du web) et le compose de
 prod pose `init: true` (sinon node en PID 1 ignore SIGTERM). Garde :
 `apps/server/src/prod-runtime-command.test.ts`.
 
+### Pas de `next/font/google` : un build ne dépend pas du réseau
+
+`next/font/google` télécharge les polices PENDANT `next build`. Le
+2026-10-29, une URL de fichier inattendue renvoyée par Google au runner a
+fait planter le loader (`Cannot read properties of null (reading '1')`) et
+bloqué le deploy, alors que la CI de la PR venait de construire le même
+code. Les polices vivent dans `apps/web/app/fonts/` (sous-ensemble latin,
+`next/font/local`, procédure de mise à jour dans le README du dossier).
+Garde : `app/fonts/self-hosted-fonts.test.ts`.
+
 ### supertest n'est pas dans les deps
 Pour tester un Express handler en isolation, utiliser
 `http.createServer(express())` + `http.request` natif au lieu de

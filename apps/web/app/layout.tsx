@@ -2,7 +2,7 @@ import "./globals.css";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { buildHreflangAlternates } from "./seo/hreflang";
-import { Cinzel_Decorative, Cinzel, Montserrat, Inter, Bebas_Neue } from "next/font/google";
+import localFont from "next/font/local";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 import { ClientLayout } from "./components/ClientLayout";
@@ -11,37 +11,46 @@ import AuthRefreshLoop from "./components/AuthRefreshLoop";
 import ImpersonationBanner from "./ImpersonationBanner";
 import { buildWebmasterVerification } from "./lib/webmaster-verification";
 
-const cinzelDecorative = Cinzel_Decorative({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+// Polices auto-hébergées (sous-ensemble latin de Google Fonts, cf.
+// fonts/README.md) : `next/font/google` les téléchargeait à CHAQUE build,
+// et une réponse inattendue de Google faisait échouer le déploiement.
+const cinzelDecorative = localFont({
+  src: [
+    { path: "./fonts/cinzel-decorative-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/cinzel-decorative-700-latin.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-cinzel-decorative",
   display: "swap",
 });
 
-const cinzel = Cinzel({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+const cinzel = localFont({
+  src: "./fonts/cinzel-variable-latin.woff2",
+  weight: "400 700",
+  style: "normal",
   variable: "--font-cinzel",
   display: "swap",
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+const montserrat = localFont({
+  src: "./fonts/montserrat-variable-latin.woff2",
+  weight: "400 700",
+  style: "normal",
   variable: "--font-montserrat",
   display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const inter = localFont({
+  src: "./fonts/inter-variable-latin.woff2",
+  weight: "400 600",
+  style: "normal",
   variable: "--font-inter",
   display: "swap",
 });
 
-const bebasNeue = Bebas_Neue({
-  subsets: ["latin"],
+const bebasNeue = localFont({
+  src: "./fonts/bebas-neue-400-latin.woff2",
   weight: "400",
+  style: "normal",
   variable: "--font-bebas-neue",
   display: "swap",
 });
