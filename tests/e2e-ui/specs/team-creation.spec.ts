@@ -159,14 +159,15 @@ test.describe("E2E UI — team creation", () => {
     // (`GET /api/rosters` → `staffConfigs`) au lieu d'être codé en dur : un
     // total figé s'était déjà désynchronisé du barème (Fan Dévoué passé de
     // 10 000 à 5 000 po en édition 2025) et laissait l'E2E rouge sur `main`.
-    // Le 1er Fan Dévoué est offert — comme dans le builder.
+    // Hors ligue, CHAQUE Fan Dévoué se paie : le fan offert est une règle de
+    // ligue, accordé à l'inscription (change `league-only-free-dedicated-fan`).
     const staff = await fetchStaffConfig("skaven", "bb11");
     const expectedStaffKpo =
       (staffChoice.rerolls * staff.rerollCost +
         staffChoice.cheerleaders * staff.cheerleaderCost +
         staffChoice.assistants * staff.assistantCost +
         (staffChoice.apothecary ? staff.apothecaryCost : 0) +
-        Math.max(0, staffChoice.dedicatedFans - 1) * staff.dedicatedFanCost) /
+        staffChoice.dedicatedFans * staff.dedicatedFanCost) /
       1000;
 
     await expect(builder.staffCost).toHaveText(
