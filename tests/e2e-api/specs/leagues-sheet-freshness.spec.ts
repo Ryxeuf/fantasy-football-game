@@ -7,6 +7,10 @@
  * Garde d'ouverture : tant qu'une rencontre d'une journée antérieure de l'une
  * des deux équipes n'est pas close, la feuille ne s'ouvre pas — sauf forcée
  * par le commissaire (journée reportée).
+ *
+ * Mise à jour : une feuille ouverte avant la validation (ou après
+ * l'invalidation) d'une autre feuille d'une des deux équipes se signale
+ * périmée et se refige d'un clic, tant que personne n'a soumis.
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
@@ -30,6 +34,14 @@ interface SheetResponse {
     home: { teamId: string; players: SheetPlayer[] } | null;
     away: { teamId: string; players: SheetPlayer[] } | null;
   };
+  reference: {
+    budget: { home: { treasury: number }; away: { treasury: number } };
+  };
+  snapshotFreshness: {
+    home: { pairingId: string; kind: string } | null;
+    away: { pairingId: string; kind: string } | null;
+    refreshable: boolean;
+  } | null;
 }
 interface Blocked {
   success: false;
@@ -185,5 +197,82 @@ describe("E2E API — feuille de match à jour : garde d'ouverture", () => {
     const homeToken = s.tokensByUser.get(first.homeParticipant.team.ownerId)!;
     const res = await rawPost(sheetUrl(first.id), homeToken, {});
     expect(res.status).toBe(201);
+  });
+});
+
+describe("E2E API — feuille de match à jour : mise à jour d'une feuille périmée", () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  it("J2 ouverte avant la validation de J1 : signalée, puis mise à jour avec les gains de J1", async () => {
+    const s = await setupSeason("refresh");
+    const first = s.rounds[0].pairings[0];
+    const { teamId, next, homeToken } = secondMatchOf(s, first);
+    const side = next.homeParticipant.team.id === teamId ? "home" : "away";
+    const url = sheetUrl(next.id);
+
+    // Journée reportée : le commissaire ouvre la J2 avant que la J1 soit jouée.
+    await post(url, s.commissionerToken, { force: true });
+    const before = unwrap(await get<{ data: SheetResponse }>(url, homeToken));
+    expect(before.snapshotFreshness).toEqual({
+      home: null,
+      away: null,
+      refreshable: true,
+    });
+    const treasuryBefore = before.reference.budget[side].treasury;
+
+    // La J1 de l'équipe est jouée et validée APRÈS l'ouverture de la J2 :
+    // son TD lui rapporte des gains.
+    await playPairing(s, first);
+    const stale = unwrap(await get<{ data: SheetResponse }>(url, homeToken));
+    expect(stale.snapshotFreshness?.[side]).toMatchObject({
+      pairingId: first.id,
+      kind: "validated",
+    });
+    // Le gel n'a pas bougé : la trésorerie figée ignore encore la J1.
+    expect(stale.reference.budget[side].treasury).toBe(treasuryBefore);
+
+    const refreshed = await rawPost(`${url}/refresh`, homeToken, {});
+    expect(refreshed.status).toBe(200);
+    const after = unwrap(await get<{ data: SheetResponse }>(url, homeToken));
+    expect(after.snapshotFreshness?.[side]).toBeNull();
+    expect(after.reference.budget[side].treasury).toBeGreaterThan(
+      treasuryBefore,
+    );
+  });
+
+  it("refuse la mise à jour d'une feuille déjà soumise", async () => {
+    const s = await setupSeason("refresh-sub");
+    const first = s.rounds[0].pairings[0];
+    const homeToken = s.tokensByUser.get(first.homeParticipant.team.ownerId)!;
+    const url = sheetUrl(first.id);
+    await post(url, homeToken, {});
+    await post(`${url}/submit`, homeToken, {});
+
+    const res = await rawPost(`${url}/refresh`, homeToken, {});
+    expect(res.status).toBe(409);
+    expect(((await res.json()) as { error: string }).error).toMatch(
+      /retirez les soumissions/,
+    );
+  });
+
+  it("refuse un tiers", async () => {
+    const s = await setupSeason("refresh-3rd");
+    const first = s.rounds[0].pairings[0];
+    const homeToken = s.tokensByUser.get(first.homeParticipant.team.ownerId)!;
+    await post(sheetUrl(first.id), homeToken, {});
+    // Un coach de la saison qui ne joue pas la rencontre et n'est pas
+    // commissaire (le tirage décide de qui joue qui).
+    const players = new Set([
+      first.homeParticipant.team.ownerId,
+      first.awayParticipant.team.ownerId,
+    ]);
+    const outsider = [...s.tokensByUser.entries()].find(
+      ([userId, token]) =>
+        !players.has(userId) && token !== s.commissionerToken,
+    )![1];
+    const res = await rawPost(`${sheetUrl(first.id)}/refresh`, outsider, {});
+    expect(res.status).toBe(403);
   });
 });

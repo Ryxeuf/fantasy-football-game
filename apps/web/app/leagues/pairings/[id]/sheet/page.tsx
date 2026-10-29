@@ -57,6 +57,8 @@ import { WeatherReminder } from "./_components/WeatherReminder";
 import { WeatherScene } from "./_components/WeatherScene";
 import { parsePurchases } from "./purchases";
 import { sheetOpenBlockFromError, type SheetOpenBlock } from "./open-guard";
+import { freshnessBanner, type SnapshotFreshnessView } from "./freshness";
+import { SnapshotFreshnessNotice } from "./_components/SnapshotFreshnessNotice";
 import {
   EVENT_KIND_OPTIONS,
   eventKindHint,
@@ -289,6 +291,11 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur antérieur au choix.
    */
   hateCandidates?: readonly HateCandidateView[];
+  /**
+   * Fraîcheur de la « version du match » (ligue, feuille non validée).
+   * Optionnel : rétro-compat avec un serveur antérieur.
+   */
+  snapshotFreshness?: SnapshotFreshnessView | null;
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -506,6 +513,15 @@ export default function MatchSheetPage() {
       setBusy(false);
     }
   };
+
+  // Nouveau gel des deux équipes (feuille ouverte avant la validation, ou
+  // après l'invalidation, d'une rencontre précédente).
+  const refreshSheet = () =>
+    run(() =>
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/refresh`, {
+        method: "POST",
+      }),
+    );
 
   const addEvent = () =>
     run(() =>
@@ -1047,6 +1063,21 @@ export default function MatchSheetPage() {
           </Link>
         </p>
       )}
+      {(() => {
+        const banner = freshnessBanner({
+          freshness: data.snapshotFreshness,
+          homeTeamName: home?.name ?? "Domicile",
+          awayTeamName: away?.name ?? "Extérieur",
+          canEdit,
+        });
+        return banner ? (
+          <SnapshotFreshnessNotice
+            banner={banner}
+            busy={busy}
+            onRefresh={() => void refreshSheet()}
+          />
+        ) : null;
+      })()}
       {doubleValidation && status !== "validated" && (
         <p
           data-testid="sheet-double-validation-notice"

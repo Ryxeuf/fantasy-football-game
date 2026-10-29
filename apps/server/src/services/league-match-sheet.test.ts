@@ -103,6 +103,7 @@ vi.mock("./league-sheet-advancements", () => ({
 import { prisma } from "../prisma";
 import {
   createMatchSheet,
+  refreshMatchSheetSnapshots,
   addEvent,
   removeEvent,
   updatePreMatch,
@@ -478,6 +479,137 @@ describe("Lot G — league-match-sheet", () => {
       mockPrisma.team.findMany.mockRejectedValue(new Error("db down"));
       const out = await createMatchSheet({ pairingId: "pair-1", userId: HOME });
       expect(out).toMatchObject({ id: "ms-new", status: "draft" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+  });
+
+  // Retour testeur : une feuille ouverte avant la validation (ou après
+  // l'invalidation) d'une rencontre précédente garde un état périmé. Un
+  // coach ou le commissaire la met à jour tant que personne n'a soumis.
+  describe("refreshMatchSheetSnapshots", () => {
+    const elevenPlayers = Array.from({ length: 11 }, (_, i) => ({
+      id: `p${i + 1}`,
+      number: i + 1,
+      name: `J${i + 1}`,
+      position: "human_lineman",
+      dead: false,
+      missNextMatch: false,
+    }));
+
+    function arrangeDraft(over: Record<string, unknown> = {}) {
+      vi.mocked(updateTeamValues).mockResolvedValue({
+        teamValue: 1_100_000,
+        currentValue: 1_050_000,
+      });
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", teamValue: 1, currentValue: 1, treasury: 60_000, dedicatedFans: 3, players: elevenPlayers },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", teamValue: 1, currentValue: 1, treasury: 25_000, dedicatedFans: 1, players: elevenPlayers },
+      ]);
+      // Ancien gel : un joueur « p-dead » que le roster courant n'a plus.
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        rosterSnapshotHome: JSON.stringify({
+          capturedAt: 1,
+          treasury: 10_000,
+          players: [
+            { id: "p1", number: 1, name: "J1" },
+            { id: "p-dead", number: 9, name: "Mort en J2" },
+          ],
+        }),
+        rosterSnapshotAway: JSON.stringify({ capturedAt: 1, players: [] }),
+        ...over,
+      });
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      vi.mocked(captureRosterSnapshot).mockImplementation(
+        async (teamId: string) =>
+          ({
+            capturedAt: 2,
+            roster: teamId === "team-home" ? "human" : "orc",
+            players:
+              teamId === "team-home" ? [{ id: "p1", number: 1, name: "J1" }] : [],
+            teamValue: 1_100_000,
+            currentValue: 1_050_000,
+            treasury: teamId === "team-home" ? 70_000 : 25_000,
+            dedicatedFans: 3,
+            rerolls: 3,
+            cheerleaders: 0,
+            assistants: 0,
+            apothecary: false,
+          }) as never,
+      );
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({
+          id: "ms1",
+          status: "draft",
+          ...a.data,
+        }),
+      );
+    }
+
+    it("refait le gel des deux côtés depuis l'état courant, sans préserver l'ancien", async () => {
+      arrangeDraft();
+      await refreshMatchSheetSnapshots({ pairingId: "pair-1", userId: HOME });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      const home = JSON.parse(data.rosterSnapshotHome as string);
+      // La trésorerie figée (10 000) n'est PAS préservée : c'est l'état
+      // courant (après la rencontre précédente) qui fait foi.
+      expect(home).toMatchObject({ capturedAt: 2, treasury: 70_000 });
+      expect(home.players.map((p: { id: string }) => p.id)).toEqual(["p1"]);
+      expect(data.rosterSnapshotAway).toBeDefined();
+    });
+
+    it("le commissaire peut mettre la feuille à jour", async () => {
+      arrangeDraft();
+      await expect(
+        refreshMatchSheetSnapshots({ pairingId: "pair-1", userId: COMMISH }),
+      ).resolves.toBeDefined();
+    });
+
+    it("refuse un tiers", async () => {
+      arrangeDraft();
+      await expect(
+        refreshMatchSheetSnapshots({ pairingId: "pair-1", userId: "stranger" }),
+      ).rejects.toMatchObject({ code: "not_a_participant" });
+    });
+
+    it("refuse une feuille déjà soumise : la soumission porte sur l'ancien état", async () => {
+      arrangeDraft({ status: "submitted_home" });
+      await expect(
+        refreshMatchSheetSnapshots({ pairingId: "pair-1", userId: AWAY }),
+      ).rejects.toMatchObject({ code: "invalid_status" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("refuse si la saisie cite un joueur que le nouveau gel ne connaît plus", async () => {
+      arrangeDraft();
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { actorPlayerId: "p-dead", targetPlayerId: null },
+      ]);
+      const err = await refreshMatchSheetSnapshots({
+        pairingId: "pair-1",
+        userId: HOME,
+      }).catch((e: unknown) => e);
+      expect(err).toMatchObject({
+        code: "refresh_orphan_players",
+        details: { players: [{ id: "p-dead", label: "n°9 Mort en J2" }] },
+      });
+      expect((err as Error).message).toContain("n°9 Mort en J2");
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("gel impossible : rien n'est écrit", async () => {
+      arrangeDraft();
+      mockPrisma.team.findMany.mockRejectedValue(new Error("db down"));
+      await expect(
+        refreshMatchSheetSnapshots({ pairingId: "pair-1", userId: HOME }),
+      ).rejects.toMatchObject({ code: "refresh_failed" });
       expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
     });
   });
@@ -1564,6 +1696,91 @@ describe("Lot G — league-match-sheet", () => {
   });
 
   describe("getMatchSheet", () => {
+    // Retour testeur : une J3 ouverte le 16/09 « reste comme si nos 2 teams
+    // n'avaient pas joué ». La feuille signale désormais un gel périmé.
+    describe("fraîcheur du gel", () => {
+      const T0 = Date.parse("2026-09-16T10:00:00.000Z");
+      function arrangeFrozen(status = "draft") {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        mockPrisma.team.findMany.mockResolvedValue([]);
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms3",
+          status,
+          events: [],
+          createdAt: new Date(T0),
+          rosterSnapshotHome: JSON.stringify({ capturedAt: T0, players: [] }),
+          rosterSnapshotAway: JSON.stringify({ capturedAt: T0, players: [] }),
+        });
+      }
+      const validatedJ2 = {
+        validatedAt: new Date(T0 + 3_600_000),
+        invalidatedAt: null,
+        pairing: {
+          id: "pair-j2",
+          round: { roundNumber: 2, name: null },
+          homeParticipant: { teamId: "team-home", team: { name: "Paladins" } },
+          awayParticipant: { teamId: "team-x", team: { name: "Elfes" } },
+        },
+      };
+
+      it("une feuille de l'équipe validée après l'ouverture rend le gel périmé", async () => {
+        arrangeFrozen();
+        mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([validatedJ2]);
+        const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out.snapshotFreshness).toEqual({
+          home: expect.objectContaining({
+            pairingId: "pair-j2",
+            kind: "validated",
+            roundLabel: "journée 2",
+          }),
+          away: null,
+          refreshable: true,
+        });
+        // Une seule lecture, bornée au plus ancien gel des deux côtés.
+        expect(mockPrisma.leagueMatchSheet.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              id: { not: "ms3" },
+              OR: [
+                { validatedAt: { gt: new Date(T0) } },
+                { invalidatedAt: { gt: new Date(T0) } },
+              ],
+            }),
+          }),
+        );
+      });
+
+      it("gel à jour : rien à signaler", async () => {
+        arrangeFrozen();
+        mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+        const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out.snapshotFreshness).toEqual({
+          home: null,
+          away: null,
+          refreshable: true,
+        });
+      });
+
+      it("feuille soumise : périmée, mais plus modifiable en l'état", async () => {
+        arrangeFrozen("submitted_home");
+        mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([validatedJ2]);
+        const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out.snapshotFreshness?.refreshable).toBe(false);
+        expect(out.snapshotFreshness?.home?.pairingId).toBe("pair-j2");
+      });
+
+      it("feuille validée : elle garde la version du match joué", async () => {
+        arrangeFrozen("validated");
+        const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out.snapshotFreshness).toBeNull();
+      });
+    });
+
     it("returns sheet + summary + viewerRole", async () => {
       mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
         id: "ms1",
