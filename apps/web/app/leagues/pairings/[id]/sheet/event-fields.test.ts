@@ -7,6 +7,9 @@
 import { describe, it, expect } from "vitest";
 import {
   EVENT_KIND_OPTIONS,
+  HEALED_ELIMINATION,
+  INJURY_SEVERITY_OPTIONS,
+  injurySeverityLabel,
   isMarkedEliminated,
   eventKindHint,
   hasTargetField,
@@ -130,7 +133,6 @@ describe("eventKindHint — rappels de règle sur les PSP (E30)", () => {
   it("ne dit rien des évènements qui rapportent normalement des PSP", () => {
     for (const kind of [
       "touchdown",
-      "casualty",
       "pass_complete",
       "interception",
     ] as const) {
@@ -166,8 +168,13 @@ describe("event-fields — rappel de règle des sorties", () => {
     expect(hint).toMatch(/Frénésie d’Agression/);
   });
 
-  it("le blocage, seule sortie sans condition, n'a rien à expliquer", () => {
-    expect(eventKindHint("casualty")).toBeNull();
+  // Retour testeur : une élimination soignée par l'Apothicaire était laissée
+  // à « — » et ne comptait plus. Le rappel dit quoi saisir à la place.
+  it("le blocage rappelle qu'une élimination soignée reste acquise", () => {
+    const hint = eventKindHint("casualty") ?? "";
+    expect(hint).toMatch(/Apothicaire/);
+    expect(hint).toMatch(/Aucune séquelle/);
+    expect(hint).toMatch(/PSP restent acquis/);
   });
 
   it("la sortie par le public renvoie à sa propre colonne", () => {
@@ -197,5 +204,27 @@ describe("EVENT_KIND_OPTIONS", () => {
     const values = EVENT_KIND_OPTIONS.map((k) => k.value);
     expect(values).toHaveLength(13);
     expect(new Set(values).size).toBe(13);
+  });
+});
+
+describe("INJURY_SEVERITY_OPTIONS — élimination soignée", () => {
+  it("propose « Aucune séquelle » juste après le vide", () => {
+    expect(INJURY_SEVERITY_OPTIONS.map((o) => o.value).slice(0, 2)).toEqual([
+      "",
+      HEALED_ELIMINATION,
+    ]);
+  });
+
+  it("garde les cinq gravités du livre, chacune une seule fois", () => {
+    const values = INJURY_SEVERITY_OPTIONS.map((o) => o.value);
+    for (const v of ["badly_hurt", "mng", "niggling", "stat_loss", "dead"]) {
+      expect(values.filter((x) => x === v)).toHaveLength(1);
+    }
+  });
+
+  it("libelle la timeline en français, jamais avec l'enum brut", () => {
+    expect(injurySeverityLabel(HEALED_ELIMINATION)).toMatch(/Apothicaire/);
+    expect(injurySeverityLabel("badly_hurt")).toBe("Commotion");
+    expect(injurySeverityLabel("inconnu")).toBe("inconnu");
   });
 });

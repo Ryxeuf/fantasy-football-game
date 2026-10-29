@@ -114,6 +114,30 @@ describe("matchSheetToPdf", () => {
     expect(doc.away.players.find((x) => x.name === "Deux")?.tally).toEqual({ agg: 1 });
   });
 
+  it("élimination soignée : code AS au journal, aucune blessure sur la ligne du joueur", () => {
+    const doc = matchSheetToPdf(
+      input({
+        sheet: {
+          status: "draft",
+          events: [
+            { kind: "casualty", team: "home", actorPlayerId: "h2", targetPlayerId: "a1", causeDetail: null, injurySeverity: "healed", meta: { half: 1 } },
+          ],
+        },
+        summary: {
+          scoreHome: 0,
+          scoreAway: 0,
+          injuries: [],
+          playerStats: [
+            { playerId: "h2", touchdowns: 0, casualtiesInflicted: 1, completions: 0, interceptions: 0 },
+          ],
+        },
+        computedSpp: { h2: 2 },
+      }),
+    );
+    expect(doc.prefill?.events?.[0]).toMatchObject({ kind: "SOR", injury: "AS" });
+    expect(doc.away.players.find((x) => x.name === "Un")?.tally).toBeNull();
+  });
+
   it("applique les règles de coupe : pas de PSP, pas d'économie", () => {
     const doc = matchSheetToPdf(
       input({

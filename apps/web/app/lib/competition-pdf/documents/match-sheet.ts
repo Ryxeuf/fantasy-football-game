@@ -65,6 +65,7 @@ const INJURY_CODES: Array<{ code: string; label: string }> = [
   { code: "BP", label: "Blessure persistante" },
   { code: "S", label: "Séquelle (préciser M, F, AG, CP ou AR)" },
   { code: "M", label: "Mort" },
+  { code: "AS", label: "Aucune séquelle (Apothicaire / Régénération) : l'élimination compte" },
 ];
 
 function sideTeam(doc: MatchSheetDocument, side: "home" | "away"): PdfSheetTeam {

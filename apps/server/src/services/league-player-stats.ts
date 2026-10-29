@@ -45,7 +45,7 @@ import {
 import { parseStringArrayJson } from "./pro-player-career-stats";
 import {
   eliminationEarnsSpp,
-  isInjurySeverity,
+  eliminationOccurred,
   type MatchEventInput,
   type MatchEventKind,
   type MatchSummaryOptions,
@@ -427,14 +427,15 @@ export async function computeLeaderboards(input: {
         if (e.kind === "aggression") bump(aggrCounts, e.actorPlayerId);
         if (e.kind === "team_throw") bump(throwCounts, e.actorPlayerId);
       }
-      // Une élimination SUBIE suppose une blessure consignée : une agression
-      // qui rate son effet, comme un blocage sans résultat, ne sort personne.
-      // Sans ce filtre, la victime d'une agression sans conséquence montait
-      // au classement du sac de frappe.
+      // Une élimination SUBIE suppose une élimination effective : une
+      // agression qui rate son effet ne sort personne (sans ce filtre, sa
+      // victime montait au classement du sac de frappe). Une élimination
+      // soignée par l'Apothicaire ou la Régénération, elle, a bien sorti son
+      // joueur — même règle que la feuille (`eliminationOccurred`).
       if (
         e.targetPlayerId &&
         SUFFERED_KINDS.has(e.kind) &&
-        isInjurySeverity(e.injurySeverity)
+        eliminationOccurred(toSummaryEvent(e))
       ) {
         bump(sufferedCounts, e.targetPlayerId);
       }

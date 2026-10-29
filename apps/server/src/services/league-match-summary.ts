@@ -40,6 +40,16 @@ export type InjurySeverity =
   | "stat_loss"
   | "dead";
 
+/**
+ * Issue d'une Élimination ANNULÉE par un Apothicaire ou par le trait
+ * Régénération : l'élimination a bien eu lieu (elle compte dans les sorties
+ * et rapporte ses PSP — « même si l'élimination est ensuite annulée »), mais
+ * aucune blessure n'est à consigner. Saisie dans la même colonne que la
+ * gravité (`injurySeverity`), sans en être une : `isInjurySeverity` la
+ * refuse, `isEliminationOutcome` l'accepte.
+ */
+export const HEALED_ELIMINATION = "healed";
+
 export interface MatchEventInput {
   readonly kind: MatchEventKind;
   readonly team?: MatchEventTeam | null;
@@ -51,6 +61,7 @@ export interface MatchEventInput {
    */
   readonly targetPlayerId?: string | null;
   readonly causeDetail?: string | null;
+  /** Gravité de la blessure, ou `HEALED_ELIMINATION` (aucune séquelle). */
   readonly injurySeverity?: InjurySeverity | string | null;
 }
 
@@ -126,13 +137,60 @@ function normalizeSeverity(raw: unknown): InjurySeverity | null {
 /**
  * Une blessure est-elle consignée sur cet évènement ?
  *
- * PUR. C'est le préalable de TOUTE élimination : sans blessure, rien n'est
- * sorti — ni infligé (`eliminationEarnsSpp`), ni subi (classement « sac de
- * frappe »). Un seul vocabulaire de sévérités pour les deux lectures, sinon
- * elles divergent au premier `stat_loss` oublié.
+ * PUR. C'est ce qui se PERSISTE (absence au match suivant, blessure
+ * persistante, séquelle, mort) et ce qui déclenche les règles de blessure
+ * (Haine, joueur relevé). Ce n'est PAS le critère d'une élimination : une
+ * élimination annulée par un Apothicaire ne laisse aucune blessure et reste
+ * une élimination (cf. `eliminationOccurred`).
  */
 export function isInjurySeverity(raw: unknown): raw is InjurySeverity {
   return normalizeSeverity(raw) !== null;
+}
+
+/**
+ * La colonne `injurySeverity` dit-elle que la victime a été éliminée ?
+ * Une gravité de blessure, ou une élimination sans séquelle
+ * (`HEALED_ELIMINATION`). PUR.
+ */
+export function isEliminationOutcome(raw: unknown): boolean {
+  return raw === HEALED_ELIMINATION || isInjurySeverity(raw);
+}
+
+/**
+ * Types d'évènement qui SONT une élimination par définition : leur libellé
+ * l'affirme (« Élimination sur Blocage », « Élimination sur Action
+ * Spéciale »). La gravité n'en décide pas — elle ne dit que la blessure qui
+ * reste, et une élimination soignée par l'Apothicaire ou la Régénération
+ * n'en laisse aucune. Les autres types (agression, atterrissage, public,
+ * esquive ratée, temporisation) ne sont une élimination que si la saisie le
+ * dit (`isEliminationOutcome`) : une agression peut n'avoir aucun effet.
+ */
+const ELIMINATION_KINDS = new Set<MatchEventKind>(["casualty", "special_elim"]);
+
+/** Types qui PEUVENT éliminer leur victime, selon la saisie. */
+const MAYBE_ELIMINATION_KINDS = new Set<MatchEventKind>([
+  "aggression",
+  "ttm_landing",
+  "crowd_surge",
+  "other_elim",
+  "stalling",
+]);
+
+/**
+ * La victime de cet évènement a-t-elle été éliminée ? PUR.
+ *
+ * C'est le préalable de toute sortie, infligée (`eliminationEarnsSpp`) comme
+ * subie (classement « sac de frappe »). Règle du livre : les PSP
+ * d'Élimination sont acquis même si l'élimination est ensuite annulée
+ * (Apothicaire, trait Régénération…) — une élimination sans blessure saisie
+ * reste donc une élimination.
+ */
+export function eliminationOccurred(ev: MatchEventInput): boolean {
+  if (ELIMINATION_KINDS.has(ev.kind)) return true;
+  return (
+    MAYBE_ELIMINATION_KINDS.has(ev.kind) &&
+    isEliminationOutcome(ev.injurySeverity)
+  );
 }
 
 /**
@@ -191,8 +249,13 @@ export interface MatchSummaryOptions {
  * incrémente : les feuilles écrites sous l'ancienne version repassent au
  * rattrapage, sans backfill de migration (`prisma/migrations/` est gitignoré
  * ici, prod = `db push`).
+ *
+ * Historique :
+ *   1. une sortie est une élimination qui rapporte des PSP ;
+ *   2. une élimination soignée (Apothicaire, Régénération — saisie sans
+ *      gravité ou « aucune séquelle ») reste une sortie.
  */
-export const CASUALTY_RULE_VERSION = 1;
+export const CASUALTY_RULE_VERSION = 2;
 
 /**
  * Une élimination rapporte-t-elle les PSP d'Élimination à son auteur ?
@@ -212,13 +275,15 @@ export const CASUALTY_RULE_VERSION = 1;
  *   - `aggression`    ⇒ « Frénésie d'Agression » (Prière du côté).
  *
  * Une agression sans exception est comptée dans les AGRESSIONS, jamais dans
- * les sorties. Pur : ne lit que l'évènement et les options.
+ * les sorties. Une élimination soignée (Apothicaire, Régénération) compte
+ * comme les autres (`eliminationOccurred`). Pur : ne lit que l'évènement et
+ * les options.
  */
 export function eliminationEarnsSpp(
   ev: MatchEventInput,
   options: MatchSummaryOptions = {},
 ): boolean {
-  if (!normalizeSeverity(ev.injurySeverity)) return false;
+  if (!eliminationOccurred(ev)) return false;
   const team = ev.team === "home" || ev.team === "away" ? ev.team : null;
   const actor = ev.actorPlayerId ?? null;
   switch (ev.kind) {
@@ -288,16 +353,14 @@ export function summarizeMatchSheet(
 
   /**
    * Consigne une élimination : compteurs de sortie si elle rapporte des
-   * PSP, blessure de la victime dans tous les cas (une agression qui
-   * blesse ne rapporte rien, mais le joueur est bien blessé).
+   * PSP, blessure de la victime dès qu'une gravité est saisie (une agression
+   * qui blesse ne rapporte rien, mais le joueur est bien blessé ; une
+   * élimination soignée rapporte, mais ne laisse aucune blessure).
    */
   const recordElimination = (
     ev: MatchEventInput,
     team: MatchEventTeam | null,
   ): void => {
-    const severity = normalizeSeverity(ev.injurySeverity);
-    if (!severity) return;
-
     if (eliminationEarnsSpp(ev, options)) {
       if (team === "home") casualtiesHome += 1;
       else if (team === "away") casualtiesAway += 1;
@@ -305,6 +368,11 @@ export function summarizeMatchSheet(
         ensureStat(ev.actorPlayerId, team).casualtiesInflicted += 1;
       }
     }
+
+    // Élimination soignée (Apothicaire, Régénération) ou évènement sans
+    // effet : aucune blessure à consigner.
+    const severity = normalizeSeverity(ev.injurySeverity);
+    if (!severity) return;
 
     // A62 — other_elim (esquive ratee, chute…) et stalling
     // (temporisation) sont des auto-eliminations saisies SANS cible : la

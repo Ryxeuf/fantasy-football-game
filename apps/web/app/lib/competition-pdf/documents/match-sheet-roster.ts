@@ -262,7 +262,7 @@ export function drawRosterPage(
   end += wrapped.length * 3;
   pdf.text(
     sheetEntryOf(doc).injuryDetails
-      ? "Blessure : C = Commotion, A = Amoché (rate le prochain match), BP = Blessure persistante, S = Séquelle (préciser M/F/AG/CP/AR), M = Mort.   Lignes vierges : journaliers, Star Players engagés, joueur relevé."
+      ? "Blessure : C = Commotion, A = Amoché (rate le prochain match), BP = Blessure persistante, S = Séquelle (préciser M/F/AG/CP/AR), M = Mort, AS = Aucune séquelle (Apothicaire / Régénération).   Lignes vierges : journaliers, Star Players engagés, joueur relevé."
       : "Lignes vierges : journaliers, Star Players engagés, joueur relevé.",
     page.margin,
     end,

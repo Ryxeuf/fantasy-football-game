@@ -61,6 +61,8 @@ import {
   eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
+  INJURY_SEVERITY_OPTIONS,
+  injurySeverityLabel,
   isMarkedEliminated,
   RECEIVER_BEARING_KINDS,
   TARGET_BEARING_KINDS,
@@ -94,17 +96,6 @@ import { sheetEntryProfile } from "../../../../lib/sheet-entry-profile";
 
 const EVENT_KINDS = EVENT_KIND_OPTIONS;
 
-// A58 — libellés officiels du livre de règles (les valeurs internes
-// badly_hurt/mng/niggling/stat_loss/dead restent inchangées côté API).
-const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "", label: "—" },
-  { value: "badly_hurt", label: "Commotion" },
-  { value: "mng", label: "Amoché" },
-  { value: "niggling", label: "Blessure Persistante (BP)" },
-  { value: "stat_loss", label: "Séquelle" },
-  { value: "dead", label: "Mort" },
-];
-
 // A68 — caractéristique affectée par une Séquelle (stat_loss). Codes
 // internes ma/st/ag/pa/av, abréviations FR affichées.
 const INJURY_STAT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
@@ -132,12 +123,6 @@ function kickoffEventLabel(id: string): string {
     (ev) => ev.id === resolvedId,
   );
   return found?.nameFr ?? id;
-}
-
-// A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par
-// les tables de libellés FR ci-dessus.
-function injurySeverityLabel(value: string): string {
-  return INJURY_SEVERITIES.find((s) => s.value === value)?.label ?? value;
 }
 
 function injuryStatLabel(value: string): string {
@@ -1470,7 +1455,7 @@ export default function MatchSheetPage() {
                       data-testid="event-injury-severity"
                       className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                     >
-                      {INJURY_SEVERITIES.map((s) => (
+                      {INJURY_SEVERITY_OPTIONS.map((s) => (
                         <option key={s.value} value={s.value}>
                           {s.label}
                         </option>

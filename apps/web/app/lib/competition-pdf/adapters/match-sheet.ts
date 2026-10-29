@@ -193,6 +193,9 @@ export const INJURY_CODES: Record<string, string> = {
   niggling: "BP",
   stat_loss: "S",
   dead: "M",
+  // Élimination annulée par l'Apothicaire ou la Régénération : elle compte
+  // (sortie, PSP), sans blessure.
+  healed: "AS",
 };
 
 const STAT_CODES: Record<string, string> = { ma: "M", st: "F", ag: "AG", pa: "CP", av: "AR" };

@@ -47,6 +47,49 @@ export const EVENT_KIND_OPTIONS: ReadonlyArray<EventKindOption> = [
 ];
 
 /**
+ * Issue d'une Élimination annulée par un Apothicaire ou par la Régénération
+ * (miroir de `HEALED_ELIMINATION` côté serveur) : l'élimination compte et
+ * rapporte ses PSP, mais aucune blessure n'est consignée.
+ */
+export const HEALED_ELIMINATION = "healed";
+
+export interface InjurySeverityOption {
+  readonly value: string;
+  readonly label: string;
+}
+
+/**
+ * Gravités proposées par la listbox « Gravité de la blessure », dans l'ordre
+ * du sélecteur. A58 — libellés officiels du livre de règles (les valeurs
+ * internes badly_hurt/mng/niggling/stat_loss/dead restent inchangées côté
+ * API). « Aucune séquelle » vient juste après le vide : c'est l'issue d'un
+ * Apothicaire réussi, que les coachs laissaient à « — » faute de mieux — et
+ * leur élimination ne comptait plus.
+ */
+export const INJURY_SEVERITY_OPTIONS: ReadonlyArray<InjurySeverityOption> = [
+  { value: "", label: "—" },
+  {
+    value: HEALED_ELIMINATION,
+    label: "Aucune séquelle (Apothicaire / Régénération)",
+  },
+  { value: "badly_hurt", label: "Commotion" },
+  { value: "mng", label: "Amoché" },
+  { value: "niggling", label: "Blessure Persistante (BP)" },
+  { value: "stat_loss", label: "Séquelle" },
+  { value: "dead", label: "Mort" },
+];
+
+/**
+ * A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par la
+ * table de libellés FR ci-dessus.
+ */
+export function injurySeverityLabel(value: string): string {
+  return (
+    INJURY_SEVERITY_OPTIONS.find((s) => s.value === value)?.label ?? value
+  );
+}
+
+/**
  * Agression saisie en mode SIMPLIFIÉ d'une coupe : marquée « cible sortie »
  * (`meta.eliminated === true`), sans gravité. Strictement booléenne, comme
  * côté serveur (`cup-match-sheet`) — aucune sortie n'est déduite.
@@ -114,8 +157,12 @@ export function hasTargetField(kind: EventKind): boolean {
  * le summarizer fait RÉELLEMENT (`league-match-summary.ts`).
  */
 export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
-  // Une sortie est une élimination qui rapporte des PSP : seul le blocage
-  // (blitz compris) en est une sans condition — il n'a donc rien à dire.
+  // Une sortie est une élimination qui rapporte des PSP : le blocage (blitz
+  // compris) en est une sans condition. Le seul piège est l'Apothicaire (ou
+  // la Régénération) : il annule la blessure, pas l'élimination — le livre
+  // accorde les PSP « même si l'élimination est ensuite annulée ».
+  casualty:
+    "Apothicaire réussi ou Régénération : choisis « Aucune séquelle » — l’élimination et ses PSP restent acquis.",
   // Une agression est une agression : colonne Agr, jamais Sorties — sauf la
   // Prière à Nuffle 13 « Frénésie d’Agression », qui la qualifie en sortie.
   aggression:

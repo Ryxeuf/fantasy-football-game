@@ -49,7 +49,10 @@ import {
   resyncValidatedSheetCasualties,
 } from "./league-sheet-casualty-resync";
 import type { OfflineResultSnapshot } from "./league-offline-result";
-import type { MatchSummary } from "./league-match-summary";
+import {
+  summarizeMatchSheet,
+  type MatchSummary,
+} from "./league-match-summary";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
@@ -321,6 +324,36 @@ describe("planCasualtyResync (pur)", () => {
     expect(plan.snapshot.input.playerStats).toEqual([
       { teamPlayerId: "h1", casualties: 4 },
     ]);
+  });
+
+  // Règle v2 : une élimination soignée (Apothicaire, Régénération) saisie
+  // sans gravité n'avait rien crédité à la validation. Relue avec la règle
+  // courante, elle est rattrapée : sortie d'équipe ET PSP de l'auteur.
+  it("élimination soignée validée sous la règle v1 : sortie et PSP rattrapés", () => {
+    const relu = summarizeMatchSheet([
+      {
+        kind: "casualty",
+        team: "home",
+        actorPlayerId: "h1",
+        targetPlayerId: "a1",
+        causeDetail: "block",
+        injurySeverity: null,
+      },
+    ]);
+    const plan = planCasualtyResync({
+      pairingId: "pair-1",
+      matchId: "m1",
+      snapshot: snapshot({ casualtiesHome: 0, playerStats: [] }),
+      summary: relu,
+      sideOf,
+      casualtySpp: { home: 2, away: 2 },
+      bonusRules: null,
+    });
+    expect(plan.casualties.after.home).toBe(1);
+    expect(plan.players).toEqual([
+      { teamPlayerId: "h1", side: "home", before: 0, after: 1, sppDelta: 2 },
+    ]);
+    expect(plan.changed).toBe(true);
   });
 });
 

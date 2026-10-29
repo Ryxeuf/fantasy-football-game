@@ -57,6 +57,30 @@ describe("A67/A68 — addEventSchema stat_loss", () => {
   });
 });
 
+// Élimination annulée par un Apothicaire ou la Régénération : saisie
+// « aucune séquelle », elle compte et rapporte ses PSP sans blessure.
+describe("addEventSchema — élimination soignée (healed)", () => {
+  it("accepte « healed » sur une élimination", () => {
+    const res = addEventSchema.safeParse({
+      kind: "casualty",
+      team: "home",
+      actorPlayerId: "h1",
+      targetPlayerId: "a1",
+      injurySeverity: "healed",
+    });
+    expect(res.success).toBe(true);
+  });
+
+  it("refuse toujours une gravité inconnue", () => {
+    const res = addEventSchema.safeParse({
+      kind: "casualty",
+      team: "home",
+      injurySeverity: "scratch",
+    });
+    expect(res.success).toBe(false);
+  });
+});
+
 describe("FDM — addEventSchema pass_complete (réceptionneur)", () => {
   const pass = {
     kind: "pass_complete" as const,
