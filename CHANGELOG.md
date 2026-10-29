@@ -1,3 +1,15 @@
+## [1.259.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.0...v1.259.1) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* **league-sheet:** feuille à jour et PSP complets (retour testeur du 29/10) ([#1081](https://github.com/Ryxeuf/fantasy-football-game/issues/1081)) ([72db494](https://github.com/Ryxeuf/fantasy-football-game/commit/72db494f81de32a6b406741436a44e7914399167))
+
+
+### 📝 Documentation
+
+* **openspec:** change league-only-free-dedicated-fan ([#1080](https://github.com/Ryxeuf/fantasy-football-game/issues/1080)) ([eef9f38](https://github.com/Ryxeuf/fantasy-football-game/commit/eef9f389834531c11ea3cd0a4beb47a768b5787c))
+
 ## [1.259.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.258.0...v1.259.0) (2026-10-20)
 
 
