@@ -31,8 +31,13 @@ export const addEventSchema = z
      */
     targetPlayerId: z.string().min(1).optional().nullable(),
     causeDetail: z.string().max(64).optional().nullable(),
+    /**
+     * Gravité de la blessure, ou `healed` : élimination annulée par un
+     * Apothicaire ou la Régénération — elle compte et rapporte ses PSP, sans
+     * laisser de blessure (cf. `HEALED_ELIMINATION`).
+     */
     injurySeverity: z
-      .enum(["badly_hurt", "mng", "niggling", "stat_loss", "dead"])
+      .enum(["badly_hurt", "mng", "niggling", "stat_loss", "dead", "healed"])
       .optional()
       .nullable(),
     /** Mi-temps de l'evenement (1 ou 2). Fusionne dans meta.half. */
@@ -353,6 +358,17 @@ export const hateChoicesSchema = z.object({
     ),
 });
 export type HateChoicesBody = z.infer<typeof hateChoicesSchema>;
+
+/**
+ * `POST /pairings/:pairingId/sheet` — ouverture de la feuille. `force` : le
+ * commissaire l'ouvre malgré une rencontre antérieure encore ouverte
+ * (journée reportée) ; ignoré pour un coach. Corps absent = `{}`.
+ */
+export const createMatchSheetSchema = z.preprocess(
+  (v) => v ?? {},
+  z.object({ force: z.boolean().optional() }),
+);
+export type CreateMatchSheetBody = z.infer<typeof createMatchSheetSchema>;
 
 export const invalidateSheetSchema = z.object({
   reason: z.string().max(500).optional(),

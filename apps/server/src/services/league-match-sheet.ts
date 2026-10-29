@@ -179,6 +179,22 @@ import {
 } from "./league-sheet-journeyman-advancements";
 import { serverLog } from "../utils/server-log";
 import {
+  CLOSED_PAIRING_STATUSES,
+  findBlockingPreviousPairings,
+  previousMatchPendingMessage,
+  type BlockingPreviousPairing,
+} from "./league-sheet-open-guard";
+import {
+  orphanSheetPlayers,
+  referencedSheetPlayerIds,
+  snapshotCapturedAt,
+  snapshotPlayers,
+  staleSnapshotChange,
+  type OtherTeamSheet,
+  type SheetChangeAfterFreeze,
+  type SheetPlayerReferences,
+} from "./league-sheet-snapshot-freshness";
+import {
   buildHateCandidateViews,
   mergeHateChoices,
   parseHateChoices,
@@ -634,8 +650,17 @@ export class MatchSheetError extends Error {
       | "hate_wrong_side"
       | "hate_invalid_candidate"
       | "hate_invalid_keyword"
-      | "coach_submissions_missing",
+      | "coach_submissions_missing"
+      | "previous_match_pending"
+      | "refresh_not_applicable"
+      | "refresh_failed"
+      | "refresh_orphan_players",
     message: string,
+    /**
+     * Données structurées du refus, servies telles quelles à l'UI (ex. les
+     * rencontres antérieures qui bloquent l'ouverture d'une feuille).
+     */
+    public readonly details?: Readonly<Record<string, unknown>>,
   ) {
     super(message);
     this.name = "MatchSheetError";
@@ -934,10 +959,16 @@ function isHeaderOnlySnapshot(raw: unknown): boolean {
 export async function createMatchSheet(input: {
   pairingId: string;
   userId: string;
+  /**
+   * Commissaire seulement : ouvre la feuille malgré une rencontre antérieure
+   * encore ouverte (journée reportée). Ignoré pour un coach.
+   */
+  force?: boolean;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  if (!side && !(await isCommissioner(ctx, input.userId))) {
+  const commissioner = await isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
     throw new MatchSheetError(
       "not_a_participant",
       "Seuls les 2 coachs et le commissaire peuvent ouvrir la feuille",
@@ -947,6 +978,19 @@ export async function createMatchSheet(input: {
     where: sheetWhere(ctx),
   });
   if (existing) return existing;
+
+  // Le gel ci-dessous fige l'état des deux équipes : il ne doit pas partir
+  // d'un état auquel manque une rencontre antérieure non encore validée.
+  if (ctx.kind === "league") {
+    const blocking = await previousPendingPairings(ctx);
+    if (blocking.length > 0 && !(commissioner && input.force === true)) {
+      throw new MatchSheetError(
+        "previous_match_pending",
+        previousMatchPendingMessage(blocking, commissioner),
+        { blocking, canForce: commissioner },
+      );
+    }
+  }
 
   const created = await prisma.leagueMatchSheet.create({
     data: { ...sheetWhere(ctx), status: "draft" },
@@ -969,6 +1013,310 @@ export async function createMatchSheet(input: {
     }
   }
   return created;
+}
+
+/**
+ * Rencontres d'une journée antérieure, dans la même saison, qui impliquent
+ * l'une des deux équipes et ne sont pas closes (cf. `league-sheet-open-guard`).
+ * Best-effort : une lecture en échec n'empêche pas d'ouvrir la feuille — la
+ * garde protège d'un oubli, elle n'est pas une frontière de sécurité.
+ */
+async function previousPendingPairings(
+  ctx: PairingContext,
+): Promise<BlockingPreviousPairing[]> {
+  try {
+    const current = (await prisma.leaguePairing.findUnique({
+      where: { id: ctx.pairingId },
+      select: {
+        id: true,
+        round: { select: { seasonId: true, roundNumber: true } },
+      },
+    })) as {
+      id: string;
+      round?: { seasonId?: string; roundNumber?: number } | null;
+    } | null;
+    const seasonId = current?.round?.seasonId;
+    const roundNumber = current?.round?.roundNumber;
+    if (!current || !seasonId || typeof roundNumber !== "number") return [];
+    const teamIds = [...new Set([ctx.homeTeamId, ctx.awayTeamId])].filter(
+      Boolean,
+    );
+    if (teamIds.length === 0) return [];
+    const rows = ((await prisma.leaguePairing.findMany({
+      where: {
+        id: { not: ctx.pairingId },
+        status: { notIn: [...CLOSED_PAIRING_STATUSES] },
+        round: { seasonId, roundNumber: { lt: roundNumber } },
+        OR: [
+          { homeParticipant: { teamId: { in: teamIds } } },
+          { awayParticipant: { teamId: { in: teamIds } } },
+        ],
+      },
+      select: {
+        id: true,
+        status: true,
+        round: { select: { roundNumber: true, name: true } },
+        homeParticipant: {
+          select: { teamId: true, team: { select: { name: true } } },
+        },
+        awayParticipant: {
+          select: { teamId: true, team: { select: { name: true } } },
+        },
+      },
+    })) ?? []) as Array<{
+      id: string;
+      status: string;
+      round: { roundNumber: number; name: string | null };
+      homeParticipant: { teamId: string; team: { name: string } };
+      awayParticipant: { teamId: string; team: { name: string } };
+    }>;
+    return findBlockingPreviousPairings({
+      current: {
+        id: ctx.pairingId,
+        roundNumber,
+        homeTeamId: ctx.homeTeamId,
+        awayTeamId: ctx.awayTeamId,
+      },
+      candidates: rows.map((r) => ({
+        id: r.id,
+        status: r.status,
+        roundNumber: r.round.roundNumber,
+        roundName: r.round.name,
+        homeTeamId: r.homeParticipant.teamId,
+        homeTeamName: r.homeParticipant.team.name,
+        awayTeamId: r.awayParticipant.teamId,
+        awayTeamName: r.awayParticipant.team.name,
+      })),
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-match-sheet] garde d'ouverture illisible pairing=${ctx.pairingId}: ${msg}`,
+    );
+    return [];
+  }
+}
+
+/** Fraîcheur du gel d'une feuille de ligue en cours de saisie. */
+export interface SnapshotFreshness {
+  readonly home: SheetChangeAfterFreeze | null;
+  readonly away: SheetChangeAfterFreeze | null;
+  /** Mise à jour possible maintenant : aucune soumission encore. */
+  readonly refreshable: boolean;
+}
+
+/**
+ * Les autres feuilles de LIGUE des deux équipes validées ou invalidées après
+ * le gel (cf. `league-sheet-snapshot-freshness`). Best-effort : une lecture
+ * en échec rend `null`, la feuille s'affiche comme avant.
+ */
+async function loadSnapshotFreshness(
+  ctx: PairingContext,
+  sheet: {
+    id: string;
+    status: string;
+    createdAt?: Date | string | null;
+    rosterSnapshotHome?: unknown;
+    rosterSnapshotAway?: unknown;
+  },
+): Promise<SnapshotFreshness | null> {
+  // Une coupe rejoue son roster d'inscription ; une feuille validée ou en
+  // correction après invalidation garde la version du match JOUÉ.
+  if (ctx.kind !== "league") return null;
+  if (sheet.status === "validated" || sheet.status === "invalidated") {
+    return null;
+  }
+  try {
+    const capturedHome = snapshotCapturedAt(
+      sheet.rosterSnapshotHome,
+      sheet.createdAt,
+    );
+    const capturedAway = snapshotCapturedAt(
+      sheet.rosterSnapshotAway,
+      sheet.createdAt,
+    );
+    const refreshable = sheet.status === "draft";
+    const captures = [capturedHome, capturedAway].filter(
+      (t): t is number => t !== null,
+    );
+    if (captures.length === 0) return { home: null, away: null, refreshable };
+    const since = new Date(Math.min(...captures));
+    const teamIds = [...new Set([ctx.homeTeamId, ctx.awayTeamId])].filter(
+      Boolean,
+    );
+    const rows = ((await prisma.leagueMatchSheet.findMany({
+      where: {
+        id: { not: sheet.id },
+        pairingId: { not: null },
+        OR: [{ validatedAt: { gt: since } }, { invalidatedAt: { gt: since } }],
+        pairing: {
+          OR: [
+            { homeParticipant: { teamId: { in: teamIds } } },
+            { awayParticipant: { teamId: { in: teamIds } } },
+          ],
+        },
+      },
+      select: {
+        validatedAt: true,
+        invalidatedAt: true,
+        pairing: {
+          select: {
+            id: true,
+            round: { select: { roundNumber: true, name: true } },
+            homeParticipant: {
+              select: { teamId: true, team: { select: { name: true } } },
+            },
+            awayParticipant: {
+              select: { teamId: true, team: { select: { name: true } } },
+            },
+          },
+        },
+      },
+    })) ?? []) as Array<{
+      validatedAt: Date | null;
+      invalidatedAt: Date | null;
+      pairing: {
+        id: string;
+        round: { roundNumber: number; name: string | null };
+        homeParticipant: { teamId: string; team: { name: string } };
+        awayParticipant: { teamId: string; team: { name: string } };
+      } | null;
+    }>;
+    const sheets: OtherTeamSheet[] = rows
+      .filter((r) => r.pairing)
+      .map((r) => ({
+        pairingId: r.pairing!.id,
+        validatedAt: r.validatedAt,
+        invalidatedAt: r.invalidatedAt,
+        roundNumber: r.pairing!.round.roundNumber,
+        roundName: r.pairing!.round.name,
+        homeTeamId: r.pairing!.homeParticipant.teamId,
+        homeTeamName: r.pairing!.homeParticipant.team.name,
+        awayTeamId: r.pairing!.awayParticipant.teamId,
+        awayTeamName: r.pairing!.awayParticipant.team.name,
+      }));
+    const changeFor = (teamId: string, capturedAt: number | null) =>
+      teamId
+        ? staleSnapshotChange({
+            capturedAt,
+            teamId,
+            currentPairingId: ctx.pairingId,
+            sheets,
+          })
+        : null;
+    return {
+      home: changeFor(ctx.homeTeamId, capturedHome),
+      away: changeFor(ctx.awayTeamId, capturedAway),
+      refreshable,
+    };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-match-sheet] fraîcheur du gel illisible pairing=${ctx.pairingId}: ${msg}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Met à jour le gel d'une feuille de LIGUE (« version du match ») depuis
+ * l'état courant des deux équipes : la feuille a été ouverte avant qu'une
+ * rencontre précédente soit validée, ou celle-ci a été invalidée puis
+ * corrigée depuis (retour testeur, oct. 2026).
+ *
+ * Coachs et commissaire, tant que personne n'a soumis (la soumission vaut
+ * « ce que j'ai saisi porte sur cet état »). Les saisies d'avant-match et les
+ * choix de postes des journaliers sont gardés. Refus si la saisie cite un
+ * joueur que le nouveau gel ne connaît plus (mort, licencié, journalier
+ * devenu inutile) : il faut d'abord corriger la saisie.
+ */
+export async function refreshMatchSheetSnapshots(input: {
+  pairingId: string;
+  userId: string;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  const side = coachSide(ctx, input.userId);
+  if (!side && !(await isCommissioner(ctx, input.userId))) {
+    throw new MatchSheetError(
+      "not_a_participant",
+      "Seuls les 2 coachs et le commissaire peuvent mettre la feuille à jour",
+    );
+  }
+  if (ctx.kind !== "league") {
+    throw new MatchSheetError(
+      "refresh_not_applicable",
+      "Une feuille de coupe rejoue le roster d'inscription : il n'y a rien à mettre à jour",
+    );
+  }
+  const sheet = await loadSheetOrThrow(ctx);
+  if (sheet.status !== "draft") {
+    throw new MatchSheetError(
+      "invalid_status",
+      sheet.status === "validated"
+        ? "Feuille validée : elle garde la version du match joué"
+        : "La feuille a déjà été soumise : retirez les soumissions avant de la mettre à jour",
+    );
+  }
+  const columns = sheet as SheetJourneymenColumns & SheetPlayerReferences;
+  const fresh = await captureMatchSnapshots(ctx, {
+    rosterSnapshotHome: null,
+    rosterSnapshotAway: null,
+    journeymenHome: columns.journeymenHome,
+    journeymenAway: columns.journeymenAway,
+  });
+  if (!fresh.rosterSnapshotHome || !fresh.rosterSnapshotAway) {
+    throw new MatchSheetError(
+      "refresh_failed",
+      "Mise à jour de la feuille impossible pour le moment : réessayez",
+    );
+  }
+
+  // Joueurs de chaque gel : roster (ids figés) + journaliers dérivés du gel.
+  const teams = await loadSheetTeams(ctx);
+  const positions = await loadJourneymanPositions(teams);
+  const playersOf = (cols: SheetJourneymenColumns): Map<string, string> => {
+    const out = new Map<string, string>();
+    for (const s of ["home", "away"] as const) {
+      const raw = s === "home" ? cols.rosterSnapshotHome : cols.rosterSnapshotAway;
+      for (const [id, label] of snapshotPlayers(raw)) out.set(id, label);
+      const team = teams[s];
+      if (!team) continue;
+      for (const j of deriveSideJourneymen(team, s, cols, positions[s])) {
+        out.set(j.id, `n°${j.number} ${j.name}`);
+      }
+    }
+    return out;
+  };
+  const events = ((await prisma.leagueMatchEvent.findMany({
+    where: { matchSheetId: sheet.id },
+    select: { actorPlayerId: true, targetPlayerId: true },
+  })) ?? []) as Array<{
+    actorPlayerId: string | null;
+    targetPlayerId: string | null;
+  }>;
+  const orphans = orphanSheetPlayers({
+    referencedIds: referencedSheetPlayerIds(columns, events),
+    before: playersOf(columns),
+    after: playersOf({ ...columns, ...fresh }),
+  });
+  if (orphans.length > 0) {
+    throw new MatchSheetError(
+      "refresh_orphan_players",
+      `Mise à jour impossible : la saisie cite des joueurs qui ne joueraient plus ce match (${orphans
+        .map((o) => o.label)
+        .join(", ")}). Retirez-les de la saisie, puis recommencez.`,
+      { players: orphans },
+    );
+  }
+
+  const updated = await prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    data: fresh,
+  });
+  serverLog.info(
+    `[league-match-sheet] gel mis à jour pairing=${ctx.pairingId} par=${input.userId}`,
+  );
+  return updated;
 }
 
 async function loadSheetOrThrow(ctx: PairingContext) {
@@ -2300,6 +2648,7 @@ export function buildOfflineInputFromSummary(
       completions: p.completions,
       interceptions: p.interceptions,
       ttmLandings: p.ttmLandings,
+      safeThrows: p.safeThrows,
       mvp: motmSet.has(p.playerId),
     }));
 
@@ -4632,6 +4981,7 @@ async function computeSheetSpp(input: {
         completions: s.completions,
         interceptions: s.interceptions,
         ttmLandings: s.ttmLandings,
+        safeThrows: s.safeThrows,
         mvp: motm.has(s.playerId),
       },
       modifier,
@@ -4755,6 +5105,13 @@ export async function getMatchSheet(input: {
    * jet a déjà eu lieu, c'est `hateRolls` qui en rend compte.
    */
   hateCandidates: readonly HateCandidateView[];
+  /**
+   * Fraîcheur du gel (ligue, feuille ni validée ni invalidée ; `null`
+   * sinon) : une autre feuille d'une des deux équipes validée ou invalidée
+   * APRÈS le gel le rend périmé. `refreshable` : la mise à jour est
+   * possible maintenant (aucune soumission).
+   */
+  snapshotFreshness: SnapshotFreshness | null;
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -5086,5 +5443,6 @@ export async function getMatchSheet(input: {
               (sheet as { hateChoices?: unknown }).hateChoices,
             ),
           }),
+    snapshotFreshness: await loadSnapshotFreshness(ctx, sheet),
   };
 }

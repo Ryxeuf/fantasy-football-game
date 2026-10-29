@@ -158,6 +158,7 @@ import {
 } from "../schemas/league-pool.schemas";
 import {
   createMatchSheet,
+  refreshMatchSheetSnapshots,
   addEvent as addMatchSheetEvent,
   removeEvent as removeMatchSheetEvent,
   updatePreMatch,
@@ -183,6 +184,8 @@ import {
   type HateChoicesBody,
   postMatchSchema,
   invalidateSheetSchema,
+  createMatchSheetSchema,
+  type CreateMatchSheetBody,
   type AddEventBody,
   type PreMatchBody,
   type PostMatchBody,
@@ -240,7 +243,7 @@ import {
   parseLeagueTieBreakRules,
   readStoredLeagueTieBreakRules,
 } from "../services/league-standings-order";
-import { sendError, sendSuccess } from "../utils/api-response";
+import { apiError, sendError, sendSuccess } from "../utils/api-response";
 import { hasRole } from "../utils/roles";
 import {
   canViewLeagueRow,
@@ -387,9 +390,23 @@ function domainError(res: Response, e: unknown): void {
               e.code === "invalidation_window_closed" ||
               e.code === "invalidation_failed" ||
               e.code === "raise_dead_not_allowed" ||
-              e.code === "coach_submissions_missing"
+              e.code === "coach_submissions_missing" ||
+              e.code === "previous_match_pending" ||
+              e.code === "refresh_not_applicable" ||
+              e.code === "refresh_failed" ||
+              e.code === "refresh_orphan_players"
             ? 409
             : 400;
+    // Un refus qui porte des données (ex. les rencontres qui bloquent
+    // l'ouverture) les sert avec son code : l'UI en a besoin pour agir.
+    if (e.details) {
+      res.status(status).json({
+        ...apiError(e.message),
+        code: e.code,
+        details: e.details,
+      });
+      return;
+    }
     sendError(res, e.message, status);
     return;
   }
@@ -2223,12 +2240,37 @@ export async function handleCreateMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  const body: CreateMatchSheetBody = req.body;
   try {
     const sheet = await createMatchSheet({
       pairingId: req.params.pairingId,
       userId,
+      force: body?.force,
     });
     sendSuccess(res, sheet, 201);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * POST /leagues/pairings/:pairingId/sheet/refresh — met à jour la « version
+ * du match » depuis l'état courant des équipes (feuille ouverte avant la
+ * validation d'une rencontre précédente). Coachs + commissaire, avant toute
+ * soumission.
+ */
+export async function handleRefreshMatchSheet(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  try {
+    const sheet = await refreshMatchSheetSnapshots({
+      pairingId: req.params.pairingId,
+      userId,
+    });
+    sendSuccess(res, sheet);
   } catch (e: unknown) {
     domainError(res, e);
   }
@@ -3273,7 +3315,17 @@ router.patch(
 
 // Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
 router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
-router.post("/pairings/:pairingId/sheet", authUser, handleCreateMatchSheet);
+router.post(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  validate(createMatchSheetSchema),
+  handleCreateMatchSheet,
+);
+router.post(
+  "/pairings/:pairingId/sheet/refresh",
+  authUser,
+  handleRefreshMatchSheet,
+);
 router.patch(
   "/pairings/:pairingId/sheet/pre-match",
   authUser,

@@ -348,12 +348,36 @@ describe("Lot J — league-player-stats", () => {
       ]);
       mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
         { kind: "aggression", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
-        { kind: "casualty", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
         { kind: "aggression", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: "mng" },
       ]);
       const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
       expect(cat.topPunchingBags.map((r) => [r.playerId, r.value])).toEqual([
         ["p2", 1],
+      ]);
+    });
+
+    // Une élimination soignée (Apothicaire, Régénération) a bien sorti son
+    // joueur : elle compte au sac de frappe, saisie sans gravité sur un
+    // blocage comme « aucune séquelle » sur une agression.
+    it("sac de frappe : une élimination soignée compte", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+        player({ id: "p2", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "casualty", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: null },
+        { kind: "aggression", actorPlayerId: "p1", targetPlayerId: "p2", injurySeverity: "healed" },
+      ]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topPunchingBags.map((r) => [r.playerId, r.value])).toEqual([
+        ["p2", 2],
+      ]);
+      // Le blocage soigné reste une sortie infligée.
+      expect(cat.topBashers.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 1],
       ]);
     });
 
@@ -475,9 +499,11 @@ describe("Lot J — league-player-stats", () => {
       expect(cat.topAggressors.map((r) => [r.playerId, r.value])).toEqual([
         ["p2", 1],
       ]);
-      // Les PSP de saison suivent : p2 n'en gagne aucun pour son agression.
+      // Les PSP de saison suivent : p2 n'en gagne aucun pour son agression ;
+      // p4 garde le PSP de son atterrissage (pas celui de l'élimination).
       expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
         ["p1", 2],
+        ["p4", 1],
       ]);
       // Les victimes restent des victimes (sac de frappe), sortie ou pas.
       expect(cat.topPunchingBags).toHaveLength(0); // x* ne sont pas de la saison
@@ -617,6 +643,31 @@ describe("Lot J — league-player-stats", () => {
       expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
         ["p1", 10],
         ["p2", 3],
+      ]);
+    });
+
+    // Table des PSP : 1 au LANCEUR d'un Lancer de Coéquipier réussi
+    // (« Lancer Sécurisé »), 1 au joueur LANCÉ qui atterrit sur ses pieds.
+    it("Future Star compte le Lancer Sécurisé et l'atterrissage", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "p1", teamId: "T1" }),
+        player({ id: "p2", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        { kind: "team_throw", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        { kind: "team_throw", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        { kind: "ttm_landing", actorPlayerId: "p2", targetPlayerId: null, injurySeverity: null },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+      mockPrisma.roster.findMany.mockResolvedValue([]);
+
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.topFutureStars.map((r) => [r.playerId, r.value])).toEqual([
+        ["p1", 2],
+        ["p2", 1],
       ]);
     });
 

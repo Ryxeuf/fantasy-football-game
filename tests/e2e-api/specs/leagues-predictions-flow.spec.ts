@@ -250,7 +250,10 @@ async function scoreSheet(
   const homeCoach = s.byUser.get(pairing.homeParticipant.team.ownerId)!;
   const awayCoach = s.byUser.get(pairing.awayParticipant.team.ownerId)!;
   const url = `/leagues/pairings/${pairing.id}/sheet`;
-  await post(url, homeCoach.token, {});
+  // Ouverte par le commissaire, forcée : certains scénarios jouent la
+  // journée 2 d'une rencontre avant la journée 1 de l'autre (garde
+  // d'ouverture), ce qui est sans objet pour les pronostics.
+  await post(url, s.commissioner.token, { force: true });
   const sheet = unwrap(await get<{ data: SheetDTO }>(url, homeCoach.token));
   for (let i = 0; i < home; i++) {
     await post(`${url}/events`, homeCoach.token, {

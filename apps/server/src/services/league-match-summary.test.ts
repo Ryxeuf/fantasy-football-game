@@ -6,7 +6,10 @@ import { describe, it, expect } from "vitest";
 import {
   summarizeMatchSheet,
   eliminationEarnsSpp,
+  eliminationOccurred,
+  isEliminationOutcome,
   isInjurySeverity,
+  HEALED_ELIMINATION,
   isMatchEventKind,
   computeMatchWinnings,
   computeStalledTeams,
@@ -473,6 +476,7 @@ describe("Lot G — summarizeMatchSheet", () => {
           interceptions: 0,
           aggressions: 0,
           ttmLandings: 0,
+          safeThrows: 0,
         },
       ]);
     });
@@ -482,7 +486,7 @@ describe("Lot G — summarizeMatchSheet", () => {
     const events: MatchEventInput[] = [
       { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },
       { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },
-      // Le lancer lui-même (team_throw) reste sans effet sur les stats SPP.
+      // Le lancer lui-même (team_throw) crédite le LANCEUR, pas le lancé.
       { kind: "team_throw", team: "home", actorPlayerId: "h5" },
     ];
     const out = summarizeMatchSheet(events);
@@ -491,11 +495,38 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.casualtiesHome).toBe(0);
     const h9 = out.playerStats.find((p) => p.playerId === "h9");
     expect(h9?.ttmLandings).toBe(2);
-    expect(out.playerStats.find((p) => p.playerId === "h5")).toBeUndefined();
+    expect(h9?.safeThrows).toBe(0);
+    expect(out.playerStats.find((p) => p.playerId === "h5")).toMatchObject({
+      safeThrows: 1,
+      ttmLandings: 0,
+    });
   });
 
   // « Vol Fatal » — le joueur LANCÉ qui atterrit sur une case occupée et
   // plaque l'adversaire gagne les PSP d'Élimination si celui-ci sort.
+  // Retour testeur : « les lancers de coéquipier ne donnent plus de PSP ».
+  // La table en prévoit deux : Lancer Sécurisé (lanceur) et atterrissage
+  // (joueur lancé) — seul le second était compté.
+  it("team_throw : le lanceur (acteur) compte un Lancer Sécurisé", () => {
+    const out = summarizeMatchSheet([
+      { kind: "team_throw", team: "away", actorPlayerId: "a2" },
+      { kind: "team_throw", team: "away", actorPlayerId: "a2" },
+      { kind: "ttm_landing", team: "away", actorPlayerId: "a7" },
+    ]);
+    const thrower = out.playerStats.find((p) => p.playerId === "a2");
+    expect(thrower).toMatchObject({ side: "away", safeThrows: 2, ttmLandings: 0 });
+    const thrown = out.playerStats.find((p) => p.playerId === "a7");
+    expect(thrown).toMatchObject({ safeThrows: 0, ttmLandings: 1 });
+    // Un lancer n'est ni un score ni une sortie.
+    expect(out.scoreAway).toBe(0);
+    expect(out.casualtiesAway).toBe(0);
+  });
+
+  it("team_throw sans lanceur identifié : rien à créditer", () => {
+    const out = summarizeMatchSheet([{ kind: "team_throw", team: "home" }]);
+    expect(out.playerStats).toHaveLength(0);
+  });
+
   it("ttm_landing : PSP d'élimination réservés à Vol Fatal", () => {
     const events: MatchEventInput[] = [
       // h9 a Vol Fatal, h8 non.
@@ -619,7 +650,10 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.playerStats.find((p) => p.playerId === "a1")).toBeUndefined();
   });
 
-  it("special_elim sans gravité de blessure : ignoré", () => {
+  // Une Élimination sur Action Spéciale est une élimination par son type :
+  // soignée (Apothicaire, Régénération), elle reste due à l'Innovateur
+  // Violent — sans blessure à consigner.
+  it("special_elim sans gravité : élimination soignée, PSP de l'Innovateur Violent", () => {
     const out = summarizeMatchSheet(
       [
         {
@@ -631,9 +665,11 @@ describe("Lot G — summarizeMatchSheet", () => {
       ],
       { violentInnovators: new Set(["h3"]) },
     );
-    expect(out.casualtiesHome).toBe(0);
+    expect(out.casualtiesHome).toBe(1);
     expect(out.injuries).toHaveLength(0);
-    expect(out.playerStats).toHaveLength(0);
+    expect(
+      out.playerStats.find((p) => p.playerId === "h3")?.casualtiesInflicted,
+    ).toBe(1);
   });
 
   it("ignores kickoff/expulsion/stalling for score and casualties", () => {
@@ -649,7 +685,7 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.injuries).toHaveLength(0);
   });
 
-  it("ignores casualty with unknown severity (no injury recorded)", () => {
+  it("casualty à gravité inconnue : l'élimination compte, aucune blessure consignée", () => {
     const events: MatchEventInput[] = [
       {
         kind: "casualty",
@@ -660,8 +696,93 @@ describe("Lot G — summarizeMatchSheet", () => {
       },
     ];
     const out = summarizeMatchSheet(events);
-    expect(out.casualtiesHome).toBe(0);
+    expect(out.casualtiesHome).toBe(1);
     expect(out.injuries).toHaveLength(0);
+  });
+
+  // Retour testeur (oct. 2026) : « j'ai réussi l'apo donc c'est normal qu'il
+  // n'y ait pas de blessure […] cela ne doit pas empêcher la validation de
+  // l'élimination ». Règle du livre : les PSP d'Élimination sont acquis même
+  // si l'élimination est ensuite annulée (Apothicaire, Régénération).
+  describe("élimination soignée (Apothicaire, Régénération)", () => {
+    for (const [label, injurySeverity] of [
+      ["sans gravité saisie", null],
+      ["« aucune séquelle »", HEALED_ELIMINATION],
+    ] as const) {
+      it(`blocage ${label} : sortie et PSP comptés, aucune blessure`, () => {
+        const out = summarizeMatchSheet([
+          {
+            kind: "casualty",
+            team: "home",
+            actorPlayerId: "h1",
+            targetPlayerId: "a5",
+            causeDetail: "block",
+            injurySeverity,
+          },
+          {
+            kind: "casualty",
+            team: "home",
+            actorPlayerId: "h2",
+            targetPlayerId: "a6",
+            causeDetail: "block",
+            injurySeverity: "badly_hurt",
+          },
+        ]);
+        expect(out.casualtiesHome).toBe(2);
+        expect(
+          out.playerStats.find((p) => p.playerId === "h1")?.casualtiesInflicted,
+        ).toBe(1);
+        // Seule la victime réellement blessée l'est.
+        expect(out.injuries.map((i) => i.playerId)).toEqual(["a6"]);
+      });
+    }
+
+    it("agression soignée sous Frénésie d'Agression : sortie, aucune blessure", () => {
+      const out = summarizeMatchSheet(
+        [
+          {
+            kind: "aggression",
+            team: "home",
+            actorPlayerId: "h5",
+            targetPlayerId: "a5",
+            injurySeverity: HEALED_ELIMINATION,
+          },
+        ],
+        { foulingFrenzy: { home: true } },
+      );
+      expect(out.casualtiesHome).toBe(1);
+      expect(out.injuries).toHaveLength(0);
+    });
+
+    it("atterrissage soigné avec Vol Fatal : sortie, aucune blessure", () => {
+      const out = summarizeMatchSheet(
+        [
+          {
+            kind: "ttm_landing",
+            team: "home",
+            actorPlayerId: "h9",
+            targetPlayerId: "a5",
+            injurySeverity: HEALED_ELIMINATION,
+          },
+        ],
+        { fatalFlighters: new Set(["h9"]) },
+      );
+      expect(out.casualtiesHome).toBe(1);
+      expect(out.injuries).toHaveLength(0);
+    });
+
+    it("auto-élimination soignée : toujours aucun PSP", () => {
+      const out = summarizeMatchSheet([
+        {
+          kind: "other_elim",
+          team: "home",
+          actorPlayerId: "h7",
+          injurySeverity: HEALED_ELIMINATION,
+        },
+      ]);
+      expect(out.casualtiesHome).toBe(0);
+      expect(out.injuries).toHaveLength(0);
+    });
   });
 
   it("is deterministic", () => {
@@ -725,6 +846,53 @@ describe("isInjurySeverity", () => {
     expect(isInjurySeverity("scratch")).toBe(false);
     expect(isInjurySeverity(1)).toBe(false);
   });
+
+  it("une élimination soignée n'est pas une blessure", () => {
+    expect(isInjurySeverity(HEALED_ELIMINATION)).toBe(false);
+  });
+});
+
+describe("isEliminationOutcome", () => {
+  it("une gravité OU « aucune séquelle »", () => {
+    expect(isEliminationOutcome("mng")).toBe(true);
+    expect(isEliminationOutcome(HEALED_ELIMINATION)).toBe(true);
+    expect(isEliminationOutcome(null)).toBe(false);
+    expect(isEliminationOutcome("")).toBe(false);
+  });
+});
+
+describe("eliminationOccurred", () => {
+  it("blocage et Action Spéciale : élimination par leur type", () => {
+    expect(eliminationOccurred({ kind: "casualty" })).toBe(true);
+    expect(eliminationOccurred({ kind: "special_elim" })).toBe(true);
+  });
+
+  it("les autres types : seulement si la saisie le dit", () => {
+    for (const kind of [
+      "aggression",
+      "ttm_landing",
+      "crowd_surge",
+      "other_elim",
+      "stalling",
+    ] as const) {
+      expect(eliminationOccurred({ kind }), kind).toBe(false);
+      expect(
+        eliminationOccurred({ kind, injurySeverity: HEALED_ELIMINATION }),
+        kind,
+      ).toBe(true);
+      expect(eliminationOccurred({ kind, injurySeverity: "dead" }), kind).toBe(
+        true,
+      );
+    }
+  });
+
+  it("les évènements sans victime ne sont jamais une élimination", () => {
+    for (const kind of ["touchdown", "pass_complete", "team_throw"] as const) {
+      expect(eliminationOccurred({ kind, injurySeverity: "dead" }), kind).toBe(
+        false,
+      );
+    }
+  });
 });
 
 describe("eliminationEarnsSpp", () => {
@@ -751,12 +919,27 @@ describe("eliminationEarnsSpp", () => {
     ).toBe(true);
   });
 
-  it("sans blessure : jamais", () => {
+  it("élimination soignée : comptée, comme les autres", () => {
     expect(
       eliminationEarnsSpp(elim("casualty", { injurySeverity: null })),
+    ).toBe(true);
+    expect(
+      eliminationEarnsSpp(
+        elim("casualty", { injurySeverity: HEALED_ELIMINATION }),
+      ),
+    ).toBe(true);
+  });
+
+  it("agression ou atterrissage SANS effet : jamais, même avec l'exception", () => {
+    expect(
+      eliminationEarnsSpp(elim("aggression", { injurySeverity: null }), {
+        foulingFrenzy: { home: true },
+      }),
     ).toBe(false);
     expect(
-      eliminationEarnsSpp(elim("casualty", { injurySeverity: "scratch" })),
+      eliminationEarnsSpp(elim("ttm_landing", { injurySeverity: null }), {
+        fatalFlighters: new Set(["h1"]),
+      }),
     ).toBe(false);
   });
 

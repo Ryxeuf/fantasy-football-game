@@ -40,11 +40,54 @@ export const EVENT_KIND_OPTIONS: ReadonlyArray<EventKindOption> = [
   { value: "expulsion", label: "Expulsion" },
   { value: "crowd_surge", label: "Sortie (Public)" },
   { value: "stalling", label: "Temporisation" },
-  { value: "team_throw", label: "Lancer de coéquipier" },
+  { value: "team_throw", label: "Lancer de coéquipier réussi" },
   { value: "ttm_landing", label: "Atterrissage réussi (coéquipier lancé)" },
   { value: "special_elim", label: "Élimination sur Action Spéciale" },
   { value: "other_elim", label: "Autre élimination" },
 ];
+
+/**
+ * Issue d'une Élimination annulée par un Apothicaire ou par la Régénération
+ * (miroir de `HEALED_ELIMINATION` côté serveur) : l'élimination compte et
+ * rapporte ses PSP, mais aucune blessure n'est consignée.
+ */
+export const HEALED_ELIMINATION = "healed";
+
+export interface InjurySeverityOption {
+  readonly value: string;
+  readonly label: string;
+}
+
+/**
+ * Gravités proposées par la listbox « Gravité de la blessure », dans l'ordre
+ * du sélecteur. A58 — libellés officiels du livre de règles (les valeurs
+ * internes badly_hurt/mng/niggling/stat_loss/dead restent inchangées côté
+ * API). « Aucune séquelle » vient juste après le vide : c'est l'issue d'un
+ * Apothicaire réussi, que les coachs laissaient à « — » faute de mieux — et
+ * leur élimination ne comptait plus.
+ */
+export const INJURY_SEVERITY_OPTIONS: ReadonlyArray<InjurySeverityOption> = [
+  { value: "", label: "—" },
+  {
+    value: HEALED_ELIMINATION,
+    label: "Aucune séquelle (Apothicaire / Régénération)",
+  },
+  { value: "badly_hurt", label: "Commotion" },
+  { value: "mng", label: "Amoché" },
+  { value: "niggling", label: "Blessure Persistante (BP)" },
+  { value: "stat_loss", label: "Séquelle" },
+  { value: "dead", label: "Mort" },
+];
+
+/**
+ * A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par la
+ * table de libellés FR ci-dessus.
+ */
+export function injurySeverityLabel(value: string): string {
+  return (
+    INJURY_SEVERITY_OPTIONS.find((s) => s.value === value)?.label ?? value
+  );
+}
 
 /**
  * Agression saisie en mode SIMPLIFIÉ d'une coupe : marquée « cible sortie »
@@ -114,8 +157,12 @@ export function hasTargetField(kind: EventKind): boolean {
  * le summarizer fait RÉELLEMENT (`league-match-summary.ts`).
  */
 export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
-  // Une sortie est une élimination qui rapporte des PSP : seul le blocage
-  // (blitz compris) en est une sans condition — il n'a donc rien à dire.
+  // Une sortie est une élimination qui rapporte des PSP : le blocage (blitz
+  // compris) en est une sans condition. Le seul piège est l'Apothicaire (ou
+  // la Régénération) : il annule la blessure, pas l'élimination — le livre
+  // accorde les PSP « même si l'élimination est ensuite annulée ».
+  casualty:
+    "Apothicaire réussi ou Régénération : choisis « Aucune séquelle » — l’élimination et ses PSP restent acquis.",
   // Une agression est une agression : colonne Agr, jamais Sorties — sauf la
   // Prière à Nuffle 13 « Frénésie d’Agression », qui la qualifie en sortie.
   aggression:
@@ -131,6 +178,11 @@ export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
     "La blessure éventuelle frappe le joueur qui temporise : personne ne l’inflige, aucun PSP.",
   crowd_surge:
     "Sortie infligée par le public : aucun joueur ne la revendique, donc aucun PSP — elle compte dans la colonne SP, pas dans les sorties.",
+  // Table des PSP : « Lancer Sécurisé » — un Lancer de Coéquipier réussi
+  // rapporte 1 PSP au LANCEUR. L'atterrissage est un autre évènement, qui
+  // rapporte 1 PSP au joueur lancé : saisir l'un ne crédite pas l'autre.
+  team_throw:
+    "Lancer Sécurisé : 1 PSP au lanceur. Si le joueur lancé atterrit sur ses pieds, saisis aussi « Atterrissage réussi » (1 PSP pour lui).",
   // Règle BB S3 : atterrir sur un adversaire et le plaquer ne rapporte
   // rien… sauf au porteur de « Vol Fatal », qui touche les PSP
   // d’Élimination. L’atterrissage lui-même vaut toujours 1 PSP.

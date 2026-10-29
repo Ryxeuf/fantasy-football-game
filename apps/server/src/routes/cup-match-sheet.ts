@@ -34,6 +34,7 @@ import {
 } from "./league";
 import {
   addEventSchema,
+  createMatchSheetSchema,
   invalidateSheetSchema,
   postMatchSchema,
   preMatchSchema,
@@ -43,7 +44,12 @@ import { rollRandomPrimarySchema } from "../schemas/advancement.schemas";
 const router = Router();
 
 router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
-router.post("/pairings/:pairingId/sheet", authUser, handleCreateMatchSheet);
+router.post(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  validate(createMatchSheetSchema),
+  handleCreateMatchSheet,
+);
 router.patch(
   "/pairings/:pairingId/sheet/pre-match",
   authUser,

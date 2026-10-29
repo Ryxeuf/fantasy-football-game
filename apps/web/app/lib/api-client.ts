@@ -35,13 +35,40 @@ export class ApiClientError extends Error {
   public readonly status?: number;
   /** Code metier server-side (ex: "NO_PREVIOUS_LINEUP") quand l'API envoie un body { error, code }. */
   public readonly code?: string;
+  /**
+   * Donnees structurees du refus (`{ success: false, error, code, details }`),
+   * ex. les rencontres qui bloquent l'ouverture d'une feuille de match.
+   */
+  public readonly details?: Readonly<Record<string, unknown>>;
 
-  constructor(message: string, status?: number, code?: string) {
+  constructor(
+    message: string,
+    status?: number,
+    code?: string,
+    details?: Readonly<Record<string, unknown>>,
+  ) {
     super(message);
     this.name = "ApiClientError";
     this.status = status;
     this.code = code;
+    this.details = details;
   }
+}
+
+/** `code` / `details` optionnels d'un body d'erreur, enveloppe ou legacy. */
+function errorExtras(body: unknown): {
+  code?: string;
+  details?: Readonly<Record<string, unknown>>;
+} {
+  if (body === null || typeof body !== "object") return {};
+  const { code, details } = body as { code?: unknown; details?: unknown };
+  return {
+    code: code === undefined || code === null ? undefined : String(code),
+    details:
+      details !== null && typeof details === "object" && !Array.isArray(details)
+        ? (details as Readonly<Record<string, unknown>>)
+        : undefined,
+  };
 }
 
 /** Type guard : vrai si le body est une `ApiResponse<T>` valide. */
@@ -64,7 +91,15 @@ export function isApiResponse(body: unknown): body is ApiResponse<unknown> {
 export function parseApiBody<T>(body: unknown, ok: boolean): T {
   if (isApiResponse(body)) {
     if (body.success) return body.data as T;
-    throw new ApiClientError(body.error || "Erreur inconnue");
+    // Une enveloppe d'erreur peut porter un { code, details } : on les
+    // propage pour que l'UI agisse sur le refus (pas seulement l'affiche).
+    const { code, details } = errorExtras(body);
+    throw new ApiClientError(
+      body.error || "Erreur inconnue",
+      undefined,
+      code,
+      details,
+    );
   }
 
   if (!ok) {
@@ -74,11 +109,8 @@ export function parseApiBody<T>(body: unknown, ok: boolean): T {
         : "Erreur inconnue";
     // Si le body inclut un { code }, on le propage pour permettre aux
     // UIs de discriminer (ex: NO_PREVIOUS_LINEUP vs LINEUP_LOCKED).
-    const code =
-      body !== null && typeof body === "object" && "code" in body
-        ? String((body as { code: unknown }).code)
-        : undefined;
-    throw new ApiClientError(legacyError, undefined, code);
+    const { code, details } = errorExtras(body);
+    throw new ApiClientError(legacyError, undefined, code, details);
   }
 
   return body as T;
@@ -155,7 +187,7 @@ export async function apiRequest<T>(
     if (e instanceof ApiClientError) {
       // Preserver le code metier lors du re-throw (parseApiBody n'a pas
       // acces au status HTTP, on l'ajoute ici tout en gardant le code).
-      throw new ApiClientError(e.message, response.status, e.code);
+      throw new ApiClientError(e.message, response.status, e.code, e.details);
     }
     throw e;
   }

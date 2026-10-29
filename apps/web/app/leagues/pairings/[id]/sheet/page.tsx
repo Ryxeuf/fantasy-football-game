@@ -56,11 +56,16 @@ import {
 import { WeatherReminder } from "./_components/WeatherReminder";
 import { WeatherScene } from "./_components/WeatherScene";
 import { parsePurchases } from "./purchases";
+import { sheetOpenBlockFromError, type SheetOpenBlock } from "./open-guard";
+import { freshnessBanner, type SnapshotFreshnessView } from "./freshness";
+import { SnapshotFreshnessNotice } from "./_components/SnapshotFreshnessNotice";
 import {
   EVENT_KIND_OPTIONS,
   eventKindHint,
   hasTargetField,
   INJURY_BEARING_KINDS,
+  INJURY_SEVERITY_OPTIONS,
+  injurySeverityLabel,
   isMarkedEliminated,
   RECEIVER_BEARING_KINDS,
   TARGET_BEARING_KINDS,
@@ -94,17 +99,6 @@ import { sheetEntryProfile } from "../../../../lib/sheet-entry-profile";
 
 const EVENT_KINDS = EVENT_KIND_OPTIONS;
 
-// A58 — libellés officiels du livre de règles (les valeurs internes
-// badly_hurt/mng/niggling/stat_loss/dead restent inchangées côté API).
-const INJURY_SEVERITIES: ReadonlyArray<{ value: string; label: string }> = [
-  { value: "", label: "—" },
-  { value: "badly_hurt", label: "Commotion" },
-  { value: "mng", label: "Amoché" },
-  { value: "niggling", label: "Blessure Persistante (BP)" },
-  { value: "stat_loss", label: "Séquelle" },
-  { value: "dead", label: "Mort" },
-];
-
 // A68 — caractéristique affectée par une Séquelle (stat_loss). Codes
 // internes ma/st/ag/pa/av, abréviations FR affichées.
 const INJURY_STAT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
@@ -132,12 +126,6 @@ function kickoffEventLabel(id: string): string {
     (ev) => ev.id === resolvedId,
   );
   return found?.nameFr ?? id;
-}
-
-// A60 — jamais d'enum brut (anglais) dans la timeline : tout passe par
-// les tables de libellés FR ci-dessus.
-function injurySeverityLabel(value: string): string {
-  return INJURY_SEVERITIES.find((s) => s.value === value)?.label ?? value;
 }
 
 function injuryStatLabel(value: string): string {
@@ -303,6 +291,11 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur antérieur au choix.
    */
   hateCandidates?: readonly HateCandidateView[];
+  /**
+   * Fraîcheur de la « version du match » (ligue, feuille non validée).
+   * Optionnel : rétro-compat avec un serveur antérieur.
+   */
+  snapshotFreshness?: SnapshotFreshnessView | null;
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -499,9 +492,35 @@ export default function MatchSheetPage() {
     [load],
   );
 
-  const createSheet = () =>
+  // Refus d'ouverture (rencontre antérieure non close) : montré à part, avec
+  // les rencontres à valider d'abord et, pour le commissaire, « forcer ».
+  const [openBlock, setOpenBlock] = useState<SheetOpenBlock | null>(null);
+  const createSheet = async (force = false) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiRequest(`/leagues/pairings/${pairingId}/sheet`, {
+        method: "POST",
+        body: JSON.stringify(force ? { force: true } : {}),
+      });
+      setOpenBlock(null);
+      await load();
+    } catch (e: unknown) {
+      const block = sheetOpenBlockFromError(e);
+      if (block) setOpenBlock(block);
+      else setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Nouveau gel des deux équipes (feuille ouverte avant la validation, ou
+  // après l'invalidation, d'une rencontre précédente).
+  const refreshSheet = () =>
     run(() =>
-      apiRequest(`/leagues/pairings/${pairingId}/sheet`, { method: "POST" }),
+      apiRequest(`/leagues/pairings/${pairingId}/sheet/refresh`, {
+        method: "POST",
+      }),
     );
 
   const addEvent = () =>
@@ -926,10 +945,47 @@ export default function MatchSheetPage() {
             {error}
           </p>
         )}
+        {openBlock && (
+          <div
+            className="mb-4 space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+            data-testid="sheet-open-blocked"
+          >
+            <p className="font-semibold">
+              Une rencontre précédente n&apos;est pas encore close
+            </p>
+            <p>{openBlock.message}</p>
+            {openBlock.blocking.length > 0 && (
+              <ul className="list-disc pl-5">
+                {openBlock.blocking.map((b) => (
+                  <li key={b.pairingId}>
+                    <Link
+                      href={dynamicRoute(`/leagues/pairings/${b.pairingId}/sheet`)}
+                      className="underline"
+                      data-testid={`sheet-open-blocking-${b.pairingId}`}
+                    >
+                      {b.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {openBlock.canForce && (
+              <button
+                type="button"
+                className="rounded border border-amber-500 bg-white px-3 py-1.5 font-semibold text-amber-900 disabled:opacity-50"
+                onClick={() => void createSheet(true)}
+                disabled={busy}
+                data-testid="open-sheet-force"
+              >
+                Ouvrir quand même (rencontre reportée)
+              </button>
+            )}
+          </div>
+        )}
         <button
           type="button"
           className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          onClick={createSheet}
+          onClick={() => void createSheet()}
           disabled={busy}
           data-testid="open-sheet"
         >
@@ -1007,6 +1063,21 @@ export default function MatchSheetPage() {
           </Link>
         </p>
       )}
+      {(() => {
+        const banner = freshnessBanner({
+          freshness: data.snapshotFreshness,
+          homeTeamName: home?.name ?? "Domicile",
+          awayTeamName: away?.name ?? "Extérieur",
+          canEdit,
+        });
+        return banner ? (
+          <SnapshotFreshnessNotice
+            banner={banner}
+            busy={busy}
+            onRefresh={() => void refreshSheet()}
+          />
+        ) : null;
+      })()}
       {doubleValidation && status !== "validated" && (
         <p
           data-testid="sheet-double-validation-notice"
@@ -1470,7 +1541,7 @@ export default function MatchSheetPage() {
                       data-testid="event-injury-severity"
                       className="mt-1 block w-full rounded border px-2 py-2 text-sm"
                     >
-                      {INJURY_SEVERITIES.map((s) => (
+                      {INJURY_SEVERITY_OPTIONS.map((s) => (
                         <option key={s.value} value={s.value}>
                           {s.label}
                         </option>

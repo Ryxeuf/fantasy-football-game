@@ -53,7 +53,7 @@ export const EVENT_CODES: Array<{ code: string; label: string }> = [
   { code: "EXP", label: "Expulsion" },
   { code: "SP", label: "Sortie (public)" },
   { code: "TEM", label: "Temporisation" },
-  { code: "LAN", label: "Lancer de coéquipier" },
+  { code: "LAN", label: "Lancer de coéquipier réussi (1 PSP au lanceur)" },
   { code: "ATT", label: "Atterrissage réussi" },
   { code: "ASP", label: "Élimination sur action spéciale" },
   { code: "AEL", label: "Autre élimination" },
@@ -65,6 +65,7 @@ const INJURY_CODES: Array<{ code: string; label: string }> = [
   { code: "BP", label: "Blessure persistante" },
   { code: "S", label: "Séquelle (préciser M, F, AG, CP ou AR)" },
   { code: "M", label: "Mort" },
+  { code: "AS", label: "Aucune séquelle (Apothicaire / Régénération) : l'élimination compte" },
 ];
 
 function sideTeam(doc: MatchSheetDocument, side: "home" | "away"): PdfSheetTeam {

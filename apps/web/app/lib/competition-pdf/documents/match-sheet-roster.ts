@@ -32,7 +32,7 @@ const TALLY_COLUMNS: TallyColumn[] = [
   { key: "int", label: "Int", legend: "Interception", width: 8 },
   { key: "cas", label: "Sor", legend: "Élimination sur blocage", width: 8 },
   { key: "agg", label: "Agr", legend: "Agression", width: 8 },
-  { key: "ttm", label: "Lan", legend: "Lancer de coéquipier", width: 8 },
+  { key: "ttm", label: "Lan", legend: "Lancer de coéquipier réussi", width: 8 },
   { key: "land", label: "Att", legend: "Atterrissage réussi", width: 8 },
   { key: "exp", label: "Exp", legend: "Expulsé", width: 7.5 },
   { key: "motm", label: "JDM", legend: "Joueur du Match", width: 8 },
@@ -262,7 +262,7 @@ export function drawRosterPage(
   end += wrapped.length * 3;
   pdf.text(
     sheetEntryOf(doc).injuryDetails
-      ? "Blessure : C = Commotion, A = Amoché (rate le prochain match), BP = Blessure persistante, S = Séquelle (préciser M/F/AG/CP/AR), M = Mort.   Lignes vierges : journaliers, Star Players engagés, joueur relevé."
+      ? "Blessure : C = Commotion, A = Amoché (rate le prochain match), BP = Blessure persistante, S = Séquelle (préciser M/F/AG/CP/AR), M = Mort, AS = Aucune séquelle (Apothicaire / Régénération).   Lignes vierges : journaliers, Star Players engagés, joueur relevé."
       : "Lignes vierges : journaliers, Star Players engagés, joueur relevé.",
     page.margin,
     end,

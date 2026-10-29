@@ -45,7 +45,7 @@ import {
 import { parseStringArrayJson } from "./pro-player-career-stats";
 import {
   eliminationEarnsSpp,
-  isInjurySeverity,
+  eliminationOccurred,
   type MatchEventInput,
   type MatchEventKind,
   type MatchSummaryOptions,
@@ -362,6 +362,10 @@ export async function computeLeaderboards(input: {
   const killCounts = new Map<string, number>();
   const aggrCounts = new Map<string, number>();
   const throwCounts = new Map<string, number>();
+  // Atterrissages réussis (joueur LANCÉ) : 1 PSP chacun, comme le Lancer
+  // Sécurisé du lanceur (`throwCounts`) — les deux entrent dans les PSP de
+  // saison.
+  const landingCounts = new Map<string, number>();
   const sufferedCounts = new Map<string, number>();
   // Catégories aussi dérivables des events -> scope par-saison (vs career).
   const tdCounts = new Map<string, number>();
@@ -426,15 +430,17 @@ export async function computeLeaderboards(input: {
         }
         if (e.kind === "aggression") bump(aggrCounts, e.actorPlayerId);
         if (e.kind === "team_throw") bump(throwCounts, e.actorPlayerId);
+        if (e.kind === "ttm_landing") bump(landingCounts, e.actorPlayerId);
       }
-      // Une élimination SUBIE suppose une blessure consignée : une agression
-      // qui rate son effet, comme un blocage sans résultat, ne sort personne.
-      // Sans ce filtre, la victime d'une agression sans conséquence montait
-      // au classement du sac de frappe.
+      // Une élimination SUBIE suppose une élimination effective : une
+      // agression qui rate son effet ne sort personne (sans ce filtre, sa
+      // victime montait au classement du sac de frappe). Une élimination
+      // soignée par l'Apothicaire ou la Régénération, elle, a bien sorti son
+      // joueur — même règle que la feuille (`eliminationOccurred`).
       if (
         e.targetPlayerId &&
         SUFFERED_KINDS.has(e.kind) &&
-        isInjurySeverity(e.injurySeverity)
+        eliminationOccurred(toSummaryEvent(e))
       ) {
         bump(sufferedCounts, e.targetPlayerId);
       }
@@ -477,6 +483,8 @@ export async function computeLeaderboards(input: {
         casualties: casCounts.get(p.id) ?? 0,
         completions: compCounts.get(p.id) ?? 0,
         interceptions: intCounts.get(p.id) ?? 0,
+        ttmLandings: landingCounts.get(p.id) ?? 0,
+        safeThrows: throwCounts.get(p.id) ?? 0,
         mvps: mvpCounts.get(p.id) ?? 0,
       },
       modifierByRoster.get(p.team.roster),

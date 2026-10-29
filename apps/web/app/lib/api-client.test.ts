@@ -74,6 +74,52 @@ describe("parseApiBody", () => {
   });
 });
 
+describe("parseApiBody — code et détails d'un refus", () => {
+  it("propage { code, details } d'une enveloppe d'erreur", () => {
+    let caught: unknown;
+    try {
+      parseApiBody(
+        {
+          success: false,
+          error: "Feuille non ouverte",
+          code: "previous_match_pending",
+          details: { canForce: true, blocking: [{ pairingId: "p2" }] },
+        },
+        false,
+      );
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(ApiClientError);
+    expect(caught).toMatchObject({
+      message: "Feuille non ouverte",
+      code: "previous_match_pending",
+      details: { canForce: true, blocking: [{ pairingId: "p2" }] },
+    });
+  });
+
+  it("sans code ni détails : rien d'inventé", () => {
+    let caught: ApiClientError | undefined;
+    try {
+      parseApiBody({ success: false, error: "msg" }, false);
+    } catch (e) {
+      caught = e as ApiClientError;
+    }
+    expect(caught?.code).toBeUndefined();
+    expect(caught?.details).toBeUndefined();
+  });
+
+  it("ignore des détails qui ne sont pas un objet", () => {
+    let caught: ApiClientError | undefined;
+    try {
+      parseApiBody({ success: false, error: "msg", details: [1, 2] }, false);
+    } catch (e) {
+      caught = e as ApiClientError;
+    }
+    expect(caught?.details).toBeUndefined();
+  });
+});
+
 describe("ApiClientError", () => {
   it("expose le statut HTTP optionnel", () => {
     const err = new ApiClientError("oops", 404);

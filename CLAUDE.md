@@ -497,6 +497,26 @@ fige l'ÉTAT COMPLET (joueurs, staff, VE/VEA, trésorerie, fans, journaliers)
 à `createMatchSheet`, et rattrape les feuilles antérieures **à la lecture**
 en PRÉSERVANT les valeurs déjà figées (`parseFrozenTeamValues`).
 
+Corollaire (retour testeur, 2026-10-29) : un gel à l'ouverture ne vaut que
+s'il part d'un état À JOUR. Une J+1 ouverte avant la validation de la J
+restait « comme si les équipes n'avaient pas joué ». Deux gardes, sans
+colonne nouvelle :
+
+- **à l'ouverture** (`league-sheet-open-guard`, pur) : refus 409
+  `previous_match_pending` tant qu'une rencontre d'une journée ANTÉRIEURE de
+  la saison, impliquant une des deux équipes, n'est pas close ; le
+  commissaire force (`force: true`) une journée reportée, jamais un coach ;
+- **après** (`league-sheet-snapshot-freshness`, pur) : chaque gel porte déjà
+  son `capturedAt` — une autre feuille de l'équipe validée ou invalidée
+  APRÈS le rend périmé (`snapshotFreshness`). `POST …/sheet/refresh` refait
+  le gel sans rien préserver, en brouillon seulement, et refuse si la saisie
+  cite un joueur que le nouveau gel ne connaît plus.
+
+Piège de test : une spec e2e qui joue la journée 2 d'une équipe avant la
+journée 1 de son adversaire doit désormais OUVRIR la feuille en commissaire
+forcé. Un refus porteur de données sert `{ code, details }` dans l'enveloppe
+d'erreur ; le client web les propage (`ApiClientError.details`).
+
 ### `computedSpp` doit couvrir les joueurs SANS stat-line
 
 Le summarizer ne produit une stat-line que pour les joueurs ayant un
@@ -774,11 +794,23 @@ réécrit pour que l'invalidation reprenne le bon montant), idempotent et
 journalisé. Script `db:resync-sheet-casualties` (simulation par défaut,
 `-- --apply`). Même posture que `db:repair-build-psp`.
 
+**Élimination ≠ blessure** (2026-10-29, règle v2) : une élimination soignée
+par l'Apothicaire ou la Régénération reste une sortie et rapporte ses PSP
+(« même si l'élimination est ensuite annulée »). `eliminationOccurred` dit
+qu'il y a eu élimination (Blocage / Action Spéciale : par le TYPE, gravité ou
+non ; les autres : gravité ou issue `healed` « Aucune séquelle ») ;
+`isInjurySeverity` ne sert qu'à ce qui se PERSISTE (absence, séquelle, mort,
+Haine, relevé). `healed` vit dans la colonne de gravité et n'entre jamais
+dans `summary.injuries`. Même passe : le « Lancer Sécurisé » (`team_throw`,
+1 PSP au LANCEUR, `safeThrows`) s'ajoute à l'atterrissage (1 PSP au lancé) —
+il n'était pas câblé. Les deux sont rattrapés par `CASUALTY_RULE_VERSION = 2`.
+
 Compteur limitrophe à NE PAS aligner : le « sac de frappe » compte les
 éliminations SUBIES, volontairement plus large (un joueur sorti par une
 agression ou par le public l'est bel et bien). Il lui manquait en revanche la
 condition de base — une blessure effectivement consignée
-(`isInjurySeverity`) : une agression sans effet classait sa cible.
+(`isInjurySeverity`) : une agression sans effet classait sa cible. Depuis la
+règle v2, il lit `eliminationOccurred` : une élimination soignée y compte.
 
 ### Un correctif de CALCUL ne corrige pas un compteur PERSISTÉ
 
@@ -2439,3 +2471,12 @@ edition du `.json`, `pnpm --filter web typecheck` +
   `Team.leagueFreeFan` (trois états) et `LeagueParticipant.freeFanGrant` ;
   règle pure partagée serveur / web ; plus de repli `|| 1`. Sans rattrapage
   de l'existant.
+- **2026-10-29** : **Feuille à jour, PSP complets** (retour testeur Discord,
+  change OpenSpec `match-sheet-freshness-and-spp`) — une feuille de ligue ne
+  s'ouvre plus avant la clôture des journées précédentes de ses deux équipes
+  (bypass commissaire), se signale périmée quand une autre feuille de
+  l'équipe est validée ou invalidée après son gel, et se met à jour d'un
+  clic avant toute soumission ; une élimination soignée (Apothicaire,
+  Régénération) reste une sortie qui rapporte ses PSP (issue « Aucune
+  séquelle ») ; le Lancer Sécurisé rapporte 1 PSP au lanceur ; rattrapage
+  du passé par `CASUALTY_RULE_VERSION = 2`.

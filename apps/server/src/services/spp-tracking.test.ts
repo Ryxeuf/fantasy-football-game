@@ -24,6 +24,20 @@ describe("calculateAggregateSPP (FR18 — PSP de saison)", () => {
     ).toBe(21);
   });
 
+  it("compte atterrissages et Lancers Sécurisés (1 PSP chacun)", () => {
+    expect(
+      calculateAggregateSPP({
+        touchdowns: 0,
+        casualties: 0,
+        completions: 0,
+        interceptions: 0,
+        ttmLandings: 1,
+        safeThrows: 3,
+        mvps: 0,
+      }),
+    ).toBe(4);
+  });
+
   it("compte plusieurs MVP (×4 chacun), pas un simple booléen", () => {
     expect(
       calculateAggregateSPP({
@@ -163,6 +177,33 @@ describe("calculatePlayerSPP", () => {
       mvp: false,
     };
     expect(calculatePlayerSPP(stats, { bagarreursBrutaux: true })).toBe(3);
+  });
+
+  // Table des PSP : « Lancer Sécurisé — effectuer un Lancer de Coéquipier
+  // réussi » rapporte 1 PSP au LANCEUR, indépendamment de l'atterrissage.
+  it("compte 1 PSP par Lancer Sécurisé, sans override d'équipe", () => {
+    const stats: PlayerMatchStats = {
+      touchdowns: 0,
+      casualties: 0,
+      completions: 0,
+      interceptions: 0,
+      safeThrows: 2,
+      mvp: false,
+    };
+    expect(calculatePlayerSPP(stats)).toBe(2);
+    expect(calculatePlayerSPP(stats, { bagarreursBrutaux: true })).toBe(2);
+  });
+
+  it("rétro-compat : sans `safeThrows`, rien n'est ajouté", () => {
+    expect(
+      calculatePlayerSPP({
+        touchdowns: 0,
+        casualties: 0,
+        completions: 1,
+        interceptions: 0,
+        mvp: false,
+      }),
+    ).toBe(1);
   });
 });
 
