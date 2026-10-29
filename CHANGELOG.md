@@ -1,3 +1,10 @@
+## [1.259.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.1...v1.259.2) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* **web:** polices auto-hébergées, le build ne dépend plus de Google Fonts ([ccc05c1](https://github.com/Ryxeuf/fantasy-football-game/commit/ccc05c1e88a745b92f0624021d025675bf739c0e))
+
 ## [1.259.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.0...v1.259.1) (2026-10-29)
 
 
