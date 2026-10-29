@@ -264,7 +264,9 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
   beforeAll(async () => {
     await resetDb();
     s = await setupOrcJourneymen("orc-jm");
-    await post(s.url, s.coachToken, {});
+    // L'adversaire n'a pas joué sa journée 1 : rencontre reportée, que la
+    // garde d'ouverture réserve au commissaire.
+    await post(s.url, s.commissionerToken, { force: true });
   });
 
   it("E37 — le roster orque propose ses DEUX Trois-quarts, et le choix par journalier re-fige la VEA et le roster du match", async () => {

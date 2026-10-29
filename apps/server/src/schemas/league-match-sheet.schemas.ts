@@ -359,6 +359,17 @@ export const hateChoicesSchema = z.object({
 });
 export type HateChoicesBody = z.infer<typeof hateChoicesSchema>;
 
+/**
+ * `POST /pairings/:pairingId/sheet` — ouverture de la feuille. `force` : le
+ * commissaire l'ouvre malgré une rencontre antérieure encore ouverte
+ * (journée reportée) ; ignoré pour un coach. Corps absent = `{}`.
+ */
+export const createMatchSheetSchema = z.preprocess(
+  (v) => v ?? {},
+  z.object({ force: z.boolean().optional() }),
+);
+export type CreateMatchSheetBody = z.infer<typeof createMatchSheetSchema>;
+
 export const invalidateSheetSchema = z.object({
   reason: z.string().max(500).optional(),
   // Deblocage « advancement-consumed » : retire aussi les evolutions

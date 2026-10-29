@@ -396,7 +396,9 @@ describe("E2E API — corrections FDM", () => {
         2,
       );
       const url = sheetUrl(nextPairingId);
-      await post(url, nextHomeToken, {});
+      // L'adversaire n'a pas joué sa journée 1 : la feuille ne s'ouvre que
+      // forcée par le commissaire (garde d'ouverture, journée reportée).
+      await post(url, ctx.commissionerToken, { force: true });
       const opened = unwrap(
         await get<{ data: SheetResponse }>(url, nextHomeToken),
       );
@@ -430,7 +432,9 @@ describe("E2E API — corrections FDM", () => {
       const { ctx, nextPairingId, nextHomeToken, nextAwayToken } =
         await pairingAfterInjuries("jm-hire", 2);
       const url = sheetUrl(nextPairingId);
-      await post(url, nextHomeToken, {});
+      // L'adversaire n'a pas joué sa journée 1 : la feuille ne s'ouvre que
+      // forcée par le commissaire (garde d'ouverture, journée reportée).
+      await post(url, ctx.commissionerToken, { force: true });
       const opened = unwrap(
         await get<{ data: SheetResponse }>(url, nextHomeToken),
       );

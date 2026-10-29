@@ -179,6 +179,12 @@ import {
 } from "./league-sheet-journeyman-advancements";
 import { serverLog } from "../utils/server-log";
 import {
+  CLOSED_PAIRING_STATUSES,
+  findBlockingPreviousPairings,
+  previousMatchPendingMessage,
+  type BlockingPreviousPairing,
+} from "./league-sheet-open-guard";
+import {
   buildHateCandidateViews,
   mergeHateChoices,
   parseHateChoices,
@@ -634,8 +640,14 @@ export class MatchSheetError extends Error {
       | "hate_wrong_side"
       | "hate_invalid_candidate"
       | "hate_invalid_keyword"
-      | "coach_submissions_missing",
+      | "coach_submissions_missing"
+      | "previous_match_pending",
     message: string,
+    /**
+     * Données structurées du refus, servies telles quelles à l'UI (ex. les
+     * rencontres antérieures qui bloquent l'ouverture d'une feuille).
+     */
+    public readonly details?: Readonly<Record<string, unknown>>,
   ) {
     super(message);
     this.name = "MatchSheetError";
@@ -934,10 +946,16 @@ function isHeaderOnlySnapshot(raw: unknown): boolean {
 export async function createMatchSheet(input: {
   pairingId: string;
   userId: string;
+  /**
+   * Commissaire seulement : ouvre la feuille malgré une rencontre antérieure
+   * encore ouverte (journée reportée). Ignoré pour un coach.
+   */
+  force?: boolean;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
-  if (!side && !(await isCommissioner(ctx, input.userId))) {
+  const commissioner = await isCommissioner(ctx, input.userId);
+  if (!side && !commissioner) {
     throw new MatchSheetError(
       "not_a_participant",
       "Seuls les 2 coachs et le commissaire peuvent ouvrir la feuille",
@@ -947,6 +965,19 @@ export async function createMatchSheet(input: {
     where: sheetWhere(ctx),
   });
   if (existing) return existing;
+
+  // Le gel ci-dessous fige l'état des deux équipes : il ne doit pas partir
+  // d'un état auquel manque une rencontre antérieure non encore validée.
+  if (ctx.kind === "league") {
+    const blocking = await previousPendingPairings(ctx);
+    if (blocking.length > 0 && !(commissioner && input.force === true)) {
+      throw new MatchSheetError(
+        "previous_match_pending",
+        previousMatchPendingMessage(blocking, commissioner),
+        { blocking, canForce: commissioner },
+      );
+    }
+  }
 
   const created = await prisma.leagueMatchSheet.create({
     data: { ...sheetWhere(ctx), status: "draft" },
@@ -969,6 +1000,88 @@ export async function createMatchSheet(input: {
     }
   }
   return created;
+}
+
+/**
+ * Rencontres d'une journée antérieure, dans la même saison, qui impliquent
+ * l'une des deux équipes et ne sont pas closes (cf. `league-sheet-open-guard`).
+ * Best-effort : une lecture en échec n'empêche pas d'ouvrir la feuille — la
+ * garde protège d'un oubli, elle n'est pas une frontière de sécurité.
+ */
+async function previousPendingPairings(
+  ctx: PairingContext,
+): Promise<BlockingPreviousPairing[]> {
+  try {
+    const current = (await prisma.leaguePairing.findUnique({
+      where: { id: ctx.pairingId },
+      select: {
+        id: true,
+        round: { select: { seasonId: true, roundNumber: true } },
+      },
+    })) as {
+      id: string;
+      round?: { seasonId?: string; roundNumber?: number } | null;
+    } | null;
+    const seasonId = current?.round?.seasonId;
+    const roundNumber = current?.round?.roundNumber;
+    if (!current || !seasonId || typeof roundNumber !== "number") return [];
+    const teamIds = [...new Set([ctx.homeTeamId, ctx.awayTeamId])].filter(
+      Boolean,
+    );
+    if (teamIds.length === 0) return [];
+    const rows = ((await prisma.leaguePairing.findMany({
+      where: {
+        id: { not: ctx.pairingId },
+        status: { notIn: [...CLOSED_PAIRING_STATUSES] },
+        round: { seasonId, roundNumber: { lt: roundNumber } },
+        OR: [
+          { homeParticipant: { teamId: { in: teamIds } } },
+          { awayParticipant: { teamId: { in: teamIds } } },
+        ],
+      },
+      select: {
+        id: true,
+        status: true,
+        round: { select: { roundNumber: true, name: true } },
+        homeParticipant: {
+          select: { teamId: true, team: { select: { name: true } } },
+        },
+        awayParticipant: {
+          select: { teamId: true, team: { select: { name: true } } },
+        },
+      },
+    })) ?? []) as Array<{
+      id: string;
+      status: string;
+      round: { roundNumber: number; name: string | null };
+      homeParticipant: { teamId: string; team: { name: string } };
+      awayParticipant: { teamId: string; team: { name: string } };
+    }>;
+    return findBlockingPreviousPairings({
+      current: {
+        id: ctx.pairingId,
+        roundNumber,
+        homeTeamId: ctx.homeTeamId,
+        awayTeamId: ctx.awayTeamId,
+      },
+      candidates: rows.map((r) => ({
+        id: r.id,
+        status: r.status,
+        roundNumber: r.round.roundNumber,
+        roundName: r.round.name,
+        homeTeamId: r.homeParticipant.teamId,
+        homeTeamName: r.homeParticipant.team.name,
+        awayTeamId: r.awayParticipant.teamId,
+        awayTeamName: r.awayParticipant.team.name,
+      })),
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    serverLog.error(
+      `[league-match-sheet] garde d'ouverture illisible pairing=${ctx.pairingId}: ${msg}`,
+    );
+    return [];
+  }
 }
 
 async function loadSheetOrThrow(ctx: PairingContext) {

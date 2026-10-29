@@ -7,7 +7,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    leaguePairing: { findUnique: vi.fn(), count: vi.fn() },
+    leaguePairing: { findUnique: vi.fn(), findMany: vi.fn(), count: vi.fn() },
     // Résolution POLYMORPHE de la rencontre (ligue puis coupe) : le mock
     // doit déclarer les deux, sinon `resolveCompetitionPairing` casse.
     // Non renseigné (undefined) ⇒ ce n'est pas une coupe, comme avant.
@@ -347,6 +347,126 @@ describe("Lot G — league-match-sheet", () => {
       expect(
         (out as { rosterSnapshotHome?: unknown }).rosterSnapshotHome,
       ).toBeDefined();
+    });
+
+    // Retour testeur : une feuille de J3 ouverte avant la validation de J2
+    // figeait l'état d'avant J2. Une rencontre antérieure encore ouverte
+    // bloque désormais l'ouverture — sauf si le commissaire force.
+    describe("garde d'ouverture : rencontre antérieure non close", () => {
+      function arrangeBlocked() {
+        mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+          id: "pair-1",
+          round: {
+            seasonId: "S1",
+            roundNumber: 3,
+            season: { league: { id: "L1", creatorId: COMMISH } },
+          },
+          homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+          awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+        });
+        mockPrisma.leaguePairing.findMany.mockResolvedValue([
+          {
+            id: "pair-j2",
+            status: "scheduled",
+            round: { roundNumber: 2, name: null },
+            homeParticipant: { teamId: "team-home", team: { name: "Paladins" } },
+            awayParticipant: { teamId: "team-x", team: { name: "Elfes" } },
+          },
+        ]);
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue(null);
+        mockPrisma.leagueMatchSheet.create.mockResolvedValue({
+          id: "ms-new",
+          status: "draft",
+        });
+      }
+
+      it("refuse un coach, rencontres bloquantes à l'appui", async () => {
+        arrangeBlocked();
+        const err = await createMatchSheet({
+          pairingId: "pair-1",
+          userId: HOME,
+        }).catch((e: unknown) => e);
+        expect(err).toBeInstanceOf(MatchSheetError);
+        expect(err).toMatchObject({
+          code: "previous_match_pending",
+          details: {
+            canForce: false,
+            blocking: [
+              expect.objectContaining({
+                pairingId: "pair-j2",
+                roundLabel: "journée 2",
+                teamNames: ["Paladins"],
+              }),
+            ],
+          },
+        });
+        expect(mockPrisma.leagueMatchSheet.create).not.toHaveBeenCalled();
+        // La requête ne lit que les journées antérieures de la saison, non
+        // closes, des deux équipes.
+        expect(mockPrisma.leaguePairing.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: expect.objectContaining({
+              id: { not: "pair-1" },
+              status: { notIn: ["played", "forfeit_home", "forfeit_away", "cancelled"] },
+              round: { seasonId: "S1", roundNumber: { lt: 3 } },
+            }),
+          }),
+        );
+      });
+
+      it("un coach ne peut pas forcer", async () => {
+        arrangeBlocked();
+        await expect(
+          createMatchSheet({ pairingId: "pair-1", userId: HOME, force: true }),
+        ).rejects.toMatchObject({ code: "previous_match_pending" });
+        expect(mockPrisma.leagueMatchSheet.create).not.toHaveBeenCalled();
+      });
+
+      it("le commissaire est prévenu qu'il peut forcer…", async () => {
+        arrangeBlocked();
+        await expect(
+          createMatchSheet({ pairingId: "pair-1", userId: COMMISH }),
+        ).rejects.toMatchObject({
+          code: "previous_match_pending",
+          details: { canForce: true },
+        });
+      });
+
+      it("… et ouvre la feuille quand il force", async () => {
+        arrangeBlocked();
+        const out = await createMatchSheet({
+          pairingId: "pair-1",
+          userId: COMMISH,
+          force: true,
+        });
+        expect(out).toMatchObject({ id: "ms-new" });
+        expect(mockPrisma.leagueMatchSheet.create).toHaveBeenCalled();
+      });
+
+      it("aucune rencontre antérieure ouverte : la feuille s'ouvre", async () => {
+        arrangeBlocked();
+        mockPrisma.leaguePairing.findMany.mockResolvedValue([]);
+        const out = await createMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out).toMatchObject({ id: "ms-new" });
+      });
+
+      it("une feuille déjà ouverte se relit sans garde", async () => {
+        arrangeBlocked();
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        const out = await createMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out).toMatchObject({ id: "ms1" });
+        expect(mockPrisma.leaguePairing.findMany).not.toHaveBeenCalled();
+      });
+
+      it("garde illisible : best-effort, la feuille s'ouvre", async () => {
+        arrangeBlocked();
+        mockPrisma.leaguePairing.findMany.mockRejectedValue(new Error("db down"));
+        const out = await createMatchSheet({ pairingId: "pair-1", userId: HOME });
+        expect(out).toMatchObject({ id: "ms-new" });
+      });
     });
 
     it("gel de démarrage best-effort : un échec n'empêche pas l'ouverture", async () => {

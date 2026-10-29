@@ -56,6 +56,7 @@ import {
 import { WeatherReminder } from "./_components/WeatherReminder";
 import { WeatherScene } from "./_components/WeatherScene";
 import { parsePurchases } from "./purchases";
+import { sheetOpenBlockFromError, type SheetOpenBlock } from "./open-guard";
 import {
   EVENT_KIND_OPTIONS,
   eventKindHint,
@@ -484,10 +485,27 @@ export default function MatchSheetPage() {
     [load],
   );
 
-  const createSheet = () =>
-    run(() =>
-      apiRequest(`/leagues/pairings/${pairingId}/sheet`, { method: "POST" }),
-    );
+  // Refus d'ouverture (rencontre antérieure non close) : montré à part, avec
+  // les rencontres à valider d'abord et, pour le commissaire, « forcer ».
+  const [openBlock, setOpenBlock] = useState<SheetOpenBlock | null>(null);
+  const createSheet = async (force = false) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiRequest(`/leagues/pairings/${pairingId}/sheet`, {
+        method: "POST",
+        body: JSON.stringify(force ? { force: true } : {}),
+      });
+      setOpenBlock(null);
+      await load();
+    } catch (e: unknown) {
+      const block = sheetOpenBlockFromError(e);
+      if (block) setOpenBlock(block);
+      else setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const addEvent = () =>
     run(() =>
@@ -911,10 +929,47 @@ export default function MatchSheetPage() {
             {error}
           </p>
         )}
+        {openBlock && (
+          <div
+            className="mb-4 space-y-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+            data-testid="sheet-open-blocked"
+          >
+            <p className="font-semibold">
+              Une rencontre précédente n&apos;est pas encore close
+            </p>
+            <p>{openBlock.message}</p>
+            {openBlock.blocking.length > 0 && (
+              <ul className="list-disc pl-5">
+                {openBlock.blocking.map((b) => (
+                  <li key={b.pairingId}>
+                    <Link
+                      href={dynamicRoute(`/leagues/pairings/${b.pairingId}/sheet`)}
+                      className="underline"
+                      data-testid={`sheet-open-blocking-${b.pairingId}`}
+                    >
+                      {b.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {openBlock.canForce && (
+              <button
+                type="button"
+                className="rounded border border-amber-500 bg-white px-3 py-1.5 font-semibold text-amber-900 disabled:opacity-50"
+                onClick={() => void createSheet(true)}
+                disabled={busy}
+                data-testid="open-sheet-force"
+              >
+                Ouvrir quand même (rencontre reportée)
+              </button>
+            )}
+          </div>
+        )}
         <button
           type="button"
           className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50"
-          onClick={createSheet}
+          onClick={() => void createSheet()}
           disabled={busy}
           data-testid="open-sheet"
         >

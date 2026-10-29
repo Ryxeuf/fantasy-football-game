@@ -183,6 +183,8 @@ import {
   type HateChoicesBody,
   postMatchSchema,
   invalidateSheetSchema,
+  createMatchSheetSchema,
+  type CreateMatchSheetBody,
   type AddEventBody,
   type PreMatchBody,
   type PostMatchBody,
@@ -240,7 +242,7 @@ import {
   parseLeagueTieBreakRules,
   readStoredLeagueTieBreakRules,
 } from "../services/league-standings-order";
-import { sendError, sendSuccess } from "../utils/api-response";
+import { apiError, sendError, sendSuccess } from "../utils/api-response";
 import { hasRole } from "../utils/roles";
 import {
   canViewLeagueRow,
@@ -387,9 +389,20 @@ function domainError(res: Response, e: unknown): void {
               e.code === "invalidation_window_closed" ||
               e.code === "invalidation_failed" ||
               e.code === "raise_dead_not_allowed" ||
-              e.code === "coach_submissions_missing"
+              e.code === "coach_submissions_missing" ||
+              e.code === "previous_match_pending"
             ? 409
             : 400;
+    // Un refus qui porte des données (ex. les rencontres qui bloquent
+    // l'ouverture) les sert avec son code : l'UI en a besoin pour agir.
+    if (e.details) {
+      res.status(status).json({
+        ...apiError(e.message),
+        code: e.code,
+        details: e.details,
+      });
+      return;
+    }
     sendError(res, e.message, status);
     return;
   }
@@ -2223,10 +2236,12 @@ export async function handleCreateMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  const body: CreateMatchSheetBody = req.body;
   try {
     const sheet = await createMatchSheet({
       pairingId: req.params.pairingId,
       userId,
+      force: body?.force,
     });
     sendSuccess(res, sheet, 201);
   } catch (e: unknown) {
@@ -3273,7 +3288,12 @@ router.patch(
 
 // Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
 router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
-router.post("/pairings/:pairingId/sheet", authUser, handleCreateMatchSheet);
+router.post(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  validate(createMatchSheetSchema),
+  handleCreateMatchSheet,
+);
 router.patch(
   "/pairings/:pairingId/sheet/pre-match",
   authUser,
