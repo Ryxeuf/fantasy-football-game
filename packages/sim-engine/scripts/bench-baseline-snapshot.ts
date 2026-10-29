@@ -11,6 +11,12 @@
  * Usage
  * -----
  *   pnpm sim:bench:snapshot > bench/bench-baseline.json
+ *   pnpm sim:bench:snapshot --apply                                   # réécrit la baseline des PR
+ *   pnpm sim:bench:snapshot --baseline=bench/bench-baseline-nightly.json --apply
+ *   pnpm sim:bench:snapshot --runs=100        # mêmes duels, autre taille d'échantillon
+ *
+ * Une baseline ne vaut que pour SA taille d'échantillon : le gate nocturne
+ * (100 matchs par duel) a sa propre baseline, `bench-baseline-nightly.json`.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -31,15 +37,16 @@ import { ENGINE_VER } from '../src/types';
 const PACKAGE_ROOT = resolve(fileURLToPath(import.meta.url), '../..');
 const DEFAULT_BASELINE_PATH = resolve(PACKAGE_ROOT, 'bench/bench-baseline.json');
 
-function snapshotEntry(entry: BenchBaselineEntry): BenchBaselineEntry {
+function snapshotEntry(entry: BenchBaselineEntry, runsOverride?: number): BenchBaselineEntry {
   const home = PRO_LEAGUE_TEAM_BY_ID[entry.homeId];
   const away = PRO_LEAGUE_TEAM_BY_ID[entry.awayId];
   if (!home || !away) {
     throw new Error(`Unknown team in baseline (${entry.homeId} / ${entry.awayId})`);
   }
+  const runs = runsOverride ?? entry.runs;
   const result = runBench({
     pairing: { home, away },
-    runs: entry.runs,
+    runs,
     seedOffset: entry.seedOffset,
     driverKind: entry.driverKind,
   });
@@ -48,7 +55,7 @@ function snapshotEntry(entry: BenchBaselineEntry): BenchBaselineEntry {
   return {
     homeId: entry.homeId,
     awayId: entry.awayId,
-    runs: entry.runs,
+    runs,
     seedOffset: entry.seedOffset,
     ...(entry.tolerance !== undefined ? { tolerance: entry.tolerance } : {}),
     ...(entry.driverKind !== undefined ? { driverKind: entry.driverKind } : {}),
@@ -70,22 +77,30 @@ function main(argv: readonly string[]): number {
     args: [...argv],
     options: {
       apply: { type: 'boolean' },
+      baseline: { type: 'string' },
+      runs: { type: 'string' },
     },
     strict: true,
   });
   const apply = values.apply === true;
-  const raw = JSON.parse(readFileSync(DEFAULT_BASELINE_PATH, 'utf8'));
+  const baselinePath = values.baseline ? resolve(PACKAGE_ROOT, values.baseline) : DEFAULT_BASELINE_PATH;
+  const runsOverride = values.runs ? Number.parseInt(values.runs, 10) : undefined;
+  if (runsOverride !== undefined && (!Number.isInteger(runsOverride) || runsOverride <= 0)) {
+    process.stderr.write('bench-snapshot: --runs must be a positive integer\n');
+    return 2;
+  }
+  const raw = JSON.parse(readFileSync(baselinePath, 'utf8'));
   const baseline = parseBenchBaseline(raw);
   const refreshed: BenchBaseline = {
     engineVer: ENGINE_VER,
     snapshotAt: new Date().toISOString().slice(0, 10),
     tolerance: baseline.tolerance,
-    pairings: baseline.pairings.map(snapshotEntry),
+    pairings: baseline.pairings.map((entry) => snapshotEntry(entry, runsOverride)),
   };
   const serialized = JSON.stringify(refreshed, null, 2) + '\n';
   if (apply) {
-    writeFileSync(DEFAULT_BASELINE_PATH, serialized, 'utf8');
-    process.stderr.write(`Wrote ${DEFAULT_BASELINE_PATH}\n`);
+    writeFileSync(baselinePath, serialized, 'utf8');
+    process.stderr.write(`Wrote ${baselinePath}\n`);
   } else {
     process.stdout.write(serialized);
   }
