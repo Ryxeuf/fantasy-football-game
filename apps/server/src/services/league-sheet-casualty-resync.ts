@@ -25,6 +25,10 @@
  *     bonus commissaire conservé) — et réécrit le snapshot pour qu'une
  *     invalidation ultérieure reprenne exactement ce qui a été appliqué.
  *
+ * Règle v2 : la même passe rattrape les Lancers Sécurisés (1 PSP au lanceur
+ * d'un Lancer de Coéquipier réussi), jamais crédités avant elle — ils ne
+ * dépendent pas des sorties, mais du même summarizer et du même snapshot.
+ *
  * Idempotent : une feuille déjà à jour ne produit aucun delta et n'écrit
  * rien. Le calcul (`planCasualtyResync`) est PUR ; l'application est
  * journalisée dans le journal d'équipe des deux équipes.
@@ -55,7 +59,11 @@ import {
   type BonusAppliedEntry,
   type BonusRule,
 } from "./league-bonus-points";
-import { calculatePlayerSPP, loadLeagueSPPContext } from "./spp-tracking";
+import {
+  calculatePlayerSPP,
+  loadLeagueSPPContext,
+  SPP_VALUES,
+} from "./spp-tracking";
 import { isSyntheticSheetPlayerId } from "./league-sheet-star-players";
 import { captureTeamState, safeRecordTeamAudit } from "./team-audit";
 import { serverLog } from "../utils/server-log";
@@ -68,13 +76,25 @@ export type CasualtyResyncSkipReason =
   | "participant-missing"
   | "season-completed";
 
-/** Un joueur dont la sortie change de qualification. */
+/** Un joueur dont la sortie (ou le Lancer Sécurisé) change de qualification. */
 export interface CasualtyResyncPlayerDelta {
   readonly teamPlayerId: string;
   readonly side: MatchEventTeam;
   /** Sorties créditées avant / après. */
   readonly before: number;
   readonly after: number;
+  /**
+   * Lancers Sécurisés crédités avant / après — présent seulement s'ils
+   * changent. Ils n'étaient pas comptés avant la règle v2 : la même passe
+   * les rattrape (1 PSP au lanceur, sans modificateur d'équipe).
+   */
+  readonly safeThrows?: { readonly before: number; readonly after: number };
+  /**
+   * Le joueur n'avait AUCUNE ligne de stats à la validation : son match
+   * joué n'a donc pas été crédité (la validation crédite un match par
+   * ligne). La resync l'ajoute, comme l'invalidation le reprendra.
+   */
+  readonly newStatLine?: true;
   /** PSP à ajouter au joueur (négatif = reprise). */
   readonly sppDelta: number;
 }
@@ -148,14 +168,24 @@ export function planCasualtyResync(
     away: summary.casualtiesAway,
   };
 
-  const oldById = new Map<string, number>();
-  for (const s of snapshot.input.playerStats) {
-    oldById.set(s.teamPlayerId, s.casualties ?? 0);
+  interface Credited {
+    readonly cas: number;
+    readonly throws: number;
   }
-  const newById = new Map<string, number>();
+  const oldById = new Map<string, Credited>();
+  for (const s of snapshot.input.playerStats) {
+    oldById.set(s.teamPlayerId, {
+      cas: s.casualties ?? 0,
+      throws: s.safeThrows ?? 0,
+    });
+  }
+  const newById = new Map<string, Credited>();
   for (const s of summary.playerStats) {
     if (isSyntheticSheetPlayerId(s.playerId)) continue;
-    newById.set(s.playerId, s.casualtiesInflicted);
+    newById.set(s.playerId, {
+      cas: s.casualtiesInflicted,
+      throws: s.safeThrows ?? 0,
+    });
   }
 
   const players: CasualtyResyncPlayerDelta[] = [];
@@ -163,15 +193,21 @@ export function planCasualtyResync(
   for (const id of ids) {
     const side = input.sideOf(id);
     if (!side) continue;
-    const oldCas = oldById.get(id) ?? 0;
-    const newCas = newById.get(id) ?? 0;
-    if (oldCas === newCas) continue;
+    const old = oldById.get(id) ?? { cas: 0, throws: 0 };
+    const now = newById.get(id) ?? { cas: 0, throws: 0 };
+    if (old.cas === now.cas && old.throws === now.throws) continue;
     players.push({
       teamPlayerId: id,
       side,
-      before: oldCas,
-      after: newCas,
-      sppDelta: (newCas - oldCas) * input.casualtySpp[side],
+      before: old.cas,
+      after: now.cas,
+      ...(old.throws !== now.throws
+        ? { safeThrows: { before: old.throws, after: now.throws } }
+        : {}),
+      ...(oldById.has(id) ? {} : { newStatLine: true as const }),
+      sppDelta:
+        (now.cas - old.cas) * input.casualtySpp[side] +
+        (now.throws - old.throws) * SPP_VALUES.safeThrow,
     });
   }
 
@@ -196,20 +232,26 @@ export function planCasualtyResync(
     };
   }
 
-  // Snapshot mis à jour : mêmes lignes, sorties réécrites. Une ligne
-  // manquante (joueur crédité sous la règle nouvelle mais absent de la
-  // saisie figée) est ajoutée avec ses seules sorties.
+  // Snapshot mis à jour : mêmes lignes, sorties (et Lancers Sécurisés)
+  // réécrits. Une ligne manquante (joueur crédité sous la règle nouvelle
+  // mais absent de la saisie figée) est ajoutée avec ses seuls compteurs.
+  const throwsOf = (delta: CasualtyResyncPlayerDelta) =>
+    delta.safeThrows ? { safeThrows: delta.safeThrows.after } : {};
   const seen = new Set<string>();
   const playerStats: OfflinePlayerStatInput[] = snapshot.input.playerStats.map(
     (s) => {
       seen.add(s.teamPlayerId);
       const delta = players.find((p) => p.teamPlayerId === s.teamPlayerId);
-      return delta ? { ...s, casualties: delta.after } : s;
+      return delta ? { ...s, casualties: delta.after, ...throwsOf(delta) } : s;
     },
   );
   for (const delta of players) {
     if (!seen.has(delta.teamPlayerId)) {
-      playerStats.push({ teamPlayerId: delta.teamPlayerId, casualties: delta.after });
+      playerStats.push({
+        teamPlayerId: delta.teamPlayerId,
+        casualties: delta.after,
+        ...throwsOf(delta),
+      });
     }
   }
 
@@ -467,6 +509,9 @@ async function applyCasualtyResync(
         data: {
           totalCasualties: atomicDelta(p.after - p.before),
           spp: atomicDelta(p.sppDelta),
+          // Ligne ajoutée au snapshot : le match joué que la validation
+          // aurait crédité (et que l'invalidation reprendra).
+          ...(p.newStatLine ? { matchesPlayed: { increment: 1 } } : {}),
         },
       }),
     );

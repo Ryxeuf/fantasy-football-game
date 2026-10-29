@@ -74,6 +74,12 @@ export interface OfflinePlayerStatInput {
   readonly interceptions?: number;
   /** Atterrissages reussis (lancer de coequipier) : 1 PSP chacun. */
   readonly ttmLandings?: number;
+  /**
+   * Lancers Securises (lancer de coequipier reussi) : 1 PSP chacun au
+   * lanceur. Absent des snapshots anterieurs (lu 0) : c'est ce qui permet a
+   * la resynchronisation de les rattraper.
+   */
+  readonly safeThrows?: number;
   readonly mvp?: boolean;
 }
 
@@ -679,6 +685,7 @@ async function applyOfflinePlayerSPP(
       completions: s.completions ?? 0,
       interceptions: s.interceptions ?? 0,
       ttmLandings: s.ttmLandings ?? 0,
+      safeThrows: s.safeThrows ?? 0,
       mvp: s.mvp ?? false,
     };
     const earned = calculatePlayerSPP(stats, modifier);

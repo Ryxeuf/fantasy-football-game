@@ -151,9 +151,19 @@ describe("eventKindHint — rappels de règle sur les PSP (E30)", () => {
   });
 
   it("ne commente pas non plus les évènements sans PSP par nature", () => {
-    for (const kind of ["kickoff", "expulsion", "team_throw"] as const) {
+    for (const kind of ["kickoff", "expulsion"] as const) {
       expect(eventKindHint(kind)).toBeNull();
     }
+  });
+
+  // Retour testeur : « les lancers de coéquipier ne donnent plus de PSP ».
+  // Le lancer crédite le lanceur, l'atterrissage le lancé : le coach doit
+  // savoir qu'il faut saisir les deux.
+  it("le lancer de coéquipier annonce le PSP du lanceur et renvoie à l'atterrissage", () => {
+    const hint = eventKindHint("team_throw") ?? "";
+    expect(hint).toMatch(/Lancer Sécurisé/);
+    expect(hint).toMatch(/1 PSP au lanceur/);
+    expect(hint).toMatch(/Atterrissage réussi/);
   });
 });
 
@@ -182,7 +192,7 @@ describe("event-fields — rappel de règle des sorties", () => {
   });
 
   it("les évènements sans élimination n'ont pas de rappel", () => {
-    for (const kind of ["kickoff", "touchdown", "pass_complete", "interception", "expulsion", "team_throw"] as const) {
+    for (const kind of ["kickoff", "touchdown", "pass_complete", "interception", "expulsion"] as const) {
       expect(eventKindHint(kind), kind).toBeNull();
     }
   });

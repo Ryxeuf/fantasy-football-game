@@ -476,6 +476,7 @@ describe("Lot G — summarizeMatchSheet", () => {
           interceptions: 0,
           aggressions: 0,
           ttmLandings: 0,
+          safeThrows: 0,
         },
       ]);
     });
@@ -485,7 +486,7 @@ describe("Lot G — summarizeMatchSheet", () => {
     const events: MatchEventInput[] = [
       { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },
       { kind: "ttm_landing", team: "home", actorPlayerId: "h9" },
-      // Le lancer lui-même (team_throw) reste sans effet sur les stats SPP.
+      // Le lancer lui-même (team_throw) crédite le LANCEUR, pas le lancé.
       { kind: "team_throw", team: "home", actorPlayerId: "h5" },
     ];
     const out = summarizeMatchSheet(events);
@@ -494,11 +495,38 @@ describe("Lot G — summarizeMatchSheet", () => {
     expect(out.casualtiesHome).toBe(0);
     const h9 = out.playerStats.find((p) => p.playerId === "h9");
     expect(h9?.ttmLandings).toBe(2);
-    expect(out.playerStats.find((p) => p.playerId === "h5")).toBeUndefined();
+    expect(h9?.safeThrows).toBe(0);
+    expect(out.playerStats.find((p) => p.playerId === "h5")).toMatchObject({
+      safeThrows: 1,
+      ttmLandings: 0,
+    });
   });
 
   // « Vol Fatal » — le joueur LANCÉ qui atterrit sur une case occupée et
   // plaque l'adversaire gagne les PSP d'Élimination si celui-ci sort.
+  // Retour testeur : « les lancers de coéquipier ne donnent plus de PSP ».
+  // La table en prévoit deux : Lancer Sécurisé (lanceur) et atterrissage
+  // (joueur lancé) — seul le second était compté.
+  it("team_throw : le lanceur (acteur) compte un Lancer Sécurisé", () => {
+    const out = summarizeMatchSheet([
+      { kind: "team_throw", team: "away", actorPlayerId: "a2" },
+      { kind: "team_throw", team: "away", actorPlayerId: "a2" },
+      { kind: "ttm_landing", team: "away", actorPlayerId: "a7" },
+    ]);
+    const thrower = out.playerStats.find((p) => p.playerId === "a2");
+    expect(thrower).toMatchObject({ side: "away", safeThrows: 2, ttmLandings: 0 });
+    const thrown = out.playerStats.find((p) => p.playerId === "a7");
+    expect(thrown).toMatchObject({ safeThrows: 0, ttmLandings: 1 });
+    // Un lancer n'est ni un score ni une sortie.
+    expect(out.scoreAway).toBe(0);
+    expect(out.casualtiesAway).toBe(0);
+  });
+
+  it("team_throw sans lanceur identifié : rien à créditer", () => {
+    const out = summarizeMatchSheet([{ kind: "team_throw", team: "home" }]);
+    expect(out.playerStats).toHaveLength(0);
+  });
+
   it("ttm_landing : PSP d'élimination réservés à Vol Fatal", () => {
     const events: MatchEventInput[] = [
       // h9 a Vol Fatal, h8 non.

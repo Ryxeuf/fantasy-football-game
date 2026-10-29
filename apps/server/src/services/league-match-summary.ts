@@ -9,7 +9,8 @@
  *     d'Agression) ;
  *   - la liste des joueurs blesses (cible + severite) ;
  *   - les stats par joueur (TD, casualties infligees, passes, receptions,
- *     interceptions, aggressions) utiles pour les SPP / classements.
+ *     interceptions, aggressions, atterrissages et lancers de coequipier)
+ *     utiles pour les SPP / classements.
  *
  * 100% pur (pas de Prisma) ⇒ testable en unit sans DB. Le service
  * `league-match-sheet` appelle cette fonction au read et a la validation
@@ -99,6 +100,13 @@ export interface PlayerStatLine {
   aggressions: number;
   /** Atterrissages reussis (lancer de coequipier) : 1 PSP chacun. */
   ttmLandings: number;
+  /**
+   * Lancers de Coequipier reussis (« Lancer Securise ») : 1 PSP chacun AU
+   * LANCEUR (acteur de `team_throw`). Distinct de l'atterrissage, qui
+   * rapporte 1 PSP au joueur LANCE : un lancer reussi peut finir sur un
+   * atterrissage rate, et inversement.
+   */
+  safeThrows: number;
 }
 
 export interface MatchSummary {
@@ -345,6 +353,7 @@ export function summarizeMatchSheet(
         interceptions: 0,
         aggressions: 0,
         ttmLandings: 0,
+        safeThrows: 0,
       };
       statsByPlayer.set(playerId, line);
     }
@@ -437,6 +446,15 @@ export function summarizeMatchSheet(
         }
         break;
       }
+      case "team_throw": {
+        // « Lancer Securise » : un Lancer de Coequipier reussi rapporte
+        // 1 PSP a son LANCEUR (l'acteur). L'atterrissage du joueur lance se
+        // saisit a part (`ttm_landing`).
+        if (ev.actorPlayerId && team) {
+          ensureStat(ev.actorPlayerId, team).safeThrows += 1;
+        }
+        break;
+      }
       case "ttm_landing": {
         // Atterrissage reussi apres un Lancer de coequipier : l'acteur
         // est le joueur LANCE, qui gagne 1 PSP (cf. spp-tracking).
@@ -472,7 +490,7 @@ export function summarizeMatchSheet(
         recordElimination(ev, team);
         break;
       }
-      // kickoff / expulsion / team_throw : pas d'impact sur score/casualty.
+      // kickoff / expulsion : pas d'impact sur score/casualty/PSP.
       case "kickoff":
       case "expulsion":
       default:

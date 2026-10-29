@@ -3890,6 +3890,40 @@ describe("Lot G — league-match-sheet", () => {
       ]);
     });
 
+    // Le Lancer Sécurisé doit entrer dans le snapshot de validation : c'est
+    // lui que l'invalidation relit pour reprendre les PSP crédités.
+    it("transmet les Lancers Sécurisés et les atterrissages au résultat offline", () => {
+      const out = buildOfflineInputFromSummary(
+        "pair-1",
+        {
+          ...baseSummary,
+          playerStats: [
+            {
+              playerId: "h4",
+              side: "home",
+              touchdowns: 0,
+              casualtiesInflicted: 0,
+              completions: 0,
+              receptions: 0,
+              interceptions: 0,
+              aggressions: 0,
+              ttmLandings: 1,
+              safeThrows: 2,
+            },
+          ],
+        },
+        {},
+        [],
+      );
+      expect(out.playerStats).toEqual([
+        expect.objectContaining({
+          teamPlayerId: "h4",
+          ttmLandings: 1,
+          safeThrows: 2,
+        }),
+      ]);
+    });
+
     it("Haine (X) : propose un candidat par sortie d'au moins un match", () => {
       const summary: MatchSummary = {
         ...baseSummary,

@@ -362,6 +362,10 @@ export async function computeLeaderboards(input: {
   const killCounts = new Map<string, number>();
   const aggrCounts = new Map<string, number>();
   const throwCounts = new Map<string, number>();
+  // Atterrissages réussis (joueur LANCÉ) : 1 PSP chacun, comme le Lancer
+  // Sécurisé du lanceur (`throwCounts`) — les deux entrent dans les PSP de
+  // saison.
+  const landingCounts = new Map<string, number>();
   const sufferedCounts = new Map<string, number>();
   // Catégories aussi dérivables des events -> scope par-saison (vs career).
   const tdCounts = new Map<string, number>();
@@ -426,6 +430,7 @@ export async function computeLeaderboards(input: {
         }
         if (e.kind === "aggression") bump(aggrCounts, e.actorPlayerId);
         if (e.kind === "team_throw") bump(throwCounts, e.actorPlayerId);
+        if (e.kind === "ttm_landing") bump(landingCounts, e.actorPlayerId);
       }
       // Une élimination SUBIE suppose une élimination effective : une
       // agression qui rate son effet ne sort personne (sans ce filtre, sa
@@ -478,6 +483,8 @@ export async function computeLeaderboards(input: {
         casualties: casCounts.get(p.id) ?? 0,
         completions: compCounts.get(p.id) ?? 0,
         interceptions: intCounts.get(p.id) ?? 0,
+        ttmLandings: landingCounts.get(p.id) ?? 0,
+        safeThrows: throwCounts.get(p.id) ?? 0,
         mvps: mvpCounts.get(p.id) ?? 0,
       },
       modifierByRoster.get(p.team.roster),

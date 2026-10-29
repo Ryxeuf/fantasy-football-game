@@ -32,7 +32,7 @@ const TALLY_COLUMNS: TallyColumn[] = [
   { key: "int", label: "Int", legend: "Interception", width: 8 },
   { key: "cas", label: "Sor", legend: "Élimination sur blocage", width: 8 },
   { key: "agg", label: "Agr", legend: "Agression", width: 8 },
-  { key: "ttm", label: "Lan", legend: "Lancer de coéquipier", width: 8 },
+  { key: "ttm", label: "Lan", legend: "Lancer de coéquipier réussi", width: 8 },
   { key: "land", label: "Att", legend: "Atterrissage réussi", width: 8 },
   { key: "exp", label: "Exp", legend: "Expulsé", width: 7.5 },
   { key: "motm", label: "JDM", legend: "Joueur du Match", width: 8 },

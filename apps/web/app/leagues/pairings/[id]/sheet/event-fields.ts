@@ -40,7 +40,7 @@ export const EVENT_KIND_OPTIONS: ReadonlyArray<EventKindOption> = [
   { value: "expulsion", label: "Expulsion" },
   { value: "crowd_surge", label: "Sortie (Public)" },
   { value: "stalling", label: "Temporisation" },
-  { value: "team_throw", label: "Lancer de coéquipier" },
+  { value: "team_throw", label: "Lancer de coéquipier réussi" },
   { value: "ttm_landing", label: "Atterrissage réussi (coéquipier lancé)" },
   { value: "special_elim", label: "Élimination sur Action Spéciale" },
   { value: "other_elim", label: "Autre élimination" },
@@ -178,6 +178,11 @@ export const EVENT_KIND_HINTS: Readonly<Partial<Record<EventKind, string>>> = {
     "La blessure éventuelle frappe le joueur qui temporise : personne ne l’inflige, aucun PSP.",
   crowd_surge:
     "Sortie infligée par le public : aucun joueur ne la revendique, donc aucun PSP — elle compte dans la colonne SP, pas dans les sorties.",
+  // Table des PSP : « Lancer Sécurisé » — un Lancer de Coéquipier réussi
+  // rapporte 1 PSP au LANCEUR. L'atterrissage est un autre évènement, qui
+  // rapporte 1 PSP au joueur lancé : saisir l'un ne crédite pas l'autre.
+  team_throw:
+    "Lancer Sécurisé : 1 PSP au lanceur. Si le joueur lancé atterrit sur ses pieds, saisis aussi « Atterrissage réussi » (1 PSP pour lui).",
   // Règle BB S3 : atterrir sur un adversaire et le plaquer ne rapporte
   // rien… sauf au porteur de « Vol Fatal », qui touche les PSP
   // d’Élimination. L’atterrissage lui-même vaut toujours 1 PSP.

@@ -2300,6 +2300,7 @@ export function buildOfflineInputFromSummary(
       completions: p.completions,
       interceptions: p.interceptions,
       ttmLandings: p.ttmLandings,
+      safeThrows: p.safeThrows,
       mvp: motmSet.has(p.playerId),
     }));
 
@@ -4632,6 +4633,7 @@ async function computeSheetSpp(input: {
         completions: s.completions,
         interceptions: s.interceptions,
         ttmLandings: s.ttmLandings,
+        safeThrows: s.safeThrows,
         mvp: motm.has(s.playerId),
       },
       modifier,

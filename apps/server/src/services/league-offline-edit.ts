@@ -516,6 +516,7 @@ export async function reverseOfflineLeagueResult(
         completions: s.completions ?? 0,
         interceptions: s.interceptions ?? 0,
         ttmLandings: s.ttmLandings ?? 0,
+        safeThrows: s.safeThrows ?? 0,
         mvp: s.mvp ?? false,
       };
       sppOps.push({

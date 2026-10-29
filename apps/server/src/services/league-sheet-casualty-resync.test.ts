@@ -351,9 +351,106 @@ describe("planCasualtyResync (pur)", () => {
     });
     expect(plan.casualties.after.home).toBe(1);
     expect(plan.players).toEqual([
-      { teamPlayerId: "h1", side: "home", before: 0, after: 1, sppDelta: 2 },
+      {
+        teamPlayerId: "h1",
+        side: "home",
+        before: 0,
+        after: 1,
+        newStatLine: true,
+        sppDelta: 2,
+      },
     ]);
     expect(plan.changed).toBe(true);
+  });
+});
+
+describe("planCasualtyResync — Lancers Sécurisés (règle v2)", () => {
+  // Un lancer de coéquipier réussi n'a jamais rien crédité au lanceur avant
+  // la règle v2 : la même passe que les sorties le rattrape.
+  it("rattrape 1 PSP par Lancer Sécurisé, sans toucher aux sorties", () => {
+    const relu = summarizeMatchSheet([
+      { kind: "team_throw", team: "home", actorPlayerId: "h1" },
+      { kind: "team_throw", team: "home", actorPlayerId: "h1" },
+    ]);
+    const plan = planCasualtyResync({
+      pairingId: "pair-1",
+      matchId: "m1",
+      snapshot: snapshot({
+        casualtiesHome: 0,
+        playerStats: [{ teamPlayerId: "h1", touchdowns: 1, casualties: 0 }],
+      }),
+      summary: relu,
+      sideOf,
+      // Bagarreurs Brutaux : le barème d'une sortie ne s'applique pas au lancer.
+      casualtySpp: { home: 3, away: 2 },
+      bonusRules: null,
+    });
+    expect(plan.players).toEqual([
+      {
+        teamPlayerId: "h1",
+        side: "home",
+        before: 0,
+        after: 0,
+        safeThrows: { before: 0, after: 2 },
+        sppDelta: 2,
+      },
+    ]);
+    expect(plan.changed).toBe(true);
+    expect(plan.casualties.after.home).toBe(0);
+    // Le snapshot garde la ligne et ses autres compteurs, lancers réécrits :
+    // une invalidation reprendra ces 2 PSP.
+    expect(plan.snapshot.input.playerStats).toEqual([
+      { teamPlayerId: "h1", touchdowns: 1, casualties: 0, safeThrows: 2 },
+    ]);
+  });
+
+  it("idempotent : un snapshot qui porte déjà ses lancers ne bouge pas", () => {
+    const relu = summarizeMatchSheet([
+      { kind: "team_throw", team: "home", actorPlayerId: "h1" },
+    ]);
+    const plan = planCasualtyResync({
+      pairingId: "pair-1",
+      matchId: "m1",
+      snapshot: snapshot({
+        casualtiesHome: 0,
+        playerStats: [{ teamPlayerId: "h1", casualties: 0, safeThrows: 1 }],
+      }),
+      summary: relu,
+      sideOf,
+      casualtySpp: { home: 2, away: 2 },
+      bonusRules: null,
+    });
+    expect(plan.players).toEqual([]);
+    expect(plan.changed).toBe(false);
+  });
+
+  it("lanceur sans ligne de stats à la validation : ligne ajoutée, match joué à créditer", () => {
+    const relu = summarizeMatchSheet([
+      { kind: "team_throw", team: "away", actorPlayerId: "a9" },
+    ]);
+    const plan = planCasualtyResync({
+      pairingId: "pair-1",
+      matchId: "m1",
+      snapshot: snapshot({ casualtiesHome: 0, playerStats: [] }),
+      summary: relu,
+      sideOf,
+      casualtySpp: { home: 2, away: 2 },
+      bonusRules: null,
+    });
+    expect(plan.players).toEqual([
+      {
+        teamPlayerId: "a9",
+        side: "away",
+        before: 0,
+        after: 0,
+        safeThrows: { before: 0, after: 1 },
+        newStatLine: true,
+        sppDelta: 1,
+      },
+    ]);
+    expect(plan.snapshot.input.playerStats).toEqual([
+      { teamPlayerId: "a9", casualties: 0, safeThrows: 1 },
+    ]);
   });
 });
 
@@ -463,6 +560,43 @@ describe("resyncValidatedSheetCasualties", () => {
     });
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     expect(mockPrisma.leagueParticipant.update).not.toHaveBeenCalled();
+  });
+
+  // Règle v2 : un lanceur qui n'avait aucune ligne de stats à la validation
+  // n'a eu ni son PSP de Lancer Sécurisé, ni son match joué (la validation
+  // crédite un match par ligne). La resync rend les deux.
+  it("application : un lanceur sans ligne figée gagne son PSP et son match joué", async () => {
+    arrangeValidatedSheet();
+    mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+      id: "ms1",
+      status: "validated",
+      prayersHome: null,
+      events: [
+        ...events,
+        { kind: "team_throw", team: "away", actorPlayerId: "a7" },
+      ],
+    });
+    mockPrisma.teamPlayer.findMany.mockResolvedValue([
+      { id: "h1", teamId: "team-home" },
+      { id: "h5", teamId: "team-home" },
+      { id: "a1", teamId: "team-away" },
+      { id: "a7", teamId: "team-away" },
+    ]);
+    await resyncValidatedSheetCasualties("pair-1", { apply: true });
+    expect(mockPrisma.teamPlayer.update).toHaveBeenCalledWith({
+      where: { id: "a7" },
+      data: {
+        totalCasualties: undefined,
+        spp: { increment: 1 },
+        matchesPlayed: { increment: 1 },
+      },
+    });
+    const matchUpdate = mockPrisma.match.update.mock.calls[0][0];
+    expect(matchUpdate.data.offlineResultInput.input.playerStats).toEqual(
+      expect.arrayContaining([
+        { teamPlayerId: "a7", casualties: 0, safeThrows: 1 },
+      ]),
+    );
   });
 
   it("application : participants, joueur, snapshot — et journal des deux équipes", async () => {
