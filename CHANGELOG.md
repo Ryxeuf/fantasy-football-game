@@ -1,3 +1,10 @@
+## [1.259.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.2...v1.259.3) (2026-10-29)
+
+
+### 🐛 Bug Fixes
+
+* **sim-bench:** baseline dédiée à 100 matchs pour le gate nocturne ([3a876bb](https://github.com/Ryxeuf/fantasy-football-game/commit/3a876bbdbefb86aa27a7143b8ae4db344909a21c))
+
 ## [1.259.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.1...v1.259.2) (2026-10-29)
 
 
