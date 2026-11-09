@@ -29,6 +29,27 @@ export function awayOptions(
   );
 }
 
+/**
+ * Vrai quand les deux équipes choisies appartiennent au MÊME coach.
+ * Décision du propriétaire : c'est permis (un coach peut aligner deux de ses
+ * équipes l'une contre l'autre), mais le commissaire doit le voir avant de
+ * créer la rencontre — d'où un avertissement NON bloquant.
+ */
+export function isSameCoachPairing(
+  participants: ReadonlyArray<{
+    id: string;
+    team: { owner?: { id: string } | null };
+  }>,
+  homeId: string,
+  awayId: string,
+): boolean {
+  if (!homeId || !awayId || homeId === awayId) return false;
+  const ownerOf = (id: string) =>
+    participants.find((p) => p.id === id)?.team.owner?.id ?? null;
+  const home = ownerOf(homeId);
+  return home !== null && home === ownerOf(awayId);
+}
+
 /** Statuts de rencontre qui rendent une journée insupprimable (miroir serveur). */
 const ENGAGED_PAIRING_STATUSES = new Set([
   "in_progress",
@@ -274,6 +295,9 @@ function RoundEditor({
   const [draftName, setDraftName] = useState(round.name ?? "");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const deletionBlocker = roundDeletionBlocker(round);
+  const sameCoachName = isSameCoachPairing(active, home, away)
+    ? (active.find((p) => p.id === home)?.team.owner?.coachName ?? "")
+    : null;
   const pairings = round.pairings ?? [];
   // A54 — l'extérieur est restreint à la poule de l'équipe à domicile.
   const aways = awayOptions(active, home);
@@ -521,6 +545,17 @@ function RoundEditor({
           + Match
         </button>
       </div>
+      {sameCoachName !== null ? (
+        <p
+          data-testid={`manual-same-coach-warning-${round.id}`}
+          role="status"
+          className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1"
+        >
+          ⚠️ Les deux équipes appartiennent au même coach
+          {sameCoachName ? ` (${sameCoachName})` : ""}. La rencontre reste
+          possible.
+        </p>
+      ) : null}
     </li>
   );
 }
