@@ -228,6 +228,34 @@ describe('Règle: Petty Cash', () => {
     expect(result.teamB.pettyCash).toBe(0);
   });
 
+  it('BB2025 étape 4 — VEA égales en ligue : aucune trésorerie mobilisable', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_000,
+      ctvTeamB: 1_000_000,
+      treasuryTeamA: 120_000,
+      treasuryTeamB: 80_000,
+      underdogBonus: 50_000,
+      spentTeamA: 30_000,
+      spentTeamB: 10_000,
+    });
+    expect(result.teamA.pettyCash).toBe(0);
+    expect(result.teamB.pettyCash).toBe(0);
+    expect(result.teamA.maxBudget).toBe(0);
+    expect(result.teamB.maxBudget).toBe(0);
+  });
+
+  it('BB2025 étape 4 — un écart d\'1 po rouvre la trésorerie du favori', () => {
+    const result = calculatePettyCash({
+      ctvTeamA: 1_000_001,
+      ctvTeamB: 1_000_000,
+      treasuryTeamA: 120_000,
+      treasuryTeamB: 80_000,
+      underdogBonus: 50_000,
+    });
+    expect(result.teamA.maxBudget).toBe(120_000);
+    expect(result.teamB.maxBudget).toBe(1 + 50_000);
+  });
+
   it('A55 — sans underdogBonus (jeu en ligne), trésorerie libre inchangée', () => {
     const result = calculatePettyCash({
       ctvTeamA: 1_000_000,
