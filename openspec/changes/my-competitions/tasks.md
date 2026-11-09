@@ -4,7 +4,7 @@
 
 - [x] 1.1 Créer `services/competition-membership.ts` : `leagueMineWhere`, `cupMineWhere` (filtres par relation `team.ownerId`, équipes supprimées comprises) et `buildViewerRoles` (pur : `commissioner`, `participant` = `active | withdrawn | former | null`, équipes de l'édition courante) ; vérifier par `competition-membership.test.ts` en table (commissaire seul, commissaire qui joue, retiré, saison passée, équipe supprimée, invité seulement, admin non membre)
 - [x] 1.2 Composer la visibilité de `listLeagues` à partir de `leagueMineWhere` (+ publiques + invités) sans changer son résultat ; vérifier par `services/league.test.ts` (existants verts) et un test « à moi ⊆ visible » sur le `where` produit
-- [ ] 1.3 Faire passer `buildCupListWhere` et `GET /cup/archived` par `cupMineWhere`, supprimer le pré-chargement des équipes non supprimées ; vérifier par `services/cup-listing.test.ts` (coupe privée jouée avec une équipe supprimée : listée) et les tests de route coupe existants
+- [x] 1.3 Faire passer `buildCupListWhere` et `GET /cup/archived` par `cupMineWhere`, supprimer le pré-chargement des équipes non supprimées ; vérifier par `services/cup-listing.test.ts` (coupe privée jouée avec une équipe supprimée : listée) et les tests de route coupe existants
 - [ ] 1.4 Consigner le patron « une seule résolution de "à moi", incluse dans la visibilité » dans `CLAUDE.md` (section Patterns) ; vérifier que la section cite `services/competition-membership`
 
 ## 2. Filtre « Les miennes » et rôle du lecteur sur les listings (serveur)

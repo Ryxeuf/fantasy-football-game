@@ -71,7 +71,10 @@ import {
   flagWithdrawnStandings,
   registeredStandings,
 } from "../services/cup-withdrawn-teams";
-import { buildCupListWhere } from "../services/cup-listing";
+import {
+  buildArchivedCupListWhere,
+  buildCupListWhere,
+} from "../services/cup-listing";
 
 /** Poule telle que `GET /cup/:id` la charge (ordre + quota). */
 interface CupPoolRow {
@@ -236,16 +239,10 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
     const showAll =
       req.query.publicOnly === "false" && hasRole(req.user!.roles, "admin");
 
-    // Récupérer les équipes de l'utilisateur pour vérifier sa participation
-    const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id, deletedAt: null },
-      select: { id: true },
-    });
-    const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
-
+    // « À moi » par relation (`cupMineWhere`) : plus de pré-chargement des
+    // équipes non supprimées du coach.
     const whereClause = buildCupListWhere({
       userId: req.user!.id,
-      userTeamIds,
       showAll,
     });
 
@@ -330,29 +327,10 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
 // GET /cup/archived - Liste les coupes archivées auxquelles l'utilisateur participe ou qu'il a créées
 router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    // Récupérer les équipes de l'utilisateur pour vérifier sa participation
-    const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id, deletedAt: null },
-      select: { id: true },
-    });
-    const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
-
+    // Coupes archivées « à moi » (créées, ou jouées par une de mes équipes —
+    // supprimée comprise : son historique reste le mien).
     const cups = await prisma.cup.findMany({
-      where: {
-        status: "archivee",
-        OR: [
-          // Coupes créées par l'utilisateur
-          { creatorId: req.user!.id },
-          // OU coupes auxquelles l'utilisateur participe (via ses équipes)
-          {
-            participants: {
-              some: {
-                teamId: { in: userTeamIds },
-              },
-            },
-          },
-        ],
-      },
+      where: buildArchivedCupListWhere(req.user!.id),
       include: {
         creator: {
           select: {
