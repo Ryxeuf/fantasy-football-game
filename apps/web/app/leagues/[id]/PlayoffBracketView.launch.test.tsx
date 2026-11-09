@@ -250,4 +250,41 @@ describe("PlayoffBracketView — panneau de lancement", () => {
     expect(await screen.findByTestId("playoff-bracket")).toBeTruthy();
     expect(screen.queryByTestId("playoff-launch-panel")).toBeNull();
   });
+
+  it("explique le flux lancer ⇒ ajuster ⇒ publier", async () => {
+    apiRequestMock.mockResolvedValue(bracketResponse());
+    render(<PlayoffBracketView seasonId="S1" isCommissioner />);
+
+    const hint = await screen.findByTestId("playoff-flow-hint");
+    expect(hint.textContent).toMatch(/visible que de toi/);
+    expect(hint.textContent).toMatch(/changer les qualifiés/);
+    expect(hint.textContent).toMatch(/Publier.*tous les coachs/);
+  });
+
+  it("rappelle d'ajuster avant de publier, tant que le bracket est masqué", async () => {
+    const round = {
+      id: "r1",
+      roundNumber: 8,
+      bracketSlot: "final",
+      status: "pending",
+      pairings: [],
+    };
+    apiRequestMock.mockResolvedValueOnce(
+      bracketResponse({ rounds: [round], playoffsPublished: false }),
+    );
+    const { unmount } = render(
+      <PlayoffBracketView seasonId="S1" isCommissioner />,
+    );
+    expect(
+      (await screen.findByTestId("playoff-publish-hint")).textContent,
+    ).toMatch(/Vérifie d'abord les qualifiés/);
+    unmount();
+
+    apiRequestMock.mockResolvedValueOnce(
+      bracketResponse({ rounds: [round], playoffsPublished: true }),
+    );
+    render(<PlayoffBracketView seasonId="S1" isCommissioner />);
+    expect(await screen.findByTestId("playoff-publish")).toBeTruthy();
+    expect(screen.queryByTestId("playoff-publish-hint")).toBeNull();
+  });
 });

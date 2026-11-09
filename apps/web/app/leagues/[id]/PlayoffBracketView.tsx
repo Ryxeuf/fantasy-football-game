@@ -369,6 +369,16 @@ function PlayoffPublishToggle({
       >
         {published ? "Dépublier" : "Publier les playoffs"}
       </button>
+      {published ? null : (
+        <span
+          data-testid="playoff-publish-hint"
+          className="basis-full text-xs text-amber-800"
+        >
+          Vérifie d'abord les qualifiés : modifie les participants ou remplace
+          une équipe dans une rencontre, puis publie. Les coachs ne voient rien
+          avant.
+        </span>
+      )}
       {error ? (
         <span data-testid="playoff-publish-error" className="text-red-600">
           {error}
@@ -761,6 +771,23 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
       <h3 className="text-md font-semibold text-nuffle-anthracite">
         Playoffs
       </h3>
+
+      <ol
+        data-testid="playoff-flow-hint"
+        className="list-decimal space-y-0.5 rounded-md border border-sky-200 bg-sky-50 py-2 pl-7 pr-3 text-sm text-sky-900"
+      >
+        <li>
+          <strong>Lancer</strong> génère le bracket depuis le classement — il
+          n'est visible que de toi.
+        </li>
+        <li>
+          <strong>Ajuster</strong> : tu peux encore changer les qualifiés (ou
+          réinitialiser le bracket pour changer sa taille).
+        </li>
+        <li>
+          <strong>Publier</strong> le rend visible de tous les coachs.
+        </li>
+      </ol>
 
       <label className="flex items-center gap-2 text-sm text-gray-700">
         Taille du bracket
