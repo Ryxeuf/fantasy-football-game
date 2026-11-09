@@ -38,11 +38,16 @@ import {
   type AllowedRoster,
   type GameFormat,
   type Ruleset,
+  buildStaffCostPo,
   defaultBuildBudgetK,
   getTeamPositions,
   getTournamentRosterRules,
   isGameFormat,
+  normalizeBuildStaff,
+  validateBuildStaff,
 } from '@bb/game-engine';
+import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import type { CreateFromRosterInput } from '../schemas/team.schemas';
 import { getStarPlayerBySlugDb } from '../utils/star-player-repository';
 import {
   validateStarPlayerPairs,
@@ -102,6 +107,8 @@ export async function handleCreateFromRoster(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<Response | void> {
+  // Typé par le schéma (validate(createFromRosterSchema) en amont).
+  const body: CreateFromRosterInput = req.body;
   const {
     name,
     roster,
@@ -111,16 +118,17 @@ export async function handleCreateFromRoster(
     format: bodyFormat,
     tournamentRuleset: bodyTournamentRuleset,
     regionalLeague: bodyRegionalLeague,
-  }: {
-    name: string;
-    roster: string;
-    teamValue?: number;
-    starPlayers?: string[];
-    ruleset?: string;
-    format?: string;
-    tournamentRuleset?: string | null;
-    regionalLeague?: string | null;
-  } = req.body;
+  } = body;
+  // Staff acheté dans l'assistant de première équipe. Absent : aucun staff
+  // (comportement historique), et aucune lecture de la config staff.
+  const staffRequested = [
+    body.rerolls,
+    body.cheerleaders,
+    body.assistants,
+    body.apothecary,
+    body.dedicatedFans,
+  ].some((v) => v !== undefined);
+  const staffSelection = normalizeBuildStaff(body);
   const ruleset = resolveRuleset(bodyRuleset) as Ruleset;
   const format: GameFormat = isGameFormat(bodyFormat) ? bodyFormat : 'bb11';
 
@@ -198,6 +206,7 @@ export async function handleCreateFromRoster(
 
   // Valider les Star Players si fournis
   const starPlayersToHire = starPlayerSlugs || [];
+  let starPlayersCostPo = 0;
   if (starPlayersToHire.length > 0) {
     // Restrictions du règlement de tournoi : autorisation par roster + bannis.
     if (pack && packRosterRules) {
@@ -247,15 +256,15 @@ export async function handleCreateFromRoster(
     // Cout des Star Players AU RULESET DE L'EQUIPE. Sans lui, une star qui
     // n'existe pas dans le ruleset par défaut était comptée 0 po : Star Player
     // gratuit pour une équipe Saison 2 (S12 de l'audit).
-    const starPlayersCost = await calculateStarPlayersCost(
+    starPlayersCostPo = await calculateStarPlayersCost(
       starPlayersToHire,
       ruleset,
     );
     const budgetInPo = finalTeamValue * 1000;
 
-    if (starPlayersCost > budgetInPo) {
+    if (starPlayersCostPo > budgetInPo) {
       return res.status(400).json({
-        error: `Budget insuffisant pour les Star Players. Coût: ${(starPlayersCost / 1000).toLocaleString()} K po, budget: ${finalTeamValue} K po`,
+        error: `Budget insuffisant pour les Star Players. Coût: ${(starPlayersCostPo / 1000).toLocaleString()} K po, budget: ${finalTeamValue} K po`,
       });
     }
 
@@ -313,6 +322,42 @@ export async function handleCreateFromRoster(
   }
   const safePlayerRows = playerRows.slice(0, 16);
 
+  // Staff demandé : mêmes plafonds (par roster × format) et même tarif que le
+  // builder complet, puis contrôle du budget TOTAL (joueurs + Star Players +
+  // staff). Sans staff, rien ne change : le reliquat part en trésorerie.
+  let staffCostPo = 0;
+  if (staffRequested) {
+    const staffConfig = await resolveStaffConfigBySlug(roster, ruleset, format);
+    if (staffSelection.apothecary && !staffConfig.apothecaryAllowed) {
+      return res
+        .status(422)
+        .json({ error: "Cette équipe ne peut pas recruter d'apothicaire" });
+    }
+    const staffCheck = validateBuildStaff(staffSelection, staffConfig);
+    if (!staffCheck.valid) {
+      return res.status(400).json({ error: staffCheck.error });
+    }
+    staffCostPo = buildStaffCostPo(staffSelection, staffConfig);
+    const costByPosition = new Map<string, number>(
+      (dbRoster && dbRoster.positions.length > 0
+        ? dbRoster.positions
+        : getTeamPositions(roster as AllowedRoster, ruleset)
+      ).map((p) => [p.slug, p.cost]),
+    );
+    const playersCostPo = safePlayerRows.reduce(
+      (sum: number, p: { position: string }) =>
+        sum + (costByPosition.get(p.position) ?? 0) * 1000,
+      0,
+    );
+    const budgetPo = finalTeamValue * 1000;
+    const spentPo = playersCostPo + starPlayersCostPo + staffCostPo;
+    if (spentPo > budgetPo) {
+      return res.status(400).json({
+        error: `Budget dépassé : ${spentPo / 1000}k (${playersCostPo / 1000}k joueurs + ${starPlayersCostPo / 1000}k Star Players + ${staffCostPo / 1000}k staff) / ${finalTeamValue}k`,
+      });
+    }
+  }
+
   const starPlayersData = await Promise.all(
     starPlayersToHire.map(async (slug: string) => {
       const sp = await getStarPlayerBySlugDb(slug, ruleset);
@@ -333,12 +378,14 @@ export async function handleCreateFromRoster(
         initialBudget: finalTeamValue,
         treasury: 0,
         regionalLeague,
-        rerolls: 0,
-        cheerleaders: 0,
-        assistants: 0,
-        apothecary: false,
-        // Aucun fan offert hors ligue (accordé à l'inscription en ligue).
-        dedicatedFans: 0,
+        // Staff choisi dans l'assistant (0 / sans apothicaire par défaut).
+        rerolls: staffSelection.rerolls,
+        cheerleaders: staffSelection.cheerleaders,
+        assistants: staffSelection.assistants,
+        apothecary: staffSelection.apothecary,
+        // Aucun fan offert hors ligue (accordé à l'inscription en ligue) :
+        // chaque fan choisi ici est payé.
+        dedicatedFans: staffSelection.dedicatedFans,
         leagueFreeFan: false,
         currentValue: 0,
         tournamentRuleset: pack?.slug ?? null,
@@ -370,6 +417,8 @@ export async function handleCreateFromRoster(
       starPlayers: starPlayersData.length,
       tournamentRuleset: pack?.slug ?? null,
       regionalLeague,
+      staff: staffSelection,
+      staffCost: staffCostPo,
     },
   });
 

@@ -236,6 +236,16 @@ export {
   type LeagueFreeFanRevokePlan,
 } from "./dedicated-fans";
 
+// Staff acheté à la construction : plafonds + tarif (builder ET assistant).
+export {
+  EMPTY_BUILD_STAFF,
+  buildStaffCostPo,
+  normalizeBuildStaff,
+  validateBuildStaff,
+  type BuildStaffCosts,
+  type BuildStaffSelection,
+} from "./build-staff";
+
 // A36 — Plafond combiné de Gros Bras (Big Guy) par équipe
 export { bigGuyLimitForRoster } from "./big-guy-limits";
 

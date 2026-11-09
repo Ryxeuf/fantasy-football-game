@@ -40,7 +40,7 @@ import {
   type AllowedRoster,
   type GameFormat,
   getFormatConstraints,
-  dedicatedFansPurchaseCost,
+  buildStaffCostPo,
   defaultBuildBudgetK,
   validateFormatSelection,
   isGameFormat,
@@ -467,13 +467,12 @@ export async function handleBuildTeam(
 
     // Coûts staff résolus (po dans `staff`) → ramenés en kpo pour rester
     // homogène avec le reste du handler (budget/positions en kpo).
+    // Tarif partagé avec l'assistant de première équipe (`buildStaffCostPo`).
     const staffCost =
-      (rerolls * staff.rerollCost +
-        cheerleaders * staff.cheerleaderCost +
-        assistants * staff.assistantCost +
-        (apothecary ? staff.apothecaryCost : 0) +
-        dedicatedFansPurchaseCost(dedicatedFans, staff.dedicatedFanCost, false)) /
-      1000;
+      buildStaffCostPo(
+        { rerolls, cheerleaders, assistants, apothecary, dedicatedFans },
+        staff,
+      ) / 1000;
 
     let starPlayersCost = 0;
 
