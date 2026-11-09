@@ -360,6 +360,23 @@ export const hateChoicesSchema = z.object({
 export type HateChoicesBody = z.infer<typeof hateChoicesSchema>;
 
 /**
+ * `POST /pairings/:pairingId/sheet/submit` et `/unsubmit` — `side` désigne le
+ * côté quand le coach possède les DEUX équipes (obligatoire alors, sinon
+ * déduit et contrôlé contre la propriété). Corps absent = `{}`.
+ */
+export const sheetSideSchema = z.preprocess(
+  (v) => v ?? {},
+  z.object({ side: z.enum(["home", "away"]).optional() }),
+);
+export type SheetSideBody = z.infer<typeof sheetSideSchema>;
+
+/** `GET /pairings/:pairingId/sheet?side=` — côté présenté au double propriétaire. */
+export const sheetViewQuerySchema = z
+  .object({ side: z.enum(["home", "away"]).optional() })
+  .passthrough();
+export type SheetViewQuery = z.infer<typeof sheetViewQuerySchema>;
+
+/**
  * `POST /pairings/:pairingId/sheet/inducements-done` — ordre d'achat des
  * coups de pouce : le favori signale qu'il a fini ses achats (`done: false`
  * retire la confirmation). `side` désigne l'équipe quand l'appelant en

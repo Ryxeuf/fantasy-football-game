@@ -102,6 +102,7 @@ vi.mock("./league-sheet-advancements", () => ({
 
 import { prisma } from "../prisma";
 import {
+  updateRaisedDead,
   setInducementsDone,
   createMatchSheet,
   refreshMatchSheetSnapshots,
@@ -3493,6 +3494,175 @@ describe("Lot G — league-match-sheet", () => {
         mockPrisma.leagueMatchSheet.update.mock.calls[1][0].data
           .inducementsDoneAwayAt,
       ).toBeNull();
+    });
+  });
+
+  describe("un coach possède les DEUX équipes", () => {
+    const BOTH = "both-owner";
+    function mockDoubleOwner() {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: BOTH } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: BOTH } },
+      });
+    }
+    /** Code d'erreur d'une action, "ok" si elle aboutit. */
+    async function codeOf(p: Promise<unknown>): Promise<string> {
+      try {
+        await p;
+        return "ok";
+      } catch (e: unknown) {
+        return (e as { code?: string }).code ?? "error";
+      }
+    }
+    const awayActions: ReadonlyArray<
+      [string, (userId: string) => Promise<unknown>, string]
+    > = [
+      [
+        "relever un mort côté extérieur",
+        (userId) =>
+          updateRaisedDead({
+            pairingId: "pair-1",
+            userId,
+            side: "away",
+            victimId: "h1",
+          }),
+        "raise_dead_wrong_side",
+      ],
+      [
+        "évolutions côté extérieur",
+        (userId) =>
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId,
+            payload: { advancementsAway: [] },
+          }),
+        "advancement_wrong_side",
+      ],
+      [
+        "tirage d'un journalier extérieur",
+        (userId) =>
+          rollJourneymanRandomPrimary({
+            pairingId: "pair-1",
+            userId,
+            journeymanId: "journeyman-away-1",
+            category: "G",
+          }),
+        "advancement_wrong_side",
+      ],
+    ];
+
+    it.each(awayActions)(
+      "%s : refusé au coach de domicile, accepté au double propriétaire",
+      async (_label, act, wrongSide) => {
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        expect(await codeOf(act(HOME))).toBe(wrongSide);
+        mockDoubleOwner();
+        expect(await codeOf(act(BOTH))).not.toBe(wrongSide);
+      },
+    );
+
+    it("soumission sans côté : 400 side_required", async () => {
+      mockDoubleOwner();
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      await expect(
+        submitByCoach({ pairingId: "pair-1", userId: BOTH }),
+      ).rejects.toMatchObject({ code: "side_required" });
+      await expect(
+        unsubmitByCoach({ pairingId: "pair-1", userId: BOTH }),
+      ).rejects.toMatchObject({ code: "side_required" });
+    });
+
+    it("un coach simple ne soumet pas le côté adverse (403)", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      await expect(
+        submitByCoach({ pairingId: "pair-1", userId: HOME, side: "away" }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("soumission domicile puis extérieur ⇒ both_submitted + commissaire notifié", async () => {
+      mockDoubleOwner();
+      let stored: Record<string, unknown> = {
+        id: "ms1",
+        status: "draft",
+        submittedByHomeAt: null,
+        submittedByAwayAt: null,
+      };
+      mockPrisma.leagueMatchSheet.findUnique.mockImplementation(async () => stored);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => {
+          stored = { ...stored, ...a.data };
+          return stored;
+        },
+      );
+      const first = await submitByCoach({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "home",
+      });
+      expect((first as { status: string }).status).toBe("submitted_home");
+      const second = await submitByCoach({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "away",
+      });
+      expect((second as { status: string }).status).toBe("both_submitted");
+      expect(stored.submittedByAwayAt).toBeInstanceOf(Date);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.objectContaining({ commissionerUserId: COMMISH, pairingId: "pair-1" }),
+      );
+
+      // Retrait côté extérieur : retour à submitted_home.
+      const back = await unsubmitByCoach({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "away",
+      });
+      expect((back as { status: string }).status).toBe("submitted_home");
+    });
+
+    it("getMatchSheet expose viewerSides et suit ?side= pour viewerRole / viewerTeamId", async () => {
+      mockDoubleOwner();
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "A", roster: "human", currentValue: 1, treasury: 0, players: [] },
+        { id: "team-away", name: "B", roster: "orc", currentValue: 1, treasury: 0, players: [] },
+      ]);
+      const def = await getMatchSheet({ pairingId: "pair-1", userId: BOTH });
+      expect(def.viewerSides).toEqual(["home", "away"]);
+      expect(def.viewerRole).toBe("home");
+      const away = await getMatchSheet({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "away",
+      });
+      expect(away.viewerRole).toBe("away");
+      expect(away.viewerTeamId).toBe("team-away");
+      // Un coach simple ne peut pas se faire passer pour l'autre côté.
+      mockPairing();
+      const single = await getMatchSheet({
+        pairingId: "pair-1",
+        userId: HOME,
+        side: "away",
+      });
+      expect(single.viewerSides).toEqual(["home"]);
+      expect(single.viewerRole).toBe("home");
     });
   });
 

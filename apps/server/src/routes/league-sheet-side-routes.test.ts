@@ -15,12 +15,22 @@ import jwt from "jsonwebtoken";
 
 vi.mock("../prisma", () => ({ prisma: {} }));
 
+// Visibilité d'une ligue privée : testée à part (`league-access.test.ts`).
+vi.mock("../services/league-access", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../services/league-access")>();
+  return { ...actual, isLeaguePairingHiddenFrom: vi.fn(async () => false) };
+});
+
 vi.mock("../services/league-match-sheet", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("../services/league-match-sheet")>();
   return {
     ...actual,
     setInducementsDone: vi.fn(),
+    submitByCoach: vi.fn(),
+    unsubmitByCoach: vi.fn(),
+    getMatchSheet: vi.fn(),
   };
 });
 
@@ -29,10 +39,16 @@ import cupSheetRouter from "./cup-match-sheet";
 import { JWT_SECRET } from "../config";
 import {
   MatchSheetError,
+  getMatchSheet,
   setInducementsDone,
+  submitByCoach,
+  unsubmitByCoach,
 } from "../services/league-match-sheet";
 
 const mockDone = setInducementsDone as unknown as ReturnType<typeof vi.fn>;
+const mockSubmit = submitByCoach as unknown as ReturnType<typeof vi.fn>;
+const mockUnsubmit = unsubmitByCoach as unknown as ReturnType<typeof vi.fn>;
+const mockGet = getMatchSheet as unknown as ReturnType<typeof vi.fn>;
 
 function tokenFor(userId: string): string {
   return jwt.sign({ sub: userId, roles: ["user"] }, JWT_SECRET);
@@ -41,6 +57,7 @@ function tokenFor(userId: string): string {
 function request(
   path: string,
   body: unknown,
+  method: "POST" | "GET" = "POST",
 ): Promise<{ status: number; body: Record<string, unknown> }> {
   const app = express();
   app.use(express.json());
@@ -56,7 +73,7 @@ function request(
           host: "127.0.0.1",
           port,
           path,
-          method: "POST",
+          method,
           headers: {
             "content-type": "application/json",
             "content-length": Buffer.byteLength(payload),
@@ -134,5 +151,69 @@ describe("POST …/sheet/inducements-done", () => {
     expect(
       (await request("/leagues/pairings/p1/sheet/inducements-done", {})).status,
     ).toBe(400);
+  });
+});
+
+describe("soumission / retrait par côté", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockSubmit.mockResolvedValue({ id: "ms1", status: "submitted_away" });
+    mockUnsubmit.mockResolvedValue({ id: "ms1", status: "draft" });
+  });
+
+  it.each([
+    ["/leagues", "submit"],
+    ["/leagues", "unsubmit"],
+    ["/cup", "submit"],
+    ["/cup", "unsubmit"],
+  ] as const)("%s …/%s transmet le côté demandé", async (prefix, action) => {
+    const out = await request(`${prefix}/pairings/p1/sheet/${action}`, {
+      side: "away",
+    });
+    expect(out.status).toBe(200);
+    const mock = action === "submit" ? mockSubmit : mockUnsubmit;
+    expect(mock).toHaveBeenCalledWith({
+      pairingId: "p1",
+      userId: "coach-1",
+      side: "away",
+    });
+  });
+
+  it("corps vide : côté déduit par le service", async () => {
+    const out = await request("/leagues/pairings/p1/sheet/submit", undefined);
+    expect(out.status).toBe(200);
+    expect(mockSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ side: undefined }),
+    );
+  });
+
+  it("côté inconnu : 400 sans appel au service", async () => {
+    const out = await request("/leagues/pairings/p1/sheet/submit", {
+      side: "both",
+    });
+    expect(out.status).toBe(400);
+    expect(mockSubmit).not.toHaveBeenCalled();
+  });
+
+  it("double propriétaire sans côté : 400 explicite", async () => {
+    mockSubmit.mockRejectedValueOnce(
+      new MatchSheetError("side_required", "Précisez le côté"),
+    );
+    const out = await request("/leagues/pairings/p1/sheet/submit", {});
+    expect(out.status).toBe(400);
+    expect(JSON.stringify(out.body)).toContain("Précisez le côté");
+  });
+
+  it("GET ?side= : transmis au service, valeur inconnue refusée", async () => {
+    mockGet.mockResolvedValue({ viewerSides: ["home", "away"] });
+    const ok = await request("/cup/pairings/p1/sheet?side=away", undefined, "GET");
+    expect(ok.status).toBe(200);
+    expect(mockGet).toHaveBeenCalledWith({
+      pairingId: "p1",
+      userId: "coach-1",
+      side: "away",
+    });
+    const bad = await request("/cup/pairings/p1/sheet?side=middle", undefined, "GET");
+    expect(bad.status).toBe(400);
   });
 });

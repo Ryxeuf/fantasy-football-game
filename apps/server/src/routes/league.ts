@@ -193,6 +193,10 @@ import {
   type InvalidateSheetBody,
   inducementsDoneSchema,
   type InducementsDoneBody,
+  sheetSideSchema,
+  type SheetSideBody,
+  sheetViewQuerySchema,
+  type SheetViewQuery,
 } from "../schemas/league-match-sheet.schemas";
 import {
   rollRandomPrimarySchema,
@@ -2228,10 +2232,12 @@ export async function handleGetMatchSheet(
   if (!(await ensureVisiblePairingLeague(req, res, req.params.pairingId))) {
     return;
   }
+  const query = req.query as unknown as SheetViewQuery;
   try {
     const out = await getMatchSheet({
       pairingId: req.params.pairingId,
       userId,
+      side: query.side,
     });
     sendSuccess(res, out);
   } catch (e: unknown) {
@@ -2518,10 +2524,12 @@ export async function handleSubmitMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  const body: SheetSideBody = req.body;
   try {
     const sheet = await submitByCoach({
       pairingId: req.params.pairingId,
       userId,
+      side: body.side,
     });
     sendSuccess(res, sheet);
   } catch (e: unknown) {
@@ -2536,10 +2544,12 @@ export async function handleUnsubmitMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  const body: SheetSideBody = req.body;
   try {
     const sheet = await unsubmitByCoach({
       pairingId: req.params.pairingId,
       userId,
+      side: body.side,
     });
     sendSuccess(res, sheet);
   } catch (e: unknown) {
@@ -3348,7 +3358,12 @@ router.patch(
 );
 
 // Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
-router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
+router.get(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  validateQuery(sheetViewQuerySchema),
+  handleGetMatchSheet,
+);
 router.post(
   "/pairings/:pairingId/sheet",
   authUser,
@@ -3417,11 +3432,13 @@ router.delete(
 router.post(
   "/pairings/:pairingId/sheet/submit",
   authUser,
+  validate(sheetSideSchema),
   handleSubmitMatchSheet,
 );
 router.post(
   "/pairings/:pairingId/sheet/unsubmit",
   authUser,
+  validate(sheetSideSchema),
   handleUnsubmitMatchSheet,
 );
 router.post(

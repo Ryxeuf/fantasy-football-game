@@ -164,13 +164,18 @@ function mockMatch(
   input: {
     sheet?: Record<string, unknown>;
     events?: Array<Record<string, unknown>>;
+    /** Propriétaire de l'équipe extérieure (défaut : AWAY). */
+    awayOwnerId?: string;
   } = {},
 ) {
   mockPrisma.leaguePairing.findUnique.mockResolvedValue({
     id: "pair-1",
     round: { season: { league: { id: "L1", creatorId: COMMISH } } },
     homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
-    awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+    awayParticipant: {
+      teamId: "team-away",
+      team: { ownerId: input.awayOwnerId ?? AWAY },
+    },
   });
   mockPrisma.team.findMany.mockResolvedValue([
     {
@@ -334,6 +339,18 @@ describe("updateHateChoices", () => {
         choices: [{ victimPlayerId: "a1", keyword: "Zombie" }],
       }),
     ).rejects.toMatchObject({ code: "hate_wrong_side" });
+  });
+
+  // Un coach qui possède les DEUX équipes choisit aussi pour l'extérieur :
+  // l'ancienne comparaison « mon côté » le ramenait toujours à domicile.
+  it("accepte un coach propriétaire des deux équipes côté extérieur", async () => {
+    mockMatch({ awayOwnerId: HOME });
+    await updateHateChoices({
+      pairingId: "pair-1",
+      userId: HOME,
+      choices: [{ victimPlayerId: "a1", keyword: "Zombie" }],
+    });
+    expect(writtenHateChoices()).toContain("Zombie");
   });
 
   it("refuse un Mot-clé qui n'est pas celui de l'adversaire", async () => {

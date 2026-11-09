@@ -209,6 +209,12 @@ import {
   writableInducementSides,
 } from "./league-sheet-inducement-budget";
 import {
+  ownedSides,
+  ownsSide,
+  resolveActingSide,
+  viewerSide,
+} from "./league-sheet-sides";
+import {
   inducementListChanged,
   inducementOrderState,
   type InducementOrderState,
@@ -733,22 +739,15 @@ async function loadPairingContext(pairingId: string): Promise<PairingContext> {
   };
 }
 
-/** Determine le cote (home/away) d'un coach, ou null s'il n'est pas joueur. */
+/**
+ * Determine le cote (home/away) d'un coach, ou null s'il n'est pas joueur.
+ * Ne sert qu'à dire « participant ou non » : un coach peut posséder les
+ * DEUX équipes, tout contrôle d'appartenance à UN côté passe par `ownsSide`.
+ */
 function coachSide(ctx: PairingContext, userId: string): CoachSide | null {
   if (userId === ctx.homeOwnerId) return "home";
   if (userId === ctx.awayOwnerId) return "away";
   return null;
-}
-
-/**
- * Côtés dont l'utilisateur possède l'équipe : aucun, un, ou LES DEUX (un
- * coach peut opposer deux de ses équipes).
- */
-function ownedSides(ctx: PairingContext, userId: string): CoachSide[] {
-  const sides: CoachSide[] = [];
-  if (userId === ctx.homeOwnerId) sides.push("home");
-  if (userId === ctx.awayOwnerId) sides.push("away");
-  return sides;
 }
 
 /**
@@ -1881,7 +1880,7 @@ export async function updateHateChoices(input: {
         `Le joueur ${entry.victimPlayerId} n'est pas candidat au jet de Haine sur cette feuille`,
       );
     }
-    if (!commissioner && side !== candidate.side) {
+    if (!commissioner && !ownsSide(ctx, input.userId, candidate.side)) {
       throw new MatchSheetError(
         "hate_wrong_side",
         "Chaque coach ne choisit le Mot-cle hai que pour ses propres joueurs",
@@ -1941,7 +1940,7 @@ export async function updateRaisedDead(input: {
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
-  if (!commissioner && side !== input.side) {
+  if (!commissioner && !ownsSide(ctx, input.userId, input.side)) {
     throw new MatchSheetError(
       "raise_dead_wrong_side",
       "Chaque coach ne releve un mort que pour sa propre equipe",
@@ -2064,13 +2063,21 @@ export async function updatePostMatch(input: {
   // commissaire peut corriger les deux) et chaque playerId doit
   // appartenir à l'équipe du côté visé.
   if (p.advancementsHome !== undefined || p.advancementsAway !== undefined) {
-    if (p.advancementsHome !== undefined && !commissioner && side !== "home") {
+    if (
+      p.advancementsHome !== undefined &&
+      !commissioner &&
+      !ownsSide(ctx, input.userId, "home")
+    ) {
       throw new MatchSheetError(
         "advancement_wrong_side",
         "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
       );
     }
-    if (p.advancementsAway !== undefined && !commissioner && side !== "away") {
+    if (
+      p.advancementsAway !== undefined &&
+      !commissioner &&
+      !ownsSide(ctx, input.userId, "away")
+    ) {
       throw new MatchSheetError(
         "advancement_wrong_side",
         "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
@@ -2210,7 +2217,7 @@ export async function rollJourneymanRandomPrimary(input: {
       `Journalier ${input.journeymanId} inconnu de cette feuille`,
     );
   }
-  if (!commissioner && side !== journeymanSideOf) {
+  if (!commissioner && !ownsSide(ctx, input.userId, journeymanSideOf)) {
     throw new MatchSheetError(
       "advancement_wrong_side",
       "Chaque coach ne tire que pour les journaliers de sa propre équipe",
@@ -2284,6 +2291,22 @@ export async function rollJourneymanRandomPrimary(input: {
   return { rolled: true, category, candidates };
 }
 
+/**
+ * Côté pour lequel un coach agit (cf. `resolveActingSide`), ou l'erreur
+ * typée correspondante : 403 hors participant / côté d'autrui, 400 quand un
+ * double propriétaire omet le côté.
+ */
+function actingSideOrThrow(
+  ctx: PairingContext,
+  userId: string,
+  requested: CoachSide | undefined,
+  messages: Record<"not_a_participant" | "side_required" | "forbidden", string>,
+): CoachSide {
+  const out = resolveActingSide(ownedSides(ctx, userId), requested);
+  if (!out.ok) throw new MatchSheetError(out.code, messages[out.code]);
+  return out.side;
+}
+
 function nextStatusOnSubmit(
   current: string,
   side: CoachSide,
@@ -2306,15 +2329,20 @@ function nextStatusOnSubmit(
 export async function submitByCoach(input: {
   pairingId: string;
   userId: string;
+  /**
+   * Côté soumis. Obligatoire pour un coach qui possède les DEUX équipes
+   * (il soumet chaque côté à son tour) ; sinon déduit, et refusé s'il ne
+   * désigne pas l'équipe du coach.
+   */
+  side?: CoachSide;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  const side = coachSide(ctx, input.userId);
-  if (!side) {
-    throw new MatchSheetError(
-      "not_a_participant",
-      "Seuls les 2 coachs peuvent soumettre leur saisie",
-    );
-  }
+  const side = actingSideOrThrow(ctx, input.userId, input.side, {
+    not_a_participant: "Seuls les 2 coachs peuvent soumettre leur saisie",
+    side_required:
+      "Vous possédez les deux équipes : précisez le côté que vous soumettez.",
+    forbidden: "Vous ne pouvez soumettre que le côté de votre équipe.",
+  });
   const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
@@ -2422,12 +2450,16 @@ async function notifyCommissionerSheetReady(
 export async function unsubmitByCoach(input: {
   pairingId: string;
   userId: string;
+  /** Côté retiré : obligatoire pour un double propriétaire (cf. submit). */
+  side?: CoachSide;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  const side = coachSide(ctx, input.userId);
-  if (!side) {
-    throw new MatchSheetError("not_a_participant", "Reserve aux coachs");
-  }
+  const side = actingSideOrThrow(ctx, input.userId, input.side, {
+    not_a_participant: "Reserve aux coachs",
+    side_required:
+      "Vous possédez les deux équipes : précisez le côté dont vous retirez la soumission.",
+    forbidden: "Vous ne pouvez retirer que la soumission de votre équipe.",
+  });
   const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
@@ -5116,6 +5148,11 @@ async function loadHateRollsForPairing(pairingId: string): Promise<HateRoll[]> {
 export async function getMatchSheet(input: {
   pairingId: string;
   userId: string;
+  /**
+   * Côté à présenter au viewer qui possède les DEUX équipes (`?side=`) :
+   * gouverne `viewerRole` / `viewerTeamId`. Ignoré s'il ne le possède pas.
+   */
+  side?: CoachSide;
 }): Promise<{
   sheet: unknown;
   summary: MatchSummary;
@@ -5140,6 +5177,12 @@ export async function getMatchSheet(input: {
    * à l'UI d'afficher l'éditeur d'évolutions de SON équipe (sinon masqué).
    */
   viewerTeamId: string | null;
+  /**
+   * Côtés dont le viewer possède l'équipe — DEUX pour un coach qui oppose
+   * ses deux équipes : l'UI lui propose alors de choisir pour lequel il
+   * saisit (`?side=`), et soumet chaque côté à son tour.
+   */
+  viewerSides: CoachSide[];
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
   reference: MatchSheetReference;
   /** SPP autoritaire par teamPlayerId (calcul officiel + modificateur d'équipe). */
@@ -5172,7 +5215,8 @@ export async function getMatchSheet(input: {
   inducementOrder: InducementOrderState;
 }> {
   const ctx = await loadPairingContext(input.pairingId);
-  const side = coachSide(ctx, input.userId);
+  const viewerOwned = ownedSides(ctx, input.userId);
+  const side = viewerSide(viewerOwned, input.side);
   const commissioner = await isCommissioner(ctx, input.userId);
   const sheet = await prisma.leagueMatchSheet.findUnique({
     where: sheetWhere(ctx),
@@ -5496,6 +5540,7 @@ export async function getMatchSheet(input: {
         : side === "away"
           ? (teams.away?.teamId ?? null)
           : null,
+    viewerSides: viewerOwned,
     // Le D6 de Haine est lance a la validation : rien a montrer avant.
     hateRolls:
       sheet.status === "validated"
