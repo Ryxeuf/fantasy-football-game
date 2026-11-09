@@ -14,12 +14,14 @@
  * du coach, qui effaçait l'historique au premier ménage de ses équipes.
  */
 
-import { cupMineWhere } from "./competition-membership";
+import { cupMineWhere, type CompetitionScope } from "./competition-membership";
 
 export interface CupListFilterInput {
   readonly userId: string;
   /** Vue admin : toutes les coupes, archivées comprises. */
   readonly showAll: boolean;
+  /** `mine` : les seules coupes « à moi ». Défaut `all`. */
+  readonly scope?: CompetitionScope;
 }
 
 /**
@@ -33,6 +35,12 @@ export function cupVisibleClauses(
 }
 
 export function buildCupListWhere(input: CupListFilterInput) {
+  if (input.scope === "mine") {
+    // Pas de clause de visibilité : « à moi » y est inclus. La vue admin
+    // garde ses archivées.
+    const mine = cupMineWhere(input.userId);
+    return input.showAll ? mine : { status: { not: "archivee" }, ...mine };
+  }
   if (input.showAll) return {};
   return { status: { not: "archivee" }, OR: cupVisibleClauses(input.userId) };
 }

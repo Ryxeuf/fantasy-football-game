@@ -21,7 +21,9 @@ import {
   updateCupRulesSchema,
   updateCupSchema,
   listMonthlyCupsQuerySchema,
+  listCupsQuerySchema,
   setMatchOfTheWeekSchema,
+  type ListCupsQuery,
   type ListMonthlyCupsQuery,
   type SetMatchOfTheWeekBody,
   type CupRulesConfigInput,
@@ -232,18 +234,24 @@ function serializeTieBreakRules(
 // GET /cup - Liste les coupes visibles par l'utilisateur
 // Règles (cf. `buildCupListWhere`) : coupes publiques non archivées, OU coupes
 // créées par l'utilisateur, OU coupes auxquelles il participe.
-router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
+router.get(
+  "/",
+  authUser,
+  validateQuery(listCupsQuerySchema),
+  async (req: AuthenticatedRequest, res) => {
   try {
+    const query = req.query as unknown as ListCupsQuery;
     // `publicOnly=false` = vue admin (archivées et privées comprises) : réservé
     // aux admins, sinon n'importe quel compte listerait les coupes privées.
     const showAll =
-      req.query.publicOnly === "false" && hasRole(req.user!.roles, "admin");
+      query.publicOnly === false && hasRole(req.user!.roles, "admin");
 
     // « À moi » par relation (`cupMineWhere`) : plus de pré-chargement des
-    // équipes non supprimées du coach.
+    // équipes non supprimées du coach. `scope=mine` : les seules miennes.
     const whereClause = buildCupListWhere({
       userId: req.user!.id,
       showAll,
+      scope: query.scope,
     });
 
     const cups = await prisma.cup.findMany({

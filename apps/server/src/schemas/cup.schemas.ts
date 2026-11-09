@@ -238,6 +238,22 @@ export const listMonthlyCupsQuerySchema = z.object({
 export type ListMonthlyCupsQuery = z.infer<typeof listMonthlyCupsQuerySchema>;
 
 /**
+ * Query de `GET /cup`. `scope=mine` : les seules coupes « à moi » (créées ou
+ * jouées, cf. `services/competition-membership`) ; défaut `all`, réponse
+ * inchangée. `publicOnly=false` reste la vue admin (archivées et privées
+ * comprises), ignorée pour un coach.
+ */
+export const listCupsQuerySchema = z.object({
+  scope: z.enum(["all", "mine"]).optional().default("all"),
+  publicOnly: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : v === "true")),
+});
+
+export type ListCupsQuery = z.infer<typeof listCupsQuerySchema>;
+
+/**
  * S27.1g — Body schema pour `POST /cup/match-of-the-week/:matchId`.
  * `note` optionnel (max 280 chars, format Twitter-like) et nullable.
  */

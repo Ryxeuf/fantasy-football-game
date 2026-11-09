@@ -46,6 +46,18 @@ describe("buildCupListWhere", () => {
   it("la vue admin ne filtre rien", () => {
     expect(buildCupListWhere({ userId: "a", showAll: true })).toEqual({});
   });
+
+  it("scope=mine : « à moi » sans clause de visibilité, hors archives", () => {
+    expect(
+      buildCupListWhere({ userId: "u1", showAll: false, scope: "mine" }),
+    ).toEqual({ status: { not: "archivee" }, ...cupMineWhere("u1") });
+  });
+
+  it("scope=mine en vue admin : les siennes, archivées comprises", () => {
+    expect(
+      buildCupListWhere({ userId: "u1", showAll: true, scope: "mine" }),
+    ).toEqual(cupMineWhere("u1"));
+  });
 });
 
 describe("buildArchivedCupListWhere", () => {
