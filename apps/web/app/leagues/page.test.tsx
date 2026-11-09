@@ -4,8 +4,13 @@ import { LanguageProvider } from "../contexts/LanguageContext";
 
 // La page monte `JoinByCodeField` (saisie de code) qui consomme
 // `useRouter()` de next/navigation. On le stub pour le rendu en test.
+// Le sélecteur « Toutes / Les miennes » lit et écrit `?scope=`.
+const replaceMock = vi.fn();
+let search = "";
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: replaceMock, prefetch: vi.fn() }),
+  usePathname: () => "/leagues",
+  useSearchParams: () => new URLSearchParams(search),
 }));
 
 import LeaguesPage from "./page";
@@ -73,6 +78,7 @@ const mockLeaguesData = {
 describe("LeaguesPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    search = "";
     localStorageMock.getItem.mockReturnValue("test-token");
   });
 
@@ -250,6 +256,73 @@ describe("LeaguesPage", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("leagues-create-cta")).toBeTruthy();
+    });
+  });
+
+  describe("« Toutes / Les miennes »", () => {
+    it("arrivée sur la liste : « Toutes » sélectionné, appel sans scope", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockLeaguesData),
+      });
+      renderWithProvider();
+      const all = await screen.findByTestId("leagues-scope-all");
+      expect(all.getAttribute("aria-checked")).toBe("true");
+      expect(String(mockFetch.mock.calls[0][0])).not.toContain("scope=");
+    });
+
+    it("lien partagé ?scope=mine : « Les miennes » sélectionné, scope transmis à l'API", async () => {
+      search = "scope=mine";
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ leagues: [] }),
+      });
+      renderWithProvider();
+      const mine = await screen.findByTestId("leagues-scope-mine");
+      expect(mine.getAttribute("aria-checked")).toBe("true");
+      expect(String(mockFetch.mock.calls[0][0])).toContain("scope=mine");
+      expect(screen.getByTestId("leagues-empty").textContent).toMatch(
+        /aucune compétition/i,
+      );
+    });
+
+    it("le clic écrit l'URL", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(mockLeaguesData),
+      });
+      renderWithProvider();
+      fireEvent.click(await screen.findByTestId("leagues-scope-mine"));
+      expect(replaceMock).toHaveBeenCalledWith("/leagues?scope=mine", {
+        scroll: false,
+      });
+    });
+
+    it("badge de rôle servi par l'API, absent sans viewerRoles", async () => {
+      const [first, second] = mockLeaguesData.leagues;
+      mockFetch.mockResolvedValue({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            leagues: [
+              {
+                ...first,
+                viewerRoles: {
+                  commissioner: true,
+                  participant: "active",
+                  teams: [{ id: "t1", name: "Gobs" }],
+                },
+              },
+              second,
+            ],
+          }),
+      });
+      renderWithProvider();
+      expect(
+        (await screen.findByTestId("league-role-lg-1-commissioner")).textContent,
+      ).toMatch(/Commissaire/);
+      expect(screen.getByTestId("league-role-lg-1-active")).toBeTruthy();
+      expect(screen.queryByTestId("league-role-lg-2-commissioner")).toBeNull();
     });
   });
 });

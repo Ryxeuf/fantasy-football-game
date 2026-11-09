@@ -15,10 +15,17 @@
  * proprement plus tard si la volumetrie grandit.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { apiRequest } from "../../lib/api-client";
 import { useLanguage } from "../../contexts/LanguageContext";
+import ScopeToggle from "../../components/ScopeToggle";
+import ViewerRoleBadges from "../../components/ViewerRoleBadges";
+import {
+  parseCompetitionScope,
+  type ViewerRoles,
+} from "../../lib/competition-scope";
 
 interface ArchivedLeague {
   id: string;
@@ -31,6 +38,8 @@ interface ArchivedLeague {
   allowedRosters: string[] | null;
   createdAt: string;
   updatedAt: string;
+  /** Rôle du lecteur, tranché par le serveur. Optionnel : API antérieure. */
+  viewerRoles?: ViewerRoles | null;
 }
 
 interface ListResponse {
@@ -39,8 +48,20 @@ interface ListResponse {
 
 const PAGE_SIZE = 50;
 
+/** `useSearchParams` impose un `<Suspense>` (rendu statique de Next 14). */
 export default function ArchivedLeaguesPage() {
+  return (
+    <Suspense fallback={null}>
+      <ArchivedLeaguesContent />
+    </Suspense>
+  );
+}
+
+function ArchivedLeaguesContent() {
   const { t } = useLanguage();
+  // « Toutes / Les miennes » vit dans l'URL ; le serveur filtre.
+  const scope = parseCompetitionScope(useSearchParams()?.get("scope"));
+  const scopeParam = scope === "mine" ? "&scope=mine" : "";
   const [completed, setCompleted] = useState<ArchivedLeague[]>([]);
   const [archived, setArchived] = useState<ArchivedLeague[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +75,10 @@ export default function ArchivedLeaguesPage() {
         setError(null);
         const [c, a] = await Promise.all([
           apiRequest<ListResponse>(
-            `/leagues?status=completed&limit=${PAGE_SIZE}`,
+            `/leagues?status=completed&limit=${PAGE_SIZE}${scopeParam}`,
           ),
           apiRequest<ListResponse>(
-            `/leagues?status=archived&limit=${PAGE_SIZE}`,
+            `/leagues?status=archived&limit=${PAGE_SIZE}${scopeParam}`,
           ),
         ]);
         if (cancelled) return;
@@ -77,7 +98,7 @@ export default function ArchivedLeaguesPage() {
     return () => {
       cancelled = true;
     };
-  }, [t.leagues.errorLoad]);
+  }, [scopeParam, t.leagues.errorLoad]);
 
   const merged = useMemo<ArchivedLeague[]>(() => {
     // Merge sans duplication (rare, mais defensif si le backend
@@ -126,6 +147,8 @@ export default function ArchivedLeaguesPage() {
         </p>
       </div>
 
+      <ScopeToggle testIdPrefix="archived-leagues-scope" />
+
       {error ? (
         <div
           data-testid="archived-leagues-error"
@@ -140,7 +163,9 @@ export default function ArchivedLeaguesPage() {
           data-testid="archived-leagues-empty"
           className="text-center py-8 text-gray-500"
         >
-          {t.leagues.archivedEmpty ?? "Aucune ligue archivee pour le moment."}
+          {scope === "mine"
+            ? t.myCompetitions.mineEmpty
+            : (t.leagues.archivedEmpty ?? "Aucune ligue archivee pour le moment.")}
         </div>
       ) : (
         <ul
@@ -158,6 +183,10 @@ export default function ArchivedLeaguesPage() {
                   <h2 className="text-lg font-semibold text-nuffle-anthracite">
                     {l.name}
                   </h2>
+                  <ViewerRoleBadges
+                    roles={l.viewerRoles}
+                    testIdPrefix={`archived-league-role-${l.id}`}
+                  />
                   <span
                     className={`text-xs uppercase tracking-wide px-2 py-0.5 rounded ${
                       l.status === "archived"

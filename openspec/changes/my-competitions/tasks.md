@@ -36,7 +36,8 @@
 ## 6. Web : listes existantes
 
 - [x] 6.1 Créer `ScopeToggle` (« Toutes / Les miennes », lit et écrit `?scope=` par `router.replace(..., { scroll: false })`) et `ViewerRoleBadges` (commissaire, inscrit, retiré, ancienne saison) ; vérifier par des tests RTL (défaut « Toutes », URL mise à jour, badges selon `viewerRoles`, champ absent toléré)
-- [ ] 6.2 Brancher `/leagues` et `/leagues/archived` : `scope` transmis à l'API, badges sur les cartes, lien vers `/me/competitions` ; vérifier par `leagues/page.test.tsx` et un test de la page d'archives
+- [x] 6.2 Brancher `/leagues` et `/leagues/archived` : `scope` transmis à l'API, badges sur les cartes, lien vers `/me/competitions` ; vérifier par `leagues/page.test.tsx` et un test de la page d'archives
+  - Lien vers `/me/competitions` NON posé : la page n'existe qu'avec la section 7 (à poser avec 7.3, sinon lien mort).
 - [ ] 6.3 Brancher `/cups` : `scope` transmis, rôles lus dans `viewerRoles` au lieu d'être reconstruits par `/auth/me` + `/team/mine`, lien vers `/me/competitions` ; vérifier par un test de page (badge « Créateur » et « Inscrit » issus de l'API, `scope=mine` dans l'appel)
 
 ## 7. Web : page « Mes compétitions »
