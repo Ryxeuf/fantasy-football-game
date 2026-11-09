@@ -475,6 +475,15 @@ export const SEASON_3_SKILL_DESCRIPTIONS: Record<
   },
 
   // Catégorie Force
+  // Esquive en Force 2025 : trois paliers de Force (≤ 3 / 4 / ≥ 5) et une
+  // fois par TOUR — le texte 2020 (« une fois par activation », +1 / +2)
+  // reste celui de la Saison 2.
+  "break-tackle": {
+    description:
+      "Une fois par Tour, quand ce joueur tente d'Esquiver, il peut appliquer un modificateur de +1 au Test d'Agilité s'il a une Caractéristique de Force de 3 ou moins, un modificateur de +2 s'il a une Caractéristique de Force de 4, ou un modificateur de +3 s'il a une Caractéristique de Force de 5 ou plus.",
+    descriptionEn:
+      "Once per turn, when this player attempts to Dodge, they may apply a +1 modifier to the Agility test if their Strength characteristic is 3 or less, a +2 modifier if their Strength characteristic is 4, or a +3 modifier if their Strength characteristic is 5 or more.",
+  },
   "arm-bar": {
     description:
       "Si un joueur adverse Chute en tentant d'Esquiver, Sauter ou Bondir depuis une case dans la Zone de Tacle de ce joueur, ce joueur peut utiliser cette Compétence. En ce cas, il peut appliquer un modificateur de +1 soit au Jet d'Armure, soit au Jet de Blessure. On peut appliquer ce modificateur après avoir fait le jet. Si le joueur adverse subit une Élimination suite à une Esquive, un Saut ou un Bond raté depuis une case dans la Zone de Tacle de ce joueur, alors celui-ci compte comme ayant causé cette Élimination et reçoit les Points de Star Player correspondant. Si un joueur tente de quitter la Zone de Tacle de plusieurs joueurs ayant cette Compétence en même temps, un seul de ces joueurs peut utiliser cette Compétence.",

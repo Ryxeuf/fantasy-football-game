@@ -97,3 +97,33 @@ describe("A21 — Prendre Racine : jet seulement si Debout", () => {
     expect(def?.description).toContain("Debout");
   });
 });
+
+describe("Esquive en Force — texte 2025 (une fois par Tour, trois paliers de Force)", () => {
+  const s3 = SEASON_3_SKILL_DESCRIPTIONS["break-tackle"];
+
+  it("la surcharge S3 porte les trois paliers et la limite par Tour (FR)", () => {
+    const desc = s3?.description ?? "";
+    expect(desc).toContain("Une fois par Tour");
+    expect(desc).toMatch(/\+1[^.]*Force de 3 ou moins/);
+    expect(desc).toMatch(/\+2[^.]*Force de 4[^ ]/);
+    expect(desc).toMatch(/\+3[^.]*Force de 5 ou plus/);
+    expect(desc).not.toContain("activation");
+  });
+
+  it("la surcharge S3 porte aussi le texte anglais", () => {
+    const en = s3?.descriptionEn ?? "";
+    expect(en).toContain("Once per turn");
+    expect(en).toContain("+3");
+    expect(en).toContain("5 or more");
+  });
+
+  it("le slug existe au canon (le seed et la mise à jour prod l'appliquent)", () => {
+    // `seed.ts` et `scripts/update-skills-and-rules-from-ocr.ts` parcourent
+    // SEASON_3_SKILL_DESCRIPTIONS par slug : il suffit que le slug soit
+    // celui du canon pour que la description servie change.
+    expect(
+      SKILLS_DEFINITIONS.find((s) => s.slug === "break-tackle"),
+    ).toBeTruthy();
+    expect(Object.keys(SEASON_3_SKILL_DESCRIPTIONS)).toContain("break-tackle");
+  });
+});
