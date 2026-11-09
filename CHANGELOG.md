@@ -1,3 +1,24 @@
+## [1.260.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.3...v1.260.0) (2026-11-09)
+
+
+### ✨ Features
+
+* **game-engine:** Grande Gueule au texte 2025, Action Spéciale de Croquement ([10b658d](https://github.com/Ryxeuf/fantasy-football-game/commit/10b658dca7dd790875d112bc0cf2bb688fecbfdc))
+
+
+### 🐛 Bug Fixes
+
+* **game-engine:** Gros Débile exige un guide Debout et non Déconcentré ([4b81b39](https://github.com/Ryxeuf/fantasy-football-game/commit/4b81b39f9cd0552b745c1900a6c59bff6e320c49))
+* **game-engine:** Minus subit -1 pour Intercepter (texte 2025) ([0e5f9a5](https://github.com/Ryxeuf/fantasy-football-game/commit/0e5f9a5408f4d055a19a0b1cac1b04dbb753a51d))
+* **game-engine:** porter l'édition dans l'état, Esquive en Force au texte 2020 en Saison 2 ([f4b5eef](https://github.com/Ryxeuf/fantasy-football-game/commit/f4b5eef20765f9b9506714c709fced61e2cae7ec))
+* **league-sheet:** annoncer la trésorerie mobilisable au refus de budget ([584c499](https://github.com/Ryxeuf/fantasy-football-game/commit/584c4995cb2ea9765f192acf421a4c027f388457))
+* **web:** garder le catalogue affiché pendant son rechargement ([64ffba3](https://github.com/Ryxeuf/fantasy-football-game/commit/64ffba3fd366cd5108e3704385f15f978c5b4d07))
+
+
+### 📝 Documentation
+
+* **backlog:** solder les écarts de compétences et l'égalité de VEA ([38a77ea](https://github.com/Ryxeuf/fantasy-football-game/commit/38a77ea96c8ba9a309d64a349238999442c2916a))
+
 ## [1.259.3](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.2...v1.259.3) (2026-10-29)
 
 
