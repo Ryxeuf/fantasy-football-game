@@ -24,6 +24,7 @@ import { collectModifiers } from '../skills/skill-registry';
 import { isSneakyGitActive } from '../skills/skill-bridge';
 import { assertSinglePending } from './pending-state';
 import { findPlaceableCaptain } from '../mechanics/captain';
+import { parseGameRuleset } from './ruleset';
 
 export type { PreMatchState };
 
@@ -79,9 +80,12 @@ export function setupPreMatchWithTeams(
      * `turnTimerSeconds`, `teamRerolls`, et attache `rulesConfig` a l'etat.
      */
     rulesMode?: RulesMode;
+    /** Édition des équipes (`Team.ruleset`) ; absente = Saison 3. */
+    ruleset?: unknown;
   }
 ): ExtendedGameState {
   const rulesConfig: RulesConfig = getRulesConfig(options?.rulesMode ?? 'full');
+  const ruleset = parseGameRuleset(options?.ruleset);
   const dugouts = initializeDugouts();
 
   // Créer les joueurs de l'équipe A
@@ -187,6 +191,7 @@ export function setupPreMatchWithTeams(
     bribesRemaining: { teamA: 0, teamB: 0 },
     turnTimerSeconds: rulesConfig.turnTimerSeconds,
     rulesConfig,
+    ...(ruleset ? { ruleset } : {}),
     // Log du match
     gameLog: [
       createLogEntry(

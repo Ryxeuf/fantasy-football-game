@@ -195,6 +195,7 @@ export async function handleGetMatchState(
         {
           teamARoster: teamA.roster,
           teamBRoster: teamB.roster,
+          ruleset: teamA.ruleset,
         },
       );
     } else {

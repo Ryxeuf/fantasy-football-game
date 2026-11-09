@@ -7,9 +7,9 @@
  *   - +2 if their Strength (ST) characteristic is 4,
  *   - +3 if their Strength (ST) characteristic is 5 or more.
  *
- * The 2020 text (Season 2: +1 for ST ≤ 4, +2 for ST ≥ 5, once per activation)
- * is no longer applied: the game state does not carry the ruleset, and the
- * other Season 3 rewordings of the engine are applied the same way.
+ * A Season 2 match keeps the 2020 text: +1 for ST ≤ 4, +2 for ST ≥ 5. Its
+ * "once per activation" needs no separate flag: a player is activated once
+ * per team turn, so the use given back at END_TURN covers both wordings.
  *
  * Rules of thumb:
  *   - Only triggers when the Dodge roll failed, and only when applying the
@@ -23,6 +23,7 @@
  */
 
 import type { GameState, Player } from '../core/types';
+import { isSeason2Rules, type GameRuleset } from '../core/ruleset';
 import { hasSkill } from '../skills/skill-effects';
 import { createLogEntry } from '../utils/logging';
 
@@ -46,8 +47,12 @@ export function hasBreakTackle(player: Player): boolean {
   return hasSkill(player, 'break-tackle') || hasSkill(player, 'break_tackle');
 }
 
-/** Strength tiers of the 2025 text: ST ≤ 3 ⇒ +1, ST 4 ⇒ +2, ST ≥ 5 ⇒ +3. */
-export function getBreakTackleModifier(player: Player): number {
+/** 2025: ST ≤ 3 ⇒ +1, ST 4 ⇒ +2, ST ≥ 5 ⇒ +3. 2020: ST ≤ 4 ⇒ +1, ST ≥ 5 ⇒ +2. */
+export function getBreakTackleModifier(
+  player: Player,
+  ruleset?: GameRuleset,
+): number {
+  if (isSeason2Rules(ruleset)) return player.st >= 5 ? 2 : 1;
   if (player.st >= 5) return 3;
   if (player.st === 4) return 2;
   return 1;
@@ -78,7 +83,7 @@ export function checkBreakTackle(
   // BB3: natural 1 always fails, cannot be saved by modifiers.
   if (diceRoll === 1) return NO_TRIGGER(state);
 
-  const modifier = getBreakTackleModifier(player);
+  const modifier = getBreakTackleModifier(player, state.ruleset);
   const newSuccess = diceRoll + modifier >= targetNumber;
 
   // Only burn the once-per-turn use if it actually succeeds.

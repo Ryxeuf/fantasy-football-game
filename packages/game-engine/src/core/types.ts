@@ -12,6 +12,8 @@
 export const ENGINE_VER = '1.0.0';
 export type EngineVersion = string;
 
+import type { GameRuleset } from './ruleset';
+
 export type TeamId = 'A' | 'B';
 
 export interface Position {
@@ -374,6 +376,8 @@ export interface GameState {
   bloodweiserKegs?: { teamA: number; teamB: number };
   // Joueurs hypnotisés (perdent leur zone de tacle jusqu'à leur prochaine activation)
   hypnotizedPlayers?: string[];
+  /** Édition du match ; absente = Saison 3 (cf. `core/ruleset`). */
+  ruleset?: GameRuleset;
   // IDs des joueurs qui ont déjà utilisé Running Pass ce tour (une fois par tour par joueur).
   // La presence d'un id ici autorise aussi la poursuite du mouvement apres
   // une Action de Passe (cf. canPlayerContinueMoving dans game-state.ts).

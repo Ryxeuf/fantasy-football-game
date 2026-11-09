@@ -269,6 +269,7 @@ export async function acceptAndMaybeStartMatch(
       teamARoster: teamA.roster,
       teamBRoster: teamB.roster,
       rulesMode,
+      ruleset: teamA.ruleset,
     },
   );
 

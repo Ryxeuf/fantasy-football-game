@@ -576,6 +576,7 @@ router.post("/:id/start", authUser, async (req: AuthenticatedRequest, res) => {
       {
         teamARoster: localMatch.teamA.roster,
         teamBRoster: localMatch.teamB.roster,
+        ruleset: localMatch.teamA.ruleset,
       },
     );
     

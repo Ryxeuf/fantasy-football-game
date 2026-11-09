@@ -158,6 +158,25 @@ describe('Regle: Break Tackle — modificateur selon la Force', () => {
   });
 });
 
+describe('Regle: Break Tackle — Saison 2 (texte 2020)', () => {
+  it.each([
+    [3, 1],
+    [4, 1],
+    [5, 2],
+    [6, 2],
+  ])('Force %i : +%i', (st, modifier) => {
+    expect(getBreakTackleModifier(makePlayer({ st }), 'season_2')).toBe(modifier);
+  });
+
+  it('checkBreakTackle lit le ruleset de la partie', () => {
+    const player = makePlayer({ st: 4, skills: ['break-tackle'] });
+    const state = { ...makeState([player]), ruleset: 'season_2' as const };
+    // D6=4, cible 6 : +2 (2025) suffirait, +1 (2020) non.
+    expect(checkBreakTackle(state, player, 4, 6, false).triggered).toBe(false);
+    expect(checkBreakTackle(state, player, 5, 6, false).modifier).toBe(1);
+  });
+});
+
 describe('Regle: Break Tackle — effets sur l\'etat du jeu', () => {
   it('marque le joueur comme ayant utilise Break Tackle (breakTackleUsed=true)', () => {
     const player = makePlayer({ skills: ['break-tackle'], st: 5 });
