@@ -61,7 +61,7 @@ const STATUS_VALUES: LeagueStatus[] = [
 //
 // `scope=mine` : le filtre « Les miennes » est appliqué par le SERVEUR (la
 // liste est paginée, un filtre client ne trierait que la page courante).
-export function buildListPath(
+function buildListPath(
   status: StatusFilter,
   scope: CompetitionScope = "all",
 ): string {
