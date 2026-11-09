@@ -193,6 +193,53 @@ describe("Lot D — overridePlayoffParticipants", () => {
     expect(mockPrisma.$transaction).toHaveBeenCalled();
   });
 
+  it("reconnaît les tours de bracket par kind OU bracketSlot, et renumérote à max+1 après suppression", async () => {
+    mockPrisma.leagueSeason.findUnique.mockResolvedValue({
+      id: "s1",
+      playoffSize: 2,
+    });
+    mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+      { id: "a", seasonId: "s1", status: "active" },
+      { id: "b", seasonId: "s1", status: "active" },
+    ]);
+    mockPrisma.leagueRound.findMany.mockResolvedValue([
+      {
+        id: "r-manual",
+        bracketSlot: "final",
+        pairings: [{ id: "p1", status: "scheduled", matchId: null }],
+      },
+    ]);
+    const order: string[] = [];
+    mockPrisma.$transaction.mockImplementation(async () => {
+      order.push("delete");
+      return [];
+    });
+    mockPrisma.leagueRound.findFirst.mockImplementation(async () => {
+      order.push("max");
+      return { roundNumber: 7 };
+    });
+    mockPrisma.leagueRound.create.mockResolvedValue({ id: "r2" });
+    mockPrisma.leaguePairing.create.mockResolvedValue({});
+
+    await overridePlayoffParticipants({
+      seasonId: "s1",
+      participantIds: ["a", "b"],
+    });
+
+    expect(mockPrisma.leagueRound.findMany.mock.calls[0][0].where).toEqual({
+      seasonId: "s1",
+      OR: [{ kind: "playoff" }, { bracketSlot: { not: null } }],
+    });
+    expect(mockPrisma.leagueRound.delete).toHaveBeenCalledWith({
+      where: { id: "r-manual" },
+    });
+    expect(order).toEqual(["delete", "max"]);
+    expect(mockPrisma.leagueRound.create.mock.calls[0][0].data).toMatchObject({
+      roundNumber: 8,
+      bracketSlot: "final",
+    });
+  });
+
   it("PlayoffOverrideError preserves code", () => {
     const e = new PlayoffOverrideError("size_mismatch", "x");
     expect(e.code).toBe("size_mismatch");
