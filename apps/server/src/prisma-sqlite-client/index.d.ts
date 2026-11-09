@@ -75905,6 +75905,8 @@ export namespace Prisma {
     forfeitSide: string | null
     tossWinner: string | null
     tossChoice: string | null
+    inducementsDoneHomeAt: Date | null
+    inducementsDoneAwayAt: Date | null
     scoreHome: number | null
     scoreAway: number | null
     winningsHome: number | null
@@ -75938,6 +75940,8 @@ export namespace Prisma {
     forfeitSide: string | null
     tossWinner: string | null
     tossChoice: string | null
+    inducementsDoneHomeAt: Date | null
+    inducementsDoneAwayAt: Date | null
     scoreHome: number | null
     scoreAway: number | null
     winningsHome: number | null
@@ -75973,6 +75977,8 @@ export namespace Prisma {
     tossChoice: number
     inducementsHome: number
     inducementsAway: number
+    inducementsDoneHomeAt: number
+    inducementsDoneAwayAt: number
     prayersHome: number
     prayersAway: number
     scoreHome: number
@@ -76058,6 +76064,8 @@ export namespace Prisma {
     forfeitSide?: true
     tossWinner?: true
     tossChoice?: true
+    inducementsDoneHomeAt?: true
+    inducementsDoneAwayAt?: true
     scoreHome?: true
     scoreAway?: true
     winningsHome?: true
@@ -76091,6 +76099,8 @@ export namespace Prisma {
     forfeitSide?: true
     tossWinner?: true
     tossChoice?: true
+    inducementsDoneHomeAt?: true
+    inducementsDoneAwayAt?: true
     scoreHome?: true
     scoreAway?: true
     winningsHome?: true
@@ -76126,6 +76136,8 @@ export namespace Prisma {
     tossChoice?: true
     inducementsHome?: true
     inducementsAway?: true
+    inducementsDoneHomeAt?: true
+    inducementsDoneAwayAt?: true
     prayersHome?: true
     prayersAway?: true
     scoreHome?: true
@@ -76266,6 +76278,8 @@ export namespace Prisma {
     tossChoice: string | null
     inducementsHome: JsonValue | null
     inducementsAway: JsonValue | null
+    inducementsDoneHomeAt: Date | null
+    inducementsDoneAwayAt: Date | null
     prayersHome: JsonValue | null
     prayersAway: JsonValue | null
     scoreHome: number
@@ -76338,6 +76352,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76395,6 +76411,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76450,6 +76468,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76505,6 +76525,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76538,7 +76560,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "hateChoices" | "casualtyRuleVersion" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
+  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "inducementsDoneHomeAt" | "inducementsDoneAwayAt" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "hateChoices" | "casualtyRuleVersion" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
   export type LeagueMatchSheetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
     cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
@@ -76581,6 +76603,8 @@ export namespace Prisma {
       tossChoice: string | null
       inducementsHome: Prisma.JsonValue | null
       inducementsAway: Prisma.JsonValue | null
+      inducementsDoneHomeAt: Date | null
+      inducementsDoneAwayAt: Date | null
       prayersHome: Prisma.JsonValue | null
       prayersAway: Prisma.JsonValue | null
       scoreHome: number
@@ -77075,6 +77099,8 @@ export namespace Prisma {
     readonly tossChoice: FieldRef<"LeagueMatchSheet", 'String'>
     readonly inducementsHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly inducementsAway: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly inducementsDoneHomeAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
+    readonly inducementsDoneAwayAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
     readonly prayersHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly prayersAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly scoreHome: FieldRef<"LeagueMatchSheet", 'Int'>
@@ -128654,6 +128680,8 @@ export namespace Prisma {
     tossChoice: 'tossChoice',
     inducementsHome: 'inducementsHome',
     inducementsAway: 'inducementsAway',
+    inducementsDoneHomeAt: 'inducementsDoneHomeAt',
+    inducementsDoneAwayAt: 'inducementsDoneAwayAt',
     prayersHome: 'prayersHome',
     prayersAway: 'prayersAway',
     scoreHome: 'scoreHome',
@@ -134807,6 +134835,8 @@ export namespace Prisma {
     tossChoice?: StringNullableFilter<"LeagueMatchSheet"> | string | null
     inducementsHome?: JsonNullableFilter<"LeagueMatchSheet">
     inducementsAway?: JsonNullableFilter<"LeagueMatchSheet">
+    inducementsDoneHomeAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
+    inducementsDoneAwayAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
     prayersHome?: JsonNullableFilter<"LeagueMatchSheet">
     prayersAway?: JsonNullableFilter<"LeagueMatchSheet">
     scoreHome?: IntFilter<"LeagueMatchSheet"> | number
@@ -134863,6 +134893,8 @@ export namespace Prisma {
     tossChoice?: SortOrderInput | SortOrder
     inducementsHome?: SortOrderInput | SortOrder
     inducementsAway?: SortOrderInput | SortOrder
+    inducementsDoneHomeAt?: SortOrderInput | SortOrder
+    inducementsDoneAwayAt?: SortOrderInput | SortOrder
     prayersHome?: SortOrderInput | SortOrder
     prayersAway?: SortOrderInput | SortOrder
     scoreHome?: SortOrder
@@ -134922,6 +134954,8 @@ export namespace Prisma {
     tossChoice?: StringNullableFilter<"LeagueMatchSheet"> | string | null
     inducementsHome?: JsonNullableFilter<"LeagueMatchSheet">
     inducementsAway?: JsonNullableFilter<"LeagueMatchSheet">
+    inducementsDoneHomeAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
+    inducementsDoneAwayAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
     prayersHome?: JsonNullableFilter<"LeagueMatchSheet">
     prayersAway?: JsonNullableFilter<"LeagueMatchSheet">
     scoreHome?: IntFilter<"LeagueMatchSheet"> | number
@@ -134978,6 +135012,8 @@ export namespace Prisma {
     tossChoice?: SortOrderInput | SortOrder
     inducementsHome?: SortOrderInput | SortOrder
     inducementsAway?: SortOrderInput | SortOrder
+    inducementsDoneHomeAt?: SortOrderInput | SortOrder
+    inducementsDoneAwayAt?: SortOrderInput | SortOrder
     prayersHome?: SortOrderInput | SortOrder
     prayersAway?: SortOrderInput | SortOrder
     scoreHome?: SortOrder
@@ -135039,6 +135075,8 @@ export namespace Prisma {
     tossChoice?: StringNullableWithAggregatesFilter<"LeagueMatchSheet"> | string | null
     inducementsHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     inducementsAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    inducementsDoneHomeAt?: DateTimeNullableWithAggregatesFilter<"LeagueMatchSheet"> | Date | string | null
+    inducementsDoneAwayAt?: DateTimeNullableWithAggregatesFilter<"LeagueMatchSheet"> | Date | string | null
     prayersHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     prayersAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     scoreHome?: IntWithAggregatesFilter<"LeagueMatchSheet"> | number
@@ -144749,6 +144787,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -144805,6 +144845,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -144857,6 +144899,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -144913,6 +144957,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -144967,6 +145013,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -145018,6 +145066,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -145071,6 +145121,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -153322,6 +153374,8 @@ export namespace Prisma {
     tossChoice?: SortOrder
     inducementsHome?: SortOrder
     inducementsAway?: SortOrder
+    inducementsDoneHomeAt?: SortOrder
+    inducementsDoneAwayAt?: SortOrder
     prayersHome?: SortOrder
     prayersAway?: SortOrder
     scoreHome?: SortOrder
@@ -153389,6 +153443,8 @@ export namespace Prisma {
     forfeitSide?: SortOrder
     tossWinner?: SortOrder
     tossChoice?: SortOrder
+    inducementsDoneHomeAt?: SortOrder
+    inducementsDoneAwayAt?: SortOrder
     scoreHome?: SortOrder
     scoreAway?: SortOrder
     winningsHome?: SortOrder
@@ -153422,6 +153478,8 @@ export namespace Prisma {
     forfeitSide?: SortOrder
     tossWinner?: SortOrder
     tossChoice?: SortOrder
+    inducementsDoneHomeAt?: SortOrder
+    inducementsDoneAwayAt?: SortOrder
     scoreHome?: SortOrder
     scoreAway?: SortOrder
     winningsHome?: SortOrder
@@ -176080,6 +176138,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -176134,6 +176194,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -176525,6 +176587,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -176579,6 +176643,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -183246,6 +183312,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -183300,6 +183368,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -183637,6 +183707,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -183691,6 +183763,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -184476,6 +184550,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -184531,6 +184607,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -184598,6 +184676,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -184653,6 +184733,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number

@@ -133,6 +133,34 @@ describe("avant-match — coups de pouce par côté", () => {
   });
 });
 
+describe("avant-match — ordre d'achat", () => {
+  it("le favori confirme ses achats : POST { side, done }", async () => {
+    serve({
+      ...sheetResponse("away"),
+      inducementOrder: {
+        favorite: "away",
+        favoriteDone: false,
+        waitingFor: "away",
+        provisionalSide: "home",
+      },
+    } as ReturnType<typeof sheetResponse>);
+    render(<MatchSheetPage />);
+    fireEvent.click(await screen.findByTestId("tab-before"));
+    expect(screen.getByTestId("inducements-waiting")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("inducements-confirm-away"));
+    await waitFor(() => {
+      const call = apiRequest.mock.calls.find(([p]) =>
+        String(p).endsWith("/sheet/inducements-done"),
+      );
+      expect(call).toBeTruthy();
+      expect(JSON.parse((call as [string, { body: string }])[1].body)).toEqual({
+        side: "away",
+        done: true,
+      });
+    });
+  });
+});
+
 describe("avant-match — relecture de fond", () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });

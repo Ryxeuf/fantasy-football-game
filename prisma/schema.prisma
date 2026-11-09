@@ -2124,6 +2124,12 @@ model LeagueMatchSheet {
   /// Coups de pouce (inducements) selectionnes : [{ id, name, cost, qty }].
   inducementsHome Json?
   inducementsAway Json?
+  /// Ordre d'achat des coups de pouce (BB2025) : le favori (VEA la plus
+  /// haute) confirme avoir fini ses achats, l'outsider achète ensuite.
+  /// null = pas confirmé (ou feuille antérieure). Une modification de la
+  /// liste du côté efface sa confirmation.
+  inducementsDoneHomeAt DateTime?
+  inducementsDoneAwayAt DateTime?
   /// Prieres de Nuffle : [{ playerId, effect, sppBonus }].
   prayersHome     Json?
   prayersAway     Json?

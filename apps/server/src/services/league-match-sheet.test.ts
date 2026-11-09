@@ -102,6 +102,7 @@ vi.mock("./league-sheet-advancements", () => ({
 
 import { prisma } from "../prisma";
 import {
+  setInducementsDone,
   createMatchSheet,
   refreshMatchSheetSnapshots,
   addEvent,
@@ -2906,6 +2907,13 @@ describe("Lot G — league-match-sheet", () => {
         maxBudget: 200_000,
       });
       expect(out.reference.budget.favorite).toBe("away");
+      // Ordre d'achat : le favori n'a pas confirmé, l'outsider attend.
+      expect(out.inducementOrder).toEqual({
+        favorite: "away",
+        favoriteDone: false,
+        waitingFor: "away",
+        provisionalSide: "home",
+      });
     });
 
     it("sous règlement de tournoi, sert la liste fermée et les prix du pack", async () => {
@@ -3398,6 +3406,93 @@ describe("Lot G — league-match-sheet", () => {
           payload: { inducementsHome: [{ slug: "bribe", cost: 100_000, qty: 1 }] },
         }),
       ).rejects.toMatchObject({ code: "inducement_over_budget" });
+    });
+  });
+
+  describe("ordre d'achat des coups de pouce (« J'ai fini mes achats »)", () => {
+    beforeEach(() => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+    });
+
+    it("un coach confirme pour son côté, sans le préciser", async () => {
+      await setInducementsDone({ pairingId: "pair-1", userId: AWAY, done: true });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.inducementsDoneAwayAt).toBeInstanceOf(Date);
+      expect("inducementsDoneHomeAt" in data).toBe(false);
+    });
+
+    it("done: false retire la confirmation", async () => {
+      await setInducementsDone({ pairingId: "pair-1", userId: HOME, done: false });
+      expect(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data,
+      ).toEqual({ inducementsDoneHomeAt: null });
+    });
+
+    it("un coach ne confirme pas pour l'adversaire (403)", async () => {
+      await expect(
+        setInducementsDone({ pairingId: "pair-1", userId: HOME, side: "away", done: true }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("le commissaire désigne le côté (sinon 400 side_required)", async () => {
+      await expect(
+        setInducementsDone({ pairingId: "pair-1", userId: COMMISH, done: true }),
+      ).rejects.toMatchObject({ code: "side_required" });
+      await setInducementsDone({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        side: "home",
+        done: true,
+      });
+      expect(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data.inducementsDoneHomeAt,
+      ).toBeInstanceOf(Date);
+    });
+
+    it("refusé sur une feuille validée", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      await expect(
+        setInducementsDone({ pairingId: "pair-1", userId: AWAY, done: true }),
+      ).rejects.toMatchObject({ code: "already_validated" });
+    });
+
+    it("modifier SA liste efface sa confirmation ; renvoyer la même liste non", async () => {
+      const list = [{ slug: "bribe", cost: 0, qty: 1 }];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        inducementsAway: list,
+        inducementsDoneAwayAt: new Date(),
+      });
+      mockPrisma.team.findMany.mockResolvedValue([]);
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: list },
+      });
+      expect(
+        "inducementsDoneAwayAt" in
+          mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data,
+      ).toBe(false);
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: [] },
+      });
+      expect(
+        mockPrisma.leagueMatchSheet.update.mock.calls[1][0].data
+          .inducementsDoneAwayAt,
+      ).toBeNull();
     });
   });
 

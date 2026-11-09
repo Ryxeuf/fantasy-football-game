@@ -209,6 +209,11 @@ import {
   writableInducementSides,
 } from "./league-sheet-inducement-budget";
 import {
+  inducementListChanged,
+  inducementOrderState,
+  type InducementOrderState,
+} from "./league-sheet-inducement-order";
+import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
   canPurchaseInducement,
@@ -661,7 +666,8 @@ export class MatchSheetError extends Error {
       | "previous_match_pending"
       | "refresh_not_applicable"
       | "refresh_failed"
-      | "refresh_orphan_players",
+      | "refresh_orphan_players"
+      | "side_required",
     message: string,
     /**
      * Données structurées du refus, servies telles quelles à l'UI (ex. les
@@ -732,6 +738,17 @@ function coachSide(ctx: PairingContext, userId: string): CoachSide | null {
   if (userId === ctx.homeOwnerId) return "home";
   if (userId === ctx.awayOwnerId) return "away";
   return null;
+}
+
+/**
+ * Côtés dont l'utilisateur possède l'équipe : aucun, un, ou LES DEUX (un
+ * coach peut opposer deux de ses équipes).
+ */
+function ownedSides(ctx: PairingContext, userId: string): CoachSide[] {
+  const sides: CoachSide[] = [];
+  if (userId === ctx.homeOwnerId) sides.push("home");
+  if (userId === ctx.awayOwnerId) sides.push("away");
+  return sides;
 }
 
 /**
@@ -1754,6 +1771,22 @@ export async function updatePreMatch(input: {
     data.inducementsHome = p.inducementsHome ?? undefined;
   if (p.inducementsAway !== undefined)
     data.inducementsAway = p.inducementsAway ?? undefined;
+  // Ordre d'achat : un côté qui MODIFIE sa liste n'a plus « fini ses
+  // achats » — l'outsider doit pouvoir s'y fier. Renvoyer la même liste ne
+  // retire rien.
+  const storedInducements = sheet as SheetInducementColumns;
+  if (
+    p.inducementsHome !== undefined &&
+    inducementListChanged(storedInducements.inducementsHome, p.inducementsHome)
+  ) {
+    data.inducementsDoneHomeAt = null;
+  }
+  if (
+    p.inducementsAway !== undefined &&
+    inducementListChanged(storedInducements.inducementsAway, p.inducementsAway)
+  ) {
+    data.inducementsDoneAwayAt = null;
+  }
   if (p.prayersHome !== undefined)
     data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined)
@@ -1761,6 +1794,51 @@ export async function updatePreMatch(input: {
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data,
+  });
+}
+
+/**
+ * Ordre d'achat des coups de pouce — « J'ai fini mes achats » (ou son
+ * retrait, `done: false`). Coach du côté ou commissaire, feuille non
+ * validée. Un coach qui possède les deux équipes désigne le côté ; un coach
+ * d'un seul côté peut l'omettre. Aucun verrou : la confirmation ne sert
+ * qu'à dire à l'outsider que son budget est définitif.
+ */
+export async function setInducementsDone(input: {
+  pairingId: string;
+  userId: string;
+  side?: CoachSide;
+  done: boolean;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  const commissioner = await isCommissioner(ctx, input.userId);
+  const owned = ownedSides(ctx, input.userId);
+  if (owned.length === 0 && !commissioner) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  const side =
+    input.side ?? (owned.length === 1 && !commissioner ? owned[0] : null);
+  if (!side) {
+    throw new MatchSheetError(
+      "side_required",
+      "Précisez le côté (domicile ou extérieur) concerné.",
+    );
+  }
+  if (!commissioner && !owned.includes(side)) {
+    throw new MatchSheetError(
+      "forbidden",
+      "Vous ne pouvez confirmer que les achats de votre équipe.",
+    );
+  }
+  const sheet = await loadSheetOrThrow(ctx);
+  ensureEditable(sheet.status);
+  const at = input.done ? new Date() : null;
+  return prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    data:
+      side === "home"
+        ? { inducementsDoneHomeAt: at }
+        : { inducementsDoneAwayAt: at },
   });
 }
 
@@ -5086,6 +5164,12 @@ export async function getMatchSheet(input: {
    * possible maintenant (aucune soumission).
    */
   snapshotFreshness: SnapshotFreshness | null;
+  /**
+   * Ordre d'achat des coups de pouce : favori (VEA la plus haute, avec de
+   * quoi acheter), confirmation « fini mes achats », côté au budget
+   * provisoire tant qu'il ne l'a pas donnée. Indicatif, jamais bloquant.
+   */
+  inducementOrder: InducementOrderState;
 }> {
   const ctx = await loadPairingContext(input.pairingId);
   const side = coachSide(ctx, input.userId);
@@ -5351,6 +5435,17 @@ export async function getMatchSheet(input: {
     stalledAway: stalledForRead.away,
   });
 
+  // Budget EFFECTIF : la Petite Monnaie de l'outsider inclut la dépense
+  // adverse STOCKÉE, comme au PATCH et à la validation.
+  const reference = await buildMatchSheetReference(
+    teams,
+    allowedInducements,
+    sheetInducementSpend(sheet as SheetInducementColumns),
+    inducementPack,
+    deadThisMatch(summary),
+    { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
+  );
+
   return {
     sheet: {
       ...(sheet as Record<string, unknown>),
@@ -5370,16 +5465,21 @@ export async function getMatchSheet(input: {
     leagueName: ctx.leagueName,
     fixture: ctx.fixture,
     teams: teamsWithRaisedDead,
-    // Budget EFFECTIF : la Petite Monnaie de l'outsider inclut la dépense
-    // adverse STOCKÉE, comme au PATCH et à la validation.
-    reference: await buildMatchSheetReference(
-      teams,
-      allowedInducements,
-      sheetInducementSpend(sheet as SheetInducementColumns),
-      inducementPack,
-      deadThisMatch(summary),
-      { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
-    ),
+    reference,
+    inducementOrder: inducementOrderState({
+      favorite: reference.budget.favorite,
+      favoriteMaxBudget:
+        reference.budget.favorite === "home"
+          ? reference.budget.home.maxBudget
+          : reference.budget.favorite === "away"
+            ? reference.budget.away.maxBudget
+            : 0,
+      doneHomeAt: (sheet as { inducementsDoneHomeAt?: Date | null })
+        .inducementsDoneHomeAt,
+      doneAwayAt: (sheet as { inducementsDoneAwayAt?: Date | null })
+        .inducementsDoneAwayAt,
+      validated: sheet.status === "validated",
+    }),
     computedSpp,
     viewerRole: commissioner
       ? "commissioner"

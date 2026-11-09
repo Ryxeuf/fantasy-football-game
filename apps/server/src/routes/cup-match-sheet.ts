@@ -23,6 +23,7 @@ import {
   handleCanInvalidate,
   handleCreateMatchSheet,
   handleGetMatchSheet,
+  handleInducementsDone,
   handleInvalidateMatchSheet,
   handleRemoveMatchSheetEvent,
   handleRollJourneymanRandomPrimary,
@@ -35,6 +36,7 @@ import {
 import {
   addEventSchema,
   createMatchSheetSchema,
+  inducementsDoneSchema,
   invalidateSheetSchema,
   postMatchSchema,
   preMatchSchema,
@@ -55,6 +57,12 @@ router.patch(
   authUser,
   validate(preMatchSchema),
   handleUpdatePreMatch,
+);
+router.post(
+  "/pairings/:pairingId/sheet/inducements-done",
+  authUser,
+  validate(inducementsDoneSchema),
+  handleInducementsDone,
 );
 router.patch(
   "/pairings/:pairingId/sheet/post-match",

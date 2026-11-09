@@ -43,6 +43,7 @@ import {
   type CostlyError,
   type SppBonusEntry,
   type MatchSheetReference,
+  type InducementOrderView,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
 import {
@@ -297,6 +298,11 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur antérieur.
    */
   snapshotFreshness?: SnapshotFreshnessView | null;
+  /**
+   * Ordre d'achat des coups de pouce (favori d'abord). Optionnel :
+   * rétro-compat avec un serveur antérieur.
+   */
+  inducementOrder?: InducementOrderView | null;
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -702,6 +708,21 @@ export default function MatchSheetPage() {
         ),
       }),
     );
+
+  // Ordre d'achat : « J'ai fini mes achats » du favori (ou son retrait).
+  // Relecture SILENCIEUSE : une saisie d'avant-match en cours reste à l'écran.
+  const saveInducementsDone = async (side: "home" | "away", done: boolean) => {
+    setError(null);
+    try {
+      await apiRequest(`/leagues/pairings/${pairingId}/sheet/inducements-done`, {
+        method: "POST",
+        body: JSON.stringify({ side, done }),
+      });
+      await load({ silent: true });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    }
+  };
 
   const savePostMatch = (v: PostMatchValues) =>
     run(() =>
@@ -1369,6 +1390,8 @@ export default function MatchSheetPage() {
             cupBudget={isCup}
             inducementsLocked={inducementsLocked}
             editableInducementSides={inducementSides}
+            inducementOrder={data.inducementOrder ?? null}
+            onInducementsDone={saveInducementsDone}
           />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">

@@ -1340,6 +1340,134 @@ describe("PreMatchPanel — budget en direct et saisie par côté", () => {
   });
 });
 
+describe("PreMatchPanel — ordre d'achat des coups de pouce", () => {
+  const waiting = {
+    favorite: "away" as const,
+    favoriteDone: false,
+    waitingFor: "away" as const,
+    provisionalSide: "home" as const,
+  };
+
+  it("l'outsider voit « En attente des achats de… » et un budget provisoire, sans blocage", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+        inducementOrder={waiting}
+        onInducementsDone={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("inducements-waiting").textContent).toMatch(
+      /En attente des achats de Gouged Eye/,
+    );
+    expect(
+      screen.getByTestId("inducements-home-budget-detail").textContent,
+    ).toMatch(/provisoire/);
+    // Pas de verrou : l'outsider peut saisir.
+    expect(screen.getByTestId("inducements-home-add")).toBeTruthy();
+    // Le bouton de confirmation n'appartient qu'au favori.
+    expect(screen.queryByTestId("inducements-confirm-away")).toBeNull();
+  });
+
+  it("le favori confirme ses achats", async () => {
+    const onDone = vi.fn().mockResolvedValue(undefined);
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["away"]}
+        inducementOrder={waiting}
+        onInducementsDone={onDone}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("inducements-confirm-away"));
+    expect(onDone).toHaveBeenCalledWith("away", true);
+  });
+
+  it("une saisie non enregistrée du favori désactive la confirmation", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+        inducementOrder={{
+          favorite: "home",
+          favoriteDone: false,
+          waitingFor: "home",
+          provisionalSide: "away",
+        }}
+        onInducementsDone={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("inducements-home-add"), {
+      target: { value: "wizard" },
+    });
+    expect(
+      (screen.getByTestId("inducements-confirm-home") as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("confirmé : plus de bandeau, le favori peut rouvrir", () => {
+    const onDone = vi.fn().mockResolvedValue(undefined);
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["away"]}
+        inducementOrder={{
+          favorite: "away",
+          favoriteDone: true,
+          waitingFor: null,
+          provisionalSide: null,
+        }}
+        onInducementsDone={onDone}
+      />,
+    );
+    expect(screen.queryByTestId("inducements-waiting")).toBeNull();
+    expect(screen.getByTestId("inducements-done-away").textContent).toMatch(
+      /Achats terminés/,
+    );
+    fireEvent.click(screen.getByTestId("inducements-reopen-away"));
+    expect(onDone).toHaveBeenCalledWith("away", false);
+  });
+
+  it("VEA égales (pas de favori) : ni bandeau ni bouton", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        inducementOrder={{
+          favorite: null,
+          favoriteDone: false,
+          waitingFor: null,
+          provisionalSide: null,
+        }}
+        onInducementsDone={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("inducements-waiting")).toBeNull();
+    expect(screen.queryByTestId("inducements-done-home")).toBeNull();
+    expect(screen.queryByTestId("inducements-done-away")).toBeNull();
+  });
+});
+
 describe("PreMatchPanel — forfait par équipe", () => {
   it("coche le forfait d'une équipe, exclut l'autre, et l'enregistre", () => {
     const onSave = vi.fn();

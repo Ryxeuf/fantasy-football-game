@@ -360,6 +360,21 @@ export const hateChoicesSchema = z.object({
 export type HateChoicesBody = z.infer<typeof hateChoicesSchema>;
 
 /**
+ * `POST /pairings/:pairingId/sheet/inducements-done` — ordre d'achat des
+ * coups de pouce : le favori signale qu'il a fini ses achats (`done: false`
+ * retire la confirmation). `side` désigne l'équipe quand l'appelant en
+ * possède deux (ou pour le commissaire) ; corps absent = `{ done: true }`.
+ */
+export const inducementsDoneSchema = z.preprocess(
+  (v) => v ?? {},
+  z.object({
+    side: z.enum(["home", "away"]).optional(),
+    done: z.boolean().default(true),
+  }),
+);
+export type InducementsDoneBody = z.infer<typeof inducementsDoneSchema>;
+
+/**
  * `POST /pairings/:pairingId/sheet` — ouverture de la feuille. `force` : le
  * commissaire l'ouvre malgré une rencontre antérieure encore ouverte
  * (journée reportée) ; ignoré pour un coach. Corps absent = `{}`.

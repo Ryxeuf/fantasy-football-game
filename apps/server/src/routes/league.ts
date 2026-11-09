@@ -173,6 +173,7 @@ import {
   getMatchSheet,
   listPendingValidationsForCommissioner,
   rollJourneymanRandomPrimary,
+  setInducementsDone,
   MatchSheetError,
 } from "../services/league-match-sheet";
 import {
@@ -190,6 +191,8 @@ import {
   type PreMatchBody,
   type PostMatchBody,
   type InvalidateSheetBody,
+  inducementsDoneSchema,
+  type InducementsDoneBody,
 } from "../schemas/league-match-sheet.schemas";
 import {
   rollRandomPrimarySchema,
@@ -2299,6 +2302,31 @@ export async function handleUpdatePreMatch(
   }
 }
 
+/**
+ * POST /leagues/pairings/:pairingId/sheet/inducements-done — ordre d'achat
+ * des coups de pouce : le favori signale qu'il a fini ses achats (ou retire
+ * sa confirmation). Coach du côté ou commissaire, feuille non validée.
+ */
+export async function handleInducementsDone(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body: InducementsDoneBody = req.body;
+  try {
+    const sheet = await setInducementsDone({
+      pairingId: req.params.pairingId,
+      userId,
+      side: body.side,
+      done: body.done,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
 /** PATCH /leagues/pairings/:pairingId/sheet/post-match */
 export async function handleUpdatePostMatch(
   req: AuthenticatedRequest,
@@ -3337,6 +3365,13 @@ router.patch(
   authUser,
   validate(preMatchSchema),
   handleUpdatePreMatch,
+);
+// Ordre d'achat des coups de pouce : « J'ai fini mes achats » du favori.
+router.post(
+  "/pairings/:pairingId/sheet/inducements-done",
+  authUser,
+  validate(inducementsDoneSchema),
+  handleInducementsDone,
 );
 // Polish — apres-match (override tresorerie, fans, erreurs couteuses,
 // achats, MVP).

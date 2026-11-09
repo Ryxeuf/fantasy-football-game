@@ -1500,6 +1500,8 @@ model LeagueMatchSheet {
   tossChoice             String?
   inducementsHome        Json?
   inducementsAway        Json?
+  inducementsDoneHomeAt  DateTime?
+  inducementsDoneAwayAt  DateTime?
   prayersHome            Json?
   prayersAway            Json?
   scoreHome              Int            @default(0)

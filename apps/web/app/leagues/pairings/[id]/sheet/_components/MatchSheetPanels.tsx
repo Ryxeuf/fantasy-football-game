@@ -399,6 +399,18 @@ export interface MatchSheetReference {
   colors: { home: TeamColors; away: TeamColors };
 }
 
+/**
+ * Ordre d'achat des coups de pouce (servi par la feuille) : le favori achète
+ * d'abord et confirme ; tant qu'il ne l'a pas fait, le budget de l'outsider
+ * est provisoire. Indicatif, jamais bloquant.
+ */
+export interface InducementOrderView {
+  favorite: "home" | "away" | null;
+  favoriteDone: boolean;
+  waitingFor: "home" | "away" | null;
+  provisionalSide: "home" | "away" | null;
+}
+
 /** Badge race + coach affiché sous le nom d'équipe (RÉSUMÉ). */
 export function TeamIdentityBadges({
   team,
@@ -1181,6 +1193,8 @@ export function PreMatchPanel({
   cupBudget = false,
   inducementsLocked = false,
   editableInducementSides = ["home", "away"],
+  inducementOrder = null,
+  onInducementsDone,
 }: {
   initial: PreMatchValues;
   homeName: string;
@@ -1213,6 +1227,10 @@ export function PreMatchPanel({
    * se met à jour à chaque relecture de la feuille.
    */
   editableInducementSides?: ReadonlyArray<"home" | "away">;
+  /** Ordre d'achat servi par la feuille (absent : serveur antérieur). */
+  inducementOrder?: InducementOrderView | null;
+  /** « J'ai fini mes achats » (ou son retrait) pour un côté. */
+  onInducementsDone?: (side: "home" | "away", done: boolean) => Promise<void>;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -1307,6 +1325,25 @@ export function PreMatchPanel({
   const overHome = canEditHome && spentH > effectiveMaxHome;
   const overAway = canEditAway && spentA > effectiveMaxAway;
   const overBudget = overHome || overAway;
+  // Ordre d'achat : la confirmation porte sur la liste ENREGISTRÉE — une
+  // saisie en cours doit d'abord être enregistrée.
+  const unsavedInducements = {
+    home: JSON.stringify(indH) !== JSON.stringify(initial.inducementsHome),
+    away: JSON.stringify(indA) !== JSON.stringify(initial.inducementsAway),
+  };
+  const showOrder = !!inducementOrder && !inducementsLocked && !forfeitOnly;
+  const favoriteName =
+    inducementOrder?.favorite === "home" ? homeName : awayName;
+  const [doneBusy, setDoneBusy] = useState(false);
+  const toggleDone = async (side: "home" | "away", done: boolean) => {
+    if (!onInducementsDone) return;
+    setDoneBusy(true);
+    try {
+      await onInducementsDone(side, done);
+    } finally {
+      setDoneBusy(false);
+    }
+  };
 
   const save = async () => {
     setBusy(true);
@@ -1348,7 +1385,11 @@ export function PreMatchPanel({
         pettyCash: viewHome.pettyCash,
         maxBudget: effectiveMaxHome,
       },
-      budgetDetail: budgetDetailLabel(viewHome, formatGold),
+      budgetDetail: `${budgetDetailLabel(viewHome, formatGold)}${
+        showOrder && inducementOrder?.provisionalSide === "home"
+          ? " — provisoire"
+          : ""
+      }`,
       canEditInducements: canEditHome,
     },
     {
@@ -1369,7 +1410,11 @@ export function PreMatchPanel({
         pettyCash: viewAway.pettyCash,
         maxBudget: effectiveMaxAway,
       },
-      budgetDetail: budgetDetailLabel(viewAway, formatGold),
+      budgetDetail: `${budgetDetailLabel(viewAway, formatGold)}${
+        showOrder && inducementOrder?.provisionalSide === "away"
+          ? " — provisoire"
+          : ""
+      }`,
       canEditInducements: canEditAway,
     },
   ];
@@ -1492,6 +1537,22 @@ export function PreMatchPanel({
         </div>
       )}
 
+      {/* Ordre d'achat des coups de pouce : le favori d'abord. Indicatif —
+          l'outsider peut saisir, le commissaire n'attend personne. */}
+      {showOrder && inducementOrder?.waitingFor && (
+        <div
+          data-testid="inducements-waiting"
+          className="mb-3 rounded border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+        >
+          <strong>En attente des achats de {favoriteName}.</strong> L&apos;équipe
+          à la VEA la plus haute achète ses coups de pouce en premier : le
+          budget de{" "}
+          {inducementOrder.provisionalSide === "home" ? homeName : awayName}{" "}
+          (écart de VEA + dépense adverse) est provisoire jusqu&apos;à sa
+          confirmation.
+        </div>
+      )}
+
       {/* Conséquences (informatives) de la météo sélectionnée. */}
       {!forfeitOnly && selectedWeather && (
         <div
@@ -1569,6 +1630,51 @@ export function PreMatchPanel({
                     cupBudget={cupBudget}
                     detail={c.budgetDetail}
                   />
+                )}
+                {showOrder && inducementOrder?.favorite === c.side && (
+                  <div
+                    data-testid={`inducements-done-${c.side}`}
+                    className="flex flex-wrap items-center gap-2 text-xs"
+                  >
+                    {inducementOrder.favoriteDone ? (
+                      <span className="font-medium text-emerald-700">
+                        ✓ Achats terminés
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">
+                        VEA la plus haute : achetez en premier.
+                      </span>
+                    )}
+                    {!disabled &&
+                      c.canEditInducements &&
+                      onInducementsDone &&
+                      (inducementOrder.favoriteDone ? (
+                        <button
+                          type="button"
+                          onClick={() => void toggleDone(c.side, false)}
+                          disabled={doneBusy}
+                          data-testid={`inducements-reopen-${c.side}`}
+                          className="rounded border px-2 py-1 text-slate-600 disabled:opacity-50"
+                        >
+                          Rouvrir mes achats
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void toggleDone(c.side, true)}
+                          disabled={doneBusy || unsavedInducements[c.side]}
+                          title={
+                            unsavedInducements[c.side]
+                              ? "Enregistrez d'abord l'avant-match"
+                              : undefined
+                          }
+                          data-testid={`inducements-confirm-${c.side}`}
+                          className="rounded bg-emerald-600 px-2 py-1 font-medium text-white disabled:opacity-50"
+                        >
+                          J&apos;ai fini mes achats
+                        </button>
+                      ))}
+                  </div>
                 )}
                 <PrayersEditor
                   list={c.prayers}

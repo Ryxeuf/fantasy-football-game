@@ -939,6 +939,8 @@ exports.Prisma.LeagueMatchSheetScalarFieldEnum = {
   tossChoice: 'tossChoice',
   inducementsHome: 'inducementsHome',
   inducementsAway: 'inducementsAway',
+  inducementsDoneHomeAt: 'inducementsDoneHomeAt',
+  inducementsDoneAwayAt: 'inducementsDoneAwayAt',
   prayersHome: 'prayersHome',
   prayersAway: 'prayersAway',
   scoreHome: 'scoreHome',
