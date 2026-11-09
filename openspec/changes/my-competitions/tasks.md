@@ -11,7 +11,7 @@
 
 - [x] 2.1 Ajouter `scope: all | mine` (défaut `all`) à `listLeaguesQuerySchema` et la branche `mine` à `listLeagues` (statut, `creatorId` et pagination par-dessus, `meta.total` sur le sous-ensemble) ; vérifier par `routes/league.test.ts` et un cas de chaîne Express réelle dans `routes/league-access.test.ts` (`scope=mine` → `where` « à moi » ; `scope=friends` → 400)
 - [x] 2.2 Créer `listCupsQuerySchema` (`scope`, `publicOnly`) monté par `validateQuery` sur `GET /cup`, branche `mine` via `cupMineWhere` ; vérifier par des tests de route (défaut inchangé, `scope=mine`, 400, `publicOnly=false` toujours réservé à l'admin)
-- [ ] 2.3 Servir `viewerRoles` sur chaque élément de `GET /leagues` (une requête de participations + `groupBy` du numéro de saison max) et de `GET /cup` (une requête de participations) ; vérifier par des tests qui comptent les appels Prisma (pas de N+1) et le contenu de `viewerRoles`
+- [x] 2.3 Servir `viewerRoles` sur chaque élément de `GET /leagues` (une requête de participations + `groupBy` du numéro de saison max) et de `GET /cup` (une requête de participations) ; vérifier par des tests qui comptent les appels Prisma (pas de N+1) et le contenu de `viewerRoles`
 
 ## 3. Liste « mes compétitions » (serveur)
 

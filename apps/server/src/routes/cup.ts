@@ -64,6 +64,7 @@ import {
 } from "../services/cup-registration";
 import { cupByesByTeamId, listCupRounds } from "../services/cup-rounds";
 import { visibleCupRounds } from "../services/cup-playoffs";
+import { buildCupViewerRoles } from "../services/competition-viewer-roles";
 import {
   normalizeCupTieBreakRules,
   parseCupTieBreakRules,
@@ -321,6 +322,10 @@ router.get(
         ruleset: p.team.ruleset,
         owner: p.team.owner,
       })),
+      // Rôle du lecteur, tranché par le serveur à partir des inscrits déjà
+      // chargés (aucune requête de plus) : l'écran n'a plus à le
+      // reconstruire par `/auth/me` + `/team/mine`.
+      viewerRoles: buildCupViewerRoles(req.user!.id, cup),
       createdAt: cup.createdAt,
       updatedAt: cup.updatedAt,
     }));

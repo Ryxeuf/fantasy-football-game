@@ -253,6 +253,7 @@ import {
 } from "../services/league-standings-order";
 import { apiError, sendError, sendSuccess } from "../utils/api-response";
 import { hasRole } from "../utils/roles";
+import { loadLeagueViewerRoles } from "../services/competition-viewer-roles";
 import {
   canViewLeagueRow,
   findVisibleLeague,
@@ -680,13 +681,25 @@ export async function handleListLeagues(
       limit: query.limit,
       offset: query.offset,
     });
+    // Rôle du lecteur sur chaque ligue de la page, en bloc (pas de N+1).
+    const rows = items as Array<Record<string, unknown>>;
+    const roles = await loadLeagueViewerRoles(
+      req.user?.id,
+      rows.map((l) => ({
+        id: String(l.id),
+        creatorId: String(l.creatorId ?? ""),
+      })),
+    );
     // S25.6 — pagination : on garde le champ `leagues` pour la
     // retro-compat des clients existants, et on expose total/limit/offset
     // dans `meta` (cf. ApiSuccess<T>.meta).
     res.status(200).json({
       success: true,
       data: {
-        leagues: (items as Array<Record<string, unknown>>).map(serializeLeague),
+        leagues: rows.map((l) => ({
+          ...serializeLeague(l),
+          viewerRoles: roles.get(String(l.id)) ?? null,
+        })),
       },
       meta: { total, limit, page: Math.floor(offset / limit) },
     });

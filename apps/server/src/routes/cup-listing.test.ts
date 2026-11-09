@@ -139,3 +139,56 @@ describe("GET /cup — scope", () => {
     expect(res.status).toBe(401);
   });
 });
+
+describe("GET /cup — viewerRoles", () => {
+  function cupRow(id: string, creatorId: string, ownerIds: string[]) {
+    return {
+      id,
+      name: `Coupe ${id}`,
+      description: null,
+      creator: { id: creatorId, coachName: "C" },
+      creatorId,
+      ruleset: "season_3",
+      format: "bb11",
+      tournamentRuleset: null,
+      validated: false,
+      isPublic: true,
+      status: "ouverte",
+      participants: ownerIds.map((ownerId, i) => ({
+        team: {
+          id: `t-${id}-${i}`,
+          name: `Équipe ${i}`,
+          roster: "human",
+          logoUrl: null,
+          ruleset: "season_3",
+          owner: { id: ownerId, coachName: ownerId },
+        },
+      })),
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+    };
+  }
+
+  it("rôles tranchés par le serveur, sans requête de plus (pas de N+1)", async () => {
+    db.cup.findMany.mockResolvedValue([
+      cupRow("c1", COACH, []),
+      cupRow("c2", "other", [COACH, "x"]),
+      cupRow("c3", "other", ["x"]),
+    ]);
+    const res = await get("/cup", tokenFor(COACH));
+    const cups = res.body.cups as Array<{ id: string; viewerRoles: unknown }>;
+    expect(cups.map((c) => c.viewerRoles)).toEqual([
+      { commissioner: true, participant: null, teams: [] },
+      {
+        commissioner: false,
+        participant: "active",
+        teams: [{ id: "t-c2-0", name: "Équipe 0" }],
+      },
+      { commissioner: false, participant: null, teams: [] },
+    ]);
+    // Une seule lecture des coupes : les rôles se lisent dans les inscrits.
+    expect(db.cup.findMany).toHaveBeenCalledTimes(1);
+    expect(db.cupParticipant.findMany).not.toHaveBeenCalled();
+    expect(db.team.findMany).not.toHaveBeenCalled();
+  });
+});

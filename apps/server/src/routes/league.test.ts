@@ -44,7 +44,9 @@ vi.mock("../prisma", () => ({
   prisma: {
     team: { findUnique: vi.fn() },
     league: { findUnique: vi.fn() },
-    leagueSeason: { findUnique: vi.fn() },
+    leagueSeason: { findUnique: vi.fn(), groupBy: vi.fn(async () => []) },
+    // `viewerRoles` du listing (`competition-viewer-roles`).
+    leagueParticipant: { findMany: vi.fn(async () => []) },
     leagueInvitation: { count: vi.fn(async () => 0) },
   },
 }));
