@@ -364,11 +364,21 @@ Trois-quart de base, ce qui rend une feuille antérieure lisible sans backfill
 et préserve les choix quand le contingent grossit. Les quatre dérivations de
 la feuille passent par `journeymenChoiceInput`, sinon elles divergent.
 
-Éligibilité : le seul seuil « 0-12 ou plus » rate les Trois-quarts à quota
-réduit (Orques : Trois-quart Gobelin, 0-4), donc le choix que la règle
-publiée annonce. Un poste est retenu s'il est 0-12+ **ou** si ses Mots-clés
-déclarent « Trois-quart » (base d'abord, repli `KEYWORDS_SEASON3`). Le tri
-reste `max` décroissant : le 0-16 est toujours le DÉFAUT.
+Éligibilité (livre p.94, confirmé le 2026-11-09) : un journalier ne se
+prend que sur un poste dont les Mots-clés déclarent « Trois-quart » (base
+d'abord, repli `KEYWORDS_SEASON3`) **et** de quantité 0-16. Un Trois-quart
+à quota réduit (Orques : Trois-quart Gobelin 0-4 ; Alliance du Vieux
+Monde : Aspirant Halfling, Trois-Quart Nain 0-3) n'en fournit PAS — la
+version précédente l'ouvrait à tort. Repli pour un roster sans mots-clés
+(Saison 2, données anciennes) : le ou les postes de plus grand `max` s'il
+atteint 12 — un test en table vérifie que chaque roster S2/S3 du moteur
+garde au moins un poste. Tri `max` décroissant puis coût : le 0-16 est le
+DÉFAUT. Un choix STOCKÉ devenu inéligible retombe sur le défaut, sauf si le
+gel de la feuille a baké CE poste à CE rang (`bakedPositionNames`) : une
+feuille figée (validée comprise) ne bouge pas, et le picker l'affiche
+encore (`withFrozenLegacyOptions`). Le mort relevé n'est PAS concerné : sa
+règle (« un Trois-quart de la fiche ») garde l'ancienne sélection, 0-12+ OU
+Mot-clé, via `troisQuartPositionsForRoster` — ne pas re-coupler les deux.
 
 Trois pièges rencontrés en corrigeant les journaliers (sept. 2026) :
 

@@ -3745,7 +3745,7 @@ describe("Lot G — league-match-sheet", () => {
       );
     }
 
-    it("re-bake le journalier changé de poste : VEA figée, stats, compétences, numéro conservé", async () => {
+    it("un Trois-quart Gobelin (0-4) choisi n'est plus suivi (p.94) : le gel reste à 2 Trois-quarts Orques", async () => {
       mockOrcSheet({
         rosterSnapshotHome: frozenHome(),
         rosterSnapshotAway: JSON.stringify({ currentValue: 900_000, players: [] }),
@@ -3758,29 +3758,18 @@ describe("Lot G — league-match-sheet", () => {
       });
 
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
-      expect(data.journeymenHome).toEqual({
-        positions: ["orc_trois_quart_gobelin", null],
-      });
       const snap = JSON.parse(data.rosterSnapshotHome as string);
-      // 940k − 50k (Trois-quart Orque) + 40k (Trois-quart Gobelin).
-      expect(snap.currentValue).toBe(930_000);
-      expect(snap.journeymenValue).toBe(90_000);
-      expect(snap.treasury).toBe(30_000);
+      // Rien ne bouge : le Gobelin n'est pas un poste de journalier.
+      expect(snap.currentValue).toBe(940_000);
+      expect(snap.journeymenValue).toBe(100_000);
       expect(snap.players).toHaveLength(11);
       expect(snap.players[9]).toMatchObject({
         number: 12,
         name: "Journalier 1",
-        position: "Journalier (Trois-quart Gobelin)",
-        ma: 6,
-        st: 2,
-        av: 8,
-      });
-      expect(snap.players[9].skills.split(",")).toEqual(
-        expect.arrayContaining(["dodge", "loner-4"]),
-      );
-      expect(snap.players[10]).toMatchObject({
-        number: 13,
         position: "Journalier (Trois-quart Orque)",
+        ma: 5,
+        st: 3,
+        av: 10,
       });
       // L'autre côté n'est pas touché.
       expect(data.rosterSnapshotAway).toBeUndefined();
@@ -3816,28 +3805,29 @@ describe("Lot G — league-match-sheet", () => {
     });
 
     it("feuille antérieure au re-gel (poste changé sans re-gel) : la VEA repart des journaliers BAKÉS", async () => {
-      // Sous l'ancien code, le choix (2 Gobelins) a été stocké sans re-geler :
-      // le gel porte encore 2 Trois-quarts Orques (940k = 840k + 2 × 50k).
+      // Gel de 2 Trois-quarts Gobelins (840k + 2 × 40k), choix STOCKÉ
+      // divergent (aucun) : c'est la valeur bakée qui sort de la VEA, pas
+      // celle re-dérivée du choix stocké (2 Orques, 100k).
       mockOrcSheet({
-        rosterSnapshotHome: frozenHome(),
-        journeymenHome: {
-          positions: ["orc_trois_quart_gobelin", "orc_trois_quart_gobelin"],
-        },
+        rosterSnapshotHome: frozenHome({
+          currentValue: 920_000,
+          players: [...realPlayers, bakedGoblin(12), bakedGoblin(13)],
+        }),
       });
 
       await updatePreMatch({
         pairingId: "pair-1",
         userId: HOME,
-        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin", null] },
+        payload: { journeymenChoicesHome: [null, "orc_trois_quart_orque"] },
       });
 
       const snap = JSON.parse(
         mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data
           .rosterSnapshotHome as string,
       );
-      // 940k − 100k (bakés) + 90k (Gobelin + Orque) — et non 950k.
-      expect(snap.currentValue).toBe(930_000);
-      expect(snap.journeymenValue).toBe(90_000);
+      // 920k − 80k (bakés) + 100k (2 Orques) — et non 920k.
+      expect(snap.currentValue).toBe(940_000);
+      expect(snap.journeymenValue).toBe(100_000);
     });
 
     it("gel « en-tête seul » : le choix est stocké, rien n'est re-baké (journaliers dérivés en live)", async () => {
@@ -3881,6 +3871,12 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.teams.home?.journeymenChoices).toEqual([
         "orc_trois_quart_gobelin",
         "orc_trois_quart_orque",
+      ]);
+      // Le Gobelin baké (antérieur à la règle p.94) reste affichable dans le
+      // picker, après le seul poste éligible.
+      expect(out.teams.home?.journeymenOptions?.map((o) => o.slug)).toEqual([
+        "orc_trois_quart_orque",
+        "orc_trois_quart_gobelin",
       ]);
     });
   });
@@ -4210,11 +4206,43 @@ describe("Lot G — league-match-sheet", () => {
       expect(again.candidates).toEqual(first.candidates);
     });
 
-    it("suit le poste CHOISI du journalier (Gobelin : Agilité Principale, Esquive exclue)", async () => {
+    it("ne suit plus un Trois-quart Gobelin choisi sur une feuille non figée (p.94)", async () => {
       mockOrcPairing({
         id: "ms1",
         status: "draft",
         journeymenAway: { positions: ["orc_trois_quart_gobelin"] },
+      });
+      // Le journalier reste un Trois-quart Orque (G,S) : Agilité refusée.
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "A",
+        }),
+      ).rejects.toMatchObject({ code: "category_not_primary" });
+    });
+
+    it("suit le Gobelin BAKÉ dans le gel d'une feuille antérieure (Agilité Principale, Esquive exclue)", async () => {
+      mockOrcPairing({
+        id: "ms1",
+        status: "draft",
+        journeymenAway: { positions: ["orc_trois_quart_gobelin"] },
+        rosterSnapshotAway: JSON.stringify({
+          currentValue: 900_000,
+          players: [
+            ...Array.from({ length: 10 }, (_, i) => ({
+              name: `J${i + 1}`,
+              position: "orc_blitzer",
+              number: i + 1,
+            })),
+            {
+              name: "Journalier 1",
+              position: "Journalier (Trois-quart Gobelin)",
+              number: 11,
+            },
+          ],
+        }),
       });
       const out = await rollJourneymanRandomPrimary({
         pairingId: "pair-1",

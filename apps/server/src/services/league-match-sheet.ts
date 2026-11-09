@@ -73,6 +73,7 @@ import {
   splitSkillCsv,
   sumJourneymenValue,
   toFrozenJourneymanEntry,
+  withFrozenLegacyOptions,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
@@ -5372,10 +5373,9 @@ export async function getMatchSheet(input: {
     return {
       ...team,
       journeymen,
-      journeymenOptions: linemanPositionsForRoster(
-        team.roster,
-        team.ruleset,
-        positions,
+      journeymenOptions: withFrozenLegacyOptions(
+        linemanPositionsForRoster(team.roster, team.ruleset, positions),
+        journeymen,
       ),
       journeymenChoice: choice.position,
       // Choix EFFECTIF de chaque journalier (le poste réellement dérivé),

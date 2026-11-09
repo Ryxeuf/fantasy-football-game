@@ -3,7 +3,7 @@
     "title": "Compendium des règles — Blood Bowl 2025 (Saison 3)",
     "edition": "Blood Bowl 2025 (Saison 3)",
     "sourceDir": "docs/regles-bb-2025/",
-    "version": "2026-10-06a",
+    "version": "2026-11-09a",
     "disclaimer": "Résumés de règles rédigés par Nuffle Arena à des fins d'aide de jeu (projet de fans indépendant, sans affiliation à Games Workshop). Ne remplace pas le livre de règles officiel."
   },
   "chapters": [
@@ -577,8 +577,8 @@
           "type": "list",
           "ordered": false,
           "items": [
-            "Un journalier correspond toujours à un poste de **Trois-quart** de la fiche d'équipe, avec une quantité 0-16, et se comporte comme un joueur normal mais reçoit en plus le trait **Solitaire (4+)**.",
-            "Si la fiche d'équipe propose plusieurs postes de Trois-quart, le coach choisit le type de journalier. Un poste de Trois-quart limité à une quantité 0-16 ne peut pas servir de journalier.",
+            "Un journalier est toujours pris sur un poste de **Trois-quart** de la fiche d'équipe et joue comme n'importe quel joueur, avec en plus le trait **Solitaire (4+)**.",
+            "Seul un poste de Trois-quart dont la quantité est 0-16 peut fournir des journaliers : un Trois-quart à effectif réduit (0-3, 0-4…) n'en fournit pas. Si plusieurs postes de Trois-quart 0-16 figurent sur la fiche, le coach choisit lequel utiliser.",
             "Les journaliers peuvent temporairement porter l'effectif (joueurs blessés inclus) au-delà de 16, mais jamais le nombre de joueurs aptes à jouer au-delà de 11.",
             "Les journaliers comptent dans la Valeur d'Équipe Actuelle (VEA) : il faut donc les inclure avant de calculer la VEA du match."
           ]

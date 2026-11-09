@@ -1066,11 +1066,11 @@ if (process.env.TEST_SQLITE === "1") {
       }
 
       // Orques : roster à DEUX postes de Trois-quart (Orque 0-16, Gobelin
-      // 0-4) — le cas « journaliers panachables » des feuilles de match de
-      // ligue (E37 / A161-A163). Le Gobelin porte ses compétences de base
-      // (Esquive, Poids Plume, Minus) et son accès Principale A,K, pour que
-      // le tirage « Hasard » d'un journalier gobelin exclue Esquive et tire
-      // dans la table Agilité. Cette table est seedée ENTIÈRE :
+      // 0-4). Règle p.94 : seul le Trois-quart Orque (0-16) fournit un
+      // journalier — le Gobelin, avec ses compétences et son accès de base,
+      // est là pour vérifier qu'il n'est PAS proposé (E37 / A161-A163). Le
+      // tirage « Hasard » du journalier orque (Principale G,S) se fait dans
+      // la table Générale, seedée ENTIÈRE comme la table Agilité :
       // `resolveRandomPrimaryPool` ne garde que les slugs présents en base
       // dès qu'il en trouve un, et un catalogue partiel n'aurait rien à tirer.
       const ORC_LINEMEN = [
@@ -1178,6 +1178,79 @@ if (process.env.TEST_SQLITE === "1") {
           nameFr: "Équilibre",
           nameEn: "Sure Feet",
           category: "Agility",
+        },
+        // Table « Compétence Principale au hasard » — Générales (p.121).
+        {
+          slug: "block",
+          nameFr: "Blocage",
+          nameEn: "Block",
+          category: "General",
+        },
+        {
+          slug: "dauntless",
+          nameFr: "Intrépide",
+          nameEn: "Dauntless",
+          category: "General",
+        },
+        {
+          slug: "fend",
+          nameFr: "Parade",
+          nameEn: "Fend",
+          category: "General",
+        },
+        {
+          slug: "frenzy",
+          nameFr: "Frénésie",
+          nameEn: "Frenzy",
+          category: "General",
+        },
+        {
+          slug: "kick",
+          nameFr: "Frappe Précise",
+          nameEn: "Kick",
+          category: "General",
+        },
+        {
+          slug: "pro",
+          nameFr: "Pro",
+          nameEn: "Pro",
+          category: "General",
+        },
+        {
+          slug: "surefoot",
+          nameFr: "Appuis Sûrs",
+          nameEn: "Steady Footing",
+          category: "General",
+        },
+        {
+          slug: "strip-ball",
+          nameFr: "Arracher le Ballon",
+          nameEn: "Strip Ball",
+          category: "General",
+        },
+        {
+          slug: "sure-hands",
+          nameFr: "Prise Sûre",
+          nameEn: "Sure Hands",
+          category: "General",
+        },
+        {
+          slug: "tackle",
+          nameFr: "Tacle",
+          nameEn: "Tackle",
+          category: "General",
+        },
+        {
+          slug: "provocation",
+          nameFr: "Provocation",
+          nameEn: "Taunt",
+          category: "General",
+        },
+        {
+          slug: "wrestle",
+          nameFr: "Lutte",
+          nameEn: "Wrestle",
+          category: "General",
         },
         // Traits de base du Trois-quart Gobelin.
         {

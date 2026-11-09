@@ -1,31 +1,31 @@
 /**
  * E2E API — journaliers de la feuille de match, du choix du poste au
  * recrutement, sur un roster à DEUX Trois-quarts (Orques : Orque 0-16,
- * Gobelin 0-4).
+ * Gobelin 0-4) dont UN SEUL fournit un journalier (livre p.94 : Trois-quart
+ * de quantité 0-16).
  *
  * Rejoue sur une vraie base (SQLite, vrai serveur, deux coachs et un
  * commissaire) la chaîne remontée par le log de validation — chaque étape
  * est l'anomalie ou l'évolution qu'elle verrouille :
  *
- *  - E37  : le journalier n°1 passe Trois-quart Orque → Gobelin ; la VEA
- *           figée du match suit (−10 000 po) et le roster « version du
- *           match » porte le nouveau poste ;
- *  - A163 : le journalier gobelin marque un TD ; ses PSP sont crédités et il
- *           atteint le palier que l'onglet Évolutions propose (3 PSP) ;
+ *  - E37  : la feuille ne propose que le Trois-quart Orque ; un choix
+ *           « Gobelin » posé par le coach est ignoré — ni la VEA figée ni le
+ *           roster « version du match » ne bougent ;
+ *  - A163 : le journalier marque un TD ; ses PSP sont crédités et il atteint
+ *           le palier que l'onglet Évolutions propose (3 PSP) ;
  *  - A162 : le tirage « Compétence Principale au hasard » lui est servi par
- *           la feuille — 2 candidats de la table Agilité, Esquive (qu'il
- *           possède) exclue, déterministe, Force refusée, et réservé au coach
- *           de son côté ;
+ *           la feuille — 2 candidats de la table Générale, déterministe,
+ *           Agilité (Secondaire) refusée, et réservé au coach de son côté ;
  *  - A161 : l'évolution stagée pour lui est ACCEPTÉE par le PATCH
  *           d'après-match (plus de « Joueur journeyman-… hors de l'équipe ») ;
- *  - A138 : recruté à l'étape EMBAUCHES, il rejoint le roster comme Gobelin,
- *           avec la compétence tirée, sans Solitaire, ses PSP débités du
- *           tirage — au prix 40 000 (poste) + 20 000 (évolution) po, débité
- *           de la trésorerie même si le coach a laissé le montant à 0 — et
- *           l'entrée est tracée « appliquée » sur la feuille ;
+ *  - A138 : recruté à l'étape EMBAUCHES, il rejoint le roster comme
+ *           Trois-quart Orque, avec la compétence tirée, sans Solitaire, ses
+ *           PSP débités du tirage — au prix 50 000 (poste) + 20 000
+ *           (évolution) po, débité de la trésorerie même si le coach a laissé
+ *           le montant à 0 — et l'entrée est tracée « appliquée » ;
  *  - la feuille reste INVALIDABLE malgré ce recrutement (retour testeur du
- *    2026-09-19 : « Reversion impossible: purchase-consumed ») — le Gobelin
- *    quitte le roster et la trésorerie revient à son état d'avant.
+ *    2026-09-19 : « Reversion impossible: purchase-consumed ») — le
+ *    journalier quitte le roster et la trésorerie revient à son état d'avant.
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
@@ -34,21 +34,23 @@ import { seedAndLogin, createTeam } from "../helpers/factories";
 
 const ORC_LINEMAN = "orc_trois_quart_orque";
 const GOBLIN_LINEMAN = "orc_trois_quart_gobelin";
-/** Table « Compétence Principale au hasard » — Agilité (p.121). */
-const AGILITY_TABLE = [
-  "catch",
-  "diving-catch",
-  "diving-tackle",
-  "dodge",
-  "defensive",
-  "hit-and-run",
-  "jump-up",
-  "leap",
-  "safe-pair-of-hands",
-  "sidestep",
-  "sprint",
-  "sure-feet",
+/** Table « Compétence Principale au hasard » — Générales (p.121). */
+const GENERAL_TABLE = [
+  "block",
+  "dauntless",
+  "fend",
+  "frenzy",
+  "kick",
+  "pro",
+  "surefoot",
+  "strip-ball",
+  "sure-hands",
+  "tackle",
+  "provocation",
+  "wrestle",
 ];
+/** Compétences d'Élite de la table Générale (surcoût de valeur en plus). */
+const ELITE_GENERAL = new Set(["block"]);
 
 interface SheetJourneyman {
   id: string;
@@ -247,10 +249,12 @@ async function setupOrcJourneymen(prefix: string): Promise<Scenario> {
   };
 }
 
-describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évolution, recrutement (E37 / A161-A163 / A138)", () => {
+describe("E2E API — journalier orque : poste, PSP, tirage « Hasard », évolution, recrutement (E37 / A161-A163 / A138)", () => {
   let s: Scenario;
-  let goblin: SheetJourneyman;
+  let jm: SheetJourneyman;
   let candidates: string[] = [];
+  /** Compétence retenue parmi les candidats (hors Élite : prix stable). */
+  let picked = "";
   /** État de l'équipe AVANT la validation (pour la reversion). */
   let rosterSizeBefore = 0;
   let treasuryBefore = 0;
@@ -269,15 +273,12 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
     await post(s.url, s.commissionerToken, { force: true });
   });
 
-  it("E37 — le roster orque propose ses DEUX Trois-quarts, et le choix par journalier re-fige la VEA et le roster du match", async () => {
+  it("E37 — le roster orque ne propose que son Trois-quart 0-16 ; un choix « Gobelin » est ignoré", async () => {
     const opened = await readSheet();
     const team = mySide(opened);
     expect(team.journeymen?.length, "2 journaliers attendus").toBe(2);
-    expect(team.journeymenOptions?.map((o) => o.slug)).toEqual([
-      ORC_LINEMAN,
-      GOBLIN_LINEMAN,
-    ]);
-    // Par défaut : le Trois-quart 0-16, à 50 000 po chacun.
+    // p.94 : le Trois-quart Gobelin (0-4) ne fournit pas de journalier.
+    expect(team.journeymenOptions?.map((o) => o.slug)).toEqual([ORC_LINEMAN]);
     expect(team.journeymen!.map((j) => [j.position, j.cost])).toEqual([
       [ORC_LINEMAN, 50_000],
       [ORC_LINEMAN, 50_000],
@@ -291,7 +292,7 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
     ctvBefore = team.currentValue;
     expect(ctvBefore).toBeGreaterThan(0);
 
-    // Le journalier n°1 devient Gobelin (rang 0), le n°2 garde le défaut.
+    // Un client qui pose quand même le Gobelin (rang 0) n'obtient rien.
     const patched = await rawPatch(`${s.url}/pre-match`, s.coachToken, {
       [sideKey(s.side, "journeymenChoices")]: [GOBLIN_LINEMAN, null],
     });
@@ -299,53 +300,47 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
 
     const after = await readSheet();
     const teamAfter = mySide(after);
-    expect(teamAfter.journeymenChoices).toEqual([GOBLIN_LINEMAN, ORC_LINEMAN]);
-    goblin = teamAfter.journeymen![0];
-    expect(goblin.position).toBe(GOBLIN_LINEMAN);
-    expect(goblin.positionName).toBe("Journalier (Trois-quart Gobelin)");
-    expect(goblin.cost).toBe(40_000);
-    expect(goblin.stats).toMatchObject({ ma: 6, st: 2, av: 8 });
-    // Compétences du poste + Solitaire (journalier).
-    const skills = goblin.skills.split(",");
-    expect(skills).toEqual(
-      expect.arrayContaining(["dodge", "right-stuff", "stunty", "loner-4"]),
-    );
-    expect(teamAfter.journeymen![1].position).toBe(ORC_LINEMAN);
-    // La VEA figée suit le panachage : 50 000 → 40 000 sur le rang 0.
-    expect(teamAfter.currentValue).toBe(ctvBefore - 10_000);
-    // Et le roster « version du match » porte le nouveau poste.
+    expect(teamAfter.journeymenChoices).toEqual([ORC_LINEMAN, ORC_LINEMAN]);
+    jm = teamAfter.journeymen![0];
+    expect(jm.position).toBe(ORC_LINEMAN);
+    expect(jm.positionName).toBe("Journalier (Trois-quart Orque)");
+    expect(jm.cost).toBe(50_000);
+    expect(jm.stats).toMatchObject({ ma: 5, st: 3, av: 10 });
+    // Poste sans compétence de base : Solitaire seul (journalier).
+    expect(jm.skills.split(",")).toEqual(["loner-4"]);
+    // Ni la VEA figée ni le roster « version du match » ne bougent.
+    expect(teamAfter.currentValue).toBe(ctvBefore);
     const frozenAfter = frozenPositions(
       after.sheet[sideKey(s.side, "rosterSnapshot") as "rosterSnapshotHome"],
     );
     expect(
-      frozenAfter.filter((p) => p === "Journalier (Trois-quart Gobelin)"),
-    ).toHaveLength(1);
-    expect(
       frozenAfter.filter((p) => p === "Journalier (Trois-quart Orque)"),
-    ).toHaveLength(1);
+    ).toHaveLength(2);
+    expect(
+      frozenAfter.filter((p) => p === "Journalier (Trois-quart Gobelin)"),
+    ).toHaveLength(0);
   });
 
-  it("A163 — le journalier gobelin marque : ses PSP sont crédités, il atteint le palier d'évolution", async () => {
+  it("A163 — le journalier marque : ses PSP sont crédités, il atteint le palier d'évolution", async () => {
     const res = await rawPost(`${s.url}/events`, s.coachToken, {
       kind: "touchdown",
       team: s.side,
-      actorPlayerId: goblin.id,
+      actorPlayerId: jm.id,
     });
     expect(res.status, await bodyOf(res)).toBe(201);
     const sheet = await readSheet();
     // TD = 3 PSP : le coût du 1er palier « Hasard » (l'éditeur liste le
     // journalier dès que ses PSP du match atteignent ce palier).
-    expect(sheet.computedSpp[goblin.id]).toBe(3);
-    // Le journalier reste bien servi au poste choisi, avec le même id.
+    expect(sheet.computedSpp[jm.id]).toBe(3);
     expect(mySide(sheet).journeymen![0]).toMatchObject({
-      id: goblin.id,
-      position: GOBLIN_LINEMAN,
+      id: jm.id,
+      position: ORC_LINEMAN,
     });
   });
 
   it("A162 — la feuille sert le tirage « Compétence Principale au hasard » du journalier", async () => {
-    const rollUrl = `${s.url}/journeymen/${goblin.id}/roll-random-primary`;
-    const res = await rawPost(rollUrl, s.coachToken, { category: "A" });
+    const rollUrl = `${s.url}/journeymen/${jm.id}/roll-random-primary`;
+    const res = await rawPost(rollUrl, s.coachToken, { category: "G" });
     expect(res.status, await bodyOf(res)).toBe(200);
     const roll = unwrap(
       (await res.json()) as {
@@ -353,41 +348,41 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
       },
     );
     candidates = roll.candidates;
-    expect(roll.category).toBe("A");
+    expect(roll.category).toBe("G");
     expect(candidates).toHaveLength(2);
     for (const slug of candidates) {
-      expect(AGILITY_TABLE).toContain(slug);
+      expect(GENERAL_TABLE).toContain(slug);
     }
-    // Esquive est une compétence du poste : jamais tirée.
-    expect(candidates).not.toContain("dodge");
+    picked = candidates.find((c) => !ELITE_GENERAL.has(c)) ?? candidates[0];
+    expect(ELITE_GENERAL.has(picked)).toBe(false);
 
     // Déterministe : relancer redonne la même paire.
     const again = unwrap(
-      (await (await rawPost(rollUrl, s.coachToken, { category: "A" })).json()) as {
+      (await (await rawPost(rollUrl, s.coachToken, { category: "G" })).json()) as {
         data: { candidates: string[] };
       },
     );
     expect(again.candidates).toEqual(candidates);
 
-    // Force n'est pas Principale pour un Trois-quart Gobelin (A,K).
+    // Agilité n'est pas Principale pour un Trois-quart Orque (G,S).
     const wrongCategory = await rawPost(rollUrl, s.coachToken, {
-      category: "S",
+      category: "A",
     });
     expect(wrongCategory.status).toBe(400);
 
     // Le coach adverse ne tire pas pour les journaliers de l'autre côté.
     const wrongSide = await rawPost(rollUrl, s.opponentToken, {
-      category: "A",
+      category: "G",
     });
     expect(wrongSide.status).toBeGreaterThanOrEqual(400);
   });
 
   it("A161 — l'évolution stagée pour le journalier est acceptée (plus de « hors de l'équipe »)", async () => {
     const staged = {
-      playerId: goblin.id,
+      playerId: jm.id,
       type: "random-primary",
-      category: "A",
-      skillSlug: candidates[0],
+      category: "G",
+      skillSlug: picked,
     };
     const res = await rawPatch(`${s.url}/post-match`, s.coachToken, {
       [sideKey(s.side, "advancements")]: [staged],
@@ -409,12 +404,12 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
     expect(foreign.status).toBeGreaterThanOrEqual(400);
   });
 
-  it("A138 — recruté à l'étape EMBAUCHES : Gobelin, compétence tirée, sans Solitaire, au prix poste + évolution débité de la trésorerie", async () => {
+  it("A138 — recruté à l'étape EMBAUCHES : Trois-quart Orque, compétence tirée, sans Solitaire, au prix poste + évolution débité de la trésorerie", async () => {
     // Le coach laisse le montant à 0 : c'est le serveur qui fixe le prix.
     const purchase = await rawPatch(`${s.url}/post-match`, s.coachToken, {
       [sideKey(s.side, "winnings") + "Manual"]: 200_000,
       [sideKey(s.side, "purchases")]: [
-        { kind: "journeyman", name: goblin.name, cost: 0, journeymanId: goblin.id },
+        { kind: "journeyman", name: jm.name, cost: 0, journeymanId: jm.id },
       ],
     });
     expect(purchase.status, await bodyOf(purchase)).toBe(200);
@@ -432,23 +427,19 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
     const team = unwrap(
       await get<{ data: TeamDetailDTO }>(`/team/${s.teamId}`, s.coachToken),
     ).team;
-    const hired = team.players.find((p) => p.name === goblin.name);
+    const hired = team.players.find((p) => p.name === jm.name);
     expect(hired, "le journalier doit avoir rejoint le roster").toBeTruthy();
-    // Il est recruté au poste CHOISI, avec ses caractéristiques.
-    expect(hired!.position).toBe(GOBLIN_LINEMAN);
-    expect(hired).toMatchObject({ ma: 6, st: 2, av: 8 });
+    expect(hired!.position).toBe(ORC_LINEMAN);
+    expect(hired).toMatchObject({ ma: 5, st: 3, av: 10 });
     const skills = hired!.skills.split(",");
-    // Compétence tirée conservée, compétences du poste aussi, Solitaire retiré.
-    expect(skills).toContain(candidates[0]);
-    expect(skills).toEqual(
-      expect.arrayContaining(["dodge", "right-stuff", "stunty"]),
-    );
+    // Compétence tirée conservée, Solitaire retiré.
+    expect(skills).toContain(picked);
     expect(skills.some((sk) => sk.startsWith("loner"))).toBe(false);
     // 3 PSP gagnés − 3 PSP du tirage « Hasard ».
     expect(hired!.spp).toBe(0);
-    // Prix : 40 000 (Trois-quart Gobelin) + 20 000 (évolution) — débité
-    // même si le coach a saisi 0 ; les 200 000 po de gains sont crédités.
-    expect(team.treasury).toBe(before.treasury + 200_000 - 60_000);
+    // Prix : 50 000 (Trois-quart Orque) + 20 000 (évolution) — débité même
+    // si le coach a saisi 0 ; les 200 000 po de gains sont crédités.
+    expect(team.treasury).toBe(before.treasury + 200_000 - 70_000);
 
     // L'entrée d'évolution du journalier est tracée « appliquée » (3 PSP).
     const validated = await readSheet();
@@ -457,8 +448,8 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
       validated.sheet[sideKey(s.side, "advancements") as "advancementsHome"],
     );
     expect(entries[0]).toMatchObject({
-      playerId: goblin.id,
-      skillSlug: candidates[0],
+      playerId: jm.id,
+      skillSlug: picked,
       applied: true,
       cost: 3,
     });
@@ -485,7 +476,7 @@ describe("E2E API — journalier gobelin : poste, PSP, tirage « Hasard », évo
       await get<{ data: TeamDetailDTO }>(`/team/${s.teamId}`, s.coachToken),
     ).team;
     expect(team.players).toHaveLength(rosterSizeBefore);
-    expect(team.players.find((p) => p.name === goblin.name)).toBeUndefined();
+    expect(team.players.find((p) => p.name === jm.name)).toBeUndefined();
     // Gains annulés, prix du recrutement rendu : retour exact.
     expect(team.treasury).toBe(treasuryBefore);
   });

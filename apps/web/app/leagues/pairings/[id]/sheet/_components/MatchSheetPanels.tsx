@@ -570,8 +570,8 @@ export function PlayerSelect({
  * Bandeau « Journaliers » d'une équipe : visible quand l'équipe aligne
  * moins de 11 joueurs disponibles.
  *
- * Quand le roster offre PLUSIEURS postes de lineman (Orques : Trois-quart
- * Orque ou Trois-quart Gobelin), chaque journalier a SON picker : le
+ * Quand le roster offre PLUSIEURS Trois-quarts 0-16 (Morts-Vivants :
+ * Squelette ou Zombie), chaque journalier a SON picker : le
  * contingent se panache. Le choix était auparavant unique et noyé sur la
  * même ligne que le texte du bandeau — d'où le « je n'ai pas vu où pouvait
  * être fait le choix ». Il est désormais sur sa propre ligne, une par
