@@ -5,6 +5,7 @@
 
 import { GameState, Player, Position, TeamId, RNG, DiceResult } from '../core/types';
 import { cloneGameState } from '../core/clone-state';
+import { isSeason2Rules } from '../core/ruleset';
 import { rollD6 } from '../utils/dice';
 import { samePos, isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
@@ -294,7 +295,7 @@ export function findInterceptors(
 /**
  * Effectue un jet d'interception (AG du joueur, -2 de base).
  * Applique egalement le malus Disturbing Presence (-1 par adversaire avec
- * le skill a <= 3 cases de l'intercepteur).
+ * le skill a <= 3 cases de l'intercepteur) et, au texte 2025, le -1 de Minus.
  */
 export function performInterceptionRoll(
   interceptor: Player,
@@ -305,8 +306,10 @@ export function performInterceptionRoll(
   const dpModifier = state
     ? getDisturbingPresenceModifier(state, interceptor.pos, interceptor.team)
     : 0;
-  // Total modifier = -2 (interception de base) + DP (negatif ou nul)
-  const totalModifier = -2 + dpModifier;
+  const stuntyModifier =
+    hasSkill(interceptor, 'stunty') && !isSeason2Rules(state?.ruleset) ? -1 : 0;
+  // Total modifier = -2 (interception de base) + DP (negatif ou nul) + Minus
+  const totalModifier = -2 + dpModifier + stuntyModifier;
   // targetNumber base = interceptor.ag - totalModifier (un modificateur negatif augmente le target)
   const targetNumber = Math.max(2, Math.min(6, interceptor.ag - totalModifier));
   const success = diceRoll >= targetNumber;

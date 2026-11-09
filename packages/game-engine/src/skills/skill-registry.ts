@@ -397,10 +397,11 @@ registerSkill({
 //  - Malus d'armure -1 quand la cible est Stunty (trigger on-armor — S27.7).
 //  - Passes Long et Long Bomb interdites (appliqué via `canAttemptPassForRange`
 //    dans `passing.ts`, consommé par `getLegalMoves` et `handlePass`).
+//  - -1 au Test d'Agilité pour Intercepter (texte 2025, `performInterceptionRoll`).
 registerSkill({
   slug: 'stunty',
   triggers: ['on-dodge', 'on-armor'],
-  description: '+1 au jet d\'esquive, armure réduite de 1 (plus fragile), passes limitées à Quick/Short.',
+  description: '+1 au jet d\'esquive, armure réduite de 1 (plus fragile), passes limitées à Quick/Short, -1 pour Intercepter.',
   canApply: (ctx) => hasSkill(ctx.player, 'stunty'),
   getModifiers: (ctx) => {
     // S27.7 — discriminer dodge vs armor via `currentTrigger` (rempli par
