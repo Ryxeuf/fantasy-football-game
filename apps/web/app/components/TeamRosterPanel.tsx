@@ -29,6 +29,11 @@ export interface RosterPlayer {
   pa: number | null;
   av: number;
   skills: string;
+  /**
+   * `TeamPlayer.advancements` brut — signale d'un dé les compétences tirées
+   * au hasard. Optionnel : rétro-compat API.
+   */
+  advancements?: string | null;
   spp: number;
   dead: boolean;
   /** FR20 — stats + blessures durables + dispo (optionnels : rétro-compat API). */
@@ -405,6 +410,7 @@ export default function TeamRosterPanel({
                         skillsString={p.skills}
                         position={p.position}
                         useDirectParsing
+                        advancements={p.advancements}
                       />
                     </td>
                     <td

@@ -1833,6 +1833,8 @@ export async function handleGetLeagueTeamRoster(
       return {
         ...p,
         value: view.playerValue(p.position, s?.advancements ?? null),
+        // Brut : l'écran signale d'un dé les compétences tirées au hasard.
+        advancements: s?.advancements ?? null,
         positionName: view.positionName(p.position),
         totalTouchdowns: career?.touchdowns ?? s?.totalTouchdowns ?? 0,
         totalCasualties: career?.casualties ?? s?.totalCasualties ?? 0,

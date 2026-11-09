@@ -562,6 +562,7 @@
     "players": "joueurs",
     "baseSkillsLegend": "Compétences de base (bordure grise)",
     "acquiredSkillsLegend": "Compétences acquises (bordure orange)",
+    "randomSkillsLegend": "Dé = compétence tirée au hasard",
     "skillColorsLegend": "Couleurs de fond selon la catégorie : General (bleu), Agility (vert), Strength (rouge), Passing (violet), Mutation (orange), Trait (gris)",
     "tableNumber": "#",
     "tableName": "Nom",

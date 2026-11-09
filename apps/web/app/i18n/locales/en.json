@@ -562,6 +562,7 @@
     "players": "players",
     "baseSkillsLegend": "Base skills (gray border)",
     "acquiredSkillsLegend": "Acquired skills (orange border)",
+    "randomSkillsLegend": "Die = randomly rolled skill",
     "skillColorsLegend": "Background colors by category: General (blue), Agility (green), Strength (red), Passing (purple), Mutation (orange), Trait (gray)",
     "tableNumber": "#",
     "tableName": "Name",

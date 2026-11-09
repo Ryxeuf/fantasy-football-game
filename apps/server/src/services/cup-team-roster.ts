@@ -136,6 +136,8 @@ export interface CupRosterPlayerView {
   readonly pa: number | null;
   readonly av: number;
   readonly skills: string;
+  /** JSON brut des améliorations (dé sur les compétences tirées au hasard). */
+  readonly advancements: string | null;
   readonly spp: number;
   readonly dead: false;
   readonly value: number;
@@ -248,6 +250,7 @@ export function buildCupRosterView(input: BuildCupRosterViewInput): CupRosterVie
           pa: p.pa,
           av: p.av,
           skills: p.skills,
+          advancements: p.advancements ?? null,
           spp: p.spp,
           dead: false,
           value: meta.playerValue(p.position, p.advancements),
@@ -273,6 +276,7 @@ export function buildCupRosterView(input: BuildCupRosterViewInput): CupRosterVie
         pa: def?.pa ?? null,
         av: def?.av ?? 0,
         skills: def?.skills ?? "",
+        advancements: null,
         spp: 0,
         dead: false,
         value: sp.cost,

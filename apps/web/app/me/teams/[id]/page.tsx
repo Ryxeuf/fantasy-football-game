@@ -4,6 +4,7 @@ import { API_BASE } from "../../../auth-client";
 import { apiRequest } from "../../../lib/api-client";
 import { useTournamentRulesetLabel } from "../../../lib/tournament-rulesets";
 import SkillTooltip from "../components/SkillTooltip";
+import { D6Icon } from "../../../components/dice/D6Icon";
 import { displayedRegionalLeagues } from "./regional-leagues";
 import { competitionLink } from "./competition-link";
 import SkillAccessBadges from "../components/SkillAccessBadges";
@@ -1062,6 +1063,13 @@ export default function TeamDetailPage() {
                   <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
                   {t.teams.acquiredSkillsLegend}
                 </span>
+                <span
+                  className="ml-4 inline-flex items-center gap-1"
+                  data-testid="random-skills-legend"
+                >
+                  <D6Icon value={6} className="h-3.5 w-3.5" label={t.teams.randomSkillsLegend} />
+                  {t.teams.randomSkillsLegend}
+                </span>
                 <div className="mt-1 text-xs text-gray-400">
                   {t.teams.skillColorsLegend}
                 </div>
@@ -1143,6 +1151,7 @@ export default function TeamDetailPage() {
                           teamName={team.roster}
                           position={p.position}
                           dbBaseSkills={positionMetaByPosition.get(p.position)?.baseSkills}
+                          advancements={p.advancements}
                         />
                         <SkillAccessBadges
                           primary={skillAccessByPosition.get(p.position)?.primary ?? null}
@@ -1283,6 +1292,7 @@ export default function TeamDetailPage() {
                         teamName={team.roster}
                         position={p.position}
                         dbBaseSkills={positionMetaByPosition.get(p.position)?.baseSkills}
+                        advancements={p.advancements}
                       />
                       <SkillAccessBadges
                         primary={skillAccessByPosition.get(p.position)?.primary ?? null}

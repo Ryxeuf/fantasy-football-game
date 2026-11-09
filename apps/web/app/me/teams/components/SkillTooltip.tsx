@@ -28,6 +28,8 @@ import {
   getSkillEliteLabel,
   SKILL_ELITE_DARK_CLASSES,
 } from "../../../lib/skill-elite";
+import { randomSkillSlugs } from "../../../lib/random-skills";
+import { D6Icon } from "../../../components/dice/D6Icon";
 
 interface SkillTooltipProps {
   skillsString: string;  // Chaîne de slugs séparés par des virgules (ex: "block,dodge,leap")
@@ -47,9 +49,15 @@ interface SkillTooltipProps {
    * catégories de la Saison 3 (W13 de l'audit).
    */
   ruleset?: string;
+  /**
+   * `TeamPlayer.advancements` brut (chaîne JSON, tableau ou `null`). Quand
+   * fourni, une compétence acquise par TIRAGE AU HASARD garde sa bordure
+   * orange et porte en plus un petit dé. Absent : affichage historique.
+   */
+  advancements?: unknown;
 }
 
-export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false, dbBaseSkills, ruleset = DEFAULT_SKILLS_RULESET }: SkillTooltipProps) {
+export default function SkillTooltip({ skillsString, teamName, position, className = "", useDirectParsing = false, showAsBaseSkillsOnly = false, dbBaseSkills, ruleset = DEFAULT_SKILLS_RULESET, advancements }: SkillTooltipProps) {
   const { language } = useLanguage();
   // Catalogue résolu côté serveur (si fourni par la page) : prioritaire sur le
   // cache client async → noms corrects dès le 1er rendu, aucun flash.
@@ -107,6 +115,10 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
     // Si pas de position, tout est considéré comme compétence de base
     baseSkillSlugs = skillSlugs;
   }
+
+  const randomSlugs = new Set(randomSkillSlugs(advancements));
+  const randomSkillLabel =
+    language === "fr" ? "Compétence tirée au hasard" : "Randomly rolled skill";
 
   // Si aucune compétence, afficher "Aucune" / "None"
   if (skillSlugs.length === 0) {
@@ -178,8 +190,23 @@ export default function SkillTooltip({ skillsString, teamName, position, classNa
               className={`px-2 py-1 rounded text-xs font-medium cursor-help border-2 border-orange-400 ${categoryColor}`}
               onMouseEnter={(e) => handleMouseEnter(skillSlug, e)}
               onMouseLeave={handleMouseLeave}
+              data-testid={`skill-badge-acquired-${skillSlug}`}
             >
               {displayName}
+              {randomSlugs.has(skillSlug) && (
+                <span
+                  className="ml-1 inline-flex align-middle"
+                  title={randomSkillLabel}
+                  data-testid={`skill-badge-random-${skillSlug}`}
+                >
+                  <D6Icon
+                    value={6}
+                    className="h-3.5 w-3.5"
+                    label={randomSkillLabel}
+                    lang={language === "fr" ? "fr" : "en"}
+                  />
+                </span>
+              )}
               {skillInfo?.isElite && (
                 <span
                   aria-label={getSkillEliteLabel(language)}

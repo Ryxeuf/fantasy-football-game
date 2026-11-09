@@ -16,6 +16,8 @@ export interface AdminTeamPlayer {
   readonly pa: number | null;
   readonly av: number;
   readonly skills: string;
+  /** JSON brut des améliorations (dé sur les compétences tirées au hasard). */
+  readonly advancements?: string | null;
   readonly spp?: number;
   readonly matchesPlayed?: number;
   readonly dead?: boolean;

@@ -634,6 +634,7 @@ export default function AdminTeamDetailPage() {
                           teamName={team.roster}
                           position={p.position}
                           dbBaseSkills={positionMeta.get(p.position)?.baseSkills}
+                          advancements={p.advancements}
                         />
                         <SkillAccessBadges
                           primary={skillAccess.get(p.position)?.primary ?? null}
