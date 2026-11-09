@@ -552,5 +552,45 @@ export const SEASON_3_SKILL_DESCRIPTIONS: Record<
     descriptionEn:
       "When an opposing player attempts to Dodge, Leap, or Jump from a square in this player's Tackle Zone, this player may use this Skill. When used, roll a D6 and add this player's Strength; subtract the opposing player's Strength from the result. On 6+, or a natural 6, the opposing player does not leave the square they were trying to leave and their activation ends. On 5 or less, or a natural 1, this Skill has no effect. If a player tries to leave the Tackle Zone of multiple players with this Skill simultaneously, only one may use this Skill.",
   },
+
+  // Audit S3 (`skills-s3-reference-audit.test.ts`) : textes 2020 encore
+  // servis en Saison 3, dont un chiffre, un seuil ou une condition diffère
+  // du livre 2025 (cf. docs/reference/extraction_competences*.md).
+  stunty: {
+    description:
+      "Quand ce joueur tente d'Esquiver, il ne subit aucun modificateur négatif à ses Tests d'Agilité pour être Marqué par des joueurs adverses. En revanche, il applique un modificateur de -1 au Test d'Agilité quand il tente d'Intercepter le ballon. Ce joueur se blesse plus facilement : tout Jet de Blessure fait pour lui se lit sur le Tableau de Blessure de Minus.",
+    descriptionEn:
+      "When this player attempts to Dodge, they suffer no negative modifiers to their Agility tests for being Marked by opposing players. However, they apply a -1 modifier to the Agility test when attempting to Intercept the ball. This player is more easily hurt: any Injury Roll made for them is read on the Stunty Injury Table.",
+  },
+  "bone-head": {
+    description:
+      "Chaque fois qu'on active ce joueur, après avoir annoncé son action, il jette un D6. Sur 2+, il effectue l'action annoncée normalement. Sur un 1, il devient Déconcentré.",
+    descriptionEn:
+      "Each time this player is activated, after declaring their action, they roll a D6. On a 2+, they perform the declared action as normal. On a 1, they become Distracted.",
+  },
+  "really-stupid": {
+    description:
+      "Chaque fois qu'on active ce joueur, après avoir annoncé son action, il jette un D6, avec un modificateur de +2 s'il est adjacent à un ou plusieurs coéquipiers Debout, non Déconcentrés et n'ayant pas le Trait Gros Débile. Sur 4+, il effectue l'action annoncée normalement. Sur un 1-3, il devient Déconcentré.",
+    descriptionEn:
+      "Each time this player is activated, after declaring their action, they roll a D6, with a +2 modifier if they are adjacent to one or more Standing team-mates who are not Distracted and do not have the Really Stupid Trait. On a 4+, they perform the declared action as normal. On a 1-3, they become Distracted.",
+  },
+  "monstrous-mouth": {
+    description:
+      "Quand on active ce joueur, il peut annoncer une Action Spéciale de Croquement (pas de limite au nombre de joueurs qui l'annoncent à chaque Tour) : il choisit 1 joueur adverse Debout qu'il Marque et jette un D6. Sur 1-2, rien ne se passe. Sur 3+, le joueur adverse est Croqué : il ne peut pas quitter sa case tant que ce joueur le Marque, et l'effet prend fin dès que ce joueur ne le Marque plus, quelle qu'en soit la raison. Le Croquement peut remplacer l'Action de Blocage d'une Action de Blitz. De plus, on ne peut pas utiliser la Compétence Arracher le Ballon contre ce joueur.",
+    descriptionEn:
+      "When activated, this player may declare a Chomp Special Action (no limit on how many players declare it each Turn): choose 1 Standing opposing player they are Marking and roll a D6. On a 1-2, nothing happens. On a 3+, the opposing player is Chomped: they cannot leave their square while this player Marks them, and the effect ends as soon as this player no longer Marks them, for any reason. Chomp may replace the Block action of a Blitz action. In addition, the Strip Ball Skill cannot be used against this player.",
+  },
+  "throw-team-mate": {
+    description:
+      "Ce joueur peut annoncer une Action de Lancer de Coéquipier, selon les règles de cette Action (p.76).",
+    descriptionEn:
+      "This player may declare a Throw Team-mate action, following the rules of that action (p.76).",
+  },
+  "dirty-player-1": {
+    description:
+      "Quand ce joueur effectue une Action d'Agression, il peut appliquer un modificateur de +1 soit au Jet d'Armure, soit au Jet de Blessure. On peut appliquer ce modificateur après avoir fait le jet.",
+    descriptionEn:
+      "When this player performs a Foul action, they may apply a +1 modifier to either the Armour Roll or the Injury Roll. This modifier may be applied after the roll.",
+  },
 };
 

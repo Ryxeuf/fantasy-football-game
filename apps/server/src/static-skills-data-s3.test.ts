@@ -127,3 +127,56 @@ describe("Esquive en Force — texte 2025 (une fois par Tour, trois paliers de F
     expect(Object.keys(SEASON_3_SKILL_DESCRIPTIONS)).toContain("break-tackle");
   });
 });
+
+describe("Textes 2020 remplacés par le texte 2025 (audit des compétences S3)", () => {
+  const fr = (slug: string) =>
+    SEASON_3_SKILL_DESCRIPTIONS[slug]?.description ?? "";
+  const en = (slug: string) =>
+    SEASON_3_SKILL_DESCRIPTIONS[slug]?.descriptionEn ?? "";
+
+  it("Minus : -1 pour INTERCEPTER (plus de +1 à l'adversaire qui interfère)", () => {
+    expect(fr("stunty")).toContain("-1");
+    expect(fr("stunty")).toContain("Intercepter");
+    expect(fr("stunty")).not.toContain("+1");
+    expect(en("stunty")).toContain("-1");
+  });
+
+  it("Grande Gueule : Action Spéciale de Croquement sur 3+, plus de relance de réception", () => {
+    expect(fr("monstrous-mouth")).toContain("Croquement");
+    expect(fr("monstrous-mouth")).toContain("3+");
+    expect(fr("monstrous-mouth")).toContain("Arracher le Ballon");
+    expect(fr("monstrous-mouth")).not.toMatch(/relancer/i);
+    expect(en("monstrous-mouth")).toContain("Chomp");
+  });
+
+  it("Lancer de Coéquipier : plus de condition de Force 5", () => {
+    expect(fr("throw-team-mate")).not.toContain("Force");
+    expect(en("throw-team-mate")).not.toContain("Strength");
+  });
+
+  it("Cerveau Lent (2+) et Gros Débile (4+, +2 si soutenu) : le joueur devient Déconcentré", () => {
+    expect(fr("bone-head")).toContain("2+");
+    expect(fr("bone-head")).toContain("Déconcentré");
+    expect(fr("really-stupid")).toContain("4+");
+    expect(fr("really-stupid")).toContain("+2");
+    expect(fr("really-stupid")).toContain("Déconcentré");
+  });
+
+  it("Joueur Déloyal : le +1 est écrit en toutes lettres", () => {
+    expect(fr("dirty-player-1")).toContain("+1");
+    expect(en("dirty-player-1")).toContain("+1");
+  });
+
+  it("chaque slug corrigé existe au canon", () => {
+    for (const slug of [
+      "stunty",
+      "monstrous-mouth",
+      "throw-team-mate",
+      "bone-head",
+      "really-stupid",
+      "dirty-player-1",
+    ]) {
+      expect(SKILLS_DEFINITIONS.find((s) => s.slug === slug)).toBeTruthy();
+    }
+  });
+});
