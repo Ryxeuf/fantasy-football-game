@@ -88,6 +88,28 @@ describe("getCoachPublicProfile", () => {
     expect(result!.eloRating).toBe(1234);
     expect(result!.isSupporter).toBe(false);
     expect(result!.memberSince).toBe("2025-12-01T00:00:00.000Z");
+    // Sans numéro NAF vérifié : rien de NAF n'est public.
+    expect(result!.naf).toBeNull();
+  });
+
+  it("expose le numéro NAF VÉRIFIÉ (numéro + nom officiel)", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      buildUser({
+        nafNumber: 7221,
+        nafName: "#5Renton",
+        nafVerifiedAt: new Date("2026-11-09T10:00:00.000Z"),
+      }),
+    ]);
+    const result = await getCoachPublicProfile("coach-alpha", FIXED_NOW);
+    expect(result!.naf).toEqual({ number: 7221, name: "#5Renton" });
+  });
+
+  it("n'expose PAS un numéro NAF en attente de vérification", async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      buildUser({ nafNumber: 7221, nafName: "Pseudo", nafVerifiedAt: null }),
+    ]);
+    const result = await getCoachPublicProfile("coach-alpha", FIXED_NOW);
+    expect(result!.naf).toBeNull();
   });
 
   it("flags the supporter status from supporterActiveUntil in the future", async () => {

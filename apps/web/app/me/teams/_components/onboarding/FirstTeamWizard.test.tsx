@@ -97,7 +97,9 @@ describe("FirstTeamWizard", () => {
       ).toBe("Reikland Reavers"),
     );
 
-    // Étape 2 -> confirmation.
+    // Étape 2 -> staff (facultatif, rien pris) -> confirmation.
+    fireEvent.click(screen.getByTestId("onboarding-next"));
+    expect(screen.getByTestId("onboarding-staff-step")).toBeTruthy();
     fireEvent.click(screen.getByTestId("onboarding-next"));
     expect(screen.getByTestId("onboarding-confirm-step")).toBeTruthy();
 
@@ -112,11 +114,81 @@ describe("FirstTeamWizard", () => {
       (c) => (c[1] as RequestInit | undefined)?.method === "POST",
     );
     expect(postCall?.[0]).toBe("/team/create-from-roster");
-    expect(JSON.parse((postCall?.[1] as RequestInit).body as string)).toMatchObject({
+    const sent = JSON.parse((postCall?.[1] as RequestInit).body as string);
+    expect(sent).toMatchObject({
       roster: "orc",
       name: "Reikland Reavers",
     });
+    // Aucun staff pris : la création reste celle d'avant l'étape Staff.
+    expect(sent).not.toHaveProperty("dedicatedFans");
+    expect(sent).not.toHaveProperty("rerolls");
     expect(onDismiss).toHaveBeenCalled();
+  });
+
+  it("achète fans et relances à l'étape Staff, avec coût et budget restant", async () => {
+    // Détail du roster orc : 11 Orc Linemen à 50k => 550k sur 1000k.
+    global.fetch = vi.fn().mockImplementation((url: string) =>
+      Promise.resolve({
+        ok: true,
+        json: async () =>
+          url.includes("/api/rosters/orc")
+            ? {
+                roster: {
+                  positions: [
+                    {
+                      slug: "orc_lineman",
+                      displayName: "Lineman",
+                      cost: 50,
+                      min: 0,
+                      max: 16,
+                      ma: 5,
+                      st: 3,
+                      ag: 3,
+                      pa: 4,
+                      av: 10,
+                      skills: "",
+                    },
+                  ],
+                },
+              }
+            : ROSTERS,
+      }),
+    ) as unknown as typeof fetch;
+    renderWizard();
+    await waitFor(() => screen.getByTestId("onboarding-race-orc"));
+    fireEvent.click(screen.getByTestId("onboarding-race-orc"));
+    await waitFor(() =>
+      expect(
+        (screen.getByTestId("onboarding-name-input") as HTMLInputElement).value,
+      ).toBe("Reikland Reavers"),
+    );
+    fireEvent.click(screen.getByTestId("onboarding-next"));
+
+    // Budget restant affiché une fois les positions chargées.
+    await waitFor(() =>
+      expect(screen.getByTestId("onboarding-staff-remaining").textContent).toContain("450"),
+    );
+    // Rappel : le premier fan n'est offert qu'à l'inscription en ligue.
+    expect(screen.getByTestId("onboarding-staff-fans-hint").textContent).toMatch(/ligue/);
+
+    fireEvent.click(screen.getByTestId("onboarding-staff-fans-inc"));
+    fireEvent.click(screen.getByTestId("onboarding-staff-fans-inc"));
+    fireEvent.click(screen.getByTestId("onboarding-staff-rerolls-inc"));
+    expect(screen.getByTestId("onboarding-staff-fans-value").textContent).toBe("2");
+    expect(screen.getByTestId("onboarding-staff-cost").textContent).not.toMatch(/^0/);
+
+    fireEvent.click(screen.getByTestId("onboarding-next"));
+    expect(screen.getByTestId("onboarding-confirm-step").textContent).toMatch(/2 fan/);
+    fireEvent.click(screen.getByTestId("onboarding-create"));
+    await waitFor(() => expect(pushMock).toHaveBeenCalled());
+    const postCall = mockedApiRequest.mock.calls.find(
+      (c) => (c[1] as RequestInit | undefined)?.method === "POST",
+    );
+    expect(JSON.parse((postCall?.[1] as RequestInit).body as string)).toMatchObject({
+      roster: "orc",
+      dedicatedFans: 2,
+      rerolls: 1,
+    });
   });
 
   it("régénère le nom au clic sur le dé", async () => {

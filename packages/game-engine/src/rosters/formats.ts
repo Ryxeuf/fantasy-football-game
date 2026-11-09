@@ -17,6 +17,7 @@
  */
 
 import type { PositionDefinition } from "./positions";
+import { validateBuildStaff } from "./build-staff";
 
 export type GameFormat = "bb11" | "sevens";
 export const FORMATS: GameFormat[] = ["bb11", "sevens"];
@@ -285,21 +286,14 @@ export function validateFormatSelection(
   // constantes du format (qui satisfont structurellement `StaffLimits`).
   const limits: StaffLimits = input.staffConfig ?? c;
 
-  if (input.rerolls > limits.maxRerolls) {
-    return { valid: false, error: `Maximum ${limits.maxRerolls} relances dans ce format` };
-  }
-  if (input.cheerleaders > limits.maxCheerleaders) {
-    return { valid: false, error: `Maximum ${limits.maxCheerleaders} cheerleaders dans ce format` };
-  }
-  if (input.assistants > limits.maxAssistants) {
-    return { valid: false, error: `Maximum ${limits.maxAssistants} coachs assistants dans ce format` };
-  }
-  if (input.dedicatedFans > limits.maxDedicatedFans) {
-    return { valid: false, error: `Maximum ${limits.maxDedicatedFans} fans dévoués dans ce format` };
-  }
-  if (input.apothecary && !limits.apothecaryAllowed) {
-    return { valid: false, error: "L'apothicaire n'est pas autorisé pour cette équipe" };
-  }
-
-  return { valid: true };
+  return validateBuildStaff(
+    {
+      rerolls: input.rerolls,
+      cheerleaders: input.cheerleaders,
+      assistants: input.assistants,
+      apothecary: input.apothecary,
+      dedicatedFans: input.dedicatedFans,
+    },
+    limits,
+  );
 }

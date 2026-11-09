@@ -1,5 +1,22 @@
 import { z } from "zod";
 
+/**
+ * Staff acheté À LA CONSTRUCTION — bornes de forme (superset BB11) communes
+ * au builder complet (`/team/build`) et à l'assistant de première équipe
+ * (`/team/create-from-roster`). Les plafonds par roster × format et le tarif
+ * sont appliqués au runtime (`validateBuildStaff` / `buildStaffCostPo`,
+ * @bb/game-engine).
+ */
+const buildStaffFields = {
+  rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
+  cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
+  assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
+  apothecary: z.boolean().optional(),
+  // Hors ligue, aucun fan n'est offert : 0 est un compte légitime. Le fan
+  // offert d'une équipe de ligue est accordé à l'inscription (league-free-fan).
+  dedicatedFans: z.number().int().min(0, "Le nombre de fans dévoués doit être entre 0 et 6").max(6, "Le nombre de fans dévoués doit être entre 0 et 6").optional(),
+};
+
 export const createFromRosterSchema = z.object({
   name: z.string().min(1, "name et roster requis").max(100),
   roster: z.string().min(1, "name et roster requis"),
@@ -17,7 +34,12 @@ export const createFromRosterSchema = z.object({
   // options du roster dans le handler ; requise dès que le roster a le choix
   // entre plusieurs Ligues, sauf règlement de tournoi qui neutralise l'axe.
   regionalLeague: z.string().trim().max(64).optional().nullable(),
+  // Staff optionnel (assistant de première équipe) : absent = aucun staff,
+  // comportement historique. Tarifé et plafonné comme dans le builder.
+  ...buildStaffFields,
 });
+
+export type CreateFromRosterInput = z.infer<typeof createFromRosterSchema>;
 
 export const buildTeamSchema = z.object({
   name: z.string().min(1, "name, roster, choices requis").max(100),
@@ -47,13 +69,7 @@ export const buildTeamSchema = z.object({
   // entre plusieurs Ligues, sauf règlement de tournoi qui neutralise l'axe.
   regionalLeague: z.string().trim().max(64).optional().nullable(),
   tournamentRuleset: z.string().trim().max(64).optional().nullable(),
-  rerolls: z.number().int().min(0, "Le nombre de relances doit être entre 0 et 8").max(8, "Le nombre de relances doit être entre 0 et 8").optional(),
-  cheerleaders: z.number().int().min(0, "Le nombre de cheerleaders doit être entre 0 et 12").max(12, "Le nombre de cheerleaders doit être entre 0 et 12").optional(),
-  assistants: z.number().int().min(0, "Le nombre d'assistants doit être entre 0 et 6").max(6, "Le nombre d'assistants doit être entre 0 et 6").optional(),
-  apothecary: z.boolean().optional(),
-  // Hors ligue, aucun fan n'est offert : 0 est un compte légitime. Le fan
-  // offert d'une équipe de ligue est accordé à l'inscription (league-free-fan).
-  dedicatedFans: z.number().int().min(0, "Le nombre de fans dévoués doit être entre 0 et 6").max(6, "Le nombre de fans dévoués doit être entre 0 et 6").optional(),
+  ...buildStaffFields,
   // Case « Édition avancée » du builder : conditionne le recrutement de
   // Star Players (refusé hors mode avancé / hors coupe).
   advancedEdition: z.boolean().optional(),

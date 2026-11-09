@@ -21,6 +21,7 @@ import { NewSeasonModal } from "./NewSeasonModal";
 import { SeasonAdminPanel } from "./SeasonAdminPanel";
 import { PoolsManagerPanel } from "./PoolsManagerPanel";
 import { ManualScheduleEditor } from "./ManualScheduleEditor";
+import { SeasonDeletePanel } from "./SeasonDeletePanel";
 import { JoinSeasonModal } from "./JoinSeasonModal";
 import { MeceneButton } from "./MeceneButton";
 import { putPoolFirst } from "./pool-order";
@@ -821,6 +822,33 @@ export default function LeagueDetailPage() {
                   }}
                 />
               </div>
+
+              {/* Zone de danger : suppression d'une saison sans résultat
+                  (commissaire ou admin ; le serveur re-vérifie). */}
+              <SeasonDeletePanel
+                key={season.id}
+                season={{
+                  id: season.id,
+                  name: season.name,
+                  rounds: season.rounds,
+                  participantsCount: season.participants.length,
+                }}
+                canManage={isCreator || currentUserIsAdmin}
+                onDeleted={() => {
+                  apiRequest<{ league: LeagueDetail }>(`/leagues/${leagueId}`)
+                    .then(({ league: data }) => {
+                      setLeague(data);
+                      setSelectedSeasonId(
+                        data.seasons.length > 0
+                          ? data.seasons[data.seasons.length - 1].id
+                          : null,
+                      );
+                    })
+                    .catch(() => {
+                      setSelectedSeasonId(null);
+                    });
+                }}
+              />
             </>
           ) : !seasonLoading && !seasonError ? (
             <p className="text-sm text-gray-500">

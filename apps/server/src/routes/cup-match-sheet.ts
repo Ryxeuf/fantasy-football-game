@@ -17,12 +17,13 @@
 
 import { Router } from "express";
 import { authUser } from "../middleware/authUser";
-import { validate } from "../middleware/validate";
+import { validate, validateQuery } from "../middleware/validate";
 import {
   handleAddMatchSheetEvent,
   handleCanInvalidate,
   handleCreateMatchSheet,
   handleGetMatchSheet,
+  handleInducementsDone,
   handleInvalidateMatchSheet,
   handleRemoveMatchSheetEvent,
   handleRollJourneymanRandomPrimary,
@@ -35,7 +36,10 @@ import {
 import {
   addEventSchema,
   createMatchSheetSchema,
+  inducementsDoneSchema,
   invalidateSheetSchema,
+  sheetSideSchema,
+  sheetViewQuerySchema,
   postMatchSchema,
   preMatchSchema,
 } from "../schemas/league-match-sheet.schemas";
@@ -43,7 +47,12 @@ import { rollRandomPrimarySchema } from "../schemas/advancement.schemas";
 
 const router = Router();
 
-router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
+router.get(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  validateQuery(sheetViewQuerySchema),
+  handleGetMatchSheet,
+);
 router.post(
   "/pairings/:pairingId/sheet",
   authUser,
@@ -55,6 +64,12 @@ router.patch(
   authUser,
   validate(preMatchSchema),
   handleUpdatePreMatch,
+);
+router.post(
+  "/pairings/:pairingId/sheet/inducements-done",
+  authUser,
+  validate(inducementsDoneSchema),
+  handleInducementsDone,
 );
 router.patch(
   "/pairings/:pairingId/sheet/post-match",
@@ -82,11 +97,13 @@ router.delete(
 router.post(
   "/pairings/:pairingId/sheet/submit",
   authUser,
+  validate(sheetSideSchema),
   handleSubmitMatchSheet,
 );
 router.post(
   "/pairings/:pairingId/sheet/unsubmit",
   authUser,
+  validate(sheetSideSchema),
   handleUnsubmitMatchSheet,
 );
 router.post(

@@ -426,6 +426,10 @@ router.get("/me", authUser, async (req: AuthenticatedRequest, res) => {
         supporterActiveUntil: true,
         totalDonatedCentsByCurrency: true,
         discordUserId: true,
+        // Numéro NAF (vérifié auprès de thenaf.net) + nom NAF officiel.
+        nafNumber: true,
+        nafName: true,
+        nafVerifiedAt: true,
         valid: true,
         eloRating: true,
         privateProfile: true,

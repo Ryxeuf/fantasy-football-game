@@ -98,11 +98,12 @@ export async function createTeam(
   ownerId: string,
   name: string,
   roster: RosterKey,
+  options: { rerolls?: number } = {},
 ): Promise<{ teamId: string; teamName: string }> {
   const created = await post<{ id: string; name: string }>(
     "/__test/seed-team",
     null,
-    { ownerId, name, roster },
+    { ownerId, name, roster, ...options },
   );
   return { teamId: created.id, teamName: created.name };
 }

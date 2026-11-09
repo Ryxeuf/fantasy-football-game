@@ -1,19 +1,25 @@
 /**
- * Break Tackle (BB3 Season 2/3 rules).
+ * Break Tackle — Esquive en Force (Blood Bowl 2025, Saison 3).
  *
- * Once per activation, after this player has performed a Dodge action (Agility
- * test), they may modify the dice roll by:
- *   - +1 if their Strength (ST) characteristic is 4 or less,
- *   - +2 if their Strength (ST) characteristic is 5 or more.
+ * Once per (team) turn, when this player attempts to Dodge, they may apply a
+ * modifier to the Agility test:
+ *   - +1 if their Strength (ST) characteristic is 3 or less,
+ *   - +2 if their Strength (ST) characteristic is 4,
+ *   - +3 if their Strength (ST) characteristic is 5 or more.
+ *
+ * The 2020 text (Season 2: +1 for ST ≤ 4, +2 for ST ≥ 5, once per activation)
+ * is no longer applied: the game state does not carry the ruleset, and the
+ * other Season 3 rewordings of the engine are applied the same way.
  *
  * Rules of thumb:
  *   - Only triggers when the Dodge roll failed, and only when applying the
  *     modifier would turn the failure into a success (otherwise the skill
- *     is kept for later in the activation).
+ *     is kept for later in the turn).
  *   - A natural 1 on the D6 remains a failure regardless of modifiers (BB3
  *     standard: natural 1 always fails).
- *   - The skill can only be used once per activation; the `breakTackleUsed`
- *     flag is reset at the end of the team turn together with `gfiUsed`.
+ *   - The skill can only be used once per team turn; the `breakTackleUsed`
+ *     flag is reset at the end of the team turn (END_TURN) together with
+ *     `gfiUsed`.
  */
 
 import type { GameState, Player } from '../core/types';
@@ -23,7 +29,7 @@ import { createLogEntry } from '../utils/logging';
 export interface BreakTackleResult {
   /** Whether the skill actually triggered. */
   triggered: boolean;
-  /** Modifier applied when triggered (+1 or +2). */
+  /** Modifier applied when triggered (+1, +2 or +3). */
   modifier?: number;
   /** New success state after the modifier is applied. */
   newSuccess?: boolean;
@@ -40,8 +46,11 @@ export function hasBreakTackle(player: Player): boolean {
   return hasSkill(player, 'break-tackle') || hasSkill(player, 'break_tackle');
 }
 
+/** Strength tiers of the 2025 text: ST ≤ 3 ⇒ +1, ST 4 ⇒ +2, ST ≥ 5 ⇒ +3. */
 export function getBreakTackleModifier(player: Player): number {
-  return player.st >= 5 ? 2 : 1;
+  if (player.st >= 5) return 3;
+  if (player.st === 4) return 2;
+  return 1;
 }
 
 /**
@@ -72,7 +81,7 @@ export function checkBreakTackle(
   const modifier = getBreakTackleModifier(player);
   const newSuccess = diceRoll + modifier >= targetNumber;
 
-  // Only burn the once-per-activation use if it actually succeeds.
+  // Only burn the once-per-turn use if it actually succeeds.
   if (!newSuccess) return NO_TRIGGER(state);
 
   const idx = state.players.findIndex((p) => p.id === player.id);

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { API_BASE } from "../../../../auth-client";
 import { apiRequest } from "../../../../lib/api-client";
 import SkillTooltip from "../../components/SkillTooltip";
+import { D6Icon } from "../../../../components/dice/D6Icon";
 import {
   getSkillActivation,
   getSkillActivationHint,
@@ -901,6 +902,13 @@ export default function TeamEditPage() {
                   <span className="w-3 h-3 border-2 border-orange-400 bg-blue-100 rounded"></span>
                   Compétences acquises
                 </span>
+                <span
+                  className="inline-flex items-center gap-1.5"
+                  data-testid="random-skills-legend"
+                >
+                  <D6Icon value={6} className="h-3.5 w-3.5" label="Compétence tirée au hasard" />
+                  Tirée au hasard
+                </span>
               </div>
             </div>
             <button
@@ -1026,6 +1034,7 @@ export default function TeamEditPage() {
                         teamName={team?.roster}
                         position={player.position}
                         dbBaseSkills={positionMeta.get(player.position)?.baseSkills}
+                        advancements={player.advancements}
                       />
                       <PlayerAdvancements
                         teamId={id}
@@ -1194,6 +1203,7 @@ export default function TeamEditPage() {
                       teamName={team?.roster}
                       position={player.position}
                       dbBaseSkills={positionMeta.get(player.position)?.baseSkills}
+                      advancements={player.advancements}
                     />
                     <PlayerAdvancements
                       teamId={id}

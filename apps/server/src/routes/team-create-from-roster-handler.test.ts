@@ -44,6 +44,20 @@ vi.mock('../utils/roster-helpers', () => ({
   })),
 }));
 
+// Config staff par roster × format : défaut dérivé du moteur (orc BB11).
+// Lue SEULEMENT quand l'assistant envoie du staff.
+vi.mock('../services/roster-staff-config', async () => {
+  const engine = await vi.importActual<typeof import('@bb/game-engine')>(
+    '@bb/game-engine',
+  );
+  return {
+    resolveStaffConfigBySlug: vi.fn(
+      async (slug: string, _r: string, format: 'bb11' | 'sevens') =>
+        engine.defaultStaffConfig(slug, format),
+    ),
+  };
+});
+
 // Neutralise le recalcul de VE (I/O Prisma supplementaire).
 vi.mock('../utils/team-values', () => ({
   updateTeamValues: vi.fn(async () => ({ teamValue: 0, currentValue: 0 })),
@@ -53,7 +67,9 @@ import { handleCreateFromRoster } from './team-create-from-roster-handler';
 import type { AuthenticatedRequest } from '../middleware/authUser';
 import { prisma } from '../prisma';
 import { getRosterFromDb } from '../utils/roster-helpers';
-import { getTeamPositions } from '@bb/game-engine';
+import { getTeamPositions, defaultStaffConfig } from '@bb/game-engine';
+import { resolveStaffConfigBySlug } from '../services/roster-staff-config';
+import { createFromRosterSchema } from '../schemas/team.schemas';
 
 function createRes() {
   const res: Partial<Response> & {
@@ -318,5 +334,153 @@ describe('handleCreateFromRoster — règlement de tournoi', () => {
     expect(
       (res as { payload?: { error?: string } }).payload?.error,
     ).toMatch(/interdit\(s\) par le règlement/);
+  });
+});
+
+describe("handleCreateFromRoster — staff choisi dans l'assistant", () => {
+  const orcStaff = defaultStaffConfig('orc', 'bb11');
+
+  beforeEach(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (prisma.team.findUnique as any).mockResolvedValue({
+      id: 'team-1',
+      ruleset: 'season_3',
+      players: [],
+      starPlayers: [],
+    });
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createdTeamData = (): Record<string, any> =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (txCreateSpy.mock.calls[0] as any)[0].data;
+
+  it('sans champ de staff : aucun staff, config jamais lue (historique)', async () => {
+    const res = createRes();
+    await handleCreateFromRoster(
+      createReq({ body: { name: 'Da Boyz', roster: 'orc' } }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+    expect(createdTeamData()).toMatchObject({
+      rerolls: 0,
+      cheerleaders: 0,
+      assistants: 0,
+      apothecary: false,
+      dedicatedFans: 0,
+      leagueFreeFan: false,
+    });
+    expect(resolveStaffConfigBySlug).not.toHaveBeenCalled();
+  });
+
+  it('enregistre les fans, relances et apothicaire demandés (aucun fan offert)', async () => {
+    const res = createRes();
+    await handleCreateFromRoster(
+      createReq({
+        body: {
+          name: 'Da Boyz',
+          roster: 'orc',
+          dedicatedFans: 3,
+          rerolls: 2,
+          apothecary: true,
+        },
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+    expect(createdTeamData()).toMatchObject({
+      rerolls: 2,
+      apothecary: true,
+      dedicatedFans: 3,
+      leagueFreeFan: false,
+    });
+    expect(resolveStaffConfigBySlug).toHaveBeenCalledWith('orc', 'season_3', 'bb11');
+  });
+
+  it('refuse (400) au-delà du plafond de fans du roster', async () => {
+    const res = createRes();
+    await handleCreateFromRoster(
+      createReq({
+        body: {
+          name: 'Da Boyz',
+          roster: 'orc',
+          dedicatedFans: orcStaff.maxDedicatedFans + 1,
+        },
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect((res.payload as { error: string }).error).toMatch(/fans dévoués/);
+    expect(txCreateSpy).not.toHaveBeenCalled();
+  });
+
+  it("refuse (422) l'apothicaire à un roster qui n'y a pas droit", async () => {
+    vi.mocked(resolveStaffConfigBySlug).mockResolvedValueOnce({
+      ...orcStaff,
+      apothecaryAllowed: false,
+    });
+    const res = createRes();
+    await handleCreateFromRoster(
+      createReq({ body: { name: 'Da Boyz', roster: 'orc', apothecary: true } }),
+      res,
+    );
+    expect(res.statusCode).toBe(422);
+    expect(txCreateSpy).not.toHaveBeenCalled();
+  });
+
+  it('refuse (400) un staff qui dépasse le budget (11 × 50k + staff > 600k)', async () => {
+    // 11 Orc Linemen = 550k ; une relance suffit à dépasser 600k.
+    const res = createRes();
+    await handleCreateFromRoster(
+      createReq({
+        body: { name: 'Da Boyz', roster: 'orc', teamValue: 600, rerolls: 1 },
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect((res.payload as { error: string }).error).toMatch(/Budget dépassé/);
+    expect(txCreateSpy).not.toHaveBeenCalled();
+  });
+
+  it('accepte un staff qui tient tout juste dans le budget', async () => {
+    // 550k de joueurs + 5 fans, au kpo près.
+    const res = createRes();
+    await handleCreateFromRoster(
+      createReq({
+        body: {
+          name: 'Da Boyz',
+          roster: 'orc',
+          teamValue: 550 + (5 * orcStaff.dedicatedFanCost) / 1000,
+          dedicatedFans: 5,
+        },
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+    expect(createdTeamData().dedicatedFans).toBe(5);
+  });
+});
+
+describe('createFromRosterSchema — staff optionnel', () => {
+  it('accepte le staff aux bornes du builder', () => {
+    expect(
+      createFromRosterSchema.safeParse({
+        name: 'X',
+        roster: 'orc',
+        dedicatedFans: 6,
+        rerolls: 8,
+        apothecary: true,
+      }).success,
+    ).toBe(true);
+  });
+
+  it('refuse un compte hors bornes ou fractionnaire', () => {
+    expect(
+      createFromRosterSchema.safeParse({ name: 'X', roster: 'orc', dedicatedFans: 7 })
+        .success,
+    ).toBe(false);
+    expect(
+      createFromRosterSchema.safeParse({ name: 'X', roster: 'orc', rerolls: 1.5 }).success,
+    ).toBe(false);
   });
 });

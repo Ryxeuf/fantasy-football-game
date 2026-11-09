@@ -179,8 +179,8 @@ export interface PettyCashInput {
    * plus bas) peut investir en coups de pouce AU-DELÀ de la différence de
    * CTV. Règle de ligue (ex: 50000) : l'extra vient de SA trésorerie,
    * selon disponibilité (20k dispo -> +20k max). `0`/absent = désactivé
-   * (jeu en ligne inchangé : trésorerie libre). Aucun effet si égalité de
-   * CTV.
+   * (jeu en ligne inchangé : trésorerie libre). En mode ligue, une égalité
+   * de CTV ferme la trésorerie des DEUX équipes (étape 4 BB2025).
    */
   underdogBonus?: number;
   /**
@@ -488,12 +488,17 @@ export function calculatePettyCash(input: PettyCashInput): PettyCashResult {
   // A55 — en mode ligue, l'underdog ne peut ajouter que min(bonus,
   // trésorerie dispo) de SA trésorerie (le bonus n'est plus une cagnotte
   // gratuite). L'équipe la plus forte dépense librement sa trésorerie.
-  const treasurySpendableA =
-    leagueMode && diff < 0
+  // Étape 4 de la séquence d'avant-match (BB2025) : à VEA ÉGALES, aucune
+  // des deux équipes ne puise dans sa trésorerie pour des coups de pouce.
+  const equalCtvLeague = leagueMode && diff === 0;
+  const treasurySpendableA = equalCtvLeague
+    ? 0
+    : leagueMode && diff < 0
       ? Math.min(bonus, input.treasuryTeamA)
       : input.treasuryTeamA;
-  const treasurySpendableB =
-    leagueMode && diff > 0
+  const treasurySpendableB = equalCtvLeague
+    ? 0
+    : leagueMode && diff > 0
       ? Math.min(bonus, input.treasuryTeamB)
       : input.treasuryTeamB;
 

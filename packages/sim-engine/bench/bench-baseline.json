@@ -1,6 +1,6 @@
 {
-  "engineVer": "0.30.0",
-  "snapshotAt": "2026-10-05",
+  "engineVer": "0.31.0",
+  "snapshotAt": "2026-11-09",
   "tolerance": 0.05,
   "pairings": [
     {
@@ -11,10 +11,10 @@
       "tolerance": 0.3,
       "driverKind": "full",
       "expected": {
-        "tdMean": 1.9,
-        "tdStd": 0.7681145747868608,
-        "casualtyMean": 1.45,
-        "turnoverMean": 11.9,
+        "tdMean": 1.95,
+        "tdStd": 0.7399324293474371,
+        "casualtyMean": 1.35,
+        "turnoverMean": 11.8,
         "homeWinRate": 0.4,
         "awayWinRate": 0.5,
         "drawRate": 0.1

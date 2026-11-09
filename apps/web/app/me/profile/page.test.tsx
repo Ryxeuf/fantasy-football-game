@@ -119,4 +119,25 @@ describe("ProfilePage — ELO display", () => {
     });
     expect(screen.queryByTestId("profile-cup-matches")).toBeNull();
   });
+
+  it("monte la carte NAF avec le numéro vérifié servi par /auth/me", async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          user: {
+            ...mockProfile.user,
+            nafNumber: 7221,
+            nafName: "#5Renton",
+            nafVerifiedAt: "2026-11-09T10:00:00Z",
+          },
+        }),
+    });
+
+    render(<ProfilePage />);
+
+    const badge = await screen.findByTestId("naf-number-verified");
+    expect(badge.textContent).toContain("#5Renton");
+    expect((screen.getByTestId("naf-number-input") as HTMLInputElement).value).toBe("7221");
+  });
 });

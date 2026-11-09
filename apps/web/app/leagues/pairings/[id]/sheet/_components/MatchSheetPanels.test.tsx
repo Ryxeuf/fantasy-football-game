@@ -1190,7 +1190,7 @@ describe("PreMatchPanel — budget de coups de pouce d'une coupe", () => {
     expect(detail.textContent).not.toMatch(/cagnotte/);
   });
 
-  it("en ligue, garde « Petite Monnaie + cagnotte »", () => {
+  it("en ligue, détaille écart de VEA + dépense adverse + trésorerie = budget", () => {
     render(
       <PreMatchPanel
         initial={EMPTY_VALUES}
@@ -1200,9 +1200,11 @@ describe("PreMatchPanel — budget de coups de pouce d'une coupe", () => {
         reference={REFERENCE}
       />,
     );
-    expect(
-      screen.getByTestId("inducements-home-budget-detail").textContent,
-    ).toMatch(/cagnotte/);
+    const detail = screen.getByTestId("inducements-home-budget-detail")
+      .textContent;
+    expect(detail).toMatch(/Écart de VEA 150 k/);
+    expect(detail).toMatch(/dépense adverse 0 po/);
+    expect(detail).toMatch(/trésorerie \(max 50 k\) 50 k = 200 k/);
   });
 
   it("en coupe, l'outsider ne récupère pas la dépense adverse", () => {
@@ -1224,6 +1226,245 @@ describe("PreMatchPanel — budget de coups de pouce d'une coupe", () => {
     expect(
       screen.getByTestId("inducements-away-remaining").textContent,
     ).toContain("Dépassé");
+  });
+});
+
+describe("PreMatchPanel — budget en direct et saisie par côté", () => {
+  const values = (inducementsAway: PreMatchValues["inducementsAway"]) => ({
+    ...EMPTY_VALUES,
+    inducementsAway,
+  });
+
+  it("la dépense du favori s'ajoute au budget de l'outsider après une relecture", () => {
+    const { rerender } = render(
+      <PreMatchPanel
+        initial={values([])}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+      />,
+    );
+    expect(
+      screen.getByTestId("inducements-home-budget-detail").textContent,
+    ).toMatch(/= 200 k/);
+    // Relecture : le favori a acheté 100 000 po.
+    rerender(
+      <PreMatchPanel
+        initial={values([
+          { slug: "bribe", name: "Pot-de-vin", cost: 100_000, qty: 1 },
+        ])}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+      />,
+    );
+    const away = screen.getByTestId("inducements-away");
+    expect(within(away).getByText("Pot-de-vin")).toBeTruthy();
+    expect(
+      screen.getByTestId("inducements-home-budget-detail").textContent,
+    ).toMatch(/dépense adverse 100 k.*= 300 k/);
+  });
+
+  it("une relecture ne remplace pas une saisie locale non enregistrée", () => {
+    const { rerender } = render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+      />,
+    );
+    const home = screen.getByTestId("inducements-home");
+    fireEvent.change(within(home).getByTestId("inducements-home-add"), {
+      target: { value: "wizard" },
+    });
+    rerender(
+      <PreMatchPanel
+        initial={values([
+          { slug: "bribe", name: "Pot-de-vin", cost: 50_000, qty: 1 },
+        ])}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+      />,
+    );
+    // Ma saisie reste, la liste adverse suit le serveur.
+    expect(within(home).getByText("Magicien")).toBeTruthy();
+    expect(
+      within(screen.getByTestId("inducements-away")).getByText("Pot-de-vin"),
+    ).toBeTruthy();
+  });
+
+  it("la liste adverse est en lecture seule pour un coach", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+      />,
+    );
+    expect(screen.queryByTestId("inducements-home-add")).toBeTruthy();
+    expect(screen.queryByTestId("inducements-away-add")).toBeNull();
+  });
+
+  it("VEA égales : le détail annonce qu'aucune trésorerie n'est mobilisable", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={{
+          ...REFERENCE,
+          budget: {
+            home: { ctv: 1_000_000, treasury: 90_000, pettyCash: 0, maxBudget: 0 },
+            away: { ctv: 1_000_000, treasury: 0, pettyCash: 0, maxBudget: 0 },
+          },
+        }}
+      />,
+    );
+    expect(
+      screen.getByTestId("inducements-home-budget-detail").textContent,
+    ).toMatch(/VEA égales/);
+  });
+});
+
+describe("PreMatchPanel — ordre d'achat des coups de pouce", () => {
+  const waiting = {
+    favorite: "away" as const,
+    favoriteDone: false,
+    waitingFor: "away" as const,
+    provisionalSide: "home" as const,
+  };
+
+  it("l'outsider voit « En attente des achats de… » et un budget provisoire, sans blocage", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+        inducementOrder={waiting}
+        onInducementsDone={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("inducements-waiting").textContent).toMatch(
+      /En attente des achats de Gouged Eye/,
+    );
+    expect(
+      screen.getByTestId("inducements-home-budget-detail").textContent,
+    ).toMatch(/provisoire/);
+    // Pas de verrou : l'outsider peut saisir.
+    expect(screen.getByTestId("inducements-home-add")).toBeTruthy();
+    // Le bouton de confirmation n'appartient qu'au favori.
+    expect(screen.queryByTestId("inducements-confirm-away")).toBeNull();
+  });
+
+  it("le favori confirme ses achats", async () => {
+    const onDone = vi.fn().mockResolvedValue(undefined);
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["away"]}
+        inducementOrder={waiting}
+        onInducementsDone={onDone}
+      />,
+    );
+    fireEvent.click(screen.getByTestId("inducements-confirm-away"));
+    expect(onDone).toHaveBeenCalledWith("away", true);
+  });
+
+  it("une saisie non enregistrée du favori désactive la confirmation", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["home"]}
+        inducementOrder={{
+          favorite: "home",
+          favoriteDone: false,
+          waitingFor: "home",
+          provisionalSide: "away",
+        }}
+        onInducementsDone={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByTestId("inducements-home-add"), {
+      target: { value: "wizard" },
+    });
+    expect(
+      (screen.getByTestId("inducements-confirm-home") as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("confirmé : plus de bandeau, le favori peut rouvrir", () => {
+    const onDone = vi.fn().mockResolvedValue(undefined);
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        editableInducementSides={["away"]}
+        inducementOrder={{
+          favorite: "away",
+          favoriteDone: true,
+          waitingFor: null,
+          provisionalSide: null,
+        }}
+        onInducementsDone={onDone}
+      />,
+    );
+    expect(screen.queryByTestId("inducements-waiting")).toBeNull();
+    expect(screen.getByTestId("inducements-done-away").textContent).toMatch(
+      /Achats terminés/,
+    );
+    fireEvent.click(screen.getByTestId("inducements-reopen-away"));
+    expect(onDone).toHaveBeenCalledWith("away", false);
+  });
+
+  it("VEA égales (pas de favori) : ni bandeau ni bouton", () => {
+    render(
+      <PreMatchPanel
+        initial={EMPTY_VALUES}
+        homeName="Reikland"
+        awayName="Gouged Eye"
+        onSave={vi.fn()}
+        reference={REFERENCE}
+        inducementOrder={{
+          favorite: null,
+          favoriteDone: false,
+          waitingFor: null,
+          provisionalSide: null,
+        }}
+        onInducementsDone={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("inducements-waiting")).toBeNull();
+    expect(screen.queryByTestId("inducements-done-home")).toBeNull();
+    expect(screen.queryByTestId("inducements-done-away")).toBeNull();
   });
 });
 

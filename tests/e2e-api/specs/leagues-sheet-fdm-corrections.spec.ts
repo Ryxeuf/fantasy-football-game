@@ -85,26 +85,44 @@ interface Ctx {
   homeTeamId: string;
 }
 
-async function setupPairing(prefix: string): Promise<Ctx> {
+async function setupPairing(
+  prefix: string,
+  options: { distinctValues?: boolean } = {},
+): Promise<Ctx> {
+  // VEA distinctes : à VEA égales, aucune équipe ne peut puiser dans sa
+  // trésorerie pour des coups de pouce (étape 4) — un test qui en achète
+  // doit donc opposer des équipes de valeurs différentes. Quel que soit le
+  // tirage domicile/extérieur, le favori dépense sa trésorerie et
+  // l'outsider sa Petite Monnaie + jusqu'à 50 000 po de trésorerie.
+  const value = (i: number) =>
+    options.distinctValues ? { rerolls: i } : {};
   const alice = await seedAndLogin(`${prefix}-a@fdm.test`, "pwd", "Alice");
   const aliceTeam = await createTeam(
     alice.userId,
     `${prefix} Skavens`,
     "skaven",
+    value(0),
   );
   const bob = await seedAndLogin(`${prefix}-b@fdm.test`, "pwd", "Bob");
   const bobTeam = await createTeam(
     bob.userId,
     `${prefix} Lizards`,
     "lizardmen",
+    value(1),
   );
   const carol = await seedAndLogin(`${prefix}-c@fdm.test`, "pwd", "Carol");
-  const carolTeam = await createTeam(carol.userId, `${prefix} Rats`, "skaven");
+  const carolTeam = await createTeam(
+    carol.userId,
+    `${prefix} Rats`,
+    "skaven",
+    value(2),
+  );
   const dan = await seedAndLogin(`${prefix}-d@fdm.test`, "pwd", "Dan");
   const danTeam = await createTeam(
     dan.userId,
     `${prefix} Sauriens`,
     "lizardmen",
+    value(3),
   );
 
   const tokens = new Map([
@@ -265,7 +283,7 @@ describe("E2E API — corrections FDM", () => {
   // A156 — un Star Player engagé JOUE le match : il doit être proposé aux
   // évènements, donc figurer dans la charge utile de la feuille.
   it("un Star Player engagé est exposé comme joueur de la feuille et peut marquer", async () => {
-    const ctx = await setupPairing("star");
+    const ctx = await setupPairing("star", { distinctValues: true });
     const url = sheetUrl(ctx.pairingId);
 
     // Le budget de coups de pouce est borné par petty cash + trésorerie, et

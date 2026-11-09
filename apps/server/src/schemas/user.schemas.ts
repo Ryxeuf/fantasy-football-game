@@ -13,3 +13,30 @@ export const updateNafSchema = z.object({
 });
 
 export type UpdateNafInput = z.infer<typeof updateNafSchema>;
+
+const NAF_NUMBER_FORMAT = "Le numéro NAF compte 1 à 7 chiffres";
+
+/**
+ * PUT /user/naf-number — numéro de membre NAF (1 à 7 chiffres).
+ *
+ * Accepte un nombre, une chaîne de chiffres (champ de formulaire) ou `null` ;
+ * une chaîne vide vaut `null` (effacement). Sortie normalisée : `number | null`.
+ */
+export const updateNafNumberSchema = z.object({
+  nafNumber: z.union([
+    z.null(),
+    z
+      .number()
+      .int(NAF_NUMBER_FORMAT)
+      .min(1, NAF_NUMBER_FORMAT)
+      .max(9_999_999, NAF_NUMBER_FORMAT),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{0,7}$/, NAF_NUMBER_FORMAT)
+      .transform((s) => (s === "" ? null : Number.parseInt(s, 10)))
+      .refine((n) => n === null || n >= 1, NAF_NUMBER_FORMAT),
+  ]),
+});
+
+export type UpdateNafNumberInput = z.output<typeof updateNafNumberSchema>;

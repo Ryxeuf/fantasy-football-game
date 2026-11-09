@@ -21,7 +21,9 @@ import {
   updateCupRulesSchema,
   updateCupSchema,
   listMonthlyCupsQuerySchema,
+  listCupsQuerySchema,
   setMatchOfTheWeekSchema,
+  type ListCupsQuery,
   type ListMonthlyCupsQuery,
   type SetMatchOfTheWeekBody,
   type CupRulesConfigInput,
@@ -62,6 +64,7 @@ import {
 } from "../services/cup-registration";
 import { cupByesByTeamId, listCupRounds } from "../services/cup-rounds";
 import { visibleCupRounds } from "../services/cup-playoffs";
+import { buildCupViewerRoles } from "../services/competition-viewer-roles";
 import {
   normalizeCupTieBreakRules,
   parseCupTieBreakRules,
@@ -71,7 +74,10 @@ import {
   flagWithdrawnStandings,
   registeredStandings,
 } from "../services/cup-withdrawn-teams";
-import { buildCupListWhere } from "../services/cup-listing";
+import {
+  buildArchivedCupListWhere,
+  buildCupListWhere,
+} from "../services/cup-listing";
 
 /** Poule telle que `GET /cup/:id` la charge (ordre + quota). */
 interface CupPoolRow {
@@ -229,24 +235,24 @@ function serializeTieBreakRules(
 // GET /cup - Liste les coupes visibles par l'utilisateur
 // Règles (cf. `buildCupListWhere`) : coupes publiques non archivées, OU coupes
 // créées par l'utilisateur, OU coupes auxquelles il participe.
-router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
+router.get(
+  "/",
+  authUser,
+  validateQuery(listCupsQuerySchema),
+  async (req: AuthenticatedRequest, res) => {
   try {
+    const query = req.query as unknown as ListCupsQuery;
     // `publicOnly=false` = vue admin (archivées et privées comprises) : réservé
     // aux admins, sinon n'importe quel compte listerait les coupes privées.
     const showAll =
-      req.query.publicOnly === "false" && hasRole(req.user!.roles, "admin");
+      query.publicOnly === false && hasRole(req.user!.roles, "admin");
 
-    // Récupérer les équipes de l'utilisateur pour vérifier sa participation
-    const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id, deletedAt: null },
-      select: { id: true },
-    });
-    const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
-
+    // « À moi » par relation (`cupMineWhere`) : plus de pré-chargement des
+    // équipes non supprimées du coach. `scope=mine` : les seules miennes.
     const whereClause = buildCupListWhere({
       userId: req.user!.id,
-      userTeamIds,
       showAll,
+      scope: query.scope,
     });
 
     const cups = await prisma.cup.findMany({
@@ -316,6 +322,10 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
         ruleset: p.team.ruleset,
         owner: p.team.owner,
       })),
+      // Rôle du lecteur, tranché par le serveur à partir des inscrits déjà
+      // chargés (aucune requête de plus) : l'écran n'a plus à le
+      // reconstruire par `/auth/me` + `/team/mine`.
+      viewerRoles: buildCupViewerRoles(req.user!.id, cup),
       createdAt: cup.createdAt,
       updatedAt: cup.updatedAt,
     }));
@@ -330,29 +340,10 @@ router.get("/", authUser, async (req: AuthenticatedRequest, res) => {
 // GET /cup/archived - Liste les coupes archivées auxquelles l'utilisateur participe ou qu'il a créées
 router.get("/archived", authUser, async (req: AuthenticatedRequest, res) => {
   try {
-    // Récupérer les équipes de l'utilisateur pour vérifier sa participation
-    const userTeams = await prisma.team.findMany({
-      where: { ownerId: req.user!.id, deletedAt: null },
-      select: { id: true },
-    });
-    const userTeamIds = userTeams.map((t: typeof userTeams[number]) => t.id);
-
+    // Coupes archivées « à moi » (créées, ou jouées par une de mes équipes —
+    // supprimée comprise : son historique reste le mien).
     const cups = await prisma.cup.findMany({
-      where: {
-        status: "archivee",
-        OR: [
-          // Coupes créées par l'utilisateur
-          { creatorId: req.user!.id },
-          // OU coupes auxquelles l'utilisateur participe (via ses équipes)
-          {
-            participants: {
-              some: {
-                teamId: { in: userTeamIds },
-              },
-            },
-          },
-        ],
-      },
+      where: buildArchivedCupListWhere(req.user!.id),
       include: {
         creator: {
           select: {

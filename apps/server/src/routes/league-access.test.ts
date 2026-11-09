@@ -534,3 +534,50 @@ describe("GET /leagues — le listing n'expose pas les ligues privées des autre
     expect(where).not.toHaveProperty("isPublic");
   });
 });
+
+describe("GET /leagues?scope= — « les miennes » filtrées côté serveur", () => {
+  it("scope=mine : seules les ligues à moi, sans clause de visibilité, statut par-dessus", async () => {
+    db.league.findMany.mockResolvedValue([]);
+    db.league.count.mockResolvedValue(0);
+    const res = await request("GET", "/leagues?scope=mine&limit=10", {
+      token: tokenFor(MEMBER),
+    });
+    expect(res.status).toBe(200);
+    const args = db.league.findMany.mock.calls[0]?.[0] as {
+      where: Record<string, unknown>;
+      take: number;
+    };
+    expect(args.where).toEqual({
+      OR: [
+        { creatorId: MEMBER },
+        {
+          seasons: {
+            some: { participants: { some: { team: { ownerId: MEMBER } } } },
+          },
+        },
+      ],
+      status: { not: "archived" },
+    });
+    expect(args.take).toBe(10);
+    // Le total paginé porte sur le MÊME sous-ensemble.
+    expect(db.league.count.mock.calls[0]?.[0]).toEqual({ where: args.where });
+  });
+
+  it("sans scope : la réponse d'aujourd'hui (visibilité générale)", async () => {
+    db.league.findMany.mockResolvedValue([]);
+    db.league.count.mockResolvedValue(0);
+    await request("GET", "/leagues", { token: tokenFor(MEMBER) });
+    const args = db.league.findMany.mock.calls[0]?.[0] as {
+      where: { OR: unknown[] };
+    };
+    expect(args.where.OR).toContainEqual({ isPublic: true });
+  });
+
+  it("scope=friends : 400", async () => {
+    const res = await request("GET", "/leagues?scope=friends", {
+      token: tokenFor(MEMBER),
+    });
+    expect(res.status).toBe(400);
+    expect(db.league.findMany).not.toHaveBeenCalled();
+  });
+});

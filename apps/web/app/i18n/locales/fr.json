@@ -32,7 +32,7 @@
   "onboarding": {
     "badge": "Nouveau coach",
     "title": "Crée ton équipe en 60 secondes",
-    "subtitle": "Trois étapes, et tu fouleras le terrain.",
+    "subtitle": "Quatre étapes, et tu fouleras le terrain.",
     "stepCounter": "Étape {current} / {total}",
     "later": "Plus tard",
     "back": "Retour",
@@ -55,6 +55,18 @@
     "namePlaceholder": "Ex. Reikland Reavers",
     "regenerate": "Régénérer",
     "nameRequired": "Donne un nom à ton équipe.",
+    "staffTitle": "Ton staff",
+    "staffSubtitle": "Facultatif : Fans Dévoués, relances, apothicaire. Le reste du budget part en trésorerie.",
+    "staffFans": "Fans Dévoués",
+    "staffRerolls": "Relances d'équipe",
+    "staffApothecary": "Apothicaire",
+    "staffUnitCost": "{cost} l'unité",
+    "staffCost": "Coût du staff",
+    "staffRemaining": "Budget restant",
+    "confirmStaff": "Staff",
+    "confirmStaffNone": "Aucun",
+    "confirmStaffFans": "{n} fan(s)",
+    "confirmStaffRerolls": "{n} relance(s)",
     "step3Title": "Prêt à entrer dans l'arène ?",
     "step3Subtitle": "On crée ton équipe de départ. Tu pourras tout ajuster ensuite.",
     "confirmRace": "Race",
@@ -562,6 +574,7 @@
     "players": "joueurs",
     "baseSkillsLegend": "Compétences de base (bordure grise)",
     "acquiredSkillsLegend": "Compétences acquises (bordure orange)",
+    "randomSkillsLegend": "Dé = compétence tirée au hasard",
     "skillColorsLegend": "Couleurs de fond selon la catégorie : General (bleu), Agility (vert), Strength (rouge), Passing (violet), Mutation (orange), Trait (gris)",
     "tableNumber": "#",
     "tableName": "Nom",
@@ -1454,5 +1467,15 @@
     "deleteSuccess": "« {name} » a été supprimée.",
     "working": "En cours...",
     "error": "L'opération a échoué"
+  },
+  "myCompetitions": {
+    "scopeLabel": "Afficher",
+    "scopeAll": "Toutes",
+    "scopeMine": "Les miennes",
+    "roleCommissioner": "👑 Commissaire",
+    "roleActive": "Inscrit",
+    "roleWithdrawn": "Retiré",
+    "roleFormer": "Ancienne saison",
+    "mineEmpty": "Tu n'as encore aucune compétition ici : ni créée, ni jouée par une de tes équipes."
   }
 }

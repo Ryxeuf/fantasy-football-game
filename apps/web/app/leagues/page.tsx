@@ -1,8 +1,16 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { apiRequest } from "../lib/api-client";
 import { useLanguage } from "../contexts/LanguageContext";
+import ScopeToggle from "../components/ScopeToggle";
+import ViewerRoleBadges from "../components/ViewerRoleBadges";
+import {
+  parseCompetitionScope,
+  type CompetitionScope,
+  type ViewerRoles,
+} from "../lib/competition-scope";
 import { PendingLeagueInvitations } from "./_components/PendingLeagueInvitations";
 import { JoinByCodeField } from "./_components/JoinByCodeField";
 
@@ -29,6 +37,8 @@ interface League {
   forfeitPoints: number;
   createdAt: string;
   updatedAt: string;
+  /** Rôle du lecteur, tranché par le serveur. Optionnel : API antérieure. */
+  viewerRoles?: ViewerRoles | null;
 }
 
 type StatusFilter = "all" | LeagueStatus;
@@ -48,15 +58,33 @@ const STATUS_VALUES: LeagueStatus[] = [
 // S25.5c — chemin relatif (sans API_BASE) : `apiRequest` re-prefixe en
 // ajoutant API_BASE et l'`Authorization: Bearer ...` automatiquement,
 // puis unwrap l'enveloppe `ApiResponse<T>` quand elle est presente.
-function buildListPath(status: StatusFilter): string {
+//
+// `scope=mine` : le filtre « Les miennes » est appliqué par le SERVEUR (la
+// liste est paginée, un filtre client ne trierait que la page courante).
+function buildListPath(
+  status: StatusFilter,
+  scope: CompetitionScope = "all",
+): string {
   const params = new URLSearchParams();
   if (status !== "all") params.set("status", status);
+  if (scope === "mine") params.set("scope", "mine");
   const qs = params.toString();
   return `/leagues${qs ? `?${qs}` : ""}`;
 }
 
+/** `useSearchParams` impose un `<Suspense>` (rendu statique de Next 14). */
 export default function LeaguesPage() {
+  return (
+    <Suspense fallback={null}>
+      <LeaguesPageContent />
+    </Suspense>
+  );
+}
+
+function LeaguesPageContent() {
   const { t } = useLanguage();
+  // « Toutes / Les miennes » vit dans l'URL (`?scope=mine`).
+  const scope = parseCompetitionScope(useSearchParams()?.get("scope"));
   const [leagues, setLeagues] = useState<League[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +97,7 @@ export default function LeaguesPage() {
         setLoading(true);
         setError(null);
         const body = await apiRequest<{ leagues: League[] }>(
-          buildListPath(statusFilter),
+          buildListPath(statusFilter, scope),
         );
         if (!cancelled) setLeagues(body.leagues ?? []);
       } catch (err: unknown) {
@@ -84,7 +112,7 @@ export default function LeaguesPage() {
     return () => {
       cancelled = true;
     };
-  }, [statusFilter, t.leagues.errorLoad]);
+  }, [statusFilter, scope, t.leagues.errorLoad]);
 
   const rulesetLabels = useMemo<Record<string, string>>(
     () => ({
@@ -168,6 +196,7 @@ export default function LeaguesPage() {
       <JoinByCodeField />
 
       <div className="flex flex-wrap items-center gap-3">
+        <ScopeToggle testIdPrefix="leagues-scope" />
         <label
           htmlFor="leagues-status-filter"
           className="text-sm font-medium text-gray-700"
@@ -195,7 +224,7 @@ export default function LeaguesPage() {
           data-testid="leagues-empty"
           className="text-center py-8 text-gray-500"
         >
-          {t.leagues.empty}
+          {scope === "mine" ? t.myCompetitions.mineEmpty : t.leagues.empty}
         </div>
       ) : (
         <ul
@@ -220,6 +249,10 @@ export default function LeaguesPage() {
                     <h2 className="text-lg font-semibold text-nuffle-anthracite">
                       {league.name}
                     </h2>
+                    <ViewerRoleBadges
+                      roles={league.viewerRoles}
+                      testIdPrefix={`league-role-${league.id}`}
+                    />
                     <span className="text-xs uppercase tracking-wide bg-nuffle-gold/10 border border-nuffle-gold/30 text-nuffle-bronze px-2 py-0.5 rounded">
                       {statusLabel}
                     </span>

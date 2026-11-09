@@ -76,12 +76,14 @@ import {
   addParticipant,
   createRound,
   listLeagues,
+  leagueVisibleClauses,
   listThemedSeasons,
   withdrawParticipant,
   isLeagueParticipant,
   getSeasonById,
   LeagueWithdrawError,
 } from "./league";
+import { leagueMineWhere } from "./competition-membership";
 import {
   createLeagueParticipant,
   withLeagueFreeFanRevoked,
@@ -860,6 +862,52 @@ describe("Rule: League service", () => {
       // Pas de filtre isPublic strict quand un viewer est fourni.
       const call = mockPrisma.league.findMany.mock.calls[0][0];
       expect(call.where.isPublic).toBeUndefined();
+    });
+
+    // Invariant du change `my-competitions` : toute clause « à moi » figure
+    // dans le OR de visibilité — une ligue à moi n'est jamais cachée.
+    it("« à moi » ⊆ « visible » : la visibilité contient leagueMineWhere", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: creatorId });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      for (const clause of leagueMineWhere(creatorId).OR) {
+        expect(call.where.OR).toContainEqual(clause);
+      }
+      expect(leagueVisibleClauses(creatorId)).toEqual(call.where.OR);
+    });
+
+    it("scope=mine : « à moi » seul, statut et creatorId par-dessus", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({
+        viewerId: creatorId,
+        scope: "mine",
+        status: "in_progress",
+        creatorId: "someone",
+        limit: 10,
+        offset: 20,
+      });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where).toEqual({
+        creatorId: "someone",
+        ...leagueMineWhere(creatorId),
+        status: "in_progress",
+      });
+      expect(call).toMatchObject({ take: 10, skip: 20 });
+      expect(mockPrisma.league.count).toHaveBeenCalledWith({
+        where: call.where,
+      });
+    });
+
+    it("scope=mine sans lecteur : rien, sans requête", async () => {
+      const out = await listLeagues({ scope: "mine" });
+      expect(out).toEqual({ items: [], total: 0, limit: 50, offset: 0 });
+      expect(mockPrisma.league.findMany).not.toHaveBeenCalled();
     });
 
     it("still restricts to public leagues when publicOnly is true", async () => {

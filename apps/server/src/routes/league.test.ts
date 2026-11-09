@@ -44,7 +44,9 @@ vi.mock("../prisma", () => ({
   prisma: {
     team: { findUnique: vi.fn() },
     league: { findUnique: vi.fn() },
-    leagueSeason: { findUnique: vi.fn() },
+    leagueSeason: { findUnique: vi.fn(), groupBy: vi.fn(async () => []) },
+    // `viewerRoles` du listing (`competition-viewer-roles`).
+    leagueParticipant: { findMany: vi.fn(async () => []) },
     leagueInvitation: { count: vi.fn(async () => 0) },
   },
 }));
@@ -281,6 +283,24 @@ describe("Route: GET /leagues (list)", () => {
       success: true,
       data: expect.objectContaining({ leagues: expect.any(Array) }),
     });
+  });
+
+  it("forwards scope=mine to the service", async () => {
+    mockService.listLeagues.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 50,
+      offset: 0,
+    });
+    const req = createReq({
+      query: { scope: "mine" },
+      user: { id: "u-1", roles: ["user"] },
+    } as Partial<AuthenticatedRequest>);
+    const res = createRes();
+    await handleListLeagues(req, res);
+    expect(mockService.listLeagues).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "mine", viewerId: "u-1" }),
+    );
   });
 
   it("forwards query filters to the service (post validateQuery coercion)", async () => {

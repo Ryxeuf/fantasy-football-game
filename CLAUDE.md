@@ -364,11 +364,21 @@ Trois-quart de base, ce qui rend une feuille antérieure lisible sans backfill
 et préserve les choix quand le contingent grossit. Les quatre dérivations de
 la feuille passent par `journeymenChoiceInput`, sinon elles divergent.
 
-Éligibilité : le seul seuil « 0-12 ou plus » rate les Trois-quarts à quota
-réduit (Orques : Trois-quart Gobelin, 0-4), donc le choix que la règle
-publiée annonce. Un poste est retenu s'il est 0-12+ **ou** si ses Mots-clés
-déclarent « Trois-quart » (base d'abord, repli `KEYWORDS_SEASON3`). Le tri
-reste `max` décroissant : le 0-16 est toujours le DÉFAUT.
+Éligibilité (livre p.94, confirmé le 2026-11-09) : un journalier ne se
+prend que sur un poste dont les Mots-clés déclarent « Trois-quart » (base
+d'abord, repli `KEYWORDS_SEASON3`) **et** de quantité 0-16. Un Trois-quart
+à quota réduit (Orques : Trois-quart Gobelin 0-4 ; Alliance du Vieux
+Monde : Aspirant Halfling, Trois-Quart Nain 0-3) n'en fournit PAS — la
+version précédente l'ouvrait à tort. Repli pour un roster sans mots-clés
+(Saison 2, données anciennes) : le ou les postes de plus grand `max` s'il
+atteint 12 — un test en table vérifie que chaque roster S2/S3 du moteur
+garde au moins un poste. Tri `max` décroissant puis coût : le 0-16 est le
+DÉFAUT. Un choix STOCKÉ devenu inéligible retombe sur le défaut, sauf si le
+gel de la feuille a baké CE poste à CE rang (`bakedPositionNames`) : une
+feuille figée (validée comprise) ne bouge pas, et le picker l'affiche
+encore (`withFrozenLegacyOptions`). Le mort relevé n'est PAS concerné : sa
+règle (« un Trois-quart de la fiche ») garde l'ancienne sélection, 0-12+ OU
+Mot-clé, via `troisQuartPositionsForRoster` — ne pas re-coupler les deux.
 
 Trois pièges rencontrés en corrigeant les journaliers (sept. 2026) :
 
@@ -1276,6 +1286,33 @@ Pièges de test : une fixture de ligue SANS `isPublic` est vue PRIVÉE
 d'un test à l'autre (préférer `mockResolvedValueOnce`). Le test de référence
 est `routes/league-access.test.ts` : chaîne Express réelle, JWT réels signés
 avec `JWT_SECRET`, Prisma mocké, en table sur dix lectures.
+
+### « Mes compétitions » : UNE résolution, incluse dans la visibilité
+
+« Créée par moi ou une de mes équipes y est inscrite » était réécrit quatre
+fois (listing des ligues, listing et archives des coupes, garde de
+visibilité), avec des variantes : équipe retirée comptée d'un côté, équipe
+supprimée exclue de l'autre (pré-chargement des équipes `deletedAt: null`).
+Règle (change OpenSpec `my-competitions`) : `services/competition-membership`
+est LA résolution — `leagueMineWhere` / `cupMineWhere` (filtres Prisma PAR
+RELATION `team: { ownerId }`, retrait et équipe supprimée compris, ni
+invitation ni rôle admin) et `buildViewerRoles` (pur : commissaire,
+`active | withdrawn | former | null`, équipes de l'édition courante).
+
+- **La visibilité se COMPOSE à partir de « à moi »** (`leagueVisibleClauses`,
+  `cupVisibleClauses` = publiques + à moi [+ invitations]) : « à moi ⊆
+  visible » tient par construction et se teste sur le `where`.
+- **`scope=mine` filtre côté SERVEUR** (`GET /leagues`, `GET /cup`) : la
+  liste des ligues est paginée, un filtre client ne trierait que la page.
+  Valeur inconnue = 400 (`validateQuery`).
+- **Le rôle se SERT, il ne se reconstruit pas** : `viewerRoles` sur chaque
+  élément (`services/competition-viewer-roles`) — ligues : UNE requête de
+  participations + un `groupBy` du numéro de saison max ; coupes : lu dans
+  les inscrits que le listing charge déjà. Jamais par élément, jamais côté
+  web.
+
+Tout nouvel écran « mes ligues / mes coupes » (et la future page
+`/me/competitions`) en part.
 
 ### Pronostics : le RÉSULTAT se stocke, la clôture s'écrit une fois
 

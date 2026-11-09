@@ -73,6 +73,7 @@ import {
   splitSkillCsv,
   sumJourneymenValue,
   toFrozenJourneymanEntry,
+  withFrozenLegacyOptions,
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
@@ -201,6 +202,26 @@ import {
   type HateCandidateView,
 } from "./league-sheet-hate-choices";
 import {
+  computeInducementBudget,
+  LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
+  restrictInducementPayload,
+  sheetInducementSpend,
+  sumGoldEntries,
+  writableInducementSides,
+} from "./league-sheet-inducement-budget";
+import {
+  ownedSides,
+  ownsSide,
+  resolveActingSide,
+  sameOwner,
+  viewerSide,
+} from "./league-sheet-sides";
+import {
+  inducementListChanged,
+  inducementOrderState,
+  type InducementOrderState,
+} from "./league-sheet-inducement-order";
+import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
   canPurchaseInducement,
@@ -209,7 +230,6 @@ import {
   getNextAdvancementPspCost,
   surchargeForAdvancement,
   type AdvancementSchedule,
-  calculatePettyCash,
   getInducementCost,
   getInducementMaxQuantity,
   getSpecialRulesForTeam,
@@ -654,7 +674,8 @@ export class MatchSheetError extends Error {
       | "previous_match_pending"
       | "refresh_not_applicable"
       | "refresh_failed"
-      | "refresh_orphan_players",
+      | "refresh_orphan_players"
+      | "side_required",
     message: string,
     /**
      * Données structurées du refus, servies telles quelles à l'UI (ex. les
@@ -720,7 +741,11 @@ async function loadPairingContext(pairingId: string): Promise<PairingContext> {
   };
 }
 
-/** Determine le cote (home/away) d'un coach, ou null s'il n'est pas joueur. */
+/**
+ * Determine le cote (home/away) d'un coach, ou null s'il n'est pas joueur.
+ * Ne sert qu'à dire « participant ou non » : un coach peut posséder les
+ * DEUX équipes, tout contrôle d'appartenance à UN côté passe par `ownsSide`.
+ */
 function coachSide(ctx: PairingContext, userId: string): CoachSide | null {
   if (userId === ctx.homeOwnerId) return "home";
   if (userId === ctx.awayOwnerId) return "away";
@@ -1459,13 +1484,24 @@ export async function updatePreMatch(input: {
   payload: PreMatchPayload;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (!coachSide(ctx, input.userId) && !(await isCommissioner(ctx, input.userId))) {
+  const commissioner = await isCommissioner(ctx, input.userId);
+  if (!coachSide(ctx, input.userId) && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
-  const p = input.payload;
+  // Un coach n'écrit que les coups de pouce de SES équipes : la liste
+  // adverse qu'un client renvoie (souvent périmée) est ignorée et la valeur
+  // stockée conservée. Le commissaire écrit les deux côtés.
+  const p = restrictInducementPayload(
+    input.payload,
+    writableInducementSides({
+      commissioner,
+      ownsHome: input.userId === ctx.homeOwnerId,
+      ownsAway: input.userId === ctx.awayOwnerId,
+    }),
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
   const sheetColumns = sheet as SheetJourneymenColumns;
@@ -1629,24 +1665,10 @@ export async function updatePreMatch(input: {
     };
     // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
     // les deux sélections (payload prioritaire, sinon valeur déjà stockée).
-    const sheetInd = sheet as {
-      inducementsHome?: unknown;
-      inducementsAway?: unknown;
-    };
-    const spentHome = sumGold(
-      p.inducementsHome !== undefined
-        ? p.inducementsHome
-        : sheetInd.inducementsHome,
-    );
-    const spentAway = sumGold(
-      p.inducementsAway !== undefined
-        ? p.inducementsAway
-        : sheetInd.inducementsAway,
-    );
     const { budget } = await buildMatchSheetReference(
       teams,
       null,
-      { home: spentHome, away: spentAway },
+      sheetInducementSpend(sheet as SheetInducementColumns, p),
       null,
       new Set(),
       { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
@@ -1750,6 +1772,22 @@ export async function updatePreMatch(input: {
     data.inducementsHome = p.inducementsHome ?? undefined;
   if (p.inducementsAway !== undefined)
     data.inducementsAway = p.inducementsAway ?? undefined;
+  // Ordre d'achat : un côté qui MODIFIE sa liste n'a plus « fini ses
+  // achats » — l'outsider doit pouvoir s'y fier. Renvoyer la même liste ne
+  // retire rien.
+  const storedInducements = sheet as SheetInducementColumns;
+  if (
+    p.inducementsHome !== undefined &&
+    inducementListChanged(storedInducements.inducementsHome, p.inducementsHome)
+  ) {
+    data.inducementsDoneHomeAt = null;
+  }
+  if (
+    p.inducementsAway !== undefined &&
+    inducementListChanged(storedInducements.inducementsAway, p.inducementsAway)
+  ) {
+    data.inducementsDoneAwayAt = null;
+  }
   if (p.prayersHome !== undefined)
     data.prayersHome = p.prayersHome ?? undefined;
   if (p.prayersAway !== undefined)
@@ -1757,6 +1795,51 @@ export async function updatePreMatch(input: {
   return prisma.leagueMatchSheet.update({
     where: { id: sheet.id },
     data,
+  });
+}
+
+/**
+ * Ordre d'achat des coups de pouce — « J'ai fini mes achats » (ou son
+ * retrait, `done: false`). Coach du côté ou commissaire, feuille non
+ * validée. Un coach qui possède les deux équipes désigne le côté ; un coach
+ * d'un seul côté peut l'omettre. Aucun verrou : la confirmation ne sert
+ * qu'à dire à l'outsider que son budget est définitif.
+ */
+export async function setInducementsDone(input: {
+  pairingId: string;
+  userId: string;
+  side?: CoachSide;
+  done: boolean;
+}) {
+  const ctx = await loadPairingContext(input.pairingId);
+  const commissioner = await isCommissioner(ctx, input.userId);
+  const owned = ownedSides(ctx, input.userId);
+  if (owned.length === 0 && !commissioner) {
+    throw new MatchSheetError("forbidden", "Action reservee aux participants");
+  }
+  const side =
+    input.side ?? (owned.length === 1 && !commissioner ? owned[0] : null);
+  if (!side) {
+    throw new MatchSheetError(
+      "side_required",
+      "Précisez le côté (domicile ou extérieur) concerné.",
+    );
+  }
+  if (!commissioner && !owned.includes(side)) {
+    throw new MatchSheetError(
+      "forbidden",
+      "Vous ne pouvez confirmer que les achats de votre équipe.",
+    );
+  }
+  const sheet = await loadSheetOrThrow(ctx);
+  ensureEditable(sheet.status);
+  const at = input.done ? new Date() : null;
+  return prisma.leagueMatchSheet.update({
+    where: { id: sheet.id },
+    data:
+      side === "home"
+        ? { inducementsDoneHomeAt: at }
+        : { inducementsDoneAwayAt: at },
   });
 }
 
@@ -1799,7 +1882,7 @@ export async function updateHateChoices(input: {
         `Le joueur ${entry.victimPlayerId} n'est pas candidat au jet de Haine sur cette feuille`,
       );
     }
-    if (!commissioner && side !== candidate.side) {
+    if (!commissioner && !ownsSide(ctx, input.userId, candidate.side)) {
       throw new MatchSheetError(
         "hate_wrong_side",
         "Chaque coach ne choisit le Mot-cle hai que pour ses propres joueurs",
@@ -1859,7 +1942,7 @@ export async function updateRaisedDead(input: {
   if (!side && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
-  if (!commissioner && side !== input.side) {
+  if (!commissioner && !ownsSide(ctx, input.userId, input.side)) {
     throw new MatchSheetError(
       "raise_dead_wrong_side",
       "Chaque coach ne releve un mort que pour sa propre equipe",
@@ -1982,13 +2065,21 @@ export async function updatePostMatch(input: {
   // commissaire peut corriger les deux) et chaque playerId doit
   // appartenir à l'équipe du côté visé.
   if (p.advancementsHome !== undefined || p.advancementsAway !== undefined) {
-    if (p.advancementsHome !== undefined && !commissioner && side !== "home") {
+    if (
+      p.advancementsHome !== undefined &&
+      !commissioner &&
+      !ownsSide(ctx, input.userId, "home")
+    ) {
       throw new MatchSheetError(
         "advancement_wrong_side",
         "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
       );
     }
-    if (p.advancementsAway !== undefined && !commissioner && side !== "away") {
+    if (
+      p.advancementsAway !== undefined &&
+      !commissioner &&
+      !ownsSide(ctx, input.userId, "away")
+    ) {
       throw new MatchSheetError(
         "advancement_wrong_side",
         "Chaque coach ne peut saisir que les évolutions de sa propre équipe",
@@ -2128,7 +2219,7 @@ export async function rollJourneymanRandomPrimary(input: {
       `Journalier ${input.journeymanId} inconnu de cette feuille`,
     );
   }
-  if (!commissioner && side !== journeymanSideOf) {
+  if (!commissioner && !ownsSide(ctx, input.userId, journeymanSideOf)) {
     throw new MatchSheetError(
       "advancement_wrong_side",
       "Chaque coach ne tire que pour les journaliers de sa propre équipe",
@@ -2202,6 +2293,22 @@ export async function rollJourneymanRandomPrimary(input: {
   return { rolled: true, category, candidates };
 }
 
+/**
+ * Côté pour lequel un coach agit (cf. `resolveActingSide`), ou l'erreur
+ * typée correspondante : 403 hors participant / côté d'autrui, 400 quand un
+ * double propriétaire omet le côté.
+ */
+function actingSideOrThrow(
+  ctx: PairingContext,
+  userId: string,
+  requested: CoachSide | undefined,
+  messages: Record<"not_a_participant" | "side_required" | "forbidden", string>,
+): CoachSide {
+  const out = resolveActingSide(ownedSides(ctx, userId), requested);
+  if (!out.ok) throw new MatchSheetError(out.code, messages[out.code]);
+  return out.side;
+}
+
 function nextStatusOnSubmit(
   current: string,
   side: CoachSide,
@@ -2224,15 +2331,20 @@ function nextStatusOnSubmit(
 export async function submitByCoach(input: {
   pairingId: string;
   userId: string;
+  /**
+   * Côté soumis. Obligatoire pour un coach qui possède les DEUX équipes
+   * (il soumet chaque côté à son tour) ; sinon déduit, et refusé s'il ne
+   * désigne pas l'équipe du coach.
+   */
+  side?: CoachSide;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  const side = coachSide(ctx, input.userId);
-  if (!side) {
-    throw new MatchSheetError(
-      "not_a_participant",
-      "Seuls les 2 coachs peuvent soumettre leur saisie",
-    );
-  }
+  const side = actingSideOrThrow(ctx, input.userId, input.side, {
+    not_a_participant: "Seuls les 2 coachs peuvent soumettre leur saisie",
+    side_required:
+      "Vous possédez les deux équipes : précisez le côté que vous soumettez.",
+    forbidden: "Vous ne pouvez soumettre que le côté de votre équipe.",
+  });
   const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
@@ -2340,12 +2452,16 @@ async function notifyCommissionerSheetReady(
 export async function unsubmitByCoach(input: {
   pairingId: string;
   userId: string;
+  /** Côté retiré : obligatoire pour un double propriétaire (cf. submit). */
+  side?: CoachSide;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  const side = coachSide(ctx, input.userId);
-  if (!side) {
-    throw new MatchSheetError("not_a_participant", "Reserve aux coachs");
-  }
+  const side = actingSideOrThrow(ctx, input.userId, input.side, {
+    not_a_participant: "Reserve aux coachs",
+    side_required:
+      "Vous possédez les deux équipes : précisez le côté dont vous retirez la soumission.",
+    forbidden: "Vous ne pouvez retirer que la soumission de votre équipe.",
+  });
   const sheet = await loadSheetOrThrow(ctx);
   if (sheet.status === "validated") {
     throw new MatchSheetError("already_validated", "Feuille deja validee");
@@ -2420,26 +2536,7 @@ function mapInjurySeverity(
  * ou string serialisee (sqlite mirror). Ignore les entrees illisibles.
  */
 function sumGold(raw: unknown): number {
-  let arr: unknown = raw;
-  if (typeof raw === "string") {
-    try {
-      arr = JSON.parse(raw);
-    } catch {
-      return 0;
-    }
-  }
-  if (!Array.isArray(arr)) return 0;
-  let total = 0;
-  for (const entry of arr) {
-    if (!entry || typeof entry !== "object") continue;
-    const cost = (entry as { cost?: unknown }).cost;
-    const qty = (entry as { qty?: unknown }).qty;
-    const c = typeof cost === "number" && Number.isFinite(cost) ? cost : 0;
-    const q =
-      typeof qty === "number" && Number.isFinite(qty) && qty > 0 ? qty : 1;
-    total += Math.max(0, Math.floor(c)) * q;
-  }
-  return total;
+  return sumGoldEntries(raw);
 }
 
 /**
@@ -3209,17 +3306,10 @@ export async function validateByCommissioner(input: {
       journeymanPositions.away,
     ),
   };
-  const sheetIndForBudget = sheet as {
-    inducementsHome?: unknown;
-    inducementsAway?: unknown;
-  };
   const { budget } = await buildMatchSheetReference(
     teamsForBudget,
     null,
-    {
-      home: sumGold(sheetIndForBudget.inducementsHome),
-      away: sumGold(sheetIndForBudget.inducementsAway),
-    },
+    sheetInducementSpend(sheet as SheetInducementColumns),
     null,
     new Set(),
     { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
@@ -4525,6 +4615,12 @@ export interface MatchSheetTeamBudget {
   readonly pettyCash: number;
   /** Budget total dépensable = petty cash + tresorerie. */
   readonly maxBudget: number;
+  /** Écart de VEA reçu (outsider seulement). */
+  readonly ctvGap: number;
+  /** Dépense adverse STOCKÉE ajoutée à la Petite Monnaie (outsider de ligue). */
+  readonly opponentSpent: number;
+  /** Trésorerie mobilisable (plafonnée à 50 000 po pour l'outsider). */
+  readonly treasuryAllowance: number;
 }
 
 /**
@@ -4546,6 +4642,8 @@ export interface MatchSheetReference {
   readonly budget: {
     readonly home: MatchSheetTeamBudget;
     readonly away: MatchSheetTeamBudget;
+    /** Côté à la VEA la plus haute (achète en premier), `null` à égalité. */
+    readonly favorite: "home" | "away" | null;
   };
   /**
    * Ce que chaque equipe peut ACHETER a l'etape 4 (embauches), et a quel
@@ -4834,7 +4932,7 @@ function assertInducementsAllowed(
  * FR14 — montant (po) que l'équipe la plus faible peut investir en plus de la
  * cagnotte (différence de VEA) pour acheter des coups de pouce, en Jeu en Ligue.
  */
-export const LEAGUE_UNDERDOG_INDUCEMENT_BONUS = 50000;
+export { LEAGUE_UNDERDOG_INDUCEMENT_BONUS };
 
 export async function buildMatchSheetReference(
   teams: {
@@ -4863,23 +4961,20 @@ export async function buildMatchSheetReference(
 ): Promise<MatchSheetReference> {
   const isCup = competition.kind === "cup";
   const sellsInducements = (competition.inducementMode ?? "match") === "match";
-  const homeCtv = teams.home?.currentValue ?? 0;
-  const awayCtv = teams.away?.currentValue ?? 0;
-  const homeTreasury = isCup ? 0 : (teams.home?.treasury ?? 0);
-  const awayTreasury = isCup ? 0 : (teams.away?.treasury ?? 0);
-
-  const petty = calculatePettyCash({
-    ctvTeamA: homeCtv,
-    ctvTeamB: awayCtv,
-    treasuryTeamA: homeTreasury,
-    treasuryTeamB: awayTreasury,
-    // FR14/A55 — règle de ligue : l'équipe la plus faible peut investir
-    // jusqu'à 50 000 po de SA trésorerie (selon disponibilité) au-delà de la
-    // différence de VEA + des dépenses adverses. En coupe, ni bonus ni
-    // dépense adverse : la petite monnaie est l'écart de VEA, rien d'autre.
-    underdogBonus: isCup ? 0 : LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
-    spentTeamA: isCup ? 0 : spent.home,
-    spentTeamB: isCup ? 0 : spent.away,
+  // FR14/A55 + étape 4 BB2025 : l'outsider reçoit l'écart de VEA + la
+  // dépense adverse et peut ajouter jusqu'à 50 000 po de SA trésorerie ; à
+  // VEA égales, personne ne puise dans sa trésorerie. En coupe, ni
+  // trésorerie ni dépense adverse. Même calcul en lecture, PATCH et
+  // validation (`league-sheet-inducement-budget`, pur).
+  const budget = computeInducementBudget({
+    ctvHome: teams.home?.currentValue ?? 0,
+    ctvAway: teams.away?.currentValue ?? 0,
+    treasuryHome: teams.home?.treasury ?? 0,
+    treasuryAway: teams.away?.treasury ?? 0,
+    spentHome: spent.home,
+    spentAway: spent.away,
+    isCup,
+    sellsInducements,
   });
 
   const [purchasesHome, purchasesAway] = await Promise.all([
@@ -4931,18 +5026,9 @@ export async function buildMatchSheetReference(
       away: colorsFor(teams.away?.roster),
     },
     budget: {
-      home: {
-        ctv: homeCtv,
-        treasury: homeTreasury,
-        pettyCash: sellsInducements ? petty.teamA.pettyCash : 0,
-        maxBudget: sellsInducements ? petty.teamA.maxBudget : 0,
-      },
-      away: {
-        ctv: awayCtv,
-        treasury: awayTreasury,
-        pettyCash: sellsInducements ? petty.teamB.pettyCash : 0,
-        maxBudget: sellsInducements ? petty.teamB.maxBudget : 0,
-      },
+      home: budget.home,
+      away: budget.away,
+      favorite: budget.favorite,
     },
   };
 }
@@ -5064,6 +5150,11 @@ async function loadHateRollsForPairing(pairingId: string): Promise<HateRoll[]> {
 export async function getMatchSheet(input: {
   pairingId: string;
   userId: string;
+  /**
+   * Côté à présenter au viewer qui possède les DEUX équipes (`?side=`) :
+   * gouverne `viewerRole` / `viewerTeamId`. Ignoré s'il ne le possède pas.
+   */
+  side?: CoachSide;
 }): Promise<{
   sheet: unknown;
   summary: MatchSummary;
@@ -5088,6 +5179,17 @@ export async function getMatchSheet(input: {
    * à l'UI d'afficher l'éditeur d'évolutions de SON équipe (sinon masqué).
    */
   viewerTeamId: string | null;
+  /**
+   * Côtés dont le viewer possède l'équipe — DEUX pour un coach qui oppose
+   * ses deux équipes : l'UI lui propose alors de choisir pour lequel il
+   * saisit (`?side=`), et soumet chaque côté à son tour.
+   */
+  viewerSides: CoachSide[];
+  /**
+   * Les deux équipes appartiennent au même coach. Autorisé (décision du
+   * propriétaire), mais signalé à tous — commissaire compris — sur la feuille.
+   */
+  sameOwner: boolean;
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
   reference: MatchSheetReference;
   /** SPP autoritaire par teamPlayerId (calcul officiel + modificateur d'équipe). */
@@ -5112,9 +5214,16 @@ export async function getMatchSheet(input: {
    * possible maintenant (aucune soumission).
    */
   snapshotFreshness: SnapshotFreshness | null;
+  /**
+   * Ordre d'achat des coups de pouce : favori (VEA la plus haute, avec de
+   * quoi acheter), confirmation « fini mes achats », côté au budget
+   * provisoire tant qu'il ne l'a pas donnée. Indicatif, jamais bloquant.
+   */
+  inducementOrder: InducementOrderState;
 }> {
   const ctx = await loadPairingContext(input.pairingId);
-  const side = coachSide(ctx, input.userId);
+  const viewerOwned = ownedSides(ctx, input.userId);
+  const side = viewerSide(viewerOwned, input.side);
   const commissioner = await isCommissioner(ctx, input.userId);
   const sheet = await prisma.leagueMatchSheet.findUnique({
     where: sheetWhere(ctx),
@@ -5264,10 +5373,9 @@ export async function getMatchSheet(input: {
     return {
       ...team,
       journeymen,
-      journeymenOptions: linemanPositionsForRoster(
-        team.roster,
-        team.ruleset,
-        positions,
+      journeymenOptions: withFrozenLegacyOptions(
+        linemanPositionsForRoster(team.roster, team.ruleset, positions),
+        journeymen,
       ),
       journeymenChoice: choice.position,
       // Choix EFFECTIF de chaque journalier (le poste réellement dérivé),
@@ -5377,6 +5485,17 @@ export async function getMatchSheet(input: {
     stalledAway: stalledForRead.away,
   });
 
+  // Budget EFFECTIF : la Petite Monnaie de l'outsider inclut la dépense
+  // adverse STOCKÉE, comme au PATCH et à la validation.
+  const reference = await buildMatchSheetReference(
+    teams,
+    allowedInducements,
+    sheetInducementSpend(sheet as SheetInducementColumns),
+    inducementPack,
+    deadThisMatch(summary),
+    { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
+  );
+
   return {
     sheet: {
       ...(sheet as Record<string, unknown>),
@@ -5396,14 +5515,21 @@ export async function getMatchSheet(input: {
     leagueName: ctx.leagueName,
     fixture: ctx.fixture,
     teams: teamsWithRaisedDead,
-    reference: await buildMatchSheetReference(
-      teams,
-      allowedInducements,
-      { home: 0, away: 0 },
-      inducementPack,
-      deadThisMatch(summary),
-      { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
-    ),
+    reference,
+    inducementOrder: inducementOrderState({
+      favorite: reference.budget.favorite,
+      favoriteMaxBudget:
+        reference.budget.favorite === "home"
+          ? reference.budget.home.maxBudget
+          : reference.budget.favorite === "away"
+            ? reference.budget.away.maxBudget
+            : 0,
+      doneHomeAt: (sheet as { inducementsDoneHomeAt?: Date | null })
+        .inducementsDoneHomeAt,
+      doneAwayAt: (sheet as { inducementsDoneAwayAt?: Date | null })
+        .inducementsDoneAwayAt,
+      validated: sheet.status === "validated",
+    }),
     computedSpp,
     viewerRole: commissioner
       ? "commissioner"
@@ -5420,6 +5546,8 @@ export async function getMatchSheet(input: {
         : side === "away"
           ? (teams.away?.teamId ?? null)
           : null,
+    viewerSides: viewerOwned,
+    sameOwner: sameOwner(ctx),
     // Le D6 de Haine est lance a la validation : rien a montrer avant.
     hateRolls:
       sheet.status === "validated"

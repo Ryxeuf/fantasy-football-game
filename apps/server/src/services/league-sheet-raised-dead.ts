@@ -48,8 +48,8 @@
 import { isBigGuy } from "@bb/game-engine";
 import {
   buildJourneymanHire,
-  linemanPositionsForRoster,
   rosterPositions,
+  troisQuartPositionsForRoster,
   splitSkillCsv,
   type JourneymanHire,
   type JourneymanHireInput,
@@ -401,16 +401,17 @@ export interface DeriveRaisedDeadInput {
 }
 
 /**
- * Postes de Trois-quart que les règles permettent de relever : les mêmes
- * que ceux d'un journalier (0-12 ou plus, ou Mot-clé « Trois-quart »), le
- * Trois-quart de base en premier.
+ * Postes de Trois-quart que les règles permettent de relever : TOUS les
+ * Trois-quarts de la fiche (0-12 ou plus, ou Mot-clé « Trois-quart »), le
+ * Trois-quart de base en premier. Volontairement DÉCOUPLÉ des journaliers,
+ * que la règle p.94 restreint aux Trois-quarts de quantité 0-16.
  */
 export function raisedDeadPositionOptions(
   roster: string,
   ruleset?: string,
   positions?: readonly JourneymanSourcePosition[] | null,
 ): JourneymanPositionOption[] {
-  return linemanPositionsForRoster(roster, ruleset, positions);
+  return troisQuartPositionsForRoster(roster, ruleset, positions);
 }
 
 /**

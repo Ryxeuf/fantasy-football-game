@@ -32,7 +32,7 @@
   "onboarding": {
     "badge": "New coach",
     "title": "Create your team in 60 seconds",
-    "subtitle": "Three steps and you're ready to hit the pitch.",
+    "subtitle": "Four steps and you're ready to hit the pitch.",
     "stepCounter": "Step {current} / {total}",
     "later": "Later",
     "back": "Back",
@@ -55,6 +55,18 @@
     "namePlaceholder": "e.g. Reikland Reavers",
     "regenerate": "Reroll",
     "nameRequired": "Give your team a name.",
+    "staffTitle": "Your staff",
+    "staffSubtitle": "Optional: Dedicated Fans, rerolls, apothecary. The rest of the budget goes to the treasury.",
+    "staffFans": "Dedicated Fans",
+    "staffRerolls": "Team rerolls",
+    "staffApothecary": "Apothecary",
+    "staffUnitCost": "{cost} each",
+    "staffCost": "Staff cost",
+    "staffRemaining": "Remaining budget",
+    "confirmStaff": "Staff",
+    "confirmStaffNone": "None",
+    "confirmStaffFans": "{n} fan(s)",
+    "confirmStaffRerolls": "{n} reroll(s)",
     "step3Title": "Ready to enter the arena?",
     "step3Subtitle": "We'll create your starting team. You can tweak everything afterwards.",
     "confirmRace": "Race",
@@ -562,6 +574,7 @@
     "players": "players",
     "baseSkillsLegend": "Base skills (gray border)",
     "acquiredSkillsLegend": "Acquired skills (orange border)",
+    "randomSkillsLegend": "Die = randomly rolled skill",
     "skillColorsLegend": "Background colors by category: General (blue), Agility (green), Strength (red), Passing (purple), Mutation (orange), Trait (gray)",
     "tableNumber": "#",
     "tableName": "Name",
@@ -1454,5 +1467,15 @@
     "deleteSuccess": "“{name}” has been deleted.",
     "working": "Working...",
     "error": "The operation failed"
+  },
+  "myCompetitions": {
+    "scopeLabel": "Show",
+    "scopeAll": "All",
+    "scopeMine": "Mine",
+    "roleCommissioner": "👑 Commissioner",
+    "roleActive": "Registered",
+    "roleWithdrawn": "Withdrawn",
+    "roleFormer": "Past season",
+    "mineEmpty": "You have no competition here yet: none created, none played by one of your teams."
   }
 }

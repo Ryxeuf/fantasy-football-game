@@ -193,3 +193,47 @@ describe("SkillTooltip — trait Haine hors catalogue (A160)", () => {
     expect(screen.getByText("FB-hatchet-job")).toBeTruthy();
   });
 });
+
+describe("SkillTooltip — compétence tirée au hasard (dé)", () => {
+  const advancements = JSON.stringify([
+    { skillSlug: "block", type: "primary", isRandom: false, at: 1 },
+    { skillSlug: "dodge", type: "random-primary", isRandom: true, at: 2 },
+  ]);
+
+  it("une compétence tirée garde la bordure orange ET porte un dé", () => {
+    render(
+      <SkillTooltip
+        skillsString="block,dodge"
+        dbBaseSkills={[]}
+        advancements={advancements}
+      />,
+    );
+    const dodge = screen.getByTestId("skill-badge-acquired-dodge");
+    expect(dodge.className).toContain("border-orange-400");
+    const die = screen.getByTestId("skill-badge-random-dodge");
+    expect(die.getAttribute("title")).toBe("Compétence tirée au hasard");
+    expect(
+      screen.getByRole("img", { name: "Compétence tirée au hasard" }),
+    ).toBeTruthy();
+    // Choisie : orange, sans dé.
+    expect(screen.getByTestId("skill-badge-acquired-block")).toBeTruthy();
+    expect(screen.queryByTestId("skill-badge-random-block")).toBeNull();
+  });
+
+  it("sans donnée d'avancement : affichage historique, aucun dé", () => {
+    render(<SkillTooltip skillsString="block,dodge" dbBaseSkills={[]} />);
+    expect(screen.getByTestId("skill-badge-acquired-dodge")).toBeTruthy();
+    expect(screen.queryByTestId("skill-badge-random-dodge")).toBeNull();
+  });
+
+  it("une compétence de base n'a jamais de dé", () => {
+    render(
+      <SkillTooltip
+        skillsString="dodge"
+        dbBaseSkills={["dodge"]}
+        advancements={advancements}
+      />,
+    );
+    expect(screen.queryByTestId("skill-badge-random-dodge")).toBeNull();
+  });
+});

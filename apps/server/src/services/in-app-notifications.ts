@@ -38,10 +38,12 @@ export type NotificationKind =
   | "league.round_followup"
   | "league.match_validation"
   | "league.predictions_settled"
+  | "league.team_withdrawn"
   | "friend.request"
   | "friend.accepted"
   | "league.archived"
   | "league.deleted"
+  | "league.season.deleted"
   | "cup.archived"
   | "cup.deleted";
 

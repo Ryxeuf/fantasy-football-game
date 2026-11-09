@@ -2,16 +2,16 @@
 
 ## 1. Une seule résolution « à moi » (serveur)
 
-- [ ] 1.1 Créer `services/competition-membership.ts` : `leagueMineWhere`, `cupMineWhere` (filtres par relation `team.ownerId`, équipes supprimées comprises) et `buildViewerRoles` (pur : `commissioner`, `participant` = `active | withdrawn | former | null`, équipes de l'édition courante) ; vérifier par `competition-membership.test.ts` en table (commissaire seul, commissaire qui joue, retiré, saison passée, équipe supprimée, invité seulement, admin non membre)
-- [ ] 1.2 Composer la visibilité de `listLeagues` à partir de `leagueMineWhere` (+ publiques + invités) sans changer son résultat ; vérifier par `services/league.test.ts` (existants verts) et un test « à moi ⊆ visible » sur le `where` produit
-- [ ] 1.3 Faire passer `buildCupListWhere` et `GET /cup/archived` par `cupMineWhere`, supprimer le pré-chargement des équipes non supprimées ; vérifier par `services/cup-listing.test.ts` (coupe privée jouée avec une équipe supprimée : listée) et les tests de route coupe existants
-- [ ] 1.4 Consigner le patron « une seule résolution de "à moi", incluse dans la visibilité » dans `CLAUDE.md` (section Patterns) ; vérifier que la section cite `services/competition-membership`
+- [x] 1.1 Créer `services/competition-membership.ts` : `leagueMineWhere`, `cupMineWhere` (filtres par relation `team.ownerId`, équipes supprimées comprises) et `buildViewerRoles` (pur : `commissioner`, `participant` = `active | withdrawn | former | null`, équipes de l'édition courante) ; vérifier par `competition-membership.test.ts` en table (commissaire seul, commissaire qui joue, retiré, saison passée, équipe supprimée, invité seulement, admin non membre)
+- [x] 1.2 Composer la visibilité de `listLeagues` à partir de `leagueMineWhere` (+ publiques + invités) sans changer son résultat ; vérifier par `services/league.test.ts` (existants verts) et un test « à moi ⊆ visible » sur le `where` produit
+- [x] 1.3 Faire passer `buildCupListWhere` et `GET /cup/archived` par `cupMineWhere`, supprimer le pré-chargement des équipes non supprimées ; vérifier par `services/cup-listing.test.ts` (coupe privée jouée avec une équipe supprimée : listée) et les tests de route coupe existants
+- [x] 1.4 Consigner le patron « une seule résolution de "à moi", incluse dans la visibilité » dans `CLAUDE.md` (section Patterns) ; vérifier que la section cite `services/competition-membership`
 
 ## 2. Filtre « Les miennes » et rôle du lecteur sur les listings (serveur)
 
-- [ ] 2.1 Ajouter `scope: all | mine` (défaut `all`) à `listLeaguesQuerySchema` et la branche `mine` à `listLeagues` (statut, `creatorId` et pagination par-dessus, `meta.total` sur le sous-ensemble) ; vérifier par `routes/league.test.ts` et un cas de chaîne Express réelle dans `routes/league-access.test.ts` (`scope=mine` → `where` « à moi » ; `scope=friends` → 400)
-- [ ] 2.2 Créer `listCupsQuerySchema` (`scope`, `publicOnly`) monté par `validateQuery` sur `GET /cup`, branche `mine` via `cupMineWhere` ; vérifier par des tests de route (défaut inchangé, `scope=mine`, 400, `publicOnly=false` toujours réservé à l'admin)
-- [ ] 2.3 Servir `viewerRoles` sur chaque élément de `GET /leagues` (une requête de participations + `groupBy` du numéro de saison max) et de `GET /cup` (une requête de participations) ; vérifier par des tests qui comptent les appels Prisma (pas de N+1) et le contenu de `viewerRoles`
+- [x] 2.1 Ajouter `scope: all | mine` (défaut `all`) à `listLeaguesQuerySchema` et la branche `mine` à `listLeagues` (statut, `creatorId` et pagination par-dessus, `meta.total` sur le sous-ensemble) ; vérifier par `routes/league.test.ts` et un cas de chaîne Express réelle dans `routes/league-access.test.ts` (`scope=mine` → `where` « à moi » ; `scope=friends` → 400)
+- [x] 2.2 Créer `listCupsQuerySchema` (`scope`, `publicOnly`) monté par `validateQuery` sur `GET /cup`, branche `mine` via `cupMineWhere` ; vérifier par des tests de route (défaut inchangé, `scope=mine`, 400, `publicOnly=false` toujours réservé à l'admin)
+- [x] 2.3 Servir `viewerRoles` sur chaque élément de `GET /leagues` (une requête de participations + `groupBy` du numéro de saison max) et de `GET /cup` (une requête de participations) ; vérifier par des tests qui comptent les appels Prisma (pas de N+1) et le contenu de `viewerRoles`
 
 ## 3. Liste « mes compétitions » (serveur)
 
@@ -35,9 +35,11 @@
 
 ## 6. Web : listes existantes
 
-- [ ] 6.1 Créer `ScopeToggle` (« Toutes / Les miennes », lit et écrit `?scope=` par `router.replace(..., { scroll: false })`) et `ViewerRoleBadges` (commissaire, inscrit, retiré, ancienne saison) ; vérifier par des tests RTL (défaut « Toutes », URL mise à jour, badges selon `viewerRoles`, champ absent toléré)
-- [ ] 6.2 Brancher `/leagues` et `/leagues/archived` : `scope` transmis à l'API, badges sur les cartes, lien vers `/me/competitions` ; vérifier par `leagues/page.test.tsx` et un test de la page d'archives
-- [ ] 6.3 Brancher `/cups` : `scope` transmis, rôles lus dans `viewerRoles` au lieu d'être reconstruits par `/auth/me` + `/team/mine`, lien vers `/me/competitions` ; vérifier par un test de page (badge « Créateur » et « Inscrit » issus de l'API, `scope=mine` dans l'appel)
+- [x] 6.1 Créer `ScopeToggle` (« Toutes / Les miennes », lit et écrit `?scope=` par `router.replace(..., { scroll: false })`) et `ViewerRoleBadges` (commissaire, inscrit, retiré, ancienne saison) ; vérifier par des tests RTL (défaut « Toutes », URL mise à jour, badges selon `viewerRoles`, champ absent toléré)
+- [x] 6.2 Brancher `/leagues` et `/leagues/archived` : `scope` transmis à l'API, badges sur les cartes, lien vers `/me/competitions` ; vérifier par `leagues/page.test.tsx` et un test de la page d'archives
+  - Lien vers `/me/competitions` NON posé : la page n'existe qu'avec la section 7 (à poser avec 7.3, sinon lien mort).
+- [x] 6.3 Brancher `/cups` : `scope` transmis, rôles lus dans `viewerRoles` au lieu d'être reconstruits par `/auth/me` + `/team/mine`, lien vers `/me/competitions` ; vérifier par un test de page (badge « Créateur » et « Inscrit » issus de l'API, `scope=mine` dans l'appel)
+  - Lien vers `/me/competitions` NON posé (même raison que 6.2). `/auth/me` reste lu pour la redirection vers la connexion, plus pour les rôles.
 
 ## 7. Web : page « Mes compétitions »
 

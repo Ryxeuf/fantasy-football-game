@@ -400,6 +400,8 @@ describe("LeagueDetailPage", () => {
         expect(screen.getByTestId("season-admin-panel")).toBeTruthy();
       });
       expect(screen.getByTestId("open-new-season-modal")).toBeTruthy();
+      // Zone de danger de la saison : réservée au commissaire (ou admin).
+      expect(screen.getByTestId("season-delete-panel")).toBeTruthy();
     });
 
     it("hides admin controls but shows Join button for non-creator users", async () => {
@@ -422,6 +424,7 @@ describe("LeagueDetailPage", () => {
 
       expect(screen.queryByTestId("season-admin-panel")).toBeNull();
       expect(screen.queryByTestId("open-new-season-modal")).toBeNull();
+      expect(screen.queryByTestId("season-delete-panel")).toBeNull();
     });
 
     it("shows Join button for the creator too (player-commissaire) when registrations are open", async () => {

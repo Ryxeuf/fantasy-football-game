@@ -3,8 +3,9 @@
  *
  * Règle BB : une équipe qui ne peut pas aligner 11 joueurs (morts,
  * absents/missNextMatch, licenciés) engage un journalier par joueur
- * manquant. Le journalier joue au poste « lineman » du roster (un poste
- * recrutable à 0-12 ou plus) avec la compétence Solitaire (4+).
+ * manquant. Le journalier joue à un poste de Trois-quart de quantité 0-16
+ * (livre p.94 ; repli « plus grand max ≥ 12 » pour un roster sans
+ * mots-clés) avec la compétence Solitaire (4+).
  *
  * Ici les journaliers sont des joueurs SYNTHÉTIQUES de la feuille :
  *  - jamais persistés en TeamPlayer (ils quittent l'équipe après le
@@ -14,8 +15,8 @@
  *  - exclus de la persistance post-match (SPP, blessures…) via
  *    `isJourneymanId` (cf. league-match-sheet.buildOfflineInputFromSummary).
  *
- * Si le roster offre PLUSIEURS postes de lineman (Orques : Trois-quart
- * Orque OU Trois-quart Gobelin), le coach choisit le poste de CHAQUE
+ * Si le roster offre PLUSIEURS Trois-quarts 0-16 (Morts-Vivants : Trois-quart
+ * Squelette OU Trois-quart Zombie), le coach choisit le poste de CHAQUE
  * journalier via la feuille (`LeagueMatchSheet.journeymenHome/Away`,
  * `{ positions: [slug | null, ...] }`). Un seul choix global
  * (`{ position: slug }`, forme historique) reste lu et s'applique alors à
@@ -67,16 +68,21 @@ export function journeymanSide(
   return null;
 }
 
-/** Seuil BB « 0-12 ou plus » : le Trois-quart « de base » d'une fiche. */
-const JOURNEYMAN_ELIGIBLE_MAX = 12;
+/**
+ * Quantité exigée d'un poste de journalier (livre p.94) : seul un poste de
+ * Trois-quart de quantité 0-16 fournit un journalier.
+ */
+const JOURNEYMAN_REQUIRED_MAX = 16;
 
 /**
- * Mot-clé de poste qui désigne un Trois-quart. Le compendium publié pose la
- * règle en ces termes — « un journalier correspond toujours à un poste de
- * Trois-quart de la fiche d'équipe » et « si la fiche d'équipe propose
- * plusieurs postes de Trois-quart, le coach choisit le type de journalier ».
- * Le seul seuil `max` ratait les Trois-quarts à quota réduit (Orques :
- * Trois-quart Gobelin, 0-4), donc le choix annoncé par la règle.
+ * Seuil historique « 0-12 ou plus » : repli des rosters SANS mots-clés de
+ * poste (Saison 2, données anciennes) et sélection des Trois-quarts de la
+ * fiche pour le mort relevé (`troisQuartPositionsForRoster`).
+ */
+const LEGACY_LINEMAN_MIN_MAX = 12;
+
+/**
+ * Mot-clé de poste qui désigne un Trois-quart (« Orque, Trois-quart »).
  */
 const LINEMAN_KEYWORD = "trois-quart";
 
@@ -85,17 +91,59 @@ function positionKeywords(p: JourneymanSourcePosition): string {
   return p.keywords ?? KEYWORDS_SEASON3[p.slug] ?? "";
 }
 
-/**
- * Poste utilisable comme journalier : le Trois-quart « de base » (0-12 ou
- * plus, quel que soit son libellé) ou tout poste dont les Mots-clés
- * déclarent « Trois-quart ».
- */
-function isJourneymanEligible(p: JourneymanSourcePosition): boolean {
-  if (p.max >= JOURNEYMAN_ELIGIBLE_MAX) return true;
+/** Le poste se déclare Trois-quart dans ses Mots-clés. */
+function hasLinemanKeyword(p: JourneymanSourcePosition): boolean {
   return positionKeywords(p)
     .split(",")
     .map((k) => k.trim().toLowerCase())
     .includes(LINEMAN_KEYWORD);
+}
+
+/**
+ * Règle des journaliers (livre p.94) : un poste dont les Mots-clés
+ * déclarent « Trois-quart » ET dont la quantité est 0-16. Un Trois-quart à
+ * quota réduit (Orques : Trois-quart Gobelin 0-4 ; Alliance du Vieux Monde :
+ * Aspirant Halfling 0-3, Trois-Quart Nain 0-3) n'en fournit pas.
+ */
+function isJourneymanEligible(p: JourneymanSourcePosition): boolean {
+  return p.max >= JOURNEYMAN_REQUIRED_MAX && hasLinemanKeyword(p);
+}
+
+/** Tri commun : max décroissant puis coût croissant (le 0-16 en tête). */
+function byMaxThenCost(
+  a: JourneymanSourcePosition,
+  b: JourneymanSourcePosition,
+): number {
+  return b.max - a.max || a.cost - b.cost;
+}
+
+/**
+ * Postes fournissant un journalier, triés (défaut en tête).
+ *
+ * Repli pour un roster dont aucun poste ne remplit la règle — typiquement
+ * un roster SANS mots-clés (Saison 2, données anciennes) : le ou les postes
+ * de plus grand `max`, s'il atteint 12 (« 0-12 ou plus », comportement
+ * historique). Aucun roster connu ne se retrouve ainsi sans journalier.
+ */
+function journeymanPositions(
+  all: readonly JourneymanSourcePosition[],
+): JourneymanSourcePosition[] {
+  const eligible = all.filter(isJourneymanEligible);
+  if (eligible.length > 0) return [...eligible].sort(byMaxThenCost);
+  const topMax = all.reduce((m, p) => Math.max(m, p.max), 0);
+  if (topMax < LEGACY_LINEMAN_MIN_MAX) return [];
+  return all.filter((p) => p.max === topMax).sort(byMaxThenCost);
+}
+
+/**
+ * Ancienne sélection (« 0-12 ou plus » OU Mot-clé « Trois-quart ») : les
+ * Trois-quarts de la fiche, quel que soit leur quota. Sert au mort relevé
+ * (règle « un Trois-quart de la fiche », sans condition de quantité) et à
+ * relire un journalier baké dans le gel d'une feuille antérieure à la règle
+ * p.94.
+ */
+function isTroisQuartPosition(p: JourneymanSourcePosition): boolean {
+  return p.max >= LEGACY_LINEMAN_MIN_MAX || hasLinemanKeyword(p);
 }
 
 export interface JourneymanPositionOption {
@@ -231,18 +279,34 @@ export function rosterPositions(
 }
 
 /**
- * Postes de Trois-quart du roster, triés par max décroissant puis coût
- * croissant : le PREMIER reste le Trois-quart de base (0-16), donc le
- * défaut historique est inchangé — seule la liste des choix s'élargit.
+ * Postes pouvant fournir un JOURNALIER (règle p.94 : Trois-quart 0-16, repli
+ * « plus grand max ≥ 12 » sans mots-clés), triés par max décroissant puis
+ * coût croissant : le PREMIER est le défaut.
  */
 export function linemanPositionsForRoster(
   roster: string,
   ruleset?: string,
   positions?: readonly JourneymanSourcePosition[] | null,
 ): JourneymanPositionOption[] {
+  return journeymanPositions(rosterPositions(roster, ruleset, positions)).map(
+    (p) => ({ slug: p.slug, name: p.displayName }),
+  );
+}
+
+/**
+ * TOUS les postes de Trois-quart de la fiche (0-12 ou plus, ou Mot-clé
+ * « Trois-quart »), triés comme `linemanPositionsForRoster`. Ce n'est PAS la
+ * règle des journaliers (p.94, quantité 0-16 exigée) : c'est celle du mort
+ * relevé (« un Trois-quart de la fiche d'équipe »), découplée exprès.
+ */
+export function troisQuartPositionsForRoster(
+  roster: string,
+  ruleset?: string,
+  positions?: readonly JourneymanSourcePosition[] | null,
+): JourneymanPositionOption[] {
   return rosterPositions(roster, ruleset, positions)
-    .filter(isJourneymanEligible)
-    .sort((a, b) => b.max - a.max || a.cost - b.cost)
+    .filter(isTroisQuartPosition)
+    .sort(byMaxThenCost)
     .map((p) => ({ slug: p.slug, name: p.displayName }));
 }
 
@@ -282,6 +346,14 @@ export interface DeriveJourneymenInput {
    * catalogue compilé.
    */
   readonly positions?: readonly JourneymanSourcePosition[] | null;
+  /**
+   * Libellés « Journalier (<poste>) » BAKÉS dans le gel, par rang. Un choix
+   * stocké devenu inéligible (Trois-quart à quota réduit, choisissable avant
+   * la règle p.94) n'est conservé QUE s'il correspond au journalier baké de
+   * ce rang : le gel fait foi pour une feuille figée (validée comprise), et
+   * tout autre cas retombe sur le défaut.
+   */
+  readonly bakedPositionNames?: readonly (string | null)[] | null;
 }
 
 /**
@@ -300,20 +372,39 @@ export function deriveJourneymen(
     input.ruleset,
     input.positions,
   );
-  const linemen = linemanPositionsForRoster(
-    input.roster,
-    input.ruleset,
-    input.positions,
-  );
-  /** Un slug n'est retenu que s'il désigne bien un lineman de ce roster. */
+  const linemen = journeymanPositions(positions);
+  /** Un slug n'est retenu que s'il désigne bien un journalier de ce roster. */
   const eligibleSlug = (slug: string | null | undefined): string | null =>
     slug && linemen.some((l) => l.slug === slug) ? slug : null;
+  /**
+   * Choix antérieur à la règle p.94 (Trois-quart à quota réduit) : retenu
+   * seulement si le gel a baké CE poste à CE rang.
+   */
+  const frozenLegacySlug = (
+    slug: string | null | undefined,
+    rank: number,
+  ): string | null => {
+    const baked = input.bakedPositionNames?.[rank];
+    if (!slug || !baked) return null;
+    const p = positions.find(
+      (pos) => pos.slug === slug && isTroisQuartPosition(pos),
+    );
+    return p && baked === `${FROZEN_JOURNEYMAN_POSITION_PREFIX} (${p.displayName})`
+      ? slug
+      : null;
+  };
   const globalSlug = eligibleSlug(input.chosenPosition);
-  const defaultSlug = globalSlug ?? linemen[0]?.slug ?? null;
+  const defaultSlug = linemen[0]?.slug ?? null;
   const maxNumber = input.players.reduce((m, p) => Math.max(m, p.number), 0);
 
   return Array.from({ length: missing }, (_, i) => {
-    const slug = eligibleSlug(input.chosenPositions?.[i]) ?? defaultSlug;
+    const ranked = input.chosenPositions?.[i];
+    const slug =
+      eligibleSlug(ranked) ??
+      frozenLegacySlug(ranked, i) ??
+      globalSlug ??
+      frozenLegacySlug(input.chosenPosition, i) ??
+      defaultSlug;
     const position = positions.find((p) => p.slug === slug);
     const baseSkills = (position?.skills ?? "")
       .split(",")
@@ -368,6 +459,8 @@ export interface FrozenSheetRoster {
   readonly journeymen: ReadonlyArray<{
     readonly number: number;
     readonly name: string;
+    /** Libellé baké « Journalier (<poste>) ». */
+    readonly positionName: string;
   }>;
 }
 
@@ -399,7 +492,11 @@ export function parseFrozenSheetRoster(raw: unknown): FrozenSheetRoster | null {
     dead: boolean;
     missNextMatch: boolean;
   }> = [];
-  const journeymen: Array<{ number: number; name: string }> = [];
+  const journeymen: Array<{
+    number: number;
+    name: string;
+    positionName: string;
+  }> = [];
   for (const entry of o.players) {
     if (!entry || typeof entry !== "object") continue;
     const e = entry as { number?: unknown; name?: unknown; position?: unknown };
@@ -411,6 +508,7 @@ export function parseFrozenSheetRoster(raw: unknown): FrozenSheetRoster | null {
       journeymen.push({
         number,
         name: typeof e.name === "string" ? e.name : "",
+        positionName: e.position,
       });
       continue;
     }
@@ -580,12 +678,39 @@ export function deriveMatchJourneymen(
 ): SheetJourneyman[] {
   const frozen = parseFrozenSheetRoster(input.frozenRosterSnapshot);
   if (!frozen) return deriveJourneymen(input);
-  const derived = deriveJourneymen({ ...input, players: frozen.players });
+  const derived = deriveJourneymen({
+    ...input,
+    players: frozen.players,
+    bakedPositionNames: frozen.journeymen.map((j) => j.positionName),
+  });
   return derived.map((j, i) => {
     const baked = frozen.journeymen[i];
     if (!baked) return j;
     return { ...j, number: baked.number, name: baked.name || j.name };
   });
+}
+
+/**
+ * Options de poste servies au picker : la règle p.94, plus le poste d'un
+ * journalier effectivement aligné qui n'y figure plus (Trois-quart à quota
+ * réduit baké dans le gel d'une feuille antérieure). Sans ce complément, le
+ * picker afficherait un poste absent de sa liste.
+ */
+export function withFrozenLegacyOptions(
+  options: readonly JourneymanPositionOption[],
+  journeymen: readonly SheetJourneyman[],
+): JourneymanPositionOption[] {
+  const out = [...options];
+  const prefix = `${FROZEN_JOURNEYMAN_POSITION_PREFIX} (`;
+  for (const j of journeymen) {
+    if (out.some((o) => o.slug === j.position)) continue;
+    if (!j.positionName.startsWith(prefix)) continue;
+    out.push({
+      slug: j.position,
+      name: j.positionName.slice(prefix.length, -1),
+    });
+  }
+  return out;
 }
 
 /**

@@ -102,6 +102,8 @@ vi.mock("./league-sheet-advancements", () => ({
 
 import { prisma } from "../prisma";
 import {
+  updateRaisedDead,
+  setInducementsDone,
   createMatchSheet,
   refreshMatchSheetSnapshots,
   addEvent,
@@ -2844,6 +2846,77 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.reference.budget.away.pettyCash).toBe(0);
     });
 
+    it("budget servi = budget EFFECTIF : la dépense adverse STOCKÉE gonfle la Petite Monnaie de l'outsider", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      // Le favori (away, VEA 1,15 M) a déjà acheté 80 000 po de coups de
+      // pouce, stockés sur la feuille.
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+        inducementsAway: JSON.stringify([
+          { slug: "bribe", name: "Pot-de-vin", cost: 80_000, qty: 1 },
+        ]),
+      });
+      const eleven = (prefix: string) =>
+        Array.from({ length: 11 }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `${prefix}${i + 1}`,
+          position: "lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          currentValue: 1_000_000,
+          treasury: 120_000,
+          players: eleven("h"),
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "orc",
+          currentValue: 1_150_000,
+          treasury: 200_000,
+          players: eleven("a"),
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+      // Outsider : écart 150k + dépense adverse 80k + 50k de trésorerie.
+      expect(out.reference.budget.home).toMatchObject({
+        ctvGap: 150_000,
+        opponentSpent: 80_000,
+        pettyCash: 230_000,
+        treasuryAllowance: 50_000,
+        maxBudget: 280_000,
+      });
+      // Favori : sa trésorerie, rien d'autre.
+      expect(out.reference.budget.away).toMatchObject({
+        pettyCash: 0,
+        opponentSpent: 0,
+        maxBudget: 200_000,
+      });
+      expect(out.reference.budget.favorite).toBe("away");
+      // Ordre d'achat : le favori n'a pas confirmé, l'outsider attend.
+      expect(out.inducementOrder).toEqual({
+        favorite: "away",
+        favoriteDone: false,
+        waitingFor: "away",
+        provisionalSide: "home",
+      });
+    });
+
     it("sous règlement de tournoi, sert la liste fermée et les prix du pack", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
@@ -3261,6 +3334,342 @@ describe("Lot G — league-match-sheet", () => {
         }),
       ).resolves.toBeDefined();
     });
+
+    it("un coach n'écrase pas les coups de pouce adverses (liste ignorée, stockée conservée)", async () => {
+      mockTeamsForBudget();
+      const storedAway = [{ slug: "bribe", name: "Pot-de-vin", cost: 100_000, qty: 1 }];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        inducementsAway: storedAway,
+      });
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          inducementsHome: [{ slug: "wizard", cost: 150_000, qty: 1 }],
+          // Liste périmée (page ouverte avant l'achat adverse) : vide.
+          inducementsAway: [],
+        },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.inducementsHome).toEqual([
+        { slug: "wizard", cost: 150_000, qty: 1 },
+      ]);
+      expect("inducementsAway" in data).toBe(false);
+    });
+
+    it("le budget de l'outsider au PATCH compte la dépense adverse STOCKÉE, pas celle renvoyée par le coach", async () => {
+      mockTeamsForBudget();
+      // Away (favori) a acheté 100k : home = 150k + 100k + 50k = 300k.
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        inducementsAway: [{ slug: "bribe", cost: 100_000, qty: 1 }],
+      });
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            inducementsHome: [{ slug: "wizard", cost: 300_000, qty: 1 }],
+            inducementsAway: [],
+          },
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    it("le commissaire écrit les deux côtés", async () => {
+      mockTeamsForBudget();
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        payload: {
+          inducementsHome: [],
+          inducementsAway: [{ slug: "bribe", cost: 0, qty: 1 }],
+        },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.inducementsHome).toEqual([]);
+      expect(data.inducementsAway).toEqual([{ slug: "bribe", cost: 0, qty: 1 }]);
+    });
+
+    it("VEA égales : aucune trésorerie mobilisable (étape 4)", async () => {
+      mockTeamsForBudget();
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", currentValue: 1_000_000, treasury: 200_000, players: [] },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", currentValue: 1_000_000, treasury: 200_000, players: [] },
+      ]);
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: { inducementsHome: [{ slug: "bribe", cost: 100_000, qty: 1 }] },
+        }),
+      ).rejects.toMatchObject({ code: "inducement_over_budget" });
+    });
+  });
+
+  describe("ordre d'achat des coups de pouce (« J'ai fini mes achats »)", () => {
+    beforeEach(() => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => ({ id: "ms1", ...a.data }),
+      );
+    });
+
+    it("un coach confirme pour son côté, sans le préciser", async () => {
+      await setInducementsDone({ pairingId: "pair-1", userId: AWAY, done: true });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.inducementsDoneAwayAt).toBeInstanceOf(Date);
+      expect("inducementsDoneHomeAt" in data).toBe(false);
+    });
+
+    it("done: false retire la confirmation", async () => {
+      await setInducementsDone({ pairingId: "pair-1", userId: HOME, done: false });
+      expect(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data,
+      ).toEqual({ inducementsDoneHomeAt: null });
+    });
+
+    it("un coach ne confirme pas pour l'adversaire (403)", async () => {
+      await expect(
+        setInducementsDone({ pairingId: "pair-1", userId: HOME, side: "away", done: true }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+      expect(mockPrisma.leagueMatchSheet.update).not.toHaveBeenCalled();
+    });
+
+    it("le commissaire désigne le côté (sinon 400 side_required)", async () => {
+      await expect(
+        setInducementsDone({ pairingId: "pair-1", userId: COMMISH, done: true }),
+      ).rejects.toMatchObject({ code: "side_required" });
+      await setInducementsDone({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        side: "home",
+        done: true,
+      });
+      expect(
+        mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data.inducementsDoneHomeAt,
+      ).toBeInstanceOf(Date);
+    });
+
+    it("refusé sur une feuille validée", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "validated",
+      });
+      await expect(
+        setInducementsDone({ pairingId: "pair-1", userId: AWAY, done: true }),
+      ).rejects.toMatchObject({ code: "already_validated" });
+    });
+
+    it("modifier SA liste efface sa confirmation ; renvoyer la même liste non", async () => {
+      const list = [{ slug: "bribe", cost: 0, qty: 1 }];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        inducementsAway: list,
+        inducementsDoneAwayAt: new Date(),
+      });
+      mockPrisma.team.findMany.mockResolvedValue([]);
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: list },
+      });
+      expect(
+        "inducementsDoneAwayAt" in
+          mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data,
+      ).toBe(false);
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: AWAY,
+        payload: { inducementsAway: [] },
+      });
+      expect(
+        mockPrisma.leagueMatchSheet.update.mock.calls[1][0].data
+          .inducementsDoneAwayAt,
+      ).toBeNull();
+    });
+  });
+
+  describe("un coach possède les DEUX équipes", () => {
+    const BOTH = "both-owner";
+    function mockDoubleOwner() {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: BOTH } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: BOTH } },
+      });
+    }
+    /** Code d'erreur d'une action, "ok" si elle aboutit. */
+    async function codeOf(p: Promise<unknown>): Promise<string> {
+      try {
+        await p;
+        return "ok";
+      } catch (e: unknown) {
+        return (e as { code?: string }).code ?? "error";
+      }
+    }
+    const awayActions: ReadonlyArray<
+      [string, (userId: string) => Promise<unknown>, string]
+    > = [
+      [
+        "relever un mort côté extérieur",
+        (userId) =>
+          updateRaisedDead({
+            pairingId: "pair-1",
+            userId,
+            side: "away",
+            victimId: "h1",
+          }),
+        "raise_dead_wrong_side",
+      ],
+      [
+        "évolutions côté extérieur",
+        (userId) =>
+          updatePostMatch({
+            pairingId: "pair-1",
+            userId,
+            payload: { advancementsAway: [] },
+          }),
+        "advancement_wrong_side",
+      ],
+      [
+        "tirage d'un journalier extérieur",
+        (userId) =>
+          rollJourneymanRandomPrimary({
+            pairingId: "pair-1",
+            userId,
+            journeymanId: "journeyman-away-1",
+            category: "G",
+          }),
+        "advancement_wrong_side",
+      ],
+    ];
+
+    it.each(awayActions)(
+      "%s : refusé au coach de domicile, accepté au double propriétaire",
+      async (_label, act, wrongSide) => {
+        mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+          id: "ms1",
+          status: "draft",
+        });
+        expect(await codeOf(act(HOME))).toBe(wrongSide);
+        mockDoubleOwner();
+        expect(await codeOf(act(BOTH))).not.toBe(wrongSide);
+      },
+    );
+
+    it("soumission sans côté : 400 side_required", async () => {
+      mockDoubleOwner();
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      await expect(
+        submitByCoach({ pairingId: "pair-1", userId: BOTH }),
+      ).rejects.toMatchObject({ code: "side_required" });
+      await expect(
+        unsubmitByCoach({ pairingId: "pair-1", userId: BOTH }),
+      ).rejects.toMatchObject({ code: "side_required" });
+    });
+
+    it("un coach simple ne soumet pas le côté adverse (403)", async () => {
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+      });
+      await expect(
+        submitByCoach({ pairingId: "pair-1", userId: HOME, side: "away" }),
+      ).rejects.toMatchObject({ code: "forbidden" });
+    });
+
+    it("soumission domicile puis extérieur ⇒ both_submitted + commissaire notifié", async () => {
+      mockDoubleOwner();
+      let stored: Record<string, unknown> = {
+        id: "ms1",
+        status: "draft",
+        submittedByHomeAt: null,
+        submittedByAwayAt: null,
+      };
+      mockPrisma.leagueMatchSheet.findUnique.mockImplementation(async () => stored);
+      mockPrisma.leagueMatchSheet.update.mockImplementation(
+        async (a: { data: Record<string, unknown> }) => {
+          stored = { ...stored, ...a.data };
+          return stored;
+        },
+      );
+      const first = await submitByCoach({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "home",
+      });
+      expect((first as { status: string }).status).toBe("submitted_home");
+      const second = await submitByCoach({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "away",
+      });
+      expect((second as { status: string }).status).toBe("both_submitted");
+      expect(stored.submittedByAwayAt).toBeInstanceOf(Date);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(mockPush).toHaveBeenCalledWith(
+        expect.objectContaining({ commissionerUserId: COMMISH, pairingId: "pair-1" }),
+      );
+
+      // Retrait côté extérieur : retour à submitted_home.
+      const back = await unsubmitByCoach({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "away",
+      });
+      expect((back as { status: string }).status).toBe("submitted_home");
+    });
+
+    it("getMatchSheet expose viewerSides et suit ?side= pour viewerRole / viewerTeamId", async () => {
+      mockDoubleOwner();
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+      });
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "A", roster: "human", currentValue: 1, treasury: 0, players: [] },
+        { id: "team-away", name: "B", roster: "orc", currentValue: 1, treasury: 0, players: [] },
+      ]);
+      const def = await getMatchSheet({ pairingId: "pair-1", userId: BOTH });
+      expect(def.viewerSides).toEqual(["home", "away"]);
+      // Avertissement servi à tous, commissaire compris.
+      expect(def.sameOwner).toBe(true);
+      expect(
+        (await getMatchSheet({ pairingId: "pair-1", userId: COMMISH })).sameOwner,
+      ).toBe(true);
+      expect(def.viewerRole).toBe("home");
+      const away = await getMatchSheet({
+        pairingId: "pair-1",
+        userId: BOTH,
+        side: "away",
+      });
+      expect(away.viewerRole).toBe("away");
+      expect(away.viewerTeamId).toBe("team-away");
+      // Un coach simple ne peut pas se faire passer pour l'autre côté.
+      mockPairing();
+      const single = await getMatchSheet({
+        pairingId: "pair-1",
+        userId: HOME,
+        side: "away",
+      });
+      expect(single.viewerSides).toEqual(["home"]);
+      expect(single.viewerRole).toBe("home");
+      expect(single.sameOwner).toBe(false);
+    });
   });
 
   // Polish — apres-match.
@@ -3336,7 +3745,7 @@ describe("Lot G — league-match-sheet", () => {
       );
     }
 
-    it("re-bake le journalier changé de poste : VEA figée, stats, compétences, numéro conservé", async () => {
+    it("un Trois-quart Gobelin (0-4) choisi n'est plus suivi (p.94) : le gel reste à 2 Trois-quarts Orques", async () => {
       mockOrcSheet({
         rosterSnapshotHome: frozenHome(),
         rosterSnapshotAway: JSON.stringify({ currentValue: 900_000, players: [] }),
@@ -3349,29 +3758,18 @@ describe("Lot G — league-match-sheet", () => {
       });
 
       const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
-      expect(data.journeymenHome).toEqual({
-        positions: ["orc_trois_quart_gobelin", null],
-      });
       const snap = JSON.parse(data.rosterSnapshotHome as string);
-      // 940k − 50k (Trois-quart Orque) + 40k (Trois-quart Gobelin).
-      expect(snap.currentValue).toBe(930_000);
-      expect(snap.journeymenValue).toBe(90_000);
-      expect(snap.treasury).toBe(30_000);
+      // Rien ne bouge : le Gobelin n'est pas un poste de journalier.
+      expect(snap.currentValue).toBe(940_000);
+      expect(snap.journeymenValue).toBe(100_000);
       expect(snap.players).toHaveLength(11);
       expect(snap.players[9]).toMatchObject({
         number: 12,
         name: "Journalier 1",
-        position: "Journalier (Trois-quart Gobelin)",
-        ma: 6,
-        st: 2,
-        av: 8,
-      });
-      expect(snap.players[9].skills.split(",")).toEqual(
-        expect.arrayContaining(["dodge", "loner-4"]),
-      );
-      expect(snap.players[10]).toMatchObject({
-        number: 13,
         position: "Journalier (Trois-quart Orque)",
+        ma: 5,
+        st: 3,
+        av: 10,
       });
       // L'autre côté n'est pas touché.
       expect(data.rosterSnapshotAway).toBeUndefined();
@@ -3407,28 +3805,29 @@ describe("Lot G — league-match-sheet", () => {
     });
 
     it("feuille antérieure au re-gel (poste changé sans re-gel) : la VEA repart des journaliers BAKÉS", async () => {
-      // Sous l'ancien code, le choix (2 Gobelins) a été stocké sans re-geler :
-      // le gel porte encore 2 Trois-quarts Orques (940k = 840k + 2 × 50k).
+      // Gel de 2 Trois-quarts Gobelins (840k + 2 × 40k), choix STOCKÉ
+      // divergent (aucun) : c'est la valeur bakée qui sort de la VEA, pas
+      // celle re-dérivée du choix stocké (2 Orques, 100k).
       mockOrcSheet({
-        rosterSnapshotHome: frozenHome(),
-        journeymenHome: {
-          positions: ["orc_trois_quart_gobelin", "orc_trois_quart_gobelin"],
-        },
+        rosterSnapshotHome: frozenHome({
+          currentValue: 920_000,
+          players: [...realPlayers, bakedGoblin(12), bakedGoblin(13)],
+        }),
       });
 
       await updatePreMatch({
         pairingId: "pair-1",
         userId: HOME,
-        payload: { journeymenChoicesHome: ["orc_trois_quart_gobelin", null] },
+        payload: { journeymenChoicesHome: [null, "orc_trois_quart_orque"] },
       });
 
       const snap = JSON.parse(
         mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data
           .rosterSnapshotHome as string,
       );
-      // 940k − 100k (bakés) + 90k (Gobelin + Orque) — et non 950k.
-      expect(snap.currentValue).toBe(930_000);
-      expect(snap.journeymenValue).toBe(90_000);
+      // 920k − 80k (bakés) + 100k (2 Orques) — et non 920k.
+      expect(snap.currentValue).toBe(940_000);
+      expect(snap.journeymenValue).toBe(100_000);
     });
 
     it("gel « en-tête seul » : le choix est stocké, rien n'est re-baké (journaliers dérivés en live)", async () => {
@@ -3472,6 +3871,12 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.teams.home?.journeymenChoices).toEqual([
         "orc_trois_quart_gobelin",
         "orc_trois_quart_orque",
+      ]);
+      // Le Gobelin baké (antérieur à la règle p.94) reste affichable dans le
+      // picker, après le seul poste éligible.
+      expect(out.teams.home?.journeymenOptions?.map((o) => o.slug)).toEqual([
+        "orc_trois_quart_orque",
+        "orc_trois_quart_gobelin",
       ]);
     });
   });
@@ -3801,11 +4206,43 @@ describe("Lot G — league-match-sheet", () => {
       expect(again.candidates).toEqual(first.candidates);
     });
 
-    it("suit le poste CHOISI du journalier (Gobelin : Agilité Principale, Esquive exclue)", async () => {
+    it("ne suit plus un Trois-quart Gobelin choisi sur une feuille non figée (p.94)", async () => {
       mockOrcPairing({
         id: "ms1",
         status: "draft",
         journeymenAway: { positions: ["orc_trois_quart_gobelin"] },
+      });
+      // Le journalier reste un Trois-quart Orque (G,S) : Agilité refusée.
+      await expect(
+        rollJourneymanRandomPrimary({
+          pairingId: "pair-1",
+          userId: AWAY,
+          journeymanId: "journeyman-away-1",
+          category: "A",
+        }),
+      ).rejects.toMatchObject({ code: "category_not_primary" });
+    });
+
+    it("suit le Gobelin BAKÉ dans le gel d'une feuille antérieure (Agilité Principale, Esquive exclue)", async () => {
+      mockOrcPairing({
+        id: "ms1",
+        status: "draft",
+        journeymenAway: { positions: ["orc_trois_quart_gobelin"] },
+        rosterSnapshotAway: JSON.stringify({
+          currentValue: 900_000,
+          players: [
+            ...Array.from({ length: 10 }, (_, i) => ({
+              name: `J${i + 1}`,
+              position: "orc_blitzer",
+              number: i + 1,
+            })),
+            {
+              name: "Journalier 1",
+              position: "Journalier (Trois-quart Gobelin)",
+              number: 11,
+            },
+          ],
+        }),
       });
       const out = await rollJourneymanRandomPrimary({
         pairingId: "pair-1",

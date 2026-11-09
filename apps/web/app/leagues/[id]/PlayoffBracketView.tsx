@@ -18,6 +18,11 @@ import {
   type PoolQuotaView,
 } from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
+import {
+  PlayoffBracketResetButton,
+  PlayoffReplaceControl,
+} from "./PlayoffBracketTools";
+import { canReplaceInPairing, canResetBracket } from "./playoff-bracket-edit";
 
 interface BracketTeam {
   id: string;
@@ -39,6 +44,8 @@ interface BracketPairing {
   homeParticipant: BracketParticipant;
   awayParticipant: BracketParticipant;
   match: { id: string; status: string } | null;
+  /** Statut de la feuille (optionnel : API antérieure). */
+  matchSheet?: { status: string } | null;
 }
 
 interface BracketRound {
@@ -244,6 +251,16 @@ export function PlayoffBracketView({
           }}
         />
       ) : null}
+      {isCommissioner ? (
+        <PlayoffBracketResetButton
+          seasonId={seasonId}
+          disabled={!canResetBracket(data.rounds)}
+          onDone={() => {
+            load();
+            onChanged?.();
+          }}
+        />
+      ) : null}
       {canEditSeeds ? (
         <PlayoffParticipantsEditor
           seasonId={seasonId}
@@ -267,7 +284,22 @@ export function PlayoffBracketView({
               {stage.title}
             </h4>
             {stage.rounds.map((round) => (
-              <RoundCard key={round.id} round={round} />
+              <RoundCard
+                key={round.id}
+                round={round}
+                replace={
+                  isCommissioner
+                    ? {
+                        rounds: data.rounds,
+                        eligibleParticipants,
+                        onDone: () => {
+                          load();
+                          onChanged?.();
+                        },
+                      }
+                    : undefined
+                }
+              />
             ))}
           </div>
         ))}
@@ -337,6 +369,16 @@ function PlayoffPublishToggle({
       >
         {published ? "Dépublier" : "Publier les playoffs"}
       </button>
+      {published ? null : (
+        <span
+          data-testid="playoff-publish-hint"
+          className="basis-full text-xs text-amber-800"
+        >
+          Vérifie d'abord les qualifiés : modifie les participants ou remplace
+          une équipe dans une rencontre, puis publie. Les coachs ne voient rien
+          avant.
+        </span>
+      )}
       {error ? (
         <span data-testid="playoff-publish-error" className="text-red-600">
           {error}
@@ -502,9 +544,15 @@ function stageTitle(stage: string): string {
 
 interface RoundCardProps {
   round: BracketRound;
+  /** Commissaire : remplacement d'un qualifié dans une rencontre à jouer. */
+  replace?: {
+    rounds: BracketRound[];
+    eligibleParticipants: EligibleParticipant[];
+    onDone: () => void;
+  };
 }
 
-function RoundCard({ round }: RoundCardProps) {
+function RoundCard({ round, replace }: RoundCardProps) {
   const pairing = round.pairings[0];
   if (!pairing) {
     return (
@@ -546,6 +594,14 @@ function RoundCard({ round }: RoundCardProps) {
         >
           {pairing.status === "played" ? "Voir le match" : "Reprendre"}
         </Link>
+      ) : null}
+      {replace && canReplaceInPairing(pairing) ? (
+        <PlayoffReplaceControl
+          pairing={pairing}
+          rounds={replace.rounds}
+          eligibleParticipants={replace.eligibleParticipants}
+          onDone={replace.onDone}
+        />
       ) : null}
     </div>
   );
@@ -715,6 +771,23 @@ function PlayoffLaunchPanel({ seasonId, data, onChanged }: LaunchPanelProps) {
       <h3 className="text-md font-semibold text-nuffle-anthracite">
         Playoffs
       </h3>
+
+      <ol
+        data-testid="playoff-flow-hint"
+        className="list-decimal space-y-0.5 rounded-md border border-sky-200 bg-sky-50 py-2 pl-7 pr-3 text-sm text-sky-900"
+      >
+        <li>
+          <strong>Lancer</strong> génère le bracket depuis le classement — il
+          n'est visible que de toi.
+        </li>
+        <li>
+          <strong>Ajuster</strong> : tu peux encore changer les qualifiés (ou
+          réinitialiser le bracket pour changer sa taille).
+        </li>
+        <li>
+          <strong>Publier</strong> le rend visible de tous les coachs.
+        </li>
+      </ol>
 
       <label className="flex items-center gap-2 text-sm text-gray-700">
         Taille du bracket

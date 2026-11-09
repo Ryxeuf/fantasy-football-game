@@ -55,6 +55,9 @@ model User {
   privateProfile              Boolean                     @default(false)
   /// Sprint R lot R.D.3 — NAF opt-in. Mirror PG.
   nafName                     String?
+  /// Mirror PG — numéro NAF vérifié (unique) + date de vérification.
+  nafNumber                   Int?                        @unique
+  nafVerifiedAt               DateTime?
   /// Mirror PG — thème de dés choisi (null = défaut).
   diceTheme                   String?
   /// Pré-alpha gate côté Postgres ; en SQLite tous les comptes sont valides.
@@ -1497,6 +1500,8 @@ model LeagueMatchSheet {
   tossChoice             String?
   inducementsHome        Json?
   inducementsAway        Json?
+  inducementsDoneHomeAt  DateTime?
+  inducementsDoneAwayAt  DateTime?
   prayersHome            Json?
   prayersAway            Json?
   scoreHome              Int           @default(0)

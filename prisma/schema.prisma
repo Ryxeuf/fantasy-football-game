@@ -62,6 +62,14 @@ model User {
   /// d'opt-in. Le service `naf-sync.ts` fetch les resultats via NAF API
   /// quand `naf_integration` flag est ON.
   nafName                     String?
+  /// Numéro de membre NAF déclaré par le coach (1 à 7 chiffres). Unique : un
+  /// numéro ne peut appartenir qu'à un compte. Vérifié auprès de l'annuaire
+  /// public thenaf.net (`services/naf-verification`). Nullable sans défaut :
+  /// `db push`, aucun backfill.
+  nafNumber                   Int?                        @unique
+  /// Date de la dernière vérification RÉUSSIE du numéro (fiche coach trouvée,
+  /// même numéro). null = jamais vérifié, ou en attente (annuaire injoignable).
+  nafVerifiedAt               DateTime?
   /// Thème de dés choisi (Dé de Blocage + D6), cf. services/dice-theme-catalogue.
   /// null = jamais choisi => thème par défaut (colonne nullable : `db push`,
   /// aucun backfill possible). Un id inconnu ou non possédé retombe aussi sur
@@ -2116,6 +2124,12 @@ model LeagueMatchSheet {
   /// Coups de pouce (inducements) selectionnes : [{ id, name, cost, qty }].
   inducementsHome Json?
   inducementsAway Json?
+  /// Ordre d'achat des coups de pouce (BB2025) : le favori (VEA la plus
+  /// haute) confirme avoir fini ses achats, l'outsider achète ensuite.
+  /// null = pas confirmé (ou feuille antérieure). Une modification de la
+  /// liste du côté efface sa confirmation.
+  inducementsDoneHomeAt DateTime?
+  inducementsDoneAwayAt DateTime?
   /// Prieres de Nuffle : [{ playerId, effect, sppBonus }].
   prayersHome     Json?
   prayersAway     Json?

@@ -18,6 +18,10 @@ import type { ReplayJournal } from './replay/journal';
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
  *
+ *  0.31.0 — Esquive en Force (Break Tackle) au texte 2025 : +1 (F ≤ 3),
+ *           +2 (F 4), +3 (F ≥ 5), et l'usage est rendu à chaque fin de tour
+ *           d'équipe (il ne l'était jamais). Les issues changent à graine
+ *           constante dès qu'un porteur de la compétence esquive.
  *  0.30.0 — Lot 4 « évolution persistée » : la forme des joueurs module
  *           l'ordre des actions à dés, le journal fige les profils des deux
  *           coachs, le résultat porte le rapport des drives. Les issues
@@ -43,7 +47,7 @@ import type { ReplayJournal } from './replay/journal';
  *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
  *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
  *  le re-snapshot de `bench/bench-baseline.json`. */
-export const ENGINE_VER = '0.30.0';
+export const ENGINE_VER = '0.31.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */

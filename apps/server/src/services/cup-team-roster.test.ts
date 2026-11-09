@@ -188,6 +188,9 @@ describe("buildCupRosterView", () => {
     expect(star.number).toBeNull();
     expect(star.value).toBe(380_000);
     expect(star.totalTouchdowns).toBe(2);
+    // Brut des améliorations servi (dé des compétences tirées au hasard).
+    expect(star.advancements).toBeNull();
+    expect(view.players[0].advancements).toBe("[]");
   });
 
   it("porte les statistiques DE LA COUPE et la valeur de chaque joueur", () => {

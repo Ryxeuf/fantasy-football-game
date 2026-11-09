@@ -173,6 +173,7 @@ import {
   getMatchSheet,
   listPendingValidationsForCommissioner,
   rollJourneymanRandomPrimary,
+  setInducementsDone,
   MatchSheetError,
 } from "../services/league-match-sheet";
 import {
@@ -190,6 +191,12 @@ import {
   type PreMatchBody,
   type PostMatchBody,
   type InvalidateSheetBody,
+  inducementsDoneSchema,
+  type InducementsDoneBody,
+  sheetSideSchema,
+  type SheetSideBody,
+  sheetViewQuerySchema,
+  type SheetViewQuery,
 } from "../schemas/league-match-sheet.schemas";
 import {
   rollRandomPrimarySchema,
@@ -209,6 +216,7 @@ import {
   LeagueRoundFollowupError,
 } from "../services/league-round-followup-notify";
 import { resolveWebOrigin } from "../config";
+import { leagueCalendarAdminRouter } from "./league-calendar-admin";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -245,6 +253,7 @@ import {
 } from "../services/league-standings-order";
 import { apiError, sendError, sendSuccess } from "../utils/api-response";
 import { hasRole } from "../utils/roles";
+import { loadLeagueViewerRoles } from "../services/competition-viewer-roles";
 import {
   canViewLeagueRow,
   findVisibleLeague,
@@ -667,16 +676,30 @@ export async function handleListLeagues(
       // L'utilisateur courant voit ses propres ligues privées (créées ou
       // rejointes) en plus des ligues publiques.
       viewerId: req.user?.id,
+      // `mine` : seules les ligues « à moi » (créées ou jouées).
+      scope: query.scope,
       limit: query.limit,
       offset: query.offset,
     });
+    // Rôle du lecteur sur chaque ligue de la page, en bloc (pas de N+1).
+    const rows = items as Array<Record<string, unknown>>;
+    const roles = await loadLeagueViewerRoles(
+      req.user?.id,
+      rows.map((l) => ({
+        id: String(l.id),
+        creatorId: String(l.creatorId ?? ""),
+      })),
+    );
     // S25.6 — pagination : on garde le champ `leagues` pour la
     // retro-compat des clients existants, et on expose total/limit/offset
     // dans `meta` (cf. ApiSuccess<T>.meta).
     res.status(200).json({
       success: true,
       data: {
-        leagues: (items as Array<Record<string, unknown>>).map(serializeLeague),
+        leagues: rows.map((l) => ({
+          ...serializeLeague(l),
+          viewerRoles: roles.get(String(l.id)) ?? null,
+        })),
       },
       meta: { total, limit, page: Math.floor(offset / limit) },
     });
@@ -1832,6 +1855,8 @@ export async function handleGetLeagueTeamRoster(
       return {
         ...p,
         value: view.playerValue(p.position, s?.advancements ?? null),
+        // Brut : l'écran signale d'un dé les compétences tirées au hasard.
+        advancements: s?.advancements ?? null,
         positionName: view.positionName(p.position),
         totalTouchdowns: career?.touchdowns ?? s?.totalTouchdowns ?? 0,
         totalCasualties: career?.casualties ?? s?.totalCasualties ?? 0,
@@ -2222,10 +2247,12 @@ export async function handleGetMatchSheet(
   if (!(await ensureVisiblePairingLeague(req, res, req.params.pairingId))) {
     return;
   }
+  const query = req.query as unknown as SheetViewQuery;
   try {
     const out = await getMatchSheet({
       pairingId: req.params.pairingId,
       userId,
+      side: query.side,
     });
     sendSuccess(res, out);
   } catch (e: unknown) {
@@ -2289,6 +2316,31 @@ export async function handleUpdatePreMatch(
       pairingId: req.params.pairingId,
       userId,
       payload: body,
+    });
+    sendSuccess(res, sheet);
+  } catch (e: unknown) {
+    domainError(res, e);
+  }
+}
+
+/**
+ * POST /leagues/pairings/:pairingId/sheet/inducements-done — ordre d'achat
+ * des coups de pouce : le favori signale qu'il a fini ses achats (ou retire
+ * sa confirmation). Coach du côté ou commissaire, feuille non validée.
+ */
+export async function handleInducementsDone(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+  const body: InducementsDoneBody = req.body;
+  try {
+    const sheet = await setInducementsDone({
+      pairingId: req.params.pairingId,
+      userId,
+      side: body.side,
+      done: body.done,
     });
     sendSuccess(res, sheet);
   } catch (e: unknown) {
@@ -2487,10 +2539,12 @@ export async function handleSubmitMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  const body: SheetSideBody = req.body;
   try {
     const sheet = await submitByCoach({
       pairingId: req.params.pairingId,
       userId,
+      side: body.side,
     });
     sendSuccess(res, sheet);
   } catch (e: unknown) {
@@ -2505,10 +2559,12 @@ export async function handleUnsubmitMatchSheet(
 ): Promise<void> {
   const userId = requireUserId(req, res);
   if (!userId) return;
+  const body: SheetSideBody = req.body;
   try {
     const sheet = await unsubmitByCoach({
       pairingId: req.params.pairingId,
       userId,
+      side: body.side,
     });
     sendSuccess(res, sheet);
   } catch (e: unknown) {
@@ -3267,6 +3323,9 @@ router.patch(
 );
 // Relance d'une journée : réservé au commissaire (le service tranche).
 router.post("/rounds/:roundId/remind", authUser, handleRemindRound);
+// Outils de calendrier du commissaire (renommer / supprimer une journée,
+// supprimer une saison) : handlers et règles dans `league-calendar-admin`.
+router.use(leagueCalendarAdminRouter);
 
 // Lot C — gestion des poules (groups). Mutation reservee au
 // commissaire ; lecture sans compte pour une ligue publique (affichage des
@@ -3314,7 +3373,12 @@ router.patch(
 );
 
 // Lot G — feuille de match v2 (saisie joueurs + validation commissaire).
-router.get("/pairings/:pairingId/sheet", authUser, handleGetMatchSheet);
+router.get(
+  "/pairings/:pairingId/sheet",
+  authUser,
+  validateQuery(sheetViewQuerySchema),
+  handleGetMatchSheet,
+);
 router.post(
   "/pairings/:pairingId/sheet",
   authUser,
@@ -3331,6 +3395,13 @@ router.patch(
   authUser,
   validate(preMatchSchema),
   handleUpdatePreMatch,
+);
+// Ordre d'achat des coups de pouce : « J'ai fini mes achats » du favori.
+router.post(
+  "/pairings/:pairingId/sheet/inducements-done",
+  authUser,
+  validate(inducementsDoneSchema),
+  handleInducementsDone,
 );
 // Polish — apres-match (override tresorerie, fans, erreurs couteuses,
 // achats, MVP).
@@ -3376,11 +3447,13 @@ router.delete(
 router.post(
   "/pairings/:pairingId/sheet/submit",
   authUser,
+  validate(sheetSideSchema),
   handleSubmitMatchSheet,
 );
 router.post(
   "/pairings/:pairingId/sheet/unsubmit",
   authUser,
+  validate(sheetSideSchema),
   handleUnsubmitMatchSheet,
 );
 router.post(

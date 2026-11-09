@@ -1,4 +1,5 @@
 import type { CoachPublicProfile } from "./types";
+import { nafCoachPageUrl } from "../../me/profile/naf-number";
 
 interface CoachProfileHeaderProps {
   profile: CoachPublicProfile;
@@ -55,6 +56,19 @@ export default function CoachProfileHeader({
             >
               Non classe
             </span>
+          )}
+          {profile.naf && (
+            <a
+              data-testid="coach-naf-badge"
+              href={nafCoachPageUrl(profile.naf.number)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Numéro NAF vérifié sur thenaf.net"
+              className="inline-flex items-center gap-1 rounded-full bg-white/10 text-white px-3 py-1 text-xs font-bold tracking-wide border border-white/30 hover:bg-white/20"
+            >
+              <span aria-hidden>✓</span> NAF #{profile.naf.number}
+              {profile.naf.name ? ` · ${profile.naf.name}` : ""}
+            </a>
           )}
           {profile.isSupporter && (
             <span

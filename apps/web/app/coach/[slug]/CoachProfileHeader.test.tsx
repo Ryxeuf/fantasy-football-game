@@ -80,4 +80,21 @@ describe("CoachProfileHeader", () => {
     expect(screen.getByTestId("coach-elo").textContent).toMatch(/1234/);
     expect(screen.queryByTestId("coach-unranked-badge")).toBeNull();
   });
+
+  it("affiche le numéro NAF vérifié, lié à la fiche coach thenaf.net", () => {
+    render(
+      <CoachProfileHeader
+        profile={{ ...baseProfile, naf: { number: 7221, name: "#5Renton" } }}
+      />,
+    );
+    const badge = screen.getByTestId("coach-naf-badge");
+    expect(badge.textContent).toContain("NAF #7221");
+    expect(badge.textContent).toContain("#5Renton");
+    expect(badge.getAttribute("href")).toContain("coach=7221");
+  });
+
+  it("aucun badge NAF sans numéro vérifié (null ou API antérieure)", () => {
+    render(<CoachProfileHeader profile={{ ...baseProfile, naf: null }} />);
+    expect(screen.queryByTestId("coach-naf-badge")).toBeNull();
+  });
 });

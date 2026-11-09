@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { API_BASE } from "../auth-client";
 import { apiRequest } from "../lib/api-client";
 import { useTournamentRulesets } from "../lib/tournament-rulesets";
@@ -29,6 +29,13 @@ import type { SheetEntryMode } from "../lib/sheet-entry-profile";
 import {
   getRosterName,
 } from "@bb/game-engine";
+import ScopeToggle from "../components/ScopeToggle";
+import { useLanguage } from "../contexts/LanguageContext";
+import {
+  parseCompetitionScope,
+  type ViewerRoles,
+} from "../lib/competition-scope";
+import { cupRolesFromApi } from "./cup-roles";
 
 type Cup = {
   id: string;
@@ -62,6 +69,8 @@ type Cup = {
   }>;
   createdAt: string;
   updatedAt: string;
+  /** Rôle du lecteur, tranché par le serveur. Optionnel : API antérieure. */
+  viewerRoles?: ViewerRoles | null;
   isCreator?: boolean;
   hasTeamParticipating?: boolean;
   scoringConfig?: {
@@ -113,8 +122,20 @@ async function postJSON(path: string, data: any) {
   return res.json();
 }
 
+/** `useSearchParams` impose un `<Suspense>` (rendu statique de Next 14). */
 export default function CupsPage() {
+  return (
+    <Suspense fallback={null}>
+      <CupsPageContent />
+    </Suspense>
+  );
+}
+
+function CupsPageContent() {
   const router = useRouter();
+  const { t } = useLanguage();
+  // « Toutes / Les miennes » vit dans l'URL (`?scope=mine`) ; le serveur filtre.
+  const scope = parseCompetitionScope(useSearchParams()?.get("scope"));
   // Règlements servis par l'API (éditables en admin).
   const { rulesets: availableRulesets, bySlug: rulesetsBySlug } =
     useTournamentRulesets();
@@ -191,9 +212,13 @@ export default function CupsPage() {
   };
 
   useEffect(() => {
-    loadCups();
     loadTeams();
   }, []);
+
+  useEffect(() => {
+    loadCups();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope]);
 
   // Charge les rosters du ruleset choisi pour alimenter les menus déroulants
   // des surcharges par roster (budget + PSP).
@@ -270,20 +295,14 @@ export default function CupsPage() {
         window.location.href = "/login";
         return;
       }
-      const { cups: data } = await fetchJSON("/cup");
-      // Récupérer les équipes de l'utilisateur pour vérifier s'il a une équipe inscrite
-      const { teams: userTeams } = await apiRequest<{ teams: Team[] }>(
-        "/team/mine",
+      const { cups: data } = await fetchJSON(
+        scope === "mine" ? "/cup?scope=mine" : "/cup",
       );
-      const userTeamIds = new Set(userTeams.map((t: Team) => t.id));
-      
-      // Enrichir avec les informations de l'utilisateur connecté
+      // Rôles servis par l'API (`viewerRoles`) : plus de reconstruction par
+      // `/team/mine`.
       const enrichedCups = data.map((cup: Cup) => ({
         ...cup,
-        isCreator: cup.creatorId === me.user.id,
-        hasTeamParticipating: cup.participants.some(
-          (p) => userTeamIds.has(p.id),
-        ),
+        ...cupRolesFromApi(cup, me.user.id),
       }));
       setCups(enrichedCups);
     } catch (e: any) {
@@ -961,14 +980,25 @@ export default function CupsPage() {
         </div>
       )}
 
+      <ScopeToggle testIdPrefix="cups-scope" />
+
       {/* Cups List */}
       <div className="grid gap-4">
         {cups.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center">
-            <p className="text-gray-500">Aucune coupe disponible</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Créez la première coupe pour commencer !
-            </p>
+          <div
+            data-testid="cups-empty"
+            className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 text-center"
+          >
+            {scope === "mine" ? (
+              <p className="text-gray-500">{t.myCompetitions.mineEmpty}</p>
+            ) : (
+              <>
+                <p className="text-gray-500">Aucune coupe disponible</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  Créez la première coupe pour commencer !
+                </p>
+              </>
+            )}
           </div>
         ) : (
           cups.map((cup) => {
@@ -1009,8 +1039,19 @@ export default function CupsPage() {
                       </span>
                     )}
                     {cup.isCreator && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-nuffle-gold/20 text-nuffle-bronze">
+                      <span
+                        data-testid={`cup-role-creator-${cup.id}`}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-nuffle-gold/20 text-nuffle-bronze"
+                      >
                         Créateur
+                      </span>
+                    )}
+                    {cup.hasTeamParticipating && (
+                      <span
+                        data-testid={`cup-role-registered-${cup.id}`}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-800"
+                      >
+                        {t.myCompetitions.roleActive}
                       </span>
                     )}
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">

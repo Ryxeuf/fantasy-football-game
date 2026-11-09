@@ -277,6 +277,8 @@ describe("handleGetLeagueTeamRoster — FR20 stats joueurs", () => {
       nigglingInjuries: 2,
       statReductions: { ma: 1, st: 0, ag: 0, pa: 0, av: 1 },
     });
+    // Brut des améliorations servi : l'écran signale les tirages au hasard.
+    expect(griff).toHaveProperty("advancements");
     // Le filtre d'events ne compte que les agressions de la ligue.
     expect(mockPrisma.leagueMatchEvent.findMany).toHaveBeenCalledWith(
       expect.objectContaining({

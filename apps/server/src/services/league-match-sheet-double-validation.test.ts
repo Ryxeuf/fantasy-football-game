@@ -11,7 +11,8 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
   prisma: {
-    leagueMatchSheet: { findUnique: vi.fn() },
+    leagueMatchSheet: { findUnique: vi.fn(), update: vi.fn() },
+    cupPairing: { findUnique: vi.fn(), updateMany: vi.fn() },
     leagueMatchEvent: { findMany: vi.fn() },
     team: { findMany: vi.fn() },
     user: { findUnique: vi.fn() },
@@ -31,7 +32,11 @@ import {
   resolveCompetitionPairing,
   type CompetitionPairingContext,
 } from "./competition-match-sheet-context";
-import { MatchSheetError, validateByCommissioner } from "./league-match-sheet";
+import {
+  MatchSheetError,
+  submitByCoach,
+  validateByCommissioner,
+} from "./league-match-sheet";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockPrisma = prisma as any;
@@ -157,5 +162,30 @@ describe("validateByCommissioner — double validation", () => {
     await expect(
       validateByCommissioner({ pairingId: "cp-1", userId: "intrus" }),
     ).rejects.toMatchObject({ code: "forbidden" });
+  });
+});
+
+describe("double validation — un coach possède les deux équipes", () => {
+  it("soumet chaque côté à son tour : la garde laisse ensuite passer", async () => {
+    mockResolve.mockResolvedValue({
+      ...context(DOUBLE),
+      homeOwnerId: "u-both",
+      awayOwnerId: "u-both",
+    });
+    let stored: Record<string, unknown> = sheet();
+    mockPrisma.leagueMatchSheet.findUnique.mockImplementation(async () => stored);
+    mockPrisma.leagueMatchSheet.update.mockImplementation(
+      async (a: { data: Record<string, unknown> }) => {
+        stored = { ...stored, ...a.data };
+        return stored;
+      },
+    );
+    await expect(validate()).rejects.toMatchObject({
+      code: "coach_submissions_missing",
+    });
+    await submitByCoach({ pairingId: "cp-1", userId: "u-both", side: "home" });
+    await submitByCoach({ pairingId: "cp-1", userId: "u-both", side: "away" });
+    expect(stored.status).toBe("both_submitted");
+    await expect(validate()).rejects.toBe(PAST_GUARD);
   });
 });

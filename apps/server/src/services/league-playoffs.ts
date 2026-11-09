@@ -29,6 +29,7 @@ import {
   type StandingRow,
 } from "./league";
 import { serverLog } from "../utils/server-log";
+import { bracketRoundsWhere } from "./league-pool";
 
 // Le moteur de bracket est PARTAGÉ avec les coupes (`bracket-seeding`) : il
 // ne connaît que des identifiants opaques. On l'importe pour s'en servir ici,
@@ -463,8 +464,11 @@ export async function overridePlayoffParticipants(input: {
   // "scheduled" pour qu'on puisse les recreer (round 1 + lazy
   // futurs). Si un pairing a deja un match associe ou status played,
   // on refuse.
+  // Même définition d'un tour de bracket que la taille (`PATCH config`) et
+  // la réinitialisation : un tour créé à la main n'a que son `bracketSlot`.
+  // Avec `kind: "playoff"` seul, il survivait à la reconstruction.
   const existingRounds = (await client.leagueRound.findMany({
-    where: { seasonId: input.seasonId, kind: "playoff" },
+    where: bracketRoundsWhere(input.seasonId),
     orderBy: { roundNumber: "asc" },
     include: {
       pairings: {
@@ -499,17 +503,6 @@ export async function overridePlayoffParticipants(input: {
   // Wipe + rebuild via $transaction. On supprime tous les rounds
   // playoff existants, puis on regenere le bracket depuis les seeds
   // fournis.
-  const lastNonPlayoff = (await client.leagueRound.findFirst({
-    where: { seasonId: input.seasonId, kind: { not: "playoff" } },
-    orderBy: { roundNumber: "desc" },
-    select: { roundNumber: true },
-  })) as { roundNumber: number } | null;
-  const baseRoundNumber = (lastNonPlayoff?.roundNumber ?? 0) + 1;
-
-  const seeds = [...input.participantIds];
-  const pairings = generatePlayoffSeedingFor(size, seeds, baseRoundNumber);
-
-  // Suppression atomique.
   await prisma.$transaction([
     ...existingRounds.map((r) =>
       (prisma as unknown as PrismaWithLeague).leagueRound.delete({
@@ -517,6 +510,14 @@ export async function overridePlayoffParticipants(input: {
       }),
     ),
   ]);
+
+  // Numerotation `max(roundNumber) + 1`, lue APRES la suppression : le
+  // dernier tour restant est le dernier tour regulier, quel que soit son
+  // `kind` (un tour de bracket manuel est `regular` avec un slot).
+  const baseRoundNumber = await allocateRoundNumber(client, input.seasonId);
+
+  const seeds = [...input.participantIds];
+  const pairings = generatePlayoffSeedingFor(size, seeds, baseRoundNumber);
 
   let nextRoundNumber = baseRoundNumber;
   const createdSlots: string[] = [];

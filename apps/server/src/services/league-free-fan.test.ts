@@ -36,6 +36,7 @@ import {
   createLeagueParticipant,
   withLeagueFreeFanRevoked,
   withLeagueFreeFansRevokedForLeague,
+  withLeagueFreeFansRevokedForSeason,
 } from "./league-free-fan";
 
 const audit = vi.mocked(safeRecordTeamAudit);
@@ -354,6 +355,71 @@ describe("withLeagueFreeFansRevokedForLeague — suppression de la ligue", () =>
     db.leagueParticipant.findMany.mockResolvedValue([]);
     const op = vi.fn().mockResolvedValue({});
     await withLeagueFreeFansRevokedForLeague("lg-1", op);
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(op).toHaveBeenCalledWith(db);
+  });
+});
+
+describe("withLeagueFreeFansRevokedForSeason — suppression d'une saison", () => {
+  it("reprend les octrois de la saison, motif season_deleted, sans transfert vers elle", async () => {
+    db.leagueParticipant.findMany.mockResolvedValue([
+      { id: "p1", teamId: "team-1", freeFanGrant: "fan", freeFanRefund: null },
+    ]);
+    db.team.findUnique.mockResolvedValue({
+      dedicatedFans: 2,
+      treasury: 0,
+      leagueFreeFan: true,
+    });
+    const op = vi.fn().mockResolvedValue({});
+
+    await withLeagueFreeFansRevokedForSeason("season-1", op);
+
+    expect(db.leagueParticipant.findMany).toHaveBeenCalledWith({
+      where: { seasonId: "season-1", freeFanGrant: { not: null } },
+      select: { id: true, teamId: true, freeFanGrant: true, freeFanRefund: true },
+    });
+    expect(db.leagueParticipant.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ seasonId: { not: "season-1" } }),
+      }),
+    );
+    expect(db.team.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: { leagueFreeFan: false, dedicatedFans: { decrement: 1 } },
+      }),
+    );
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: "team.league_free_fan.revoked",
+        details: expect.objectContaining({ reason: "season_deleted" }),
+      }),
+    );
+    expect(op).toHaveBeenCalledTimes(1);
+  });
+
+  it("équipe inscrite à une autre saison : l'octroi y est transféré", async () => {
+    db.leagueParticipant.findMany.mockResolvedValue([
+      { id: "p1", teamId: "team-1", freeFanGrant: "refund", freeFanRefund: 5000 },
+    ]);
+    db.leagueParticipant.findFirst.mockResolvedValue({ id: "p-other-season" });
+    const op = vi.fn().mockResolvedValue({});
+
+    await withLeagueFreeFansRevokedForSeason("season-1", op);
+
+    expect(db.leagueParticipant.updateMany).toHaveBeenCalledWith({
+      where: { id: "p-other-season" },
+      data: { freeFanGrant: "refund", freeFanRefund: 5000 },
+    });
+    expect(db.team.updateMany).not.toHaveBeenCalled();
+    expect(audit).not.toHaveBeenCalled();
+    expect(op).toHaveBeenCalledTimes(1);
+  });
+
+  it("saison sans octroi : la suppression seule, sans transaction", async () => {
+    db.leagueParticipant.findMany.mockResolvedValue([]);
+    const op = vi.fn().mockResolvedValue({});
+    await withLeagueFreeFansRevokedForSeason("season-1", op);
     expect(db.$transaction).not.toHaveBeenCalled();
     expect(op).toHaveBeenCalledWith(db);
   });

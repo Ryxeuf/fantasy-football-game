@@ -1,17 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { setup } from '../core/game-state';
-import { checkBreakTackle } from './break-tackle';
+import { applyMove } from '../actions/actions';
+import { checkBreakTackle, getBreakTackleModifier } from './break-tackle';
 import type { GameState, Player } from '../core/types';
 
 /**
- * Break Tackle (BB3 Season 2/3 rules):
- * - Once per activation, after the player has performed a Dodge action (D6 agility test),
- *   they may modify the dice roll by:
- *     - +1 if their Strength characteristic is 4 or less,
- *     - +2 if their Strength characteristic is 5 or more.
+ * Break Tackle — Esquive en Force (Blood Bowl 2025, Saison 3) :
+ * - Once per (team) turn, when the player attempts to Dodge, they may apply to
+ *   the Agility test:
+ *     - +1 if their Strength characteristic is 3 or less,
+ *     - +2 if their Strength characteristic is 4,
+ *     - +3 if their Strength characteristic is 5 or more.
  * - The skill is only useful to turn a failed dodge into a success.
- * - A player can only use Break Tackle once during their activation, regardless of how
- *   many Dodge actions they make.
+ * - A player can only use Break Tackle once per turn, regardless of how many
+ *   Dodge actions they make; the use is given back at END_TURN.
  */
 
 function makePlayer(overrides: Partial<Player> = {}): Player {
@@ -70,7 +72,7 @@ describe('Regle: Break Tackle — activation', () => {
     expect(result.triggered).toBe(false);
   });
 
-  it('ne declenche pas si le joueur a deja utilise Break Tackle pendant son activation', () => {
+  it('ne declenche pas si le joueur a deja utilise Break Tackle pendant ce tour', () => {
     const player = makePlayer({
       skills: ['break-tackle'],
       st: 4,
@@ -98,22 +100,18 @@ describe('Regle: Break Tackle — modificateur selon la Force', () => {
     expect(result.newSuccess).toBe(true);
   });
 
-  it('applique +1 quand ST = 4', () => {
+  it('applique +1 quand ST = 2 (palier « 3 ou moins »)', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 2 });
+    expect(getBreakTackleModifier(player)).toBe(1);
+    // Dodge 3, target 5+ : +1 ne suffit pas => compétence gardée.
+    expect(checkBreakTackle(makeState([player]), player, 3, 5, false).triggered).toBe(false);
+  });
+
+  it('applique +2 quand ST = 4', () => {
     const player = makePlayer({ skills: ['break-tackle'], st: 4 });
     const state = makeState([player]);
 
-    const result = checkBreakTackle(state, player, 3, 4, false);
-
-    expect(result.triggered).toBe(true);
-    expect(result.modifier).toBe(1);
-    expect(result.newSuccess).toBe(true);
-  });
-
-  it('applique +2 quand ST = 5', () => {
-    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
-    const state = makeState([player]);
-
-    // Dodge 2, target 4+ : +2 donne 4 => succès
+    // Dodge 2, target 4+ : +2 donne 4 => succès (+1 n'aurait pas suffi).
     const result = checkBreakTackle(state, player, 2, 4, false);
 
     expect(result.triggered).toBe(true);
@@ -121,15 +119,42 @@ describe('Regle: Break Tackle — modificateur selon la Force', () => {
     expect(result.newSuccess).toBe(true);
   });
 
-  it('applique +2 quand ST = 7 (Deathroller)', () => {
+  it('applique +3 quand ST = 5', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 5 });
+    const state = makeState([player]);
+
+    // Dodge 2, target 5+ : +3 donne 5 => succès (+2 n'aurait pas suffi).
+    const result = checkBreakTackle(state, player, 2, 5, false);
+
+    expect(result.triggered).toBe(true);
+    expect(result.modifier).toBe(3);
+    expect(result.newSuccess).toBe(true);
+  });
+
+  it('applique +3 quand ST = 7 (Deathroller)', () => {
     const player = makePlayer({ skills: ['break-tackle'], st: 7 });
     const state = makeState([player]);
 
-    const result = checkBreakTackle(state, player, 3, 5, false);
+    const result = checkBreakTackle(state, player, 3, 6, false);
 
     expect(result.triggered).toBe(true);
-    expect(result.modifier).toBe(2);
+    expect(result.modifier).toBe(3);
     expect(result.newSuccess).toBe(true);
+  });
+
+  it('table des paliers : ST 1-3 ⇒ +1, ST 4 ⇒ +2, ST 5+ ⇒ +3', () => {
+    const expected: Array<[number, number]> = [
+      [1, 1],
+      [2, 1],
+      [3, 1],
+      [4, 2],
+      [5, 3],
+      [6, 3],
+      [7, 3],
+    ];
+    for (const [st, modifier] of expected) {
+      expect(getBreakTackleModifier(makePlayer({ st }))).toBe(modifier);
+    }
   });
 });
 
@@ -186,7 +211,30 @@ describe('Regle: Break Tackle — effets sur l\'etat du jeu', () => {
     const result = checkBreakTackle(state, player, 2, 4, false);
 
     expect(result.triggered).toBe(true);
-    expect(result.modifier).toBe(2);
+    expect(result.modifier).toBe(3);
+  });
+});
+
+describe('Regle: Break Tackle — une fois par TOUR', () => {
+  it('un second dodge du meme tour ne peut plus en beneficier', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 4 });
+    const first = checkBreakTackle(makeState([player]), player, 2, 4, false);
+    expect(first.triggered).toBe(true);
+
+    const afterFirst = first.newState.players.find((p) => p.id === player.id)!;
+    const second = checkBreakTackle(first.newState, afterFirst, 2, 4, false);
+    expect(second.triggered).toBe(false);
+  });
+
+  it('END_TURN rend l\'usage : le tour suivant de l\'equipe peut l\'utiliser a nouveau', () => {
+    const player = makePlayer({ skills: ['break-tackle'], st: 4, breakTackleUsed: true });
+    const base = makeState([player]);
+    const state: GameState = { ...base, currentPlayer: 'A' };
+
+    const afterEnd = applyMove(state, { type: 'END_TURN' }, () => 0.5);
+    const reset = afterEnd.players.find((p) => p.id === player.id)!;
+    expect(reset.breakTackleUsed).toBe(false);
+    expect(checkBreakTackle(afterEnd, reset, 2, 4, false).triggered).toBe(true);
   });
 });
 
@@ -213,14 +261,14 @@ describe('Regle: Break Tackle — cas limites', () => {
   });
 
   it('applique exactement le bonus necessaire sans sur-modifier', () => {
-    // Le jet est juste ameliore du +1/+2, pas plus
+    // Le jet est juste ameliore du +1/+2/+3, pas plus
     const player = makePlayer({ skills: ['break-tackle'], st: 5 });
     const state = makeState([player]);
 
     const result = checkBreakTackle(state, player, 3, 4, false);
 
     expect(result.triggered).toBe(true);
-    expect(result.modifier).toBe(2); // ST 5 => +2
+    expect(result.modifier).toBe(3); // ST 5 => +3
     expect(result.newSuccess).toBe(true);
   });
 });

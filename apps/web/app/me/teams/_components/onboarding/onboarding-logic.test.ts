@@ -7,8 +7,14 @@ import {
   isValidTeamName,
   stepIndex,
   TEAM_NAME_MAX_LENGTH,
+  onboardingBudgetK,
+  onboardingStaffConfig,
+  staffFitsBudget,
+  staffRequestFields,
+  summarizeStaffBudget,
   type OnboardingRoster,
 } from "./onboarding-logic";
+import { EMPTY_BUILD_STAFF, defaultStaffConfig } from "@bb/game-engine";
 
 const ROSTERS: OnboardingRoster[] = [
   { slug: "amazon", name: "Amazones" },
@@ -134,6 +140,64 @@ describe("stepIndex", () => {
   it("returns a 1-based index", () => {
     expect(stepIndex("race")).toBe(1);
     expect(stepIndex("name")).toBe(2);
-    expect(stepIndex("confirm")).toBe(3);
+    expect(stepIndex("staff")).toBe(3);
+    expect(stepIndex("confirm")).toBe(4);
+  });
+});
+
+describe("étape Staff", () => {
+  const orc = defaultStaffConfig("orc", "bb11");
+
+  it("config staff : celle de la base, sinon le défaut du moteur", () => {
+    expect(onboardingStaffConfig({ slug: "orc", name: "Orcs" })).toEqual(orc);
+    const custom = { ...orc, dedicatedFanCost: 15000 };
+    expect(
+      onboardingStaffConfig({ slug: "orc", name: "Orcs", staffConfigs: { bb11: custom } }),
+    ).toEqual(custom);
+  });
+
+  it("budget : celui du roster, sinon le plafond du format", () => {
+    expect(onboardingBudgetK({ slug: "orc", name: "Orcs", budget: 1150 })).toBe(1150);
+    expect(onboardingBudgetK({ slug: "orc", name: "Orcs" })).toBe(1000);
+  });
+
+  it("coût du staff et budget restant (chaque fan est payé)", () => {
+    const summary = summarizeStaffBudget({
+      selection: { ...EMPTY_BUILD_STAFF, dedicatedFans: 2, rerolls: 1 },
+      staff: orc,
+      budgetK: 1000,
+      lineupCostK: 550,
+    });
+    const staffK = (2 * orc.dedicatedFanCost + orc.rerollCost) / 1000;
+    expect(summary).toEqual({
+      staffCostK: staffK,
+      remainingK: 1000 - 550 - staffK,
+      overBudget: false,
+    });
+  });
+
+  it("joueurs inconnus : pas de budget restant, jamais bloquant", () => {
+    const summary = summarizeStaffBudget({
+      selection: { ...EMPTY_BUILD_STAFF, rerolls: 8 },
+      staff: orc,
+      budgetK: 600,
+      lineupCostK: null,
+    });
+    expect(summary.remainingK).toBeNull();
+    expect(summary.overBudget).toBe(false);
+  });
+
+  it("refuse un ajout qui dépasse le budget", () => {
+    // 50k de marge : un fan passe, deux relances non.
+    const ctx = { staff: orc, budgetK: 600, lineupCostK: 550 };
+    expect(staffFitsBudget({ ...EMPTY_BUILD_STAFF, dedicatedFans: 1 }, ctx)).toBe(true);
+    expect(staffFitsBudget({ ...EMPTY_BUILD_STAFF, rerolls: 2 }, ctx)).toBe(false);
+  });
+
+  it("n'envoie que le staff réellement pris", () => {
+    expect(staffRequestFields(EMPTY_BUILD_STAFF)).toEqual({});
+    expect(
+      staffRequestFields({ ...EMPTY_BUILD_STAFF, dedicatedFans: 2, apothecary: true }),
+    ).toEqual({ dedicatedFans: 2, apothecary: true });
   });
 });

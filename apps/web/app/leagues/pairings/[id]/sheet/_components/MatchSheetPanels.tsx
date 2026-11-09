@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   EXPENSIVE_MISTAKE_LABELS_FR,
   EXPENSIVE_MISTAKES_THRESHOLD,
@@ -9,6 +9,11 @@ import {
   type ExpensiveMistakeOutcome,
   PRAYERS_TABLE,
 } from "@bb/game-engine";
+import {
+  budgetDetailLabel,
+  effectiveSideBudget,
+  mergeServerValue,
+} from "../inducement-budget";
 
 // Refonte mobile-first — panneaux de saisie d'une feuille de match de
 // ligue physique. Sections AVANT-MATCH / FIN DU MATCH calquees sur la
@@ -335,6 +340,13 @@ export interface TeamBudget {
   treasury: number;
   pettyCash: number;
   maxBudget: number;
+  /**
+   * Composition du budget (serveur récent) : écart de VEA, dépense adverse
+   * STOCKÉE, trésorerie mobilisable. Optionnels pour rétro-compat.
+   */
+  ctvGap?: number;
+  opponentSpent?: number;
+  treasuryAllowance?: number;
 }
 export interface TeamColors {
   primary: string;
@@ -372,7 +384,12 @@ export interface MatchSheetReference {
   weatherTables: WeatherTable[];
   inducements: { home: InducementOption[]; away: InducementOption[] };
   starPlayers: { home: StarPlayerOption[]; away: StarPlayerOption[] };
-  budget: { home: TeamBudget; away: TeamBudget };
+  budget: {
+    home: TeamBudget;
+    away: TeamBudget;
+    /** Côté à la VEA la plus haute (achète en premier), `null` à égalité. */
+    favorite?: "home" | "away" | null;
+  };
   /**
    * Postes et staff achetables à l'étape 4 (EMBAUCHES), avec leur prix et
    * leur quota. Optionnel : une feuille servie par un serveur antérieur à ce
@@ -380,6 +397,18 @@ export interface MatchSheetReference {
    */
   purchases?: { home: PurchaseOptions; away: PurchaseOptions };
   colors: { home: TeamColors; away: TeamColors };
+}
+
+/**
+ * Ordre d'achat des coups de pouce (servi par la feuille) : le favori achète
+ * d'abord et confirme ; tant qu'il ne l'a pas fait, le budget de l'outsider
+ * est provisoire. Indicatif, jamais bloquant.
+ */
+export interface InducementOrderView {
+  favorite: "home" | "away" | null;
+  favoriteDone: boolean;
+  waitingFor: "home" | "away" | null;
+  provisionalSide: "home" | "away" | null;
 }
 
 /** Badge race + coach affiché sous le nom d'équipe (RÉSUMÉ). */
@@ -541,8 +570,8 @@ export function PlayerSelect({
  * Bandeau « Journaliers » d'une équipe : visible quand l'équipe aligne
  * moins de 11 joueurs disponibles.
  *
- * Quand le roster offre PLUSIEURS postes de lineman (Orques : Trois-quart
- * Orque ou Trois-quart Gobelin), chaque journalier a SON picker : le
+ * Quand le roster offre PLUSIEURS Trois-quarts 0-16 (Morts-Vivants :
+ * Squelette ou Zombie), chaque journalier a SON picker : le
  * contingent se panache. Le choix était auparavant unique et noyé sur la
  * même ligne que le texte du bandeau — d'où le « je n'ai pas vu où pouvait
  * être fait le choix ». Il est désormais sur sa propre ligne, une par
@@ -941,6 +970,7 @@ function InducementEditor({
   starPlayers,
   budget,
   cupBudget = false,
+  detail,
 }: {
   list: Inducement[];
   onChange: (l: Inducement[]) => void;
@@ -954,6 +984,8 @@ function InducementEditor({
    * le budget — seule la petite monnaie (écart de VEA) se dépense.
    */
   cupBudget?: boolean;
+  /** Composition lisible du budget (« écart de VEA + dépense adverse… »). */
+  detail?: string;
 }) {
   const [pick, setPick] = useState("");
 
@@ -1017,7 +1049,9 @@ function InducementEditor({
         </div>
         <div className="flex justify-between text-[11px] text-slate-500">
           <span data-testid={`${testId}-budget-detail`}>
-            {cupBudget ? (
+            {detail ? (
+              detail
+            ) : cupBudget ? (
               <>
                 Petite Monnaie {formatGold(budget.pettyCash)} (écart de VEA,
                 pas de trésorerie en coupe)
@@ -1158,6 +1192,9 @@ export function PreMatchPanel({
   forfeitOnly = false,
   cupBudget = false,
   inducementsLocked = false,
+  editableInducementSides = ["home", "away"],
+  inducementOrder = null,
+  onInducementsDone,
 }: {
   initial: PreMatchValues;
   homeName: string;
@@ -1184,6 +1221,16 @@ export function PreMatchPanel({
    * l'avant-match ne vend rien, l'éditeur de coups de pouce disparaît.
    */
   inducementsLocked?: boolean;
+  /**
+   * Côtés dont le viewer saisit les coups de pouce (un coach : ses équipes ;
+   * le commissaire : les deux). L'autre côté s'affiche en lecture seule — il
+   * se met à jour à chaque relecture de la feuille.
+   */
+  editableInducementSides?: ReadonlyArray<"home" | "away">;
+  /** Ordre d'achat servi par la feuille (absent : serveur antérieur). */
+  inducementOrder?: InducementOrderView | null;
+  /** « J'ai fini mes achats » (ou son retrait) pour un côté. */
+  onInducementsDone?: (side: "home" | "away", done: boolean) => Promise<void>;
 }) {
   const [weatherTable, setWeatherTable] = useState(initial.weatherTable);
   const [weather, setWeather] = useState(initial.weather);
@@ -1208,6 +1255,39 @@ export function PreMatchPanel({
   const [prA, setPrA] = useState<PrayerEntry[]>(initial.prayersAway);
   const [busy, setBusy] = useState(false);
 
+  // Resynchronisation après chaque relecture de la feuille (enregistrement,
+  // retour sur l'onglet, relecture périodique) : un champ que l'utilisateur
+  // n'a pas modifié suit le serveur — les achats du favori apparaissent chez
+  // l'outsider — et une saisie locale non enregistrée est conservée.
+  const lastInitial = useRef(initial);
+  const initialKey = JSON.stringify(initial);
+  useEffect(() => {
+    const prev = lastInitial.current;
+    const next = initial;
+    lastInitial.current = next;
+    if (prev === next) return;
+    const str = (n: number | null) => n?.toString() ?? "";
+    setWeatherTable((l) => mergeServerValue(l, prev.weatherTable, next.weatherTable));
+    setWeather((l) => mergeServerValue(l, prev.weather, next.weather));
+    setForfeitSide((l) =>
+      mergeServerValue(l, prev.forfeitSide ?? "", next.forfeitSide ?? ""),
+    );
+    setTossWinner((l) =>
+      mergeServerValue(l, prev.tossWinner ?? "", next.tossWinner ?? ""),
+    );
+    setTossChoice((l) =>
+      mergeServerValue(l, prev.tossChoice ?? "", next.tossChoice ?? ""),
+    );
+    setPopH((l) => mergeServerValue(l, str(prev.popularityHome), str(next.popularityHome)));
+    setPopA((l) => mergeServerValue(l, str(prev.popularityAway), str(next.popularityAway)));
+    setIndH((l) => mergeServerValue(l, prev.inducementsHome, next.inducementsHome));
+    setIndA((l) => mergeServerValue(l, prev.inducementsAway, next.inducementsAway));
+    setPrH((l) => mergeServerValue(l, prev.prayersHome, next.prayersHome));
+    setPrA((l) => mergeServerValue(l, prev.prayersAway, next.prayersAway));
+    // `initialKey` porte le contenu : un nouvel objet identique ne relance rien.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialKey]);
+
   // A63 — formule officielle : chaque équipe reçoit la moyenne des deux
   // facteurs de popularité × 10k ; les +10k/TD s'ajoutent en cours de
   // match (gains auto recalculés côté serveur).
@@ -1223,20 +1303,47 @@ export function PreMatchPanel({
   const weatherResults = selectedTable?.results ?? [];
   const selectedWeather = weatherResults.find((r) => r.condition === weather);
 
-  // A55 — le budget de l'underdog (pettyCash > 0) augmente de la dépense
-  // adverse (règle officielle : la CTV de la plus forte inclut ses achats).
+  // A55 — la Petite Monnaie de l'outsider = écart de VEA + dépense adverse
+  // (celle AFFICHÉE, qui suit la saisie du commissaire et les relectures).
+  // En coupe, ni trésorerie ni dépense adverse : le budget servi fait foi.
   const spentH = sumInducements(indH);
   const spentA = sumInducements(indA);
-  // En coupe, ni trésorerie ni dépense adverse : le budget servi fait foi.
-  const effectiveMaxHome =
-    reference.budget.home.maxBudget +
-    (!cupBudget && reference.budget.home.pettyCash > 0 ? spentA : 0);
-  const effectiveMaxAway =
-    reference.budget.away.maxBudget +
-    (!cupBudget && reference.budget.away.pettyCash > 0 ? spentH : 0);
-  const overHome = spentH > effectiveMaxHome;
-  const overAway = spentA > effectiveMaxAway;
+  const viewHome = effectiveSideBudget(reference.budget.home, reference.budget.away, {
+    opponentSpent: spentA,
+    cup: cupBudget,
+  });
+  const viewAway = effectiveSideBudget(reference.budget.away, reference.budget.home, {
+    opponentSpent: spentH,
+    cup: cupBudget,
+  });
+  const effectiveMaxHome = viewHome.maxBudget;
+  const effectiveMaxAway = viewAway.maxBudget;
+  const canEditHome = editableInducementSides.includes("home");
+  const canEditAway = editableInducementSides.includes("away");
+  // Seuls les côtés que le viewer saisit bloquent l'enregistrement : la
+  // liste adverse n'est ni envoyée ni modifiable ici.
+  const overHome = canEditHome && spentH > effectiveMaxHome;
+  const overAway = canEditAway && spentA > effectiveMaxAway;
   const overBudget = overHome || overAway;
+  // Ordre d'achat : la confirmation porte sur la liste ENREGISTRÉE — une
+  // saisie en cours doit d'abord être enregistrée.
+  const unsavedInducements = {
+    home: JSON.stringify(indH) !== JSON.stringify(initial.inducementsHome),
+    away: JSON.stringify(indA) !== JSON.stringify(initial.inducementsAway),
+  };
+  const showOrder = !!inducementOrder && !inducementsLocked && !forfeitOnly;
+  const favoriteName =
+    inducementOrder?.favorite === "home" ? homeName : awayName;
+  const [doneBusy, setDoneBusy] = useState(false);
+  const toggleDone = async (side: "home" | "away", done: boolean) => {
+    if (!onInducementsDone) return;
+    setDoneBusy(true);
+    try {
+      await onInducementsDone(side, done);
+    } finally {
+      setDoneBusy(false);
+    }
+  };
 
   const save = async () => {
     setBusy(true);
@@ -1273,7 +1380,17 @@ export function PreMatchPanel({
       setPrayers: setPrH,
       catalogue: reference.inducements.home,
       stars: reference.starPlayers.home,
-      budget: { ...reference.budget.home, maxBudget: effectiveMaxHome },
+      budget: {
+        ...reference.budget.home,
+        pettyCash: viewHome.pettyCash,
+        maxBudget: effectiveMaxHome,
+      },
+      budgetDetail: `${budgetDetailLabel(viewHome, formatGold)}${
+        showOrder && inducementOrder?.provisionalSide === "home"
+          ? " — provisoire"
+          : ""
+      }`,
+      canEditInducements: canEditHome,
     },
     {
       side: "away" as const,
@@ -1288,7 +1405,17 @@ export function PreMatchPanel({
       setPrayers: setPrA,
       catalogue: reference.inducements.away,
       stars: reference.starPlayers.away,
-      budget: { ...reference.budget.away, maxBudget: effectiveMaxAway },
+      budget: {
+        ...reference.budget.away,
+        pettyCash: viewAway.pettyCash,
+        maxBudget: effectiveMaxAway,
+      },
+      budgetDetail: `${budgetDetailLabel(viewAway, formatGold)}${
+        showOrder && inducementOrder?.provisionalSide === "away"
+          ? " — provisoire"
+          : ""
+      }`,
+      canEditInducements: canEditAway,
     },
   ];
 
@@ -1410,6 +1537,22 @@ export function PreMatchPanel({
         </div>
       )}
 
+      {/* Ordre d'achat des coups de pouce : le favori d'abord. Indicatif —
+          l'outsider peut saisir, le commissaire n'attend personne. */}
+      {showOrder && inducementOrder?.waitingFor && (
+        <div
+          data-testid="inducements-waiting"
+          className="mb-3 rounded border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+        >
+          <strong>En attente des achats de {favoriteName}.</strong> L&apos;équipe
+          à la VEA la plus haute achète ses coups de pouce en premier : le
+          budget de{" "}
+          {inducementOrder.provisionalSide === "home" ? homeName : awayName}{" "}
+          (écart de VEA + dépense adverse) est provisoire jusqu&apos;à sa
+          confirmation.
+        </div>
+      )}
+
       {/* Conséquences (informatives) de la météo sélectionnée. */}
       {!forfeitOnly && selectedWeather && (
         <div
@@ -1479,13 +1622,59 @@ export function PreMatchPanel({
                   <InducementEditor
                     list={c.ind}
                     onChange={c.setInd}
-                    disabled={disabled}
+                    disabled={disabled || !c.canEditInducements}
                     testId={`inducements-${c.side}`}
                     catalogue={c.catalogue}
                     starPlayers={c.stars}
                     budget={c.budget}
                     cupBudget={cupBudget}
+                    detail={c.budgetDetail}
                   />
+                )}
+                {showOrder && inducementOrder?.favorite === c.side && (
+                  <div
+                    data-testid={`inducements-done-${c.side}`}
+                    className="flex flex-wrap items-center gap-2 text-xs"
+                  >
+                    {inducementOrder.favoriteDone ? (
+                      <span className="font-medium text-emerald-700">
+                        ✓ Achats terminés
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">
+                        VEA la plus haute : achetez en premier.
+                      </span>
+                    )}
+                    {!disabled &&
+                      c.canEditInducements &&
+                      onInducementsDone &&
+                      (inducementOrder.favoriteDone ? (
+                        <button
+                          type="button"
+                          onClick={() => void toggleDone(c.side, false)}
+                          disabled={doneBusy}
+                          data-testid={`inducements-reopen-${c.side}`}
+                          className="rounded border px-2 py-1 text-slate-600 disabled:opacity-50"
+                        >
+                          Rouvrir mes achats
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void toggleDone(c.side, true)}
+                          disabled={doneBusy || unsavedInducements[c.side]}
+                          title={
+                            unsavedInducements[c.side]
+                              ? "Enregistrez d'abord l'avant-match"
+                              : undefined
+                          }
+                          data-testid={`inducements-confirm-${c.side}`}
+                          className="rounded bg-emerald-600 px-2 py-1 font-medium text-white disabled:opacity-50"
+                        >
+                          J&apos;ai fini mes achats
+                        </button>
+                      ))}
+                  </div>
                 )}
                 <PrayersEditor
                   list={c.prayers}

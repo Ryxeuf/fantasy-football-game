@@ -27,6 +27,11 @@ export interface CoachPublicProfile {
    * retro-compat avec les reponses API ne renvoyant pas encore le champ.
    */
   leaderboardStatusVisible?: boolean;
+  /**
+   * Numéro NAF VÉRIFIÉ auprès de thenaf.net (null ou absent sinon).
+   * Optionnel : rétro-compat API.
+   */
+  naf?: { number: number; name: string | null } | null;
   /** S26.3f — vitrine des derniers succes deverrouilles. */
   achievements: CoachShowcaseAchievement[];
   /** S26.3h — equipes recentes du coach. */

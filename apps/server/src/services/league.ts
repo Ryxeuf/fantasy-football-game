@@ -37,6 +37,10 @@ import {
 } from "./league-standings-stats";
 import { serverLog } from "../utils/server-log";
 import {
+  leagueMineWhere,
+  type CompetitionScope,
+} from "./competition-membership";
+import {
   LEAGUE_TIE_BREAK_SLUGS,
   type LeagueTieBreakSlug,
   parseLeagueTieBreakRules,
@@ -165,6 +169,12 @@ export interface ListLeaguesFilter {
    * plus ».
    */
   viewerId?: string;
+  /**
+   * `mine` : seules les ligues « à moi » du `viewerId` (créées ou jouées,
+   * `leagueMineWhere`), sans clause de visibilité — « à moi » y est inclus.
+   * Statut, `creatorId` et pagination s'appliquent par-dessus. Défaut `all`.
+   */
+  scope?: CompetitionScope;
   // S25.6 — pagination. Si non fournis, on retombe sur des defauts
   // raisonnables (50 / 0) pour eviter qu'un client legacy charge tout.
   limit?: number;
@@ -504,6 +514,26 @@ export async function createRound(input: CreateRoundInput) {
   });
 }
 
+/**
+ * Visibilité d'une ligue dans le listing général pour un lecteur connecté :
+ * publiques + « à moi » (`leagueMineWhere` : créées ou jouées) + invitations
+ * en attente. Composée À PARTIR de la règle « à moi » pour que « à moi ⊆
+ * visible » tienne par construction.
+ */
+export function leagueVisibleClauses(
+  viewerId: string,
+): Array<Record<string, unknown>> {
+  return [
+    { isPublic: true },
+    ...leagueMineWhere(viewerId).OR,
+    {
+      invitations: {
+        some: { inviteeUserId: viewerId, status: "pending" },
+      },
+    },
+  ];
+}
+
 export async function listLeagues(filter: ListLeaguesFilter) {
   const where: Record<string, unknown> = {};
   if (filter.creatorId) {
@@ -520,28 +550,20 @@ export async function listLeagues(filter: ListLeaguesFilter) {
   //    ligue privee a laquelle il est convie. On n'applique ce OR que
   //    sur la liste generale (pas quand un `creatorId` explicite est
   //    demande).
-  if (filter.publicOnly === true) {
+  const limit = Math.min(Math.max(filter.limit ?? 50, 1), 100);
+  const offset = Math.max(filter.offset ?? 0, 0);
+  if (filter.scope === "mine") {
+    // « À moi » sans lecteur : rien (jamais « tout »).
+    if (!filter.viewerId) return { items: [], total: 0, limit, offset };
+    // Pas de clause de visibilité : « à moi » y est inclus. Un `publicOnly`
+    // explicite reste un rétrécissement.
+    Object.assign(where, leagueMineWhere(filter.viewerId));
+    if (filter.publicOnly === true) where.isPublic = true;
+  } else if (filter.publicOnly === true) {
     where.isPublic = true;
   } else if (filter.publicOnly !== false) {
     if (filter.viewerId && !filter.creatorId) {
-      where.OR = [
-        { isPublic: true },
-        { creatorId: filter.viewerId },
-        {
-          seasons: {
-            some: {
-              participants: {
-                some: { team: { ownerId: filter.viewerId } },
-              },
-            },
-          },
-        },
-        {
-          invitations: {
-            some: { inviteeUserId: filter.viewerId, status: "pending" },
-          },
-        },
-      ];
+      where.OR = leagueVisibleClauses(filter.viewerId);
     } else {
       where.isPublic = true;
     }
@@ -555,10 +577,9 @@ export async function listLeagues(filter: ListLeaguesFilter) {
     // ce que fait la page « Ligues archivées ».
     where.status = { not: LEAGUE_ARCHIVED_STATUS };
   }
-  // S25.6 — defaults raisonnables si limit/offset non fournis. Cap a 100
-  // pour eviter qu'un caller passe une valeur exagerement grande.
-  const limit = Math.min(Math.max(filter.limit ?? 50, 1), 100);
-  const offset = Math.max(filter.offset ?? 0, 0);
+  // S25.6 — defaults raisonnables si limit/offset non fournis (calculés en
+  // tête), cap a 100 pour eviter qu'un caller passe une valeur exagerement
+  // grande.
   const [items, total] = await Promise.all([
     prisma.league.findMany({
       where,

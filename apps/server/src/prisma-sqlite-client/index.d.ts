@@ -11399,10 +11399,12 @@ export namespace Prisma {
   }
 
   export type UserAvgAggregateOutputType = {
+    nafNumber: number | null
     eloRating: number | null
   }
 
   export type UserSumAggregateOutputType = {
+    nafNumber: number | null
     eloRating: number | null
   }
 
@@ -11425,6 +11427,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     nafName: string | null
+    nafNumber: number | null
+    nafVerifiedAt: Date | null
     diceTheme: string | null
     valid: boolean | null
     bannedAt: Date | null
@@ -11462,6 +11466,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string | null
     privateProfile: boolean | null
     nafName: string | null
+    nafNumber: number | null
+    nafVerifiedAt: Date | null
     diceTheme: string | null
     valid: boolean | null
     bannedAt: Date | null
@@ -11499,6 +11505,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: number
     privateProfile: number
     nafName: number
+    nafNumber: number
+    nafVerifiedAt: number
     diceTheme: number
     valid: number
     bannedAt: number
@@ -11520,10 +11528,12 @@ export namespace Prisma {
 
 
   export type UserAvgAggregateInputType = {
+    nafNumber?: true
     eloRating?: true
   }
 
   export type UserSumAggregateInputType = {
+    nafNumber?: true
     eloRating?: true
   }
 
@@ -11546,6 +11556,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     nafName?: true
+    nafNumber?: true
+    nafVerifiedAt?: true
     diceTheme?: true
     valid?: true
     bannedAt?: true
@@ -11583,6 +11595,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     nafName?: true
+    nafNumber?: true
+    nafVerifiedAt?: true
     diceTheme?: true
     valid?: true
     bannedAt?: true
@@ -11620,6 +11634,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: true
     privateProfile?: true
     nafName?: true
+    nafNumber?: true
+    nafVerifiedAt?: true
     diceTheme?: true
     valid?: true
     bannedAt?: true
@@ -11744,6 +11760,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: string
     privateProfile: boolean
     nafName: string | null
+    nafNumber: number | null
+    nafVerifiedAt: Date | null
     diceTheme: string | null
     valid: boolean
     bannedAt: Date | null
@@ -11800,6 +11818,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    nafNumber?: boolean
+    nafVerifiedAt?: boolean
     diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
@@ -11877,6 +11897,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    nafNumber?: boolean
+    nafVerifiedAt?: boolean
     diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
@@ -11914,6 +11936,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    nafNumber?: boolean
+    nafVerifiedAt?: boolean
     diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
@@ -11951,6 +11975,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: boolean
     privateProfile?: boolean
     nafName?: boolean
+    nafNumber?: boolean
+    nafVerifiedAt?: boolean
     diceTheme?: boolean
     valid?: boolean
     bannedAt?: boolean
@@ -11969,7 +11995,7 @@ export namespace Prisma {
     eloRating?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "nafName" | "diceTheme" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "mustChangePassword" | "deletedAt" | "deletionReason" | "lastLoginAt" | "leaderboardStatus" | "leaderboardStatusReason" | "leaderboardStatusUpdatedAt" | "leaderboardStatusUpdatedBy" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "passwordHash" | "name" | "coachName" | "firstName" | "lastName" | "dateOfBirth" | "role" | "roles" | "patreon" | "kofiLinkCode" | "discordUserId" | "supporterTier" | "supporterActiveUntil" | "totalDonatedCentsByCurrency" | "privateProfile" | "nafName" | "nafNumber" | "nafVerifiedAt" | "diceTheme" | "valid" | "bannedAt" | "bannedUntil" | "banReason" | "mustChangePassword" | "deletedAt" | "deletionReason" | "lastLoginAt" | "leaderboardStatus" | "leaderboardStatusReason" | "leaderboardStatusUpdatedAt" | "leaderboardStatusUpdatedBy" | "createdAt" | "updatedAt" | "eloRating", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     matches?: boolean | User$matchesArgs<ExtArgs>
     createdMatches?: boolean | User$createdMatchesArgs<ExtArgs>
@@ -12119,6 +12145,11 @@ export namespace Prisma {
        * Sprint R lot R.D.3 — NAF opt-in. Mirror PG.
        */
       nafName: string | null
+      /**
+       * Mirror PG — numéro NAF vérifié (unique) + date de vérification.
+       */
+      nafNumber: number | null
+      nafVerifiedAt: Date | null
       /**
        * Mirror PG — thème de dés choisi (null = défaut).
        */
@@ -12637,6 +12668,8 @@ export namespace Prisma {
     readonly totalDonatedCentsByCurrency: FieldRef<"User", 'String'>
     readonly privateProfile: FieldRef<"User", 'Boolean'>
     readonly nafName: FieldRef<"User", 'String'>
+    readonly nafNumber: FieldRef<"User", 'Int'>
+    readonly nafVerifiedAt: FieldRef<"User", 'DateTime'>
     readonly diceTheme: FieldRef<"User", 'String'>
     readonly valid: FieldRef<"User", 'Boolean'>
     readonly bannedAt: FieldRef<"User", 'DateTime'>
@@ -75872,6 +75905,8 @@ export namespace Prisma {
     forfeitSide: string | null
     tossWinner: string | null
     tossChoice: string | null
+    inducementsDoneHomeAt: Date | null
+    inducementsDoneAwayAt: Date | null
     scoreHome: number | null
     scoreAway: number | null
     winningsHome: number | null
@@ -75905,6 +75940,8 @@ export namespace Prisma {
     forfeitSide: string | null
     tossWinner: string | null
     tossChoice: string | null
+    inducementsDoneHomeAt: Date | null
+    inducementsDoneAwayAt: Date | null
     scoreHome: number | null
     scoreAway: number | null
     winningsHome: number | null
@@ -75940,6 +75977,8 @@ export namespace Prisma {
     tossChoice: number
     inducementsHome: number
     inducementsAway: number
+    inducementsDoneHomeAt: number
+    inducementsDoneAwayAt: number
     prayersHome: number
     prayersAway: number
     scoreHome: number
@@ -76025,6 +76064,8 @@ export namespace Prisma {
     forfeitSide?: true
     tossWinner?: true
     tossChoice?: true
+    inducementsDoneHomeAt?: true
+    inducementsDoneAwayAt?: true
     scoreHome?: true
     scoreAway?: true
     winningsHome?: true
@@ -76058,6 +76099,8 @@ export namespace Prisma {
     forfeitSide?: true
     tossWinner?: true
     tossChoice?: true
+    inducementsDoneHomeAt?: true
+    inducementsDoneAwayAt?: true
     scoreHome?: true
     scoreAway?: true
     winningsHome?: true
@@ -76093,6 +76136,8 @@ export namespace Prisma {
     tossChoice?: true
     inducementsHome?: true
     inducementsAway?: true
+    inducementsDoneHomeAt?: true
+    inducementsDoneAwayAt?: true
     prayersHome?: true
     prayersAway?: true
     scoreHome?: true
@@ -76233,6 +76278,8 @@ export namespace Prisma {
     tossChoice: string | null
     inducementsHome: JsonValue | null
     inducementsAway: JsonValue | null
+    inducementsDoneHomeAt: Date | null
+    inducementsDoneAwayAt: Date | null
     prayersHome: JsonValue | null
     prayersAway: JsonValue | null
     scoreHome: number
@@ -76305,6 +76352,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76362,6 +76411,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76417,6 +76468,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76472,6 +76525,8 @@ export namespace Prisma {
     tossChoice?: boolean
     inducementsHome?: boolean
     inducementsAway?: boolean
+    inducementsDoneHomeAt?: boolean
+    inducementsDoneAwayAt?: boolean
     prayersHome?: boolean
     prayersAway?: boolean
     scoreHome?: boolean
@@ -76505,7 +76560,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "hateChoices" | "casualtyRuleVersion" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
+  export type LeagueMatchSheetOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "pairingId" | "cupPairingId" | "status" | "submittedByHomeAt" | "submittedByAwayAt" | "validatedAt" | "validatedById" | "invalidatedAt" | "invalidationReason" | "weatherTable" | "weather" | "popularityHome" | "popularityAway" | "forfeitSide" | "tossWinner" | "tossChoice" | "inducementsHome" | "inducementsAway" | "inducementsDoneHomeAt" | "inducementsDoneAwayAt" | "prayersHome" | "prayersAway" | "scoreHome" | "scoreAway" | "winningsHome" | "winningsAway" | "winningsHomeManual" | "winningsAwayManual" | "dedicatedFansDeltaHome" | "dedicatedFansDeltaAway" | "rankingBonusHome" | "rankingBonusAway" | "sppBonus" | "costlyErrorsHome" | "costlyErrorsAway" | "motmPlayerIds" | "purchasesHome" | "purchasesAway" | "firedPlayerIds" | "advancementsHome" | "advancementsAway" | "rosterSnapshotHome" | "rosterSnapshotAway" | "journeymenHome" | "journeymenAway" | "raisedDeadHome" | "raisedDeadAway" | "hateChoices" | "casualtyRuleVersion" | "createdAt" | "updatedAt", ExtArgs["result"]["leagueMatchSheet"]>
   export type LeagueMatchSheetInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     pairing?: boolean | LeagueMatchSheet$pairingArgs<ExtArgs>
     cupPairing?: boolean | LeagueMatchSheet$cupPairingArgs<ExtArgs>
@@ -76548,6 +76603,8 @@ export namespace Prisma {
       tossChoice: string | null
       inducementsHome: Prisma.JsonValue | null
       inducementsAway: Prisma.JsonValue | null
+      inducementsDoneHomeAt: Date | null
+      inducementsDoneAwayAt: Date | null
       prayersHome: Prisma.JsonValue | null
       prayersAway: Prisma.JsonValue | null
       scoreHome: number
@@ -77042,6 +77099,8 @@ export namespace Prisma {
     readonly tossChoice: FieldRef<"LeagueMatchSheet", 'String'>
     readonly inducementsHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly inducementsAway: FieldRef<"LeagueMatchSheet", 'Json'>
+    readonly inducementsDoneHomeAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
+    readonly inducementsDoneAwayAt: FieldRef<"LeagueMatchSheet", 'DateTime'>
     readonly prayersHome: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly prayersAway: FieldRef<"LeagueMatchSheet", 'Json'>
     readonly scoreHome: FieldRef<"LeagueMatchSheet", 'Int'>
@@ -127662,6 +127721,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
     privateProfile: 'privateProfile',
     nafName: 'nafName',
+    nafNumber: 'nafNumber',
+    nafVerifiedAt: 'nafVerifiedAt',
     diceTheme: 'diceTheme',
     valid: 'valid',
     bannedAt: 'bannedAt',
@@ -128619,6 +128680,8 @@ export namespace Prisma {
     tossChoice: 'tossChoice',
     inducementsHome: 'inducementsHome',
     inducementsAway: 'inducementsAway',
+    inducementsDoneHomeAt: 'inducementsDoneHomeAt',
+    inducementsDoneAwayAt: 'inducementsDoneAwayAt',
     prayersHome: 'prayersHome',
     prayersAway: 'prayersAway',
     scoreHome: 'scoreHome',
@@ -129530,6 +129593,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     nafName?: StringNullableFilter<"User"> | string | null
+    nafNumber?: IntNullableFilter<"User"> | number | null
+    nafVerifiedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     diceTheme?: StringNullableFilter<"User"> | string | null
     valid?: BoolFilter<"User"> | boolean
     bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -129606,6 +129671,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrderInput | SortOrder
+    nafNumber?: SortOrderInput | SortOrder
+    nafVerifiedAt?: SortOrderInput | SortOrder
     diceTheme?: SortOrderInput | SortOrder
     valid?: SortOrder
     bannedAt?: SortOrderInput | SortOrder
@@ -129668,6 +129735,7 @@ export namespace Prisma {
     email?: string
     kofiLinkCode?: string
     discordUserId?: string
+    nafNumber?: number
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
@@ -129685,6 +129753,7 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     nafName?: StringNullableFilter<"User"> | string | null
+    nafVerifiedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     diceTheme?: StringNullableFilter<"User"> | string | null
     valid?: BoolFilter<"User"> | boolean
     bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -129740,7 +129809,7 @@ export namespace Prisma {
     leagueInvitationsReceived?: LeagueInvitationListRelationFilter
     cupInvitationsSent?: CupInvitationListRelationFilter
     cupInvitationsReceived?: CupInvitationListRelationFilter
-  }, "id" | "email" | "kofiLinkCode" | "discordUserId">
+  }, "id" | "email" | "kofiLinkCode" | "discordUserId" | "nafNumber">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
@@ -129761,6 +129830,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrderInput | SortOrder
+    nafNumber?: SortOrderInput | SortOrder
+    nafVerifiedAt?: SortOrderInput | SortOrder
     diceTheme?: SortOrderInput | SortOrder
     valid?: SortOrder
     bannedAt?: SortOrderInput | SortOrder
@@ -129806,6 +129877,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringWithAggregatesFilter<"User"> | string
     privateProfile?: BoolWithAggregatesFilter<"User"> | boolean
     nafName?: StringNullableWithAggregatesFilter<"User"> | string | null
+    nafNumber?: IntNullableWithAggregatesFilter<"User"> | number | null
+    nafVerifiedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     diceTheme?: StringNullableWithAggregatesFilter<"User"> | string | null
     valid?: BoolWithAggregatesFilter<"User"> | boolean
     bannedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
@@ -134762,6 +134835,8 @@ export namespace Prisma {
     tossChoice?: StringNullableFilter<"LeagueMatchSheet"> | string | null
     inducementsHome?: JsonNullableFilter<"LeagueMatchSheet">
     inducementsAway?: JsonNullableFilter<"LeagueMatchSheet">
+    inducementsDoneHomeAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
+    inducementsDoneAwayAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
     prayersHome?: JsonNullableFilter<"LeagueMatchSheet">
     prayersAway?: JsonNullableFilter<"LeagueMatchSheet">
     scoreHome?: IntFilter<"LeagueMatchSheet"> | number
@@ -134818,6 +134893,8 @@ export namespace Prisma {
     tossChoice?: SortOrderInput | SortOrder
     inducementsHome?: SortOrderInput | SortOrder
     inducementsAway?: SortOrderInput | SortOrder
+    inducementsDoneHomeAt?: SortOrderInput | SortOrder
+    inducementsDoneAwayAt?: SortOrderInput | SortOrder
     prayersHome?: SortOrderInput | SortOrder
     prayersAway?: SortOrderInput | SortOrder
     scoreHome?: SortOrder
@@ -134877,6 +134954,8 @@ export namespace Prisma {
     tossChoice?: StringNullableFilter<"LeagueMatchSheet"> | string | null
     inducementsHome?: JsonNullableFilter<"LeagueMatchSheet">
     inducementsAway?: JsonNullableFilter<"LeagueMatchSheet">
+    inducementsDoneHomeAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
+    inducementsDoneAwayAt?: DateTimeNullableFilter<"LeagueMatchSheet"> | Date | string | null
     prayersHome?: JsonNullableFilter<"LeagueMatchSheet">
     prayersAway?: JsonNullableFilter<"LeagueMatchSheet">
     scoreHome?: IntFilter<"LeagueMatchSheet"> | number
@@ -134933,6 +135012,8 @@ export namespace Prisma {
     tossChoice?: SortOrderInput | SortOrder
     inducementsHome?: SortOrderInput | SortOrder
     inducementsAway?: SortOrderInput | SortOrder
+    inducementsDoneHomeAt?: SortOrderInput | SortOrder
+    inducementsDoneAwayAt?: SortOrderInput | SortOrder
     prayersHome?: SortOrderInput | SortOrder
     prayersAway?: SortOrderInput | SortOrder
     scoreHome?: SortOrder
@@ -134994,6 +135075,8 @@ export namespace Prisma {
     tossChoice?: StringNullableWithAggregatesFilter<"LeagueMatchSheet"> | string | null
     inducementsHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     inducementsAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
+    inducementsDoneHomeAt?: DateTimeNullableWithAggregatesFilter<"LeagueMatchSheet"> | Date | string | null
+    inducementsDoneAwayAt?: DateTimeNullableWithAggregatesFilter<"LeagueMatchSheet"> | Date | string | null
     prayersHome?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     prayersAway?: JsonNullableWithAggregatesFilter<"LeagueMatchSheet">
     scoreHome?: IntWithAggregatesFilter<"LeagueMatchSheet"> | number
@@ -138782,6 +138865,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -138858,6 +138943,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -138934,6 +139021,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -139010,6 +139099,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -139086,6 +139177,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -139123,6 +139216,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -139160,6 +139255,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -144690,6 +144787,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -144746,6 +144845,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -144798,6 +144899,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -144854,6 +144957,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -144908,6 +145013,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -144959,6 +145066,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -145012,6 +145121,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -149249,6 +149360,17 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -149635,6 +149757,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrder
+    nafNumber?: SortOrder
+    nafVerifiedAt?: SortOrder
     diceTheme?: SortOrder
     valid?: SortOrder
     bannedAt?: SortOrder
@@ -149654,6 +149778,7 @@ export namespace Prisma {
   }
 
   export type UserAvgOrderByAggregateInput = {
+    nafNumber?: SortOrder
     eloRating?: SortOrder
   }
 
@@ -149676,6 +149801,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrder
+    nafNumber?: SortOrder
+    nafVerifiedAt?: SortOrder
     diceTheme?: SortOrder
     valid?: SortOrder
     bannedAt?: SortOrder
@@ -149713,6 +149840,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: SortOrder
     privateProfile?: SortOrder
     nafName?: SortOrder
+    nafNumber?: SortOrder
+    nafVerifiedAt?: SortOrder
     diceTheme?: SortOrder
     valid?: SortOrder
     bannedAt?: SortOrder
@@ -149732,6 +149861,7 @@ export namespace Prisma {
   }
 
   export type UserSumOrderByAggregateInput = {
+    nafNumber?: SortOrder
     eloRating?: SortOrder
   }
 
@@ -149789,6 +149919,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -150690,17 +150836,6 @@ export namespace Prisma {
     _max?: NestedBoolNullableFilter<$PrismaModel>
   }
 
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type TeamScalarRelationFilter = {
     is?: TeamWhereInput
     isNot?: TeamWhereInput
@@ -150872,22 +151007,6 @@ export namespace Prisma {
     agReduction?: SortOrder
     paReduction?: SortOrder
     avReduction?: SortOrder
-  }
-
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type TeamPlayerScalarRelationFilter = {
@@ -153255,6 +153374,8 @@ export namespace Prisma {
     tossChoice?: SortOrder
     inducementsHome?: SortOrder
     inducementsAway?: SortOrder
+    inducementsDoneHomeAt?: SortOrder
+    inducementsDoneAwayAt?: SortOrder
     prayersHome?: SortOrder
     prayersAway?: SortOrder
     scoreHome?: SortOrder
@@ -153322,6 +153443,8 @@ export namespace Prisma {
     forfeitSide?: SortOrder
     tossWinner?: SortOrder
     tossChoice?: SortOrder
+    inducementsDoneHomeAt?: SortOrder
+    inducementsDoneAwayAt?: SortOrder
     scoreHome?: SortOrder
     scoreAway?: SortOrder
     winningsHome?: SortOrder
@@ -153355,6 +153478,8 @@ export namespace Prisma {
     forfeitSide?: SortOrder
     tossWinner?: SortOrder
     tossChoice?: SortOrder
+    inducementsDoneHomeAt?: SortOrder
+    inducementsDoneAwayAt?: SortOrder
     scoreHome?: SortOrder
     scoreAway?: SortOrder
     winningsHome?: SortOrder
@@ -156365,6 +156490,14 @@ export namespace Prisma {
     set?: boolean
   }
 
+  export type NullableIntFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
   }
@@ -158515,14 +158648,6 @@ export namespace Prisma {
     connectOrCreate?: TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput | TeamPlayerStatusEventCreateOrConnectWithoutPlayerInput[]
     createMany?: TeamPlayerStatusEventCreateManyPlayerInputEnvelope
     connect?: TeamPlayerStatusEventWhereUniqueInput | TeamPlayerStatusEventWhereUniqueInput[]
-  }
-
-  export type NullableIntFieldUpdateOperationsInput = {
-    set?: number | null
-    increment?: number
-    decrement?: number
-    multiply?: number
-    divide?: number
   }
 
   export type TeamUpdateOneRequiredWithoutPlayersNestedInput = {
@@ -162943,6 +163068,17 @@ export namespace Prisma {
     not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[]
@@ -162999,17 +163135,6 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | null
@@ -163030,6 +163155,33 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -163154,33 +163306,6 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedBoolNullableFilter<$PrismaModel>
     _max?: NestedBoolNullableFilter<$PrismaModel>
-  }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
-  export type NestedFloatNullableFilter<$PrismaModel = never> = {
-    equals?: number | FloatFieldRefInput<$PrismaModel> | null
-    in?: number[] | null
-    notIn?: number[] | null
-    lt?: number | FloatFieldRefInput<$PrismaModel>
-    lte?: number | FloatFieldRefInput<$PrismaModel>
-    gt?: number | FloatFieldRefInput<$PrismaModel>
-    gte?: number | FloatFieldRefInput<$PrismaModel>
-    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedEnumAdvancementKindFilter<$PrismaModel = never> = {
@@ -165905,6 +166030,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -165980,6 +166107,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -166071,6 +166200,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -166146,6 +166277,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -166221,6 +166354,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -166296,6 +166431,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -166387,6 +166524,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -166462,6 +166601,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -166537,6 +166678,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -166612,6 +166755,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -166703,6 +166848,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -166778,6 +166925,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -166853,6 +167002,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -166928,6 +167079,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167019,6 +167172,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167094,6 +167249,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167169,6 +167326,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167244,6 +167403,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167335,6 +167496,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167410,6 +167573,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167485,6 +167650,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167560,6 +167727,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167651,6 +167820,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167726,6 +167897,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -167801,6 +167974,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167876,6 +168051,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -167967,6 +168144,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168042,6 +168221,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168117,6 +168298,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -168192,6 +168375,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -168272,6 +168457,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -168347,6 +168534,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -168438,6 +168627,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168513,6 +168704,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168599,6 +168792,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168674,6 +168869,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -168809,6 +169006,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -168884,6 +169083,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -169004,6 +169205,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -169079,6 +169282,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -169154,6 +169359,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -169229,6 +169436,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -169309,6 +169518,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -169384,6 +169595,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -169689,6 +169902,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -169764,6 +169979,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -169858,6 +170075,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFilter<"User"> | string
     privateProfile?: BoolFilter<"User"> | boolean
     nafName?: StringNullableFilter<"User"> | string | null
+    nafNumber?: IntNullableFilter<"User"> | number | null
+    nafVerifiedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     diceTheme?: StringNullableFilter<"User"> | string | null
     valid?: BoolFilter<"User"> | boolean
     bannedAt?: DateTimeNullableFilter<"User"> | Date | string | null
@@ -170329,6 +170548,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -170404,6 +170625,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -170651,6 +170874,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -170726,6 +170951,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -170892,6 +171119,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -170967,6 +171196,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -171613,6 +171844,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -171688,6 +171921,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174078,6 +174313,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -174153,6 +174390,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -174484,6 +174723,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -174559,6 +174800,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -175895,6 +176138,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -175949,6 +176194,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -176340,6 +176587,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -176394,6 +176643,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -176463,6 +176714,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -176538,6 +176791,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -176714,6 +176969,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176789,6 +177046,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -176955,6 +177214,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -177030,6 +177291,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -177462,6 +177725,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -177537,6 +177802,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -178084,6 +178351,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -178159,6 +178428,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -178389,6 +178660,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -178464,6 +178737,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -179469,6 +179744,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -179544,6 +179821,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -179624,6 +179903,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -179699,6 +179980,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -179991,6 +180274,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -180066,6 +180351,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -180152,6 +180439,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -180227,6 +180516,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -180480,6 +180771,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -180555,6 +180848,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -180635,6 +180930,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -180710,6 +181007,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -180979,6 +181278,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -181054,6 +181355,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -181140,6 +181443,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -181215,6 +181520,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -181523,6 +181830,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -181598,6 +181907,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -181843,6 +182154,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -181918,6 +182231,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -182997,6 +183312,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -183051,6 +183368,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -183388,6 +183707,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -183442,6 +183763,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -183587,6 +183910,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -183662,6 +183987,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -183841,6 +184168,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -183916,6 +184245,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -184219,6 +184550,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -184274,6 +184607,8 @@ export namespace Prisma {
     tossChoice?: string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: Date | string | null
+    inducementsDoneAwayAt?: Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: number
@@ -184341,6 +184676,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -184396,6 +184733,8 @@ export namespace Prisma {
     tossChoice?: NullableStringFieldUpdateOperationsInput | string | null
     inducementsHome?: NullableJsonNullValueInput | InputJsonValue
     inducementsAway?: NullableJsonNullValueInput | InputJsonValue
+    inducementsDoneHomeAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    inducementsDoneAwayAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     prayersHome?: NullableJsonNullValueInput | InputJsonValue
     prayersAway?: NullableJsonNullValueInput | InputJsonValue
     scoreHome?: IntFieldUpdateOperationsInput | number
@@ -187284,6 +187623,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -187359,6 +187700,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -187499,6 +187842,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -187574,6 +187919,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -187704,6 +188051,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -187779,6 +188128,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -187895,6 +188246,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -187970,6 +188323,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -188360,6 +188715,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -188435,6 +188792,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -188555,6 +188914,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -188630,6 +188991,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -188804,6 +189167,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -188879,6 +189244,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -188970,6 +189337,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -189045,6 +189414,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -189253,6 +189624,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -189328,6 +189701,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -189470,6 +189845,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -189545,6 +189922,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -189692,6 +190071,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -189767,6 +190148,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -189897,6 +190280,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -189972,6 +190357,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -190047,6 +190434,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -190122,6 +190511,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -190265,6 +190656,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -190340,6 +190733,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -190474,6 +190869,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -190549,6 +190946,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -190673,6 +191072,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -190748,6 +191149,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -190850,6 +191253,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -190925,6 +191330,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -191116,6 +191523,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -191191,6 +191600,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -191380,6 +191791,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -191455,6 +191868,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -191673,6 +192088,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -191748,6 +192165,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -192075,6 +192494,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -192150,6 +192571,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -192385,6 +192808,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -192460,6 +192885,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -192720,6 +193147,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -192795,6 +193224,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -192921,6 +193352,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -192996,6 +193429,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -193138,6 +193573,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -193213,6 +193650,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -193377,6 +193816,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -193452,6 +193893,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -193527,6 +193970,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -193602,6 +194047,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -193693,6 +194140,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -193768,6 +194217,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -193843,6 +194294,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -193918,6 +194371,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: string
     privateProfile?: boolean
     nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
     diceTheme?: string | null
     valid?: boolean
     bannedAt?: Date | string | null
@@ -194009,6 +194464,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -194084,6 +194541,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -196215,6 +196674,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -196290,6 +196751,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -196365,6 +196828,8 @@ export namespace Prisma {
     totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
     privateProfile?: BoolFieldUpdateOperationsInput | boolean
     nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
     valid?: BoolFieldUpdateOperationsInput | boolean
     bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

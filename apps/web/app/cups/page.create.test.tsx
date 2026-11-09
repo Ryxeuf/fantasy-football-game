@@ -7,7 +7,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/cups",
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 vi.mock("../lib/api-client", () => ({
@@ -20,6 +22,7 @@ vi.mock("../lib/tournament-rulesets", () => ({
 }));
 
 import CupsPage from "./page";
+import { LanguageProvider } from "../contexts/LanguageContext";
 
 const fetchMock = vi.fn();
 
@@ -59,7 +62,11 @@ function createBody(): Record<string, unknown> {
 }
 
 async function openForm() {
-  render(<CupsPage />);
+  render(
+    <LanguageProvider>
+      <CupsPage />
+    </LanguageProvider>,
+  );
   fireEvent.click(await screen.findByText("Nouvelle coupe"));
   fireEvent.change(screen.getByLabelText(/Nom de la coupe/), {
     target: { value: "Coupe du Gouffre" },

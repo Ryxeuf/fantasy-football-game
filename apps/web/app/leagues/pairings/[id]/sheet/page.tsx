@@ -43,6 +43,7 @@ import {
   type CostlyError,
   type SppBonusEntry,
   type MatchSheetReference,
+  type InducementOrderView,
 } from "./_components/MatchSheetPanels";
 import { chronologicalTimeline } from "./timeline";
 import {
@@ -80,6 +81,14 @@ import {
   pendingSubmissionsLabel,
 } from "./double-validation";
 import { RosterSection } from "./_components/RosterSection";
+import { useSheetAutoRefresh } from "./use-sheet-auto-refresh";
+import {
+  ownsBothSides,
+  parseSideParam,
+  pickMySide,
+  searchWithSide,
+  type SheetSide,
+} from "./side-selection";
 import { MatchSheetPdfButton } from "./_components/MatchSheetPdfButton";
 import TeamLogo from "../../../../components/TeamLogo";
 import TeamRosterLink from "../../../[id]/TeamRosterLink";
@@ -232,6 +241,16 @@ interface SheetResponse {
    */
   viewerTeamId?: string | null;
   /**
+   * Côtés dont le viewer possède l'équipe — deux pour un coach qui oppose
+   * ses deux équipes. Optionnel : rétro-compat avec un serveur antérieur.
+   */
+  viewerSides?: ReadonlyArray<"home" | "away">;
+  /**
+   * Les deux équipes appartiennent au même coach : autorisé, mais signalé à
+   * tous. Optionnel : rétro-compat avec un serveur antérieur.
+   */
+  sameOwner?: boolean;
+  /**
    * Compétition d'origine. Absent = serveur antérieur au support des
    * coupes : on retombe sur « ligue », comportement historique.
    */
@@ -296,6 +315,11 @@ interface SheetResponse {
    * Optionnel : rétro-compat avec un serveur antérieur.
    */
   snapshotFreshness?: SnapshotFreshnessView | null;
+  /**
+   * Ordre d'achat des coups de pouce (favori d'abord). Optionnel :
+   * rétro-compat avec un serveur antérieur.
+   */
+  inducementOrder?: InducementOrderView | null;
 }
 
 function parseArray<T>(raw: unknown): T[] {
@@ -448,29 +472,58 @@ export default function MatchSheetPage() {
   const [eventHalf, setEventHalf] = useState<1 | 2>(1);
   const [eventTurn, setEventTurn] = useState<string>("");
 
+  // Double propriétaire : côté pour lequel il saisit, persistant dans l'URL
+  // (`?side=`). Lu à l'initialisation (pas de `useSearchParams` : la page
+  // n'a pas besoin de re-rendu sur navigation).
+  const [selectedSide, setSelectedSide] = useState<SheetSide | null>(() =>
+    typeof window === "undefined" ? null : parseSideParam(window.location.search),
+  );
+  const chooseSide = useCallback((side: SheetSide) => {
+    setSelectedSide(side);
+    if (typeof window !== "undefined") {
+      const url = `${window.location.pathname}${searchWithSide(window.location.search, side)}${window.location.hash}`;
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }, []);
+
   // Onglet actif : Avant-match / En cours / Fin de match / Évolutions.
   const [tab, setTab] = useState<
     "before" | "during" | "after" | "advancements"
   >("before");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiRequest<SheetResponse>(
-        `/leagues/pairings/${pairingId}/sheet`,
-      );
-      setData(res);
-    } catch (e: unknown) {
-      if (e instanceof ApiClientError && e.status === 404) {
-        setData(null);
-      } else {
-        setError(e instanceof Error ? e.message : "Erreur");
+  // `silent` : relecture de fond (retour sur l'onglet, minuteur) — ni écran
+  // de chargement (il démonterait la saisie en cours), ni message d'erreur.
+  const load = useCallback(
+    async (opts: { silent?: boolean } = {}) => {
+      const path = `/leagues/pairings/${pairingId}/sheet${
+        selectedSide ? `?side=${selectedSide}` : ""
+      }`;
+      if (opts.silent) {
+        try {
+          const res = await apiRequest<SheetResponse>(path);
+          setData(res);
+        } catch {
+          // Best-effort : la prochaine relecture réessaiera.
+        }
+        return;
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [pairingId]);
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await apiRequest<SheetResponse>(path);
+        setData(res);
+      } catch (e: unknown) {
+        if (e instanceof ApiClientError && e.status === 404) {
+          setData(null);
+        } else {
+          setError(e instanceof Error ? e.message : "Erreur");
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pairingId, selectedSide],
+  );
 
   useEffect(() => {
     void load();
@@ -578,16 +631,20 @@ export default function MatchSheetPage() {
       }),
     );
 
+  // Soumission PAR CÔTÉ : un double propriétaire soumet chaque équipe à son
+  // tour (le serveur exige alors le côté) ; un coach simple envoie le sien.
   const submit = () =>
     run(() =>
       apiRequest(`/leagues/pairings/${pairingId}/sheet/submit`, {
         method: "POST",
+        body: JSON.stringify(mySide ? { side: mySide } : {}),
       }),
     );
   const unsubmit = () =>
     run(() =>
       apiRequest(`/leagues/pairings/${pairingId}/sheet/unsubmit`, {
         method: "POST",
+        body: JSON.stringify(mySide ? { side: mySide } : {}),
       }),
     );
   const validate = () =>
@@ -667,11 +724,17 @@ export default function MatchSheetPage() {
                 popularityAway: v.popularityAway,
                 // Coupe en `build` / `none` : l'avant-match ne vend rien, on
                 // n'envoie donc aucune sélection (le serveur la refuserait).
+                // Sinon, seulement les côtés que le viewer saisit : renvoyer
+                // la liste adverse l'écraserait avec une copie périmée.
                 ...(preMatchInducementsLocked(data)
                   ? {}
                   : {
-                      inducementsHome: v.inducementsHome,
-                      inducementsAway: v.inducementsAway,
+                      ...(inducementSides.includes("home")
+                        ? { inducementsHome: v.inducementsHome }
+                        : {}),
+                      ...(inducementSides.includes("away")
+                        ? { inducementsAway: v.inducementsAway }
+                        : {}),
                     }),
                 prayersHome: v.prayersHome,
                 prayersAway: v.prayersAway,
@@ -679,6 +742,21 @@ export default function MatchSheetPage() {
         ),
       }),
     );
+
+  // Ordre d'achat : « J'ai fini mes achats » du favori (ou son retrait).
+  // Relecture SILENCIEUSE : une saisie d'avant-match en cours reste à l'écran.
+  const saveInducementsDone = async (side: "home" | "away", done: boolean) => {
+    setError(null);
+    try {
+      await apiRequest(`/leagues/pairings/${pairingId}/sheet/inducements-done`, {
+        method: "POST",
+        body: JSON.stringify({ side, done }),
+      });
+      await load({ silent: true });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    }
+  };
 
   const savePostMatch = (v: PostMatchValues) =>
     run(() =>
@@ -867,12 +945,18 @@ export default function MatchSheetPage() {
   const editable = status !== "validated";
   const canEdit = editable && (isCoach || isCommissioner);
   // Staging des évolutions : côté du viewer + entrées stagées par côté.
-  const mySide: "home" | "away" | null =
+  // Un double propriétaire saisit pour le côté CHOISI (sélecteur, `?side=`).
+  const viewerSides = data?.viewerSides;
+  const bothSidesOwned = ownsBothSides(viewerSides);
+  const mySide: "home" | "away" | null = pickMySide(
+    viewerSides,
+    selectedSide,
     myTeamId && myTeamId === home?.teamId
       ? "home"
       : myTeamId && myTeamId === away?.teamId
         ? "away"
-        : null;
+        : null,
+  );
   const stagedHome = parseStagedAdvancements(data?.sheet.advancementsHome);
   const stagedAway = parseStagedAdvancements(data?.sheet.advancementsAway);
   const myStaged = mySide === "home" ? stagedHome : stagedAway;
@@ -924,6 +1008,23 @@ export default function MatchSheetPage() {
     home: home?.name,
     away: away?.name,
   });
+  // Coups de pouce : le commissaire saisit les deux côtés, un coach ses
+  // équipes (les deux pour un double propriétaire).
+  const inducementSides: ReadonlyArray<"home" | "away"> = isCommissioner
+    ? ["home", "away"]
+    : bothSidesOwned
+      ? ["home", "away"]
+      : mySide
+        ? [mySide]
+        : [];
+  // Avant-match ouvert : relecture au retour sur l'onglet et toutes les ~15 s
+  // (les achats du favori changent le budget de l'outsider).
+  useSheetAutoRefresh(
+    tab === "before" && data !== null && editable && (isCoach || isCommissioner),
+    () => {
+      if (!busy) void load({ silent: true });
+    },
+  );
 
   if (loading) {
     return (
@@ -1078,6 +1179,55 @@ export default function MatchSheetPage() {
           />
         ) : null;
       })()}
+      {data.sameOwner && (
+        <p
+          data-testid="sheet-same-owner-notice"
+          role="note"
+          className="rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs text-slate-700"
+        >
+          <strong>Les deux équipes appartiennent au même coach.</strong> La
+          rencontre peut se jouer et se saisir normalement ; le commissaire en
+          est simplement averti.
+        </p>
+      )}
+      {bothSidesOwned && (
+        <div
+          data-testid="sheet-side-selector"
+          role="radiogroup"
+          aria-label="Équipe saisie"
+          className="flex flex-wrap items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-xs text-indigo-900"
+        >
+          <span className="font-semibold">Je saisis pour :</span>
+          {(["home", "away"] as const).map((side) => {
+            const active = mySide === side;
+            const submitted =
+              status === "both_submitted" ||
+              status === `submitted_${side}`;
+            return (
+              <button
+                key={side}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => chooseSide(side)}
+                data-testid={`sheet-side-${side}`}
+                className={`rounded-md border px-3 py-1.5 font-semibold ${
+                  active
+                    ? "border-indigo-600 bg-indigo-600 text-white"
+                    : "border-indigo-300 bg-white text-indigo-900"
+                }`}
+              >
+                {(side === "home" ? home?.name : away?.name) ??
+                  (side === "home" ? "Domicile" : "Extérieur")}
+                {submitted ? " ✓" : ""}
+              </button>
+            );
+          })}
+          <span className="text-indigo-800">
+            Chaque équipe se soumet à son tour (« Valider ma saisie »).
+          </span>
+        </div>
+      )}
       {doubleValidation && status !== "validated" && (
         <p
           data-testid="sheet-double-validation-notice"
@@ -1331,6 +1481,9 @@ export default function MatchSheetPage() {
             forfeitOnly={profile.preMatch === "forfeit-only"}
             cupBudget={isCup}
             inducementsLocked={inducementsLocked}
+            editableInducementSides={inducementSides}
+            inducementOrder={data.inducementOrder ?? null}
+            onInducementsDone={saveInducementsDone}
           />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
@@ -1952,8 +2105,11 @@ export default function MatchSheetPage() {
                 </p>
               ) : null}
               <SheetAdvancementsEditor
+                key={mySide}
                 pairingId={pairingId}
-                teamId={myTeamId}
+                teamId={
+                  (mySide === "home" ? home?.teamId : away?.teamId) ?? myTeamId
+                }
                 ruleset={
                   (mySide === "home" ? home?.ruleset : away?.ruleset) ??
                   "season_3"
@@ -1990,7 +2146,12 @@ export default function MatchSheetPage() {
               disabled={busy}
               data-testid="submit-sheet"
             >
-              Valider ma saisie
+              {bothSidesOwned && mySide
+                ? `Valider la saisie de ${
+                    (mySide === "home" ? home?.name : away?.name) ??
+                    (mySide === "home" ? "Domicile" : "Extérieur")
+                  }`
+                : "Valider ma saisie"}
             </button>
             <button
               type="button"

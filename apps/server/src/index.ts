@@ -102,6 +102,8 @@ import careerStatsRoutes from "./routes/career-stats";
 import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
+import leaguePlayoffEditRoutes from "./routes/league-playoff-edit";
+import leagueCommissionerWithdrawalRoutes from "./routes/league-commissioner-withdrawal";
 import leagueInvitationRoutes from "./routes/league-invitation";
 import leaguePredictionsRoutes from "./routes/league-predictions";
 import {
@@ -157,13 +159,18 @@ const inTestEnv =
 if (!inTestEnv && process.env.LOG_FORMAT !== "console") {
   setServerLogImpl(pinoServerLogImpl);
 }
-// Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
+// Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage.
+// `--accept-data-loss` : la base est JETABLE (tests seulement), mais le CLI
+// Prisma résout `file:memdb1` en un vrai fichier commité
+// (`prisma/sqlite/memdb1`) — ajouter une contrainte unique à une table
+// existante (ex. `User.nafNumber`) y déclenche l'avertissement de perte de
+// données, le push échoue en silence et toute la suite tombe en 500.
 if (process.env.TEST_SQLITE === "1") {
   const url =
     process.env.TEST_DATABASE_URL || "file:memdb1?mode=memory&cache=shared";
   try {
     execSync(
-      `TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate`,
+      `TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate --accept-data-loss`,
       {
         stdio: "inherit",
         cwd: process.cwd(),
@@ -445,6 +452,12 @@ app.use("/coach", publicCache(), coachRoutes);
 // Archivage / suppression par le commissaire (POST /leagues/:id/archive,
 // DELETE /leagues/:id) — cf. routes/competition-lifecycle.
 app.use("/leagues", leagueLifecycleRouter);
+// Édition d'un bracket de play-offs généré (réinitialiser, remplacer un
+// qualifié) — cf. routes/league-playoff-edit.
+app.use("/leagues", leaguePlayoffEditRoutes);
+// Retrait d'une équipe par le commissaire en cours de saison (forfait ou
+// annulation de ses rencontres restantes).
+app.use("/leagues", leagueCommissionerWithdrawalRoutes);
 app.use("/leagues", leagueRoutes);
 // Pronostics sur les rencontres de ligue (portée, pronostics, classement,
 // clôtures) — cf. routes/league-predictions.
@@ -824,10 +837,12 @@ if (process.env.TEST_SQLITE === "1") {
   // avec le schéma SQLite de test (starPlayers, etc.).
   app.post("/__test/seed-team", async (req, res) => {
     try {
-      const { ownerId, name, roster } = req.body as {
+      const { ownerId, name, roster, rerolls } = req.body as {
         ownerId?: string;
         name?: string;
         roster?: "skaven" | "lizardmen" | "orc" | "undead" | "nurgle";
+        /** Relances : pour opposer des équipes de VEA différentes. */
+        rerolls?: number;
       };
       if (!ownerId || !name || !roster) {
         return res
@@ -854,7 +869,10 @@ if (process.env.TEST_SQLITE === "1") {
           teamValue: 1000,
           initialBudget: 1000,
           treasury: 0,
-          rerolls: 0,
+          rerolls:
+            Number.isInteger(rerolls) && (rerolls as number) >= 0
+              ? (rerolls as number)
+              : 0,
           cheerleaders: 0,
           assistants: 0,
           apothecary: false,
@@ -1066,11 +1084,11 @@ if (process.env.TEST_SQLITE === "1") {
       }
 
       // Orques : roster à DEUX postes de Trois-quart (Orque 0-16, Gobelin
-      // 0-4) — le cas « journaliers panachables » des feuilles de match de
-      // ligue (E37 / A161-A163). Le Gobelin porte ses compétences de base
-      // (Esquive, Poids Plume, Minus) et son accès Principale A,K, pour que
-      // le tirage « Hasard » d'un journalier gobelin exclue Esquive et tire
-      // dans la table Agilité. Cette table est seedée ENTIÈRE :
+      // 0-4). Règle p.94 : seul le Trois-quart Orque (0-16) fournit un
+      // journalier — le Gobelin, avec ses compétences et son accès de base,
+      // est là pour vérifier qu'il n'est PAS proposé (E37 / A161-A163). Le
+      // tirage « Hasard » du journalier orque (Principale G,S) se fait dans
+      // la table Générale, seedée ENTIÈRE comme la table Agilité :
       // `resolveRandomPrimaryPool` ne garde que les slugs présents en base
       // dès qu'il en trouve un, et un catalogue partiel n'aurait rien à tirer.
       const ORC_LINEMEN = [
@@ -1178,6 +1196,79 @@ if (process.env.TEST_SQLITE === "1") {
           nameFr: "Équilibre",
           nameEn: "Sure Feet",
           category: "Agility",
+        },
+        // Table « Compétence Principale au hasard » — Générales (p.121).
+        {
+          slug: "block",
+          nameFr: "Blocage",
+          nameEn: "Block",
+          category: "General",
+        },
+        {
+          slug: "dauntless",
+          nameFr: "Intrépide",
+          nameEn: "Dauntless",
+          category: "General",
+        },
+        {
+          slug: "fend",
+          nameFr: "Parade",
+          nameEn: "Fend",
+          category: "General",
+        },
+        {
+          slug: "frenzy",
+          nameFr: "Frénésie",
+          nameEn: "Frenzy",
+          category: "General",
+        },
+        {
+          slug: "kick",
+          nameFr: "Frappe Précise",
+          nameEn: "Kick",
+          category: "General",
+        },
+        {
+          slug: "pro",
+          nameFr: "Pro",
+          nameEn: "Pro",
+          category: "General",
+        },
+        {
+          slug: "surefoot",
+          nameFr: "Appuis Sûrs",
+          nameEn: "Steady Footing",
+          category: "General",
+        },
+        {
+          slug: "strip-ball",
+          nameFr: "Arracher le Ballon",
+          nameEn: "Strip Ball",
+          category: "General",
+        },
+        {
+          slug: "sure-hands",
+          nameFr: "Prise Sûre",
+          nameEn: "Sure Hands",
+          category: "General",
+        },
+        {
+          slug: "tackle",
+          nameFr: "Tacle",
+          nameEn: "Tackle",
+          category: "General",
+        },
+        {
+          slug: "provocation",
+          nameFr: "Provocation",
+          nameEn: "Taunt",
+          category: "General",
+        },
+        {
+          slug: "wrestle",
+          nameFr: "Lutte",
+          nameEn: "Wrestle",
+          category: "General",
         },
         // Traits de base du Trois-quart Gobelin.
         {
