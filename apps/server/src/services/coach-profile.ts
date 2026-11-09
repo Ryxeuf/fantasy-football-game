@@ -40,6 +40,12 @@ export interface CoachPublicProfile {
    * `PATCH /admin/users/:id/leaderboard-status`.
    */
   leaderboardStatusVisible: boolean;
+  /**
+   * Numéro NAF du coach, servi SEULEMENT s'il a été vérifié auprès de
+   * l'annuaire thenaf.net (sinon `null`) : un numéro déclaré mais non
+   * vérifié n'est pas affiché publiquement.
+   */
+  naf: { readonly number: number; readonly name: string | null } | null;
 }
 
 export interface CoachShowcaseAchievement {
@@ -87,6 +93,17 @@ interface CandidateUser {
   createdAt: Date;
   /** "visible" | "hidden_admin" — defaut "visible". */
   leaderboardStatus?: string | null;
+  nafNumber?: number | null;
+  nafName?: string | null;
+  nafVerifiedAt?: Date | null;
+}
+
+/** NAF publique : numéro + nom officiel, uniquement si vérifié. */
+export function publicNafOf(
+  user: Pick<CandidateUser, "nafNumber" | "nafName" | "nafVerifiedAt">,
+): CoachPublicProfile["naf"] {
+  if (user.nafNumber == null || !user.nafVerifiedAt) return null;
+  return { number: user.nafNumber, name: user.nafName ?? null };
 }
 
 export async function getCoachPublicProfile(
@@ -112,6 +129,9 @@ export async function getCoachPublicProfile(
       supporterTier: true,
       createdAt: true,
       leaderboardStatus: true,
+      nafNumber: true,
+      nafName: true,
+      nafVerifiedAt: true,
     },
     orderBy: { createdAt: "asc" },
   })) as CandidateUser[];
@@ -142,6 +162,7 @@ export async function getCoachPublicProfile(
     supporterTier: match.supporterTier,
     memberSince: match.createdAt.toISOString(),
     leaderboardStatusVisible: isLeaderboardVisible,
+    naf: publicNafOf(match),
   };
 }
 
