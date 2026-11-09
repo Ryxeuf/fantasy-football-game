@@ -36,6 +36,7 @@ import {
   type SeasonExtraStats,
 } from "./league-standings-stats";
 import { serverLog } from "../utils/server-log";
+import { leagueMineWhere } from "./competition-membership";
 import {
   LEAGUE_TIE_BREAK_SLUGS,
   type LeagueTieBreakSlug,
@@ -504,6 +505,26 @@ export async function createRound(input: CreateRoundInput) {
   });
 }
 
+/**
+ * Visibilité d'une ligue dans le listing général pour un lecteur connecté :
+ * publiques + « à moi » (`leagueMineWhere` : créées ou jouées) + invitations
+ * en attente. Composée À PARTIR de la règle « à moi » pour que « à moi ⊆
+ * visible » tienne par construction.
+ */
+export function leagueVisibleClauses(
+  viewerId: string,
+): Array<Record<string, unknown>> {
+  return [
+    { isPublic: true },
+    ...leagueMineWhere(viewerId).OR,
+    {
+      invitations: {
+        some: { inviteeUserId: viewerId, status: "pending" },
+      },
+    },
+  ];
+}
+
 export async function listLeagues(filter: ListLeaguesFilter) {
   const where: Record<string, unknown> = {};
   if (filter.creatorId) {
@@ -524,24 +545,7 @@ export async function listLeagues(filter: ListLeaguesFilter) {
     where.isPublic = true;
   } else if (filter.publicOnly !== false) {
     if (filter.viewerId && !filter.creatorId) {
-      where.OR = [
-        { isPublic: true },
-        { creatorId: filter.viewerId },
-        {
-          seasons: {
-            some: {
-              participants: {
-                some: { team: { ownerId: filter.viewerId } },
-              },
-            },
-          },
-        },
-        {
-          invitations: {
-            some: { inviteeUserId: filter.viewerId, status: "pending" },
-          },
-        },
-      ];
+      where.OR = leagueVisibleClauses(filter.viewerId);
     } else {
       where.isPublic = true;
     }

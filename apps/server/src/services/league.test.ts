@@ -76,12 +76,14 @@ import {
   addParticipant,
   createRound,
   listLeagues,
+  leagueVisibleClauses,
   listThemedSeasons,
   withdrawParticipant,
   isLeagueParticipant,
   getSeasonById,
   LeagueWithdrawError,
 } from "./league";
+import { leagueMineWhere } from "./competition-membership";
 import {
   createLeagueParticipant,
   withLeagueFreeFanRevoked,
@@ -860,6 +862,21 @@ describe("Rule: League service", () => {
       // Pas de filtre isPublic strict quand un viewer est fourni.
       const call = mockPrisma.league.findMany.mock.calls[0][0];
       expect(call.where.isPublic).toBeUndefined();
+    });
+
+    // Invariant du change `my-competitions` : toute clause « à moi » figure
+    // dans le OR de visibilité — une ligue à moi n'est jamais cachée.
+    it("« à moi » ⊆ « visible » : la visibilité contient leagueMineWhere", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({ viewerId: creatorId });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      for (const clause of leagueMineWhere(creatorId).OR) {
+        expect(call.where.OR).toContainEqual(clause);
+      }
+      expect(leagueVisibleClauses(creatorId)).toEqual(call.where.OR);
     });
 
     it("still restricts to public leagues when publicOnly is true", async () => {
