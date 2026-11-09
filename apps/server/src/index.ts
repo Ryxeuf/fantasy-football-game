@@ -159,13 +159,18 @@ const inTestEnv =
 if (!inTestEnv && process.env.LOG_FORMAT !== "console") {
   setServerLogImpl(pinoServerLogImpl);
 }
-// Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage
+// Si tests SQLite: pousser le schéma SQLite en mémoire partagée au démarrage.
+// `--accept-data-loss` : la base est JETABLE (tests seulement), mais le CLI
+// Prisma résout `file:memdb1` en un vrai fichier commité
+// (`prisma/sqlite/memdb1`) — ajouter une contrainte unique à une table
+// existante (ex. `User.nafNumber`) y déclenche l'avertissement de perte de
+// données, le push échoue en silence et toute la suite tombe en 500.
 if (process.env.TEST_SQLITE === "1") {
   const url =
     process.env.TEST_DATABASE_URL || "file:memdb1?mode=memory&cache=shared";
   try {
     execSync(
-      `TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate`,
+      `TEST_DATABASE_URL='${url}' npx prisma db push --schema prisma/sqlite/schema.prisma --skip-generate --accept-data-loss`,
       {
         stdio: "inherit",
         cwd: process.cwd(),
