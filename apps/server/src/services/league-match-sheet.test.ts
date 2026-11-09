@@ -2844,6 +2844,70 @@ describe("Lot G — league-match-sheet", () => {
       expect(out.reference.budget.away.pettyCash).toBe(0);
     });
 
+    it("budget servi = budget EFFECTIF : la dépense adverse STOCKÉE gonfle la Petite Monnaie de l'outsider", async () => {
+      mockPrisma.leaguePairing.findUnique.mockResolvedValue({
+        id: "pair-1",
+        round: { season: { league: { id: "L1", creatorId: COMMISH } } },
+        homeParticipant: { teamId: "team-home", team: { ownerId: HOME } },
+        awayParticipant: { teamId: "team-away", team: { ownerId: AWAY } },
+      });
+      // Le favori (away, VEA 1,15 M) a déjà acheté 80 000 po de coups de
+      // pouce, stockés sur la feuille.
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        events: [],
+        inducementsAway: JSON.stringify([
+          { slug: "bribe", name: "Pot-de-vin", cost: 80_000, qty: 1 },
+        ]),
+      });
+      const eleven = (prefix: string) =>
+        Array.from({ length: 11 }, (_, i) => ({
+          id: `${prefix}${i + 1}`,
+          number: i + 1,
+          name: `${prefix}${i + 1}`,
+          position: "lineman",
+          dead: false,
+          missNextMatch: false,
+        }));
+      mockPrisma.team.findMany.mockResolvedValue([
+        {
+          id: "team-home",
+          name: "Reikland",
+          roster: "human",
+          currentValue: 1_000_000,
+          treasury: 120_000,
+          players: eleven("h"),
+        },
+        {
+          id: "team-away",
+          name: "Gouged Eye",
+          roster: "orc",
+          currentValue: 1_150_000,
+          treasury: 200_000,
+          players: eleven("a"),
+        },
+      ]);
+
+      const out = await getMatchSheet({ pairingId: "pair-1", userId: HOME });
+
+      // Outsider : écart 150k + dépense adverse 80k + 50k de trésorerie.
+      expect(out.reference.budget.home).toMatchObject({
+        ctvGap: 150_000,
+        opponentSpent: 80_000,
+        pettyCash: 230_000,
+        treasuryAllowance: 50_000,
+        maxBudget: 280_000,
+      });
+      // Favori : sa trésorerie, rien d'autre.
+      expect(out.reference.budget.away).toMatchObject({
+        pettyCash: 0,
+        opponentSpent: 0,
+        maxBudget: 200_000,
+      });
+      expect(out.reference.budget.favorite).toBe("away");
+    });
+
     it("sous règlement de tournoi, sert la liste fermée et les prix du pack", async () => {
       mockPrisma.leaguePairing.findUnique.mockResolvedValue({
         id: "pair-1",
@@ -3260,6 +3324,80 @@ describe("Lot G — league-match-sheet", () => {
           },
         }),
       ).resolves.toBeDefined();
+    });
+
+    it("un coach n'écrase pas les coups de pouce adverses (liste ignorée, stockée conservée)", async () => {
+      mockTeamsForBudget();
+      const storedAway = [{ slug: "bribe", name: "Pot-de-vin", cost: 100_000, qty: 1 }];
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        inducementsAway: storedAway,
+      });
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: HOME,
+        payload: {
+          inducementsHome: [{ slug: "wizard", cost: 150_000, qty: 1 }],
+          // Liste périmée (page ouverte avant l'achat adverse) : vide.
+          inducementsAway: [],
+        },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.inducementsHome).toEqual([
+        { slug: "wizard", cost: 150_000, qty: 1 },
+      ]);
+      expect("inducementsAway" in data).toBe(false);
+    });
+
+    it("le budget de l'outsider au PATCH compte la dépense adverse STOCKÉE, pas celle renvoyée par le coach", async () => {
+      mockTeamsForBudget();
+      // Away (favori) a acheté 100k : home = 150k + 100k + 50k = 300k.
+      mockPrisma.leagueMatchSheet.findUnique.mockResolvedValue({
+        id: "ms1",
+        status: "draft",
+        inducementsAway: [{ slug: "bribe", cost: 100_000, qty: 1 }],
+      });
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: {
+            inducementsHome: [{ slug: "wizard", cost: 300_000, qty: 1 }],
+            inducementsAway: [],
+          },
+        }),
+      ).resolves.toBeDefined();
+    });
+
+    it("le commissaire écrit les deux côtés", async () => {
+      mockTeamsForBudget();
+      await updatePreMatch({
+        pairingId: "pair-1",
+        userId: COMMISH,
+        payload: {
+          inducementsHome: [],
+          inducementsAway: [{ slug: "bribe", cost: 0, qty: 1 }],
+        },
+      });
+      const data = mockPrisma.leagueMatchSheet.update.mock.calls[0][0].data;
+      expect(data.inducementsHome).toEqual([]);
+      expect(data.inducementsAway).toEqual([{ slug: "bribe", cost: 0, qty: 1 }]);
+    });
+
+    it("VEA égales : aucune trésorerie mobilisable (étape 4)", async () => {
+      mockTeamsForBudget();
+      mockPrisma.team.findMany.mockResolvedValue([
+        { id: "team-home", name: "Reikland", roster: "human", currentValue: 1_000_000, treasury: 200_000, players: [] },
+        { id: "team-away", name: "Gouged Eye", roster: "orc", currentValue: 1_000_000, treasury: 200_000, players: [] },
+      ]);
+      await expect(
+        updatePreMatch({
+          pairingId: "pair-1",
+          userId: HOME,
+          payload: { inducementsHome: [{ slug: "bribe", cost: 100_000, qty: 1 }] },
+        }),
+      ).rejects.toMatchObject({ code: "inducement_over_budget" });
     });
   });
 

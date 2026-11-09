@@ -201,6 +201,14 @@ import {
   type HateCandidateView,
 } from "./league-sheet-hate-choices";
 import {
+  computeInducementBudget,
+  LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
+  restrictInducementPayload,
+  sheetInducementSpend,
+  sumGoldEntries,
+  writableInducementSides,
+} from "./league-sheet-inducement-budget";
+import {
   WEATHER_TYPES,
   INDUCEMENT_CATALOGUE,
   canPurchaseInducement,
@@ -209,7 +217,6 @@ import {
   getNextAdvancementPspCost,
   surchargeForAdvancement,
   type AdvancementSchedule,
-  calculatePettyCash,
   getInducementCost,
   getInducementMaxQuantity,
   getSpecialRulesForTeam,
@@ -1459,13 +1466,24 @@ export async function updatePreMatch(input: {
   payload: PreMatchPayload;
 }) {
   const ctx = await loadPairingContext(input.pairingId);
-  if (!coachSide(ctx, input.userId) && !(await isCommissioner(ctx, input.userId))) {
+  const commissioner = await isCommissioner(ctx, input.userId);
+  if (!coachSide(ctx, input.userId) && !commissioner) {
     throw new MatchSheetError("forbidden", "Action reservee aux participants");
   }
   const sheet = await loadSheetOrThrow(ctx);
   ensureEditable(sheet.status);
 
-  const p = input.payload;
+  // Un coach n'écrit que les coups de pouce de SES équipes : la liste
+  // adverse qu'un client renvoie (souvent périmée) est ignorée et la valeur
+  // stockée conservée. Le commissaire écrit les deux côtés.
+  const p = restrictInducementPayload(
+    input.payload,
+    writableInducementSides({
+      commissioner,
+      ownsHome: input.userId === ctx.homeOwnerId,
+      ownsAway: input.userId === ctx.awayOwnerId,
+    }),
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data: any = {};
   const sheetColumns = sheet as SheetJourneymenColumns;
@@ -1629,24 +1647,10 @@ export async function updatePreMatch(input: {
     };
     // A55 — le budget de l'underdog inclut la dépense adverse : on évalue
     // les deux sélections (payload prioritaire, sinon valeur déjà stockée).
-    const sheetInd = sheet as {
-      inducementsHome?: unknown;
-      inducementsAway?: unknown;
-    };
-    const spentHome = sumGold(
-      p.inducementsHome !== undefined
-        ? p.inducementsHome
-        : sheetInd.inducementsHome,
-    );
-    const spentAway = sumGold(
-      p.inducementsAway !== undefined
-        ? p.inducementsAway
-        : sheetInd.inducementsAway,
-    );
     const { budget } = await buildMatchSheetReference(
       teams,
       null,
-      { home: spentHome, away: spentAway },
+      sheetInducementSpend(sheet as SheetInducementColumns, p),
       null,
       new Set(),
       { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
@@ -2420,26 +2424,7 @@ function mapInjurySeverity(
  * ou string serialisee (sqlite mirror). Ignore les entrees illisibles.
  */
 function sumGold(raw: unknown): number {
-  let arr: unknown = raw;
-  if (typeof raw === "string") {
-    try {
-      arr = JSON.parse(raw);
-    } catch {
-      return 0;
-    }
-  }
-  if (!Array.isArray(arr)) return 0;
-  let total = 0;
-  for (const entry of arr) {
-    if (!entry || typeof entry !== "object") continue;
-    const cost = (entry as { cost?: unknown }).cost;
-    const qty = (entry as { qty?: unknown }).qty;
-    const c = typeof cost === "number" && Number.isFinite(cost) ? cost : 0;
-    const q =
-      typeof qty === "number" && Number.isFinite(qty) && qty > 0 ? qty : 1;
-    total += Math.max(0, Math.floor(c)) * q;
-  }
-  return total;
+  return sumGoldEntries(raw);
 }
 
 /**
@@ -3209,17 +3194,10 @@ export async function validateByCommissioner(input: {
       journeymanPositions.away,
     ),
   };
-  const sheetIndForBudget = sheet as {
-    inducementsHome?: unknown;
-    inducementsAway?: unknown;
-  };
   const { budget } = await buildMatchSheetReference(
     teamsForBudget,
     null,
-    {
-      home: sumGold(sheetIndForBudget.inducementsHome),
-      away: sumGold(sheetIndForBudget.inducementsAway),
-    },
+    sheetInducementSpend(sheet as SheetInducementColumns),
     null,
     new Set(),
     { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
@@ -4525,6 +4503,12 @@ export interface MatchSheetTeamBudget {
   readonly pettyCash: number;
   /** Budget total dépensable = petty cash + tresorerie. */
   readonly maxBudget: number;
+  /** Écart de VEA reçu (outsider seulement). */
+  readonly ctvGap: number;
+  /** Dépense adverse STOCKÉE ajoutée à la Petite Monnaie (outsider de ligue). */
+  readonly opponentSpent: number;
+  /** Trésorerie mobilisable (plafonnée à 50 000 po pour l'outsider). */
+  readonly treasuryAllowance: number;
 }
 
 /**
@@ -4546,6 +4530,8 @@ export interface MatchSheetReference {
   readonly budget: {
     readonly home: MatchSheetTeamBudget;
     readonly away: MatchSheetTeamBudget;
+    /** Côté à la VEA la plus haute (achète en premier), `null` à égalité. */
+    readonly favorite: "home" | "away" | null;
   };
   /**
    * Ce que chaque equipe peut ACHETER a l'etape 4 (embauches), et a quel
@@ -4834,7 +4820,7 @@ function assertInducementsAllowed(
  * FR14 — montant (po) que l'équipe la plus faible peut investir en plus de la
  * cagnotte (différence de VEA) pour acheter des coups de pouce, en Jeu en Ligue.
  */
-export const LEAGUE_UNDERDOG_INDUCEMENT_BONUS = 50000;
+export { LEAGUE_UNDERDOG_INDUCEMENT_BONUS };
 
 export async function buildMatchSheetReference(
   teams: {
@@ -4863,23 +4849,20 @@ export async function buildMatchSheetReference(
 ): Promise<MatchSheetReference> {
   const isCup = competition.kind === "cup";
   const sellsInducements = (competition.inducementMode ?? "match") === "match";
-  const homeCtv = teams.home?.currentValue ?? 0;
-  const awayCtv = teams.away?.currentValue ?? 0;
-  const homeTreasury = isCup ? 0 : (teams.home?.treasury ?? 0);
-  const awayTreasury = isCup ? 0 : (teams.away?.treasury ?? 0);
-
-  const petty = calculatePettyCash({
-    ctvTeamA: homeCtv,
-    ctvTeamB: awayCtv,
-    treasuryTeamA: homeTreasury,
-    treasuryTeamB: awayTreasury,
-    // FR14/A55 — règle de ligue : l'équipe la plus faible peut investir
-    // jusqu'à 50 000 po de SA trésorerie (selon disponibilité) au-delà de la
-    // différence de VEA + des dépenses adverses. En coupe, ni bonus ni
-    // dépense adverse : la petite monnaie est l'écart de VEA, rien d'autre.
-    underdogBonus: isCup ? 0 : LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
-    spentTeamA: isCup ? 0 : spent.home,
-    spentTeamB: isCup ? 0 : spent.away,
+  // FR14/A55 + étape 4 BB2025 : l'outsider reçoit l'écart de VEA + la
+  // dépense adverse et peut ajouter jusqu'à 50 000 po de SA trésorerie ; à
+  // VEA égales, personne ne puise dans sa trésorerie. En coupe, ni
+  // trésorerie ni dépense adverse. Même calcul en lecture, PATCH et
+  // validation (`league-sheet-inducement-budget`, pur).
+  const budget = computeInducementBudget({
+    ctvHome: teams.home?.currentValue ?? 0,
+    ctvAway: teams.away?.currentValue ?? 0,
+    treasuryHome: teams.home?.treasury ?? 0,
+    treasuryAway: teams.away?.treasury ?? 0,
+    spentHome: spent.home,
+    spentAway: spent.away,
+    isCup,
+    sellsInducements,
   });
 
   const [purchasesHome, purchasesAway] = await Promise.all([
@@ -4931,18 +4914,9 @@ export async function buildMatchSheetReference(
       away: colorsFor(teams.away?.roster),
     },
     budget: {
-      home: {
-        ctv: homeCtv,
-        treasury: homeTreasury,
-        pettyCash: sellsInducements ? petty.teamA.pettyCash : 0,
-        maxBudget: sellsInducements ? petty.teamA.maxBudget : 0,
-      },
-      away: {
-        ctv: awayCtv,
-        treasury: awayTreasury,
-        pettyCash: sellsInducements ? petty.teamB.pettyCash : 0,
-        maxBudget: sellsInducements ? petty.teamB.maxBudget : 0,
-      },
+      home: budget.home,
+      away: budget.away,
+      favorite: budget.favorite,
     },
   };
 }
@@ -5396,10 +5370,12 @@ export async function getMatchSheet(input: {
     leagueName: ctx.leagueName,
     fixture: ctx.fixture,
     teams: teamsWithRaisedDead,
+    // Budget EFFECTIF : la Petite Monnaie de l'outsider inclut la dépense
+    // adverse STOCKÉE, comme au PATCH et à la validation.
     reference: await buildMatchSheetReference(
       teams,
       allowedInducements,
-      { home: 0, away: 0 },
+      sheetInducementSpend(sheet as SheetInducementColumns),
       inducementPack,
       deadThisMatch(summary),
       { kind: ctx.kind, inducementMode: ctx.rules.inducementMode },
