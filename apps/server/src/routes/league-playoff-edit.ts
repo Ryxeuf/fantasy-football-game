@@ -4,7 +4,8 @@
  * historique (`routes/league.ts`) : routes littérales, aucune ne recouvre
  * une route existante.
  *
- *   POST /leagues/seasons/:seasonId/playoff-bracket/reset
+ *   POST  /leagues/seasons/:seasonId/playoff-bracket/reset
+ *   PATCH /leagues/pairings/:pairingId/playoff-participant
  *
  * Autorisation et décisions dans `services/league-playoff-edit` ; ici on ne
  * fait que mapper les erreurs typées vers les statuts HTTP.
@@ -12,12 +13,15 @@
 
 import { Router } from "express";
 import type { Response } from "express";
+import { z } from "zod";
+import { validate } from "../middleware/validate";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
 import { hasRole } from "../utils/roles";
 import { apiError, sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
 import {
   PlayoffEditError,
+  replacePlayoffParticipant,
   resetPlayoffBracket,
   type PlayoffEditActor,
   type PlayoffEditErrorCode,
@@ -25,7 +29,17 @@ import {
 
 const NOT_FOUND_CODES: ReadonlySet<PlayoffEditErrorCode> = new Set([
   "season_not_found",
+  "pairing_not_found",
+  "participant_not_found",
 ]);
+
+export const replacePlayoffParticipantSchema = z.object({
+  side: z.enum(["home", "away"]),
+  participantId: z.string().min(1).max(64),
+});
+export type ReplacePlayoffParticipantBody = z.infer<
+  typeof replacePlayoffParticipantSchema
+>;
 
 function actorOf(
   req: AuthenticatedRequest,
@@ -73,12 +87,41 @@ export async function handleResetPlayoffBracket(
   }
 }
 
+/** PATCH /leagues/pairings/:pairingId/playoff-participant */
+export async function handleReplacePlayoffParticipant(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const actor = actorOf(req, res);
+  if (!actor) return;
+  const body: ReplacePlayoffParticipantBody = req.body;
+  try {
+    const out = await replacePlayoffParticipant(
+      {
+        pairingId: req.params.pairingId,
+        side: body.side,
+        participantId: body.participantId,
+      },
+      actor,
+    );
+    sendSuccess(res, out);
+  } catch (e: unknown) {
+    handleError(res, e);
+  }
+}
+
 const router = Router();
 
 router.post(
   "/seasons/:seasonId/playoff-bracket/reset",
   authUser,
   handleResetPlayoffBracket,
+);
+router.patch(
+  "/pairings/:pairingId/playoff-participant",
+  authUser,
+  validate(replacePlayoffParticipantSchema),
+  handleReplacePlayoffParticipant,
 );
 
 export default router;

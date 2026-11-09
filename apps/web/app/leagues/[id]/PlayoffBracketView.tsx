@@ -18,8 +18,11 @@ import {
   type PoolQuotaView,
 } from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
-import { PlayoffBracketResetButton } from "./PlayoffBracketTools";
-import { canResetBracket } from "./playoff-bracket-edit";
+import {
+  PlayoffBracketResetButton,
+  PlayoffReplaceControl,
+} from "./PlayoffBracketTools";
+import { canReplaceInPairing, canResetBracket } from "./playoff-bracket-edit";
 
 interface BracketTeam {
   id: string;
@@ -281,7 +284,22 @@ export function PlayoffBracketView({
               {stage.title}
             </h4>
             {stage.rounds.map((round) => (
-              <RoundCard key={round.id} round={round} />
+              <RoundCard
+                key={round.id}
+                round={round}
+                replace={
+                  isCommissioner
+                    ? {
+                        rounds: data.rounds,
+                        eligibleParticipants,
+                        onDone: () => {
+                          load();
+                          onChanged?.();
+                        },
+                      }
+                    : undefined
+                }
+              />
             ))}
           </div>
         ))}
@@ -516,9 +534,15 @@ function stageTitle(stage: string): string {
 
 interface RoundCardProps {
   round: BracketRound;
+  /** Commissaire : remplacement d'un qualifié dans une rencontre à jouer. */
+  replace?: {
+    rounds: BracketRound[];
+    eligibleParticipants: EligibleParticipant[];
+    onDone: () => void;
+  };
 }
 
-function RoundCard({ round }: RoundCardProps) {
+function RoundCard({ round, replace }: RoundCardProps) {
   const pairing = round.pairings[0];
   if (!pairing) {
     return (
@@ -560,6 +584,14 @@ function RoundCard({ round }: RoundCardProps) {
         >
           {pairing.status === "played" ? "Voir le match" : "Reprendre"}
         </Link>
+      ) : null}
+      {replace && canReplaceInPairing(pairing) ? (
+        <PlayoffReplaceControl
+          pairing={pairing}
+          rounds={replace.rounds}
+          eligibleParticipants={replace.eligibleParticipants}
+          onDone={replace.onDone}
+        />
       ) : null}
     </div>
   );

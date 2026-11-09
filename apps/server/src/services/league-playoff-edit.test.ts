@@ -4,13 +4,20 @@ vi.mock("../prisma", () => ({
   prisma: {
     leagueSeason: { findUnique: vi.fn(), update: vi.fn() },
     leagueRound: { findMany: vi.fn(), deleteMany: vi.fn() },
+    leaguePairing: { findUnique: vi.fn(), findMany: vi.fn(), update: vi.fn() },
+    leagueParticipant: { findUnique: vi.fn() },
+    leagueMatchSheet: { deleteMany: vi.fn() },
+    competitionPrediction: { deleteMany: vi.fn() },
     auditLog: { create: vi.fn() },
     $transaction: vi.fn(),
   },
 }));
 
 import { prisma } from "../prisma";
-import { resetPlayoffBracket } from "./league-playoff-edit";
+import {
+  replacePlayoffParticipant,
+  resetPlayoffBracket,
+} from "./league-playoff-edit";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = prisma as any;
@@ -139,5 +146,132 @@ describe("resetPlayoffBracket", () => {
     await expect(resetPlayoffBracket("s1", COMMISSIONER)).rejects.toMatchObject(
       { code: "season_completed" },
     );
+  });
+});
+
+describe("replacePlayoffParticipant", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    db.$transaction.mockResolvedValue([]);
+    db.leaguePairing.update.mockReturnValue("pairing-update-op");
+    db.leagueMatchSheet.deleteMany.mockReturnValue("sheet-delete-op");
+    db.competitionPrediction.deleteMany.mockReturnValue("predictions-delete-op");
+  });
+
+  const finalRow = {
+    ...pairingRow({ id: "final", homeParticipantId: "a", awayParticipantId: "c" }),
+    round: { seasonId: "s1", kind: "playoff", bracketSlot: "final" },
+  };
+
+  it("404 sur une rencontre inconnue", async () => {
+    db.leaguePairing.findUnique.mockResolvedValue(null);
+    await expect(
+      replacePlayoffParticipant(
+        { pairingId: "x", side: "home", participantId: "d" },
+        COMMISSIONER,
+      ),
+    ).rejects.toMatchObject({ code: "pairing_not_found" });
+  });
+
+  it("refuse un coach qui n'est pas commissaire", async () => {
+    db.leaguePairing.findUnique.mockResolvedValue(finalRow);
+    db.leagueSeason.findUnique.mockResolvedValue(season());
+    await expect(
+      replacePlayoffParticipant(
+        { pairingId: "final", side: "away", participantId: "d" },
+        { userId: "u-coach", isAdmin: false },
+      ),
+    ).rejects.toMatchObject({ code: "forbidden" });
+    expect(db.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("remplace le finaliste parti, efface le brouillon vide et les pronostics non réglés", async () => {
+    db.leaguePairing.findUnique.mockResolvedValue(finalRow);
+    db.leagueSeason.findUnique.mockResolvedValue(season());
+    db.leaguePairing.findMany.mockResolvedValue([
+      pairingRow({ id: "sf1", status: "played", homeParticipantId: "a", awayParticipantId: "b" }),
+      pairingRow({ id: "sf2", status: "played", homeParticipantId: "c", awayParticipantId: "d" }),
+      pairingRow({ id: "final", homeParticipantId: "a", awayParticipantId: "c" }),
+    ]);
+    db.leagueParticipant.findUnique.mockResolvedValue({
+      id: "d",
+      seasonId: "s1",
+      status: "active",
+    });
+
+    const out = await replacePlayoffParticipant(
+      { pairingId: "final", side: "away", participantId: "d" },
+      COMMISSIONER,
+    );
+
+    expect(out).toEqual({
+      pairingId: "final",
+      seasonId: "s1",
+      replacedParticipantId: "c",
+      homeParticipantId: "a",
+      awayParticipantId: "d",
+    });
+    // Toutes les rencontres du bracket (kind OU bracketSlot) sont lues.
+    expect(db.leaguePairing.findMany.mock.calls[0][0].where).toEqual({
+      round: {
+        seasonId: "s1",
+        OR: [{ kind: "playoff" }, { bracketSlot: { not: null } }],
+      },
+    });
+    expect(db.leaguePairing.update).toHaveBeenCalledWith({
+      where: { id: "final" },
+      data: { homeParticipantId: "a", awayParticipantId: "d" },
+    });
+    expect(db.leagueMatchSheet.deleteMany).toHaveBeenCalledWith({
+      where: { pairingId: "final", status: "draft" },
+    });
+    expect(db.competitionPrediction.deleteMany).toHaveBeenCalledWith({
+      where: { pairingId: "final", settledAt: null },
+    });
+    expect(db.$transaction).toHaveBeenCalledWith([
+      "pairing-update-op",
+      "sheet-delete-op",
+      "predictions-delete-op",
+    ]);
+  });
+
+  it("reconnaît un tour de bracket créé à la main par son seul bracketSlot", async () => {
+    db.leaguePairing.findUnique.mockResolvedValue({
+      ...finalRow,
+      round: { seasonId: "s1", kind: "regular", bracketSlot: "final" },
+    });
+    db.leagueSeason.findUnique.mockResolvedValue(season());
+    db.leaguePairing.findMany.mockResolvedValue([finalRow]);
+    db.leagueParticipant.findUnique.mockResolvedValue({
+      id: "d",
+      seasonId: "s1",
+      status: "active",
+    });
+    await expect(
+      replacePlayoffParticipant(
+        { pairingId: "final", side: "away", participantId: "d" },
+        COMMISSIONER,
+      ),
+    ).resolves.toMatchObject({ awayParticipantId: "d" });
+  });
+
+  it("refuse une rencontre de saison régulière", async () => {
+    db.leaguePairing.findUnique.mockResolvedValue({
+      ...finalRow,
+      round: { seasonId: "s1", kind: "regular", bracketSlot: null },
+    });
+    db.leagueSeason.findUnique.mockResolvedValue(season());
+    db.leaguePairing.findMany.mockResolvedValue([]);
+    db.leagueParticipant.findUnique.mockResolvedValue({
+      id: "d",
+      seasonId: "s1",
+      status: "active",
+    });
+    await expect(
+      replacePlayoffParticipant(
+        { pairingId: "final", side: "away", participantId: "d" },
+        COMMISSIONER,
+      ),
+    ).rejects.toMatchObject({ code: "not_a_bracket_pairing" });
   });
 });

@@ -1,11 +1,176 @@
 "use client";
 /**
  * Outils du commissaire sur un bracket de play-offs DÉJÀ généré (montés par
- * `PlayoffBracketView`) : réinitialiser le bracket tant que rien n'est joué.
+ * `PlayoffBracketView`) : réinitialiser le bracket tant que rien n'est joué,
+ * remplacer un qualifié dans une rencontre encore à jouer.
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { apiRequest } from "../../lib/api-client";
+import {
+  isPlaceholder,
+  replacementCandidates,
+  type BracketPairingLike,
+  type BracketRoundLike,
+} from "./playoff-bracket-edit";
+
+interface NamedParticipant {
+  id: string;
+  name: string;
+}
+
+interface ReplaceProps {
+  pairing: BracketPairingLike & {
+    homeParticipant: { id: string; team: { name: string } };
+    awayParticipant: { id: string; team: { name: string } };
+  };
+  rounds: readonly BracketRoundLike[];
+  /** Équipes actives de la saison. */
+  eligibleParticipants: readonly NamedParticipant[];
+  onDone: () => void;
+}
+
+/**
+ * « Remplacer » un qualifié dans UNE rencontre non jouée, même quand
+ * d'autres rencontres du bracket le sont (le finaliste parti remplacé par le
+ * 3e). Sur un placeholder (un seul qualifié connu), c'est ce qualifié qui
+ * est remplacé.
+ */
+export function PlayoffReplaceControl({
+  pairing,
+  rounds,
+  eligibleParticipants,
+  onDone,
+}: ReplaceProps) {
+  const placeholder = isPlaceholder(pairing);
+  const [open, setOpen] = useState(false);
+  const [side, setSide] = useState<"home" | "away">("home");
+  const [participantId, setParticipantId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const candidates = useMemo(
+    () => replacementCandidates(rounds, pairing, side, eligibleParticipants),
+    [rounds, pairing, side, eligibleParticipants],
+  );
+
+  const submit = useCallback(async () => {
+    if (!participantId) {
+      setError("Choisis l'équipe qui entre dans le bracket.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await apiRequest(`/leagues/pairings/${pairing.id}/playoff-participant`, {
+        method: "PATCH",
+        body: JSON.stringify({ side, participantId }),
+      });
+      setOpen(false);
+      setParticipantId("");
+      onDone();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  }, [pairing.id, side, participantId, onDone]);
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        data-testid={`playoff-replace-${pairing.id}`}
+        onClick={() => {
+          setError(null);
+          setOpen(true);
+        }}
+        className="block w-full text-center text-xs text-nuffle-bronze hover:underline mt-1"
+      >
+        🔁 Remplacer une équipe
+      </button>
+    );
+  }
+
+  return (
+    <div
+      data-testid={`playoff-replace-form-${pairing.id}`}
+      className="mt-1 space-y-1 rounded border border-amber-200 bg-amber-50/60 p-2 text-xs"
+    >
+      {placeholder ? (
+        <p>
+          Qualifié connu :{" "}
+          <strong>{pairing.homeParticipant.team.name}</strong>
+        </p>
+      ) : (
+        <div className="flex flex-col gap-1">
+          {(["home", "away"] as const).map((s) => (
+            <label key={s} className="flex items-center gap-1">
+              <input
+                type="radio"
+                name={`replace-side-${pairing.id}`}
+                data-testid={`playoff-replace-side-${s}`}
+                checked={side === s}
+                disabled={busy}
+                onChange={() => {
+                  setSide(s);
+                  setParticipantId("");
+                }}
+              />
+              Remplacer{" "}
+              {s === "home"
+                ? pairing.homeParticipant.team.name
+                : pairing.awayParticipant.team.name}
+            </label>
+          ))}
+        </div>
+      )}
+      <select
+        data-testid={`playoff-replace-select-${pairing.id}`}
+        value={participantId}
+        disabled={busy}
+        onChange={(e) => setParticipantId(e.target.value)}
+        className="w-full rounded border border-gray-300 px-1 py-0.5"
+      >
+        <option value="">— Équipe entrante —</option>
+        {candidates.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+      {candidates.length === 0 ? (
+        <p className="text-gray-500">
+          Aucune équipe active disponible hors du bracket.
+        </p>
+      ) : null}
+      {error ? (
+        <p data-testid={`playoff-replace-error-${pairing.id}`} className="text-red-600">
+          {error}
+        </p>
+      ) : null}
+      <div className="flex gap-1">
+        <button
+          type="button"
+          data-testid={`playoff-replace-submit-${pairing.id}`}
+          onClick={submit}
+          disabled={busy || !participantId}
+          className="rounded bg-nuffle-gold px-2 py-0.5 font-medium text-white disabled:opacity-50"
+        >
+          Remplacer
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          disabled={busy}
+          className="rounded border border-gray-300 bg-white px-2 py-0.5 text-gray-700"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface ResetProps {
   seasonId: string;

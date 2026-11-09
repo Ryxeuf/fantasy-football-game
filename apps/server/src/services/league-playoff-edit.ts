@@ -12,15 +12,19 @@ import { prisma } from "../prisma";
 import { serverLog } from "../utils/server-log";
 import { bracketRoundsWhere } from "./league-pool";
 import {
+  decidePlayoffReplacement,
   decidePlayoffReset,
   type PlayoffPairingState,
+  type PlayoffReplaceRefusal,
   type PlayoffResetRefusal,
 } from "./league-playoff-edit-rules";
 
 export type PlayoffEditErrorCode =
   | "season_not_found"
+  | "pairing_not_found"
   | "forbidden"
-  | PlayoffResetRefusal;
+  | PlayoffResetRefusal
+  | PlayoffReplaceRefusal;
 
 export class PlayoffEditError extends Error {
   constructor(
@@ -186,4 +190,114 @@ export async function resetPlayoffBracket(
     roundsDeleted: rounds.length,
   });
   return { seasonId, roundsDeleted: rounds.length };
+}
+
+export interface ReplacePlayoffParticipantInput {
+  readonly pairingId: string;
+  /** Côté remplacé ; sans effet sur un placeholder (`home === away`). */
+  readonly side: "home" | "away";
+  /** `LeagueParticipant.id` du remplaçant. */
+  readonly participantId: string;
+}
+
+export interface ReplacePlayoffParticipantOutcome {
+  readonly pairingId: string;
+  readonly seasonId: string;
+  readonly replacedParticipantId: string;
+  readonly homeParticipantId: string;
+  readonly awayParticipantId: string;
+}
+
+/**
+ * Remplace un qualifié dans UNE rencontre de bracket non engagée — même si
+ * d'autres rencontres du bracket sont jouées (cas du finaliste qui quitte
+ * la ligue : le 3e prend sa place).
+ *
+ * Ce que la rencontre portait sur l'ancien couple part avec lui :
+ *  - la feuille en BROUILLON VIDE (la décision garantit qu'elle l'est) : son
+ *    gel « version du match » est celui de l'équipe remplacée, elle sera
+ *    recréée à la prochaine ouverture ;
+ *  - les pronostics NON RÉGLÉS : `home` / `away` désignaient une autre
+ *    équipe.
+ *
+ * Si le qualifié remplacé venait d'une rencontre jouée, l'invalidation de
+ * celle-ci ne touchera plus à ce côté (`unadvancePlayoffsForSlot` voit un
+ * avancement supplanté) : le choix du commissaire l'emporte.
+ */
+export async function replacePlayoffParticipant(
+  input: ReplacePlayoffParticipantInput,
+  actor: PlayoffEditActor,
+): Promise<ReplacePlayoffParticipantOutcome> {
+  const row = (await prisma.leaguePairing.findUnique({
+    where: { id: input.pairingId },
+    select: {
+      ...PLAYOFF_PAIRING_STATE_SELECT,
+      round: { select: { seasonId: true, kind: true, bracketSlot: true } },
+    },
+  })) as unknown as
+    | (PlayoffPairingRow & {
+        round: { seasonId: string; kind: string; bracketSlot: string | null };
+      })
+    | null;
+  if (!row) {
+    throw new PlayoffEditError("pairing_not_found", "Rencontre introuvable");
+  }
+  const seasonId = row.round.seasonId;
+  const season = await loadSeasonForCommissioner(seasonId, actor);
+
+  const [bracketRows, replacement] = await Promise.all([
+    prisma.leaguePairing.findMany({
+      where: { round: bracketRoundsWhere(seasonId) },
+      select: PLAYOFF_PAIRING_STATE_SELECT,
+    }) as unknown as Promise<PlayoffPairingRow[]>,
+    prisma.leagueParticipant.findUnique({
+      where: { id: input.participantId },
+      select: { id: true, seasonId: true, status: true },
+    }),
+  ]);
+
+  const decision = decidePlayoffReplacement({
+    seasonId,
+    seasonStatus: season.status,
+    pairing: {
+      ...toPlayoffPairingState(row),
+      isBracket: row.round.kind === "playoff" || row.round.bracketSlot !== null,
+    },
+    side: input.side,
+    replacement,
+    bracketPairings: bracketRows.map(toPlayoffPairingState),
+  });
+  if (!decision.ok) throw new PlayoffEditError(decision.code, decision.message);
+
+  await prisma.$transaction([
+    prisma.leaguePairing.update({
+      where: { id: row.id },
+      data: decision.data,
+    }),
+    // Le brouillon vide gelait l'équipe remplacée (deleteMany : no-op sans
+    // feuille, et jamais une feuille saisie — la décision l'a refusée).
+    prisma.leagueMatchSheet.deleteMany({
+      where: { pairingId: row.id, status: "draft" },
+    }),
+    prisma.competitionPrediction.deleteMany({
+      where: { pairingId: row.id, settledAt: null },
+    }),
+  ]);
+
+  serverLog.info(
+    `[league-playoff-edit] season=${seasonId} pairing=${row.id} ${decision.replacedParticipantId} -> ${input.participantId} by=${actor.userId}`,
+  );
+  await auditPlayoffEdit(actor, "replace", seasonId, {
+    leagueId: season.league.id,
+    pairingId: row.id,
+    slot: row.round.bracketSlot,
+    replacedParticipantId: decision.replacedParticipantId,
+    participantId: input.participantId,
+  });
+  return {
+    pairingId: row.id,
+    seasonId,
+    replacedParticipantId: decision.replacedParticipantId,
+    ...decision.data,
+  };
 }

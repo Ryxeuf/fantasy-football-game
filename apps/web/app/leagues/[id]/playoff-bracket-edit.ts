@@ -43,3 +43,52 @@ export function canResetBracket(rounds: readonly BracketRoundLike[]): boolean {
     rounds.every((r) => r.pairings.every((p) => !isBracketPairingEngaged(p)))
   );
 }
+
+/** Rencontre sans résultat : un remplaçant ne peut pas y être déjà engagé. */
+const OPEN_STATUSES = new Set(["scheduled", "in_progress"]);
+
+/** La rencontre accepte un remplacement (à jouer, rien de saisi). */
+export function canReplaceInPairing(p: BracketPairingLike): boolean {
+  return p.status === "scheduled" && !isBracketPairingEngaged(p);
+}
+
+/** Un seul qualifié connu : il occupe les deux côtés. */
+export function isPlaceholder(p: BracketPairingLike): boolean {
+  return p.homeParticipant.id === p.awayParticipant.id;
+}
+
+/**
+ * Équipes proposables pour remplacer un côté : actives (la liste fournie),
+ * hors de toute rencontre de bracket encore à jouer — sauf le côté remplacé
+ * lui-même, qui s'en va. Miroir de la règle serveur
+ * (`decidePlayoffReplacement`), qui reste juge.
+ */
+export function replacementCandidates<T extends { readonly id: string }>(
+  rounds: readonly BracketRoundLike[],
+  pairing: BracketPairingLike,
+  side: "home" | "away",
+  eligible: readonly T[],
+): T[] {
+  const placeholder = isPlaceholder(pairing);
+  const replaced = placeholder
+    ? pairing.homeParticipant.id
+    : side === "home"
+      ? pairing.homeParticipant.id
+      : pairing.awayParticipant.id;
+  const busy = new Set<string>();
+  for (const r of rounds) {
+    for (const p of r.pairings) {
+      if (!OPEN_STATUSES.has(p.status)) continue;
+      busy.add(p.homeParticipant.id);
+      busy.add(p.awayParticipant.id);
+    }
+  }
+  busy.delete(replaced);
+  if (!placeholder) {
+    // L'adversaire reste dans la rencontre.
+    busy.add(
+      side === "home" ? pairing.awayParticipant.id : pairing.homeParticipant.id,
+    );
+  }
+  return eligible.filter((e) => e.id !== replaced && !busy.has(e.id));
+}

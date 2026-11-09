@@ -30,11 +30,13 @@ import router, { playoffEditErrorStatus } from "./league-playoff-edit";
 import { JWT_SECRET } from "../config";
 import {
   PlayoffEditError,
+  replacePlayoffParticipant,
   resetPlayoffBracket,
 } from "../services/league-playoff-edit";
 
 type MockFn = ReturnType<typeof vi.fn>;
 const resetMock = resetPlayoffBracket as unknown as MockFn;
+const replaceMock = replacePlayoffParticipant as unknown as MockFn;
 
 function tokenFor(userId: string, roles: readonly string[] = ["user"]): string {
   return jwt.sign({ sub: userId, roles: [...roles] }, JWT_SECRET);
@@ -107,6 +109,9 @@ describe("playoffEditErrorStatus", () => {
     ["bracket_engaged", 409],
     ["no_bracket", 409],
     ["season_completed", 409],
+    ["pairing_not_found", 404],
+    ["participant_not_found", 404],
+    ["participant_already_in_bracket", 409],
   ] as const)("%s ⇒ %d", (code, status) => {
     expect(playoffEditErrorStatus(code)).toBe(status);
   });
@@ -153,5 +158,48 @@ describe("POST /leagues/seasons/:seasonId/playoff-bracket/reset", () => {
       error: "Rencontre engagée",
       code: "bracket_engaged",
     });
+  });
+});
+
+describe("PATCH /leagues/pairings/:pairingId/playoff-participant", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("400 sur un corps invalide (côté inconnu)", async () => {
+    const res = await call(
+      "PATCH",
+      "/leagues/pairings/p1/playoff-participant",
+      { token: tokenFor("u-com"), json: { side: "middle", participantId: "d" } },
+    );
+    expect(res.status).toBe(400);
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("transmet la demande validée", async () => {
+    replaceMock.mockResolvedValue({ pairingId: "p1" });
+    const res = await call(
+      "PATCH",
+      "/leagues/pairings/p1/playoff-participant",
+      { token: tokenFor("u-com"), json: { side: "away", participantId: "d" } },
+    );
+    expect(res.status).toBe(200);
+    expect(replaceMock).toHaveBeenCalledWith(
+      { pairingId: "p1", side: "away", participantId: "d" },
+      { userId: "u-com", isAdmin: false },
+    );
+  });
+
+  it("404 avec code quand le remplaçant est introuvable", async () => {
+    replaceMock.mockRejectedValue(
+      new PlayoffEditError("participant_not_found", "Équipe introuvable"),
+    );
+    const res = await call(
+      "PATCH",
+      "/leagues/pairings/p1/playoff-participant",
+      { token: tokenFor("u-com"), json: { side: "home", participantId: "z" } },
+    );
+    expect(res.status).toBe(404);
+    expect(res.body.code).toBe("participant_not_found");
   });
 });
