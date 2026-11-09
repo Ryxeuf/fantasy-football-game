@@ -308,10 +308,6 @@ Source : `cup-build-inducements` (2026-10-10). Laissé hors du lot :
   une ligue ne peut que restreindre celle du règlement (intersection). À
   aligner si un commissaire de ligue le demande — `LeagueForm` affiche
   d'ailleurs tout le catalogue sous règlement, et un ajout y est sans effet.
-- **Règle d'égalité de VEA de `calculatePettyCash`** (ligue) à confirmer
-  dans le livre : à VEA égale, les deux équipes peuvent y puiser toute leur
-  trésorerie, alors que le compendium dit « aucune ». Hors coupe depuis que
-  la coupe n'a plus de trésorerie.
 
 ## Pro League — match complet, journal rejouable, cerveau du coach (lots 1 à 3)
 
@@ -405,32 +401,22 @@ sur la ligue. Restent :
   journée en PDF depuis son en-tête (`MatchdayExport`) ; les rondes de coupe
   n'ont ni filtre ni export par ronde (seulement l'export global de la coupe).
 
-## Compétences : mécaniques du moteur encore au texte 2020
+## Compétences : mécaniques du moteur au texte 2025
 
 Source : audit des descriptions Saison 3 contre le livre 2025
-(`apps/server/src/skills-s3-reference-audit.test.ts`, 2026-11-09). Les
-TEXTES servis sont corrigés ; ces écarts de MÉCANIQUE du moteur
-(`packages/game-engine`) ne le sont pas :
+(`apps/server/src/skills-s3-reference-audit.test.ts`, 2026-11-09). Les quatre
+écarts de mécanique sont corrigés (`GameState.ruleset`, `mechanics/chomp`) ;
+une équipe Saison 2 garde le texte 2020. Restent :
 
-- **Grande Gueule (`monstrous-mouth`)** — le moteur applique le texte 2020 :
-  relance des réceptions ratées (`mechanics/passing.ts`,
-  `performCatchRollWithSkill`) et immunité à Arracher le Ballon. Le texte
-  2025 retire la relance et ajoute l'Action Spéciale de **Croquement** (D6,
-  3+ : la cible Marquée ne peut plus quitter sa case tant qu'elle est
-  Marquée ; remplace le Blocage d'un Blitz). L'immunité à Arracher le Ballon
-  reste.
-- **Minus (`stunty`)** — 2025 : le joueur Minus applique **-1** à son Test
-  d'Agilité quand il tente d'INTERCEPTER. L'interception du moteur
-  (`mechanics/passing.ts`, -2 de base + Présence Perturbante) l'ignore.
-- **Gros Débile (`really-stupid`)** — le +2 (`hasGuidingTeammate`,
-  `mechanics/negative-traits.ts`) compte tout coéquipier adjacent de statut
-  `active`, donc un coéquipier **À Terre** (Prone = `stunned` sans
-  `state: 'stunned'`) ou **Déconcentré** ; 2025 exige un coéquipier Debout,
-  non Déconcentré, sans le Trait.
-- **Esquive en Force (`break-tackle`), Saison 2** — le moteur n'a pas le
-  ruleset dans son état : la règle 2025 (+1/+2/+3, une fois par tour)
-  s'applique aussi aux équipes Saison 2, dont le texte servi reste celui de
-  2020 (+1/+2). À reprendre si le ruleset entre un jour dans `GameState`.
+- **Bouton du Croquement sur l'écran de match** : le coup `CHOMP` est légal et
+  joué par l'IA, mais aucune Action Spéciale (Poignard, Vomissement, Regard…)
+  n'a de bouton dans l'interface en ligne.
+- **Déconcentré** : le moteur ne le pose que pour le Regard Hypnotique. Un joueur
+  qui rate Cerveau Lent ou Gros Débile n'est pas Déconcentré pour autant, donc
+  il compte encore comme guide d'un Gros Débile adjacent.
+- **Poussée d'un joueur Croqué** : lecture retenue, « quitter sa case » vise ses
+  déplacements ; une poussée subie rompt le Marquage, donc l'effet. À revoir si
+  une erreur de lecture du livre remonte.
 
 ## Opérations à faire au déploiement
 
@@ -453,4 +439,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `cup-build-inducements` | `prisma db push` (colonnes `Cup.inducementMode` et `Cup.allowedInducements`, nullables sans `@default` — les coupes existantes restent en avant-match ; table `TeamInducement`), joué par `scripts/deploy.sh`. Puis, dans `/admin/data/tournament-rulesets`, **réinitialiser** (ou éditer) la ligne NAF World Cup 2027 pour y porter la remise des Pots-de-vin (50 000 po) et le plafond « Arme Secrète » (2) : le seed ne réécrit jamais une ligne existante. |
 | `cup-league-parity` | `prisma db push` (`CompetitionPrediction.pairingId` devient nullable, colonne `cupPairingId` + unicité `[cupPairingId, userId]` ; colonnes `Cup.predictionsScope`, `CupPairing.predictionsClosedAt`, `CupRound.predictionsNotifiedAt`, nullables sans `@default`, aucun backfill) — joué par `scripts/deploy.sh`. Les coupes existantes démarrent SANS pronostics (`null` ⇒ `off`) ; leur commissaire est invité à les activer depuis la page de la coupe. |
 | `pro-league-coach-evolution` | `prisma db push` (tables `ProCoach`, `ProCoachMemory`), joué par `scripts/deploy.sh`. Aucun backfill : le coach d'une équipe se crée à son premier match. Variables optionnelles du lot 5 : `PRO_LEAGUE_SIM_WORKERS`, `PRO_LEAGUE_COMPLETION_TICK_MS`, `PRO_LEAGUE_REPLAY_RETENTION_DAYS`. |
-| Audit des compétences S3 (2026-11-09) | Descriptions Saison 3 corrigées (Esquive en Force, Minus, Grande Gueule, Lancer de Coéquipier, Cerveau Lent, Gros Débile, Joueur Déloyal) : `pnpm --filter @bb/server tsx src/scripts/update-skills-and-rules-from-ocr.ts` (ou un passage de seed) pour les écrire en base. |
+| ~~Audit des compétences S3 (2026-11-09)~~ | **Fait le 2026-11-09** pour les 7 descriptions corrigées, écrites une à une. Ne pas relancer `update-skills-and-rules-from-ocr.ts` sans relire `take-root` : le script remplacerait le texte posé en admin le 2026-07-22 par une version plus ancienne, et créerait 17 lignes `TeamSpecialRule` / `RegionalLeague` (tables vides en prod). |
