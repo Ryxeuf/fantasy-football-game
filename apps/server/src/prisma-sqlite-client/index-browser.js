@@ -136,6 +136,8 @@ exports.Prisma.UserScalarFieldEnum = {
   totalDonatedCentsByCurrency: 'totalDonatedCentsByCurrency',
   privateProfile: 'privateProfile',
   nafName: 'nafName',
+  nafNumber: 'nafNumber',
+  nafVerifiedAt: 'nafVerifiedAt',
   diceTheme: 'diceTheme',
   valid: 'valid',
   bannedAt: 'bannedAt',

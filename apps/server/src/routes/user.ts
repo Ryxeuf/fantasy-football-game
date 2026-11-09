@@ -1,8 +1,21 @@
-import { Router } from "express";
+import { Router, type Response } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
 import { validate } from "../middleware/validate";
-import { updateNafSchema, type UpdateNafInput } from "../schemas/user.schemas";
+import { sessionOnly } from "../middleware/sessionOnly";
+import {
+  updateNafNumberSchema,
+  updateNafSchema,
+  type UpdateNafInput,
+  type UpdateNafNumberInput,
+} from "../schemas/user.schemas";
+import {
+  NafNumberError,
+  retryUserNafVerification,
+  setUserNafNumber,
+  type UserNafView,
+} from "../services/user-naf-number";
+import { serverLog } from "../utils/server-log";
 import { parsePagination, buildApiMeta } from "../utils/pagination";
 import { isValidNafName } from "../services/naf-sync";
 import { getSupporterStatus } from "../services/supporter-status";
@@ -52,6 +65,64 @@ router.patch(
       data: { nafName: next },
     });
     res.json({ nafName: next });
+  },
+);
+
+// Numéro NAF vérifié automatiquement auprès de l'annuaire thenaf.net.
+//
+// PUT /user/naf-number { nafNumber: string | number | null }
+//   - trouvé : numéro + date de vérification + nom NAF officiel ;
+//   - introuvable : 422 `naf_not_found`, rien d'enregistré ;
+//   - annuaire injoignable : numéro enregistré, `verified: false` (en attente) ;
+//   - déjà pris : 409 `naf_number_taken`.
+// POST /user/naf-number/verify : retente la vérification.
+// `sessionOnly` : modification du profil (cf. clés API d'administration).
+function sendNafView(res: Response, view: UserNafView) {
+  res.json({
+    nafNumber: view.nafNumber,
+    nafName: view.nafName,
+    nafVerifiedAt: view.nafVerifiedAt,
+    verified: view.verified,
+    nafCoachUrl: view.nafCoachUrl,
+  });
+}
+
+function sendNafError(res: Response, e: unknown) {
+  if (e instanceof NafNumberError) {
+    const status =
+      e.code === "naf_number_taken" ? 409 : e.code === "naf_not_found" ? 422 : 400;
+    res.status(status).json({ error: e.message, code: e.code });
+    return;
+  }
+  serverLog.error("[user/naf-number] failed:", e);
+  res.status(500).json({ error: "Erreur serveur" });
+}
+
+router.put(
+  "/naf-number",
+  authUser,
+  sessionOnly,
+  validate(updateNafNumberSchema),
+  async (req: AuthenticatedRequest, res) => {
+    const body: UpdateNafNumberInput = req.body;
+    try {
+      sendNafView(res, await setUserNafNumber(req.user!.id, body.nafNumber));
+    } catch (e: unknown) {
+      sendNafError(res, e);
+    }
+  },
+);
+
+router.post(
+  "/naf-number/verify",
+  authUser,
+  sessionOnly,
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      sendNafView(res, await retryUserNafVerification(req.user!.id));
+    } catch (e: unknown) {
+      sendNafError(res, e);
+    }
   },
 );
 
