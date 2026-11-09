@@ -592,13 +592,14 @@ registerSkill({
   getModifiers: () => ({ passModifier: 1 }),
 });
 
-// MONSTROUS MOUTH (O.1 batch 3f) : relance toute tentative ratee de reception
-// (effectuee dans `performCatchRollWithSkill`) et Strip Ball ne peut pas etre
-// utilise contre ce joueur (resolu dans `handlePushBack` de `mechanics/blocking.ts`).
+// MONSTROUS MOUTH : Action Speciale de Croquement au texte 2025
+// (`mechanics/chomp.ts`) ; relance de reception au texte 2020 seulement
+// (`performCatchRollWithSkill`). Strip Ball ne peut pas etre utilise contre ce
+// joueur (`handlePushBack` de `mechanics/blocking.ts`).
 registerSkill({
   slug: 'monstrous-mouth',
-  triggers: ['on-catch'],
-  description: 'Relance toute tentative ratee de reception. Strip Ball ne peut pas etre utilise contre ce joueur.',
+  triggers: ['on-activation'],
+  description: "Action Speciale de Croquement : sur 3+ au D6, l'adversaire Marque ne peut plus quitter sa case tant que ce joueur le Marque. Strip Ball ne peut pas etre utilise contre ce joueur.",
   canApply: (ctx) =>
     hasSkill(ctx.player, 'monstrous-mouth') || hasSkill(ctx.player, 'monstrous_mouth'),
 });

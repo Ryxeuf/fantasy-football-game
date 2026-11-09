@@ -21,6 +21,7 @@ import { createLogEntry } from '../utils/logging';
 import { isAdjacent, inBounds, samePos } from './movement';
 import { getRandomDirection, bounceBall, checkTouchdowns, isInOpponentEndzone, awardTouchdown } from './ball';
 import { performInjuryRoll } from './injury';
+import { isChomped } from './chomp';
 import { getDistance, getPassRangeModifier } from './passing';
 import { getAdjacentOpponents } from './movement';
 import { checkAlwaysHungry } from './negative-traits';
@@ -58,6 +59,8 @@ export function canThrowTeamMate(
   if (!isAdjacent(thrower.pos, thrown.pos)) return false;
   // Le lancé doit être debout et actif
   if (thrown.stunned || (thrown.state !== undefined && thrown.state !== 'active')) return false;
+  // Un joueur Croqué ne quitte pas sa case.
+  if (isChomped(state, thrown)) return false;
 
   return true;
 }

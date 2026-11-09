@@ -31,6 +31,7 @@ import { canThrowTeamMate, getThrowRange } from '../mechanics/throw-team-mate';
 import { canHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import { canProjectileVomit } from '../mechanics/projectile-vomit';
 import { canStab } from '../mechanics/stab';
+import { canChomp, hasMonstrousMouth, isChomped } from '../mechanics/chomp';
 import { canChainsaw } from '../mechanics/chainsaw';
 import { canInstablePerformAction } from '../mechanics/negative-traits';
 import {
@@ -197,7 +198,9 @@ export function getLegalMoves(state: GameState): Move[] {
   );
 
   for (const p of myPlayers) {
-    for (const d of DIRS) {
+    // Grande Gueule : un joueur Croqué ne quitte pas sa case.
+    const pinned = isChomped(state, p);
+    for (const d of pinned ? [] : DIRS) {
       const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
       if (!inBounds(state, to)) continue;
       if (occ.has(`${to.x},${to.y}`)) continue; // pas de chevauchement
@@ -207,7 +210,7 @@ export function getLegalMoves(state: GameState): Move[] {
     // Actions de Saut (LEAP / Pogo Stick) — 2 cases de mouvement, test d'AG,
     // ignore les zones de tacle au depart.
     // MVP: on exige p.pm >= 2 (pas de leap-via-GFI pour l'instant).
-    if (playerCanLeap(p) && p.pm >= 2) {
+    if (!pinned && playerCanLeap(p) && p.pm >= 2) {
       const leapDests = getLegalLeapDestinations(state, p.pos);
       for (const to of leapDests) {
         moves.push({ type: 'LEAP', playerId: p.id, to });
@@ -246,7 +249,7 @@ export function getLegalMoves(state: GameState): Move[] {
     }
 
     // Actions de blitz (mouvement + blocage atomique, pour les joueurs pas encore déplacés)
-    if (!playerAction) {
+    if (!playerAction && !pinned) {
       for (const d of DIRS) {
         const to = { x: p.pos.x + d.x, y: p.pos.y + d.y };
         if (!inBounds(state, to)) continue;
@@ -354,6 +357,21 @@ export function getLegalMoves(state: GameState): Move[] {
       );
       for (const target of adjacentOpponents) {
         moves.push({ type: 'STAB', playerId: p.id, targetId: target.id });
+      }
+    }
+
+    // Croquement (Grande Gueule) : à l'activation, ou à la place du Blocage
+    // d'un Blitz après un Mouvement (mêmes conditions que le blitz au contact).
+    if (hasMonstrousMouth(p)) {
+      const asBlitzBlock =
+        playerAction === 'MOVE' && canTeamBlitz(state, p.team) && p.pm > 0;
+      const asActivation = !playerAction && !state.kickoffBlitzTurn;
+      if (asBlitzBlock || asActivation) {
+        for (const opponent of adjacentOpponents) {
+          if (canChomp(state, p, opponent)) {
+            moves.push({ type: 'CHOMP', playerId: p.id, targetId: opponent.id });
+          }
+        }
       }
     }
 

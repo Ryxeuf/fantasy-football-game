@@ -97,6 +97,7 @@ function clonePlayer(p: Player): Player {
     ...p,
     skills: p.skills.slice(),
     pos: { ...p.pos },
+    ...(p.chompedBy ? { chompedBy: p.chompedBy.slice() } : {}),
   };
 }
 

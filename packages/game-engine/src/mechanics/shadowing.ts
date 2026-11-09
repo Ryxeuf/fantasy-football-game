@@ -18,6 +18,7 @@ import { hasSkill } from '../skills/skill-effects';
 import { isAdjacent, getAdjacentOpponents } from './movement';
 import { rollD6 } from '../utils/dice';
 import { createLogEntry } from '../utils/logging';
+import { isChomped } from './chomp';
 
 /**
  * Target number for a successful Shadowing roll (2D6 + MA diff).
@@ -67,6 +68,8 @@ export function findShadowingCandidates(
     if (opponent.stunned) return false;
     const playerState = opponent.state;
     if (playerState && playerState !== 'active') return false;
+    // Un joueur Croqué ne quitte pas sa case.
+    if (isChomped(state, opponent)) return false;
     return true;
   });
 }

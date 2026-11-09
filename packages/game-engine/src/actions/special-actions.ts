@@ -17,7 +17,10 @@ import {
   hasPlayerActed,
   setPlayerAction,
   checkPlayerTurnEnd,
+  canTeamBlitz,
+  incrementTeamBlitzCount,
 } from '../core/game-state';
+import { canChomp, executeChomp } from '../mechanics/chomp';
 import { canHypnoticGaze, executeHypnoticGaze } from '../mechanics/hypnotic-gaze';
 import {
   canProjectileVomit,
@@ -91,6 +94,45 @@ export function handleStab(
   let newState = executeStab(state, stabber, target, rng);
   newState = setPlayerAction(newState, stabber.id, 'STAB');
   newState = checkPlayerTurnEnd(newState, stabber.id);
+  return newState;
+}
+
+/**
+ * Gere une Action Speciale de Croquement (Grande Gueule).
+ *
+ * Declaree a l'activation, ou apres un Mouvement a la place du Blocage d'un
+ * Blitz : elle compte alors comme le Blitz de l'equipe.
+ */
+export function handleChomp(
+  state: GameState,
+  move: { type: 'CHOMP'; playerId: string; targetId: string },
+  rng: RNG,
+): GameState {
+  const chomper = state.players.find((p) => p.id === move.playerId);
+  const target = state.players.find((p) => p.id === move.targetId);
+
+  if (!chomper || !target) return state;
+  if (chomper.team !== state.currentPlayer) return state;
+  if (!canChomp(state, chomper, target)) return state;
+
+  const declaredAction = state.playerActions?.[chomper.id];
+  const replacesBlitzBlock =
+    declaredAction === 'MOVE' &&
+    canTeamBlitz(state, chomper.team) &&
+    chomper.pm > 0;
+  if (declaredAction && !replacesBlitzBlock) return state;
+  if (state.kickoffBlitzTurn && !replacesBlitzBlock) return state;
+
+  let newState = executeChomp(state, chomper, target, rng);
+  newState = setPlayerAction(
+    newState,
+    chomper.id,
+    replacesBlitzBlock ? 'BLITZ' : 'CHOMP',
+  );
+  if (replacesBlitzBlock) {
+    newState = incrementTeamBlitzCount(newState, chomper.team);
+  }
+  newState = checkPlayerTurnEnd(newState, chomper.id);
   return newState;
 }
 

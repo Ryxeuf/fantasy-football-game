@@ -15,6 +15,8 @@
 //    Stupid, etc.) appelees au debut de chaque action,
 //  - les resolutions kickoff (4 routes du dispatcher),
 //  - tous les `handle*` extraits dans des modules dedies.
+import { clearExpiredChomps, isMoveBlockedByChomp } from '../mechanics/chomp';
+import { rejectMove } from './reject-move';
 import { GameState, Move, RNG } from '../core/types';
 import { truncateGameLog } from '../utils/logging';
 import { checkTouchdowns, settleLooseBall } from '../mechanics/ball';
@@ -26,6 +28,7 @@ import {
   handleHypnoticGaze,
   handleProjectileVomit,
   handleStab,
+  handleChomp,
   handleChainsaw,
   handleBallAndChain,
   handleBombThrow,
@@ -141,7 +144,7 @@ export function applyMove(state: GameState, move: Move, rng: RNG): GameState {
   if (next === state) return next;
   // Lot 3 « cerveau du coach » : un ballon libre sous un joueur au sol
   // rebondit (cf. `settleLooseBall`).
-  return settleLooseBall(next, rng);
+  return clearExpiredChomps(settleLooseBall(next, rng));
 }
 
 function applyMoveInner(state: GameState, move: Move, rng: RNG): GameState {
@@ -232,13 +235,18 @@ function applyMoveInner(state: GameState, move: Move, rng: RNG): GameState {
     return state;
   }
 
+  // Un joueur Croqué ne quitte pas sa case, avant tout jet d'activation.
+  if (isMoveBlockedByChomp(state, move)) {
+    return rejectMove(state, `${move.type} : joueur Croque`, { move });
+  }
+
   // ─── Negative trait activation checks (Bone Head, etc.) ───────────────
   // These run once at the start of a player's activation (first action only).
   // If the check fails, the player's activation ends without executing the action.
   let activeState = state;
   const ACTIVATION_MOVE_TYPES: string[] = [
     'MOVE', 'LEAP', 'DODGE', 'BLOCK', 'MULTI_BLOCK', 'BLITZ', 'PASS', 'HANDOFF',
-    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB',
+    'THROW_TEAM_MATE', 'FOUL', 'HYPNOTIC_GAZE', 'PROJECTILE_VOMIT', 'STAB', 'CHOMP',
     'CHAINSAW', 'BALL_AND_CHAIN', 'BOMB_THROW',
   ];
   if (ACTIVATION_MOVE_TYPES.includes(move.type) && 'playerId' in move) {
@@ -318,6 +326,8 @@ function applyMoveInner(state: GameState, move: Move, rng: RNG): GameState {
       return handleHypnoticGaze(activeState, move, rng);
     case 'PROJECTILE_VOMIT':
       return handleProjectileVomit(activeState, move, rng);
+    case 'CHOMP':
+      return handleChomp(activeState, move, rng);
     case 'STAB':
       return handleStab(activeState, move, rng);
     case 'CHAINSAW':

@@ -5,7 +5,7 @@
 
 import { GameState, Player, Position, TeamId, RNG, DiceResult } from '../core/types';
 import { cloneGameState } from '../core/clone-state';
-import { isSeason2Rules } from '../core/ruleset';
+import { isSeason2Rules, type GameRuleset } from '../core/ruleset';
 import { rollD6 } from '../utils/dice';
 import { samePos, isAdjacent, getAdjacentOpponents } from './movement';
 import { createLogEntry } from '../utils/logging';
@@ -182,20 +182,20 @@ export function performCatchRollWithSkill(
   catcher: Player,
   rng: RNG,
   modifiers: number,
+  ruleset?: GameRuleset,
 ): { result: DiceResult; rerolled: boolean } {
   const first = performCatchRoll(catcher, rng, modifiers);
   if (first.success) {
     return { result: first, rerolled: false };
   }
-  // Catch (relance standard) OU Monstrous Mouth (O.1 batch 3f, mutation qui
-  // permet de relancer toute tentative ratee de reception). Les deux skills
-  // offrent la meme relance personnelle ; les posseder ensemble n'autorise
-  // pas une double relance.
+  // Catch (relance standard). Grande Gueule offre la meme relance au texte
+  // 2020 seulement : en Saison 3 elle donne le Croquement a la place.
   const hasCatch = catcher.skills.some(s => s.toLowerCase() === 'catch');
-  const hasMonstrousMouth =
-    catcher.skills.includes('monstrous-mouth') ||
-    catcher.skills.includes('monstrous_mouth');
-  if (!hasCatch && !hasMonstrousMouth) {
+  const hasMouthReroll =
+    isSeason2Rules(ruleset) &&
+    (catcher.skills.includes('monstrous-mouth') ||
+      catcher.skills.includes('monstrous_mouth'));
+  if (!hasCatch && !hasMouthReroll) {
     return { result: first, rerolled: false };
   }
   const second = performCatchRoll(catcher, rng, modifiers);
@@ -521,7 +521,7 @@ export function executePass(
 
   // Passe réussie : le receveur doit réceptionner (avec relance `catch` skill)
   const catchModifiers = calculateCatchModifiers(newState, target);
-  const catchOutcome = performCatchRollWithSkill(target, rng, catchModifiers);
+  const catchOutcome = performCatchRollWithSkill(target, rng, catchModifiers, newState.ruleset);
   const catchResult = catchOutcome.result;
   if (catchOutcome.rerolled) {
     const catchRerollLog = createLogEntry(
@@ -634,7 +634,7 @@ export function executeHandoff(
 
   // Jet de réception pour le receveur (avec relance `catch` skill)
   const catchModifiers = calculateCatchModifiers(newState, target);
-  const catchOutcomeHO = performCatchRollWithSkill(target, rng, catchModifiers);
+  const catchOutcomeHO = performCatchRollWithSkill(target, rng, catchModifiers, newState.ruleset);
   const catchResult = catchOutcomeHO.result;
   if (catchOutcomeHO.rerolled) {
     const catchRerollLog = createLogEntry(

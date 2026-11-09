@@ -14,10 +14,9 @@ import {
  * O.1 batch 3f — Skills niche passe/catch :
  * - Cannoneer : +1 au jet de passe sur les distances Long (7-10) et Bomb (11-13).
  *   Complement symetrique d'Accurate (Quick/Short) et Strong Arm (Short/Long/Bomb).
- * - Monstrous Mouth : relance toute tentative ratee de reception (effet symetrique
- *   du skill Catch mais disponible uniquement pour les joueurs ayant la mutation).
- *   Le second effet (Strip Ball ne peut pas etre utilise contre ce joueur) est
- *   couvert par un autre test (blocking).
+ * - Monstrous Mouth : au texte 2020 seulement, relance toute tentative ratee de
+ *   reception. Le Croquement du texte 2025 est couvert par `chomp.test.ts`,
+ *   l'immunite a Strip Ball par `strip-ball.test.ts`.
  */
 
 function scriptedRng(values: number[]): RNG {
@@ -107,20 +106,28 @@ describe('Pass modifier skill: Cannoneer', () => {
   });
 });
 
-describe('Catch skill: Monstrous Mouth (reroll)', () => {
-  it('relance un jet de reception rate (echec puis reussite)', () => {
+describe('Catch skill: Monstrous Mouth', () => {
+  it('Saison 3 : plus de relance de reception', () => {
+    const catcher = makeCatcher(['monstrous-mouth']);
+    const rng = scriptedRng([0.01, 0.75]);
+    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0);
+    expect(rerolled).toBe(false);
+    expect(result.success).toBe(false);
+  });
+
+  it('Saison 2 : relance un jet de reception rate', () => {
     const catcher = makeCatcher(['monstrous-mouth']);
     // AG 3 -> target 4+. 1er jet = 1 (echec), 2eme = 5 (reussite).
     const rng = scriptedRng([0.01, 0.75]);
-    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0);
+    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0, 'season_2');
     expect(rerolled).toBe(true);
     expect(result.success).toBe(true);
   });
 
-  it('ne relance pas si le premier jet reussit', () => {
+  it('Saison 2 : ne relance pas si le premier jet reussit', () => {
     const catcher = makeCatcher(['monstrous-mouth']);
     const rng = scriptedRng([0.99, 0.01]);
-    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0);
+    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0, 'season_2');
     expect(rerolled).toBe(false);
     expect(result.success).toBe(true);
   });
@@ -128,16 +135,16 @@ describe('Catch skill: Monstrous Mouth (reroll)', () => {
   it('ne relance pas sans le skill', () => {
     const catcher = makeCatcher([]);
     const rng = scriptedRng([0.01, 0.99]);
-    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0);
+    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0, 'season_2');
     expect(rerolled).toBe(false);
     expect(result.success).toBe(false);
   });
 
-  it('catch + monstrous-mouth : une seule relance (pas deux)', () => {
+  it('Saison 2 : catch + monstrous-mouth donne une seule relance', () => {
     const catcher = makeCatcher(['catch', 'monstrous-mouth']);
     // Echec, echec, un troisieme jet reussi ne doit pas etre consomme.
     const rng = scriptedRng([0.01, 0.01, 0.99]);
-    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0);
+    const { result, rerolled } = performCatchRollWithSkill(catcher, rng, 0, 'season_2');
     expect(rerolled).toBe(true);
     expect(result.success).toBe(false);
   });

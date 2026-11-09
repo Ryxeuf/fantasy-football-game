@@ -64,6 +64,8 @@ export interface Player {
   skills: string[];
   pm: number; // points de mouvement restants
   gfiUsed?: number; // nombre de GFI (Going For It) utilisés ce tour (max 2)
+  /** Grande Gueule : ids des joueurs qui ont Croqué celui-ci (cf. `mechanics/chomp`). */
+  chompedBy?: string[];
   breakTackleUsed?: boolean; // Break Tackle utilisé pendant cette activation (BB3 — reset chaque tour d'équipe)
   hasBall?: boolean; // indique si le joueur a la balle
   state?: PlayerState; // état du joueur pour les zones de dugout
@@ -483,6 +485,7 @@ export type ActionType =
   | 'HYPNOTIC_GAZE'
   | 'PROJECTILE_VOMIT'
   | 'STAB'
+  | 'CHOMP'
   | 'CHAINSAW'
   | 'BALL_AND_CHAIN'
   | 'BOMB_THROW';
@@ -513,6 +516,7 @@ export type Move =
   | { type: 'HYPNOTIC_GAZE'; playerId: string; targetId: string }
   | { type: 'PROJECTILE_VOMIT'; playerId: string; targetId: string }
   | { type: 'STAB'; playerId: string; targetId: string }
+  | { type: 'CHOMP'; playerId: string; targetId: string }
   | { type: 'CHAINSAW'; playerId: string; targetId: string }
   | { type: 'BALL_AND_CHAIN'; playerId: string }
   | { type: 'BOMB_THROW'; playerId: string; target: Position }

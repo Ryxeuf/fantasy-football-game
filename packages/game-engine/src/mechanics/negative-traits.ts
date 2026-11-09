@@ -1068,6 +1068,7 @@ export function logInstablePrevention(
     HYPNOTIC_GAZE: 'de regard hypnotique',
     PROJECTILE_VOMIT: 'de vomissement projectile',
     STAB: 'de poignard',
+    CHOMP: 'de croquement',
     CHAINSAW: 'de tronconneuse',
     BALL_AND_CHAIN: 'de chaine et boulet',
     BOMB_THROW: 'de lancer de bombe',

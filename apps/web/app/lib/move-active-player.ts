@@ -37,6 +37,7 @@ export function getMoveActivePlayerId(
     case "HYPNOTIC_GAZE":
     case "PROJECTILE_VOMIT":
     case "STAB":
+    case "CHOMP":
     case "CHAINSAW":
     case "BALL_AND_CHAIN":
     case "BOMB_THROW":
