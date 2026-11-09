@@ -6,6 +6,7 @@ import EmailDigestPreference from "../../components/EmailDigestPreference";
 import PrivateProfileToggle from "./PrivateProfileToggle";
 import DiceThemeSummaryCard from "./DiceThemeSummaryCard";
 import CrownsCard from "./CrownsCard";
+import NafNumberCard from "./NafNumberCard";
 
 type UserProfile = {
   id: string;
@@ -16,6 +17,10 @@ type UserProfile = {
   lastName?: string | null;
   dateOfBirth?: string | null;
   discordUserId?: string | null;
+  /** Numéro NAF vérifié auprès de thenaf.net (optionnels : API antérieure). */
+  nafNumber?: number | null;
+  nafName?: string | null;
+  nafVerifiedAt?: string | null;
   role?: string;
   roles?: string[];
   patreon?: boolean;
@@ -640,6 +645,17 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Numéro NAF, vérifié automatiquement auprès de thenaf.net */}
+      {profile && (
+        <NafNumberCard
+          initial={{
+            nafNumber: profile.nafNumber ?? null,
+            nafName: profile.nafName ?? null,
+            nafVerifiedAt: profile.nafVerifiedAt ?? null,
+          }}
+        />
+      )}
 
       {/* Profil prive (S26.3k) */}
       {profile && (
