@@ -879,6 +879,37 @@ describe("Rule: League service", () => {
       expect(leagueVisibleClauses(creatorId)).toEqual(call.where.OR);
     });
 
+    it("scope=mine : « à moi » seul, statut et creatorId par-dessus", async () => {
+      mockPrisma.league.findMany.mockResolvedValue([]);
+      mockPrisma.league.count.mockResolvedValue(0);
+
+      await listLeagues({
+        viewerId: creatorId,
+        scope: "mine",
+        status: "in_progress",
+        creatorId: "someone",
+        limit: 10,
+        offset: 20,
+      });
+
+      const call = mockPrisma.league.findMany.mock.calls[0][0];
+      expect(call.where).toEqual({
+        creatorId: "someone",
+        ...leagueMineWhere(creatorId),
+        status: "in_progress",
+      });
+      expect(call).toMatchObject({ take: 10, skip: 20 });
+      expect(mockPrisma.league.count).toHaveBeenCalledWith({
+        where: call.where,
+      });
+    });
+
+    it("scope=mine sans lecteur : rien, sans requête", async () => {
+      const out = await listLeagues({ scope: "mine" });
+      expect(out).toEqual({ items: [], total: 0, limit: 50, offset: 0 });
+      expect(mockPrisma.league.findMany).not.toHaveBeenCalled();
+    });
+
     it("still restricts to public leagues when publicOnly is true", async () => {
       mockPrisma.league.findMany.mockResolvedValue([]);
       mockPrisma.league.count.mockResolvedValue(0);

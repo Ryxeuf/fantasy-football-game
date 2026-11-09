@@ -675,6 +675,8 @@ export async function handleListLeagues(
       // L'utilisateur courant voit ses propres ligues privées (créées ou
       // rejointes) en plus des ligues publiques.
       viewerId: req.user?.id,
+      // `mine` : seules les ligues « à moi » (créées ou jouées).
+      scope: query.scope,
       limit: query.limit,
       offset: query.offset,
     });

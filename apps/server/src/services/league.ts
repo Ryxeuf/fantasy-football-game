@@ -36,7 +36,10 @@ import {
   type SeasonExtraStats,
 } from "./league-standings-stats";
 import { serverLog } from "../utils/server-log";
-import { leagueMineWhere } from "./competition-membership";
+import {
+  leagueMineWhere,
+  type CompetitionScope,
+} from "./competition-membership";
 import {
   LEAGUE_TIE_BREAK_SLUGS,
   type LeagueTieBreakSlug,
@@ -166,6 +169,12 @@ export interface ListLeaguesFilter {
    * plus ».
    */
   viewerId?: string;
+  /**
+   * `mine` : seules les ligues « à moi » du `viewerId` (créées ou jouées,
+   * `leagueMineWhere`), sans clause de visibilité — « à moi » y est inclus.
+   * Statut, `creatorId` et pagination s'appliquent par-dessus. Défaut `all`.
+   */
+  scope?: CompetitionScope;
   // S25.6 — pagination. Si non fournis, on retombe sur des defauts
   // raisonnables (50 / 0) pour eviter qu'un client legacy charge tout.
   limit?: number;
@@ -541,7 +550,16 @@ export async function listLeagues(filter: ListLeaguesFilter) {
   //    ligue privee a laquelle il est convie. On n'applique ce OR que
   //    sur la liste generale (pas quand un `creatorId` explicite est
   //    demande).
-  if (filter.publicOnly === true) {
+  const limit = Math.min(Math.max(filter.limit ?? 50, 1), 100);
+  const offset = Math.max(filter.offset ?? 0, 0);
+  if (filter.scope === "mine") {
+    // « À moi » sans lecteur : rien (jamais « tout »).
+    if (!filter.viewerId) return { items: [], total: 0, limit, offset };
+    // Pas de clause de visibilité : « à moi » y est inclus. Un `publicOnly`
+    // explicite reste un rétrécissement.
+    Object.assign(where, leagueMineWhere(filter.viewerId));
+    if (filter.publicOnly === true) where.isPublic = true;
+  } else if (filter.publicOnly === true) {
     where.isPublic = true;
   } else if (filter.publicOnly !== false) {
     if (filter.viewerId && !filter.creatorId) {
@@ -559,10 +577,9 @@ export async function listLeagues(filter: ListLeaguesFilter) {
     // ce que fait la page « Ligues archivées ».
     where.status = { not: LEAGUE_ARCHIVED_STATUS };
   }
-  // S25.6 — defaults raisonnables si limit/offset non fournis. Cap a 100
-  // pour eviter qu'un caller passe une valeur exagerement grande.
-  const limit = Math.min(Math.max(filter.limit ?? 50, 1), 100);
-  const offset = Math.max(filter.offset ?? 0, 0);
+  // S25.6 — defaults raisonnables si limit/offset non fournis (calculés en
+  // tête), cap a 100 pour eviter qu'un caller passe une valeur exagerement
+  // grande.
   const [items, total] = await Promise.all([
     prisma.league.findMany({
       where,

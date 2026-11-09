@@ -283,6 +283,24 @@ describe("Route: GET /leagues (list)", () => {
     });
   });
 
+  it("forwards scope=mine to the service", async () => {
+    mockService.listLeagues.mockResolvedValue({
+      items: [],
+      total: 0,
+      limit: 50,
+      offset: 0,
+    });
+    const req = createReq({
+      query: { scope: "mine" },
+      user: { id: "u-1", roles: ["user"] },
+    } as Partial<AuthenticatedRequest>);
+    const res = createRes();
+    await handleListLeagues(req, res);
+    expect(mockService.listLeagues).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "mine", viewerId: "u-1" }),
+    );
+  });
+
   it("forwards query filters to the service (post validateQuery coercion)", async () => {
     mockService.listLeagues.mockResolvedValue([]);
     // validateQuery coerces publicOnly from "false" to boolean false before the handler
