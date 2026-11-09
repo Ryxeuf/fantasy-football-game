@@ -29,6 +29,54 @@ export function awayOptions(
   );
 }
 
+/** Statuts de rencontre qui rendent une journée insupprimable (miroir serveur). */
+const ENGAGED_PAIRING_STATUSES = new Set([
+  "in_progress",
+  "played",
+  "forfeit_home",
+  "forfeit_away",
+]);
+
+/**
+ * Raison pour laquelle une journée ne peut pas être supprimée, ou `null`.
+ * Miroir LISIBLE de `decideRoundRemoval` côté serveur (qui reste seul juge :
+ * il connaît aussi les matchs déjà reportés au classement) — sert à griser le
+ * bouton avec son explication plutôt qu'à découvrir le refus après coup.
+ */
+export function roundDeletionBlocker(
+  round: Pick<LeagueRoundDetail, "kind" | "bracketSlot" | "pairings">,
+): string | null {
+  if (round.kind === "playoff" || (round.bracketSlot ?? null) !== null) {
+    return "Journée de play-off : elle se gère depuis le bracket.";
+  }
+  const pairings = round.pairings ?? [];
+  if (pairings.some((p) => ENGAGED_PAIRING_STATUSES.has(String(p.status)))) {
+    return "Une rencontre est en cours, jouée ou déclarée forfait.";
+  }
+  if (pairings.some((p) => p.match)) {
+    return "Une rencontre a déjà un match lancé.";
+  }
+  if (pairings.some((p) => p.matchSheet && p.matchSheet.status !== "draft")) {
+    return "Une feuille de match a été soumise ou validée.";
+  }
+  return null;
+}
+
+/** Texte de confirmation : ce que la suppression emporte. */
+export function roundDeletionSummary(pairingsCount: number): string {
+  if (pairingsCount === 0) return "La journée est vide.";
+  const s = pairingsCount > 1 ? "s" : "";
+  return `Cela supprime ${pairingsCount} rencontre${s} à jouer et leurs pronostics (feuilles en brouillon comprises).`;
+}
+
+/** Libellé d'une journée : son nom, sinon « Journée N ». */
+export function roundLabel(
+  round: Pick<LeagueRoundDetail, "roundNumber" | "name">,
+): string {
+  const name = round.name?.trim();
+  return name ? name : `Journée ${round.roundNumber}`;
+}
+
 interface Props {
   seasonId: string;
   rounds: LeagueRoundDetail[];
@@ -176,6 +224,21 @@ export function ManualScheduleEditor({
                   }),
                 )
               }
+              onRename={(name) =>
+                run(() =>
+                  apiRequest(`/leagues/rounds/${round.id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ name }),
+                  }),
+                )
+              }
+              onDeleteRound={() =>
+                run(() =>
+                  apiRequest(`/leagues/rounds/${round.id}`, {
+                    method: "DELETE",
+                  }),
+                )
+              }
             />
           ))}
         </ul>
@@ -192,6 +255,8 @@ function RoundEditor({
   nameOf,
   onAddPairing,
   onDeletePairing,
+  onRename,
+  onDeleteRound,
 }: {
   round: LeagueRoundDetail;
   active: LeagueParticipantDetail[];
@@ -200,9 +265,15 @@ function RoundEditor({
   nameOf: (id: string) => string;
   onAddPairing: (homeId: string, awayId: string) => void;
   onDeletePairing: (pairingId: string) => void;
+  onRename: (name: string) => void;
+  onDeleteRound: () => void;
 }) {
   const [home, setHome] = useState("");
   const [away, setAway] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [draftName, setDraftName] = useState(round.name ?? "");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const deletionBlocker = roundDeletionBlocker(round);
   const pairings = round.pairings ?? [];
   // A54 — l'extérieur est restreint à la poule de l'équipe à domicile.
   const aways = awayOptions(active, home);
@@ -235,10 +306,128 @@ function RoundEditor({
 
   return (
     <li className="bg-white border border-gray-200 rounded p-2 space-y-1.5">
-      <div className="text-sm font-medium text-nuffle-anthracite">
-        J{round.roundNumber}
-        {round.name ? ` — ${round.name}` : ""}
-      </div>
+      {renaming ? (
+        <form
+          className="flex flex-wrap items-center gap-1.5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onRename(draftName.trim());
+            setRenaming(false);
+          }}
+        >
+          <span className="text-sm font-medium text-nuffle-anthracite">
+            J{round.roundNumber}
+          </span>
+          <input
+            type="text"
+            data-testid={`manual-round-name-${round.id}`}
+            value={draftName}
+            maxLength={120}
+            disabled={busy}
+            autoFocus
+            onChange={(e) => setDraftName(e.target.value)}
+            placeholder={`Journée ${round.roundNumber}`}
+            aria-label="Nom de la journée"
+            className="border border-gray-300 rounded px-2 py-0.5 text-sm"
+          />
+          <button
+            type="submit"
+            data-testid={`manual-round-name-save-${round.id}`}
+            disabled={busy}
+            className="px-2 py-0.5 rounded bg-amber-600 text-white text-xs font-medium disabled:opacity-50"
+          >
+            Enregistrer
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraftName(round.name ?? "");
+              setRenaming(false);
+            }}
+            className="text-xs text-gray-500 hover:text-gray-800"
+          >
+            Annuler
+          </button>
+          <span className="w-full text-[11px] text-gray-500">
+            Laisser vide pour revenir à « Journée {round.roundNumber} ».
+          </span>
+        </form>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-sm font-medium text-nuffle-anthracite">
+            J{round.roundNumber} — {roundLabel(round)}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid={`manual-rename-round-${round.id}`}
+              disabled={busy}
+              onClick={() => {
+                setDraftName(round.name ?? "");
+                setConfirmingDelete(false);
+                setRenaming(true);
+              }}
+              className="text-xs text-nuffle-bronze hover:underline disabled:opacity-50"
+            >
+              ✏️ Renommer
+            </button>
+            <button
+              type="button"
+              data-testid={`manual-delete-round-${round.id}`}
+              disabled={busy || deletionBlocker !== null}
+              title={deletionBlocker ?? undefined}
+              onClick={() => setConfirmingDelete(true)}
+              className="text-xs text-red-600 hover:text-red-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              🗑️ Supprimer la journée
+            </button>
+          </div>
+        </div>
+      )}
+
+      {deletionBlocker ? (
+        <p
+          data-testid={`manual-delete-round-blocked-${round.id}`}
+          className="text-[11px] text-gray-500"
+        >
+          Suppression impossible : {deletionBlocker}
+        </p>
+      ) : null}
+
+      {confirmingDelete && deletionBlocker === null ? (
+        <div
+          data-testid={`manual-delete-round-confirm-box-${round.id}`}
+          role="alertdialog"
+          className="border border-red-200 bg-red-50 rounded px-2 py-1.5 text-xs text-red-800 space-y-1"
+        >
+          <p>
+            Supprimer définitivement J{round.roundNumber} — {roundLabel(round)}{" "}
+            ? {roundDeletionSummary(pairings.length)} Les journées suivantes
+            gardent leur numéro.
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              data-testid={`manual-delete-round-confirm-${round.id}`}
+              disabled={busy}
+              onClick={() => {
+                setConfirmingDelete(false);
+                onDeleteRound();
+              }}
+              className="px-2 py-0.5 rounded bg-red-600 text-white font-medium disabled:opacity-50"
+            >
+              Confirmer la suppression
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(false)}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {pairings.length > 0 ? (
         <div className="space-y-1.5">
