@@ -832,10 +832,12 @@ if (process.env.TEST_SQLITE === "1") {
   // avec le schéma SQLite de test (starPlayers, etc.).
   app.post("/__test/seed-team", async (req, res) => {
     try {
-      const { ownerId, name, roster } = req.body as {
+      const { ownerId, name, roster, rerolls } = req.body as {
         ownerId?: string;
         name?: string;
         roster?: "skaven" | "lizardmen" | "orc" | "undead" | "nurgle";
+        /** Relances : pour opposer des équipes de VEA différentes. */
+        rerolls?: number;
       };
       if (!ownerId || !name || !roster) {
         return res
@@ -862,7 +864,10 @@ if (process.env.TEST_SQLITE === "1") {
           teamValue: 1000,
           initialBudget: 1000,
           treasury: 0,
-          rerolls: 0,
+          rerolls:
+            Number.isInteger(rerolls) && (rerolls as number) >= 0
+              ? (rerolls as number)
+              : 0,
           cheerleaders: 0,
           assistants: 0,
           apothecary: false,
