@@ -209,6 +209,7 @@ import {
   LeagueRoundFollowupError,
 } from "../services/league-round-followup-notify";
 import { resolveWebOrigin } from "../config";
+import { leagueCalendarAdminRouter } from "./league-calendar-admin";
 import { listLeagueThemes } from "../services/league-themes";
 import {
   createLeagueSchema,
@@ -3267,6 +3268,9 @@ router.patch(
 );
 // Relance d'une journée : réservé au commissaire (le service tranche).
 router.post("/rounds/:roundId/remind", authUser, handleRemindRound);
+// Outils de calendrier du commissaire (renommer / supprimer une journée,
+// supprimer une saison) : handlers et règles dans `league-calendar-admin`.
+router.use(leagueCalendarAdminRouter);
 
 // Lot C — gestion des poules (groups). Mutation reservee au
 // commissaire ; lecture sans compte pour une ligue publique (affichage des
