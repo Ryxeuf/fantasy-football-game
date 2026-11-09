@@ -5,6 +5,7 @@
  *
  *   PATCH  /rounds/:roundId   renommer une journée / changer ses dates
  *   DELETE /rounds/:roundId   supprimer une journée sans rencontre engagée
+ *   DELETE /seasons/:seasonId supprimer une saison sans aucun effet joué
  *
  * Autorisation, visibilité (ligue privée ⇒ 404) et règles vivent dans les
  * services ; ici on ne fait que valider, appeler, journaliser et mapper les
@@ -26,6 +27,10 @@ import {
   LeagueRoundAdminError,
   type RoundActor,
 } from "../services/league-round-admin";
+import {
+  deleteLeagueSeason,
+  LeagueSeasonDeletionError,
+} from "../services/league-season-deletion";
 import {
   updateLeagueRoundSchema,
   type UpdateLeagueRoundBody,
@@ -130,6 +135,51 @@ export async function handleDeleteLeagueRound(
   }
 }
 
+function seasonDeletionError(res: Response, e: unknown): void {
+  if (e instanceof LeagueSeasonDeletionError) {
+    if (e.code === "season_not_found") {
+      sendError(res, e.message, 404);
+    } else if (e.code === "forbidden") {
+      sendError(res, e.message, 403);
+    } else {
+      sendRefusal(res, 409, e);
+    }
+    return;
+  }
+  serverLog.error("[league-calendar-admin] season deletion failed", e);
+  sendError(res, "Erreur serveur", 500);
+}
+
+/** DELETE /leagues/seasons/:seasonId — commissaire ou admin, saison sans effet joué. */
+export async function handleDeleteLeagueSeason(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const actor = actorOf(req, res);
+  if (!actor) return;
+  try {
+    const result = await deleteLeagueSeason({
+      seasonId: req.params.seasonId,
+      actor,
+    });
+    await safeRecordAdminActionFromRequest(prisma, req, {
+      action: "league.season.delete",
+      entity: "LeagueSeason",
+      entityId: result.seasonId,
+      oldValue: {
+        leagueId: result.leagueId,
+        name: result.name,
+        seasonNumber: result.seasonNumber,
+        participantsRemoved: result.participantsRemoved,
+        invitationsCancelled: result.invitationsCancelled,
+      },
+    });
+    sendSuccess(res, result);
+  } catch (e: unknown) {
+    seasonDeletionError(res, e);
+  }
+}
+
 export function createLeagueCalendarAdminRouter(): Router {
   const router = Router();
   router.patch(
@@ -139,6 +189,7 @@ export function createLeagueCalendarAdminRouter(): Router {
     handleUpdateLeagueRound,
   );
   router.delete("/rounds/:roundId", authUser, handleDeleteLeagueRound);
+  router.delete("/seasons/:seasonId", authUser, handleDeleteLeagueSeason);
   return router;
 }
 

@@ -42,6 +42,7 @@ export type NotificationKind =
   | "friend.accepted"
   | "league.archived"
   | "league.deleted"
+  | "league.season.deleted"
   | "cup.archived"
   | "cup.deleted";
 

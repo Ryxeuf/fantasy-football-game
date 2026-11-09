@@ -20,6 +20,19 @@ vi.mock("../services/league-round-admin", () => ({
   },
 }));
 
+vi.mock("../services/league-season-deletion", () => ({
+  deleteLeagueSeason: vi.fn(),
+  LeagueSeasonDeletionError: class LeagueSeasonDeletionError extends Error {
+    constructor(
+      public readonly code: string,
+      message: string,
+    ) {
+      super(message);
+      this.name = "LeagueSeasonDeletionError";
+    }
+  },
+}));
+
 vi.mock("../services/audit-log", () => ({
   safeRecordAdminActionFromRequest: vi.fn(async () => {}),
 }));
@@ -35,7 +48,12 @@ import {
 } from "../services/league-round-admin";
 import { safeRecordAdminActionFromRequest } from "../services/audit-log";
 import {
+  deleteLeagueSeason,
+  LeagueSeasonDeletionError,
+} from "../services/league-season-deletion";
+import {
   handleDeleteLeagueRound,
+  handleDeleteLeagueSeason,
   handleUpdateLeagueRound,
 } from "./league-calendar-admin";
 import { updateLeagueRoundSchema } from "../schemas/league-calendar-admin.schemas";
@@ -44,6 +62,7 @@ type MockFn = ReturnType<typeof vi.fn>;
 const mockUpdate = updateLeagueRound as unknown as MockFn;
 const mockDelete = deleteLeagueRound as unknown as MockFn;
 const mockAudit = safeRecordAdminActionFromRequest as unknown as MockFn;
+const mockDeleteSeason = deleteLeagueSeason as unknown as MockFn;
 
 function makeRes() {
   const res = { status: vi.fn(), json: vi.fn() } as unknown as Response & {
@@ -200,5 +219,91 @@ describe("handleDeleteLeagueRound", () => {
     const res = makeRes();
     await handleDeleteLeagueRound(makeReq(), res);
     expect(res.status).toHaveBeenCalledWith(500);
+  });
+});
+
+describe("handleDeleteLeagueSeason", () => {
+  const seasonReq = (overrides: Partial<AuthenticatedRequest> = {}) =>
+    makeReq({ params: { seasonId: "s-1" }, ...overrides });
+
+  it("401 sans utilisateur", async () => {
+    const res = makeRes();
+    await handleDeleteLeagueSeason(seasonReq({ user: undefined }), res);
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(mockDeleteSeason).not.toHaveBeenCalled();
+  });
+
+  it("transmet l'acteur (admin reconnu par son rôle), journalise, 200", async () => {
+    mockDeleteSeason.mockResolvedValue({
+      deleted: true,
+      seasonId: "s-1",
+      leagueId: "lg-1",
+      name: "Saison 2027",
+      seasonNumber: 2,
+      participantsRemoved: 4,
+      invitationsCancelled: 0,
+      notified: 3,
+    });
+    const res = makeRes();
+    await handleDeleteLeagueSeason(
+      seasonReq({ user: { id: "u-admin", roles: ["admin"] } as never }),
+      res,
+    );
+    expect(mockDeleteSeason).toHaveBeenCalledWith({
+      seasonId: "s-1",
+      actor: { userId: "u-admin", isAdmin: true },
+    });
+    expect(mockAudit).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({
+        action: "league.season.delete",
+        entity: "LeagueSeason",
+        entityId: "s-1",
+      }),
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+  });
+
+  it("ligue privée cachée / saison inconnue ⇒ 404", async () => {
+    mockDeleteSeason.mockRejectedValue(
+      new LeagueSeasonDeletionError("season_not_found", "Saison introuvable"),
+    );
+    const res = makeRes();
+    await handleDeleteLeagueSeason(seasonReq(), res);
+    expect(res.status).toHaveBeenCalledWith(404);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: "Saison introuvable",
+    });
+  });
+
+  it("ni commissaire ni admin ⇒ 403", async () => {
+    mockDeleteSeason.mockRejectedValue(
+      new LeagueSeasonDeletionError("forbidden", "Seul le commissaire"),
+    );
+    const res = makeRes();
+    await handleDeleteLeagueSeason(seasonReq(), res);
+    expect(res.status).toHaveBeenCalledWith(403);
+  });
+
+  it.each([
+    "sheets_validated",
+    "results_recorded",
+    "matches_scored",
+    "post_match_sequences",
+  ])("saison jouée (%s) ⇒ 409 avec son code", async (code) => {
+    mockDeleteSeason.mockRejectedValue(
+      new LeagueSeasonDeletionError(code as "sheets_validated", "Suppression impossible : cloturez-la"),
+    );
+    const res = makeRes();
+    await handleDeleteLeagueSeason(seasonReq(), res);
+    expect(res.status).toHaveBeenCalledWith(409);
+    expect(res.json).toHaveBeenCalledWith({
+      success: false,
+      error: "Suppression impossible : cloturez-la",
+      code,
+    });
+    expect(mockAudit).not.toHaveBeenCalled();
   });
 });

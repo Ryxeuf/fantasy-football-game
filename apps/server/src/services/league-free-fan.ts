@@ -6,7 +6,7 @@
  * construite hors compétition ou pour une coupe n'en a pas
  * (`Team.leagueFreeFan = false`). Son inscription à une saison de ligue le
  * lui accorde ; elle le perd si elle quitte la ligue (retrait, suppression
- * par le commissaire, suppression de la ligue).
+ * par le commissaire, suppression de la saison ou de la ligue).
  *
  * Trois règles qui ne se voient pas d'un seul appelant :
  *
@@ -157,7 +157,8 @@ export interface DepartingParticipant {
 export type LeagueDepartureReason =
   | "withdrawn"
   | "removed_by_commissioner"
-  | "league_deleted";
+  | "league_deleted"
+  | "season_deleted";
 
 export interface LeagueDeparture {
   /** Inscriptions qui partent (retirées, supprimées, emportées). */
@@ -168,6 +169,11 @@ export interface LeagueDeparture {
    * octroi transféré (la cascade les emporte toutes).
    */
   readonly deletedLeagueId?: string;
+  /**
+   * Saison supprimée : même règle à l'échelle d'une saison — aucune de ses
+   * inscriptions ne recueille un octroi transféré.
+   */
+  readonly deletedSeasonId?: string;
 }
 
 interface RevokeOutcome {
@@ -224,6 +230,9 @@ export async function withLeagueFreeFanRevoked<T>(
             id: { notIn: departingIds },
             ...(departure.deletedLeagueId
               ? { season: { leagueId: { not: departure.deletedLeagueId } } }
+              : {}),
+            ...(departure.deletedSeasonId
+              ? { seasonId: { not: departure.deletedSeasonId } }
               : {}),
           },
           orderBy: { joinedAt: "desc" },
@@ -321,6 +330,29 @@ export async function withLeagueFreeFansRevokedForLeague<T>(
       participants: participants ?? [],
       reason: "league_deleted",
       deletedLeagueId: leagueId,
+    },
+    op,
+  );
+}
+
+/**
+ * Suppression d'une saison : reprend le fan offert accordé par chacune de ses
+ * inscriptions avant que la cascade ne les emporte. Une équipe inscrite à une
+ * AUTRE saison (de cette ligue ou d'une autre) garde l'octroi, transféré.
+ */
+export async function withLeagueFreeFansRevokedForSeason<T>(
+  seasonId: string,
+  op: (db: typeof prisma) => Promise<T>,
+): Promise<T> {
+  const participants = (await prisma.leagueParticipant.findMany({
+    where: { seasonId, freeFanGrant: { not: null } },
+    select: { id: true, teamId: true, freeFanGrant: true, freeFanRefund: true },
+  })) as DepartingParticipant[] | undefined;
+  return withLeagueFreeFanRevoked(
+    {
+      participants: participants ?? [],
+      reason: "season_deleted",
+      deletedSeasonId: seasonId,
     },
     op,
   );
