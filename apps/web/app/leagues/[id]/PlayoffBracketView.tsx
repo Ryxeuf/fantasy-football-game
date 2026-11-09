@@ -18,6 +18,8 @@ import {
   type PoolQuotaView,
 } from "../../lib/pool-qualification";
 import TeamLogo from "../../components/TeamLogo";
+import { PlayoffBracketResetButton } from "./PlayoffBracketTools";
+import { canResetBracket } from "./playoff-bracket-edit";
 
 interface BracketTeam {
   id: string;
@@ -39,6 +41,8 @@ interface BracketPairing {
   homeParticipant: BracketParticipant;
   awayParticipant: BracketParticipant;
   match: { id: string; status: string } | null;
+  /** Statut de la feuille (optionnel : API antérieure). */
+  matchSheet?: { status: string } | null;
 }
 
 interface BracketRound {
@@ -239,6 +243,16 @@ export function PlayoffBracketView({
           seasonId={seasonId}
           published={published}
           onChanged={() => {
+            load();
+            onChanged?.();
+          }}
+        />
+      ) : null}
+      {isCommissioner ? (
+        <PlayoffBracketResetButton
+          seasonId={seasonId}
+          disabled={!canResetBracket(data.rounds)}
+          onDone={() => {
             load();
             onChanged?.();
           }}

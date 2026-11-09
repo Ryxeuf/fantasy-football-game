@@ -102,6 +102,7 @@ import careerStatsRoutes from "./routes/career-stats";
 import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
+import leaguePlayoffEditRoutes from "./routes/league-playoff-edit";
 import leagueInvitationRoutes from "./routes/league-invitation";
 import leaguePredictionsRoutes from "./routes/league-predictions";
 import {
@@ -445,6 +446,9 @@ app.use("/coach", publicCache(), coachRoutes);
 // Archivage / suppression par le commissaire (POST /leagues/:id/archive,
 // DELETE /leagues/:id) — cf. routes/competition-lifecycle.
 app.use("/leagues", leagueLifecycleRouter);
+// Édition d'un bracket de play-offs généré (réinitialiser, remplacer un
+// qualifié) — cf. routes/league-playoff-edit.
+app.use("/leagues", leaguePlayoffEditRoutes);
 app.use("/leagues", leagueRoutes);
 // Pronostics sur les rencontres de ligue (portée, pronostics, classement,
 // clôtures) — cf. routes/league-predictions.
