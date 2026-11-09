@@ -146,8 +146,8 @@ export function handleEndTurn(state: GameState, rng: RNG): GameState {
     // suivant. Le flag `stunned` (= au sol) reste posé.
     players: state.players.map((p) =>
       p.team === endingTeam && p.state === 'stunned' && p.pos.x >= 0
-        ? { ...p, state: 'active' as const, pm: p.ma, gfiUsed: 0 }
-        : { ...p, pm: p.ma, gfiUsed: 0 },
+        ? { ...p, state: 'active' as const, pm: p.ma, gfiUsed: 0, breakTackleUsed: false }
+        : { ...p, pm: p.ma, gfiUsed: 0, breakTackleUsed: false },
     ),
     isTurnover: false,
     lastDiceResult: undefined,

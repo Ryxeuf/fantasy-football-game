@@ -4,7 +4,7 @@
  * Tests these skills through the full game flow (applyMove, resolveBlockResult)
  * with real roster player configurations from the 5 priority teams.
  *
- * Break Tackle: once per activation, +1 (ST<=4) or +2 (ST>=5) to a failed dodge roll.
+ * Break Tackle (2025): once per turn, +1 (ST<=3), +2 (ST 4) or +3 (ST>=5) to a failed dodge roll.
  * Iron Hard Skin: nullifies attacker's armor-roll modifiers (Mighty Blow, Dirty Player,
  *   Chainsaw, Claws) when defender has IHS.
  */
@@ -222,14 +222,14 @@ function makeAttackerWithMightyBlow(overrides: Partial<Player> = {}): Player {
 // ── Break Tackle: checkBreakTackle with roster players ───────────────────
 
 describe('Integration: Break Tackle — checkBreakTackle avec joueurs roster', () => {
-  it('Deathroller (ST7) applique +2 sur un dodge rate', () => {
+  it('Deathroller (ST7) applique +3 sur un dodge rate', () => {
     const dr = makeDeathroller();
     const state = makeState([dr]);
 
-    const result = checkBreakTackle(state, dr, 3, 5, false);
+    const result = checkBreakTackle(state, dr, 3, 6, false);
 
     expect(result.triggered).toBe(true);
-    expect(result.modifier).toBe(2);
+    expect(result.modifier).toBe(3);
     expect(result.newSuccess).toBe(true);
   });
 
@@ -292,18 +292,18 @@ describe('Integration: Break Tackle — predicats roster', () => {
     expect(hasBreakTackle(makeSaurusWarrior())).toBe(false);
   });
 
-  it('getBreakTackleModifier — +2 pour Deathroller (ST7)', () => {
-    expect(getBreakTackleModifier(makeDeathroller())).toBe(2);
+  it('getBreakTackleModifier — +3 pour Deathroller (ST7)', () => {
+    expect(getBreakTackleModifier(makeDeathroller())).toBe(3);
   });
 
-  it('getBreakTackleModifier — +1 pour un joueur ST4 avec break-tackle', () => {
+  it('getBreakTackleModifier — +2 pour un joueur ST4 avec break-tackle', () => {
     const player = makeSaurusWarrior({ st: 4, skills: ['break-tackle'] });
-    expect(getBreakTackleModifier(player)).toBe(1);
+    expect(getBreakTackleModifier(player)).toBe(2);
   });
 
-  it('getBreakTackleModifier — +2 pour un joueur ST5 avec break-tackle', () => {
+  it('getBreakTackleModifier — +3 pour un joueur ST5 avec break-tackle', () => {
     const player = makeSaurusWarrior({ st: 5, skills: ['break-tackle'] });
-    expect(getBreakTackleModifier(player)).toBe(2);
+    expect(getBreakTackleModifier(player)).toBe(3);
   });
 });
 
@@ -316,7 +316,7 @@ describe('Integration: Break Tackle dans le flow de dodge complet', () => {
     const state = makeState([dr, tackler]);
 
     // Deathroller AG 5 → base target 5+, +1 tackle zone = 6+.
-    // D6=4 fails (4 < 6). Break Tackle +2 (ST7): 4+2=6 >= 6 → success!
+    // D6=4 fails (4 < 6). Break Tackle +3 (ST7): 4+3=7 >= 6 → success!
     const rng = makeTestRNG([die(4), die(6), die(6), die(6), die(6)]);
     const move: Move = { type: 'MOVE', playerId: 'A1', to: { x: 6, y: 7 } };
     const result = applyMove(state, move, rng);
@@ -331,7 +331,7 @@ describe('Integration: Break Tackle dans le flow de dodge complet', () => {
     const tackler = makeStormvermin({ id: 'B1', pos: { x: 6, y: 6 } });
     const state = makeState([dr, tackler]);
 
-    // Same scenario: D6=4 fails dodge, Break Tackle +2 saves.
+    // Same scenario: D6=4 fails dodge, Break Tackle +3 saves.
     const rng = makeTestRNG([die(4), die(6), die(6), die(6), die(6)]);
     const move: Move = { type: 'MOVE', playerId: 'A1', to: { x: 6, y: 7 } };
     const result = applyMove(state, move, rng);
@@ -501,7 +501,7 @@ describe('Integration: Break Tackle + Iron Hard Skin sur Deathroller', () => {
 
     const result = checkBreakTackle(state, dr, 3, 5, false);
     expect(result.triggered).toBe(true);
-    expect(result.modifier).toBe(2);
+    expect(result.modifier).toBe(3);
   });
 
   it('Deathroller bloque : attaquant avec MB contre Gnome IHS — MB nullifie', () => {
