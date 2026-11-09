@@ -18,6 +18,10 @@ import type { ReplayJournal } from './replay/journal';
 /** Identifies the package version that produced a SimResult. Used for replay
  *  freezing and bench regression baselines (cf. lots 0.D / 1.A.5).
  *
+ *  0.32.0 — Compétences au texte 2025 : Minus subit -1 pour Intercepter, Gros
+ *           Débile exige un guide Debout et non Déconcentré, Grande Gueule
+ *           perd sa relance de réception et gagne le Croquement. Les issues
+ *           changent à graine constante dès qu'un porteur intervient.
  *  0.31.0 — Esquive en Force (Break Tackle) au texte 2025 : +1 (F ≤ 3),
  *           +2 (F 4), +3 (F ≥ 5), et l'usage est rendu à chaque fin de tour
  *           d'équipe (il ne l'était jamais). Les issues changent à graine
@@ -47,7 +51,7 @@ import type { ReplayJournal } from './replay/journal';
  *  POW en 6 la ou le moteur place STUMBLE en 4, POW en 5 et le second
  *  PUSH_BACK en 6. A seed constant les issues de match changent donc, d'ou
  *  le re-snapshot de `bench/bench-baseline.json`. */
-export const ENGINE_VER = '0.31.0';
+export const ENGINE_VER = '0.32.0';
 export type EngineVersion = string;
 
 /** Match outcome at score level. */
