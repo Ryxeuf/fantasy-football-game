@@ -1287,6 +1287,33 @@ d'un test à l'autre (préférer `mockResolvedValueOnce`). Le test de référenc
 est `routes/league-access.test.ts` : chaîne Express réelle, JWT réels signés
 avec `JWT_SECRET`, Prisma mocké, en table sur dix lectures.
 
+### « Mes compétitions » : UNE résolution, incluse dans la visibilité
+
+« Créée par moi ou une de mes équipes y est inscrite » était réécrit quatre
+fois (listing des ligues, listing et archives des coupes, garde de
+visibilité), avec des variantes : équipe retirée comptée d'un côté, équipe
+supprimée exclue de l'autre (pré-chargement des équipes `deletedAt: null`).
+Règle (change OpenSpec `my-competitions`) : `services/competition-membership`
+est LA résolution — `leagueMineWhere` / `cupMineWhere` (filtres Prisma PAR
+RELATION `team: { ownerId }`, retrait et équipe supprimée compris, ni
+invitation ni rôle admin) et `buildViewerRoles` (pur : commissaire,
+`active | withdrawn | former | null`, équipes de l'édition courante).
+
+- **La visibilité se COMPOSE à partir de « à moi »** (`leagueVisibleClauses`,
+  `cupVisibleClauses` = publiques + à moi [+ invitations]) : « à moi ⊆
+  visible » tient par construction et se teste sur le `where`.
+- **`scope=mine` filtre côté SERVEUR** (`GET /leagues`, `GET /cup`) : la
+  liste des ligues est paginée, un filtre client ne trierait que la page.
+  Valeur inconnue = 400 (`validateQuery`).
+- **Le rôle se SERT, il ne se reconstruit pas** : `viewerRoles` sur chaque
+  élément (`services/competition-viewer-roles`) — ligues : UNE requête de
+  participations + un `groupBy` du numéro de saison max ; coupes : lu dans
+  les inscrits que le listing charge déjà. Jamais par élément, jamais côté
+  web.
+
+Tout nouvel écran « mes ligues / mes coupes » (et la future page
+`/me/competitions`) en part.
+
 ### Pronostics : le RÉSULTAT se stocke, la clôture s'écrit une fois
 
 Pick'em de ligue (`CompetitionPrediction`, change `league-match-predictions`,
