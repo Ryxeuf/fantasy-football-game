@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { apiRequest } from "../../lib/api-client";
 import { CommissionerTeamEditor } from "./commissioner/CommissionerTeamEditor";
+import { CommissionerWithdrawControl } from "./CommissionerWithdrawControl";
 import type { LeagueParticipantDetail } from "./types";
 import RosterBadge from "../../components/RosterBadge";
 import TeamLogo from "../../components/TeamLogo";
@@ -64,6 +65,10 @@ export function SeasonParticipants({
     !!commissionerLeagueId &&
     !!seasonId &&
     (seasonStatus === "draft" || seasonStatus === "scheduled");
+  // Saison lancée : le commissaire retire une équipe en réglant le sort de
+  // ses rencontres restantes (forfait ou annulation).
+  const canWithdrawTeams =
+    !!commissionerLeagueId && !!seasonId && seasonStatus === "in_progress";
 
   async function handleRemoveTeam(teamId: string) {
     if (!commissionerLeagueId || !seasonId) return;
@@ -238,6 +243,15 @@ export function SeasonParticipants({
                         🗑 Supprimer
                       </button>
                     )
+                  ) : null}
+                  {canWithdrawTeams && seasonId ? (
+                    <CommissionerWithdrawControl
+                      seasonId={seasonId}
+                      participantId={p.id}
+                      teamName={p.team.name}
+                      withdrawn={isWithdrawn}
+                      onDone={() => onChanged?.()}
+                    />
                   ) : null}
                   {/* Retrait du coach (son équipe + ses invitations en attente). */}
                   {canRemoveTeams && !isWithdrawn ? (

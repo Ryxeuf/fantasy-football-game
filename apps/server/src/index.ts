@@ -103,6 +103,7 @@ import achievementsRoutes from "./routes/achievements";
 import coachRoutes from "./routes/coach";
 import leagueRoutes from "./routes/league";
 import leaguePlayoffEditRoutes from "./routes/league-playoff-edit";
+import leagueCommissionerWithdrawalRoutes from "./routes/league-commissioner-withdrawal";
 import leagueInvitationRoutes from "./routes/league-invitation";
 import leaguePredictionsRoutes from "./routes/league-predictions";
 import {
@@ -449,6 +450,9 @@ app.use("/leagues", leagueLifecycleRouter);
 // Édition d'un bracket de play-offs généré (réinitialiser, remplacer un
 // qualifié) — cf. routes/league-playoff-edit.
 app.use("/leagues", leaguePlayoffEditRoutes);
+// Retrait d'une équipe par le commissaire en cours de saison (forfait ou
+// annulation de ses rencontres restantes).
+app.use("/leagues", leagueCommissionerWithdrawalRoutes);
 app.use("/leagues", leagueRoutes);
 // Pronostics sur les rencontres de ligue (portée, pronostics, classement,
 // clôtures) — cf. routes/league-predictions.
