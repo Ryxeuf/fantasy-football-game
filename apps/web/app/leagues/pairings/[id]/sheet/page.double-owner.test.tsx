@@ -42,6 +42,7 @@ const TEAM = {
 function sheetResponse(
   viewerSides: ReadonlyArray<"home" | "away">,
   status = "draft",
+  viewerRole: "home" | "away" | "commissioner" = "home",
 ) {
   return {
     sheet: { id: "ms1", status, events: [] },
@@ -53,9 +54,10 @@ function sheetResponse(
       injuries: [],
       playerStats: [],
     },
-    viewerRole: "home",
-    viewerTeamId: "t1",
+    viewerRole,
+    viewerTeamId: viewerRole === "commissioner" ? null : "t1",
     viewerSides,
+    sameOwner: viewerSides.length === 2 || viewerRole === "commissioner",
     competitionKind: "league",
     competitionRules: {},
     leagueId: "L1",
@@ -140,11 +142,27 @@ describe("feuille — double propriétaire", () => {
     expect(apiRequest.mock.calls[0][0]).toBe("/leagues/pairings/lp-1/sheet?side=away");
   });
 
+  it("avertit que les deux équipes appartiennent au même coach", async () => {
+    serve(sheetResponse(["home", "away"]));
+    render(<MatchSheetPage />);
+    expect(
+      (await screen.findByTestId("sheet-same-owner-notice")).textContent,
+    ).toMatch(/Les deux équipes appartiennent au même coach/);
+  });
+
+  it("l'avertissement est aussi montré au commissaire (sans sélecteur)", async () => {
+    serve(sheetResponse([], "draft", "commissioner"));
+    render(<MatchSheetPage />);
+    expect(await screen.findByTestId("sheet-same-owner-notice")).toBeTruthy();
+    expect(screen.queryByTestId("sheet-side-selector")).toBeNull();
+  });
+
   it("coach simple : pas de sélecteur, soumission de son côté", async () => {
     serve(sheetResponse(["home"]));
     render(<MatchSheetPage />);
     fireEvent.click(await screen.findByTestId("submit-sheet"));
     expect(screen.queryByTestId("sheet-side-selector")).toBeNull();
+    expect(screen.queryByTestId("sheet-same-owner-notice")).toBeNull();
     await waitFor(() => expect(lastBody("/sheet/submit")).toEqual({ side: "home" }));
   });
 });

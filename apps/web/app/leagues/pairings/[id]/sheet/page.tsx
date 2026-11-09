@@ -246,6 +246,11 @@ interface SheetResponse {
    */
   viewerSides?: ReadonlyArray<"home" | "away">;
   /**
+   * Les deux équipes appartiennent au même coach : autorisé, mais signalé à
+   * tous. Optionnel : rétro-compat avec un serveur antérieur.
+   */
+  sameOwner?: boolean;
+  /**
    * Compétition d'origine. Absent = serveur antérieur au support des
    * coupes : on retombe sur « ligue », comportement historique.
    */
@@ -1174,6 +1179,17 @@ export default function MatchSheetPage() {
           />
         ) : null;
       })()}
+      {data.sameOwner && (
+        <p
+          data-testid="sheet-same-owner-notice"
+          role="note"
+          className="rounded-lg border border-slate-300 bg-slate-50 p-3 text-xs text-slate-700"
+        >
+          <strong>Les deux équipes appartiennent au même coach.</strong> La
+          rencontre peut se jouer et se saisir normalement ; le commissaire en
+          est simplement averti.
+        </p>
+      )}
       {bothSidesOwned && (
         <div
           data-testid="sheet-side-selector"

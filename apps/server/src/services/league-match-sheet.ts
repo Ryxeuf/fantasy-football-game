@@ -212,6 +212,7 @@ import {
   ownedSides,
   ownsSide,
   resolveActingSide,
+  sameOwner,
   viewerSide,
 } from "./league-sheet-sides";
 import {
@@ -5183,6 +5184,11 @@ export async function getMatchSheet(input: {
    * saisit (`?side=`), et soumet chaque côté à son tour.
    */
   viewerSides: CoachSide[];
+  /**
+   * Les deux équipes appartiennent au même coach. Autorisé (décision du
+   * propriétaire), mais signalé à tous — commissaire compris — sur la feuille.
+   */
+  sameOwner: boolean;
   teams: { home: MatchSheetTeam | null; away: MatchSheetTeam | null };
   reference: MatchSheetReference;
   /** SPP autoritaire par teamPlayerId (calcul officiel + modificateur d'équipe). */
@@ -5541,6 +5547,7 @@ export async function getMatchSheet(input: {
           ? (teams.away?.teamId ?? null)
           : null,
     viewerSides: viewerOwned,
+    sameOwner: sameOwner(ctx),
     // Le D6 de Haine est lance a la validation : rien a montrer avant.
     hateRolls:
       sheet.status === "validated"

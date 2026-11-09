@@ -3646,6 +3646,11 @@ describe("Lot G — league-match-sheet", () => {
       ]);
       const def = await getMatchSheet({ pairingId: "pair-1", userId: BOTH });
       expect(def.viewerSides).toEqual(["home", "away"]);
+      // Avertissement servi à tous, commissaire compris.
+      expect(def.sameOwner).toBe(true);
+      expect(
+        (await getMatchSheet({ pairingId: "pair-1", userId: COMMISH })).sameOwner,
+      ).toBe(true);
       expect(def.viewerRole).toBe("home");
       const away = await getMatchSheet({
         pairingId: "pair-1",
@@ -3663,6 +3668,7 @@ describe("Lot G — league-match-sheet", () => {
       });
       expect(single.viewerSides).toEqual(["home"]);
       expect(single.viewerRole).toBe("home");
+      expect(single.sameOwner).toBe(false);
     });
   });
 
