@@ -133,6 +133,32 @@ describe('checkReallyStupid', () => {
     expect(result.passed).toBe(true);
   });
 
+  describe('coequipier guide : Debout, non Deconcentre', () => {
+    function adjacentPair() {
+      let state = setup();
+      state = withSkill(state, 'A1', 'really-stupid');
+      state = withPosition(state, 'A1', 10, 7);
+      state = withPosition(state, 'A2', 11, 7);
+      return {
+        ...state,
+        players: state.players.map(p =>
+          p.id === 'A2' ? { ...p, state: 'active' as const } : p
+        ),
+      };
+    }
+    // RNG 0.2 → roll=2 : passe avec guide (2+), echoue sans (4+).
+    it('un coequipier A Terre ne guide pas', () => {
+      let state = adjacentPair();
+      state = { ...state, players: state.players.map(p => (p.id === 'A2' ? { ...p, stunned: true } : p)) };
+      expect(checkReallyStupid(state, getPlayer(state, 'A1'), fixedRNG(0.2)).passed).toBe(false);
+    });
+
+    it('un coequipier Deconcentre ne guide pas', () => {
+      const state = { ...adjacentPair(), hypnotizedPlayers: ['A2'] };
+      expect(checkReallyStupid(state, getPlayer(state, 'A1'), fixedRNG(0.2)).passed).toBe(false);
+    });
+  });
+
   it('should need 4+ without adjacent non-really-stupid teammate', () => {
     let state = setup();
     state = withSkill(state, 'A1', 'really-stupid');

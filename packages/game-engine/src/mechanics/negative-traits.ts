@@ -108,16 +108,20 @@ function hasReallyStupid(player: Player): boolean {
 }
 
 /**
- * Check if a Really Stupid player has at least one standing, non-Really-Stupid
- * teammate adjacent to them.
+ * Check if a Really Stupid player has an adjacent teammate who is Standing,
+ * not Distracted and without the Trait. Prone is `stunned` with `state` still
+ * 'active', and the engine's only Distracted state is Hypnotic Gaze.
  */
 function hasGuidingTeammate(state: GameState, player: Player): boolean {
   const adjacents = getAdjacentPlayers(state, player.pos);
+  const distracted = state.hypnotizedPlayers ?? [];
   return adjacents.some(
     p =>
       p.team === player.team &&
       p.id !== player.id &&
       p.state === 'active' &&
+      !p.stunned &&
+      !distracted.includes(p.id) &&
       !hasReallyStupid(p)
   );
 }
