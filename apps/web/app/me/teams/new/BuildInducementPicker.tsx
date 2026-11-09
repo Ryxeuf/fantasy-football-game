@@ -68,7 +68,7 @@ export default function BuildInducementPicker({
           {hint}
         </p>
       )}
-      {loading ? (
+      {loading && options.length === 0 ? (
         <p className="text-xs text-gray-400">Chargement du catalogue…</p>
       ) : options.length === 0 ? (
         <p className="text-xs text-gray-500">

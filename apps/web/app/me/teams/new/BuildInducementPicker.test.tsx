@@ -9,6 +9,33 @@ const OPTIONS: BuildInducementOption[] = [
 ];
 
 describe("BuildInducementPicker", () => {
+  it("garde les lignes pendant le rechargement du catalogue", () => {
+    render(
+      <BuildInducementPicker
+        options={OPTIONS}
+        selection={{}}
+        onChange={vi.fn()}
+        availableBudgetK={500}
+        loading
+      />,
+    );
+    expect(screen.getByTestId("build-inducement-team_mascot-plus")).toBeTruthy();
+    expect(screen.queryByText("Chargement du catalogue…")).toBeNull();
+  });
+
+  it("annonce le chargement tant qu'aucun catalogue n'est connu", () => {
+    render(
+      <BuildInducementPicker
+        options={[]}
+        selection={{}}
+        onChange={vi.fn()}
+        availableBudgetK={500}
+        loading
+      />,
+    );
+    expect(screen.getByText("Chargement du catalogue…")).toBeTruthy();
+  });
+
   it("liste le catalogue servi avec prix et plafond", () => {
     render(
       <BuildInducementPicker
