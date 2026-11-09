@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   computeInducementBudget,
+  inducementOverBudgetMessage,
   restrictInducementPayload,
   sheetInducementSpend,
   sumGoldEntries,
@@ -15,6 +16,34 @@ const base = {
   isCup: false,
   sellsInducements: true,
 };
+
+describe("inducementOverBudgetMessage", () => {
+  const gold = (value: number): string => value.toLocaleString("fr-FR");
+
+  it("VEA égales : annonce 0 de trésorerie mobilisable, pas le solde", () => {
+    const b = computeInducementBudget({
+      ...base,
+      ctvHome: 1_000_000,
+      ctvAway: 1_000_000,
+      treasuryHome: 200_000,
+    });
+    const message = inducementOverBudgetMessage("domicile", 100_000, b.home);
+    expect(message).toContain("trésorerie mobilisable 0)");
+    expect(message).not.toContain(gold(200_000));
+  });
+
+  it("outsider : annonce la part plafonnée, pas son solde", () => {
+    const b = computeInducementBudget({
+      ...base,
+      ctvHome: 1_000_000,
+      ctvAway: 1_100_000,
+      treasuryHome: 300_000,
+    });
+    const message = inducementOverBudgetMessage("domicile", 200_000, b.home);
+    expect(message).toContain(`trésorerie mobilisable ${gold(50_000)})`);
+    expect(message).not.toContain(gold(300_000));
+  });
+});
 
 describe("computeInducementBudget", () => {
   it("favori : sa trésorerie seule, sans Petite Monnaie", () => {

@@ -133,6 +133,21 @@ export function computeInducementBudget(
 }
 
 /**
+ * Message du refus « budget dépassé ». Il détaille la trésorerie MOBILISABLE,
+ * jamais la trésorerie de l'équipe : à VEA égales elle vaut 0, et l'outsider
+ * n'en mobilise que 50 000 po — annoncer le solde ferait croire à un budget
+ * que le calcul ne donne pas.
+ */
+export function inducementOverBudgetMessage(
+  sideLabel: string,
+  spent: number,
+  side: InducementSideBudget,
+): string {
+  const gold = (value: number): string => value.toLocaleString("fr-FR");
+  return `Budget de coups de pouce dépassé (${sideLabel}) : ${gold(spent)} po pour un budget de ${gold(side.maxBudget)} po (petite monnaie ${gold(side.pettyCash)} + trésorerie mobilisable ${gold(side.treasuryAllowance)}).`;
+}
+
+/**
  * Somme tolérante des coûts (or) d'une liste JSON `[{ cost, qty? }]` (coups
  * de pouce / erreurs coûteuses / achats). Accepte array natif (PG) ou chaîne
  * sérialisée (miroir SQLite). Ignore les entrées illisibles.

@@ -203,6 +203,7 @@ import {
 } from "./league-sheet-hate-choices";
 import {
   computeInducementBudget,
+  inducementOverBudgetMessage,
   LEAGUE_UNDERDOG_INDUCEMENT_BONUS,
   restrictInducementPayload,
   sheetInducementSpend,
@@ -1716,7 +1717,7 @@ export async function updatePreMatch(input: {
       if (spent > budget.home.maxBudget) {
         throw new MatchSheetError(
           "inducement_over_budget",
-          `Budget de coups de pouce dépassé (domicile) : ${spent.toLocaleString("fr-FR")} po pour un budget de ${budget.home.maxBudget.toLocaleString("fr-FR")} po (petty cash ${budget.home.pettyCash.toLocaleString("fr-FR")} + trésorerie ${budget.home.treasury.toLocaleString("fr-FR")}).`,
+          inducementOverBudgetMessage("domicile", spent, budget.home),
         );
       }
     }
@@ -1725,7 +1726,7 @@ export async function updatePreMatch(input: {
       if (spent > budget.away.maxBudget) {
         throw new MatchSheetError(
           "inducement_over_budget",
-          `Budget de coups de pouce dépassé (extérieur) : ${spent.toLocaleString("fr-FR")} po pour un budget de ${budget.away.maxBudget.toLocaleString("fr-FR")} po (petty cash ${budget.away.pettyCash.toLocaleString("fr-FR")} + trésorerie ${budget.away.treasury.toLocaleString("fr-FR")}).`,
+          inducementOverBudgetMessage("extérieur", spent, budget.away),
         );
       }
     }
