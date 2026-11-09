@@ -8,6 +8,14 @@
  * Aucune dépendance React / DOM ⇒ unit-testable sans jsdom.
  */
 
+import {
+  buildStaffCostPo,
+  defaultBuildBudgetK,
+  defaultStaffConfig,
+  type BuildStaffSelection,
+  type RosterStaffConfig,
+} from "@bb/game-engine";
+
 /** Clé localStorage dédiée pour mémoriser le skip ("Plus tard"). */
 export const ONBOARDING_DISMISS_KEY = "onboarding_first_team_dismissed_v1";
 
@@ -81,6 +89,10 @@ export interface OnboardingRoster {
    * Optionnel : rétro-compat avec un serveur antérieur au choix de Ligue.
    */
   readonly regionalLeagueOptions?: readonly OnboardingRegionalLeague[];
+  /** Budget de construction BB11 du roster (kpo, `Roster.budget`). */
+  readonly budget?: number;
+  /** Config staff (coûts po + plafonds) par format, servie par la base. */
+  readonly staffConfigs?: Partial<Record<"bb11" | "sevens", RosterStaffConfig>>;
 }
 
 /** Option de Ligue régionale telle que renvoyée par `/api/rosters`. */
@@ -156,16 +168,89 @@ export function isValidTeamName(name: string): boolean {
   return trimmed.length >= 1 && trimmed.length <= TEAM_NAME_MAX_LENGTH;
 }
 
-/** Les 3 étapes du wizard (intro implicite dans l'étape 1). */
-export type OnboardingStep = "race" | "name" | "confirm";
+/** Les 4 étapes du wizard (intro implicite dans l'étape 1). */
+export type OnboardingStep = "race" | "name" | "staff" | "confirm";
 
 export const ONBOARDING_STEPS: readonly OnboardingStep[] = [
   "race",
   "name",
+  "staff",
   "confirm",
 ];
 
-/** Index 1-based de l'étape (pour l'affichage "Étape X / 3"). */
+/** Index 1-based de l'étape (pour l'affichage "Étape X / 4"). */
 export function stepIndex(step: OnboardingStep): number {
   return ONBOARDING_STEPS.indexOf(step) + 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Étape « Staff » — relances, apothicaire, Fans Dévoués               */
+/* ------------------------------------------------------------------ */
+
+/** Format unique de l'assistant (création BB11). */
+export const ONBOARDING_FORMAT = "bb11" as const;
+
+/** Staff du roster : config servie par la base, sinon défaut du moteur. */
+export function onboardingStaffConfig(roster: OnboardingRoster): RosterStaffConfig {
+  return (
+    roster.staffConfigs?.[ONBOARDING_FORMAT] ??
+    defaultStaffConfig(roster.slug, ONBOARDING_FORMAT)
+  );
+}
+
+/** Budget de construction (kpo) — celui que le serveur appliquera. */
+export function onboardingBudgetK(roster: OnboardingRoster): number {
+  return defaultBuildBudgetK(roster.budget, ONBOARDING_FORMAT);
+}
+
+export interface StaffBudgetInput {
+  readonly selection: BuildStaffSelection;
+  readonly staff: RosterStaffConfig;
+  readonly budgetK: number;
+  /** Coût de la composition de départ ; `null` = inconnu (positions non chargées). */
+  readonly lineupCostK: number | null;
+}
+
+export interface StaffBudgetSummary {
+  /** Coût du staff choisi (kpo). */
+  readonly staffCostK: number;
+  /** Budget restant après joueurs + staff (kpo) ; `null` si joueurs inconnus. */
+  readonly remainingK: number | null;
+  readonly overBudget: boolean;
+}
+
+/** Coût du staff et budget restant — même tarif que le serveur. */
+export function summarizeStaffBudget(input: StaffBudgetInput): StaffBudgetSummary {
+  const staffCostK = buildStaffCostPo(input.selection, input.staff) / 1000;
+  if (input.lineupCostK === null) {
+    return { staffCostK, remainingK: null, overBudget: false };
+  }
+  const remainingK = input.budgetK - input.lineupCostK - staffCostK;
+  return { staffCostK, remainingK, overBudget: remainingK < 0 };
+}
+
+/**
+ * Un ajout de staff (`next`) tient-il dans le budget ? Sans coût de joueurs
+ * connu, on laisse faire : le serveur reste juge (refus « Budget dépassé »).
+ */
+export function staffFitsBudget(
+  next: BuildStaffSelection,
+  input: Omit<StaffBudgetInput, "selection">,
+): boolean {
+  return !summarizeStaffBudget({ ...input, selection: next }).overBudget;
+}
+
+/**
+ * Champs de staff envoyés à `POST /team/create-from-roster`. Rien si le
+ * coach n'a rien pris : la création reste exactement l'historique.
+ */
+export function staffRequestFields(
+  selection: BuildStaffSelection,
+): Partial<BuildStaffSelection> {
+  const fields: Partial<BuildStaffSelection> = {
+    ...(selection.dedicatedFans > 0 ? { dedicatedFans: selection.dedicatedFans } : {}),
+    ...(selection.rerolls > 0 ? { rerolls: selection.rerolls } : {}),
+    ...(selection.apothecary ? { apothecary: true } : {}),
+  };
+  return fields;
 }

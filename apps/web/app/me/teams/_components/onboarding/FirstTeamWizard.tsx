@@ -3,12 +3,14 @@
 /**
  * Assistant guidé "Crée ton équipe en 60 secondes".
  *
- * Trois étapes courtes pour amener un nouveau coach (0 équipe) jusqu'à sa
+ * Quatre étapes courtes pour amener un nouveau coach (0 équipe) jusqu'à sa
  * première équipe, sans friction :
  *   1. CHOISIR SA RACE — grille avec rosters recommandés mis en avant +
  *      indicateur de difficulté ; sélection en 1 clic.
  *   2. NOMMER L'ÉQUIPE — nom pré-rempli via /team/name-generator (régénérable).
- *   3. CONFIRMER — POST /team/create-from-roster → /me/teams/[id]?welcome=1.
+ *   3. STAFF — Fans Dévoués, relances, apothicaire (facultatif), avec coût et
+ *      budget restant : plus besoin de créer PUIS modifier l'équipe.
+ *   4. CONFIRMER — POST /team/create-from-roster → /me/teams/[id]?welcome=1.
  *
  * Toujours skippable ("Plus tard"). Design parchemin (cf. tailwind nuffle-*),
  * i18n fr/en, accessible (focus géré, clavier, aria), mobile-friendly,
@@ -27,11 +29,24 @@ import { useLanguage } from "../../../../contexts/LanguageContext";
 import { trackUmamiEvent, UMAMI_EVENTS } from "../../../../lib/umami-events";
 import { EmblemCup, EmblemTutorial, EmblemLeague } from "../../../../components/home/NuffleArt";
 import RegionalLeaguePicker from "../../../../components/RegionalLeaguePicker";
+import QuantityStepper from "../../components/QuantityStepper";
+import {
+  EMPTY_BUILD_STAFF,
+  defaultLineupCostK,
+  type BuildStaffSelection,
+  type DefaultLineupPosition,
+  type RosterStaffConfig,
+} from "@bb/game-engine";
 import {
   getRecommendedRosters,
   recommendedSlugSet,
   getRosterDifficulty,
   isValidTeamName,
+  onboardingBudgetK,
+  onboardingStaffConfig,
+  staffFitsBudget,
+  staffRequestFields,
+  summarizeStaffBudget,
   stepIndex,
   ONBOARDING_STEPS,
   type OnboardingRoster,
@@ -61,6 +76,12 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
   const [selected, setSelected] = useState<OnboardingRoster | null>(null);
   const [name, setName] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
+
+  // Staff acheté à la création (rien par défaut : aucun fan n'est offert
+  // hors ligue) + coût de la composition de départ, pour le budget restant.
+  const [staffSelection, setStaffSelection] =
+    useState<BuildStaffSelection>(EMPTY_BUILD_STAFF);
+  const [lineupCostK, setLineupCostK] = useState<number | null>(null);
 
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState(false);
@@ -133,6 +154,30 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
     }
   }, []);
 
+  // Positions du roster → coût de la composition que le serveur créera
+  // (`defaultLineupCostK`, moteur partagé). Inconnu tant que non chargé.
+  const fetchLineupCost = useCallback(
+    async (rosterSlug: string) => {
+      const lang = language === "en" ? "en" : "fr";
+      try {
+        const r = await fetch(
+          `${API_BASE}/api/rosters/${encodeURIComponent(rosterSlug)}?lang=${lang}&ruleset=${RULESET}`,
+        );
+        if (!r.ok) return;
+        const data = (await r.json()) as {
+          roster?: { positions?: DefaultLineupPosition[] };
+        };
+        const positions = data?.roster?.positions;
+        if (Array.isArray(positions) && positions.length > 0) {
+          setLineupCostK(defaultLineupCostK(positions));
+        }
+      } catch {
+        // Budget restant inconnu : le serveur reste juge du dépassement.
+      }
+    },
+    [language],
+  );
+
   const recommended = getRecommendedRosters(rosters);
   const recommendedSet = recommendedSlugSet(rosters);
   const otherRosters = rosters.filter((r) => !recommendedSet.has(r.slug));
@@ -144,6 +189,9 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
     const leagues = roster.regionalLeagueOptions ?? [];
     setRegionalLeague(leagues.length === 1 ? leagues[0].slug : null);
     setRegionalLeagueTouched(false);
+    setStaffSelection(EMPTY_BUILD_STAFF);
+    setLineupCostK(null);
+    void fetchLineupCost(roster.slug);
     trackUmamiEvent(UMAMI_EVENTS.ONBOARDING_RACE, {
       roster: roster.slug,
       recommended: recommendedSet.has(roster.slug),
@@ -152,11 +200,27 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
     setStep("name");
   };
 
-  const goConfirm = () => {
+  const goStaff = () => {
     if (!isValidTeamName(name)) {
       setNameTouched(true);
       return;
     }
+    setStep("staff");
+  };
+
+  const staffConfig = selected ? onboardingStaffConfig(selected) : null;
+  const budgetK = selected ? onboardingBudgetK(selected) : 0;
+  const staffBudget = staffConfig
+    ? summarizeStaffBudget({
+        selection: staffSelection,
+        staff: staffConfig,
+        budgetK,
+        lineupCostK,
+      })
+    : null;
+
+  const goConfirm = () => {
+    if (staffBudget?.overBudget) return;
     setStep("confirm");
   };
 
@@ -180,6 +244,8 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
             ruleset: RULESET,
             format: "bb11",
             ...(regionalLeague ? { regionalLeague } : {}),
+            // Rien si le coach n'a pris aucun staff (création historique).
+            ...staffRequestFields(staffSelection),
           }),
         },
       );
@@ -205,14 +271,18 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
       ? t.onboarding.step1Title
       : step === "name"
         ? t.onboarding.step2Title
-        : t.onboarding.step3Title;
+        : step === "staff"
+          ? t.onboarding.staffTitle
+          : t.onboarding.step3Title;
 
   const stepSubtitle =
     step === "race"
       ? t.onboarding.step1Subtitle
       : step === "name"
         ? t.onboarding.step2Subtitle
-        : t.onboarding.step3Subtitle;
+        : step === "staff"
+          ? t.onboarding.staffSubtitle
+          : t.onboarding.step3Subtitle;
 
   return (
     <div
@@ -306,11 +376,24 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
             />
           )}
 
+          {step === "staff" && selected && staffConfig && staffBudget && (
+            <StaffStep
+              selection={staffSelection}
+              staff={staffConfig}
+              budgetK={budgetK}
+              lineupCostK={lineupCostK}
+              summary={staffBudget}
+              onChange={setStaffSelection}
+            />
+          )}
+
           {step === "confirm" && selected && (
             <ConfirmStep
               roster={selected}
               name={name}
               difficultyLabel={difficultyLabel}
+              staffSelection={staffSelection}
+              staffCostK={staffBudget?.staffCostK ?? 0}
               error={createError}
               regionalLeague={regionalLeague}
               onRegionalLeagueChange={(slug) => {
@@ -330,7 +413,15 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
                 <button
                   type="button"
                   data-testid="onboarding-back"
-                  onClick={() => setStep(step === "confirm" ? "name" : "race")}
+                  onClick={() =>
+                    setStep(
+                      step === "confirm"
+                        ? "staff"
+                        : step === "staff"
+                          ? "name"
+                          : "race",
+                    )
+                  }
                   className="rounded-lg px-3 py-2 text-sm font-semibold text-nuffle-bronze transition hover:bg-nuffle-bronze/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-nuffle-gold"
                 >
                   {t.onboarding.back}
@@ -346,13 +437,17 @@ export default function FirstTeamWizard({ onDismiss }: FirstTeamWizardProps) {
               </button>
             </div>
 
-            {step === "name" && (
+            {(step === "name" || step === "staff") && (
               <button
                 type="button"
                 data-testid="onboarding-next"
-                onClick={goConfirm}
+                onClick={step === "name" ? goStaff : goConfirm}
                 className="rounded-lg bg-nuffle-gold px-5 py-2 text-sm font-bold text-nuffle-anthracite shadow transition hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-nuffle-anthracite disabled:opacity-50"
-                disabled={!isValidTeamName(name)}
+                disabled={
+                  step === "name"
+                    ? !isValidTeamName(name)
+                    : Boolean(staffBudget?.overBudget)
+                }
               >
                 {t.onboarding.next}
               </button>
@@ -644,13 +739,136 @@ function NameStep({ roster, name, onName, onRegenerate, invalid }: NameStepProps
 }
 
 /* ------------------------------------------------------------------ */
-/* Étape 3 — Confirmation                                              */
+/* Étape 3 — Staff (facultatif)                                        */
+/* ------------------------------------------------------------------ */
+
+interface StaffStepProps {
+  readonly selection: BuildStaffSelection;
+  readonly staff: RosterStaffConfig;
+  readonly budgetK: number;
+  readonly lineupCostK: number | null;
+  readonly summary: { readonly staffCostK: number; readonly remainingK: number | null; readonly overBudget: boolean };
+  readonly onChange: (next: BuildStaffSelection) => void;
+}
+
+function StaffStep({ selection, staff, budgetK, lineupCostK, summary, onChange }: StaffStepProps) {
+  const { t } = useLanguage();
+  const k = (po: number) => `${po / 1000}${t.teams.kpo}`;
+  const fits = (next: BuildStaffSelection) =>
+    staffFitsBudget(next, { staff, budgetK, lineupCostK });
+  const withFans = { ...selection, dedicatedFans: selection.dedicatedFans + 1 };
+  const withReroll = { ...selection, rerolls: selection.rerolls + 1 };
+  const apothecaryId = useId();
+
+  return (
+    <div className="space-y-4" data-testid="onboarding-staff-step">
+      <ul className="space-y-3" role="list">
+        <li className="flex items-center justify-between gap-3 rounded-xl border border-nuffle-gold/40 bg-white/70 p-3">
+          <div>
+            <p className="font-subtitle font-semibold text-nuffle-anthracite">
+              {t.onboarding.staffFans}
+            </p>
+            <p className="text-xs text-nuffle-bronze">
+              {t.onboarding.staffUnitCost.replace("{cost}", k(staff.dedicatedFanCost))}
+            </p>
+          </div>
+          <QuantityStepper
+            value={selection.dedicatedFans}
+            min={0}
+            max={staff.maxDedicatedFans}
+            onChange={(v) => onChange({ ...selection, dedicatedFans: v })}
+            disabledIncrement={!fits(withFans)}
+            label={t.onboarding.staffFans}
+            decrementTestId="onboarding-staff-fans-dec"
+            incrementTestId="onboarding-staff-fans-inc"
+            valueTestId="onboarding-staff-fans-value"
+            size="sm"
+          />
+        </li>
+        <li className="flex items-center justify-between gap-3 rounded-xl border border-nuffle-bronze/25 bg-white/70 p-3">
+          <div>
+            <p className="font-subtitle font-semibold text-nuffle-anthracite">
+              {t.onboarding.staffRerolls}
+            </p>
+            <p className="text-xs text-nuffle-bronze">
+              {t.onboarding.staffUnitCost.replace("{cost}", k(staff.rerollCost))}
+            </p>
+          </div>
+          <QuantityStepper
+            value={selection.rerolls}
+            min={0}
+            max={staff.maxRerolls}
+            onChange={(v) => onChange({ ...selection, rerolls: v })}
+            disabledIncrement={!fits(withReroll)}
+            label={t.onboarding.staffRerolls}
+            decrementTestId="onboarding-staff-rerolls-dec"
+            incrementTestId="onboarding-staff-rerolls-inc"
+            valueTestId="onboarding-staff-rerolls-value"
+            size="sm"
+          />
+        </li>
+        {staff.apothecaryAllowed && (
+          <li className="flex items-center justify-between gap-3 rounded-xl border border-nuffle-bronze/25 bg-white/70 p-3">
+            <label htmlFor={apothecaryId} className="cursor-pointer">
+              <span className="block font-subtitle font-semibold text-nuffle-anthracite">
+                {t.onboarding.staffApothecary}
+              </span>
+              <span className="block text-xs text-nuffle-bronze">
+                {t.onboarding.staffUnitCost.replace("{cost}", k(staff.apothecaryCost))}
+              </span>
+            </label>
+            <input
+              id={apothecaryId}
+              type="checkbox"
+              data-testid="onboarding-staff-apothecary"
+              checked={selection.apothecary}
+              disabled={!selection.apothecary && !fits({ ...selection, apothecary: true })}
+              onChange={(e) => onChange({ ...selection, apothecary: e.target.checked })}
+              className="h-5 w-5 accent-nuffle-gold"
+            />
+          </li>
+        )}
+      </ul>
+
+      <dl className="space-y-1 rounded-xl border border-nuffle-gold/30 bg-[#FBF7EC] p-3 text-sm">
+        <div className="flex items-center justify-between gap-3">
+          <dt className="text-nuffle-bronze">{t.onboarding.staffCost}</dt>
+          <dd className="font-semibold text-nuffle-anthracite" data-testid="onboarding-staff-cost">
+            {summary.staffCostK}
+            {t.teams.kpo}
+          </dd>
+        </div>
+        {summary.remainingK !== null && (
+          <div className="flex items-center justify-between gap-3">
+            <dt className="text-nuffle-bronze">{t.onboarding.staffRemaining}</dt>
+            <dd
+              className={`font-semibold ${summary.overBudget ? "text-nuffle-red" : "text-nuffle-anthracite"}`}
+              data-testid="onboarding-staff-remaining"
+            >
+              {summary.remainingK}
+              {t.teams.kpo}
+            </dd>
+          </div>
+        )}
+      </dl>
+      <p className="text-xs text-nuffle-bronze/90" data-testid="onboarding-staff-fans-hint">
+        {t.teams.dedicatedFansBuildHint}
+      </p>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Étape 4 — Confirmation                                              */
 /* ------------------------------------------------------------------ */
 
 interface ConfirmStepProps {
   readonly roster: OnboardingRoster;
   readonly name: string;
   readonly difficultyLabel: (d: RosterDifficulty) => string;
+  /** Staff choisi à l'étape précédente (rappel du récapitulatif). */
+  readonly staffSelection: BuildStaffSelection;
+  readonly staffCostK: number;
   readonly error: boolean;
   /** Ligue régionale retenue (null tant que le coach n'a pas tranché). */
   readonly regionalLeague: string | null;
@@ -663,6 +881,8 @@ function ConfirmStep({
   roster,
   name,
   difficultyLabel,
+  staffSelection,
+  staffCostK,
   error,
   regionalLeague,
   onRegionalLeagueChange,
@@ -683,6 +903,30 @@ function ConfirmStep({
         <Row
           label={t.onboarding.confirmDifficulty}
           value={difficultyLabel(getRosterDifficulty(roster.slug))}
+        />
+        <Row
+          label={t.onboarding.confirmStaff}
+          value={
+            staffCostK > 0
+              ? `${[
+                  staffSelection.dedicatedFans > 0
+                    ? t.onboarding.confirmStaffFans.replace(
+                        "{n}",
+                        String(staffSelection.dedicatedFans),
+                      )
+                    : null,
+                  staffSelection.rerolls > 0
+                    ? t.onboarding.confirmStaffRerolls.replace(
+                        "{n}",
+                        String(staffSelection.rerolls),
+                      )
+                    : null,
+                  staffSelection.apothecary ? t.onboarding.staffApothecary : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")} (${staffCostK}${t.teams.kpo})`
+              : t.onboarding.confirmStaffNone
+          }
         />
       </dl>
       {options.length > 1 && (
