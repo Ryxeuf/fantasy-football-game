@@ -1467,5 +1467,15 @@
     "deleteSuccess": "“{name}” has been deleted.",
     "working": "Working...",
     "error": "The operation failed"
+  },
+  "myCompetitions": {
+    "scopeLabel": "Show",
+    "scopeAll": "All",
+    "scopeMine": "Mine",
+    "roleCommissioner": "👑 Commissioner",
+    "roleActive": "Registered",
+    "roleWithdrawn": "Withdrawn",
+    "roleFormer": "Past season",
+    "mineEmpty": "You have no competition here yet: none created, none played by one of your teams."
   }
 }

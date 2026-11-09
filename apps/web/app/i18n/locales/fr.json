@@ -1467,5 +1467,15 @@
     "deleteSuccess": "« {name} » a été supprimée.",
     "working": "En cours...",
     "error": "L'opération a échoué"
+  },
+  "myCompetitions": {
+    "scopeLabel": "Afficher",
+    "scopeAll": "Toutes",
+    "scopeMine": "Les miennes",
+    "roleCommissioner": "👑 Commissaire",
+    "roleActive": "Inscrit",
+    "roleWithdrawn": "Retiré",
+    "roleFormer": "Ancienne saison",
+    "mineEmpty": "Tu n'as encore aucune compétition ici : ni créée, ni jouée par une de tes équipes."
   }
 }
