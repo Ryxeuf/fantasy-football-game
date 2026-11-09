@@ -80,6 +80,7 @@ import {
   pendingSubmissionsLabel,
 } from "./double-validation";
 import { RosterSection } from "./_components/RosterSection";
+import { useSheetAutoRefresh } from "./use-sheet-auto-refresh";
 import { MatchSheetPdfButton } from "./_components/MatchSheetPdfButton";
 import TeamLogo from "../../../../components/TeamLogo";
 import TeamRosterLink from "../../../[id]/TeamRosterLink";
@@ -453,24 +454,40 @@ export default function MatchSheetPage() {
     "before" | "during" | "after" | "advancements"
   >("before");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiRequest<SheetResponse>(
-        `/leagues/pairings/${pairingId}/sheet`,
-      );
-      setData(res);
-    } catch (e: unknown) {
-      if (e instanceof ApiClientError && e.status === 404) {
-        setData(null);
-      } else {
-        setError(e instanceof Error ? e.message : "Erreur");
+  // `silent` : relecture de fond (retour sur l'onglet, minuteur) — ni écran
+  // de chargement (il démonterait la saisie en cours), ni message d'erreur.
+  const load = useCallback(
+    async (opts: { silent?: boolean } = {}) => {
+      if (opts.silent) {
+        try {
+          const res = await apiRequest<SheetResponse>(
+            `/leagues/pairings/${pairingId}/sheet`,
+          );
+          setData(res);
+        } catch {
+          // Best-effort : la prochaine relecture réessaiera.
+        }
+        return;
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [pairingId]);
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await apiRequest<SheetResponse>(
+          `/leagues/pairings/${pairingId}/sheet`,
+        );
+        setData(res);
+      } catch (e: unknown) {
+        if (e instanceof ApiClientError && e.status === 404) {
+          setData(null);
+        } else {
+          setError(e instanceof Error ? e.message : "Erreur");
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pairingId],
+  );
 
   useEffect(() => {
     void load();
@@ -667,11 +684,17 @@ export default function MatchSheetPage() {
                 popularityAway: v.popularityAway,
                 // Coupe en `build` / `none` : l'avant-match ne vend rien, on
                 // n'envoie donc aucune sélection (le serveur la refuserait).
+                // Sinon, seulement les côtés que le viewer saisit : renvoyer
+                // la liste adverse l'écraserait avec une copie périmée.
                 ...(preMatchInducementsLocked(data)
                   ? {}
                   : {
-                      inducementsHome: v.inducementsHome,
-                      inducementsAway: v.inducementsAway,
+                      ...(inducementSides.includes("home")
+                        ? { inducementsHome: v.inducementsHome }
+                        : {}),
+                      ...(inducementSides.includes("away")
+                        ? { inducementsAway: v.inducementsAway }
+                        : {}),
                     }),
                 prayersHome: v.prayersHome,
                 prayersAway: v.prayersAway,
@@ -924,6 +947,20 @@ export default function MatchSheetPage() {
     home: home?.name,
     away: away?.name,
   });
+  // Coups de pouce : le commissaire saisit les deux côtés, un coach le sien.
+  const inducementSides: ReadonlyArray<"home" | "away"> = isCommissioner
+    ? ["home", "away"]
+    : mySide
+      ? [mySide]
+      : [];
+  // Avant-match ouvert : relecture au retour sur l'onglet et toutes les ~15 s
+  // (les achats du favori changent le budget de l'outsider).
+  useSheetAutoRefresh(
+    tab === "before" && data !== null && editable && (isCoach || isCommissioner),
+    () => {
+      if (!busy) void load({ silent: true });
+    },
+  );
 
   if (loading) {
     return (
@@ -1331,6 +1368,7 @@ export default function MatchSheetPage() {
             forfeitOnly={profile.preMatch === "forfeit-only"}
             cupBudget={isCup}
             inducementsLocked={inducementsLocked}
+            editableInducementSides={inducementSides}
           />
         ) : (
           <p className="rounded-lg border bg-white p-4 text-sm text-slate-500">
