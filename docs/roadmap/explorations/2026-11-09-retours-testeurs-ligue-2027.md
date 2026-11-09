@@ -337,7 +337,21 @@ logique de sélection en modules purs ; lot 4 en change OpenSpec séparé. Les
 colonnes ajoutées (`inducementsDone*At`, `nafNumber`, `League.format`) sont
 nullables et lues sans backfill (`db push` en prod).
 
-Questions à poser aux testeurs avant de coder :
+### Décisions du propriétaire (2026-11-09)
+
+1. p.94 confirmé : journaliers = Trois-quart 0-16 uniquement (C).
+2. Un coach peut opposer ses deux équipes, avec un avertissement (B).
+3. Inconnu : les deux manques (taille après génération, remplacement par
+   slot) sont traités (G).
+4. NAF : vérification automatique auprès de l'annuaire public de thenaf.net
+   (K).
+5. Ligue libre : change OpenSpec séparé, consigné dans
+   `openspec/changes/open-league/` (L).
+
+Le filtre « mes ligues » (H) suit le change OpenSpec déjà rédigé
+`my-competitions` (sections 1, 2 et 6.1-6.3) plutôt qu'une variante.
+
+Questions posées aux testeurs avant de coder :
 
 1. p.94 : la règle des journaliers dit-elle bien « Trois-quart 0-16 »
    uniquement ? (C)
