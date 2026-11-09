@@ -19,7 +19,9 @@
  *      positions ;
  *   4. on borne le total à `hardCap` (16 par défaut).
  *
- * 100% pur ⇒ testable en unit sans Prisma.
+ * 100% pur ⇒ testable en unit sans Prisma. Vit dans le moteur pour que
+ * l'assistant web annonce le budget restant de la MÊME composition que
+ * celle que le serveur créera.
  */
 
 /** Position telle que remontée par `getRosterFromDb`. */
@@ -145,4 +147,19 @@ export function buildDefaultLineup(
     if (used >= hardCap) break;
   }
   return entries;
+}
+
+/**
+ * Coût (kpo) de la composition de départ : ce que l'assistant de première
+ * équipe dépense en joueurs avant tout staff. Une position inconnue compte 0.
+ */
+export function defaultLineupCostK(
+  positions: readonly DefaultLineupPosition[],
+  options: BuildDefaultLineupOptions = {},
+): number {
+  const costBySlug = new Map(positions.map((p) => [p.slug, p.cost]));
+  return buildDefaultLineup(positions, options).reduce(
+    (sum, entry) => sum + (costBySlug.get(entry.position) ?? 0) * entry.count,
+    0,
+  );
 }

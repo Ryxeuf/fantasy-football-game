@@ -236,6 +236,15 @@ export {
   type LeagueFreeFanRevokePlan,
 } from "./dedicated-fans";
 
+// Composition de départ de l'assistant de première équipe (serveur + web).
+export {
+  buildDefaultLineup,
+  defaultLineupCostK,
+  type BuildDefaultLineupOptions,
+  type DefaultLineupPosition,
+  type LineupEntry,
+} from "./default-lineup";
+
 // Staff acheté à la construction : plafonds + tarif (builder ET assistant).
 export {
   EMPTY_BUILD_STAFF,

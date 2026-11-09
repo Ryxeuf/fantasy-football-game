@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildDefaultLineup,
+  defaultLineupCostK,
   type DefaultLineupPosition,
 } from './default-lineup';
 
@@ -107,5 +108,20 @@ describe('buildDefaultLineup', () => {
     const lineup = buildDefaultLineup(positions);
     const filler = lineup.find((e) => e.count === 11);
     expect(filler?.position).toBe('alpha');
+  });
+});
+
+describe('defaultLineupCostK', () => {
+  it('somme le coût de la composition de départ (kpo)', () => {
+    // 2 thrower obligatoires (70k) + 9 linemen (50k) = 590k.
+    const positions = [
+      pos('thrower', { cost: 70, min: 2, max: 2 }),
+      pos('lineman', { cost: 50, max: 16 }),
+    ];
+    expect(defaultLineupCostK(positions)).toBe(2 * 70 + 9 * 50);
+  });
+
+  it('aucune position : 0', () => {
+    expect(defaultLineupCostK([])).toBe(0);
   });
 });

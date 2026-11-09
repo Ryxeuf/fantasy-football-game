@@ -38,11 +38,13 @@ import {
   type AllowedRoster,
   type GameFormat,
   type Ruleset,
+  buildDefaultLineup,
   buildStaffCostPo,
   defaultBuildBudgetK,
   getTeamPositions,
   getTournamentRosterRules,
   isGameFormat,
+  type LineupEntry,
   normalizeBuildStaff,
   validateBuildStaff,
 } from '@bb/game-engine';
@@ -60,7 +62,6 @@ import {
   getRosterFromDb,
   type RosterPayload,
 } from '../utils/roster-helpers';
-import { buildDefaultLineup, type LineupEntry } from '../utils/default-lineup';
 import { isAllowedTeamRoster } from '../services/roster-catalogue';
 import { loadTeamRulesCatalogue } from '../services/team-rules-catalogue';
 
