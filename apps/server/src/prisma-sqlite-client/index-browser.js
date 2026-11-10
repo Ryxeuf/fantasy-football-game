@@ -449,6 +449,7 @@ exports.Prisma.SkillScalarFieldEnum = {
   isPassive: 'isPassive',
   isModified: 'isModified',
   excludedFromSelection: 'excludedFromSelection',
+  requiredSkills: 'requiredSkills',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };

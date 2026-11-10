@@ -39,6 +39,12 @@ export interface SkillDefinition {
    * Recopiée en base sur `Skill.excludedFromSelection` au seed.
    */
   excludedFromSelection?: boolean;
+  /**
+   * Compétences dont le joueur doit posséder au moins une pour acquérir
+   * celle-ci. Valeur initiale de `Skill.requiredSkills` : ensuite, c'est
+   * l'admin qui fait foi (cf. `sync-skill-prerequisites`).
+   */
+  requiredSkills?: readonly string[];
 }
 
 // Définition de toutes les compétences avec leurs slugs
@@ -489,6 +495,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "strong-arm",
+    requiredSkills: ["throw-team-mate"],
     nameFr: "Bras Musclé",
     nameEn: "Strong Arm",
     description: "Quand ce joueur effectue une action de Passe, vous pouvez réduire la portée d'un niveau (par exemple, une Passe Longue devient une Passe Courte).",
@@ -888,6 +895,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "saboteur",
+    requiredSkills: ["secret-weapon"],
     nameFr: "Saboteur",
     nameEn: "Saboteur",
     description: "Quand ce joueur est Plaqué suite à l'Action de Blocage d'un joueur Adverse, avant de faire le jet d'Armure, il peut jeter un D6. Sur un 1-3, rien et on fait le jet d'Armure. Sur 4+, l'arme sabotée de joueur explose et le joueur adverse est aussi Plaquée, sans provoquer de Turnover sauf si le joueur adverse était en possession du Ballon. Si l'arme de ce joueur explose, le joueur est automatiquement KO et pas de jet d'Armure pour lui. Nécessite le trait Arme Secrète",
@@ -896,6 +904,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "fatal-flight",
+    requiredSkills: ["stunty"],
     nameFr: "Vol Fatal",
     nameEn: "Fatal Flight",
     description: "Lors d'un Lancer de Coéquipier, permet au joueur lancé, s'il atterrit ou rebondit sur une case occupée et si le joueur adverse est plaqué, d'appliquer un +1 au jet d'Armure ou au jet de Blessure. Si le joueur adverse subit une Élimination, ce joueur gagne des PSP correspondants pour avoir infligé une Élimination.",
@@ -924,6 +933,7 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
   },
   {
     slug: "bullseye",
+    requiredSkills: ["throw-team-mate"],
     nameFr: "Dans le Mille",
     nameEn: "Bullseye",
     description: "Lors d'une Action de Lancer de Coéquipier de joueur, si le résultat du lancer est un Lancer Superbe, alors le joueur lancé ne Valdingue pas et atterrit sur la case ciblée.",

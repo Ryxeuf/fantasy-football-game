@@ -43,6 +43,7 @@ import { syncTeamRules } from "./seeders/sync-team-rules";
 import { syncInducements } from "./seeders/sync-inducements";
 import { syncAdvancementCosts } from "./seeders/sync-advancement-costs";
 import { syncDiceThemes } from "./seeders/sync-dice-themes";
+import { syncSkillPrerequisites } from "./seeders/sync-skill-prerequisites";
 import { serverLog } from "./utils/server-log";
 
 async function main() {
@@ -176,6 +177,9 @@ async function main() {
       }
     }
   }
+
+  const prerequisitesSet = await syncSkillPrerequisites();
+  serverLog.log(`✅ Prérequis de compétences: ${prerequisitesSet} initialisés\n`);
 
   // =============================================================================
   // 1b. SEED DES NOUVELLES COMPÉTENCES SAISON 3

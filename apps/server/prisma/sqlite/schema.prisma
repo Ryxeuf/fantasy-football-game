@@ -604,6 +604,10 @@ model Skill {
   /// ex. mighty-blow-2) : reste valide si deja possede, mais ne doit plus etre
   /// selectionnable lors d'une nouvelle evolution/creation de joueur normal.
   excludedFromSelection Boolean @default(false)
+  // Prérequis d'acquisition : CSV de slugs, le joueur doit en posséder au moins
+  // un. null = jamais renseigné, "" = retiré en admin ; dans les deux cas, aucune
+  // contrainte. Seul null peut être initialisé par le seed.
+  requiredSkills String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

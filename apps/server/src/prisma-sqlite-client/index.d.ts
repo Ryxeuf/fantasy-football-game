@@ -37983,6 +37983,7 @@ export namespace Prisma {
     isPassive: boolean | null
     isModified: boolean | null
     excludedFromSelection: boolean | null
+    requiredSkills: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -38000,6 +38001,7 @@ export namespace Prisma {
     isPassive: boolean | null
     isModified: boolean | null
     excludedFromSelection: boolean | null
+    requiredSkills: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -38017,6 +38019,7 @@ export namespace Prisma {
     isPassive: number
     isModified: number
     excludedFromSelection: number
+    requiredSkills: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -38036,6 +38039,7 @@ export namespace Prisma {
     isPassive?: true
     isModified?: true
     excludedFromSelection?: true
+    requiredSkills?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -38053,6 +38057,7 @@ export namespace Prisma {
     isPassive?: true
     isModified?: true
     excludedFromSelection?: true
+    requiredSkills?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -38070,6 +38075,7 @@ export namespace Prisma {
     isPassive?: true
     isModified?: true
     excludedFromSelection?: true
+    requiredSkills?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -38160,6 +38166,7 @@ export namespace Prisma {
     isPassive: boolean
     isModified: boolean
     excludedFromSelection: boolean
+    requiredSkills: string | null
     createdAt: Date
     updatedAt: Date
     _count: SkillCountAggregateOutputType | null
@@ -38194,6 +38201,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     positionSkills?: boolean | Skill$positionSkillsArgs<ExtArgs>
@@ -38214,6 +38222,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["skill"]>
@@ -38231,6 +38240,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["skill"]>
@@ -38248,11 +38258,12 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type SkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "category" | "isElite" | "isPassive" | "isModified" | "excludedFromSelection" | "createdAt" | "updatedAt", ExtArgs["result"]["skill"]>
+  export type SkillOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "ruleset" | "nameFr" | "nameEn" | "description" | "descriptionEn" | "category" | "isElite" | "isPassive" | "isModified" | "excludedFromSelection" | "requiredSkills" | "createdAt" | "updatedAt", ExtArgs["result"]["skill"]>
   export type SkillInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     positionSkills?: boolean | Skill$positionSkillsArgs<ExtArgs>
     starPlayerSkills?: boolean | Skill$starPlayerSkillsArgs<ExtArgs>
@@ -38285,6 +38296,7 @@ export namespace Prisma {
        * selectionnable lors d'une nouvelle evolution/creation de joueur normal.
        */
       excludedFromSelection: boolean
+      requiredSkills: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["skill"]>
@@ -38724,6 +38736,7 @@ export namespace Prisma {
     readonly isPassive: FieldRef<"Skill", 'Boolean'>
     readonly isModified: FieldRef<"Skill", 'Boolean'>
     readonly excludedFromSelection: FieldRef<"Skill", 'Boolean'>
+    readonly requiredSkills: FieldRef<"Skill", 'String'>
     readonly createdAt: FieldRef<"Skill", 'DateTime'>
     readonly updatedAt: FieldRef<"Skill", 'DateTime'>
   }
@@ -128097,6 +128110,7 @@ export namespace Prisma {
     isPassive: 'isPassive',
     isModified: 'isModified',
     excludedFromSelection: 'excludedFromSelection',
+    requiredSkills: 'requiredSkills',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -131724,6 +131738,7 @@ export namespace Prisma {
     isPassive?: BoolFilter<"Skill"> | boolean
     isModified?: BoolFilter<"Skill"> | boolean
     excludedFromSelection?: BoolFilter<"Skill"> | boolean
+    requiredSkills?: StringNullableFilter<"Skill"> | string | null
     createdAt?: DateTimeFilter<"Skill"> | Date | string
     updatedAt?: DateTimeFilter<"Skill"> | Date | string
     positionSkills?: PositionSkillListRelationFilter
@@ -131743,6 +131758,7 @@ export namespace Prisma {
     isPassive?: SortOrder
     isModified?: SortOrder
     excludedFromSelection?: SortOrder
+    requiredSkills?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     positionSkills?: PositionSkillOrderByRelationAggregateInput
@@ -131766,6 +131782,7 @@ export namespace Prisma {
     isPassive?: BoolFilter<"Skill"> | boolean
     isModified?: BoolFilter<"Skill"> | boolean
     excludedFromSelection?: BoolFilter<"Skill"> | boolean
+    requiredSkills?: StringNullableFilter<"Skill"> | string | null
     createdAt?: DateTimeFilter<"Skill"> | Date | string
     updatedAt?: DateTimeFilter<"Skill"> | Date | string
     positionSkills?: PositionSkillListRelationFilter
@@ -131785,6 +131802,7 @@ export namespace Prisma {
     isPassive?: SortOrder
     isModified?: SortOrder
     excludedFromSelection?: SortOrder
+    requiredSkills?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: SkillCountOrderByAggregateInput
@@ -131808,6 +131826,7 @@ export namespace Prisma {
     isPassive?: BoolWithAggregatesFilter<"Skill"> | boolean
     isModified?: BoolWithAggregatesFilter<"Skill"> | boolean
     excludedFromSelection?: BoolWithAggregatesFilter<"Skill"> | boolean
+    requiredSkills?: StringNullableWithAggregatesFilter<"Skill"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Skill"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Skill"> | Date | string
   }
@@ -141311,6 +141330,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     positionSkills?: PositionSkillCreateNestedManyWithoutSkillInput
@@ -141330,6 +141350,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     positionSkills?: PositionSkillUncheckedCreateNestedManyWithoutSkillInput
@@ -141349,6 +141370,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positionSkills?: PositionSkillUpdateManyWithoutSkillNestedInput
@@ -141368,6 +141390,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positionSkills?: PositionSkillUncheckedUpdateManyWithoutSkillNestedInput
@@ -141387,6 +141410,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -141404,6 +141428,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -141421,6 +141446,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -151360,6 +151386,7 @@ export namespace Prisma {
     isPassive?: SortOrder
     isModified?: SortOrder
     excludedFromSelection?: SortOrder
+    requiredSkills?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -151377,6 +151404,7 @@ export namespace Prisma {
     isPassive?: SortOrder
     isModified?: SortOrder
     excludedFromSelection?: SortOrder
+    requiredSkills?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -151394,6 +151422,7 @@ export namespace Prisma {
     isPassive?: SortOrder
     isModified?: SortOrder
     excludedFromSelection?: SortOrder
+    requiredSkills?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -173631,6 +173660,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     positionSkills?: PositionSkillCreateNestedManyWithoutSkillInput
@@ -173649,6 +173679,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     positionSkills?: PositionSkillUncheckedCreateNestedManyWithoutSkillInput
@@ -173736,6 +173767,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positionSkills?: PositionSkillUpdateManyWithoutSkillNestedInput
@@ -173754,6 +173786,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     positionSkills?: PositionSkillUncheckedUpdateManyWithoutSkillNestedInput
@@ -174156,6 +174189,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     starPlayerSkills?: StarPlayerSkillCreateNestedManyWithoutSkillInput
@@ -174174,6 +174208,7 @@ export namespace Prisma {
     isPassive?: boolean
     isModified?: boolean
     excludedFromSelection?: boolean
+    requiredSkills?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     starPlayerSkills?: StarPlayerSkillUncheckedCreateNestedManyWithoutSkillInput
@@ -174271,6 +174306,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     starPlayerSkills?: StarPlayerSkillUpdateManyWithoutSkillNestedInput
@@ -174289,6 +174325,7 @@ export namespace Prisma {
     isPassive?: BoolFieldUpdateOperationsInput | boolean
     isModified?: BoolFieldUpdateOperationsInput | boolean
     excludedFromSelection?: BoolFieldUpdateOperationsInput | boolean
+    requiredSkills?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     starPlayerSkills?: StarPlayerSkillUncheckedUpdateManyWithoutSkillNestedInput

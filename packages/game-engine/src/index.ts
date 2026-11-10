@@ -433,6 +433,7 @@ export {
   hateSkillLabelFr,
 } from './skills/hate-trait';
 export * from './skills/random-skill-table-2025';
+export * from './skills/skill-prerequisites';
 
 // Enregistrement des règles spéciales des Star Players
 export {
