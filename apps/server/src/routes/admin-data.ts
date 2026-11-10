@@ -12,7 +12,10 @@ import { prisma } from "../prisma";
 import { adminOnly } from "../middleware/adminOnly";
 import { authUser } from "../middleware/authUser";
 import { resolveRuleset, type Ruleset } from "../utils/ruleset-helpers";
-import { toCanonicalAccessCsv } from "../services/skill-access";
+import {
+  checkRequiredSkillsInput,
+  toCanonicalAccessCsv,
+} from "../services/skill-access";
 import {
   revalidateRosterPages,
   revalidateStarPlayerPages,
@@ -203,7 +206,7 @@ router.post("/skills", validate(createSkillSchema), async (req, res) => {
 
 router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
   try {
-    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified, excludedFromSelection } = req.body;
+    const { nameFr, nameEn, description, descriptionEn, category, ruleset: rawRuleset, isElite, isPassive, isModified, excludedFromSelection, requiredSkills } = req.body;
 
     const data: any = {
       nameFr,
@@ -243,8 +246,25 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
         isPassive: true,
         isModified: true,
         excludedFromSelection: true,
+        requiredSkills: true,
       },
     });
+
+    if (previous && Array.isArray(requiredSkills)) {
+      const known = await prisma.skill.findMany({
+        where: { ruleset: data.ruleset ?? previous.ruleset },
+        select: { slug: true },
+      });
+      const check = checkRequiredSkillsInput({
+        requested: requiredSkills,
+        selfSlug: previous.slug,
+        knownSlugs: new Set(known.map((s: { slug: string }) => s.slug)),
+      });
+      if (!check.ok) {
+        return res.status(400).json({ error: check.error });
+      }
+      data.requiredSkills = check.csv;
+    }
 
     const skill = await prisma.skill.update({
       where: { id: req.params.id },
@@ -265,6 +285,7 @@ router.put("/skills/:id", validate(updateSkillSchema), async (req, res) => {
         isPassive: skill.isPassive,
         isModified: skill.isModified,
         excludedFromSelection: skill.excludedFromSelection,
+        requiredSkills: skill.requiredSkills,
       },
     });
     res.json({ skill });
@@ -320,6 +341,7 @@ router.post("/skills/:id/duplicate", validate(duplicateToRulesetSchema), async (
         isElite: sourceSkill.isElite,
         isPassive: sourceSkill.isPassive,
         isModified: sourceSkill.isModified,
+        requiredSkills: sourceSkill.requiredSkills,
       },
     });
 

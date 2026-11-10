@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../../../../auth-client";
 import { RULESET_OPTIONS, getRulesetLabel } from "../../../ruleset-utils";
+import { parseRequiredSkillSlugs } from "../../../../../skills/skill-prerequisites";
+import SkillPrerequisitesField, {
+  type PrerequisiteOption,
+} from "./SkillPrerequisitesField";
 
 const categories = ["General", "Agility", "Strength", "Passing", "Mutation", "Trait", "Scélérates", "StarPlayerRule"];
 
@@ -19,6 +23,7 @@ type Skill = {
   isPassive: boolean;
   isModified: boolean;
   excludedFromSelection: boolean;
+  requiredSkills?: string | null;
 };
 
 async function fetchJSON(path: string) {
@@ -58,6 +63,8 @@ export default function EditSkillPage() {
   const [skill, setSkill] = useState<Skill | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [requiredSkills, setRequiredSkills] = useState<string[]>([]);
+  const [prerequisiteOptions, setPrerequisiteOptions] = useState<PrerequisiteOption[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -81,6 +88,15 @@ export default function EditSkillPage() {
       }
       const { skill: data } = await fetchJSON(`/admin/data/skills/${skillId}`);
       setSkill(data);
+      setRequiredSkills(parseRequiredSkillSlugs(data.requiredSkills));
+      const { skills: sameRuleset } = await fetchJSON(
+        `/admin/data/skills?ruleset=${encodeURIComponent(data.ruleset)}`,
+      );
+      setPrerequisiteOptions(
+        (sameRuleset as Skill[])
+          .filter((other) => other.slug !== data.slug)
+          .sort((a, b) => a.nameFr.localeCompare(b.nameFr, "fr")),
+      );
     } catch (e: any) {
       setError(e.message || "Erreur");
     } finally {
@@ -105,6 +121,7 @@ export default function EditSkillPage() {
         isPassive: formData.get("isPassive") === "on",
         isModified: formData.get("isModified") === "on",
         excludedFromSelection: formData.get("excludedFromSelection") === "on",
+        requiredSkills,
       };
       await putJSON(`/admin/data/skills/${skill.id}`, data);
       router.push("/admin/data/skills");
@@ -210,6 +227,11 @@ export default function EditSkillPage() {
               </span>
             </label>
           </div>
+          <SkillPrerequisitesField
+            value={requiredSkills}
+            options={prerequisiteOptions}
+            onChange={setRequiredSkills}
+          />
           <div>
             <label className="block text-sm font-medium mb-1">Nom (FR) *</label>
             <input

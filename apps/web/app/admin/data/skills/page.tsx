@@ -17,6 +17,7 @@ type Skill = {
   isPassive: boolean;
   isModified: boolean;
   excludedFromSelection: boolean;
+  requiredSkills?: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -306,6 +307,14 @@ export default function AdminSkillsPage() {
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900">
                     {skill.nameFr}
+                    {skill.requiredSkills ? (
+                      <span
+                        className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300"
+                        title={`Prérequis : ${skill.requiredSkills.split(",").join(" ou ")}`}
+                      >
+                        🔒 Prérequis
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-6 py-4 text-gray-700">{skill.nameEn}</td>
                   <td className="px-6 py-4">

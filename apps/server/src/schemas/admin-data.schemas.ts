@@ -55,6 +55,7 @@ export const updateSkillSchema = z.object({
   isPassive: z.boolean().optional(),
   isModified: z.boolean().optional(),
   excludedFromSelection: z.boolean().optional(),
+  requiredSkills: z.array(z.string().min(1).max(100)).max(10).optional(),
 });
 
 export const duplicateToRulesetSchema = z.object({
