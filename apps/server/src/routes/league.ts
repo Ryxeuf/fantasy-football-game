@@ -14,6 +14,7 @@ import {
   optionalAuthUser,
   type AuthenticatedRequest,
 } from "../middleware/authUser";
+import { rejectDeletedTeamWrite } from "../middleware/rejectDeletedTeamWrite";
 import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
@@ -3497,6 +3498,10 @@ router.get(
   optionalAuthUser,
   handleGetTeamLeaderboards,
 );
+
+// Outils du commissaire : une équipe supprimée n'est plus modifiable. Le
+// retrait d'une inscription (`/seasons/:seasonId/teams/:teamId`) reste permis.
+router.use("/:leagueId/teams/:teamId", rejectDeletedTeamWrite("teamId"));
 
 // Roster en lecture seule, visible par tout coach inscrit a la ligue.
 router.get(
