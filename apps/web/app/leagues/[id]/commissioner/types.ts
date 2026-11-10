@@ -46,6 +46,8 @@ export interface SkillCatalogItem {
   slug: string;
   nameFr: string;
   category: string;
+  /** CSV de slugs : le joueur doit en posséder au moins un pour l'acquérir. */
+  requiredSkills?: string | null;
 }
 
 export interface TeamStaff {

@@ -5,6 +5,7 @@
  * Aucun import React : testables en unitaire sans rendu.
  */
 
+import { meetsSkillPrerequisites } from "@bb/game-engine";
 import type {
   EditPlayer,
   PositionAccess,
@@ -111,6 +112,7 @@ export function accessibleSkills(
       const code = SKILL_CATEGORY_CODE[c.category];
       if (code === undefined || ownedSet.has(c.slug)) return [];
       if (!primary.has(code) && !secondary.has(code)) return [];
+      if (!meetsSkillPrerequisites(c.requiredSkills, owned)) return [];
       return [
         { slug: c.slug, nameFr: c.nameFr, code, primary: primary.has(code) },
       ];

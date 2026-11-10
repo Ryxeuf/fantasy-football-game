@@ -31,6 +31,8 @@ interface SkillRow {
   /** Reste valide si déjà possédée, mais non sélectionnable en nouveauté
    *  (création/évolution) — ex: variantes réservées aux star players. */
   excludedFromSelection: boolean;
+  /** CSV de slugs : le joueur doit en posséder au moins un pour l'acquérir. */
+  requiredSkills: string | null;
 }
 
 async function loadSkills(
@@ -54,6 +56,7 @@ async function loadSkills(
       isPassive: true,
       isElite: true,
       excludedFromSelection: true,
+      requiredSkills: true,
     },
   });
   return { skills: skills as SkillRow[] };
@@ -91,6 +94,7 @@ router.get("/skills", async (req, res) => {
           isPassive: true,
           isElite: true,
           excludedFromSelection: true,
+          requiredSkills: true,
         },
       });
       res.json({ skills });

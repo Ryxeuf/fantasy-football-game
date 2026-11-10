@@ -111,6 +111,23 @@ describe("skillOptionsFor", () => {
     expect(options.find((o) => o.skill.slug === "pro")?.blocked).toBe("excluded");
   });
 
+  it("bloque une compétence dont le poste n'a pas le prérequis, et l'ouvre sinon", () => {
+    const catalog: SkillCatalogItem[] = [
+      { slug: "strong-arm", nameFr: "Bras Musclé", category: "Strength", requiredSkills: "throw-team-mate" },
+    ];
+    const blockedFor = (skills: string) =>
+      skillOptionsFor({
+        catalog,
+        position: { ...OGRE, skills },
+        type: "primary",
+        slot: 0,
+        pickedSlugs: [],
+      })[0]?.blocked;
+
+    expect(blockedFor("bone-head")).toBe("prerequisite");
+    expect(blockedFor("throw-team-mate")).toBeNull();
+  });
+
   it("ouvre toutes les catégories quand l'accès n'est pas renseigné", () => {
     const options = skillOptionsFor({
       catalog: CATALOG,

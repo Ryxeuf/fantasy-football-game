@@ -63,6 +63,17 @@ describe("skillsOf / charValueOf", () => {
 });
 
 describe("accessibleSkills", () => {
+  it("ne propose pas une compétence dont le joueur n'a pas le prérequis", () => {
+    const withPrerequisite = [
+      { slug: "strong-arm", nameFr: "Bras Musclé", category: "Strength", requiredSkills: "throw-team-mate" },
+    ];
+    const positionAccess = { primarySkills: "S", secondarySkills: "", innateSkills: [] };
+    expect(accessibleSkills(withPrerequisite, positionAccess, ["block"])).toEqual([]);
+    expect(
+      accessibleSkills(withPrerequisite, positionAccess, ["throw-team-mate"]).map((s) => s.slug),
+    ).toEqual(["strong-arm"]);
+  });
+
   const catalog = [
     { slug: "guard", nameFr: "Garde", category: "Strength" },
     { slug: "dodge", nameFr: "Esquive", category: "Agility" },

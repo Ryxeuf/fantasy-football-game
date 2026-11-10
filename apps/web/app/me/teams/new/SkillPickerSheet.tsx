@@ -39,6 +39,7 @@ const BLOCK_LABELS: Record<SkillBlockReason, string> = {
   owned: "Déjà sur la fiche du poste",
   picked: "Déjà choisie pour ce joueur",
   excluded: "Non sélectionnable",
+  prerequisite: "Prérequis manquant",
 };
 
 export interface SkillPickerSheetProps {

@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   characteristicOptionsForRoll,
+  meetsSkillPrerequisites,
   type CharacteristicKind,
 } from "@bb/game-engine";
 import { apiRequest } from "../lib/api-client";
@@ -80,6 +81,7 @@ export interface SkillCatalogItem {
   isElite?: boolean;
   /** Reste valide si déjà possédée, mais non proposée en nouvelle sélection. */
   excludedFromSelection?: boolean;
+  requiredSkills?: string | null;
 }
 
 /**
@@ -442,6 +444,7 @@ export function PlayerRow({
         const code = CATEGORY_CODE[s.category];
         if (!code || !pool.has(code)) return false;
         if (s.excludedFromSelection) return false;
+        if (!meetsSkillPrerequisites(s.requiredSkills, playerSkillSlugs)) return false;
         if (owned.has(s.slug)) return false;
         if (seen.has(s.slug)) return false;
         seen.add(s.slug);

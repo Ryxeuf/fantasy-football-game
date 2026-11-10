@@ -23,6 +23,7 @@ import {
   ELITE_SKILL_SURCHARGE,
   SURCHARGE_PER_ADVANCEMENT,
   maxTwoSkillPlayers,
+  meetsSkillPrerequisites,
   resolveTournamentEliteSkills,
   tournamentSkillCost,
   type TournamentRosterRules,
@@ -51,6 +52,8 @@ export interface SkillCatalogItem {
   isElite?: boolean;
   /** Valide si déjà possédée, mais non sélectionnable en nouveauté. */
   excludedFromSelection?: boolean;
+  /** CSV de slugs : le joueur doit en posséder au moins un pour l'acquérir. */
+  requiredSkills?: string | null;
 }
 
 /** Poste du roster, tel que servi par `/api/rosters`. */
@@ -262,7 +265,7 @@ export function stackingUsage(
 }
 
 /** Raison pour laquelle une compétence n'est pas sélectionnable. */
-export type SkillBlockReason = "owned" | "picked" | "excluded";
+export type SkillBlockReason = "owned" | "picked" | "excluded" | "prerequisite";
 
 /** Une compétence proposée dans le sélecteur, avec son statut. */
 export interface SkillOption {
@@ -325,7 +328,9 @@ export function skillOptionsFor({
         ? "picked"
         : skill.excludedFromSelection
           ? "excluded"
-          : null;
+          : !meetsSkillPrerequisites(skill.requiredSkills, [...owned, ...picked])
+            ? "prerequisite"
+            : null;
 
     out.push({
       skill,

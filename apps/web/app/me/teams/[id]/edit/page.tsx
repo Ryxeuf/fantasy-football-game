@@ -62,6 +62,7 @@ import {
 import {
   getTournamentRosterRules,
   getTournamentRuleset,
+  meetsSkillPrerequisites,
   tournamentSkillCost,
 } from "@bb/game-engine";
 
@@ -77,6 +78,7 @@ interface EditSkillCatalogItem {
   isElite?: boolean;
   description?: string;
   excludedFromSelection?: boolean;
+  requiredSkills?: string | null;
 }
 import { useLanguage } from "../../../../contexts/LanguageContext";
 import { NumberDieIcon } from "../../../../components/dice/NumberDieIcon";
@@ -1500,13 +1502,14 @@ export default function TeamEditPage() {
               ];
 
               // Compétences disponibles filtrées
+              const currentSkills = (player.skills || '').split(',').filter(Boolean);
               const availableSkills = skillsCatalog
                 .filter(s => allowedCategories.includes(s.category as any))
                 .filter(s => !selectedCategory || s.category === selectedCategory)
-                .filter(s => !s.excludedFromSelection);
+                .filter(s => !s.excludedFromSelection)
+                .filter(s => meetsSkillPrerequisites(s.requiredSkills, currentSkills));
 
               const selectedSkill = selectedSkillSlug ? skillsCatalog.find(s => s.slug === selectedSkillSlug) : null;
-              const currentSkills = (player.skills || '').split(',').filter(Boolean);
 
               // BB2025 — amelioration de caracteristique : stats courantes du
               // joueur (PA 0/falsy = « — » non passable -> null pour le helper)
