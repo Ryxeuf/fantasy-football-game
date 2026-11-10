@@ -774,8 +774,11 @@ export default function NewTeamBuilder() {
         type: a.type,
         skillSlug: a.skillSlug,
       })),
+      undefined,
+      // Chaque Star Player recruté peut retirer un cumul (pack V3.0).
+      selectedStarPlayers.length,
     );
-  }, [pack, packRules, buildAdvancements]);
+  }, [pack, packRules, buildAdvancements, selectedStarPlayers]);
 
   function change(slug: string, delta: number) {
     setCounts((prev) => {
@@ -1318,6 +1321,9 @@ export default function NewTeamBuilder() {
                     {packRules.skillStacking === "none"
                       ? "1 compétence max par joueur"
                       : `2 compétences sur ${maxTwoSkillPlayers(packRules.skillStacking)} joueur${maxTwoSkillPlayers(packRules.skillStacking) > 1 ? "s" : ""} max`}
+                    {(pack.stackReductionPerStarPlayer ?? 0) > 0 &&
+                      packRules.starPlayersAllowed &&
+                      " — chaque Star Player recruté retire un cumul"}
                   </li>
                   <li>
                     Star Players :{" "}
@@ -1445,6 +1451,7 @@ export default function NewTeamBuilder() {
                   // autorisés à cumuler 2 compétences.
                   pack={pack}
                   packRules={packRules}
+                  starPlayerCount={selectedStarPlayers.length}
                 />
                 {!packPlanValidation.valid && (
                   <p

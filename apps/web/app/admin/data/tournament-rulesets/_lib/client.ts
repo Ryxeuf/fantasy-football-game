@@ -115,6 +115,8 @@ export interface EditableDefinition {
   }>;
   scoring: { win: number; draw: number; loss: number; concession: number };
   regionalLeagueChoice?: boolean;
+  /** Cumuls retirés par Star Player recruté (absent = aucun). */
+  stackReductionPerStarPlayer?: number;
 }
 
 export interface RulesetDetail {

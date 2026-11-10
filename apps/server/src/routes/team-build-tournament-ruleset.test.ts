@@ -520,6 +520,127 @@ describe('handleBuildTeam — plan de compétences sous règlement', () => {
   });
 });
 
+describe('handleBuildTeam — NAF WC 2027 V3.0 : chaque Star Player retire un cumul', () => {
+  const TWO_SKILLS = (ordinal: number) => [
+    { positionSlug: 'lineman', ordinal, type: 'primary', skillSlug: 'block' },
+    { positionSlug: 'lineman', ordinal, type: 'primary', skillSlug: 'tackle' },
+  ];
+  const ogreBuild = (over: Record<string, unknown>) =>
+    createReq({
+      name: 'T',
+      roster: 'ogre',
+      // Les Ogres ont deux Ligues possibles : le choix est obligatoire.
+      regionalLeague: 'badlands_brawl',
+      choices: ELEVEN_LINEMEN,
+      tournamentRuleset: 'naf_world_cup_2027_v3',
+      ...over,
+    });
+
+  beforeEach(() => {
+    (getRosterFromDb as ReturnType<typeof vi.fn>).mockResolvedValue(
+      rosterDef({ slug: 'ogre' }),
+    );
+    (prisma.teamPlayer.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 'p1', position: 'lineman' },
+      { id: 'p2', position: 'lineman' },
+    ]);
+  });
+
+  it('impose le tier V3.0 (Ogres : 1 200 kpo, 72 SPP)', async () => {
+    const res = createRes();
+    await handleBuildTeam(ogreBuild({}), res);
+    expect(res.statusCode).toBe(201);
+    const data = txMock.team.create.mock.calls[0][0].data;
+    expect(data.initialBudget).toBe(1200);
+    expect(data.startingPspPool).toBe(72);
+    expect(data.tournamentRuleset).toBe('naf_world_cup_2027_v3');
+  });
+
+  it('sans Star Player : deux joueurs à 2 compétences sont acceptés', async () => {
+    const res = createRes();
+    await handleBuildTeam(
+      ogreBuild({ advancements: [...TWO_SKILLS(0), ...TWO_SKILLS(1)] }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('avec un Star Player : le second cumul est refusé AVANT toute création', async () => {
+    const res = createRes();
+    await handleBuildTeam(
+      ogreBuild({
+        starPlayers: ['fungus_the_loon'],
+        advancements: [...TWO_SKILLS(0), ...TWO_SKILLS(1)],
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect(errorOf(res)).toMatch(/1 joueur maximum/);
+    expect(errorOf(res)).toMatch(/Star Player/);
+    expect(txMock.team.create).not.toHaveBeenCalled();
+  });
+
+  it('avec un Star Player : un seul cumul passe', async () => {
+    const res = createRes();
+    await handleBuildTeam(
+      ogreBuild({
+        starPlayers: ['fungus_the_loon'],
+        advancements: TWO_SKILLS(0),
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(201);
+  });
+
+  it('avec deux Star Players : plus aucun cumul', async () => {
+    const res = createRes();
+    await handleBuildTeam(
+      ogreBuild({
+        starPlayers: ['fungus_the_loon', 'scrappa_sorehead'],
+        advancements: TWO_SKILLS(0),
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+    expect(errorOf(res)).toMatch(/ne peut pas cumuler/);
+  });
+
+  it('refuse un Star Player aux rosters des colonnes 44 et 52 SPP (orc)', async () => {
+    (getRosterFromDb as ReturnType<typeof vi.fn>).mockResolvedValue(rosterDef());
+    const res = createRes();
+    await handleBuildTeam(
+      createReq({
+        name: 'T',
+        roster: 'orc',
+        choices: ELEVEN_LINEMEN,
+        starPlayers: ['fungus_the_loon'],
+        tournamentRuleset: 'naf_world_cup_2027_v3',
+      }),
+      res,
+    );
+    expect(res.statusCode).toBe(400);
+  });
+
+  it('refuse un Star Player banni par le V3.0 mais pas par le V2.1 (Glotl Stop)', async () => {
+    const res = createRes();
+    await handleBuildTeam(ogreBuild({ starPlayers: ['glotl_stop'] }), res);
+    expect(res.statusCode).toBe(400);
+    expect(errorOf(res)).toMatch(/glotl_stop/);
+  });
+
+  it('taxe à la borne : 200 kpo cumulés restent dans la première tranche (18 SPP)', async () => {
+    (calculateStarPlayersCost as ReturnType<typeof vi.fn>).mockResolvedValue(
+      200_000,
+    );
+    const res = createRes();
+    await handleBuildTeam(ogreBuild({ starPlayers: ['fungus_the_loon'] }), res);
+    expect(res.statusCode).toBe(201);
+    expect(dataOf<{ startingPspPool: number }>(res).startingPspPool).toBe(
+      72 - 18,
+    );
+  });
+});
+
 describe('handleBuildTeam — cohérence coupe ↔ règlement', () => {
   const openCup = {
     id: 'cup-1',

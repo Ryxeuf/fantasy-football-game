@@ -74,6 +74,42 @@ surcoût Elite).
 - WHEN une équipe orc (cumul : aucun) achète 2 compétences au même joueur
 - THEN la création DOIT être refusée (400)
 
+### Requirement: Cumuls retirés par Star Player recruté
+Un règlement PEUT déclarer `stackReductionPerStarPlayer` : le nombre de
+joueurs autorisés à porter 2 compétences DOIT alors être le quota du roster
+moins cette valeur par Star Player recruté, sans jamais devenir négatif. Un
+règlement qui ne le déclare pas (NAF WC 2027 V2.1) NE DOIT PAS voir son quota
+modifié par les Star Players. La règle DOIT s'appliquer à la création
+d'équipe, à l'ajout d'une compétence sur une équipe existante et dans le
+builder, par une seule fonction pure (`maxTwoSkillPlayersWithStars`).
+
+#### Scenario: Un Star Player retire un cumul
+- WHEN une équipe Ogre NAF WC 2027 V3.0 (2 cumuls) recrute un Star Player et demande 2 joueurs à 2 compétences
+- THEN le build DOIT être refusé (400) avec un message citant les Star Players, et aucune équipe NE DOIT être créée
+
+#### Scenario: Deux Star Players, plus aucun cumul
+- WHEN la même équipe recrute deux Star Players
+- THEN aucun joueur NE DOIT pouvoir porter 2 compétences, les premières compétences restant libres
+
+#### Scenario: Règlement sans la règle
+- WHEN une équipe NAF WC 2027 V2.1 recrute deux Star Players
+- THEN son quota de joueurs à 2 compétences DOIT rester celui du roster
+
+### Requirement: Plusieurs versions d'un même tournoi coexistent
+Une nouvelle version d'un pack (NAF WC 2027 V3.0) DOIT être ajoutée au
+registre sous un slug propre (`naf_world_cup_2027_v3`), sans modifier la
+définition de la version précédente : les équipes et compétitions déjà créées
+référencent son slug. Les libellés courts DOIVENT permettre de distinguer les
+versions dans les listes.
+
+#### Scenario: Seed sur une base qui porte déjà le V2.1
+- WHEN le seed des règlements tourne sur une base contenant `naf_world_cup_2027`
+- THEN la ligne `naf_world_cup_2027_v3` DOIT être créée et la ligne V2.1 laissée intacte
+
+#### Scenario: Tier V3.0
+- WHEN une équipe Ogre est construite sous NAF WC 2027 V3.0
+- THEN son budget DOIT être 1 200 kpo et son pool 72 SPP
+
 ### Requirement: Règlement imposé par une ligue ou une coupe
 Une ligue et une coupe DOIVENT pouvoir être créées avec un
 `tournamentRuleset` (validé : slug connu, édition — et format pour la
