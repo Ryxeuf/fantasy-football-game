@@ -1,3 +1,18 @@
+## [1.261.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.260.0...v1.261.0) (2026-11-10)
+
+
+### ✨ Features
+
+* **admin:** gérer les prérequis d'une compétence ([65c56c9](https://github.com/Ryxeuf/fantasy-football-game/commit/65c56c9b4a2d937707274c8226985ffa10b23a0d))
+* **compendium:** afficher les prérequis des compétences ([af0c20c](https://github.com/Ryxeuf/fantasy-football-game/commit/af0c20ca7d37a76b92fa72f66493edb546f2a7e3))
+* **skills:** déclarer les prérequis d'acquisition d'une compétence ([c323c86](https://github.com/Ryxeuf/fantasy-football-game/commit/c323c867cdc58d7c5d679b692aa1f451ec8b8d75))
+* **web:** ne plus proposer une compétence sans son prérequis ([e7e6c35](https://github.com/Ryxeuf/fantasy-football-game/commit/e7e6c35e25717e92c2c226a70601e4163e7d90bc))
+
+
+### 🐛 Bug Fixes
+
+* **advancement:** refuser une compétence sans son prérequis ([40562fd](https://github.com/Ryxeuf/fantasy-football-game/commit/40562fd18f10d993af413453c3df9ead2ec5ae65))
+
 ## [1.260.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.259.3...v1.260.0) (2026-11-09)
 
 
