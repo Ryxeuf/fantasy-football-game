@@ -43,6 +43,7 @@ import TeamShareToggle from "./TeamShareToggle";
 import FirstTeamWelcomeBanner from "./FirstTeamWelcomeBanner";
 import RosterBadge from "../../../components/RosterBadge";
 import CaptainPanel from "./CaptainPanel";
+import DeletedTeamBanner from "./DeletedTeamBanner";
 import TeamMatchStatsPanel from "./TeamMatchStatsPanel";
 import { resolveTeamMatchStats } from "./team-match-stats";
 import TeamLogo from "../../../components/TeamLogo";
@@ -494,6 +495,8 @@ export default function TeamDetailPage() {
   const match = data?.currentMatch;
   const teamMatchStats = resolveTeamMatchStats(data);
   const canEdit = !match || (match.status !== "pending" && match.status !== "active");
+  // Équipe supprimée : fiche en lecture seule (le serveur refuse toute écriture).
+  const isDeleted = Boolean(team?.deletedAt);
 
   // A11 — accès compétences (primaire/secondaire) indexés par position, plus
   // règles spéciales d'équipe et ligues régionales, dérivés du détail roster.
@@ -599,12 +602,15 @@ export default function TeamDetailPage() {
           onExportPdf={handleExportRoster}
         />
       ) : null}
-      {id ? <PendingAdvancementsBanner teamId={id} /> : null}
+      {id && team?.deletedAt ? (
+        <DeletedTeamBanner teamId={id} deletedAt={team.deletedAt} isAdmin={isAdmin} />
+      ) : null}
+      {id && !isDeleted ? <PendingAdvancementsBanner teamId={id} /> : null}
       {id ? <MatchReportBanner teamId={id} /> : null}
       {/* Logo d'equipe : upload / retrait. Le logo est repris devant le
           nom de l'equipe dans les matchs, le classement et la feuille de
           match ; sans logo, celui de la race sert de repli. */}
-      {id && team ? (
+      {id && team && !isDeleted ? (
         <TeamLogoUploader
           teamId={id}
           roster={team.roster}
@@ -613,7 +619,7 @@ export default function TeamDetailPage() {
           onChange={refetchTeam}
         />
       ) : null}
-      {id && team ? (
+      {id && team && !isDeleted ? (
         <TeamShareToggle
           teamId={id}
           initialIsPublic={Boolean(team.isPublic)}
@@ -623,7 +629,7 @@ export default function TeamDetailPage() {
       {/* Règle spéciale "Capitaine" : rendu interne uniquement si le roster
           possède la règle (fetch autonome du statut). Après désignation, on
           recharge la fiche (le capitaine gagne la compétence Pro). */}
-      {id ? (
+      {id && !isDeleted ? (
         <CaptainPanel teamId={id} onDesignated={refetchTeam} />
       ) : null}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
@@ -637,7 +643,7 @@ export default function TeamDetailPage() {
             />
             {/* Renommage inline : disponible meme quand l'edition du roster
                 est verrouillee (equipe engagee) — le nom est cosmetique. */}
-            {id && team?.name ? (
+            {id && team?.name && !isDeleted ? (
               <TeamNameInlineEdit
                 teamId={id}
                 name={team.name}
@@ -721,7 +727,7 @@ export default function TeamDetailPage() {
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
-          {canEdit ? (
+          {isDeleted ? null : canEdit ? (
             <a
               href={`/me/teams/${id}/edit`}
               className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-center"
@@ -747,13 +753,15 @@ export default function TeamDetailPage() {
           >
             Stats de carriere
           </a>
-          <a
-            data-testid="team-treasury-link"
-            href={`/me/teams/${id}/treasury`}
-            className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors text-center"
-          >
-            {t.teams.treasuryTitle ?? "Tresorerie"}
-          </a>
+          {isDeleted ? null : (
+            <a
+              data-testid="team-treasury-link"
+              href={`/me/teams/${id}/treasury`}
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-amber-600 text-white rounded hover:bg-amber-700 transition-colors text-center"
+            >
+              {t.teams.treasuryTitle ?? "Tresorerie"}
+            </a>
+          )}
           {/* Journal : qui a modifie quoi, et quel a ete le resultat. Outil
               d'investigation, reserve aux admins dans l'interface — un coach
               n'a pas a arbitrer un ecart de tresorerie sur sa propre fiche. */}
@@ -1104,11 +1112,13 @@ export default function TeamDetailPage() {
                             teamId={String(id)}
                             player={p}
                             size={32}
+                            readOnly={isDeleted}
                             onChange={handlePlayerImageChanged}
                           />
                           <PlayerIdentityInlineEdit
                             teamId={String(id)}
                             player={p}
+                            readOnly={isDeleted}
                             onSaved={handleIdentitySaved}
                           />
                           {p.isCaptain && !p.dead && !p.firedAt ? (
@@ -1178,7 +1188,7 @@ export default function TeamDetailPage() {
                           >
                             ⬇️
                           </button>
-                          {p.dead || p.firedAt ? (
+                          {(p.dead || p.firedAt) && !isDeleted ? (
                             <button
                               type="button"
                               data-testid={`remove-player-${p.id}`}
@@ -1211,6 +1221,7 @@ export default function TeamDetailPage() {
                           teamId={String(id)}
                           player={p}
                           size={40}
+                          readOnly={isDeleted}
                           onChange={handlePlayerImageChanged}
                         />
                         <span className="font-mono text-xl font-bold text-gray-900">{p.number}</span>
@@ -1219,6 +1230,7 @@ export default function TeamDetailPage() {
                             <PlayerIdentityInlineEdit
                               teamId={String(id)}
                               player={p}
+                              readOnly={isDeleted}
                               onSaved={handleIdentitySaved}
                             />
                             {p.isCaptain && !p.dead && !p.firedAt ? (
@@ -1249,7 +1261,7 @@ export default function TeamDetailPage() {
                         >
                           {Math.round(playerValuePo(p) / 1000)}{t.teams.kpo}
                         </div>
-                        {p.dead || p.firedAt ? (
+                        {(p.dead || p.firedAt) && !isDeleted ? (
                           <button
                             type="button"
                             data-testid={`remove-player-mobile-${p.id}`}

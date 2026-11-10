@@ -27,6 +27,8 @@ export interface EditAccessInput {
   readonly canEdit: boolean;
   readonly frozen?: boolean;
   readonly buildLocked?: boolean;
+  /** Équipe supprimée : plus rien à éditer, pour personne. */
+  readonly deleted?: boolean;
 }
 
 export interface EditAccess {
@@ -42,7 +44,7 @@ export function resolveEditAccess(input: EditAccessInput): EditAccess {
   // l'ancien comportement (gel de composition = redirection).
   const buildLocked = input.buildLocked ?? frozen;
   return {
-    redirect: !input.canEdit || buildLocked,
+    redirect: Boolean(input.deleted) || !input.canEdit || buildLocked,
     rosterLocked: frozen,
   };
 }

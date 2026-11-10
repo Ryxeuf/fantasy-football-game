@@ -18,6 +18,8 @@ interface PlayerImageUploaderProps {
   size?: number;
   /** Notifie le parent (rafraîchit les autres affichages de l'avatar). */
   onChange?: (playerId: string, imageUrl: string | null) => void;
+  /** Affiche la photo sans bouton d'envoi ni de retrait (équipe supprimée). */
+  readOnly?: boolean;
 }
 
 /** PNG/JPEG uniquement : l'export de carte (satori) ne lit pas le WEBP. */
@@ -46,6 +48,7 @@ export default function PlayerImageUploader({
   player,
   size = 32,
   onChange,
+  readOnly = false,
 }: PlayerImageUploaderProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(
@@ -104,6 +107,10 @@ export default function PlayerImageUploader({
       setBusy(false);
     }
   };
+
+  if (readOnly) {
+    return <PlayerAvatar name={player.name} imageUrl={imageUrl} size={size} />;
+  }
 
   return (
     <span
