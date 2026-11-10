@@ -17,6 +17,8 @@ import {
 import StructuredData from "../../components/StructuredData";
 import { buildSkillDetailSchema } from "../skill-detail-structured-data";
 import type { Skill } from "../SkillsClient";
+import SkillPrerequisiteNotice from "../SkillPrerequisiteNotice";
+import { resolveSkillPrerequisites, type SkillPrerequisite } from "../skill-prerequisites";
 import {
   groupPositionsByRoster,
   type ApiPositionLite,
@@ -52,6 +54,7 @@ const RULESET_LABELS: Record<string, string> = {
 interface SkillBundle {
   skill: Skill;
   related: Skill[];
+  prerequisites: SkillPrerequisite[];
   /** Ruleset dans lequel la compétence a été trouvée (pour fetcher les positions). */
   ruleset: string;
 }
@@ -74,7 +77,8 @@ async function getSkillBundle(slug: string, throwing: boolean): Promise<SkillBun
         .filter((s) => s.category === skill.category && s.slug !== skill.slug)
         .sort((a, b) => a.nameFr.localeCompare(b.nameFr))
         .slice(0, 8);
-      return { skill, related, ruleset };
+      const prerequisites = resolveSkillPrerequisites(skill.requiredSkills, list);
+      return { skill, related, prerequisites, ruleset };
     }
   }
   return null;
@@ -141,7 +145,7 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
   if (!bundle) {
     notFound();
   }
-  const { skill, related, ruleset } = bundle;
+  const { skill, related, prerequisites, ruleset } = bundle;
   const positionGroups = await fetchPositionsWithSkill(skill.slug, ruleset);
   const positionCount = positionGroups.reduce(
     (sum, group) => sum + group.positions.length,
@@ -224,6 +228,11 @@ export default async function SkillDetailPage({ params }: SkillPageProps) {
             <p className="mt-2 text-nuffle-anthracite/80 font-body leading-relaxed">
               {skill.description}
             </p>
+            <SkillPrerequisiteNotice
+              skillSlug={skill.slug}
+              prerequisites={prerequisites}
+              language="fr"
+            />
             {/* E8 — rappel de ce qu'implique « actif » ou « passif ». */}
             <p className="mt-3 text-sm font-body text-nuffle-bronze/80">
               {getSkillActivationHint(skill.isPassive, "fr")}

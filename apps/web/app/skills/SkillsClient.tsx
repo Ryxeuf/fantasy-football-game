@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { SKILL_CATEGORY_ICONS } from "../lib/skill-category-icons";
+import SkillPrerequisiteNotice from "./SkillPrerequisiteNotice";
+import { resolveSkillPrerequisites } from "./skill-prerequisites";
 import {
   getSkillCategoryColor,
   getSkillCategorySolidColor,
@@ -34,6 +36,8 @@ export interface Skill {
   isPassive?: boolean;
   /** Compétence Élite : +10 000 po sur la valeur du joueur. */
   isElite?: boolean;
+  /** CSV de slugs : le joueur doit en posséder au moins un pour l'acquérir. */
+  requiredSkills?: string | null;
 }
 
 const RULESET_OPTIONS = [
@@ -305,6 +309,14 @@ export default function SkillsClient({
                             ? skill.description
                             : skill.descriptionEn || skill.description}
                         </p>
+                        <SkillPrerequisiteNotice
+                          skillSlug={skill.slug}
+                          prerequisites={resolveSkillPrerequisites(
+                            skill.requiredSkills,
+                            skills,
+                          )}
+                          language={language === "fr" ? "fr" : "en"}
+                        />
                       </div>
                       <div className="sm:ml-4 flex-shrink-0">
                         <span
