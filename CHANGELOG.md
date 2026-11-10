@@ -1,3 +1,15 @@
+## [1.262.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.261.0...v1.262.0) (2026-11-10)
+
+
+### ✨ Features
+
+* **web:** afficher une équipe supprimée en lecture seule ([2b64f4d](https://github.com/Ryxeuf/fantasy-football-game/commit/2b64f4da04c76d2a02176669a5bd9af4acee4d74))
+
+
+### 🐛 Bug Fixes
+
+* **team:** refuser toute écriture sur une équipe supprimée ([54403f2](https://github.com/Ryxeuf/fantasy-football-game/commit/54403f23e85548440ca6d2e97d255b7eeccc2136))
+
 ## [1.261.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.260.0...v1.261.0) (2026-11-10)
 
 
