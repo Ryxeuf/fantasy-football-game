@@ -115,3 +115,36 @@ describe("rollRandomPrimaryCandidates", () => {
     expect(out).toHaveLength(1);
   });
 });
+
+describe("rollRandomPrimaryCandidates — compétences inéligibles", () => {
+  const params = { category: "S" as const, ownedSlugs: ["brawler", "grab"], seed: "s1" };
+
+  it("ne propose jamais une compétence inéligible", () => {
+    const [first] = rollRandomPrimaryCandidates(params);
+    const out = rollRandomPrimaryCandidates({
+      ...params,
+      ineligible: new Set([first]),
+    });
+    expect(out).not.toContain(first);
+    expect(out).toHaveLength(2);
+  });
+
+  it("garde le candidat légal et remplace seulement l'inéligible", () => {
+    const [first, second] = rollRandomPrimaryCandidates(params);
+    const out = rollRandomPrimaryCandidates({
+      ...params,
+      ineligible: new Set([second]),
+    });
+    expect(out[0]).toBe(first);
+    expect(out[1]).not.toBe(second);
+  });
+
+  it("laisse identique un tirage qui ne contient aucune inéligible", () => {
+    const base = rollRandomPrimaryCandidates({ ...params, count: 12 });
+    const out = rollRandomPrimaryCandidates({
+      ...params,
+      ineligible: new Set([base[base.length - 1]]),
+    });
+    expect(out).toEqual(base.slice(0, 2));
+  });
+});

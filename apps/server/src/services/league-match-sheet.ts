@@ -77,7 +77,7 @@ import {
   type JourneymanPositionOption,
   type SheetJourneyman,
 } from "./league-sheet-journeymen";
-import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { resolveRandomPrimaryDraw } from "./random-primary-pool";
 import { parseAccessCsv } from "./skill-access";
 import {
   applyPrayerSppBonuses,
@@ -2283,7 +2283,11 @@ export async function rollJourneymanRandomPrimary(input: {
     seed: journeymanRandomPrimarySeed(sheet.id, journeyman, category),
     // Même pool (filtré en base) que le tirage d'équipe et que la
     // vérification à la validation.
-    pool: await resolveRandomPrimaryPool(category, team.ruleset),
+    ...(await resolveRandomPrimaryDraw(
+      category,
+      team.ruleset,
+      splitSkillCsv(journeyman.skills),
+    )),
   });
   if (candidates.length === 0) {
     throw new MatchSheetError(

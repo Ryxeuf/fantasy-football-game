@@ -24,10 +24,16 @@ import { prisma } from "../prisma";
 import { loadAdvancementSchedule } from "./advancement-schedule-repository";
 import type { Ruleset } from "@bb/game-engine";
 import {
+  meetsSkillPrerequisites,
   surchargeForAdvancement,
   type PlayerAdvancement,
 } from "@bb/game-engine";
-import { categoryCodeForSkill, checkSkillAccess } from "./skill-access";
+import {
+  categoryCodeForSkill,
+  checkSkillAccess,
+  getSkillSelectionInfo,
+  requiredSkillsLabel,
+} from "./skill-access";
 import { getEliteSkillSlugs } from "./elite-skills";
 import { updateTeamValues } from "../utils/team-values";
 import {
@@ -47,6 +53,7 @@ export class CommissionerEditError extends Error {
       | "invalid_delta"
       | "invalid_value"
       | "skill_already_present"
+      | "skill_prerequisite_missing"
       | "skill_not_present"
       | "skill_not_accessible"
       | "innate_skill"
@@ -414,6 +421,13 @@ export async function addPlayerSkill(input: AddSkillInput) {
 
   // E13 — validation d'acces + determination du type d'avancement.
   const ruleset = player.team?.ruleset ?? "season_3";
+  const { requiredSkills } = await getSkillSelectionInfo(trimmedSkill, ruleset);
+  if (!meetsSkillPrerequisites(requiredSkills, existing)) {
+    throw new CommissionerEditError(
+      "skill_prerequisite_missing",
+      `La competence "${trimmedSkill}" exige ${await requiredSkillsLabel(requiredSkills, ruleset)}`,
+    );
+  }
   const positionAccess = (await prisma.position.findFirst({
     where: {
       slug: player.position,

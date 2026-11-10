@@ -578,6 +578,27 @@ describe("applyAdvancementChoice", () => {
       skillSlug: "mighty-blow-2",
     });
     expect(out).toEqual({ skipped: true, reason: "skill-excluded-from-selection" });
+  });
+
+  it("refuse une competence dont le joueur n'a pas le prerequis", async () => {
+    mockEligiblePlayer();
+    mocked.positionFind.mockResolvedValue({
+      primarySkills: "G,S",
+      secondarySkills: "A",
+    });
+    mocked.skillFind.mockResolvedValue({
+      category: "Strength",
+      excludedFromSelection: false,
+      requiredSkills: "throw-team-mate",
+    });
+
+    const out = await applyAdvancementChoice({
+      teamId: "t1",
+      playerId: "p1",
+      type: "primary",
+      skillSlug: "strong-arm",
+    });
+    expect(out).toEqual({ skipped: true, reason: "skill-prerequisite-missing" });
     expect(mocked.playerUpdate).not.toHaveBeenCalled();
   });
 

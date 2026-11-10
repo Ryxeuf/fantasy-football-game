@@ -10,7 +10,7 @@ vi.mock("../prisma", () => ({
 
 import { RANDOM_PRIMARY_SKILL_TABLE_2025 } from "@bb/game-engine";
 import { prisma } from "../prisma";
-import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { resolveRandomPrimaryDraw } from "./random-primary-pool";
 
 const skillFindMany = prisma.skill.findMany as unknown as ReturnType<
   typeof vi.fn
@@ -29,10 +29,10 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-describe("resolveRandomPrimaryPool", () => {
+describe("resolveRandomPrimaryDraw", () => {
   it("sert la table officielle quand la base est alignée", async () => {
     skillFindMany.mockResolvedValue(rowsFor("G", "General"));
-    const pool = await resolveRandomPrimaryPool("G", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("G", "season_3", []);
     expect(pool).toEqual(RANDOM_PRIMARY_SKILL_TABLE_2025.G);
   });
 
@@ -44,7 +44,7 @@ describe("resolveRandomPrimaryPool", () => {
     rows.find((r) => r.slug === "provocation")!.category = "Scélérates";
     skillFindMany.mockResolvedValue(rows);
 
-    const pool = await resolveRandomPrimaryPool("G", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("G", "season_3", []);
     expect(pool).not.toContain("provocation");
     expect(pool).toHaveLength(RANDOM_PRIMARY_SKILL_TABLE_2025.G.length - 1);
   });
@@ -54,7 +54,7 @@ describe("resolveRandomPrimaryPool", () => {
     rows.find((r) => r.slug === "guard")!.excludedFromSelection = true;
     skillFindMany.mockResolvedValue(rows);
 
-    const pool = await resolveRandomPrimaryPool("S", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("S", "season_3", []);
     expect(pool).not.toContain("guard");
   });
 
@@ -62,7 +62,7 @@ describe("resolveRandomPrimaryPool", () => {
     skillFindMany.mockResolvedValue(
       rowsFor("A", "Agility").filter((r) => r.slug !== "hit-and-run"),
     );
-    const pool = await resolveRandomPrimaryPool("A", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("A", "season_3", []);
     expect(pool).not.toContain("hit-and-run");
   });
 
@@ -71,7 +71,7 @@ describe("resolveRandomPrimaryPool", () => {
       // Ordre DB volontairement inversé : c'est la table qui ordonne.
       [...rowsFor("M", "Mutation")].reverse(),
     );
-    const pool = await resolveRandomPrimaryPool("M", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("M", "season_3", []);
     expect(pool).toEqual(RANDOM_PRIMARY_SKILL_TABLE_2025.M);
   });
 
@@ -86,19 +86,38 @@ describe("resolveRandomPrimaryPool", () => {
         excludedFromSelection: false,
       },
     ]);
-    const pool = await resolveRandomPrimaryPool("S", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("S", "season_3", []);
     expect(pool).not.toContain("mighty-blow-2");
   });
 
   it("retombe sur la table officielle si la base est injoignable", async () => {
     skillFindMany.mockRejectedValue(new Error("no db"));
-    const pool = await resolveRandomPrimaryPool("P", "season_3");
+    const { pool } = await resolveRandomPrimaryDraw("P", "season_3", []);
     expect(pool).toEqual(RANDOM_PRIMARY_SKILL_TABLE_2025.P);
   });
 
   it("retombe sur la table officielle si le ruleset n'est pas seedé", async () => {
     skillFindMany.mockResolvedValue([]);
-    const pool = await resolveRandomPrimaryPool("K", "season_2");
+    const { pool } = await resolveRandomPrimaryDraw("K", "season_2", []);
     expect(pool).toEqual(RANDOM_PRIMARY_SKILL_TABLE_2025.K);
+  });
+
+  it("rend inéligible une compétence dont le joueur n'a pas le prérequis", async () => {
+    skillFindMany.mockResolvedValue(
+      rowsFor("S", "Strength").map((r) =>
+        r.slug === "strong-arm"
+          ? { ...r, requiredSkills: "throw-team-mate" }
+          : r,
+      ),
+    );
+
+    const orc = await resolveRandomPrimaryDraw("S", "season_3", ["brawler"]);
+    const troll = await resolveRandomPrimaryDraw("S", "season_3", [
+      "throw-team-mate",
+    ]);
+
+    expect(orc.pool).toContain("strong-arm");
+    expect(orc.ineligible.has("strong-arm")).toBe(true);
+    expect(troll.ineligible.has("strong-arm")).toBe(false);
   });
 });

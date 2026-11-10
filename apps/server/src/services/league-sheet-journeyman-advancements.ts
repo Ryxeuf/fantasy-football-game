@@ -24,6 +24,7 @@
  */
 
 import {
+  meetsSkillPrerequisites,
   canImproveCharacteristic,
   characteristicOptionsForRoll,
   isRandomSkillCategory,
@@ -39,7 +40,7 @@ import {
 } from "./league-sheet-journeymen";
 import { isRaisedDeadId } from "./league-sheet-raised-dead";
 import type { StagedAdvancement } from "./league-sheet-advancements";
-import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { resolveRandomPrimaryDraw } from "./random-primary-pool";
 import {
   checkSkillAccess,
   getSkillSelectionInfo,
@@ -71,6 +72,7 @@ export type JourneymanAdvancementSkipReason =
   | "random-not-in-candidates"
   | "skill-excluded-from-selection"
   | "skill-not-in-pool"
+  | "skill-prerequisite-missing"
   | "missing-stat"
   | "missing-d8"
   | "stat-roll-mismatch"
@@ -143,7 +145,7 @@ export async function verifyJourneymanAdvancement(input: {
       category,
       ownedSlugs: owned,
       seed: journeymanRandomPrimarySeed(input.sheetId, journeyman, category),
-      pool: await resolveRandomPrimaryPool(category, input.ruleset),
+      ...(await resolveRandomPrimaryDraw(category, input.ruleset, owned)),
     });
     if (!candidates.includes(entry.skillSlug)) {
       return { ok: false, reason: "random-not-in-candidates" };
@@ -156,6 +158,7 @@ export async function verifyJourneymanAdvancement(input: {
   let info: {
     categoryCode: SkillCategoryCode | null;
     excludedFromSelection: boolean;
+    requiredSkills?: string | null;
   };
   try {
     info = await getSkillSelectionInfo(entry.skillSlug, input.ruleset);
@@ -168,6 +171,9 @@ export async function verifyJourneymanAdvancement(input: {
   }
   if (info.excludedFromSelection) {
     return { ok: false, reason: "skill-excluded-from-selection" };
+  }
+  if (!meetsSkillPrerequisites(info.requiredSkills, owned)) {
+    return { ok: false, reason: "skill-prerequisite-missing" };
   }
   const check = checkSkillAccess({
     type: entry.type,

@@ -43,6 +43,7 @@ import {
   canImproveCharacteristic,
   rollRandomPrimaryCandidates,
   isRandomSkillCategory,
+  meetsSkillPrerequisites,
   type RandomSkillCategoryCode,
   type AdvancementFunding,
 } from "@bb/game-engine";
@@ -54,7 +55,7 @@ import {
   getSkillSelectionInfo,
   parseAccessCsv,
 } from "./skill-access";
-import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { resolveRandomPrimaryDraw } from "./random-primary-pool";
 
 /**
  * Seed déterministe du tirage random-primary d'un joueur : stable entre le
@@ -341,6 +342,7 @@ export type ApplyAdvancementOutcome =
         | "insufficient-spp"
         | "skill-not-in-pool"
         | "skill-excluded-from-selection"
+        | "skill-prerequisite-missing"
         | "skill-already-owned"
         | "missing-skill"
         | "missing-stat"
@@ -477,7 +479,11 @@ export async function rollRandomPrimarySkill(input: {
     // Pool FILTRE en base : une competence recategorisee ou retiree de la
     // selection en admin ne doit plus etre tiree, sinon l'anti-triche
     // ci-dessous refuse ensuite un choix pourtant legal (S17).
-    pool: await resolveRandomPrimaryPool(category, ruleset),
+    ...(await resolveRandomPrimaryDraw(
+      category,
+      ruleset,
+      parsePlayerSkillSlugs(player.skills),
+    )),
   });
   if (candidates.length === 0) {
     return { skipped: true, reason: "no-candidates" };
@@ -661,10 +667,11 @@ export async function applyAdvancementChoice(
       seed: randomPrimarySeed(player.id, taken.length, input.category),
       // MEME pool que l'endpoint de tirage : les deux doivent partir de la
       // meme liste, sinon un candidat propose est refuse a la validation.
-      pool: await resolveRandomPrimaryPool(
+      ...(await resolveRandomPrimaryDraw(
         input.category as RandomSkillCategoryCode,
         player.team?.ruleset ?? "season_3",
-      ),
+        ownedSlugs,
+      )),
     });
     if (!candidates.includes(skillSlug)) {
       return { skipped: true, reason: "random-not-in-candidates" };
@@ -683,8 +690,11 @@ export async function applyAdvancementChoice(
     },
     select: { primarySkills: true, secondarySkills: true },
   });
-  const { categoryCode: skillCode, excludedFromSelection } =
-    await getSkillSelectionInfo(skillSlug, ruleset);
+  const {
+    categoryCode: skillCode,
+    excludedFromSelection,
+    requiredSkills,
+  } = await getSkillSelectionInfo(skillSlug, ruleset);
 
   // Skill reservee (ex: mighty-blow-2, variante star player) : bloque toute
   // NOUVELLE selection, quelle que soit la disponibilite de donnees de
@@ -692,6 +702,13 @@ export async function applyAdvancementChoice(
   // deja possedee (jamais le cas ici : on ajoute une competence absente).
   if (excludedFromSelection) {
     return { skipped: true, reason: "skill-excluded-from-selection" };
+  }
+
+  // Prérequis d'acquisition (ex. Bras Musclé exige Lancer de Coéquipier) :
+  // indépendant de l'accès par catégorie, donc contrôlé quelle que soit la
+  // disponibilité des données de position.
+  if (!meetsSkillPrerequisites(requiredSkills, ownedSlugs)) {
+    return { skipped: true, reason: "skill-prerequisite-missing" };
   }
 
   if (positionAccess) {

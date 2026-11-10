@@ -439,6 +439,32 @@ describe("Lot I — commissioner-team-edit", () => {
       ).rejects.toMatchObject({ code: "skill_not_accessible" });
     });
 
+    it("refuse une compétence dont le joueur n'a pas le prérequis", async () => {
+      mockPrisma.leagueParticipant.count.mockResolvedValue(1);
+      mockPrisma.teamPlayer.findUnique.mockResolvedValue({
+        id: "P1",
+        teamId: "T1",
+        skills: "brawler,grab",
+        name: "X",
+        position: "black_orc_orque_noir",
+        advancements: "[]",
+        team: { roster: "black_orc", ruleset: "season_3" },
+      });
+      mockPrisma.skill.findFirst.mockResolvedValue({
+        category: "Strength",
+        requiredSkills: "throw-team-mate",
+      });
+      await expect(
+        addPlayerSkill({
+          leagueId: "L1",
+          teamId: "T1",
+          playerId: "P1",
+          skill: "strong-arm",
+          byCommissionerId: commish,
+        }),
+      ).rejects.toMatchObject({ code: "skill_prerequisite_missing" });
+    });
+
     it("A6 — enregistre un avancement et incrémente la VE (+20k primaire)", async () => {
       mockPrisma.leagueParticipant.count.mockResolvedValue(1);
       mockPrisma.teamPlayer.findUnique.mockResolvedValue({

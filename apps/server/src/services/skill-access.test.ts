@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("../prisma", () => ({
-  prisma: { skill: { findFirst: vi.fn() } },
+  prisma: { skill: { findFirst: vi.fn(), findMany: vi.fn() } },
 }));
 
 import { prisma } from "../prisma";
@@ -18,6 +18,8 @@ import {
   checkSkillAccess,
   categoryCodeForSkill,
   toCanonicalAccessCsv,
+  checkRequiredSkillsInput,
+  requiredSkillsLabel,
 } from "./skill-access";
 
 type MockFn = ReturnType<typeof vi.fn>;
@@ -200,5 +202,52 @@ describe("categoryCodeForSkill", () => {
   it("renvoie null si la catégorie n'est pas pickable", async () => {
     skillFind.mockResolvedValue({ category: "Trait" });
     expect(await categoryCodeForSkill("loner", "season_3")).toBeNull();
+  });
+});
+
+describe("requiredSkillsLabel", () => {
+  const skillFindMany = prisma.skill.findMany as MockFn;
+
+  it("joint les noms français des alternatives", async () => {
+    skillFindMany.mockResolvedValue([
+      { slug: "secret-weapon", nameFr: "Arme Secrète" },
+      { slug: "stunty", nameFr: "Minus" },
+    ]);
+    await expect(requiredSkillsLabel("secret-weapon,stunty", "season_3")).resolves.toBe(
+      "Arme Secrète ou Minus",
+    );
+  });
+
+  it("retombe sur les slugs si le catalogue est injoignable", async () => {
+    skillFindMany.mockRejectedValue(new Error("db"));
+    await expect(requiredSkillsLabel("stunty", "season_3")).resolves.toBe("stunty");
+  });
+});
+
+describe("checkRequiredSkillsInput", () => {
+  const knownSlugs = new Set(["throw-team-mate", "stunty", "strong-arm"]);
+  const check = (requested: string[]) =>
+    checkRequiredSkillsInput({ requested, selfSlug: "strong-arm", knownSlugs });
+
+  it("rend un CSV dédoublonné", () => {
+    expect(check(["stunty", "stunty", "throw-team-mate"])).toEqual({
+      ok: true,
+      csv: "stunty,throw-team-mate",
+    });
+  });
+
+  it("rend une chaîne vide quand le prérequis est retiré", () => {
+    expect(check([])).toEqual({ ok: true, csv: "" });
+  });
+
+  it("refuse la compétence elle-même", () => {
+    expect(check(["strong-arm"]).ok).toBe(false);
+  });
+
+  it("refuse un slug inconnu de l'édition", () => {
+    expect(check(["bullseye"])).toEqual({
+      ok: false,
+      error: "Prérequis inconnu pour cette édition : bullseye",
+    });
   });
 });

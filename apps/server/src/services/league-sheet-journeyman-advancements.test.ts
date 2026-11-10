@@ -11,7 +11,7 @@ vi.mock("./skill-access", async () => {
   return { ...actual, getSkillSelectionInfo: vi.fn() };
 });
 vi.mock("./random-primary-pool", () => ({
-  resolveRandomPrimaryPool: vi.fn(),
+  resolveRandomPrimaryDraw: vi.fn(),
 }));
 
 import {
@@ -19,7 +19,7 @@ import {
   rollRandomPrimaryCandidates,
 } from "@bb/game-engine";
 import { getSkillSelectionInfo } from "./skill-access";
-import { resolveRandomPrimaryPool } from "./random-primary-pool";
+import { resolveRandomPrimaryDraw } from "./random-primary-pool";
 import {
   clearAdvancementTrace,
   mergeAdvancementTraces,
@@ -34,7 +34,7 @@ import {
 import type { StagedAdvancement } from "./league-sheet-advancements";
 
 const mockSkillInfo = getSkillSelectionInfo as ReturnType<typeof vi.fn>;
-const mockPool = resolveRandomPrimaryPool as ReturnType<typeof vi.fn>;
+const mockPool = resolveRandomPrimaryDraw as ReturnType<typeof vi.fn>;
 
 /** Trois-quart Orque (Principale G,S — Secondaire A,K), aucune compétence. */
 const ORC: SheetJourneyman = {
@@ -77,7 +77,10 @@ beforeEach(() => {
   vi.resetAllMocks();
   mockPool.mockImplementation(
     async (category: "G" | "A" | "S" | "P" | "M" | "K") =>
-      RANDOM_PRIMARY_SKILL_TABLE_2025[category],
+      ({
+        pool: RANDOM_PRIMARY_SKILL_TABLE_2025[category],
+        ineligible: new Set<string>(),
+      }),
   );
   mockSkillInfo.mockImplementation(async (slug: string) => ({
     categoryCode:
@@ -215,7 +218,7 @@ describe("verifyJourneymanAdvancement", () => {
         }),
       ).resolves.toEqual({ ok: false, reason: "random-not-in-candidates" });
       // Même pool filtré en base que l'endpoint de tirage.
-      expect(mockPool).toHaveBeenCalledWith("G", "season_3");
+      expect(mockPool).toHaveBeenCalledWith("G", "season_3", expect.any(Array));
     });
 
     it("suit le POSTE du journalier : les candidats du Gobelin ne sont pas ceux de l'Orque", async () => {

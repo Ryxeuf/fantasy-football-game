@@ -57,6 +57,7 @@ import {
   type TeamAuditPrismaLike,
 } from '../services/team-audit';
 import {
+  meetsSkillPrerequisites,
   applyCharacteristicImprovement,
   characteristicOptionsForRoll,
   canImproveCharacteristic,
@@ -70,11 +71,12 @@ import {
 import { serverLog } from '../utils/server-log';
 import {
   checkSkillAccess,
+  requiredSkillsLabel,
   dbCategoryToCode,
   parseAccessCsv,
   type SkillCategoryCode,
 } from '../services/skill-access';
-import { resolveRandomPrimaryPool } from '../services/random-primary-pool';
+import { resolveRandomPrimaryDraw } from '../services/random-primary-pool';
 import { isTeamBuildLocked } from '../services/team-lock-status';
 import {
   advancementCostFor,
@@ -415,7 +417,11 @@ export async function handleUpdatePlayerSkills(
         ownedSlugs: currentSkills,
         seed: `${playerId}:${advancements.length}:${categoryCode}`,
         count: 1,
-        pool: await resolveRandomPrimaryPool(categoryCode, teamRuleset),
+        ...(await resolveRandomPrimaryDraw(
+          categoryCode,
+          teamRuleset,
+          currentSkills,
+        )),
       });
       if (candidates.length === 0) {
         sendError(
@@ -437,6 +443,7 @@ export async function handleUpdatePlayerSkills(
           nameFr: true,
           category: true,
           excludedFromSelection: true,
+          requiredSkills: true,
         },
       });
       if (!skillDef) {
@@ -453,6 +460,19 @@ export async function handleUpdatePlayerSkills(
         sendError(
           res,
           `La competence '${skillDef.nameFr}' n'est pas disponible a la selection`,
+          400,
+        );
+        return;
+      }
+
+      if (!meetsSkillPrerequisites(skillDef.requiredSkills, currentSkills)) {
+        const required = await requiredSkillsLabel(
+          skillDef.requiredSkills,
+          teamRuleset,
+        );
+        sendError(
+          res,
+          `La competence '${skillDef.nameFr}' exige ${required}`,
           400,
         );
         return;

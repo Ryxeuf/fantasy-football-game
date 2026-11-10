@@ -19,12 +19,13 @@
  */
 
 import { prisma } from "../prisma";
+import { meetsSkillPrerequisites } from "@bb/game-engine";
 import type { BbPosition, BbRace } from "@bb/nfl-mapper";
 
 import {
-  categoryCodeForSkill,
   checkSkillAccess,
   dbCategoryToCode,
+  getSkillSelectionInfo,
   parseAccessCsv,
   type AdvancementAccessType,
   type SkillCategoryCode,
@@ -41,6 +42,7 @@ export type SkillUnlockErrorCode =
   | "SKILL_NOT_FOUND"
   | "SKILL_ALREADY_OWNED"
   | "SKILL_NOT_IN_POOL"
+  | "SKILL_PREREQUISITE_MISSING"
   | "NOT_ENOUGH_SPP"
   | "SKILL_CAP_REACHED";
 
@@ -177,11 +179,20 @@ export async function unlockSkill(
     );
   }
 
-  const skillCode = await categoryCodeForSkill(opts.skillSlug, RULESET_S3);
+  const { categoryCode: skillCode, requiredSkills } = await getSkillSelectionInfo(
+    opts.skillSlug,
+    RULESET_S3,
+  );
   if (!skillCode) {
     throw new SkillUnlockError(
       "SKILL_NOT_FOUND",
       `Skill ${opts.skillSlug} introuvable / categorie non pickable`,
+    );
+  }
+  if (!meetsSkillPrerequisites(requiredSkills, [...starters, ...unlocked])) {
+    throw new SkillUnlockError(
+      "SKILL_PREREQUISITE_MISSING",
+      `Skill ${opts.skillSlug} exige ${requiredSkills}`,
     );
   }
   const access = checkSkillAccess({

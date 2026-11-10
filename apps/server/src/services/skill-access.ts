@@ -22,6 +22,7 @@
  * `categoryCodeForSkill` touche la DB (intégration).
  */
 
+import { parseRequiredSkills } from "@bb/game-engine";
 import { prisma } from "../prisma";
 
 export type SkillCategoryCode = "G" | "A" | "S" | "P" | "M" | "K";
@@ -174,13 +175,67 @@ export async function categoryCodeForSkill(
 export async function getSkillSelectionInfo(
   slug: string,
   ruleset: string,
-): Promise<{ categoryCode: SkillCategoryCode | null; excludedFromSelection: boolean }> {
+): Promise<{
+  categoryCode: SkillCategoryCode | null;
+  excludedFromSelection: boolean;
+  requiredSkills: string | null;
+}> {
   const skill = await prisma.skill.findFirst({
     where: { slug, ruleset: ruleset as never },
-    select: { category: true, excludedFromSelection: true },
+    select: { category: true, excludedFromSelection: true, requiredSkills: true },
   });
   return {
     categoryCode: dbCategoryToCode(skill?.category),
     excludedFromSelection: skill?.excludedFromSelection ?? false,
+    requiredSkills: skill?.requiredSkills ?? null,
   };
+}
+
+/**
+ * Libellé lisible des prérequis (« Lancer de Coéquipier ou Minus ») pour les
+ * messages de refus. Catalogue injoignable : les slugs, plutôt qu'un échec.
+ */
+export async function requiredSkillsLabel(
+  requiredSkills: string | null | undefined,
+  ruleset: string,
+): Promise<string> {
+  const slugs = parseRequiredSkills(requiredSkills);
+  let names = new Map<string, string>();
+  try {
+    const rows = (await prisma.skill.findMany({
+      where: { slug: { in: slugs }, ruleset: ruleset as never },
+      select: { slug: true, nameFr: true },
+    })) as Array<{ slug: string; nameFr: string }>;
+    names = new Map(rows.map((r) => [r.slug, r.nameFr]));
+  } catch {
+    // Repli sur les slugs : le refus doit rester servi.
+  }
+  return slugs.map((slug) => names.get(slug) ?? slug).join(" ou ");
+}
+
+export type RequiredSkillsInputCheck =
+  | { readonly ok: true; readonly csv: string }
+  | { readonly ok: false; readonly error: string };
+
+/**
+ * Valide les prérequis saisis en admin. Une liste vide donne `""` : la
+ * compétence reste sans contrainte, et le seed ne la réécrira pas.
+ */
+export function checkRequiredSkillsInput(input: {
+  readonly requested: readonly string[];
+  readonly selfSlug: string;
+  readonly knownSlugs: ReadonlySet<string>;
+}): RequiredSkillsInputCheck {
+  const slugs = [...new Set(input.requested)];
+  if (slugs.includes(input.selfSlug)) {
+    return { ok: false, error: "Une compétence ne peut pas être son propre prérequis" };
+  }
+  const unknown = slugs.filter((slug) => !input.knownSlugs.has(slug));
+  if (unknown.length > 0) {
+    return {
+      ok: false,
+      error: `Prérequis inconnu pour cette édition : ${unknown.join(", ")}`,
+    };
+  }
+  return { ok: true, csv: slugs.join(",") };
 }

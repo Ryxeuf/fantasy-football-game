@@ -150,6 +150,10 @@ export function isRandomSkillCategory(
  * la catégorie déjà résolue en base (une compétence recatégorisée ou retirée
  * de la sélection en admin ne doit plus être tirée). Absent ⇒ la table
  * officielle p.121 ci-dessus, qui reste le repli hors base.
+ *
+ * `ineligible` écarte APRÈS le mélange les compétences que ce joueur ne peut
+ * pas acquérir (prérequis manquant) : la suivante du mélange prend leur place,
+ * et un tirage qui n'en contenait aucune reste strictement identique.
  */
 export function rollRandomPrimaryCandidates(params: {
   category: RandomSkillCategoryCode;
@@ -157,6 +161,7 @@ export function rollRandomPrimaryCandidates(params: {
   seed: string;
   count?: number;
   pool?: readonly string[];
+  ineligible?: ReadonlySet<string>;
 }): string[] {
   const { category, ownedSlugs, seed } = params;
   const count = params.count ?? 2;
@@ -172,5 +177,8 @@ export function rollRandomPrimaryCandidates(params: {
     const j = Math.floor(rng() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return arr.slice(0, Math.min(count, arr.length));
+  const drawable = params.ineligible
+    ? arr.filter((slug) => !params.ineligible?.has(slug))
+    : arr;
+  return drawable.slice(0, Math.min(count, drawable.length));
 }
