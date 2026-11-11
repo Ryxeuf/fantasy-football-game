@@ -1,3 +1,10 @@
+## [1.262.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.0...v1.262.1) (2026-11-11)
+
+
+### 🐛 Bug Fixes
+
+* **leagues:** créditer au joueur recruté les gestes d'un journalier ([#1083](https://github.com/Ryxeuf/fantasy-football-game/issues/1083)) ([cfc19de](https://github.com/Ryxeuf/fantasy-football-game/commit/cfc19deb3c9d7fa7d3e36c1f88c810933ebfc532))
+
 ## [1.262.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.261.0...v1.262.0) (2026-11-10)
 
 
