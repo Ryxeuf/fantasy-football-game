@@ -70,6 +70,8 @@ export interface BuildAdvancementAllocatorProps {
   pack?: TournamentRulesetDefinition | null;
   /** Règles du règlement pour ce roster. */
   packRules?: TournamentRosterRules | null;
+  /** Star Players recrutés (ils peuvent retirer des cumuls, cf. règlement). */
+  starPlayerCount?: number;
 }
 
 export default function BuildAdvancementAllocator({
@@ -81,6 +83,7 @@ export default function BuildAdvancementAllocator({
   onChange,
   pack = null,
   packRules = null,
+  starPlayerCount = 0,
 }: BuildAdvancementAllocatorProps) {
   const [catalog, setCatalog] = useState<SkillCatalogItem[]>([]);
   const [playerFilter, setPlayerFilter] = useState("");
@@ -123,8 +126,8 @@ export default function BuildAdvancementAllocator({
   const eliteSlugSet = useMemo(() => new Set(eliteSlugs), [eliteSlugs]);
 
   const ctx: BuildCostContext = useMemo(
-    () => ({ pack, packRules, editionEliteSkills: eliteSlugs }),
-    [pack, packRules, eliteSlugs],
+    () => ({ pack, packRules, editionEliteSkills: eliteSlugs, starPlayerCount }),
+    [pack, packRules, eliteSlugs, starPlayerCount],
   );
 
   const skillName = (slug: string) => catalogBySlug.get(slug)?.nameFr ?? slug;
@@ -268,6 +271,8 @@ export default function BuildAdvancementAllocator({
             : `${stacking.used}/${stacking.max} joueur${
                 stacking.max > 1 ? "s" : ""
               } à 2 compétences`}
+          {(pack.stackReductionPerStarPlayer ?? 0) > 0 &&
+            " (chaque Star Player recruté retire un cumul)"}
         </p>
       )}
 

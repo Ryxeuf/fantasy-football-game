@@ -9,6 +9,7 @@ vi.mock('../prisma', () => ({
     team: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     teamPlayer: { findMany: vi.fn(), findFirst: vi.fn(), update: vi.fn(), findUnique: vi.fn() },
     cupParticipant: { findFirst: vi.fn() },
+    teamStarPlayer: { count: vi.fn() },
     // Le règlement de tournoi est résolu par le repository (base d'abord).
     // Table vide ⇒ repli sur le registre du moteur, sans bruit d'erreur.
     tournamentRuleset: { findMany: vi.fn(() => Promise.resolve([])) },
@@ -57,6 +58,7 @@ const playerFindMany = prisma.teamPlayer.findMany as unknown as ReturnType<typeo
 const playerFindFirst = prisma.teamPlayer.findFirst as unknown as ReturnType<typeof vi.fn>;
 const playerFindUnique = prisma.teamPlayer.findUnique as unknown as ReturnType<typeof vi.fn>;
 const playerUpdate = prisma.teamPlayer.update as unknown as ReturnType<typeof vi.fn>;
+const starCount = prisma.teamStarPlayer.count as unknown as ReturnType<typeof vi.fn>;
 const cupFindFirst = prisma.cupParticipant.findFirst as unknown as ReturnType<typeof vi.fn>;
 const skillFindMany = prisma.skill.findMany as unknown as ReturnType<typeof vi.fn>;
 const frozen = isTeamBuildLocked as unknown as ReturnType<typeof vi.fn>;
@@ -416,6 +418,66 @@ describe('assertTournamentAllowsAdvancement', () => {
         type: 'primary',
       }),
     ).rejects.toMatchObject({ code: 'tournament-rules' });
+  });
+});
+
+/**
+ * Pack NAF WC 2027 V3.0 : chaque Star Player recruté retire un cumul. Un
+ * roster Ogre (2 cumuls) n'en garde qu'un avec un Star Player, aucun avec deux.
+ */
+describe('assertTournamentAllowsAdvancement — cumuls retirés par Star Player', () => {
+  const doubled = (id: string) => ({
+    id,
+    advancements: JSON.stringify([{ type: 'primary' }, { type: 'primary' }]),
+  });
+  const single = (id: string) => ({
+    id,
+    advancements: JSON.stringify([{ type: 'primary' }]),
+  });
+  /** 2e compétence demandée pour P2, P1 en cumulant déjà deux. */
+  const secondSkillForP2 = async (packSlug: string) =>
+    assertTournamentAllowsAdvancement({
+      teamId: 'T1',
+      roster: 'ogre',
+      playerId: 'P2',
+      pack: await packForTeam(packSlug),
+      type: 'primary',
+    });
+
+  it('sans Star Player : le second cumul est accepté', async () => {
+    playerFindMany.mockResolvedValue([doubled('P1'), single('P2')]);
+    starCount.mockResolvedValue(0);
+    await expect(secondSkillForP2('naf_world_cup_2027_v3')).resolves.toBeUndefined();
+    expect(starCount).toHaveBeenCalledWith({ where: { teamId: 'T1' } });
+  });
+
+  it('avec un Star Player : le second cumul est refusé, et le message le dit', async () => {
+    playerFindMany.mockResolvedValue([doubled('P1'), single('P2')]);
+    starCount.mockResolvedValue(1);
+    await expect(secondSkillForP2('naf_world_cup_2027_v3')).rejects.toMatchObject({
+      code: 'tournament-rules',
+      message: expect.stringContaining('Star Player'),
+    });
+  });
+
+  it('avec deux Star Players : plus aucun cumul', async () => {
+    playerFindMany.mockResolvedValue([single('P2')]);
+    starCount.mockResolvedValue(2);
+    await expect(secondSkillForP2('naf_world_cup_2027_v3')).rejects.toMatchObject({
+      code: 'tournament-rules',
+    });
+  });
+
+  it('une 1re compétence reste libre quel que soit le nombre de Star Players', async () => {
+    playerFindMany.mockResolvedValue([{ id: 'P2', advancements: '[]' }]);
+    starCount.mockResolvedValue(2);
+    await expect(secondSkillForP2('naf_world_cup_2027_v3')).resolves.toBeUndefined();
+  });
+
+  it('pack V2.1 : les Star Players ne sont ni lus ni décomptés', async () => {
+    playerFindMany.mockResolvedValue([doubled('P1'), single('P2')]);
+    await expect(secondSkillForP2('naf_world_cup_2027')).resolves.toBeUndefined();
+    expect(starCount).not.toHaveBeenCalled();
   });
 });
 

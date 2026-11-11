@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { NAF_WORLD_CUP_2027 } from "@bb/game-engine";
+import { NAF_WORLD_CUP_2027, NAF_WORLD_CUP_2027_V3 } from "@bb/game-engine";
 import {
   parseDefinition,
   serializeDefinition,
@@ -249,5 +249,36 @@ describe("remises et plafond Arme Secrète des coups de pouce", () => {
       }),
     );
     expect(parsed.ok).toBe(true);
+  });
+});
+
+describe("pack NAF WC 2027 V3.0 — cumuls retirés par Star Player", () => {
+  it("le pack V3.0 passe par le JSON et se reparse à l'identique", () => {
+    const stored = JSON.parse(
+      JSON.stringify(serializeDefinition(NAF_WORLD_CUP_2027_V3)),
+    );
+    const parsed = parseDefinition(stored);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.definition).toEqual(NAF_WORLD_CUP_2027_V3);
+    expect(parsed.definition.stackReductionPerStarPlayer).toBe(1);
+  });
+
+  it("le champ reste absent quand le règlement ne le porte pas (V2.1)", () => {
+    const parsed = parseDefinition(serializeDefinition(NAF_WORLD_CUP_2027));
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.definition.stackReductionPerStarPlayer).toBeUndefined();
+  });
+
+  it("refuse une valeur négative, fractionnaire ou hors borne", () => {
+    for (const value of [-1, 0.5, 3]) {
+      const parsed = parseDefinition(
+        validInput({ stackReductionPerStarPlayer: value }),
+      );
+      expect(parsed.ok).toBe(false);
+      if (parsed.ok) continue;
+      expect(parsed.issues[0].path).toBe("stackReductionPerStarPlayer");
+    }
   });
 });

@@ -22,7 +22,7 @@
 import {
   ELITE_SKILL_SURCHARGE,
   SURCHARGE_PER_ADVANCEMENT,
-  maxTwoSkillPlayers,
+  maxTwoSkillPlayersWithStars,
   meetsSkillPrerequisites,
   resolveTournamentEliteSkills,
   tournamentSkillCost,
@@ -135,6 +135,11 @@ export interface BuildCostContext {
    * des compétences concernées — le cas du pack NAF WC 2027.
    */
   readonly editionEliteSkills?: readonly string[];
+  /**
+   * Star Players recrutés : certains règlements (NAF WC 2027 V3.0) retirent
+   * un cumul par Star Player. Absent = 0.
+   */
+  readonly starPlayerCount?: number;
 }
 
 /** Compétences Élite retenues par le règlement du contexte (vide hors pack). */
@@ -259,7 +264,11 @@ export function stackingUsage(
   const used = [...perPlayer.values()].filter((n) => n >= 2).length;
   const max =
     ctx.pack && ctx.packRules
-      ? maxTwoSkillPlayers(ctx.packRules.skillStacking)
+      ? maxTwoSkillPlayersWithStars(
+          ctx.pack,
+          ctx.packRules,
+          ctx.starPlayerCount ?? 0,
+        )
       : Number.POSITIVE_INFINITY;
   return { used, max };
 }

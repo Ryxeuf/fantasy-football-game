@@ -14,7 +14,11 @@ vi.mock("../utils/server-log", () => ({
   serverLog: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), log: vi.fn() },
 }));
 
-import { NAF_WORLD_CUP_2027 } from "@bb/game-engine";
+import {
+  NAF_WORLD_CUP_2027,
+  NAF_WORLD_CUP_2027_V3,
+  TOURNAMENT_RULESET_SLUGS,
+} from "@bb/game-engine";
 import { serializeDefinition } from "../schemas/tournament-ruleset.schemas";
 import {
   getTournamentRulesetDefinition,
@@ -43,16 +47,18 @@ describe("repli sur le registre du moteur", () => {
   it("table vide : le registre est servi", async () => {
     findMany.mockResolvedValue([]);
     const list = await listTournamentRulesets();
-    expect(list).toHaveLength(1);
-    expect(list[0].slug).toBe("naf_world_cup_2027");
-    expect(list[0].source).toBe("engine");
+    expect(list.map((r) => r.slug)).toEqual([...TOURNAMENT_RULESET_SLUGS]);
+    expect(list.every((r) => r.source === "engine")).toBe(true);
     expect(list[0].definition).toEqual(NAF_WORLD_CUP_2027);
+    // Le pack V3.0 est servi dès le déploiement, avant tout seed.
+    expect(list[1].definition).toEqual(NAF_WORLD_CUP_2027_V3);
   });
 
   it("base injoignable : le registre est servi", async () => {
     findMany.mockRejectedValue(new Error("relation does not exist"));
     const list = await listTournamentRulesets();
-    expect(list.map((r) => r.source)).toEqual(["engine"]);
+    expect(list.map((r) => r.slug)).toEqual([...TOURNAMENT_RULESET_SLUGS]);
+    expect(list.every((r) => r.source === "engine")).toBe(true);
   });
 
   it("ligne au JSON invalide : la ligne est ignorée, le moteur prend le relais", async () => {
@@ -60,9 +66,10 @@ describe("repli sur le registre du moteur", () => {
       row({ definition: { slug: "naf_world_cup_2027", nameFr: "" } }),
     ]);
     const list = await listTournamentRulesets();
-    expect(list).toHaveLength(1);
-    expect(list[0].source).toBe("engine");
-    expect(list[0].definition).toEqual(NAF_WORLD_CUP_2027);
+    const v21 = list.filter((r) => r.slug === "naf_world_cup_2027");
+    expect(v21).toHaveLength(1);
+    expect(v21[0].source).toBe("engine");
+    expect(v21[0].definition).toEqual(NAF_WORLD_CUP_2027);
   });
 });
 
@@ -96,6 +103,7 @@ describe("la base prime", () => {
     expect(list.map((r) => r.slug).sort()).toEqual([
       "coupe_maison",
       "naf_world_cup_2027",
+      "naf_world_cup_2027_v3",
     ]);
   });
 });
@@ -103,12 +111,15 @@ describe("la base prime", () => {
 describe("règlements désactivés", () => {
   it("exclus des listes de création", async () => {
     findMany.mockResolvedValue([row({ enabled: false })]);
-    expect(await listTournamentRulesets()).toEqual([]);
+    // Désactiver le V2.1 ne retire que lui : le V3.0 reste proposé.
+    expect((await listTournamentRulesets()).map((r) => r.slug)).toEqual([
+      "naf_world_cup_2027_v3",
+    ]);
     invalidateTournamentRulesetCache();
     findMany.mockResolvedValue([row({ enabled: false })]);
     expect(
       (await listTournamentRulesets({ includeDisabled: true })).map((r) => r.slug),
-    ).toEqual(["naf_world_cup_2027"]);
+    ).toEqual(["naf_world_cup_2027", "naf_world_cup_2027_v3"]);
   });
 
   it("restent résolvables par slug (équipes déjà créées)", async () => {

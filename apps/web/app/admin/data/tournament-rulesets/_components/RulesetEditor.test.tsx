@@ -313,3 +313,34 @@ describe("coups de pouce : prix réduit et plafond Arme Secrète", () => {
     expect(screen.getByLabelText("Max avec Arme Secrète team_mascot")).toBeTruthy();
   });
 });
+
+describe("Star Players : cumuls retirés par Star Player recruté", () => {
+  it("part de 0 quand le règlement ne porte pas la règle, et enregistre la saisie", async () => {
+    const onSave = renderEditor();
+    fireEvent.click(screen.getByTestId("tab-stars"));
+    const input = screen
+      .getByTestId("field-stackReductionPerStarPlayer")
+      .querySelector("input") as HTMLInputElement;
+    expect(input.value).toBe("0");
+
+    fireEvent.change(input, { target: { value: "1" } });
+    fireEvent.click(screen.getByTestId("ruleset-save"));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0].stackReductionPerStarPlayer).toBe(1);
+  });
+
+  it("une erreur sur ce champ signale l'onglet Star Players", async () => {
+    validateRuleset.mockRejectedValue(
+      new RulesetApiError("Définition de règlement invalide", [
+        { path: "stackReductionPerStarPlayer", message: "Trop grand" },
+      ]),
+    );
+    renderEditor();
+    fireEvent.click(screen.getByTestId("ruleset-check"));
+    fireEvent.click(await screen.findByTestId("tab-stars"));
+    expect(
+      (await screen.findByTestId("error-stackReductionPerStarPlayer")).textContent,
+    ).toBe("Trop grand");
+  });
+});

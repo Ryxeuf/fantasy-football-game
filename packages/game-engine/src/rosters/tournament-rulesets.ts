@@ -154,6 +154,13 @@ export interface TournamentRulesetDefinition {
    * `false` : aucune Ligue n'est alors demandée ni enregistrée.
    */
   readonly regionalLeagueChoice?: boolean;
+  /**
+   * Nombre de cumuls (joueurs autorisés à porter 2 compétences) RETIRÉS par
+   * Star Player recruté. Absent ou 0 = les Star Players ne touchent pas au
+   * cumul (pack V2.1). Le pack NAF WC 2027 V3.0 en retire 1 par Star Player.
+   * Cf. `maxTwoSkillPlayersWithStars`.
+   */
+  readonly stackReductionPerStarPlayer?: number;
 }
 
 /**
@@ -295,11 +302,146 @@ export const NAF_WORLD_CUP_2027: TournamentRulesetDefinition = {
   scoring: { win: 5, draw: 2, loss: 0, concession: -5 },
 };
 
+/** Ligne du tableau des tiers V3.0 : le cumul et les Star Players suivent la COLONNE de SPP. */
+function v3Tier(
+  goldBudget: number,
+  sppBudget: 44 | 52 | 60 | 66 | 72,
+): TournamentRosterRules {
+  const upperTier = sppBudget >= 60;
+  return {
+    goldBudget,
+    sppBudget,
+    skillStacking: upperTier ? "two_players" : "one_player",
+    starPlayersAllowed: upperTier,
+  };
+}
+
+/**
+ * NAF World Cup 2027 (Malte) — Rules Pack officiel V3.0.
+ *
+ * Règlement DISTINCT du V2.1 (slug propre) : les équipes et compétitions
+ * créées sous V2.1 gardent leurs budgets. Ce qui change :
+ *  - tableau des tiers refondu (budgets de 1 100 à 1 200 kpo, colonnes
+ *    44 / 52 / 60 / 66 / 72 SPP) ;
+ *  - cumul et Star Players portés par la COLONNE de SPP : 44 et 52 = un
+ *    joueur à 2 compétences, sans Star Player ; 60, 66 et 72 = deux joueurs
+ *    à 2 compétences, Star Players autorisés ;
+ *  - chaque Star Player recruté retire un cumul ;
+ *  - taxe Star Players par tranches 0-200 / 201-300 / 301+ kpo ;
+ *  - liste des Star Players bannis révisée.
+ * Escouades (6 coachs + 1 remplaçant), départages et conduite ne sont pas
+ * modélisés : seule la composition d'équipe l'est.
+ */
+export const NAF_WORLD_CUP_2027_V3: TournamentRulesetDefinition = {
+  slug: "naf_world_cup_2027_v3",
+  nameFr: "NAF World Cup 2027 (règlement officiel V3.0)",
+  nameEn: "NAF World Cup 2027 (official rules pack V3.0)",
+  shortLabel: "NAF World Cup 2027 V3.0",
+  version: "V3.0",
+  edition: "season_3",
+  format: "bb11",
+  descriptionFr:
+    "Tournoi résurrection : aucun SPP gagné en jeu, blessures et morts non " +
+    "conservées entre les matchs. Budget d'or et budget de SPP fixés par le " +
+    "tier du roster ; l'or et les SPP non dépensés à la création sont perdus. " +
+    "Minimum 11 joueurs réguliers avant tout Star Player ; compétences au " +
+    "choix uniquement (améliorations aléatoires et de caractéristique " +
+    "interdites). Chaque Star Player recruté retire un cumul de compétences. " +
+    "Maîtres de la Non-vie et Contagieux s'appliquent, mais un joueur ajouté " +
+    "en cours de match quitte l'équipe à la fin de la rencontre. Toutes les " +
+    "équipes sont considérées à la même VEA pour les Prières à Nuffle. Joué " +
+    "en escouades de 6 coachs (plus un remplaçant facultatif), un roster et " +
+    "un Star Player donnés ne pouvant être pris qu'une fois par escouade.",
+  resurrection: true,
+  minRegularPlayersBeforeStars: 11,
+  rosterRules: {
+    // ——— 1 100 000 po ———
+    amazon: v3Tier(1100, 44),
+    dark_elf: v3Tier(1100, 44),
+    high_elf: v3Tier(1100, 44),
+    old_world_alliance: v3Tier(1100, 44),
+    wood_elf: v3Tier(1100, 44),
+    human: v3Tier(1100, 52),
+    orc: v3Tier(1100, 52),
+    skaven: v3Tier(1100, 52),
+    undead: v3Tier(1100, 52),
+    underworld: v3Tier(1100, 52),
+    nurgle: v3Tier(1100, 60),
+    snotling: v3Tier(1100, 66),
+    // ——— 1 140 000 po ———
+    lizardmen: v3Tier(1140, 44),
+    elven_union: v3Tier(1140, 52),
+    tomb_kings: v3Tier(1140, 60),
+    chaos_chosen: v3Tier(1140, 66),
+    imperial_nobility: v3Tier(1140, 66),
+    // ——— 1 160 000 po ———
+    necromantic_horror: v3Tier(1160, 52),
+    slann: v3Tier(1160, 52),
+    bretonnian: v3Tier(1160, 66),
+    chaos_renegade: v3Tier(1160, 72),
+    // ——— 1 180 000 po ———
+    gnome: v3Tier(1180, 60),
+    black_orc: v3Tier(1180, 72),
+    goblin: v3Tier(1180, 72),
+    halfling: v3Tier(1180, 72),
+    // ——— 1 200 000 po ———
+    vampire: v3Tier(1200, 52),
+    norse: v3Tier(1200, 60),
+    chaos_dwarf: v3Tier(1200, 66),
+    khorne: v3Tier(1200, 66),
+    dwarf: v3Tier(1200, 72),
+    ogre: v3Tier(1200, 72),
+  },
+  skillCosts: {
+    firstPrimary: 6,
+    firstSecondary: 10,
+    secondPrimary: 8,
+    secondSecondary: 12,
+    eliteSurcharge: 2,
+  },
+  // Comme le V2.1 : surcoût Elite facturé sans republier la liste, donc
+  // celles de l'édition (`resolveTournamentEliteSkills`).
+  eliteSkills: [],
+  bannedStarPlayers: [
+    "anqi_panqi",
+    "boa_konssstriktr",
+    // « Dribl & Drull » : la paire est bannie (2 slugs).
+    "dribl",
+    "drull",
+    "deeproot_strongbranch",
+    "estelle_la_veneaux",
+    "glotl_stop",
+    // « Grak and Crumbleberry » : la paire est bannie (2 slugs).
+    "grak",
+    "crumbleberry",
+    "griff_oberwald",
+    "hakflem_skuttlespike",
+    "hthark_the_unstoppable",
+    "ivar_eriksson",
+    "jordell_freshbreeze",
+    "maple_highgrove",
+    "morg_n_thorg",
+    "ripper_bolgrot",
+    "skitter_stab_stab",
+    // « Skrorg Snowpelt » dans le pack ; slug du catalogue du moteur.
+    "skorg_snowpelt",
+  ],
+  starPlayerSppTax: [
+    { maxTotalCostK: 200, spp: 18 },
+    { maxTotalCostK: 300, spp: 24 },
+    { maxTotalCostK: Number.POSITIVE_INFINITY, spp: 32 },
+  ],
+  stackReductionPerStarPlayer: 1,
+  allowedInducements: NAF_WORLD_CUP_2027.allowedInducements,
+  scoring: { win: 5, draw: 2, loss: 0, concession: -5 },
+};
+
 /** Registre des règlements de tournoi disponibles. */
 export const TOURNAMENT_RULESETS: Readonly<
   Record<string, TournamentRulesetDefinition>
 > = {
   [NAF_WORLD_CUP_2027.slug]: NAF_WORLD_CUP_2027,
+  [NAF_WORLD_CUP_2027_V3.slug]: NAF_WORLD_CUP_2027_V3,
 };
 
 /** Slugs disponibles (ordre d'affichage des listes déroulantes). */
@@ -331,6 +473,25 @@ export function maxTwoSkillPlayers(stacking: TournamentSkillStacking): number {
   if (stacking === "one_player") return 1;
   if (stacking === "two_players") return 2;
   return 0;
+}
+
+/**
+ * Nombre de joueurs pouvant cumuler 2 compétences UNE FOIS les Star Players
+ * recrutés pris en compte : le quota du roster, moins
+ * `stackReductionPerStarPlayer` par Star Player (jamais négatif). Sans
+ * réduction au règlement, c'est `maxTwoSkillPlayers`.
+ *
+ * `starPlayerCount` compte les Star Players recrutés, une paire valant deux.
+ */
+export function maxTwoSkillPlayersWithStars(
+  def: TournamentRulesetDefinition,
+  rules: TournamentRosterRules,
+  starPlayerCount = 0,
+): number {
+  const base = maxTwoSkillPlayers(rules.skillStacking);
+  const perStar = def.stackReductionPerStarPlayer ?? 0;
+  if (perStar <= 0 || starPlayerCount <= 0) return base;
+  return Math.max(0, base - perStar * starPlayerCount);
 }
 
 /**
@@ -371,7 +532,8 @@ export interface TournamentSkillPlanResult {
  * règlement de tournoi : types autorisés (choix primaire/secondaire
  * uniquement), 2 compétences max par joueur, quota de joueurs à 2 compétences
  * selon le cumul du roster, et calcule le coût SPP total (1re/2e compétence ×
- * primaire/secondaire + surcoût Elite). La vérification du budget SPP
+ * primaire/secondaire + surcoût Elite). `starPlayerCount` réduit le quota
+ * quand le règlement le prévoit (`stackReductionPerStarPlayer`). La vérification du budget SPP
  * (pool − taxe Star Players) reste à la charge de l'appelant.
  */
 export function validateTournamentSkillPlan(
@@ -379,6 +541,7 @@ export function validateTournamentSkillPlan(
   rules: TournamentRosterRules,
   picks: readonly TournamentSkillPick[],
   eliteSkills?: ReadonlySet<string>,
+  starPlayerCount = 0,
 ): TournamentSkillPlanResult {
   const eliteSet = eliteSkills ?? new Set(def.eliteSkills);
   const perPlayer = new Map<string, number>();
@@ -419,16 +582,36 @@ export function validateTournamentSkillPlan(
   }
 
   const doubled = [...perPlayer.values()].filter((n) => n >= 2).length;
-  const maxDoubled = maxTwoSkillPlayers(rules.skillStacking);
+  const maxDoubled = maxTwoSkillPlayersWithStars(def, rules, starPlayerCount);
   if (doubled > maxDoubled) {
-    const label =
-      maxDoubled === 0
-        ? "Ce roster ne peut pas cumuler 2 compétences sur un même joueur"
-        : `Ce roster ne peut cumuler 2 compétences que sur ${maxDoubled} joueur${maxDoubled > 1 ? "s" : ""} maximum`;
-    return { valid: false, error: label, totalSpp: 0 };
+    return {
+      valid: false,
+      error: tournamentStackingError(def, rules, starPlayerCount),
+      totalSpp: 0,
+    };
   }
 
   return { valid: true, totalSpp };
+}
+
+/**
+ * Message de refus d'un cumul hors quota. Il nomme les Star Players quand
+ * ce sont eux qui ont consommé le quota du roster : « ce roster ne peut pas
+ * cumuler » serait faux pour un roster qui le peut sans Star Player.
+ */
+export function tournamentStackingError(
+  def: TournamentRulesetDefinition,
+  rules: TournamentRosterRules,
+  starPlayerCount = 0,
+): string {
+  const max = maxTwoSkillPlayersWithStars(def, rules, starPlayerCount);
+  const reduced = max < maxTwoSkillPlayers(rules.skillStacking);
+  const suffix = reduced
+    ? " (chaque Star Player recruté retire un cumul)"
+    : "";
+  return max === 0
+    ? `Ce roster ne peut pas cumuler 2 compétences sur un même joueur${suffix}`
+    : `Ce roster ne peut cumuler 2 compétences que sur ${max} joueur${max > 1 ? "s" : ""} maximum${suffix}`;
 }
 
 /**

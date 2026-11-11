@@ -611,6 +611,17 @@ export function StarPlayersSection({
         </div>
       </div>
 
+      <NumberField
+        label="Cumuls retirés par Star Player recruté"
+        path="stackReductionPerStarPlayer"
+        errors={errors}
+        hint="0 = les Star Players ne réduisent pas le nombre de joueurs à 2 compétences."
+        min={0}
+        max={2}
+        value={def.stackReductionPerStarPlayer ?? 0}
+        onChange={(v) => onChange({ stackReductionPerStarPlayer: v })}
+      />
+
       <div>
         <p className="text-sm font-medium text-gray-700">
           Star Players interdits ({def.bannedStarPlayers.length})
