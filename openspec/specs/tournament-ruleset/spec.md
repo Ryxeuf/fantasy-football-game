@@ -95,6 +95,28 @@ builder, par une seule fonction pure (`maxTwoSkillPlayersWithStars`).
 - WHEN une équipe NAF WC 2027 V2.1 recrute deux Star Players
 - THEN son quota de joueurs à 2 compétences DOIT rester celui du roster
 
+### Requirement: Le règlement s'applique aux Star Players après la création
+Le recrutement d'un Star Player sur une équipe déjà créée
+(`POST /team/:id/star-players`) DOIT appliquer le règlement de l'équipe comme
+le fait la création : roster autorisé, Star Players bannis, effectif régulier
+minimum, taxe de PSP, cumuls retirés et plafond « Arme Secrète » des coups de
+pouce. La taxe DOIT être prélevée sur le pool dans la même transaction que le
+recrutement, et rendue au renvoi d'un Star Player — un renvoi NE DOIT jamais
+être refusé par le règlement. La liste des recrutables DOIT marquer non
+recrutables, avec la raison, les Star Players que le règlement ferme.
+
+#### Scenario: Star Player banni après la création
+- WHEN le coach d'une équipe NAF WC 2027 V3.0 recrute un Star Player banni depuis la fiche d'équipe
+- THEN la requête DOIT être refusée (400) et rien NE DOIT être écrit
+
+#### Scenario: Taxe prélevée puis rendue
+- WHEN une équipe Ogre V3.0 (pool 72) recrute un Star Player à 80 kpo, puis le renvoie
+- THEN le pool DOIT passer à 54, puis revenir à 72
+
+#### Scenario: Compétences déjà achetées
+- WHEN le pool restant ne couvre pas la taxe, ou que l'équipe utilise déjà les cumuls que le Star Player retirerait
+- THEN le recrutement DOIT être refusé avec un message invitant à retirer d'abord une compétence
+
 ### Requirement: Plusieurs versions d'un même tournoi coexistent
 Une nouvelle version d'un pack (NAF WC 2027 V3.0) DOIT être ajoutée au
 registre sous un slug propre (`naf_world_cup_2027_v3`), sans modifier la

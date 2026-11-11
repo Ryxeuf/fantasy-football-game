@@ -12,3 +12,4 @@ Nouveau règlement de tournoi : NAF World Cup 2027 V3.0.
 - **Star Players** : 17 noms bannis (liste révisée), taxe de 18 / 24 / 32 SPP par tranches 0-200 / 201-300 / 301+ kpo.
 - **Coups de pouce, barème de compétences et points** : inchangés par rapport au V2.1.
 - **Correctif** : un plan de compétences refusé par le règlement est désormais rejeté avant la création de l'équipe (elle était créée puis laissée en place).
+- **Correctif** : le règlement de tournoi s'applique aussi au recrutement d'un Star Player sur une équipe déjà créée (il ne valait qu'à la création). Roster autorisé, bannis, effectif minimum, taxe de PSP, cumuls retirés et plafond « Arme Secrète » sont vérifiés ; la taxe est prélevée sur le pool au recrutement et rendue au renvoi ; la liste des recrutables marque les Star Players fermés par le règlement.

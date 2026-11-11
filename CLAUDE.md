@@ -1002,6 +1002,15 @@ par `maxTwoSkillPlayersWithStars` (build, ajout de competence, builder web).
 Tout test qui suppose un registre a UN reglement casse a l'ajout du suivant :
 asserter sur `TOURNAMENT_RULESET_SLUGS`.
 
+Un reglement ne vaut que s'il est applique a CHAQUE chemin qui change ce
+qu'il contraint, pas seulement a la creation : le recrutement d'un Star
+Player sur une equipe existante ne le consultait pas du tout (bannis, taxe,
+roster ferme). `services/tournament-star-player-rules` porte la decision
+(`decidePackStarChange`, pure) pour le recrutement, le renvoi et la liste des
+recrutables. Le pool stocke (`Team.startingPspPool`) etant « tier − taxe », un
+changement de Star Players le deplace de l'ECART de taxe dans la meme
+transaction, et un renvoi la rend — il n'est jamais refuse.
+
 Les fonctions PURES du moteur (bareme de competences, quota de cumul, taxe
 Star Players, `validateTournamentSkillPlan`, `resolveTournamentEliteSkills`)
 sont inchangees : elles prennent la definition en argument.
