@@ -288,6 +288,81 @@ describe("Lot J — league-player-stats", () => {
     });
   });
 
+  describe("journalier recruté en fin de match", () => {
+    it("crédite son interception (et son titre de JDM) au joueur recruté", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([
+        { teamId: "T1" },
+      ]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([
+        player({ id: "tp-fresno", name: "Fresno", teamId: "T1" }),
+        player({ id: "p1", name: "Titulaire", teamId: "T1" }),
+      ]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([
+        // Le journal cite le journalier par son id SYNTHÉTIQUE.
+        { matchSheetId: "s1", kind: "interception", team: "home", actorPlayerId: "journeyman-home-1", targetPlayerId: null, injurySeverity: null },
+        { matchSheetId: "s1", kind: "touchdown", team: "home", actorPlayerId: "p1", targetPlayerId: null, injurySeverity: null },
+        // Autre feuille, autre journalier au même id, NON recruté : rien.
+        { matchSheetId: "s2", kind: "interception", team: "home", actorPlayerId: "journeyman-home-1", targetPlayerId: null, injurySeverity: null },
+      ]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([
+        {
+          id: "s1",
+          motmPlayerIds: ["journeyman-home-1"],
+          pairing: {
+            homeParticipant: { teamId: "T1" },
+            awayParticipant: { teamId: "T2" },
+            match: {
+              offlineResultInput: {
+                input: {
+                  purchasesHome: [
+                    { kind: "journeyman", name: "Fresno", cost: 50000, journeymanId: "journeyman-home-1" },
+                  ],
+                  purchasesAway: [],
+                },
+                rosterMutations: {
+                  home: { createdPlayerIds: ["tp-fresno"] },
+                  away: { createdPlayerIds: [] },
+                },
+              },
+            },
+          },
+        },
+        {
+          id: "s2",
+          motmPlayerIds: [],
+          pairing: {
+            homeParticipant: { teamId: "T1" },
+            awayParticipant: { teamId: "T3" },
+            match: { offlineResultInput: { input: { purchasesHome: [] } } },
+          },
+        },
+      ]);
+      mockPrisma.roster.findMany.mockResolvedValue([]);
+      const cat = await computeLeaderboards({ seasonId: "S1", topN: 5 });
+      expect(cat.scope).toBe("season");
+      expect(cat.topInterceptors.map((r) => [r.playerId, r.playerName, r.value])).toEqual([
+        ["tp-fresno", "Fresno", 1],
+      ]);
+      expect(cat.topMvps.map((r) => [r.playerId, r.value])).toEqual([
+        ["tp-fresno", 1],
+      ]);
+      // Ses PSP de saison suivent : interception (2) + JDM (4).
+      expect(cat.topFutureStars.find((r) => r.playerId === "tp-fresno")?.value).toBe(6);
+    });
+
+    it("lit le snapshot de validation dans la même requête que les feuilles", async () => {
+      mockPrisma.leagueParticipant.findMany.mockResolvedValue([{ teamId: "T1" }]);
+      mockPrisma.teamPlayer.findMany.mockResolvedValue([player({ id: "p1", teamId: "T1" })]);
+      mockPrisma.leagueMatchEvent.findMany.mockResolvedValue([]);
+      mockPrisma.leagueMatchSheet.findMany.mockResolvedValue([]);
+      await computeLeaderboards({ seasonId: "S1" });
+      const args = mockPrisma.leagueMatchSheet.findMany.mock.calls[0][0];
+      expect(args.select.pairing.select.match).toEqual({
+        select: { offlineResultInput: true },
+      });
+    });
+  });
+
   describe("FR18 — killers / aggressors (events de saison)", () => {
     it("classe killers (casualty+dead) et agresseurs (aggression) par acteur", async () => {
       mockPrisma.leagueParticipant.findMany.mockResolvedValue([

@@ -51,6 +51,10 @@ import {
   type MatchSummaryOptions,
 } from "./league-match-summary";
 import { buildSheetSummaryOptions } from "./league-sheet-summary-options";
+import {
+  hiredSheetPlayerIdsFromOfflineSnapshot,
+  resolveHiredSheetPlayerId,
+} from "./league-sheet-hired-players";
 
 // E16 — les classements affichent des noms lisibles, jamais les slugs
 // techniques (ex: "gnome_belluaire_gnome"). Fallback : slug sans underscores.
@@ -163,6 +167,8 @@ interface SeasonSheetRow {
   pairing?: {
     homeParticipant?: { teamId: string } | null;
     awayParticipant?: { teamId: string } | null;
+    /** Snapshot de validation : qui a été recruté parmi les journaliers. */
+    match?: { offlineResultInput?: unknown } | null;
   } | null;
 }
 
@@ -299,6 +305,10 @@ export async function computeLeaderboards(input: {
   // exactement comme la feuille elle-même (`buildSheetSummaryOptions`).
   const mvpCounts = new Map<string, number>();
   const optionsBySheetId = new Map<string, MatchSummaryOptions>();
+  // Journaliers / morts relevés RECRUTÉS en fin de match : le journal les
+  // cite par leur id synthétique, le classement les crédite au `TeamPlayer`
+  // créé (sinon leur interception comptait pour l'équipe, pas pour eux).
+  const hiredBySheetId = new Map<string, Map<string, string>>();
   const playersByTeamId = new Map<string, PlayerSelected[]>();
   for (const p of players) {
     const list = playersByTeamId.get(p.team.id) ?? [];
@@ -330,12 +340,20 @@ export async function computeLeaderboards(input: {
           select: {
             homeParticipant: { select: { teamId: true } },
             awayParticipant: { select: { teamId: true } },
+            match: { select: { offlineResultInput: true } },
           },
         },
       },
     })) as Array<SeasonSheetRow>;
     for (const s of sheets) {
-      for (const playerId of parseStringArrayJson(s.motmPlayerIds)) {
+      const hired = hiredSheetPlayerIdsFromOfflineSnapshot(
+        s.pairing?.match?.offlineResultInput,
+      );
+      if (typeof s.id === "string" && hired.size > 0) {
+        hiredBySheetId.set(s.id, hired);
+      }
+      for (const rawId of parseStringArrayJson(s.motmPlayerIds)) {
+        const playerId = resolveHiredSheetPlayerId(rawId, hired) ?? rawId;
         mvpCounts.set(playerId, (mvpCounts.get(playerId) ?? 0) + 1);
       }
       if (typeof s.id !== "string") continue;
@@ -415,7 +433,11 @@ export async function computeLeaderboards(input: {
     hasEvents = events.length > 0;
     const bump = (m: Map<string, number>, id: string) =>
       m.set(id, (m.get(id) ?? 0) + 1);
-    for (const e of events) {
+    for (const raw of events) {
+      // Qualification (sortie, élimination effective) sur l'évènement BRUT :
+      // les options de la feuille (compétences gelées) connaissent le
+      // journalier par son id synthétique. Seul le CRÉDIT va au recruté.
+      const e = withHiredPlayerIds(raw);
       if (e.actorPlayerId) {
         if (e.kind === "touchdown") bump(tdCounts, e.actorPlayerId);
         if (e.kind === "pass_complete") bump(compCounts, e.actorPlayerId);
@@ -424,7 +446,7 @@ export async function computeLeaderboards(input: {
         // que la feuille. Une Action Spéciale sans Innovateur Violent, un
         // atterrissage sans Vol Fatal ou une agression sans Frénésie
         // d'Agression blessent, mais ne classent pas leur auteur.
-        if (eliminationEarnsSpp(toSummaryEvent(e), sheetOptions(e))) {
+        if (eliminationEarnsSpp(toSummaryEvent(raw), sheetOptions(raw))) {
           bump(casCounts, e.actorPlayerId);
           if (e.injurySeverity === "dead") bump(killCounts, e.actorPlayerId);
         }
@@ -440,13 +462,26 @@ export async function computeLeaderboards(input: {
       if (
         e.targetPlayerId &&
         SUFFERED_KINDS.has(e.kind) &&
-        eliminationOccurred(toSummaryEvent(e))
+        eliminationOccurred(toSummaryEvent(raw))
       ) {
         bump(sufferedCounts, e.targetPlayerId);
       }
     }
   } catch {
     // Events indisponibles (tests SQLite) -> classements events vides.
+  }
+
+  function withHiredPlayerIds(e: SeasonEventRow): SeasonEventRow {
+    const hired =
+      typeof e.matchSheetId === "string"
+        ? hiredBySheetId.get(e.matchSheetId)
+        : undefined;
+    if (!hired) return e;
+    return {
+      ...e,
+      actorPlayerId: resolveHiredSheetPlayerId(e.actorPlayerId, hired),
+      targetPlayerId: resolveHiredSheetPlayerId(e.targetPlayerId, hired),
+    };
   }
 
   function sheetOptions(e: SeasonEventRow): MatchSummaryOptions {
