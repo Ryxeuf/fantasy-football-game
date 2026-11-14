@@ -3,8 +3,28 @@
 import type { ReactNode } from "react";
 import TeamLogo from "./TeamLogo";
 import SkillTooltip from "../me/teams/components/SkillTooltip";
+import SkillAccessBadges from "../me/teams/components/SkillAccessBadges";
+import KeywordChips from "./KeywordChips";
 import PlayerAvatar from "./PlayerAvatar";
 import SpecialRulesBadges, { type SpecialRuleView } from "./SpecialRulesBadges";
+import RosterPlayerCard from "./roster-panel/RosterPlayerCard";
+import { useRosterPositionMeta } from "./roster-panel/useRosterPositionMeta";
+import {
+  formatGold,
+  formatTarget,
+  hasTeamPlayerCard,
+  playerValueLabel,
+  rosterStatCells,
+  rosterStatTestId,
+} from "./roster-panel/roster-player-view";
+import {
+  PlayerAvailability,
+  PlayerCardButtons,
+  PlayerDeathMark,
+  PlayerInjuries,
+  PlayerNoteBadge,
+  RemoveDeadButton,
+} from "./roster-panel/RosterPlayerParts";
 
 /**
  * Fiche de roster en LECTURE SEULE, partagée par la ligue
@@ -70,6 +90,8 @@ export interface RosterTeam {
   id: string;
   name: string;
   roster: string;
+  /** Édition de l'équipe (catalogue de compétences, accès). Optionnel : rétro-compat API. */
+  ruleset?: string;
   raceName: string;
   coachName: string | null;
   /** Absente en coupe (pas de trésorerie en tournoi résurrection). */
@@ -96,67 +118,7 @@ export interface RosterTeam {
   cupMatchesPlayed?: number;
 }
 
-/**
- * Origine lisible d'une mort. Sert à expliquer le ☠ : une mort issue d'une
- * feuille de match est réversible en invalidant la feuille, une mort posée
- * à la main ne l'est pas de la même façon.
- */
-const STATUS_SOURCE_LABELS: Record<string, string> = {
-  match_sheet: "feuille de match",
-  online_match: "match en ligne",
-  commissioner: "décision du commissaire",
-  admin: "administration",
-  legacy: "origine inconnue",
-};
-
-function deathOriginLabel(p: RosterPlayer): string {
-  if (!p.dead) return "";
-  const source = p.statusSource
-    ? (STATUS_SOURCE_LABELS[p.statusSource] ?? p.statusSource)
-    : null;
-  const when = p.statusAt
-    ? new Date(p.statusAt).toLocaleDateString("fr-FR")
-    : null;
-  if (source && when) return `Décédé — ${source}, le ${when}`;
-  if (source) return `Décédé — ${source}`;
-  return "Décédé";
-}
-
-/**
- * FR20 — libellé compact des blessures durables d'un joueur.
- *
- * Les Blessures Persistantes sont notées « N BP » (abréviation officielle
- * de la feuille d'équipe) et se **cumulent** : le compteur serveur est
- * incrémenté à chaque nouvelle BP, on affiche donc le total tel quel
- * (« 1 BP », « 2 BP », …) sans pluriel — « BP » est un sigle invariable.
- * Les réductions de caractéristique (Séquelles) restent affichées à part.
- */
-function lastingInjuriesLabel(p: RosterPlayer): string {
-  const parts: string[] = [];
-  const r = p.statReductions;
-  if (r) {
-    if (r.ma > 0) parts.push(`-${r.ma} M`);
-    if (r.st > 0) parts.push(`-${r.st} F`);
-    if (r.ag > 0) parts.push(`+${r.ag} AG`);
-    if (r.pa > 0) parts.push(`+${r.pa} CP`);
-    if (r.av > 0) parts.push(`-${r.av} AR`);
-  }
-  const bp = p.nigglingInjuries ?? 0;
-  if (bp > 0) parts.push(`${bp} BP`);
-  return parts.join(", ");
-}
-
-export function formatGold(n: number): string {
-  return `${n.toLocaleString("fr-FR")} po`;
-}
-
-/**
- * Valeur d'un joueur en kpo (105 000 -> « 105 k po ») : la colonne
- * « Valeur » du roster (17 colonnes) reste compacte.
- */
-function formatKpo(n: number): string {
-  return `${Math.round(n / 1000).toLocaleString("fr-FR")} k po`;
-}
+export { formatGold };
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -202,6 +164,14 @@ export default function TeamRosterPanel({
   // Une coupe rejoue son roster d'inscription intact : ni blessure durable,
   // ni absence, ni mort ne s'y conservent.
   const showInjuries = !isCup;
+  // Mots-clés, accès aux compétences, compétences de base et illustration
+  // des postes : même source que la fiche « Mes équipes ».
+  const positionMeta = useRosterPositionMeta(team.roster, team.ruleset);
+  // En-têtes de stats : mêmes cellules que chaque ligne (titres ligue/coupe).
+  const statHeaders = rosterStatCells(
+    { dead: false, spp: 0 },
+    competition,
+  );
 
   return (
     <div data-testid={testId} className="mt-4 space-y-5">
@@ -285,8 +255,12 @@ export default function TeamRosterPanel({
         ) : null}
       </section>
 
-      {/* Roster */}
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      {/* Roster — tableau sur écran large, cartes sur écran étroit (même
+          contenu, cf. roster-panel/roster-player-view). */}
+      <section
+        data-testid="roster-table"
+        className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white xl:block"
+      >
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="whitespace-nowrap bg-slate-50 text-xs uppercase tracking-wide text-gray-500">
@@ -300,31 +274,11 @@ export default function TeamRosterPanel({
                 <th className="px-2 py-2 text-right">PA</th>
                 <th className="px-2 py-2 text-right">AV</th>
                 <th className="px-2 py-2 text-left">Compétences</th>
-                <th
-                  className="px-2 py-2 text-right"
-                  title={
-                    isCup
-                      ? "Matchs joués dans la coupe"
-                      : "Matchs joués, toutes compétitions (ligue, coupe, en ligne)"
-                  }
-                >
-                  MJ
-                </th>
-                <th className="px-2 py-2 text-right" title="Touchdowns marqués">TD</th>
-                <th className="px-2 py-2 text-right" title="Éliminations provoquées sur Blocage">Élim.</th>
-                <th className="px-2 py-2 text-right" title="Passes complétées">Pas.</th>
-                <th className="px-2 py-2 text-right" title="Interceptions">Int.</th>
-                <th className="px-2 py-2 text-right" title="Agressions">Agr.</th>
-                <th
-                  className="px-2 py-2 text-right"
-                  title={
-                    isCup
-                      ? "Points de Star Player à l'inscription (une coupe n'en rapporte pas)"
-                      : "Points de Star Player gagnés"
-                  }
-                >
-                  PSP
-                </th>
+                {statHeaders.map((h) => (
+                  <th key={h.key} className="px-2 py-2 text-right" title={h.title}>
+                    {h.label}
+                  </th>
+                ))}
                 <th
                   className="px-2 py-2 text-right"
                   title="Valeur du joueur (coût du poste + améliorations)"
@@ -342,162 +296,148 @@ export default function TeamRosterPanel({
                     <th className="px-2 py-2 text-center" title="Disponible pour le prochain match">Dispo</th>
                   </>
                 ) : null}
-                {canRemoveDead ? (
-                  <th
-                    className="px-2 py-2 text-center"
-                    title="Retirer un joueur mort du roster (sans licenciement)"
-                  >
-                    {""}
-                  </th>
-                ) : null}
+                <th
+                  className="px-2 py-2 text-left"
+                  title="Carte du joueur (PNG) ; le commissaire retire ici un joueur mort (sans licenciement)"
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {players.map((p) => {
-                const injuries = lastingInjuriesLabel(p);
+                const posMeta = positionMeta.metaByPosition.get(p.position);
+                const access = positionMeta.accessByPosition.get(p.position);
+                const positionName = p.positionName ?? posMeta?.displayName ?? p.position;
                 return (
                   <tr
                     key={p.id}
-                    className={`border-t border-gray-100 ${
-                      p.dead
-                        ? "text-gray-400 line-through"
-                        : "hover:bg-slate-50/60"
+                    className={`border-t border-gray-100 align-top ${
+                      p.dead ? "text-gray-400" : "hover:bg-slate-50/60"
                     }`}
                   >
                     <td className="px-2 py-2 tabular-nums text-gray-500">
                       {p.number ?? "—"}
                     </td>
-                    <td className="px-2 py-2 font-medium text-nuffle-anthracite">
-                      <span className="inline-flex items-center gap-1.5">
+                    <td className="min-w-[11rem] px-2 py-2 font-medium text-nuffle-anthracite">
+                      <span className="inline-flex flex-wrap items-center gap-1.5">
                         <PlayerAvatar
                           name={p.name}
                           imageUrl={p.imageUrl}
                           size={24}
                         />
-                        {p.name}
-                        {p.note ? (
-                          <span
-                            data-testid={`player-note-${p.id}`}
-                            className="rounded bg-nuffle-gold/15 px-1.5 py-0.5 text-[10px] font-semibold text-nuffle-bronze"
-                          >
-                            {p.note}
-                          </span>
-                        ) : null}
-                        {p.dead ? (
-                          <span
-                            title={deathOriginLabel(p)}
-                            data-testid={`player-death-origin-${p.id}`}
-                          >
-                            {" ☠"}
-                          </span>
-                        ) : (
-                          ""
-                        )}
+                        <span
+                          className={`whitespace-nowrap ${p.dead ? "text-gray-400 line-through" : ""}`}
+                        >
+                          {p.name}
+                        </span>
+                        <PlayerNoteBadge playerId={p.id} note={p.note} variant="table" />
+                        <PlayerDeathMark player={p} playerId={p.id} variant="table" />
                       </span>
                     </td>
                     <td className="px-2 py-2 text-gray-600">
-                      {p.positionName ?? p.position}
+                      <div>{positionName}</div>
+                      <KeywordChips keywords={posMeta?.keywords} className="mt-1" />
                     </td>
                     <td className="px-2 py-2 text-right tabular-nums">{p.ma}</td>
                     <td className="px-2 py-2 text-right tabular-nums">{p.st}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{p.ag}+</td>
-                    <td className="px-2 py-2 text-right tabular-nums">
-                      {p.pa === null ? "–" : `${p.pa}+`}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">{p.av}+</td>
-                    <td className="px-2 py-2">
+                    <td className="px-2 py-2 text-right tabular-nums">{formatTarget(p.ag)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums">{formatTarget(p.pa)}</td>
+                    <td className="px-2 py-2 text-right tabular-nums">{formatTarget(p.av)}</td>
+                    <td className="min-w-[10rem] px-2 py-2">
                       <SkillTooltip
                         skillsString={p.skills}
                         position={p.position}
+                        teamName={team.roster}
+                        ruleset={team.ruleset}
                         useDirectParsing
+                        dbBaseSkills={posMeta?.baseSkills}
                         advancements={p.advancements}
                       />
+                      <SkillAccessBadges
+                        primary={access?.primary ?? null}
+                        secondary={access?.secondary ?? null}
+                      />
                     </td>
+                    {rosterStatCells(p, competition).map((cell) => (
+                      <td
+                        key={cell.key}
+                        className="px-2 py-2 text-right tabular-nums"
+                        data-testid={rosterStatTestId(cell.key, p.id, "table")}
+                      >
+                        {cell.value}
+                      </td>
+                    ))}
                     <td
-                      className="px-2 py-2 text-right tabular-nums"
-                      data-testid={`player-matches-${p.id}`}
-                    >
-                      {p.matchesPlayed ?? 0}
-                    </td>
-                    <td
-                      className="px-2 py-2 text-right tabular-nums"
-                      data-testid={`player-td-${p.id}`}
-                    >
-                      {p.totalTouchdowns ?? 0}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">
-                      {p.totalCasualties ?? 0}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">
-                      {p.totalCompletions ?? 0}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">
-                      {p.totalInterceptions ?? 0}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">
-                      {p.aggressions ?? 0}
-                    </td>
-                    <td className="px-2 py-2 text-right tabular-nums">{p.spp}</td>
-                    <td
-                      className="px-2 py-2 text-right tabular-nums"
+                      className="whitespace-nowrap px-2 py-2 text-right tabular-nums"
                       data-testid={`player-value-${p.id}`}
                     >
-                      {typeof p.value === "number" ? formatKpo(p.value) : "—"}
+                      {playerValueLabel(p.value)}
                     </td>
                     {showInjuries ? (
                       <>
-                        <td
-                          className="px-2 py-2 text-xs text-red-700"
-                          data-testid={`player-injuries-${p.id}`}
-                        >
-                          {injuries || <span className="text-gray-300">—</span>}
+                        <td className="px-2 py-2">
+                          <PlayerInjuries player={p} playerId={p.id} variant="table" />
                         </td>
-                        <td
-                          className="px-2 py-2 text-center"
-                          data-testid={`player-availability-${p.id}`}
-                        >
-                          {p.dead ? (
-                            <span title={deathOriginLabel(p)}>☠</span>
-                          ) : p.missNextMatch ? (
-                            <span
-                              className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700"
-                              title="Rate le prochain match (blessure)"
-                            >
-                              Absent
-                            </span>
-                          ) : (
-                            <span
-                              className="text-emerald-600"
-                              title="Disponible pour le prochain match"
-                            >
-                              ✓
-                            </span>
-                          )}
+                        <td className="px-2 py-2 text-center">
+                          <PlayerAvailability player={p} playerId={p.id} variant="table" />
                         </td>
                       </>
                     ) : null}
-                    {canRemoveDead ? (
-                      <td className="px-2 py-2 text-center">
-                        {p.dead ? (
-                          <button
-                            type="button"
-                            data-testid={`remove-dead-player-${p.id}`}
-                            disabled={removingPlayerId === p.id}
-                            onClick={() => onRemoveDeadPlayer?.(p)}
-                            title="Retirer ce joueur mort du roster (fiche et historique conservés, aucun licenciement)"
-                            className="whitespace-nowrap rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 no-underline hover:bg-red-50 disabled:opacity-50"
-                          >
-                            {removingPlayerId === p.id ? "…" : "Retirer"}
-                          </button>
+                    <td className="px-2 py-2">
+                      <div className="flex flex-col items-start gap-1.5">
+                        {hasTeamPlayerCard(p) ? (
+                          <PlayerCardButtons
+                            playerId={p.id}
+                            player={p}
+                            context={{
+                              teamName: team.name,
+                              rosterSlug: team.roster,
+                              positionName,
+                              positionImageUrl: posMeta?.imageUrl ?? null,
+                            }}
+                            variant="table"
+                          />
                         ) : null}
-                      </td>
-                    ) : null}
+                        {canRemoveDead && p.dead ? (
+                          <RemoveDeadButton
+                            playerId={p.id}
+                            removing={removingPlayerId === p.id}
+                            onClick={() => onRemoveDeadPlayer?.(p)}
+                            variant="table"
+                          />
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section
+        data-testid="roster-cards"
+        aria-label="Composition de l'équipe"
+        className="grid gap-3 md:grid-cols-2 xl:hidden"
+      >
+        {players.map((p) => (
+          <RosterPlayerCard
+            key={p.id}
+            player={p}
+            competition={competition}
+            teamName={team.name}
+            rosterSlug={team.roster}
+            ruleset={team.ruleset}
+            positionMeta={positionMeta.metaByPosition.get(p.position)}
+            skillAccess={positionMeta.accessByPosition.get(p.position)}
+            showInjuries={showInjuries}
+            canRemoveDead={canRemoveDead}
+            removing={removingPlayerId === p.id}
+            onRemoveDead={() => onRemoveDeadPlayer?.(p)}
+          />
+        ))}
       </section>
 
       {children}
