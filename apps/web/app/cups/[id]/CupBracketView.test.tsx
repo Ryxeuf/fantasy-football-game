@@ -113,5 +113,20 @@ describe("CupBracketView (S27.1j)", () => {
     expect(screen.queryByTestId("team-roster-link-bracket-m-completed-a")).toBeNull();
     expect(screen.getByText("Skaven Stars")).toBeTruthy();
   });
-});
 
+  it("empile équipes et score sur mobile, trois colonnes à partir de sm", () => {
+    render(<CupBracketView matches={[completedMatch]} />);
+    const node = screen.getByTestId("cup-bracket-match-m-completed");
+    const row = node.querySelector("div.grid");
+    expect(row).not.toBeNull();
+    expect(row?.getAttribute("class")).toContain("grid-cols-1");
+    expect(row?.getAttribute("class")).toContain(
+      "sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
+    );
+    // Chaque équipe peut rétrécir (min-w-0) ; le score ne se casse pas.
+    const [teamA, score, teamB] = Array.from(row?.children ?? []);
+    expect(teamA.getAttribute("class")).toContain("min-w-0");
+    expect(teamB.getAttribute("class")).toContain("min-w-0");
+    expect(score.getAttribute("class")).toContain("whitespace-nowrap");
+  });
+});
