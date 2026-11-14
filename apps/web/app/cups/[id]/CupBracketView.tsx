@@ -65,7 +65,7 @@ export default function CupBracketView({
   return (
     <section
       data-testid="cup-bracket-view"
-      className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
+      className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm"
     >
       <h2 className="text-lg font-bold text-nuffle-anthracite">
         Bracket visuel
@@ -90,9 +90,13 @@ export default function CupBracketView({
                   {m.name}
                 </p>
               ) : null}
-              <div className="flex items-center justify-between gap-2">
+              {/* Mobile : équipe A / score / équipe B empilés, chaque nom a
+                  toute la largeur. À partir de `sm` : grille 1fr / auto /
+                  1fr, score centré. En flex sur une seule ligne, les noms
+                  s'écrasaient mot par mot. */}
+              <div className="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center sm:gap-2">
                 <span
-                  className={`inline-flex items-center gap-1.5 ${
+                  className={`flex min-w-0 items-center gap-1.5 break-words ${
                     aWins
                       ? "font-bold text-nuffle-anthracite"
                       : "text-nuffle-anthracite"
@@ -114,7 +118,7 @@ export default function CupBracketView({
                     {m.teamA.name}
                   </TeamRosterLink>
                 </span>
-                <span className="text-sm text-gray-600">
+                <span className="whitespace-nowrap pl-[26px] text-sm text-gray-600 sm:pl-0 sm:text-center">
                   {m.status === "completed" &&
                   m.scoreTeamA !== null &&
                   m.scoreTeamB !== null
@@ -124,7 +128,7 @@ export default function CupBracketView({
                       : "vs"}
                 </span>
                 <span
-                  className={`inline-flex items-center gap-1.5 ${
+                  className={`flex min-w-0 items-center gap-1.5 break-words sm:flex-row-reverse sm:text-right ${
                     bWins
                       ? "font-bold text-nuffle-anthracite"
                       : "text-nuffle-anthracite"
