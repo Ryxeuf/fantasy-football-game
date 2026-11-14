@@ -1,3 +1,10 @@
+## [1.263.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.2...v1.263.0) (2026-11-14)
+
+
+### ✨ Features
+
+* **web:** fiche de roster de ligue/coupe en cartes sur mobile ([3298d71](https://github.com/Ryxeuf/fantasy-football-game/commit/3298d71ec04dd2d8447dde4e3dd74ec1d6a8cf4a))
+
 ## [1.262.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.1...v1.262.2) (2026-11-14)
 
 
