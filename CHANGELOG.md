@@ -1,3 +1,10 @@
+## [1.262.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.1...v1.262.2) (2026-11-14)
+
+
+### 🐛 Bug Fixes
+
+* **cups:** affichage mobile de la page d'une coupe ([#1085](https://github.com/Ryxeuf/fantasy-football-game/issues/1085)) ([39d127d](https://github.com/Ryxeuf/fantasy-football-game/commit/39d127df3b8b2a340be4ad0fc1845eca6aa1650a))
+
 ## [1.262.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.0...v1.262.1) (2026-11-11)
 
 
