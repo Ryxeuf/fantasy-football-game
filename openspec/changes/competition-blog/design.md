@@ -267,9 +267,9 @@ suffisant pour un garde-fou, cf. Risks.
 
 | Méthode | Chemin | Auth | Droit |
 |---|---|---|---|
-| GET | `/posts?cursor&limit&drafts=mine` | `optionalAuthUser` | lecture |
+| GET | `/posts?page&limit&drafts=mine` | `optionalAuthUser` | lecture (épinglés servis à part en page 1) |
 | GET | `/posts/:postId` | `optionalAuthUser` | lecture (+ réactions, droits) |
-| GET | `/posts/:postId/comments?cursor&limit` | `optionalAuthUser` | lecture |
+| GET | `/posts/:postId/comments?page&limit` | `optionalAuthUser` | lecture |
 | POST | `/posts` | `authUser` | `canWrite` |
 | PATCH | `/posts/:postId` | `authUser` | auteur + `canWrite` |
 | DELETE | `/posts/:postId` | `authUser` | auteur ou `canModerate` |

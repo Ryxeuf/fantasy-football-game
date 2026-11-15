@@ -1275,10 +1275,10 @@ autres, elle est INTROUVABLE.
   pour une ligue publique.
 - **Les listings appliquent la même règle en `where`** (`listLeagues`,
   `listThemedSeasons`) : un listing qui ne filtre pas expose les noms.
-- **La feuille de match est polymorphe** (ligue XOR coupe) : la garde ne
-  cache que les rencontres de LIGUE ; une rencontre de coupe ou un id inconnu
-  passent au service. Les coupes privées gardent leur 403 (visibilité non
-  tranchée, `GET /cup/:id` les sert).
+- **La feuille de match est polymorphe** (ligue XOR coupe) : la garde cache
+  les rencontres d'une ligue OU d'une coupe invisible ; un id inconnu passe
+  au service. Les coupes privées suivent la même règle depuis le 2026-11-15
+  (404, cf. « Une visibilité par compétition »).
 
 Pièges de test : une fixture de ligue SANS `isPublic` est vue PRIVÉE
 (`undefined` est faux) — les fixtures de route portent `creatorId` +
@@ -1649,6 +1649,44 @@ Quatre règles qui ne se voient pas en lisant un seul fichier :
   détail servi au journal). Un passage = UNE opération `REWARD` réf.
   `rewards:<uuid>`, détaillée à la lecture par le registre. Le bonus de la
   Pro League (`grantFirstTimeBonus`) refuse si le registre l'a déjà versé.
+
+### Une visibilité par compétition, ligue OU coupe (`competition-access`)
+
+La ligue avait sa résolution (`league-access`), la coupe AUCUNE : `GET /cup/:id`
+et toutes ses lectures servaient une coupe privée à n'importe quel compte
+connecté, les documents officiels répondaient 403. `services/competition-access`
+pose la règle des coupes en calque de la ligue (publique, sinon commissaire,
+admin, propriétaire d'une équipe inscrite, invité `pending` — à lui ou à une de
+ses équipes) et sert les deux familles par `findVisibleCompetition(kind, id)`.
+Côté route, `requireVisibleCup()` (`middleware/competitionVisibility`) se pose
+après `authUser` sur toute lecture d'une coupe par id ; la garde de la feuille
+de match couvre les rencontres de ligue ET de coupe. Toute nouvelle lecture
+d'une coupe par id prend la garde — même règle « 404, jamais 403 » que la ligue.
+
+Conséquence assumée : une équipe RETIRÉE d'une coupe privée (ligne
+`CupParticipant` supprimée) ne la voit plus. Piège de test : une fixture de
+coupe sans `isPublic` est vue PRIVÉE et déclenche les requêtes d'appartenance
+(`cupParticipant.count`, `cupInvitation.count`) — mockées ou `isPublic: true`.
+
+### Blog de compétition : membres actuels, contenu confiné à la compétition
+
+`docs/competition-blog.md`. Trois règles qui ne se voient pas dans un seul
+fichier :
+
+- **Écrire ≠ lire.** Lire suit la visibilité de la compétition ; écrire,
+  réagir, commenter est réservé aux MEMBRES ACTUELS (commissaire + équipe
+  engagée dans l'édition courante, `buildViewerRoles` → `active`). Un ancien
+  participant reste « à moi » (`competition-membership`) mais ne publie plus.
+- **Le serveur confine le contenu**, pas l'éditeur : une image n'est gardée
+  que sous le dossier de SA compétition, avec un nom généré
+  (`isAllowedCompetitionImageUrl`) — sinon un blog public servirait les
+  images d'un blog privé, ou un pixel espion.
+- **Write-once pour ce qui ne doit arriver qu'une fois** : `publishedAt`,
+  `seasonId`, `notifiedAt` (réclamé par `updateMany … where null`).
+
+Piège de test rencontré : `beforeEach(() => fn.mockReset())` RENVOIE le mock,
+que vitest exécute comme hook de nettoyage — un mock à rejet se déclenche alors
+hors du test. Toujours un corps à accolades.
 
 ### Parser tolerant PG + sqlite pour JSON fields (Q.A.2)
 Pour les champs `Json?` qui peuvent etre array natif (PG), string
@@ -2527,3 +2565,10 @@ edition du `.json`, `pnpm --filter web typecheck` +
   Régénération) reste une sortie qui rapporte ses PSP (issue « Aucune
   séquelle ») ; le Lancer Sécurisé rapporte 1 PSP au lanceur ; rattrapage
   du passé par `CASUALTY_RULE_VERSION = 2`.
+- **2026-11-15** : **Blog des compétitions et coupes privées alignées**
+  (change OpenSpec `competition-blog`) — un blog par ligue et par coupe
+  (`CompetitionPost` ligue XOR coupe, commentaires, réactions), écrit par les
+  membres actuels, lu comme la compétition, modéré par le commissaire, derrière
+  le flag `competition_blog` ; au passage, `services/competition-access` rend
+  une coupe privée introuvable (404) hors de ses membres sur TOUTES ses
+  lectures. Doc [`docs/competition-blog.md`](./docs/competition-blog.md).

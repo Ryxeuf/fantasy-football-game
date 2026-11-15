@@ -1,6 +1,7 @@
 import {
   AI_TRAINING_FLAG,
   COMPETITION_PDF_EXPORTS_FLAG,
+  COMPETITION_BLOG_FLAG,
   CROWNS_FLAG,
   DICE_THEMES_FLAG,
   HOME_NEWS_TICKER_FLAG,
@@ -289,6 +290,17 @@ export const HELP_CATEGORIES: readonly HelpCategory[] = [
         access: "account",
         description:
           "Règlement, annexes ou affiches déposés par le commissaire, consultables par tous les participants depuis la fiche de la ligue ou de la coupe.",
+        links: [{ label: "Coupes", href: "/cups" }],
+      },
+      {
+        id: "blog-de-competition",
+        title: "Le blog de la compétition",
+        icon: "📰",
+        href: "/leagues",
+        access: "account",
+        flags: [COMPETITION_BLOG_FLAG],
+        description:
+          "Chaque ligue et chaque coupe a son blog : les coachs engagés y publient comptes rendus et annonces, réagissent et commentent. Il se lit comme la compétition — une compétition privée garde son blog pour ses membres — et le commissaire le modère.",
         links: [{ label: "Coupes", href: "/cups" }],
       },
       {

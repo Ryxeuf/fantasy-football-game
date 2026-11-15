@@ -109,7 +109,7 @@ L'auteur DOIT pouvoir modifier son article tant qu'il a le droit d'écrire ; une
 modification d'un article publié DOIT être signalée (« modifié le … »). Le
 commissaire et l'admin DOIVENT pouvoir épingler un article publié ; la liste
 DOIT présenter les articles épinglés d'abord, puis par date de publication
-décroissante, avec une pagination par curseur.
+décroissante, paginée.
 
 #### Scenario: Brouillon privé
 - **WHEN** un membre enregistre un brouillon
