@@ -1,3 +1,10 @@
+## [1.264.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.263.0...v1.264.0) (2026-11-15)
+
+
+### ✨ Features
+
+* **competition-blog:** un blog par ligue et par coupe + coupes privées réellement privées ([#1087](https://github.com/Ryxeuf/fantasy-football-game/issues/1087)) ([8732d2c](https://github.com/Ryxeuf/fantasy-football-game/commit/8732d2c88c873cc3c081d2897d82707378bd85de))
+
 ## [1.263.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.2...v1.263.0) (2026-11-14)
 
 
