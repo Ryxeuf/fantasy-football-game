@@ -118,6 +118,17 @@ export const DICE_THEMES_FLAG = "dice_themes" as const;
 export const CROWNS_FLAG = "crowns" as const;
 
 /**
+ * Blog d'une compétition (ligue ou coupe) alimenté par ses coachs : articles,
+ * réactions, commentaires (change OpenSpec `competition-blog`).
+ *
+ * DESACTIVE par defaut (2026-11-15) : en recette avant ouverture. Gate
+ * NORMAL (pas un kill-switch) : admins et `FEATURE_FLAGS_FORCE_ENABLED` le
+ * voient. Gate toutes les routes `/api/competitions/:kind/:id/blog/...` ET le
+ * bloc / les pages web.
+ */
+export const COMPETITION_BLOG_FLAG = "competition_blog" as const;
+
+/**
  * Sprint P (Lot P.A.1) — kill-switch global qui met le site en mode
  * "maintenance" : toutes les routes non-essentielles retournent 503
  * avec `Retry-After`. Routes preservees : `/health/*`, `/admin/*`,
@@ -213,6 +224,11 @@ export const KNOWN_FLAGS: ReadonlyArray<KnownFlagSpec> = [
     key: CROWNS_FLAG,
     description:
       "Couronnes (Crowns) — solde et historique sur le profil coach, achat de thèmes de dés. OFF : invisible, thèmes payants verrouillés.",
+  },
+  {
+    key: COMPETITION_BLOG_FLAG,
+    description:
+      "Blog des compétitions (ligues et coupes) — articles, réactions et commentaires des coachs. OFF : en recette.",
   },
   {
     key: MAINTENANCE_MODE_FLAG,

@@ -33,6 +33,7 @@ import {
   HOME_NEWS_TICKER_FLAG,
   DICE_THEMES_FLAG,
   CROWNS_FLAG,
+  COMPETITION_BLOG_FLAG,
 } from "./services/featureFlags";
 import { seedDefaultLeagues, DEFAULT_LEAGUE_NAME } from "./seeders/leagues";
 import { seedProLeague, OLD_WORLD_LEAGUE_NAME } from "./seeders/pro-league";
@@ -1250,6 +1251,25 @@ async function main() {
   });
   serverLog.log(
     `   ✅ Flag '${CROWNS_FLAG}' ${crownsFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
+  );
+
+  // Blog des compétitions — EN RECETTE : OFF, bypass admin, un testeur
+  // s'active par override. `update` ne touche PAS `enabled`.
+  const competitionBlogFlag = await prisma.featureFlag.upsert({
+    where: { key: COMPETITION_BLOG_FLAG },
+    update: {
+      description:
+        "Blog des compétitions (ligues et coupes) — articles, réactions et commentaires des coachs. OFF : en recette.",
+    },
+    create: {
+      key: COMPETITION_BLOG_FLAG,
+      description:
+        "Blog des compétitions (ligues et coupes) — articles, réactions et commentaires des coachs. OFF : en recette.",
+      enabled: false,
+    },
+  });
+  serverLog.log(
+    `   ✅ Flag '${COMPETITION_BLOG_FLAG}' ${competitionBlogFlag.enabled ? "actif" : "inactif (bypass admin)"}`,
   );
 
   // Nuffle Coach (fantasy NFL) — gate l'UI publique (menu + sous-nav

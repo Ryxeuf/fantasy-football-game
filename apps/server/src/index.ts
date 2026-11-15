@@ -129,6 +129,7 @@ import {
   HOME_NEWS_TICKER_FLAG,
   DICE_THEMES_FLAG,
   CROWNS_FLAG,
+  COMPETITION_BLOG_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -1536,6 +1537,12 @@ if (process.env.TEST_SQLITE === "1") {
           // OFF en prod (recette), ON pour les suites.
           key: CROWNS_FLAG,
           description: "Couronnes (Crowns) — solde coach, achat de thèmes de dés.",
+        },
+        {
+          // OFF en prod (recette), ON pour les suites.
+          key: COMPETITION_BLOG_FLAG,
+          description:
+            "Blog des compétitions — articles, réactions et commentaires.",
         },
       ];
       for (const flag of flagSeeds) {

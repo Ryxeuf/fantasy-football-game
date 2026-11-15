@@ -264,6 +264,26 @@ export type CupInvitation = $Result.DefaultSelection<Prisma.$CupInvitationPayloa
  */
 export type CompetitionDocument = $Result.DefaultSelection<Prisma.$CompetitionDocumentPayload>
 /**
+ * Model CompetitionPost
+ * Blog d'une COMPÉTITION (change OpenSpec `competition-blog`) : article
+ * rattaché à une ligue OU à une coupe (`leagueId` XOR `cupId`, invariant tenu
+ * par `services/competition-blog`, seul chemin d'écriture — patron de
+ * `CompetitionDocument`). La famille se déduit de la FK présente.
+ * Masquage (modération) et suppression sont des colonnes, jamais un DELETE :
+ * une décision du commissaire doit rester explicable.
+ */
+export type CompetitionPost = $Result.DefaultSelection<Prisma.$CompetitionPostPayload>
+/**
+ * Model CompetitionPostComment
+ * Commentaire d'un article de blog de compétition : texte brut, à plat.
+ */
+export type CompetitionPostComment = $Result.DefaultSelection<Prisma.$CompetitionPostCommentPayload>
+/**
+ * Model CompetitionPostReaction
+ * Réaction d'un membre à un article (catalogue fixe `REACTION_KINDS`).
+ */
+export type CompetitionPostReaction = $Result.DefaultSelection<Prisma.$CompetitionPostReactionPayload>
+/**
  * Model LeagueParticipant
  * 
  */
@@ -1181,6 +1201,36 @@ export class PrismaClient<
     * ```
     */
   get competitionDocument(): Prisma.CompetitionDocumentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.competitionPost`: Exposes CRUD operations for the **CompetitionPost** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CompetitionPosts
+    * const competitionPosts = await prisma.competitionPost.findMany()
+    * ```
+    */
+  get competitionPost(): Prisma.CompetitionPostDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.competitionPostComment`: Exposes CRUD operations for the **CompetitionPostComment** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CompetitionPostComments
+    * const competitionPostComments = await prisma.competitionPostComment.findMany()
+    * ```
+    */
+  get competitionPostComment(): Prisma.CompetitionPostCommentDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.competitionPostReaction`: Exposes CRUD operations for the **CompetitionPostReaction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more CompetitionPostReactions
+    * const competitionPostReactions = await prisma.competitionPostReaction.findMany()
+    * ```
+    */
+  get competitionPostReaction(): Prisma.CompetitionPostReactionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.leagueParticipant`: Exposes CRUD operations for the **LeagueParticipant** model.
@@ -2149,6 +2199,9 @@ export namespace Prisma {
     LeagueInvitation: 'LeagueInvitation',
     CupInvitation: 'CupInvitation',
     CompetitionDocument: 'CompetitionDocument',
+    CompetitionPost: 'CompetitionPost',
+    CompetitionPostComment: 'CompetitionPostComment',
+    CompetitionPostReaction: 'CompetitionPostReaction',
     LeagueParticipant: 'LeagueParticipant',
     LeagueRound: 'LeagueRound',
     LeaguePairing: 'LeaguePairing',
@@ -2215,7 +2268,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "eloSnapshot" | "refreshToken" | "apiKey" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "teamInducement" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
+      modelProps: "user" | "eloSnapshot" | "refreshToken" | "apiKey" | "passwordResetToken" | "kofiTransaction" | "tutorialCompletion" | "userAchievement" | "friendship" | "featureFlag" | "featureFlagUser" | "match" | "turn" | "teamSelection" | "team" | "teamPlayer" | "teamPlayerStatusEvent" | "teamStarPlayer" | "teamInducement" | "roster" | "rosterStaffConfig" | "skill" | "starPlayer" | "starPlayerSkill" | "starPlayerHirableBy" | "position" | "positionSkill" | "inducement" | "advancementCost" | "characteristicValue" | "rulesetConfig" | "cup" | "cupParticipant" | "cupPool" | "cupRound" | "cupPairing" | "matchQueue" | "pushSubscription" | "notification" | "emailDigestPreference" | "localMatch" | "localMatchAction" | "league" | "leagueSeason" | "leaguePool" | "leagueInvitation" | "cupInvitation" | "competitionDocument" | "competitionPost" | "competitionPostComment" | "competitionPostReaction" | "leagueParticipant" | "leagueRound" | "leaguePairing" | "competitionPrediction" | "leagueMatchSheet" | "leagueMatchEvent" | "teamSpecialRule" | "regionalLeague" | "leaguePostMatchSequence" | "leagueSeasonAward" | "feedback" | "proLeague" | "proTeam" | "proCoach" | "proCoachMemory" | "proTeamRoster" | "proLeagueSeason" | "proLeagueRound" | "proLeagueMatch" | "proLeagueStandings" | "replay" | "proSpectatorFollow" | "proWallet" | "proTransaction" | "proBetMarket" | "proBet" | "proBetSettlement" | "proUserBadge" | "proGazetteArticle" | "proHallOfFame" | "proHallOfFameDedication" | "proTournament" | "proTournamentEntry" | "auditLog" | "teamAuditEvent" | "engineComparison" | "proPredictionLeague" | "proPredictionLeagueMember" | "proPredictionPick" | "proSurvivorEntry" | "proPlayerCareerSnapshot" | "proPlayerOfMatchVote" | "proGazetteComment" | "proMatchPrediction" | "tournamentRuleset" | "diceTheme" | "userDiceTheme" | "crownsReward"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5768,6 +5821,228 @@ export namespace Prisma {
           count: {
             args: Prisma.CompetitionDocumentCountArgs<ExtArgs>
             result: $Utils.Optional<CompetitionDocumentCountAggregateOutputType> | number
+          }
+        }
+      }
+      CompetitionPost: {
+        payload: Prisma.$CompetitionPostPayload<ExtArgs>
+        fields: Prisma.CompetitionPostFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CompetitionPostFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CompetitionPostFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>
+          }
+          findFirst: {
+            args: Prisma.CompetitionPostFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CompetitionPostFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>
+          }
+          findMany: {
+            args: Prisma.CompetitionPostFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>[]
+          }
+          create: {
+            args: Prisma.CompetitionPostCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>
+          }
+          createMany: {
+            args: Prisma.CompetitionPostCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CompetitionPostCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>[]
+          }
+          delete: {
+            args: Prisma.CompetitionPostDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>
+          }
+          update: {
+            args: Prisma.CompetitionPostUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>
+          }
+          deleteMany: {
+            args: Prisma.CompetitionPostDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CompetitionPostUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CompetitionPostUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>[]
+          }
+          upsert: {
+            args: Prisma.CompetitionPostUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostPayload>
+          }
+          aggregate: {
+            args: Prisma.CompetitionPostAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCompetitionPost>
+          }
+          groupBy: {
+            args: Prisma.CompetitionPostGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionPostGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CompetitionPostCountArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionPostCountAggregateOutputType> | number
+          }
+        }
+      }
+      CompetitionPostComment: {
+        payload: Prisma.$CompetitionPostCommentPayload<ExtArgs>
+        fields: Prisma.CompetitionPostCommentFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CompetitionPostCommentFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CompetitionPostCommentFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>
+          }
+          findFirst: {
+            args: Prisma.CompetitionPostCommentFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CompetitionPostCommentFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>
+          }
+          findMany: {
+            args: Prisma.CompetitionPostCommentFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>[]
+          }
+          create: {
+            args: Prisma.CompetitionPostCommentCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>
+          }
+          createMany: {
+            args: Prisma.CompetitionPostCommentCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CompetitionPostCommentCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>[]
+          }
+          delete: {
+            args: Prisma.CompetitionPostCommentDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>
+          }
+          update: {
+            args: Prisma.CompetitionPostCommentUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>
+          }
+          deleteMany: {
+            args: Prisma.CompetitionPostCommentDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CompetitionPostCommentUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CompetitionPostCommentUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>[]
+          }
+          upsert: {
+            args: Prisma.CompetitionPostCommentUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostCommentPayload>
+          }
+          aggregate: {
+            args: Prisma.CompetitionPostCommentAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCompetitionPostComment>
+          }
+          groupBy: {
+            args: Prisma.CompetitionPostCommentGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionPostCommentGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CompetitionPostCommentCountArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionPostCommentCountAggregateOutputType> | number
+          }
+        }
+      }
+      CompetitionPostReaction: {
+        payload: Prisma.$CompetitionPostReactionPayload<ExtArgs>
+        fields: Prisma.CompetitionPostReactionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.CompetitionPostReactionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.CompetitionPostReactionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>
+          }
+          findFirst: {
+            args: Prisma.CompetitionPostReactionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.CompetitionPostReactionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>
+          }
+          findMany: {
+            args: Prisma.CompetitionPostReactionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>[]
+          }
+          create: {
+            args: Prisma.CompetitionPostReactionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>
+          }
+          createMany: {
+            args: Prisma.CompetitionPostReactionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.CompetitionPostReactionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>[]
+          }
+          delete: {
+            args: Prisma.CompetitionPostReactionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>
+          }
+          update: {
+            args: Prisma.CompetitionPostReactionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>
+          }
+          deleteMany: {
+            args: Prisma.CompetitionPostReactionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.CompetitionPostReactionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.CompetitionPostReactionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>[]
+          }
+          upsert: {
+            args: Prisma.CompetitionPostReactionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$CompetitionPostReactionPayload>
+          }
+          aggregate: {
+            args: Prisma.CompetitionPostReactionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateCompetitionPostReaction>
+          }
+          groupBy: {
+            args: Prisma.CompetitionPostReactionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionPostReactionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.CompetitionPostReactionCountArgs<ExtArgs>
+            result: $Utils.Optional<CompetitionPostReactionCountAggregateOutputType> | number
           }
         }
       }
@@ -9467,6 +9742,9 @@ export namespace Prisma {
     leagueInvitation?: LeagueInvitationOmit
     cupInvitation?: CupInvitationOmit
     competitionDocument?: CompetitionDocumentOmit
+    competitionPost?: CompetitionPostOmit
+    competitionPostComment?: CompetitionPostCommentOmit
+    competitionPostReaction?: CompetitionPostReactionOmit
     leagueParticipant?: LeagueParticipantOmit
     leagueRound?: LeagueRoundOmit
     leaguePairing?: LeaguePairingOmit
@@ -9601,6 +9879,9 @@ export namespace Prisma {
     teamSelections: number
     createdCups: number
     competitionDocuments: number
+    competitionPosts: number
+    competitionPostComments: number
+    competitionPostReactions: number
     createdLeagues: number
     createdLocalMatches: number
     featureFlagOverrides: number
@@ -9641,6 +9922,9 @@ export namespace Prisma {
     teamSelections?: boolean | UserCountOutputTypeCountTeamSelectionsArgs
     createdCups?: boolean | UserCountOutputTypeCountCreatedCupsArgs
     competitionDocuments?: boolean | UserCountOutputTypeCountCompetitionDocumentsArgs
+    competitionPosts?: boolean | UserCountOutputTypeCountCompetitionPostsArgs
+    competitionPostComments?: boolean | UserCountOutputTypeCountCompetitionPostCommentsArgs
+    competitionPostReactions?: boolean | UserCountOutputTypeCountCompetitionPostReactionsArgs
     createdLeagues?: boolean | UserCountOutputTypeCountCreatedLeaguesArgs
     createdLocalMatches?: boolean | UserCountOutputTypeCountCreatedLocalMatchesArgs
     featureFlagOverrides?: boolean | UserCountOutputTypeCountFeatureFlagOverridesArgs
@@ -9725,6 +10009,27 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountCompetitionDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CompetitionDocumentWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCompetitionPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCompetitionPostCommentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostCommentWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountCompetitionPostReactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostReactionWhereInput
   }
 
   /**
@@ -10366,6 +10671,7 @@ export namespace Prisma {
     localMatches: number
     rounds: number
     documents: number
+    blogPosts: number
   }
 
   export type CupCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10375,6 +10681,7 @@ export namespace Prisma {
     localMatches?: boolean | CupCountOutputTypeCountLocalMatchesArgs
     rounds?: boolean | CupCountOutputTypeCountRoundsArgs
     documents?: boolean | CupCountOutputTypeCountDocumentsArgs
+    blogPosts?: boolean | CupCountOutputTypeCountBlogPostsArgs
   }
 
   // Custom InputTypes
@@ -10428,6 +10735,13 @@ export namespace Prisma {
    */
   export type CupCountOutputTypeCountDocumentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: CompetitionDocumentWhereInput
+  }
+
+  /**
+   * CupCountOutputType without action
+   */
+  export type CupCountOutputTypeCountBlogPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostWhereInput
   }
 
 
@@ -10563,12 +10877,14 @@ export namespace Prisma {
     seasons: number
     invitations: number
     documents: number
+    blogPosts: number
   }
 
   export type LeagueCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     seasons?: boolean | LeagueCountOutputTypeCountSeasonsArgs
     invitations?: boolean | LeagueCountOutputTypeCountInvitationsArgs
     documents?: boolean | LeagueCountOutputTypeCountDocumentsArgs
+    blogPosts?: boolean | LeagueCountOutputTypeCountBlogPostsArgs
   }
 
   // Custom InputTypes
@@ -10603,6 +10919,13 @@ export namespace Prisma {
     where?: CompetitionDocumentWhereInput
   }
 
+  /**
+   * LeagueCountOutputType without action
+   */
+  export type LeagueCountOutputTypeCountBlogPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostWhereInput
+  }
+
 
   /**
    * Count Type LeagueSeasonCountOutputType
@@ -10614,6 +10937,7 @@ export namespace Prisma {
     matches: number
     pools: number
     invitations: number
+    blogPosts: number
   }
 
   export type LeagueSeasonCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -10622,6 +10946,7 @@ export namespace Prisma {
     matches?: boolean | LeagueSeasonCountOutputTypeCountMatchesArgs
     pools?: boolean | LeagueSeasonCountOutputTypeCountPoolsArgs
     invitations?: boolean | LeagueSeasonCountOutputTypeCountInvitationsArgs
+    blogPosts?: boolean | LeagueSeasonCountOutputTypeCountBlogPostsArgs
   }
 
   // Custom InputTypes
@@ -10670,6 +10995,13 @@ export namespace Prisma {
     where?: LeagueInvitationWhereInput
   }
 
+  /**
+   * LeagueSeasonCountOutputType without action
+   */
+  export type LeagueSeasonCountOutputTypeCountBlogPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostWhereInput
+  }
+
 
   /**
    * Count Type LeaguePoolCountOutputType
@@ -10708,6 +11040,46 @@ export namespace Prisma {
    */
   export type LeaguePoolCountOutputTypeCountRoundsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: LeagueRoundWhereInput
+  }
+
+
+  /**
+   * Count Type CompetitionPostCountOutputType
+   */
+
+  export type CompetitionPostCountOutputType = {
+    comments: number
+    reactions: number
+  }
+
+  export type CompetitionPostCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    comments?: boolean | CompetitionPostCountOutputTypeCountCommentsArgs
+    reactions?: boolean | CompetitionPostCountOutputTypeCountReactionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * CompetitionPostCountOutputType without action
+   */
+  export type CompetitionPostCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostCountOutputType
+     */
+    select?: CompetitionPostCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPostCountOutputType without action
+   */
+  export type CompetitionPostCountOutputTypeCountCommentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostCommentWhereInput
+  }
+
+  /**
+   * CompetitionPostCountOutputType without action
+   */
+  export type CompetitionPostCountOutputTypeCountReactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostReactionWhereInput
   }
 
 
@@ -11842,6 +12214,9 @@ export namespace Prisma {
     teamSelections?: boolean | User$teamSelectionsArgs<ExtArgs>
     createdCups?: boolean | User$createdCupsArgs<ExtArgs>
     competitionDocuments?: boolean | User$competitionDocumentsArgs<ExtArgs>
+    competitionPosts?: boolean | User$competitionPostsArgs<ExtArgs>
+    competitionPostComments?: boolean | User$competitionPostCommentsArgs<ExtArgs>
+    competitionPostReactions?: boolean | User$competitionPostReactionsArgs<ExtArgs>
     createdLeagues?: boolean | User$createdLeaguesArgs<ExtArgs>
     createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     matchQueue?: boolean | User$matchQueueArgs<ExtArgs>
@@ -12003,6 +12378,9 @@ export namespace Prisma {
     teamSelections?: boolean | User$teamSelectionsArgs<ExtArgs>
     createdCups?: boolean | User$createdCupsArgs<ExtArgs>
     competitionDocuments?: boolean | User$competitionDocumentsArgs<ExtArgs>
+    competitionPosts?: boolean | User$competitionPostsArgs<ExtArgs>
+    competitionPostComments?: boolean | User$competitionPostCommentsArgs<ExtArgs>
+    competitionPostReactions?: boolean | User$competitionPostReactionsArgs<ExtArgs>
     createdLeagues?: boolean | User$createdLeaguesArgs<ExtArgs>
     createdLocalMatches?: boolean | User$createdLocalMatchesArgs<ExtArgs>
     matchQueue?: boolean | User$matchQueueArgs<ExtArgs>
@@ -12050,6 +12428,9 @@ export namespace Prisma {
       teamSelections: Prisma.$TeamSelectionPayload<ExtArgs>[]
       createdCups: Prisma.$CupPayload<ExtArgs>[]
       competitionDocuments: Prisma.$CompetitionDocumentPayload<ExtArgs>[]
+      competitionPosts: Prisma.$CompetitionPostPayload<ExtArgs>[]
+      competitionPostComments: Prisma.$CompetitionPostCommentPayload<ExtArgs>[]
+      competitionPostReactions: Prisma.$CompetitionPostReactionPayload<ExtArgs>[]
       createdLeagues: Prisma.$LeaguePayload<ExtArgs>[]
       createdLocalMatches: Prisma.$LocalMatchPayload<ExtArgs>[]
       matchQueue: Prisma.$MatchQueuePayload<ExtArgs> | null
@@ -12588,6 +12969,9 @@ export namespace Prisma {
     teamSelections<T extends User$teamSelectionsArgs<ExtArgs> = {}>(args?: Subset<T, User$teamSelectionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TeamSelectionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdCups<T extends User$createdCupsArgs<ExtArgs> = {}>(args?: Subset<T, User$createdCupsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     competitionDocuments<T extends User$competitionDocumentsArgs<ExtArgs> = {}>(args?: Subset<T, User$competitionDocumentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    competitionPosts<T extends User$competitionPostsArgs<ExtArgs> = {}>(args?: Subset<T, User$competitionPostsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    competitionPostComments<T extends User$competitionPostCommentsArgs<ExtArgs> = {}>(args?: Subset<T, User$competitionPostCommentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    competitionPostReactions<T extends User$competitionPostReactionsArgs<ExtArgs> = {}>(args?: Subset<T, User$competitionPostReactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdLeagues<T extends User$createdLeaguesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdLeaguesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     createdLocalMatches<T extends User$createdLocalMatchesArgs<ExtArgs> = {}>(args?: Subset<T, User$createdLocalMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     matchQueue<T extends User$matchQueueArgs<ExtArgs> = {}>(args?: Subset<T, User$matchQueueArgs<ExtArgs>>): Prisma__MatchQueueClient<$Result.GetResult<Prisma.$MatchQueuePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
@@ -13213,6 +13597,78 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
+  }
+
+  /**
+   * User.competitionPosts
+   */
+  export type User$competitionPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    where?: CompetitionPostWhereInput
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    cursor?: CompetitionPostWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
+  }
+
+  /**
+   * User.competitionPostComments
+   */
+  export type User$competitionPostCommentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    where?: CompetitionPostCommentWhereInput
+    orderBy?: CompetitionPostCommentOrderByWithRelationInput | CompetitionPostCommentOrderByWithRelationInput[]
+    cursor?: CompetitionPostCommentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostCommentScalarFieldEnum | CompetitionPostCommentScalarFieldEnum[]
+  }
+
+  /**
+   * User.competitionPostReactions
+   */
+  export type User$competitionPostReactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    where?: CompetitionPostReactionWhereInput
+    orderBy?: CompetitionPostReactionOrderByWithRelationInput | CompetitionPostReactionOrderByWithRelationInput[]
+    cursor?: CompetitionPostReactionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostReactionScalarFieldEnum | CompetitionPostReactionScalarFieldEnum[]
   }
 
   /**
@@ -49897,6 +50353,7 @@ export namespace Prisma {
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
     rounds?: boolean | Cup$roundsArgs<ExtArgs>
     documents?: boolean | Cup$documentsArgs<ExtArgs>
+    blogPosts?: boolean | Cup$blogPostsArgs<ExtArgs>
     _count?: boolean | CupCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["cup"]>
 
@@ -50019,6 +50476,7 @@ export namespace Prisma {
     localMatches?: boolean | Cup$localMatchesArgs<ExtArgs>
     rounds?: boolean | Cup$roundsArgs<ExtArgs>
     documents?: boolean | Cup$documentsArgs<ExtArgs>
+    blogPosts?: boolean | Cup$blogPostsArgs<ExtArgs>
     _count?: boolean | CupCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type CupIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -50041,6 +50499,7 @@ export namespace Prisma {
        */
       rounds: Prisma.$CupRoundPayload<ExtArgs>[]
       documents: Prisma.$CompetitionDocumentPayload<ExtArgs>[]
+      blogPosts: Prisma.$CompetitionPostPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -50483,6 +50942,7 @@ export namespace Prisma {
     localMatches<T extends Cup$localMatchesArgs<ExtArgs> = {}>(args?: Subset<T, Cup$localMatchesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LocalMatchPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rounds<T extends Cup$roundsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$roundsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CupRoundPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     documents<T extends Cup$documentsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    blogPosts<T extends Cup$blogPostsArgs<ExtArgs> = {}>(args?: Subset<T, Cup$blogPostsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -51080,6 +51540,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: CompetitionDocumentScalarFieldEnum | CompetitionDocumentScalarFieldEnum[]
+  }
+
+  /**
+   * Cup.blogPosts
+   */
+  export type Cup$blogPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    where?: CompetitionPostWhereInput
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    cursor?: CompetitionPostWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
   }
 
   /**
@@ -63149,6 +63633,7 @@ export namespace Prisma {
     seasons?: boolean | League$seasonsArgs<ExtArgs>
     invitations?: boolean | League$invitationsArgs<ExtArgs>
     documents?: boolean | League$documentsArgs<ExtArgs>
+    blogPosts?: boolean | League$blogPostsArgs<ExtArgs>
     _count?: boolean | LeagueCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["league"]>
 
@@ -63229,6 +63714,7 @@ export namespace Prisma {
     seasons?: boolean | League$seasonsArgs<ExtArgs>
     invitations?: boolean | League$invitationsArgs<ExtArgs>
     documents?: boolean | League$documentsArgs<ExtArgs>
+    blogPosts?: boolean | League$blogPostsArgs<ExtArgs>
     _count?: boolean | LeagueCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -63245,6 +63731,7 @@ export namespace Prisma {
       seasons: Prisma.$LeagueSeasonPayload<ExtArgs>[]
       invitations: Prisma.$LeagueInvitationPayload<ExtArgs>[]
       documents: Prisma.$CompetitionDocumentPayload<ExtArgs>[]
+      blogPosts: Prisma.$CompetitionPostPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -63668,6 +64155,7 @@ export namespace Prisma {
     seasons<T extends League$seasonsArgs<ExtArgs> = {}>(args?: Subset<T, League$seasonsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitations<T extends League$invitationsArgs<ExtArgs> = {}>(args?: Subset<T, League$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     documents<T extends League$documentsArgs<ExtArgs> = {}>(args?: Subset<T, League$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    blogPosts<T extends League$blogPostsArgs<ExtArgs> = {}>(args?: Subset<T, League$blogPostsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -64183,6 +64671,30 @@ export namespace Prisma {
   }
 
   /**
+   * League.blogPosts
+   */
+  export type League$blogPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    where?: CompetitionPostWhereInput
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    cursor?: CompetitionPostWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
+  }
+
+  /**
    * League without action
    */
   export type LeagueDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -64486,6 +64998,7 @@ export namespace Prisma {
     award?: boolean | LeagueSeason$awardArgs<ExtArgs>
     pools?: boolean | LeagueSeason$poolsArgs<ExtArgs>
     invitations?: boolean | LeagueSeason$invitationsArgs<ExtArgs>
+    blogPosts?: boolean | LeagueSeason$blogPostsArgs<ExtArgs>
     _count?: boolean | LeagueSeasonCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["leagueSeason"]>
 
@@ -64551,6 +65064,7 @@ export namespace Prisma {
     award?: boolean | LeagueSeason$awardArgs<ExtArgs>
     pools?: boolean | LeagueSeason$poolsArgs<ExtArgs>
     invitations?: boolean | LeagueSeason$invitationsArgs<ExtArgs>
+    blogPosts?: boolean | LeagueSeason$blogPostsArgs<ExtArgs>
     _count?: boolean | LeagueSeasonCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type LeagueSeasonIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -64570,6 +65084,7 @@ export namespace Prisma {
       award: Prisma.$LeagueSeasonAwardPayload<ExtArgs> | null
       pools: Prisma.$LeaguePoolPayload<ExtArgs>[]
       invitations: Prisma.$LeagueInvitationPayload<ExtArgs>[]
+      blogPosts: Prisma.$CompetitionPostPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -64987,6 +65502,7 @@ export namespace Prisma {
     award<T extends LeagueSeason$awardArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$awardArgs<ExtArgs>>): Prisma__LeagueSeasonAwardClient<$Result.GetResult<Prisma.$LeagueSeasonAwardPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     pools<T extends LeagueSeason$poolsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$poolsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeaguePoolPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     invitations<T extends LeagueSeason$invitationsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$invitationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$LeagueInvitationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    blogPosts<T extends LeagueSeason$blogPostsArgs<ExtArgs> = {}>(args?: Subset<T, LeagueSeason$blogPostsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -65560,6 +66076,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: LeagueInvitationScalarFieldEnum | LeagueInvitationScalarFieldEnum[]
+  }
+
+  /**
+   * LeagueSeason.blogPosts
+   */
+  export type LeagueSeason$blogPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    where?: CompetitionPostWhereInput
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    cursor?: CompetitionPostWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
   }
 
   /**
@@ -70608,6 +71148,3655 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: CompetitionDocumentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CompetitionPost
+   */
+
+  export type AggregateCompetitionPost = {
+    _count: CompetitionPostCountAggregateOutputType | null
+    _min: CompetitionPostMinAggregateOutputType | null
+    _max: CompetitionPostMaxAggregateOutputType | null
+  }
+
+  export type CompetitionPostMinAggregateOutputType = {
+    id: string | null
+    leagueId: string | null
+    cupId: string | null
+    seasonId: string | null
+    authorId: string | null
+    title: string | null
+    contentHtml: string | null
+    excerpt: string | null
+    coverImageUrl: string | null
+    status: string | null
+    publishedAt: Date | null
+    notifiedAt: Date | null
+    editedAt: Date | null
+    pinnedAt: Date | null
+    hiddenAt: Date | null
+    hiddenById: string | null
+    hiddenReason: string | null
+    deletedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CompetitionPostMaxAggregateOutputType = {
+    id: string | null
+    leagueId: string | null
+    cupId: string | null
+    seasonId: string | null
+    authorId: string | null
+    title: string | null
+    contentHtml: string | null
+    excerpt: string | null
+    coverImageUrl: string | null
+    status: string | null
+    publishedAt: Date | null
+    notifiedAt: Date | null
+    editedAt: Date | null
+    pinnedAt: Date | null
+    hiddenAt: Date | null
+    hiddenById: string | null
+    hiddenReason: string | null
+    deletedAt: Date | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type CompetitionPostCountAggregateOutputType = {
+    id: number
+    leagueId: number
+    cupId: number
+    seasonId: number
+    authorId: number
+    title: number
+    contentHtml: number
+    excerpt: number
+    coverImageUrl: number
+    status: number
+    publishedAt: number
+    notifiedAt: number
+    editedAt: number
+    pinnedAt: number
+    hiddenAt: number
+    hiddenById: number
+    hiddenReason: number
+    deletedAt: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type CompetitionPostMinAggregateInputType = {
+    id?: true
+    leagueId?: true
+    cupId?: true
+    seasonId?: true
+    authorId?: true
+    title?: true
+    contentHtml?: true
+    excerpt?: true
+    coverImageUrl?: true
+    status?: true
+    publishedAt?: true
+    notifiedAt?: true
+    editedAt?: true
+    pinnedAt?: true
+    hiddenAt?: true
+    hiddenById?: true
+    hiddenReason?: true
+    deletedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CompetitionPostMaxAggregateInputType = {
+    id?: true
+    leagueId?: true
+    cupId?: true
+    seasonId?: true
+    authorId?: true
+    title?: true
+    contentHtml?: true
+    excerpt?: true
+    coverImageUrl?: true
+    status?: true
+    publishedAt?: true
+    notifiedAt?: true
+    editedAt?: true
+    pinnedAt?: true
+    hiddenAt?: true
+    hiddenById?: true
+    hiddenReason?: true
+    deletedAt?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type CompetitionPostCountAggregateInputType = {
+    id?: true
+    leagueId?: true
+    cupId?: true
+    seasonId?: true
+    authorId?: true
+    title?: true
+    contentHtml?: true
+    excerpt?: true
+    coverImageUrl?: true
+    status?: true
+    publishedAt?: true
+    notifiedAt?: true
+    editedAt?: true
+    pinnedAt?: true
+    hiddenAt?: true
+    hiddenById?: true
+    hiddenReason?: true
+    deletedAt?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type CompetitionPostAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionPost to aggregate.
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPosts to fetch.
+     */
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CompetitionPostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPosts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CompetitionPosts
+    **/
+    _count?: true | CompetitionPostCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CompetitionPostMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CompetitionPostMaxAggregateInputType
+  }
+
+  export type GetCompetitionPostAggregateType<T extends CompetitionPostAggregateArgs> = {
+        [P in keyof T & keyof AggregateCompetitionPost]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCompetitionPost[P]>
+      : GetScalarType<T[P], AggregateCompetitionPost[P]>
+  }
+
+
+
+
+  export type CompetitionPostGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostWhereInput
+    orderBy?: CompetitionPostOrderByWithAggregationInput | CompetitionPostOrderByWithAggregationInput[]
+    by: CompetitionPostScalarFieldEnum[] | CompetitionPostScalarFieldEnum
+    having?: CompetitionPostScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CompetitionPostCountAggregateInputType | true
+    _min?: CompetitionPostMinAggregateInputType
+    _max?: CompetitionPostMaxAggregateInputType
+  }
+
+  export type CompetitionPostGroupByOutputType = {
+    id: string
+    leagueId: string | null
+    cupId: string | null
+    seasonId: string | null
+    authorId: string | null
+    title: string
+    contentHtml: string
+    excerpt: string | null
+    coverImageUrl: string | null
+    status: string
+    publishedAt: Date | null
+    notifiedAt: Date | null
+    editedAt: Date | null
+    pinnedAt: Date | null
+    hiddenAt: Date | null
+    hiddenById: string | null
+    hiddenReason: string | null
+    deletedAt: Date | null
+    createdAt: Date
+    updatedAt: Date
+    _count: CompetitionPostCountAggregateOutputType | null
+    _min: CompetitionPostMinAggregateOutputType | null
+    _max: CompetitionPostMaxAggregateOutputType | null
+  }
+
+  type GetCompetitionPostGroupByPayload<T extends CompetitionPostGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CompetitionPostGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CompetitionPostGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CompetitionPostGroupByOutputType[P]>
+            : GetScalarType<T[P], CompetitionPostGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CompetitionPostSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    seasonId?: boolean
+    authorId?: boolean
+    title?: boolean
+    contentHtml?: boolean
+    excerpt?: boolean
+    coverImageUrl?: boolean
+    status?: boolean
+    publishedAt?: boolean
+    notifiedAt?: boolean
+    editedAt?: boolean
+    pinnedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    league?: boolean | CompetitionPost$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionPost$cupArgs<ExtArgs>
+    season?: boolean | CompetitionPost$seasonArgs<ExtArgs>
+    author?: boolean | CompetitionPost$authorArgs<ExtArgs>
+    comments?: boolean | CompetitionPost$commentsArgs<ExtArgs>
+    reactions?: boolean | CompetitionPost$reactionsArgs<ExtArgs>
+    _count?: boolean | CompetitionPostCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPost"]>
+
+  export type CompetitionPostSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    seasonId?: boolean
+    authorId?: boolean
+    title?: boolean
+    contentHtml?: boolean
+    excerpt?: boolean
+    coverImageUrl?: boolean
+    status?: boolean
+    publishedAt?: boolean
+    notifiedAt?: boolean
+    editedAt?: boolean
+    pinnedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    league?: boolean | CompetitionPost$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionPost$cupArgs<ExtArgs>
+    season?: boolean | CompetitionPost$seasonArgs<ExtArgs>
+    author?: boolean | CompetitionPost$authorArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPost"]>
+
+  export type CompetitionPostSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    seasonId?: boolean
+    authorId?: boolean
+    title?: boolean
+    contentHtml?: boolean
+    excerpt?: boolean
+    coverImageUrl?: boolean
+    status?: boolean
+    publishedAt?: boolean
+    notifiedAt?: boolean
+    editedAt?: boolean
+    pinnedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    league?: boolean | CompetitionPost$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionPost$cupArgs<ExtArgs>
+    season?: boolean | CompetitionPost$seasonArgs<ExtArgs>
+    author?: boolean | CompetitionPost$authorArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPost"]>
+
+  export type CompetitionPostSelectScalar = {
+    id?: boolean
+    leagueId?: boolean
+    cupId?: boolean
+    seasonId?: boolean
+    authorId?: boolean
+    title?: boolean
+    contentHtml?: boolean
+    excerpt?: boolean
+    coverImageUrl?: boolean
+    status?: boolean
+    publishedAt?: boolean
+    notifiedAt?: boolean
+    editedAt?: boolean
+    pinnedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type CompetitionPostOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "leagueId" | "cupId" | "seasonId" | "authorId" | "title" | "contentHtml" | "excerpt" | "coverImageUrl" | "status" | "publishedAt" | "notifiedAt" | "editedAt" | "pinnedAt" | "hiddenAt" | "hiddenById" | "hiddenReason" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["competitionPost"]>
+  export type CompetitionPostInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    league?: boolean | CompetitionPost$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionPost$cupArgs<ExtArgs>
+    season?: boolean | CompetitionPost$seasonArgs<ExtArgs>
+    author?: boolean | CompetitionPost$authorArgs<ExtArgs>
+    comments?: boolean | CompetitionPost$commentsArgs<ExtArgs>
+    reactions?: boolean | CompetitionPost$reactionsArgs<ExtArgs>
+    _count?: boolean | CompetitionPostCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type CompetitionPostIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    league?: boolean | CompetitionPost$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionPost$cupArgs<ExtArgs>
+    season?: boolean | CompetitionPost$seasonArgs<ExtArgs>
+    author?: boolean | CompetitionPost$authorArgs<ExtArgs>
+  }
+  export type CompetitionPostIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    league?: boolean | CompetitionPost$leagueArgs<ExtArgs>
+    cup?: boolean | CompetitionPost$cupArgs<ExtArgs>
+    season?: boolean | CompetitionPost$seasonArgs<ExtArgs>
+    author?: boolean | CompetitionPost$authorArgs<ExtArgs>
+  }
+
+  export type $CompetitionPostPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CompetitionPost"
+    objects: {
+      league: Prisma.$LeaguePayload<ExtArgs> | null
+      cup: Prisma.$CupPayload<ExtArgs> | null
+      /**
+       * Repère d'affichage d'un article de ligue : saison la plus récente à la
+       * première publication.
+       */
+      season: Prisma.$LeagueSeasonPayload<ExtArgs> | null
+      /**
+       * SetNull : l'article survit à la suppression du compte (« coach supprimé »).
+       */
+      author: Prisma.$UserPayload<ExtArgs> | null
+      comments: Prisma.$CompetitionPostCommentPayload<ExtArgs>[]
+      reactions: Prisma.$CompetitionPostReactionPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      leagueId: string | null
+      cupId: string | null
+      seasonId: string | null
+      authorId: string | null
+      title: string
+      /**
+       * HTML assaini côté serveur (`utils/sanitize-competition-post-html`).
+       */
+      contentHtml: string
+      /**
+       * Texte brut dérivé du corps à l'écriture (listings).
+       */
+      excerpt: string | null
+      coverImageUrl: string | null
+      /**
+       * "draft" | "published"
+       */
+      status: string
+      /**
+       * Première publication (write-once).
+       */
+      publishedAt: Date | null
+      /**
+       * Notification de publication envoyée (write-once).
+       */
+      notifiedAt: Date | null
+      /**
+       * Dernière modification APRÈS publication.
+       */
+      editedAt: Date | null
+      pinnedAt: Date | null
+      hiddenAt: Date | null
+      hiddenById: string | null
+      hiddenReason: string | null
+      deletedAt: Date | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["competitionPost"]>
+    composites: {}
+  }
+
+  type CompetitionPostGetPayload<S extends boolean | null | undefined | CompetitionPostDefaultArgs> = $Result.GetResult<Prisma.$CompetitionPostPayload, S>
+
+  type CompetitionPostCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CompetitionPostFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CompetitionPostCountAggregateInputType | true
+    }
+
+  export interface CompetitionPostDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CompetitionPost'], meta: { name: 'CompetitionPost' } }
+    /**
+     * Find zero or one CompetitionPost that matches the filter.
+     * @param {CompetitionPostFindUniqueArgs} args - Arguments to find a CompetitionPost
+     * @example
+     * // Get one CompetitionPost
+     * const competitionPost = await prisma.competitionPost.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CompetitionPostFindUniqueArgs>(args: SelectSubset<T, CompetitionPostFindUniqueArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CompetitionPost that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CompetitionPostFindUniqueOrThrowArgs} args - Arguments to find a CompetitionPost
+     * @example
+     * // Get one CompetitionPost
+     * const competitionPost = await prisma.competitionPost.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CompetitionPostFindUniqueOrThrowArgs>(args: SelectSubset<T, CompetitionPostFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionPost that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostFindFirstArgs} args - Arguments to find a CompetitionPost
+     * @example
+     * // Get one CompetitionPost
+     * const competitionPost = await prisma.competitionPost.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CompetitionPostFindFirstArgs>(args?: SelectSubset<T, CompetitionPostFindFirstArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionPost that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostFindFirstOrThrowArgs} args - Arguments to find a CompetitionPost
+     * @example
+     * // Get one CompetitionPost
+     * const competitionPost = await prisma.competitionPost.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CompetitionPostFindFirstOrThrowArgs>(args?: SelectSubset<T, CompetitionPostFindFirstOrThrowArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CompetitionPosts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CompetitionPosts
+     * const competitionPosts = await prisma.competitionPost.findMany()
+     * 
+     * // Get first 10 CompetitionPosts
+     * const competitionPosts = await prisma.competitionPost.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const competitionPostWithIdOnly = await prisma.competitionPost.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CompetitionPostFindManyArgs>(args?: SelectSubset<T, CompetitionPostFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CompetitionPost.
+     * @param {CompetitionPostCreateArgs} args - Arguments to create a CompetitionPost.
+     * @example
+     * // Create one CompetitionPost
+     * const CompetitionPost = await prisma.competitionPost.create({
+     *   data: {
+     *     // ... data to create a CompetitionPost
+     *   }
+     * })
+     * 
+     */
+    create<T extends CompetitionPostCreateArgs>(args: SelectSubset<T, CompetitionPostCreateArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CompetitionPosts.
+     * @param {CompetitionPostCreateManyArgs} args - Arguments to create many CompetitionPosts.
+     * @example
+     * // Create many CompetitionPosts
+     * const competitionPost = await prisma.competitionPost.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CompetitionPostCreateManyArgs>(args?: SelectSubset<T, CompetitionPostCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CompetitionPosts and returns the data saved in the database.
+     * @param {CompetitionPostCreateManyAndReturnArgs} args - Arguments to create many CompetitionPosts.
+     * @example
+     * // Create many CompetitionPosts
+     * const competitionPost = await prisma.competitionPost.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CompetitionPosts and only return the `id`
+     * const competitionPostWithIdOnly = await prisma.competitionPost.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CompetitionPostCreateManyAndReturnArgs>(args?: SelectSubset<T, CompetitionPostCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CompetitionPost.
+     * @param {CompetitionPostDeleteArgs} args - Arguments to delete one CompetitionPost.
+     * @example
+     * // Delete one CompetitionPost
+     * const CompetitionPost = await prisma.competitionPost.delete({
+     *   where: {
+     *     // ... filter to delete one CompetitionPost
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CompetitionPostDeleteArgs>(args: SelectSubset<T, CompetitionPostDeleteArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CompetitionPost.
+     * @param {CompetitionPostUpdateArgs} args - Arguments to update one CompetitionPost.
+     * @example
+     * // Update one CompetitionPost
+     * const competitionPost = await prisma.competitionPost.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CompetitionPostUpdateArgs>(args: SelectSubset<T, CompetitionPostUpdateArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CompetitionPosts.
+     * @param {CompetitionPostDeleteManyArgs} args - Arguments to filter CompetitionPosts to delete.
+     * @example
+     * // Delete a few CompetitionPosts
+     * const { count } = await prisma.competitionPost.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CompetitionPostDeleteManyArgs>(args?: SelectSubset<T, CompetitionPostDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionPosts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CompetitionPosts
+     * const competitionPost = await prisma.competitionPost.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CompetitionPostUpdateManyArgs>(args: SelectSubset<T, CompetitionPostUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionPosts and returns the data updated in the database.
+     * @param {CompetitionPostUpdateManyAndReturnArgs} args - Arguments to update many CompetitionPosts.
+     * @example
+     * // Update many CompetitionPosts
+     * const competitionPost = await prisma.competitionPost.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CompetitionPosts and only return the `id`
+     * const competitionPostWithIdOnly = await prisma.competitionPost.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CompetitionPostUpdateManyAndReturnArgs>(args: SelectSubset<T, CompetitionPostUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CompetitionPost.
+     * @param {CompetitionPostUpsertArgs} args - Arguments to update or create a CompetitionPost.
+     * @example
+     * // Update or create a CompetitionPost
+     * const competitionPost = await prisma.competitionPost.upsert({
+     *   create: {
+     *     // ... data to create a CompetitionPost
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CompetitionPost we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CompetitionPostUpsertArgs>(args: SelectSubset<T, CompetitionPostUpsertArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CompetitionPosts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCountArgs} args - Arguments to filter CompetitionPosts to count.
+     * @example
+     * // Count the number of CompetitionPosts
+     * const count = await prisma.competitionPost.count({
+     *   where: {
+     *     // ... the filter for the CompetitionPosts we want to count
+     *   }
+     * })
+    **/
+    count<T extends CompetitionPostCountArgs>(
+      args?: Subset<T, CompetitionPostCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CompetitionPostCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CompetitionPost.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CompetitionPostAggregateArgs>(args: Subset<T, CompetitionPostAggregateArgs>): Prisma.PrismaPromise<GetCompetitionPostAggregateType<T>>
+
+    /**
+     * Group by CompetitionPost.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CompetitionPostGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CompetitionPostGroupByArgs['orderBy'] }
+        : { orderBy?: CompetitionPostGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CompetitionPostGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCompetitionPostGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CompetitionPost model
+   */
+  readonly fields: CompetitionPostFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CompetitionPost.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CompetitionPostClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    league<T extends CompetitionPost$leagueArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPost$leagueArgs<ExtArgs>>): Prisma__LeagueClient<$Result.GetResult<Prisma.$LeaguePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    cup<T extends CompetitionPost$cupArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPost$cupArgs<ExtArgs>>): Prisma__CupClient<$Result.GetResult<Prisma.$CupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    season<T extends CompetitionPost$seasonArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPost$seasonArgs<ExtArgs>>): Prisma__LeagueSeasonClient<$Result.GetResult<Prisma.$LeagueSeasonPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    author<T extends CompetitionPost$authorArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPost$authorArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    comments<T extends CompetitionPost$commentsArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPost$commentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    reactions<T extends CompetitionPost$reactionsArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPost$reactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CompetitionPost model
+   */
+  interface CompetitionPostFieldRefs {
+    readonly id: FieldRef<"CompetitionPost", 'String'>
+    readonly leagueId: FieldRef<"CompetitionPost", 'String'>
+    readonly cupId: FieldRef<"CompetitionPost", 'String'>
+    readonly seasonId: FieldRef<"CompetitionPost", 'String'>
+    readonly authorId: FieldRef<"CompetitionPost", 'String'>
+    readonly title: FieldRef<"CompetitionPost", 'String'>
+    readonly contentHtml: FieldRef<"CompetitionPost", 'String'>
+    readonly excerpt: FieldRef<"CompetitionPost", 'String'>
+    readonly coverImageUrl: FieldRef<"CompetitionPost", 'String'>
+    readonly status: FieldRef<"CompetitionPost", 'String'>
+    readonly publishedAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly notifiedAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly editedAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly pinnedAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly hiddenAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly hiddenById: FieldRef<"CompetitionPost", 'String'>
+    readonly hiddenReason: FieldRef<"CompetitionPost", 'String'>
+    readonly deletedAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly createdAt: FieldRef<"CompetitionPost", 'DateTime'>
+    readonly updatedAt: FieldRef<"CompetitionPost", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CompetitionPost findUnique
+   */
+  export type CompetitionPostFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPost to fetch.
+     */
+    where: CompetitionPostWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPost findUniqueOrThrow
+   */
+  export type CompetitionPostFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPost to fetch.
+     */
+    where: CompetitionPostWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPost findFirst
+   */
+  export type CompetitionPostFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPost to fetch.
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPosts to fetch.
+     */
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionPosts.
+     */
+    cursor?: CompetitionPostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPosts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionPosts.
+     */
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPost findFirstOrThrow
+   */
+  export type CompetitionPostFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPost to fetch.
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPosts to fetch.
+     */
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionPosts.
+     */
+    cursor?: CompetitionPostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPosts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionPosts.
+     */
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPost findMany
+   */
+  export type CompetitionPostFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPosts to fetch.
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPosts to fetch.
+     */
+    orderBy?: CompetitionPostOrderByWithRelationInput | CompetitionPostOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CompetitionPosts.
+     */
+    cursor?: CompetitionPostWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPosts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPosts.
+     */
+    skip?: number
+    distinct?: CompetitionPostScalarFieldEnum | CompetitionPostScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPost create
+   */
+  export type CompetitionPostCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CompetitionPost.
+     */
+    data: XOR<CompetitionPostCreateInput, CompetitionPostUncheckedCreateInput>
+  }
+
+  /**
+   * CompetitionPost createMany
+   */
+  export type CompetitionPostCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CompetitionPosts.
+     */
+    data: CompetitionPostCreateManyInput | CompetitionPostCreateManyInput[]
+  }
+
+  /**
+   * CompetitionPost createManyAndReturn
+   */
+  export type CompetitionPostCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * The data used to create many CompetitionPosts.
+     */
+    data: CompetitionPostCreateManyInput | CompetitionPostCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPost update
+   */
+  export type CompetitionPostUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CompetitionPost.
+     */
+    data: XOR<CompetitionPostUpdateInput, CompetitionPostUncheckedUpdateInput>
+    /**
+     * Choose, which CompetitionPost to update.
+     */
+    where: CompetitionPostWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPost updateMany
+   */
+  export type CompetitionPostUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CompetitionPosts.
+     */
+    data: XOR<CompetitionPostUpdateManyMutationInput, CompetitionPostUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionPosts to update
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * Limit how many CompetitionPosts to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionPost updateManyAndReturn
+   */
+  export type CompetitionPostUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * The data used to update CompetitionPosts.
+     */
+    data: XOR<CompetitionPostUpdateManyMutationInput, CompetitionPostUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionPosts to update
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * Limit how many CompetitionPosts to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPost upsert
+   */
+  export type CompetitionPostUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CompetitionPost to update in case it exists.
+     */
+    where: CompetitionPostWhereUniqueInput
+    /**
+     * In case the CompetitionPost found by the `where` argument doesn't exist, create a new CompetitionPost with this data.
+     */
+    create: XOR<CompetitionPostCreateInput, CompetitionPostUncheckedCreateInput>
+    /**
+     * In case the CompetitionPost was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CompetitionPostUpdateInput, CompetitionPostUncheckedUpdateInput>
+  }
+
+  /**
+   * CompetitionPost delete
+   */
+  export type CompetitionPostDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+    /**
+     * Filter which CompetitionPost to delete.
+     */
+    where: CompetitionPostWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPost deleteMany
+   */
+  export type CompetitionPostDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionPosts to delete
+     */
+    where?: CompetitionPostWhereInput
+    /**
+     * Limit how many CompetitionPosts to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionPost.league
+   */
+  export type CompetitionPost$leagueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the League
+     */
+    select?: LeagueSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the League
+     */
+    omit?: LeagueOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueInclude<ExtArgs> | null
+    where?: LeagueWhereInput
+  }
+
+  /**
+   * CompetitionPost.cup
+   */
+  export type CompetitionPost$cupArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Cup
+     */
+    select?: CupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Cup
+     */
+    omit?: CupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CupInclude<ExtArgs> | null
+    where?: CupWhereInput
+  }
+
+  /**
+   * CompetitionPost.season
+   */
+  export type CompetitionPost$seasonArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the LeagueSeason
+     */
+    select?: LeagueSeasonSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the LeagueSeason
+     */
+    omit?: LeagueSeasonOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: LeagueSeasonInclude<ExtArgs> | null
+    where?: LeagueSeasonWhereInput
+  }
+
+  /**
+   * CompetitionPost.author
+   */
+  export type CompetitionPost$authorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * CompetitionPost.comments
+   */
+  export type CompetitionPost$commentsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    where?: CompetitionPostCommentWhereInput
+    orderBy?: CompetitionPostCommentOrderByWithRelationInput | CompetitionPostCommentOrderByWithRelationInput[]
+    cursor?: CompetitionPostCommentWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostCommentScalarFieldEnum | CompetitionPostCommentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPost.reactions
+   */
+  export type CompetitionPost$reactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    where?: CompetitionPostReactionWhereInput
+    orderBy?: CompetitionPostReactionOrderByWithRelationInput | CompetitionPostReactionOrderByWithRelationInput[]
+    cursor?: CompetitionPostReactionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: CompetitionPostReactionScalarFieldEnum | CompetitionPostReactionScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPost without action
+   */
+  export type CompetitionPostDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPost
+     */
+    select?: CompetitionPostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPost
+     */
+    omit?: CompetitionPostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CompetitionPostComment
+   */
+
+  export type AggregateCompetitionPostComment = {
+    _count: CompetitionPostCommentCountAggregateOutputType | null
+    _min: CompetitionPostCommentMinAggregateOutputType | null
+    _max: CompetitionPostCommentMaxAggregateOutputType | null
+  }
+
+  export type CompetitionPostCommentMinAggregateOutputType = {
+    id: string | null
+    postId: string | null
+    authorId: string | null
+    body: string | null
+    editedAt: Date | null
+    hiddenAt: Date | null
+    hiddenById: string | null
+    hiddenReason: string | null
+    deletedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type CompetitionPostCommentMaxAggregateOutputType = {
+    id: string | null
+    postId: string | null
+    authorId: string | null
+    body: string | null
+    editedAt: Date | null
+    hiddenAt: Date | null
+    hiddenById: string | null
+    hiddenReason: string | null
+    deletedAt: Date | null
+    createdAt: Date | null
+  }
+
+  export type CompetitionPostCommentCountAggregateOutputType = {
+    id: number
+    postId: number
+    authorId: number
+    body: number
+    editedAt: number
+    hiddenAt: number
+    hiddenById: number
+    hiddenReason: number
+    deletedAt: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type CompetitionPostCommentMinAggregateInputType = {
+    id?: true
+    postId?: true
+    authorId?: true
+    body?: true
+    editedAt?: true
+    hiddenAt?: true
+    hiddenById?: true
+    hiddenReason?: true
+    deletedAt?: true
+    createdAt?: true
+  }
+
+  export type CompetitionPostCommentMaxAggregateInputType = {
+    id?: true
+    postId?: true
+    authorId?: true
+    body?: true
+    editedAt?: true
+    hiddenAt?: true
+    hiddenById?: true
+    hiddenReason?: true
+    deletedAt?: true
+    createdAt?: true
+  }
+
+  export type CompetitionPostCommentCountAggregateInputType = {
+    id?: true
+    postId?: true
+    authorId?: true
+    body?: true
+    editedAt?: true
+    hiddenAt?: true
+    hiddenById?: true
+    hiddenReason?: true
+    deletedAt?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type CompetitionPostCommentAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionPostComment to aggregate.
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostComments to fetch.
+     */
+    orderBy?: CompetitionPostCommentOrderByWithRelationInput | CompetitionPostCommentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CompetitionPostCommentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostComments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostComments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CompetitionPostComments
+    **/
+    _count?: true | CompetitionPostCommentCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CompetitionPostCommentMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CompetitionPostCommentMaxAggregateInputType
+  }
+
+  export type GetCompetitionPostCommentAggregateType<T extends CompetitionPostCommentAggregateArgs> = {
+        [P in keyof T & keyof AggregateCompetitionPostComment]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCompetitionPostComment[P]>
+      : GetScalarType<T[P], AggregateCompetitionPostComment[P]>
+  }
+
+
+
+
+  export type CompetitionPostCommentGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostCommentWhereInput
+    orderBy?: CompetitionPostCommentOrderByWithAggregationInput | CompetitionPostCommentOrderByWithAggregationInput[]
+    by: CompetitionPostCommentScalarFieldEnum[] | CompetitionPostCommentScalarFieldEnum
+    having?: CompetitionPostCommentScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CompetitionPostCommentCountAggregateInputType | true
+    _min?: CompetitionPostCommentMinAggregateInputType
+    _max?: CompetitionPostCommentMaxAggregateInputType
+  }
+
+  export type CompetitionPostCommentGroupByOutputType = {
+    id: string
+    postId: string
+    authorId: string | null
+    body: string
+    editedAt: Date | null
+    hiddenAt: Date | null
+    hiddenById: string | null
+    hiddenReason: string | null
+    deletedAt: Date | null
+    createdAt: Date
+    _count: CompetitionPostCommentCountAggregateOutputType | null
+    _min: CompetitionPostCommentMinAggregateOutputType | null
+    _max: CompetitionPostCommentMaxAggregateOutputType | null
+  }
+
+  type GetCompetitionPostCommentGroupByPayload<T extends CompetitionPostCommentGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CompetitionPostCommentGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CompetitionPostCommentGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CompetitionPostCommentGroupByOutputType[P]>
+            : GetScalarType<T[P], CompetitionPostCommentGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CompetitionPostCommentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    postId?: boolean
+    authorId?: boolean
+    body?: boolean
+    editedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    author?: boolean | CompetitionPostComment$authorArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPostComment"]>
+
+  export type CompetitionPostCommentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    postId?: boolean
+    authorId?: boolean
+    body?: boolean
+    editedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    author?: boolean | CompetitionPostComment$authorArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPostComment"]>
+
+  export type CompetitionPostCommentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    postId?: boolean
+    authorId?: boolean
+    body?: boolean
+    editedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    author?: boolean | CompetitionPostComment$authorArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPostComment"]>
+
+  export type CompetitionPostCommentSelectScalar = {
+    id?: boolean
+    postId?: boolean
+    authorId?: boolean
+    body?: boolean
+    editedAt?: boolean
+    hiddenAt?: boolean
+    hiddenById?: boolean
+    hiddenReason?: boolean
+    deletedAt?: boolean
+    createdAt?: boolean
+  }
+
+  export type CompetitionPostCommentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "postId" | "authorId" | "body" | "editedAt" | "hiddenAt" | "hiddenById" | "hiddenReason" | "deletedAt" | "createdAt", ExtArgs["result"]["competitionPostComment"]>
+  export type CompetitionPostCommentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    author?: boolean | CompetitionPostComment$authorArgs<ExtArgs>
+  }
+  export type CompetitionPostCommentIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    author?: boolean | CompetitionPostComment$authorArgs<ExtArgs>
+  }
+  export type CompetitionPostCommentIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    author?: boolean | CompetitionPostComment$authorArgs<ExtArgs>
+  }
+
+  export type $CompetitionPostCommentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CompetitionPostComment"
+    objects: {
+      post: Prisma.$CompetitionPostPayload<ExtArgs>
+      author: Prisma.$UserPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      postId: string
+      authorId: string | null
+      body: string
+      editedAt: Date | null
+      hiddenAt: Date | null
+      hiddenById: string | null
+      /**
+       * "blocklist:<motif>" (auto) ou raison saisie par le modérateur.
+       */
+      hiddenReason: string | null
+      deletedAt: Date | null
+      createdAt: Date
+    }, ExtArgs["result"]["competitionPostComment"]>
+    composites: {}
+  }
+
+  type CompetitionPostCommentGetPayload<S extends boolean | null | undefined | CompetitionPostCommentDefaultArgs> = $Result.GetResult<Prisma.$CompetitionPostCommentPayload, S>
+
+  type CompetitionPostCommentCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CompetitionPostCommentFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CompetitionPostCommentCountAggregateInputType | true
+    }
+
+  export interface CompetitionPostCommentDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CompetitionPostComment'], meta: { name: 'CompetitionPostComment' } }
+    /**
+     * Find zero or one CompetitionPostComment that matches the filter.
+     * @param {CompetitionPostCommentFindUniqueArgs} args - Arguments to find a CompetitionPostComment
+     * @example
+     * // Get one CompetitionPostComment
+     * const competitionPostComment = await prisma.competitionPostComment.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CompetitionPostCommentFindUniqueArgs>(args: SelectSubset<T, CompetitionPostCommentFindUniqueArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CompetitionPostComment that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CompetitionPostCommentFindUniqueOrThrowArgs} args - Arguments to find a CompetitionPostComment
+     * @example
+     * // Get one CompetitionPostComment
+     * const competitionPostComment = await prisma.competitionPostComment.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CompetitionPostCommentFindUniqueOrThrowArgs>(args: SelectSubset<T, CompetitionPostCommentFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionPostComment that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentFindFirstArgs} args - Arguments to find a CompetitionPostComment
+     * @example
+     * // Get one CompetitionPostComment
+     * const competitionPostComment = await prisma.competitionPostComment.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CompetitionPostCommentFindFirstArgs>(args?: SelectSubset<T, CompetitionPostCommentFindFirstArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionPostComment that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentFindFirstOrThrowArgs} args - Arguments to find a CompetitionPostComment
+     * @example
+     * // Get one CompetitionPostComment
+     * const competitionPostComment = await prisma.competitionPostComment.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CompetitionPostCommentFindFirstOrThrowArgs>(args?: SelectSubset<T, CompetitionPostCommentFindFirstOrThrowArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CompetitionPostComments that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CompetitionPostComments
+     * const competitionPostComments = await prisma.competitionPostComment.findMany()
+     * 
+     * // Get first 10 CompetitionPostComments
+     * const competitionPostComments = await prisma.competitionPostComment.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const competitionPostCommentWithIdOnly = await prisma.competitionPostComment.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CompetitionPostCommentFindManyArgs>(args?: SelectSubset<T, CompetitionPostCommentFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CompetitionPostComment.
+     * @param {CompetitionPostCommentCreateArgs} args - Arguments to create a CompetitionPostComment.
+     * @example
+     * // Create one CompetitionPostComment
+     * const CompetitionPostComment = await prisma.competitionPostComment.create({
+     *   data: {
+     *     // ... data to create a CompetitionPostComment
+     *   }
+     * })
+     * 
+     */
+    create<T extends CompetitionPostCommentCreateArgs>(args: SelectSubset<T, CompetitionPostCommentCreateArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CompetitionPostComments.
+     * @param {CompetitionPostCommentCreateManyArgs} args - Arguments to create many CompetitionPostComments.
+     * @example
+     * // Create many CompetitionPostComments
+     * const competitionPostComment = await prisma.competitionPostComment.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CompetitionPostCommentCreateManyArgs>(args?: SelectSubset<T, CompetitionPostCommentCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CompetitionPostComments and returns the data saved in the database.
+     * @param {CompetitionPostCommentCreateManyAndReturnArgs} args - Arguments to create many CompetitionPostComments.
+     * @example
+     * // Create many CompetitionPostComments
+     * const competitionPostComment = await prisma.competitionPostComment.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CompetitionPostComments and only return the `id`
+     * const competitionPostCommentWithIdOnly = await prisma.competitionPostComment.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CompetitionPostCommentCreateManyAndReturnArgs>(args?: SelectSubset<T, CompetitionPostCommentCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CompetitionPostComment.
+     * @param {CompetitionPostCommentDeleteArgs} args - Arguments to delete one CompetitionPostComment.
+     * @example
+     * // Delete one CompetitionPostComment
+     * const CompetitionPostComment = await prisma.competitionPostComment.delete({
+     *   where: {
+     *     // ... filter to delete one CompetitionPostComment
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CompetitionPostCommentDeleteArgs>(args: SelectSubset<T, CompetitionPostCommentDeleteArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CompetitionPostComment.
+     * @param {CompetitionPostCommentUpdateArgs} args - Arguments to update one CompetitionPostComment.
+     * @example
+     * // Update one CompetitionPostComment
+     * const competitionPostComment = await prisma.competitionPostComment.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CompetitionPostCommentUpdateArgs>(args: SelectSubset<T, CompetitionPostCommentUpdateArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CompetitionPostComments.
+     * @param {CompetitionPostCommentDeleteManyArgs} args - Arguments to filter CompetitionPostComments to delete.
+     * @example
+     * // Delete a few CompetitionPostComments
+     * const { count } = await prisma.competitionPostComment.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CompetitionPostCommentDeleteManyArgs>(args?: SelectSubset<T, CompetitionPostCommentDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionPostComments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CompetitionPostComments
+     * const competitionPostComment = await prisma.competitionPostComment.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CompetitionPostCommentUpdateManyArgs>(args: SelectSubset<T, CompetitionPostCommentUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionPostComments and returns the data updated in the database.
+     * @param {CompetitionPostCommentUpdateManyAndReturnArgs} args - Arguments to update many CompetitionPostComments.
+     * @example
+     * // Update many CompetitionPostComments
+     * const competitionPostComment = await prisma.competitionPostComment.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CompetitionPostComments and only return the `id`
+     * const competitionPostCommentWithIdOnly = await prisma.competitionPostComment.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CompetitionPostCommentUpdateManyAndReturnArgs>(args: SelectSubset<T, CompetitionPostCommentUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CompetitionPostComment.
+     * @param {CompetitionPostCommentUpsertArgs} args - Arguments to update or create a CompetitionPostComment.
+     * @example
+     * // Update or create a CompetitionPostComment
+     * const competitionPostComment = await prisma.competitionPostComment.upsert({
+     *   create: {
+     *     // ... data to create a CompetitionPostComment
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CompetitionPostComment we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CompetitionPostCommentUpsertArgs>(args: SelectSubset<T, CompetitionPostCommentUpsertArgs<ExtArgs>>): Prisma__CompetitionPostCommentClient<$Result.GetResult<Prisma.$CompetitionPostCommentPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CompetitionPostComments.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentCountArgs} args - Arguments to filter CompetitionPostComments to count.
+     * @example
+     * // Count the number of CompetitionPostComments
+     * const count = await prisma.competitionPostComment.count({
+     *   where: {
+     *     // ... the filter for the CompetitionPostComments we want to count
+     *   }
+     * })
+    **/
+    count<T extends CompetitionPostCommentCountArgs>(
+      args?: Subset<T, CompetitionPostCommentCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CompetitionPostCommentCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CompetitionPostComment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CompetitionPostCommentAggregateArgs>(args: Subset<T, CompetitionPostCommentAggregateArgs>): Prisma.PrismaPromise<GetCompetitionPostCommentAggregateType<T>>
+
+    /**
+     * Group by CompetitionPostComment.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostCommentGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CompetitionPostCommentGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CompetitionPostCommentGroupByArgs['orderBy'] }
+        : { orderBy?: CompetitionPostCommentGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CompetitionPostCommentGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCompetitionPostCommentGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CompetitionPostComment model
+   */
+  readonly fields: CompetitionPostCommentFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CompetitionPostComment.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CompetitionPostCommentClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    post<T extends CompetitionPostDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPostDefaultArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    author<T extends CompetitionPostComment$authorArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPostComment$authorArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CompetitionPostComment model
+   */
+  interface CompetitionPostCommentFieldRefs {
+    readonly id: FieldRef<"CompetitionPostComment", 'String'>
+    readonly postId: FieldRef<"CompetitionPostComment", 'String'>
+    readonly authorId: FieldRef<"CompetitionPostComment", 'String'>
+    readonly body: FieldRef<"CompetitionPostComment", 'String'>
+    readonly editedAt: FieldRef<"CompetitionPostComment", 'DateTime'>
+    readonly hiddenAt: FieldRef<"CompetitionPostComment", 'DateTime'>
+    readonly hiddenById: FieldRef<"CompetitionPostComment", 'String'>
+    readonly hiddenReason: FieldRef<"CompetitionPostComment", 'String'>
+    readonly deletedAt: FieldRef<"CompetitionPostComment", 'DateTime'>
+    readonly createdAt: FieldRef<"CompetitionPostComment", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CompetitionPostComment findUnique
+   */
+  export type CompetitionPostCommentFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostComment to fetch.
+     */
+    where: CompetitionPostCommentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostComment findUniqueOrThrow
+   */
+  export type CompetitionPostCommentFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostComment to fetch.
+     */
+    where: CompetitionPostCommentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostComment findFirst
+   */
+  export type CompetitionPostCommentFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostComment to fetch.
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostComments to fetch.
+     */
+    orderBy?: CompetitionPostCommentOrderByWithRelationInput | CompetitionPostCommentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionPostComments.
+     */
+    cursor?: CompetitionPostCommentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostComments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostComments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionPostComments.
+     */
+    distinct?: CompetitionPostCommentScalarFieldEnum | CompetitionPostCommentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPostComment findFirstOrThrow
+   */
+  export type CompetitionPostCommentFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostComment to fetch.
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostComments to fetch.
+     */
+    orderBy?: CompetitionPostCommentOrderByWithRelationInput | CompetitionPostCommentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionPostComments.
+     */
+    cursor?: CompetitionPostCommentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostComments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostComments.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionPostComments.
+     */
+    distinct?: CompetitionPostCommentScalarFieldEnum | CompetitionPostCommentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPostComment findMany
+   */
+  export type CompetitionPostCommentFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostComments to fetch.
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostComments to fetch.
+     */
+    orderBy?: CompetitionPostCommentOrderByWithRelationInput | CompetitionPostCommentOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CompetitionPostComments.
+     */
+    cursor?: CompetitionPostCommentWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostComments from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostComments.
+     */
+    skip?: number
+    distinct?: CompetitionPostCommentScalarFieldEnum | CompetitionPostCommentScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPostComment create
+   */
+  export type CompetitionPostCommentCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CompetitionPostComment.
+     */
+    data: XOR<CompetitionPostCommentCreateInput, CompetitionPostCommentUncheckedCreateInput>
+  }
+
+  /**
+   * CompetitionPostComment createMany
+   */
+  export type CompetitionPostCommentCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CompetitionPostComments.
+     */
+    data: CompetitionPostCommentCreateManyInput | CompetitionPostCommentCreateManyInput[]
+  }
+
+  /**
+   * CompetitionPostComment createManyAndReturn
+   */
+  export type CompetitionPostCommentCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * The data used to create many CompetitionPostComments.
+     */
+    data: CompetitionPostCommentCreateManyInput | CompetitionPostCommentCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPostComment update
+   */
+  export type CompetitionPostCommentUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CompetitionPostComment.
+     */
+    data: XOR<CompetitionPostCommentUpdateInput, CompetitionPostCommentUncheckedUpdateInput>
+    /**
+     * Choose, which CompetitionPostComment to update.
+     */
+    where: CompetitionPostCommentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostComment updateMany
+   */
+  export type CompetitionPostCommentUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CompetitionPostComments.
+     */
+    data: XOR<CompetitionPostCommentUpdateManyMutationInput, CompetitionPostCommentUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionPostComments to update
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * Limit how many CompetitionPostComments to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionPostComment updateManyAndReturn
+   */
+  export type CompetitionPostCommentUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * The data used to update CompetitionPostComments.
+     */
+    data: XOR<CompetitionPostCommentUpdateManyMutationInput, CompetitionPostCommentUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionPostComments to update
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * Limit how many CompetitionPostComments to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPostComment upsert
+   */
+  export type CompetitionPostCommentUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CompetitionPostComment to update in case it exists.
+     */
+    where: CompetitionPostCommentWhereUniqueInput
+    /**
+     * In case the CompetitionPostComment found by the `where` argument doesn't exist, create a new CompetitionPostComment with this data.
+     */
+    create: XOR<CompetitionPostCommentCreateInput, CompetitionPostCommentUncheckedCreateInput>
+    /**
+     * In case the CompetitionPostComment was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CompetitionPostCommentUpdateInput, CompetitionPostCommentUncheckedUpdateInput>
+  }
+
+  /**
+   * CompetitionPostComment delete
+   */
+  export type CompetitionPostCommentDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+    /**
+     * Filter which CompetitionPostComment to delete.
+     */
+    where: CompetitionPostCommentWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostComment deleteMany
+   */
+  export type CompetitionPostCommentDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionPostComments to delete
+     */
+    where?: CompetitionPostCommentWhereInput
+    /**
+     * Limit how many CompetitionPostComments to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionPostComment.author
+   */
+  export type CompetitionPostComment$authorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * CompetitionPostComment without action
+   */
+  export type CompetitionPostCommentDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostComment
+     */
+    select?: CompetitionPostCommentSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostComment
+     */
+    omit?: CompetitionPostCommentOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostCommentInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model CompetitionPostReaction
+   */
+
+  export type AggregateCompetitionPostReaction = {
+    _count: CompetitionPostReactionCountAggregateOutputType | null
+    _min: CompetitionPostReactionMinAggregateOutputType | null
+    _max: CompetitionPostReactionMaxAggregateOutputType | null
+  }
+
+  export type CompetitionPostReactionMinAggregateOutputType = {
+    id: string | null
+    postId: string | null
+    userId: string | null
+    kind: string | null
+    createdAt: Date | null
+  }
+
+  export type CompetitionPostReactionMaxAggregateOutputType = {
+    id: string | null
+    postId: string | null
+    userId: string | null
+    kind: string | null
+    createdAt: Date | null
+  }
+
+  export type CompetitionPostReactionCountAggregateOutputType = {
+    id: number
+    postId: number
+    userId: number
+    kind: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type CompetitionPostReactionMinAggregateInputType = {
+    id?: true
+    postId?: true
+    userId?: true
+    kind?: true
+    createdAt?: true
+  }
+
+  export type CompetitionPostReactionMaxAggregateInputType = {
+    id?: true
+    postId?: true
+    userId?: true
+    kind?: true
+    createdAt?: true
+  }
+
+  export type CompetitionPostReactionCountAggregateInputType = {
+    id?: true
+    postId?: true
+    userId?: true
+    kind?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type CompetitionPostReactionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionPostReaction to aggregate.
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostReactions to fetch.
+     */
+    orderBy?: CompetitionPostReactionOrderByWithRelationInput | CompetitionPostReactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: CompetitionPostReactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostReactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostReactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned CompetitionPostReactions
+    **/
+    _count?: true | CompetitionPostReactionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: CompetitionPostReactionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: CompetitionPostReactionMaxAggregateInputType
+  }
+
+  export type GetCompetitionPostReactionAggregateType<T extends CompetitionPostReactionAggregateArgs> = {
+        [P in keyof T & keyof AggregateCompetitionPostReaction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateCompetitionPostReaction[P]>
+      : GetScalarType<T[P], AggregateCompetitionPostReaction[P]>
+  }
+
+
+
+
+  export type CompetitionPostReactionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: CompetitionPostReactionWhereInput
+    orderBy?: CompetitionPostReactionOrderByWithAggregationInput | CompetitionPostReactionOrderByWithAggregationInput[]
+    by: CompetitionPostReactionScalarFieldEnum[] | CompetitionPostReactionScalarFieldEnum
+    having?: CompetitionPostReactionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: CompetitionPostReactionCountAggregateInputType | true
+    _min?: CompetitionPostReactionMinAggregateInputType
+    _max?: CompetitionPostReactionMaxAggregateInputType
+  }
+
+  export type CompetitionPostReactionGroupByOutputType = {
+    id: string
+    postId: string
+    userId: string
+    kind: string
+    createdAt: Date
+    _count: CompetitionPostReactionCountAggregateOutputType | null
+    _min: CompetitionPostReactionMinAggregateOutputType | null
+    _max: CompetitionPostReactionMaxAggregateOutputType | null
+  }
+
+  type GetCompetitionPostReactionGroupByPayload<T extends CompetitionPostReactionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<CompetitionPostReactionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof CompetitionPostReactionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], CompetitionPostReactionGroupByOutputType[P]>
+            : GetScalarType<T[P], CompetitionPostReactionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type CompetitionPostReactionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    postId?: boolean
+    userId?: boolean
+    kind?: boolean
+    createdAt?: boolean
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPostReaction"]>
+
+  export type CompetitionPostReactionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    postId?: boolean
+    userId?: boolean
+    kind?: boolean
+    createdAt?: boolean
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPostReaction"]>
+
+  export type CompetitionPostReactionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    postId?: boolean
+    userId?: boolean
+    kind?: boolean
+    createdAt?: boolean
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["competitionPostReaction"]>
+
+  export type CompetitionPostReactionSelectScalar = {
+    id?: boolean
+    postId?: boolean
+    userId?: boolean
+    kind?: boolean
+    createdAt?: boolean
+  }
+
+  export type CompetitionPostReactionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "postId" | "userId" | "kind" | "createdAt", ExtArgs["result"]["competitionPostReaction"]>
+  export type CompetitionPostReactionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CompetitionPostReactionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type CompetitionPostReactionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    post?: boolean | CompetitionPostDefaultArgs<ExtArgs>
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $CompetitionPostReactionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "CompetitionPostReaction"
+    objects: {
+      post: Prisma.$CompetitionPostPayload<ExtArgs>
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      postId: string
+      userId: string
+      kind: string
+      createdAt: Date
+    }, ExtArgs["result"]["competitionPostReaction"]>
+    composites: {}
+  }
+
+  type CompetitionPostReactionGetPayload<S extends boolean | null | undefined | CompetitionPostReactionDefaultArgs> = $Result.GetResult<Prisma.$CompetitionPostReactionPayload, S>
+
+  type CompetitionPostReactionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<CompetitionPostReactionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: CompetitionPostReactionCountAggregateInputType | true
+    }
+
+  export interface CompetitionPostReactionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['CompetitionPostReaction'], meta: { name: 'CompetitionPostReaction' } }
+    /**
+     * Find zero or one CompetitionPostReaction that matches the filter.
+     * @param {CompetitionPostReactionFindUniqueArgs} args - Arguments to find a CompetitionPostReaction
+     * @example
+     * // Get one CompetitionPostReaction
+     * const competitionPostReaction = await prisma.competitionPostReaction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends CompetitionPostReactionFindUniqueArgs>(args: SelectSubset<T, CompetitionPostReactionFindUniqueArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one CompetitionPostReaction that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {CompetitionPostReactionFindUniqueOrThrowArgs} args - Arguments to find a CompetitionPostReaction
+     * @example
+     * // Get one CompetitionPostReaction
+     * const competitionPostReaction = await prisma.competitionPostReaction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends CompetitionPostReactionFindUniqueOrThrowArgs>(args: SelectSubset<T, CompetitionPostReactionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionPostReaction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionFindFirstArgs} args - Arguments to find a CompetitionPostReaction
+     * @example
+     * // Get one CompetitionPostReaction
+     * const competitionPostReaction = await prisma.competitionPostReaction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends CompetitionPostReactionFindFirstArgs>(args?: SelectSubset<T, CompetitionPostReactionFindFirstArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first CompetitionPostReaction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionFindFirstOrThrowArgs} args - Arguments to find a CompetitionPostReaction
+     * @example
+     * // Get one CompetitionPostReaction
+     * const competitionPostReaction = await prisma.competitionPostReaction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends CompetitionPostReactionFindFirstOrThrowArgs>(args?: SelectSubset<T, CompetitionPostReactionFindFirstOrThrowArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more CompetitionPostReactions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all CompetitionPostReactions
+     * const competitionPostReactions = await prisma.competitionPostReaction.findMany()
+     * 
+     * // Get first 10 CompetitionPostReactions
+     * const competitionPostReactions = await prisma.competitionPostReaction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const competitionPostReactionWithIdOnly = await prisma.competitionPostReaction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends CompetitionPostReactionFindManyArgs>(args?: SelectSubset<T, CompetitionPostReactionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a CompetitionPostReaction.
+     * @param {CompetitionPostReactionCreateArgs} args - Arguments to create a CompetitionPostReaction.
+     * @example
+     * // Create one CompetitionPostReaction
+     * const CompetitionPostReaction = await prisma.competitionPostReaction.create({
+     *   data: {
+     *     // ... data to create a CompetitionPostReaction
+     *   }
+     * })
+     * 
+     */
+    create<T extends CompetitionPostReactionCreateArgs>(args: SelectSubset<T, CompetitionPostReactionCreateArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many CompetitionPostReactions.
+     * @param {CompetitionPostReactionCreateManyArgs} args - Arguments to create many CompetitionPostReactions.
+     * @example
+     * // Create many CompetitionPostReactions
+     * const competitionPostReaction = await prisma.competitionPostReaction.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends CompetitionPostReactionCreateManyArgs>(args?: SelectSubset<T, CompetitionPostReactionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many CompetitionPostReactions and returns the data saved in the database.
+     * @param {CompetitionPostReactionCreateManyAndReturnArgs} args - Arguments to create many CompetitionPostReactions.
+     * @example
+     * // Create many CompetitionPostReactions
+     * const competitionPostReaction = await prisma.competitionPostReaction.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many CompetitionPostReactions and only return the `id`
+     * const competitionPostReactionWithIdOnly = await prisma.competitionPostReaction.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends CompetitionPostReactionCreateManyAndReturnArgs>(args?: SelectSubset<T, CompetitionPostReactionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a CompetitionPostReaction.
+     * @param {CompetitionPostReactionDeleteArgs} args - Arguments to delete one CompetitionPostReaction.
+     * @example
+     * // Delete one CompetitionPostReaction
+     * const CompetitionPostReaction = await prisma.competitionPostReaction.delete({
+     *   where: {
+     *     // ... filter to delete one CompetitionPostReaction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends CompetitionPostReactionDeleteArgs>(args: SelectSubset<T, CompetitionPostReactionDeleteArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one CompetitionPostReaction.
+     * @param {CompetitionPostReactionUpdateArgs} args - Arguments to update one CompetitionPostReaction.
+     * @example
+     * // Update one CompetitionPostReaction
+     * const competitionPostReaction = await prisma.competitionPostReaction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends CompetitionPostReactionUpdateArgs>(args: SelectSubset<T, CompetitionPostReactionUpdateArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more CompetitionPostReactions.
+     * @param {CompetitionPostReactionDeleteManyArgs} args - Arguments to filter CompetitionPostReactions to delete.
+     * @example
+     * // Delete a few CompetitionPostReactions
+     * const { count } = await prisma.competitionPostReaction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends CompetitionPostReactionDeleteManyArgs>(args?: SelectSubset<T, CompetitionPostReactionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionPostReactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many CompetitionPostReactions
+     * const competitionPostReaction = await prisma.competitionPostReaction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends CompetitionPostReactionUpdateManyArgs>(args: SelectSubset<T, CompetitionPostReactionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more CompetitionPostReactions and returns the data updated in the database.
+     * @param {CompetitionPostReactionUpdateManyAndReturnArgs} args - Arguments to update many CompetitionPostReactions.
+     * @example
+     * // Update many CompetitionPostReactions
+     * const competitionPostReaction = await prisma.competitionPostReaction.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more CompetitionPostReactions and only return the `id`
+     * const competitionPostReactionWithIdOnly = await prisma.competitionPostReaction.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends CompetitionPostReactionUpdateManyAndReturnArgs>(args: SelectSubset<T, CompetitionPostReactionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one CompetitionPostReaction.
+     * @param {CompetitionPostReactionUpsertArgs} args - Arguments to update or create a CompetitionPostReaction.
+     * @example
+     * // Update or create a CompetitionPostReaction
+     * const competitionPostReaction = await prisma.competitionPostReaction.upsert({
+     *   create: {
+     *     // ... data to create a CompetitionPostReaction
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the CompetitionPostReaction we want to update
+     *   }
+     * })
+     */
+    upsert<T extends CompetitionPostReactionUpsertArgs>(args: SelectSubset<T, CompetitionPostReactionUpsertArgs<ExtArgs>>): Prisma__CompetitionPostReactionClient<$Result.GetResult<Prisma.$CompetitionPostReactionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of CompetitionPostReactions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionCountArgs} args - Arguments to filter CompetitionPostReactions to count.
+     * @example
+     * // Count the number of CompetitionPostReactions
+     * const count = await prisma.competitionPostReaction.count({
+     *   where: {
+     *     // ... the filter for the CompetitionPostReactions we want to count
+     *   }
+     * })
+    **/
+    count<T extends CompetitionPostReactionCountArgs>(
+      args?: Subset<T, CompetitionPostReactionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], CompetitionPostReactionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a CompetitionPostReaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends CompetitionPostReactionAggregateArgs>(args: Subset<T, CompetitionPostReactionAggregateArgs>): Prisma.PrismaPromise<GetCompetitionPostReactionAggregateType<T>>
+
+    /**
+     * Group by CompetitionPostReaction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {CompetitionPostReactionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends CompetitionPostReactionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: CompetitionPostReactionGroupByArgs['orderBy'] }
+        : { orderBy?: CompetitionPostReactionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, CompetitionPostReactionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetCompetitionPostReactionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the CompetitionPostReaction model
+   */
+  readonly fields: CompetitionPostReactionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for CompetitionPostReaction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__CompetitionPostReactionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    post<T extends CompetitionPostDefaultArgs<ExtArgs> = {}>(args?: Subset<T, CompetitionPostDefaultArgs<ExtArgs>>): Prisma__CompetitionPostClient<$Result.GetResult<Prisma.$CompetitionPostPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the CompetitionPostReaction model
+   */
+  interface CompetitionPostReactionFieldRefs {
+    readonly id: FieldRef<"CompetitionPostReaction", 'String'>
+    readonly postId: FieldRef<"CompetitionPostReaction", 'String'>
+    readonly userId: FieldRef<"CompetitionPostReaction", 'String'>
+    readonly kind: FieldRef<"CompetitionPostReaction", 'String'>
+    readonly createdAt: FieldRef<"CompetitionPostReaction", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * CompetitionPostReaction findUnique
+   */
+  export type CompetitionPostReactionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostReaction to fetch.
+     */
+    where: CompetitionPostReactionWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostReaction findUniqueOrThrow
+   */
+  export type CompetitionPostReactionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostReaction to fetch.
+     */
+    where: CompetitionPostReactionWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostReaction findFirst
+   */
+  export type CompetitionPostReactionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostReaction to fetch.
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostReactions to fetch.
+     */
+    orderBy?: CompetitionPostReactionOrderByWithRelationInput | CompetitionPostReactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionPostReactions.
+     */
+    cursor?: CompetitionPostReactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostReactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostReactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionPostReactions.
+     */
+    distinct?: CompetitionPostReactionScalarFieldEnum | CompetitionPostReactionScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPostReaction findFirstOrThrow
+   */
+  export type CompetitionPostReactionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostReaction to fetch.
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostReactions to fetch.
+     */
+    orderBy?: CompetitionPostReactionOrderByWithRelationInput | CompetitionPostReactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for CompetitionPostReactions.
+     */
+    cursor?: CompetitionPostReactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostReactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostReactions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of CompetitionPostReactions.
+     */
+    distinct?: CompetitionPostReactionScalarFieldEnum | CompetitionPostReactionScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPostReaction findMany
+   */
+  export type CompetitionPostReactionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * Filter, which CompetitionPostReactions to fetch.
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of CompetitionPostReactions to fetch.
+     */
+    orderBy?: CompetitionPostReactionOrderByWithRelationInput | CompetitionPostReactionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing CompetitionPostReactions.
+     */
+    cursor?: CompetitionPostReactionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` CompetitionPostReactions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` CompetitionPostReactions.
+     */
+    skip?: number
+    distinct?: CompetitionPostReactionScalarFieldEnum | CompetitionPostReactionScalarFieldEnum[]
+  }
+
+  /**
+   * CompetitionPostReaction create
+   */
+  export type CompetitionPostReactionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a CompetitionPostReaction.
+     */
+    data: XOR<CompetitionPostReactionCreateInput, CompetitionPostReactionUncheckedCreateInput>
+  }
+
+  /**
+   * CompetitionPostReaction createMany
+   */
+  export type CompetitionPostReactionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many CompetitionPostReactions.
+     */
+    data: CompetitionPostReactionCreateManyInput | CompetitionPostReactionCreateManyInput[]
+  }
+
+  /**
+   * CompetitionPostReaction createManyAndReturn
+   */
+  export type CompetitionPostReactionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * The data used to create many CompetitionPostReactions.
+     */
+    data: CompetitionPostReactionCreateManyInput | CompetitionPostReactionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPostReaction update
+   */
+  export type CompetitionPostReactionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a CompetitionPostReaction.
+     */
+    data: XOR<CompetitionPostReactionUpdateInput, CompetitionPostReactionUncheckedUpdateInput>
+    /**
+     * Choose, which CompetitionPostReaction to update.
+     */
+    where: CompetitionPostReactionWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostReaction updateMany
+   */
+  export type CompetitionPostReactionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update CompetitionPostReactions.
+     */
+    data: XOR<CompetitionPostReactionUpdateManyMutationInput, CompetitionPostReactionUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionPostReactions to update
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * Limit how many CompetitionPostReactions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionPostReaction updateManyAndReturn
+   */
+  export type CompetitionPostReactionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * The data used to update CompetitionPostReactions.
+     */
+    data: XOR<CompetitionPostReactionUpdateManyMutationInput, CompetitionPostReactionUncheckedUpdateManyInput>
+    /**
+     * Filter which CompetitionPostReactions to update
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * Limit how many CompetitionPostReactions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * CompetitionPostReaction upsert
+   */
+  export type CompetitionPostReactionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the CompetitionPostReaction to update in case it exists.
+     */
+    where: CompetitionPostReactionWhereUniqueInput
+    /**
+     * In case the CompetitionPostReaction found by the `where` argument doesn't exist, create a new CompetitionPostReaction with this data.
+     */
+    create: XOR<CompetitionPostReactionCreateInput, CompetitionPostReactionUncheckedCreateInput>
+    /**
+     * In case the CompetitionPostReaction was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<CompetitionPostReactionUpdateInput, CompetitionPostReactionUncheckedUpdateInput>
+  }
+
+  /**
+   * CompetitionPostReaction delete
+   */
+  export type CompetitionPostReactionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
+    /**
+     * Filter which CompetitionPostReaction to delete.
+     */
+    where: CompetitionPostReactionWhereUniqueInput
+  }
+
+  /**
+   * CompetitionPostReaction deleteMany
+   */
+  export type CompetitionPostReactionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which CompetitionPostReactions to delete
+     */
+    where?: CompetitionPostReactionWhereInput
+    /**
+     * Limit how many CompetitionPostReactions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * CompetitionPostReaction without action
+   */
+  export type CompetitionPostReactionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the CompetitionPostReaction
+     */
+    select?: CompetitionPostReactionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the CompetitionPostReaction
+     */
+    omit?: CompetitionPostReactionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: CompetitionPostReactionInclude<ExtArgs> | null
   }
 
 
@@ -128592,6 +132781,59 @@ export namespace Prisma {
   export type CompetitionDocumentScalarFieldEnum = (typeof CompetitionDocumentScalarFieldEnum)[keyof typeof CompetitionDocumentScalarFieldEnum]
 
 
+  export const CompetitionPostScalarFieldEnum: {
+    id: 'id',
+    leagueId: 'leagueId',
+    cupId: 'cupId',
+    seasonId: 'seasonId',
+    authorId: 'authorId',
+    title: 'title',
+    contentHtml: 'contentHtml',
+    excerpt: 'excerpt',
+    coverImageUrl: 'coverImageUrl',
+    status: 'status',
+    publishedAt: 'publishedAt',
+    notifiedAt: 'notifiedAt',
+    editedAt: 'editedAt',
+    pinnedAt: 'pinnedAt',
+    hiddenAt: 'hiddenAt',
+    hiddenById: 'hiddenById',
+    hiddenReason: 'hiddenReason',
+    deletedAt: 'deletedAt',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type CompetitionPostScalarFieldEnum = (typeof CompetitionPostScalarFieldEnum)[keyof typeof CompetitionPostScalarFieldEnum]
+
+
+  export const CompetitionPostCommentScalarFieldEnum: {
+    id: 'id',
+    postId: 'postId',
+    authorId: 'authorId',
+    body: 'body',
+    editedAt: 'editedAt',
+    hiddenAt: 'hiddenAt',
+    hiddenById: 'hiddenById',
+    hiddenReason: 'hiddenReason',
+    deletedAt: 'deletedAt',
+    createdAt: 'createdAt'
+  };
+
+  export type CompetitionPostCommentScalarFieldEnum = (typeof CompetitionPostCommentScalarFieldEnum)[keyof typeof CompetitionPostCommentScalarFieldEnum]
+
+
+  export const CompetitionPostReactionScalarFieldEnum: {
+    id: 'id',
+    postId: 'postId',
+    userId: 'userId',
+    kind: 'kind',
+    createdAt: 'createdAt'
+  };
+
+  export type CompetitionPostReactionScalarFieldEnum = (typeof CompetitionPostReactionScalarFieldEnum)[keyof typeof CompetitionPostReactionScalarFieldEnum]
+
+
   export const LeagueParticipantScalarFieldEnum: {
     id: 'id',
     seasonId: 'seasonId',
@@ -129631,6 +133873,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionListRelationFilter
     createdCups?: CupListRelationFilter
     competitionDocuments?: CompetitionDocumentListRelationFilter
+    competitionPosts?: CompetitionPostListRelationFilter
+    competitionPostComments?: CompetitionPostCommentListRelationFilter
+    competitionPostReactions?: CompetitionPostReactionListRelationFilter
     createdLeagues?: LeagueListRelationFilter
     createdLocalMatches?: LocalMatchListRelationFilter
     matchQueue?: XOR<MatchQueueNullableScalarRelationFilter, MatchQueueWhereInput> | null
@@ -129709,6 +133954,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionOrderByRelationAggregateInput
     createdCups?: CupOrderByRelationAggregateInput
     competitionDocuments?: CompetitionDocumentOrderByRelationAggregateInput
+    competitionPosts?: CompetitionPostOrderByRelationAggregateInput
+    competitionPostComments?: CompetitionPostCommentOrderByRelationAggregateInput
+    competitionPostReactions?: CompetitionPostReactionOrderByRelationAggregateInput
     createdLeagues?: LeagueOrderByRelationAggregateInput
     createdLocalMatches?: LocalMatchOrderByRelationAggregateInput
     matchQueue?: MatchQueueOrderByWithRelationInput
@@ -129790,6 +134038,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionListRelationFilter
     createdCups?: CupListRelationFilter
     competitionDocuments?: CompetitionDocumentListRelationFilter
+    competitionPosts?: CompetitionPostListRelationFilter
+    competitionPostComments?: CompetitionPostCommentListRelationFilter
+    competitionPostReactions?: CompetitionPostReactionListRelationFilter
     createdLeagues?: LeagueListRelationFilter
     createdLocalMatches?: LocalMatchListRelationFilter
     matchQueue?: XOR<MatchQueueNullableScalarRelationFilter, MatchQueueWhereInput> | null
@@ -132623,6 +136874,7 @@ export namespace Prisma {
     localMatches?: LocalMatchListRelationFilter
     rounds?: CupRoundListRelationFilter
     documents?: CompetitionDocumentListRelationFilter
+    blogPosts?: CompetitionPostListRelationFilter
   }
 
   export type CupOrderByWithRelationInput = {
@@ -132666,6 +136918,7 @@ export namespace Prisma {
     localMatches?: LocalMatchOrderByRelationAggregateInput
     rounds?: CupRoundOrderByRelationAggregateInput
     documents?: CompetitionDocumentOrderByRelationAggregateInput
+    blogPosts?: CompetitionPostOrderByRelationAggregateInput
   }
 
   export type CupWhereUniqueInput = Prisma.AtLeast<{
@@ -132712,6 +136965,7 @@ export namespace Prisma {
     localMatches?: LocalMatchListRelationFilter
     rounds?: CupRoundListRelationFilter
     documents?: CompetitionDocumentListRelationFilter
+    blogPosts?: CompetitionPostListRelationFilter
   }, "id">
 
   export type CupOrderByWithAggregationInput = {
@@ -133705,6 +137959,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonListRelationFilter
     invitations?: LeagueInvitationListRelationFilter
     documents?: CompetitionDocumentListRelationFilter
+    blogPosts?: CompetitionPostListRelationFilter
   }
 
   export type LeagueOrderByWithRelationInput = {
@@ -133732,6 +137987,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonOrderByRelationAggregateInput
     invitations?: LeagueInvitationOrderByRelationAggregateInput
     documents?: CompetitionDocumentOrderByRelationAggregateInput
+    blogPosts?: CompetitionPostOrderByRelationAggregateInput
   }
 
   export type LeagueWhereUniqueInput = Prisma.AtLeast<{
@@ -133762,6 +138018,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonListRelationFilter
     invitations?: LeagueInvitationListRelationFilter
     documents?: CompetitionDocumentListRelationFilter
+    blogPosts?: CompetitionPostListRelationFilter
   }, "id">
 
   export type LeagueOrderByWithAggregationInput = {
@@ -133843,6 +138100,7 @@ export namespace Prisma {
     award?: XOR<LeagueSeasonAwardNullableScalarRelationFilter, LeagueSeasonAwardWhereInput> | null
     pools?: LeaguePoolListRelationFilter
     invitations?: LeagueInvitationListRelationFilter
+    blogPosts?: CompetitionPostListRelationFilter
   }
 
   export type LeagueSeasonOrderByWithRelationInput = {
@@ -133867,6 +138125,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardOrderByWithRelationInput
     pools?: LeaguePoolOrderByRelationAggregateInput
     invitations?: LeagueInvitationOrderByRelationAggregateInput
+    blogPosts?: CompetitionPostOrderByRelationAggregateInput
   }
 
   export type LeagueSeasonWhereUniqueInput = Prisma.AtLeast<{
@@ -133895,6 +138154,7 @@ export namespace Prisma {
     award?: XOR<LeagueSeasonAwardNullableScalarRelationFilter, LeagueSeasonAwardWhereInput> | null
     pools?: LeaguePoolListRelationFilter
     invitations?: LeagueInvitationListRelationFilter
+    blogPosts?: CompetitionPostListRelationFilter
   }, "id" | "leagueId_seasonNumber">
 
   export type LeagueSeasonOrderByWithAggregationInput = {
@@ -134365,6 +138625,293 @@ export namespace Prisma {
     sortOrder?: IntWithAggregatesFilter<"CompetitionDocument"> | number
     createdAt?: DateTimeWithAggregatesFilter<"CompetitionDocument"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"CompetitionDocument"> | Date | string
+  }
+
+  export type CompetitionPostWhereInput = {
+    AND?: CompetitionPostWhereInput | CompetitionPostWhereInput[]
+    OR?: CompetitionPostWhereInput[]
+    NOT?: CompetitionPostWhereInput | CompetitionPostWhereInput[]
+    id?: StringFilter<"CompetitionPost"> | string
+    leagueId?: StringNullableFilter<"CompetitionPost"> | string | null
+    cupId?: StringNullableFilter<"CompetitionPost"> | string | null
+    seasonId?: StringNullableFilter<"CompetitionPost"> | string | null
+    authorId?: StringNullableFilter<"CompetitionPost"> | string | null
+    title?: StringFilter<"CompetitionPost"> | string
+    contentHtml?: StringFilter<"CompetitionPost"> | string
+    excerpt?: StringNullableFilter<"CompetitionPost"> | string | null
+    coverImageUrl?: StringNullableFilter<"CompetitionPost"> | string | null
+    status?: StringFilter<"CompetitionPost"> | string
+    publishedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    notifiedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    editedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    pinnedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    hiddenAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    hiddenById?: StringNullableFilter<"CompetitionPost"> | string | null
+    hiddenReason?: StringNullableFilter<"CompetitionPost"> | string | null
+    deletedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    createdAt?: DateTimeFilter<"CompetitionPost"> | Date | string
+    updatedAt?: DateTimeFilter<"CompetitionPost"> | Date | string
+    league?: XOR<LeagueNullableScalarRelationFilter, LeagueWhereInput> | null
+    cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+    season?: XOR<LeagueSeasonNullableScalarRelationFilter, LeagueSeasonWhereInput> | null
+    author?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    comments?: CompetitionPostCommentListRelationFilter
+    reactions?: CompetitionPostReactionListRelationFilter
+  }
+
+  export type CompetitionPostOrderByWithRelationInput = {
+    id?: SortOrder
+    leagueId?: SortOrderInput | SortOrder
+    cupId?: SortOrderInput | SortOrder
+    seasonId?: SortOrderInput | SortOrder
+    authorId?: SortOrderInput | SortOrder
+    title?: SortOrder
+    contentHtml?: SortOrder
+    excerpt?: SortOrderInput | SortOrder
+    coverImageUrl?: SortOrderInput | SortOrder
+    status?: SortOrder
+    publishedAt?: SortOrderInput | SortOrder
+    notifiedAt?: SortOrderInput | SortOrder
+    editedAt?: SortOrderInput | SortOrder
+    pinnedAt?: SortOrderInput | SortOrder
+    hiddenAt?: SortOrderInput | SortOrder
+    hiddenById?: SortOrderInput | SortOrder
+    hiddenReason?: SortOrderInput | SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    league?: LeagueOrderByWithRelationInput
+    cup?: CupOrderByWithRelationInput
+    season?: LeagueSeasonOrderByWithRelationInput
+    author?: UserOrderByWithRelationInput
+    comments?: CompetitionPostCommentOrderByRelationAggregateInput
+    reactions?: CompetitionPostReactionOrderByRelationAggregateInput
+  }
+
+  export type CompetitionPostWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CompetitionPostWhereInput | CompetitionPostWhereInput[]
+    OR?: CompetitionPostWhereInput[]
+    NOT?: CompetitionPostWhereInput | CompetitionPostWhereInput[]
+    leagueId?: StringNullableFilter<"CompetitionPost"> | string | null
+    cupId?: StringNullableFilter<"CompetitionPost"> | string | null
+    seasonId?: StringNullableFilter<"CompetitionPost"> | string | null
+    authorId?: StringNullableFilter<"CompetitionPost"> | string | null
+    title?: StringFilter<"CompetitionPost"> | string
+    contentHtml?: StringFilter<"CompetitionPost"> | string
+    excerpt?: StringNullableFilter<"CompetitionPost"> | string | null
+    coverImageUrl?: StringNullableFilter<"CompetitionPost"> | string | null
+    status?: StringFilter<"CompetitionPost"> | string
+    publishedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    notifiedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    editedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    pinnedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    hiddenAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    hiddenById?: StringNullableFilter<"CompetitionPost"> | string | null
+    hiddenReason?: StringNullableFilter<"CompetitionPost"> | string | null
+    deletedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    createdAt?: DateTimeFilter<"CompetitionPost"> | Date | string
+    updatedAt?: DateTimeFilter<"CompetitionPost"> | Date | string
+    league?: XOR<LeagueNullableScalarRelationFilter, LeagueWhereInput> | null
+    cup?: XOR<CupNullableScalarRelationFilter, CupWhereInput> | null
+    season?: XOR<LeagueSeasonNullableScalarRelationFilter, LeagueSeasonWhereInput> | null
+    author?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+    comments?: CompetitionPostCommentListRelationFilter
+    reactions?: CompetitionPostReactionListRelationFilter
+  }, "id">
+
+  export type CompetitionPostOrderByWithAggregationInput = {
+    id?: SortOrder
+    leagueId?: SortOrderInput | SortOrder
+    cupId?: SortOrderInput | SortOrder
+    seasonId?: SortOrderInput | SortOrder
+    authorId?: SortOrderInput | SortOrder
+    title?: SortOrder
+    contentHtml?: SortOrder
+    excerpt?: SortOrderInput | SortOrder
+    coverImageUrl?: SortOrderInput | SortOrder
+    status?: SortOrder
+    publishedAt?: SortOrderInput | SortOrder
+    notifiedAt?: SortOrderInput | SortOrder
+    editedAt?: SortOrderInput | SortOrder
+    pinnedAt?: SortOrderInput | SortOrder
+    hiddenAt?: SortOrderInput | SortOrder
+    hiddenById?: SortOrderInput | SortOrder
+    hiddenReason?: SortOrderInput | SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: CompetitionPostCountOrderByAggregateInput
+    _max?: CompetitionPostMaxOrderByAggregateInput
+    _min?: CompetitionPostMinOrderByAggregateInput
+  }
+
+  export type CompetitionPostScalarWhereWithAggregatesInput = {
+    AND?: CompetitionPostScalarWhereWithAggregatesInput | CompetitionPostScalarWhereWithAggregatesInput[]
+    OR?: CompetitionPostScalarWhereWithAggregatesInput[]
+    NOT?: CompetitionPostScalarWhereWithAggregatesInput | CompetitionPostScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CompetitionPost"> | string
+    leagueId?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    cupId?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    seasonId?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    authorId?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    title?: StringWithAggregatesFilter<"CompetitionPost"> | string
+    contentHtml?: StringWithAggregatesFilter<"CompetitionPost"> | string
+    excerpt?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    coverImageUrl?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    status?: StringWithAggregatesFilter<"CompetitionPost"> | string
+    publishedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPost"> | Date | string | null
+    notifiedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPost"> | Date | string | null
+    editedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPost"> | Date | string | null
+    pinnedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPost"> | Date | string | null
+    hiddenAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPost"> | Date | string | null
+    hiddenById?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    hiddenReason?: StringNullableWithAggregatesFilter<"CompetitionPost"> | string | null
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPost"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CompetitionPost"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"CompetitionPost"> | Date | string
+  }
+
+  export type CompetitionPostCommentWhereInput = {
+    AND?: CompetitionPostCommentWhereInput | CompetitionPostCommentWhereInput[]
+    OR?: CompetitionPostCommentWhereInput[]
+    NOT?: CompetitionPostCommentWhereInput | CompetitionPostCommentWhereInput[]
+    id?: StringFilter<"CompetitionPostComment"> | string
+    postId?: StringFilter<"CompetitionPostComment"> | string
+    authorId?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    body?: StringFilter<"CompetitionPostComment"> | string
+    editedAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenById?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    hiddenReason?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    deletedAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    createdAt?: DateTimeFilter<"CompetitionPostComment"> | Date | string
+    post?: XOR<CompetitionPostScalarRelationFilter, CompetitionPostWhereInput>
+    author?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }
+
+  export type CompetitionPostCommentOrderByWithRelationInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    authorId?: SortOrderInput | SortOrder
+    body?: SortOrder
+    editedAt?: SortOrderInput | SortOrder
+    hiddenAt?: SortOrderInput | SortOrder
+    hiddenById?: SortOrderInput | SortOrder
+    hiddenReason?: SortOrderInput | SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    post?: CompetitionPostOrderByWithRelationInput
+    author?: UserOrderByWithRelationInput
+  }
+
+  export type CompetitionPostCommentWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: CompetitionPostCommentWhereInput | CompetitionPostCommentWhereInput[]
+    OR?: CompetitionPostCommentWhereInput[]
+    NOT?: CompetitionPostCommentWhereInput | CompetitionPostCommentWhereInput[]
+    postId?: StringFilter<"CompetitionPostComment"> | string
+    authorId?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    body?: StringFilter<"CompetitionPostComment"> | string
+    editedAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenById?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    hiddenReason?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    deletedAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    createdAt?: DateTimeFilter<"CompetitionPostComment"> | Date | string
+    post?: XOR<CompetitionPostScalarRelationFilter, CompetitionPostWhereInput>
+    author?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id">
+
+  export type CompetitionPostCommentOrderByWithAggregationInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    authorId?: SortOrderInput | SortOrder
+    body?: SortOrder
+    editedAt?: SortOrderInput | SortOrder
+    hiddenAt?: SortOrderInput | SortOrder
+    hiddenById?: SortOrderInput | SortOrder
+    hiddenReason?: SortOrderInput | SortOrder
+    deletedAt?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: CompetitionPostCommentCountOrderByAggregateInput
+    _max?: CompetitionPostCommentMaxOrderByAggregateInput
+    _min?: CompetitionPostCommentMinOrderByAggregateInput
+  }
+
+  export type CompetitionPostCommentScalarWhereWithAggregatesInput = {
+    AND?: CompetitionPostCommentScalarWhereWithAggregatesInput | CompetitionPostCommentScalarWhereWithAggregatesInput[]
+    OR?: CompetitionPostCommentScalarWhereWithAggregatesInput[]
+    NOT?: CompetitionPostCommentScalarWhereWithAggregatesInput | CompetitionPostCommentScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CompetitionPostComment"> | string
+    postId?: StringWithAggregatesFilter<"CompetitionPostComment"> | string
+    authorId?: StringNullableWithAggregatesFilter<"CompetitionPostComment"> | string | null
+    body?: StringWithAggregatesFilter<"CompetitionPostComment"> | string
+    editedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenById?: StringNullableWithAggregatesFilter<"CompetitionPostComment"> | string | null
+    hiddenReason?: StringNullableWithAggregatesFilter<"CompetitionPostComment"> | string | null
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"CompetitionPostComment"> | Date | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"CompetitionPostComment"> | Date | string
+  }
+
+  export type CompetitionPostReactionWhereInput = {
+    AND?: CompetitionPostReactionWhereInput | CompetitionPostReactionWhereInput[]
+    OR?: CompetitionPostReactionWhereInput[]
+    NOT?: CompetitionPostReactionWhereInput | CompetitionPostReactionWhereInput[]
+    id?: StringFilter<"CompetitionPostReaction"> | string
+    postId?: StringFilter<"CompetitionPostReaction"> | string
+    userId?: StringFilter<"CompetitionPostReaction"> | string
+    kind?: StringFilter<"CompetitionPostReaction"> | string
+    createdAt?: DateTimeFilter<"CompetitionPostReaction"> | Date | string
+    post?: XOR<CompetitionPostScalarRelationFilter, CompetitionPostWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type CompetitionPostReactionOrderByWithRelationInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    createdAt?: SortOrder
+    post?: CompetitionPostOrderByWithRelationInput
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type CompetitionPostReactionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    postId_userId_kind?: CompetitionPostReactionPostIdUserIdKindCompoundUniqueInput
+    AND?: CompetitionPostReactionWhereInput | CompetitionPostReactionWhereInput[]
+    OR?: CompetitionPostReactionWhereInput[]
+    NOT?: CompetitionPostReactionWhereInput | CompetitionPostReactionWhereInput[]
+    postId?: StringFilter<"CompetitionPostReaction"> | string
+    userId?: StringFilter<"CompetitionPostReaction"> | string
+    kind?: StringFilter<"CompetitionPostReaction"> | string
+    createdAt?: DateTimeFilter<"CompetitionPostReaction"> | Date | string
+    post?: XOR<CompetitionPostScalarRelationFilter, CompetitionPostWhereInput>
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "postId_userId_kind">
+
+  export type CompetitionPostReactionOrderByWithAggregationInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    createdAt?: SortOrder
+    _count?: CompetitionPostReactionCountOrderByAggregateInput
+    _max?: CompetitionPostReactionMaxOrderByAggregateInput
+    _min?: CompetitionPostReactionMinOrderByAggregateInput
+  }
+
+  export type CompetitionPostReactionScalarWhereWithAggregatesInput = {
+    AND?: CompetitionPostReactionScalarWhereWithAggregatesInput | CompetitionPostReactionScalarWhereWithAggregatesInput[]
+    OR?: CompetitionPostReactionScalarWhereWithAggregatesInput[]
+    NOT?: CompetitionPostReactionScalarWhereWithAggregatesInput | CompetitionPostReactionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"CompetitionPostReaction"> | string
+    postId?: StringWithAggregatesFilter<"CompetitionPostReaction"> | string
+    userId?: StringWithAggregatesFilter<"CompetitionPostReaction"> | string
+    kind?: StringWithAggregatesFilter<"CompetitionPostReaction"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"CompetitionPostReaction"> | Date | string
   }
 
   export type LeagueParticipantWhereInput = {
@@ -138908,6 +143455,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -138986,6 +143536,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -139064,6 +143617,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -139142,6 +143698,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -142322,6 +146881,7 @@ export namespace Prisma {
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateInput = {
@@ -142364,6 +146924,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupUpdateInput = {
@@ -142406,6 +146967,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateInput = {
@@ -142448,6 +147010,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupCreateManyInput = {
@@ -143541,6 +148104,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateInput = {
@@ -143567,6 +148131,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUpdateInput = {
@@ -143593,6 +148158,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateInput = {
@@ -143619,6 +148185,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueCreateManyInput = {
@@ -143710,6 +148277,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateInput = {
@@ -143733,6 +148301,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUpdateInput = {
@@ -143756,6 +148325,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateInput = {
@@ -143779,6 +148349,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonCreateManyInput = {
@@ -144286,6 +148857,314 @@ export namespace Prisma {
     sortOrder?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCreateInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutBlogPostsInput
+    cup?: CupCreateNestedOneWithoutBlogPostsInput
+    season?: LeagueSeasonCreateNestedOneWithoutBlogPostsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostsInput
+    comments?: CompetitionPostCommentCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    comments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutBlogPostsNestedInput
+    cup?: CupUpdateOneWithoutBlogPostsNestedInput
+    season?: LeagueSeasonUpdateOneWithoutBlogPostsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostsNestedInput
+    comments?: CompetitionPostCommentUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    comments?: CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostCreateManyInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionPostUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentCreateInput = {
+    id?: string
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    post: CompetitionPostCreateNestedOneWithoutCommentsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostCommentsInput
+  }
+
+  export type CompetitionPostCommentUncheckedCreateInput = {
+    id?: string
+    postId: string
+    authorId?: string | null
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostCommentUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    post?: CompetitionPostUpdateOneRequiredWithoutCommentsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostCommentsNestedInput
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentCreateManyInput = {
+    id?: string
+    postId: string
+    authorId?: string | null
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostCommentUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionCreateInput = {
+    id?: string
+    kind: string
+    createdAt?: Date | string
+    post: CompetitionPostCreateNestedOneWithoutReactionsInput
+    user: UserCreateNestedOneWithoutCompetitionPostReactionsInput
+  }
+
+  export type CompetitionPostReactionUncheckedCreateInput = {
+    id?: string
+    postId: string
+    userId: string
+    kind: string
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostReactionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    post?: CompetitionPostUpdateOneRequiredWithoutReactionsNestedInput
+    user?: UserUpdateOneRequiredWithoutCompetitionPostReactionsNestedInput
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionCreateManyInput = {
+    id?: string
+    postId: string
+    userId: string
+    kind: string
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostReactionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type LeagueParticipantCreateInput = {
@@ -149449,6 +154328,24 @@ export namespace Prisma {
     none?: CompetitionDocumentWhereInput
   }
 
+  export type CompetitionPostListRelationFilter = {
+    every?: CompetitionPostWhereInput
+    some?: CompetitionPostWhereInput
+    none?: CompetitionPostWhereInput
+  }
+
+  export type CompetitionPostCommentListRelationFilter = {
+    every?: CompetitionPostCommentWhereInput
+    some?: CompetitionPostCommentWhereInput
+    none?: CompetitionPostCommentWhereInput
+  }
+
+  export type CompetitionPostReactionListRelationFilter = {
+    every?: CompetitionPostReactionWhereInput
+    some?: CompetitionPostReactionWhereInput
+    none?: CompetitionPostReactionWhereInput
+  }
+
   export type LeagueListRelationFilter = {
     every?: LeagueWhereInput
     some?: LeagueWhereInput
@@ -149649,6 +154546,18 @@ export namespace Prisma {
   }
 
   export type CompetitionDocumentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CompetitionPostOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CompetitionPostCommentOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type CompetitionPostReactionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -153055,6 +157964,149 @@ export namespace Prisma {
     sortOrder?: SortOrder
   }
 
+  export type CompetitionPostCountOrderByAggregateInput = {
+    id?: SortOrder
+    leagueId?: SortOrder
+    cupId?: SortOrder
+    seasonId?: SortOrder
+    authorId?: SortOrder
+    title?: SortOrder
+    contentHtml?: SortOrder
+    excerpt?: SortOrder
+    coverImageUrl?: SortOrder
+    status?: SortOrder
+    publishedAt?: SortOrder
+    notifiedAt?: SortOrder
+    editedAt?: SortOrder
+    pinnedAt?: SortOrder
+    hiddenAt?: SortOrder
+    hiddenById?: SortOrder
+    hiddenReason?: SortOrder
+    deletedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CompetitionPostMaxOrderByAggregateInput = {
+    id?: SortOrder
+    leagueId?: SortOrder
+    cupId?: SortOrder
+    seasonId?: SortOrder
+    authorId?: SortOrder
+    title?: SortOrder
+    contentHtml?: SortOrder
+    excerpt?: SortOrder
+    coverImageUrl?: SortOrder
+    status?: SortOrder
+    publishedAt?: SortOrder
+    notifiedAt?: SortOrder
+    editedAt?: SortOrder
+    pinnedAt?: SortOrder
+    hiddenAt?: SortOrder
+    hiddenById?: SortOrder
+    hiddenReason?: SortOrder
+    deletedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CompetitionPostMinOrderByAggregateInput = {
+    id?: SortOrder
+    leagueId?: SortOrder
+    cupId?: SortOrder
+    seasonId?: SortOrder
+    authorId?: SortOrder
+    title?: SortOrder
+    contentHtml?: SortOrder
+    excerpt?: SortOrder
+    coverImageUrl?: SortOrder
+    status?: SortOrder
+    publishedAt?: SortOrder
+    notifiedAt?: SortOrder
+    editedAt?: SortOrder
+    pinnedAt?: SortOrder
+    hiddenAt?: SortOrder
+    hiddenById?: SortOrder
+    hiddenReason?: SortOrder
+    deletedAt?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type CompetitionPostScalarRelationFilter = {
+    is?: CompetitionPostWhereInput
+    isNot?: CompetitionPostWhereInput
+  }
+
+  export type CompetitionPostCommentCountOrderByAggregateInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    authorId?: SortOrder
+    body?: SortOrder
+    editedAt?: SortOrder
+    hiddenAt?: SortOrder
+    hiddenById?: SortOrder
+    hiddenReason?: SortOrder
+    deletedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CompetitionPostCommentMaxOrderByAggregateInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    authorId?: SortOrder
+    body?: SortOrder
+    editedAt?: SortOrder
+    hiddenAt?: SortOrder
+    hiddenById?: SortOrder
+    hiddenReason?: SortOrder
+    deletedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CompetitionPostCommentMinOrderByAggregateInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    authorId?: SortOrder
+    body?: SortOrder
+    editedAt?: SortOrder
+    hiddenAt?: SortOrder
+    hiddenById?: SortOrder
+    hiddenReason?: SortOrder
+    deletedAt?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CompetitionPostReactionPostIdUserIdKindCompoundUniqueInput = {
+    postId: string
+    userId: string
+    kind: string
+  }
+
+  export type CompetitionPostReactionCountOrderByAggregateInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CompetitionPostReactionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type CompetitionPostReactionMinOrderByAggregateInput = {
+    id?: SortOrder
+    postId?: SortOrder
+    userId?: SortOrder
+    kind?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type LeaguePairingListRelationFilter = {
     every?: LeaguePairingWhereInput
     some?: LeaguePairingWhereInput
@@ -156004,6 +161056,27 @@ export namespace Prisma {
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
+  export type CompetitionPostCreateNestedManyWithoutAuthorInput = {
+    create?: XOR<CompetitionPostCreateWithoutAuthorInput, CompetitionPostUncheckedCreateWithoutAuthorInput> | CompetitionPostCreateWithoutAuthorInput[] | CompetitionPostUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutAuthorInput | CompetitionPostCreateOrConnectWithoutAuthorInput[]
+    createMany?: CompetitionPostCreateManyAuthorInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+  }
+
+  export type CompetitionPostCommentCreateNestedManyWithoutAuthorInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutAuthorInput, CompetitionPostCommentUncheckedCreateWithoutAuthorInput> | CompetitionPostCommentCreateWithoutAuthorInput[] | CompetitionPostCommentUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutAuthorInput | CompetitionPostCommentCreateOrConnectWithoutAuthorInput[]
+    createMany?: CompetitionPostCommentCreateManyAuthorInputEnvelope
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostReactionCreateNestedManyWithoutUserInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutUserInput, CompetitionPostReactionUncheckedCreateWithoutUserInput> | CompetitionPostReactionCreateWithoutUserInput[] | CompetitionPostReactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutUserInput | CompetitionPostReactionCreateOrConnectWithoutUserInput[]
+    createMany?: CompetitionPostReactionCreateManyUserInputEnvelope
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+  }
+
   export type LeagueCreateNestedManyWithoutCreatorInput = {
     create?: XOR<LeagueCreateWithoutCreatorInput, LeagueUncheckedCreateWithoutCreatorInput> | LeagueCreateWithoutCreatorInput[] | LeagueUncheckedCreateWithoutCreatorInput[]
     connectOrCreate?: LeagueCreateOrConnectWithoutCreatorInput | LeagueCreateOrConnectWithoutCreatorInput[]
@@ -156272,6 +161345,27 @@ export namespace Prisma {
     connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutUploaderInput | CompetitionDocumentCreateOrConnectWithoutUploaderInput[]
     createMany?: CompetitionDocumentCreateManyUploaderInputEnvelope
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput = {
+    create?: XOR<CompetitionPostCreateWithoutAuthorInput, CompetitionPostUncheckedCreateWithoutAuthorInput> | CompetitionPostCreateWithoutAuthorInput[] | CompetitionPostUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutAuthorInput | CompetitionPostCreateOrConnectWithoutAuthorInput[]
+    createMany?: CompetitionPostCreateManyAuthorInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+  }
+
+  export type CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutAuthorInput, CompetitionPostCommentUncheckedCreateWithoutAuthorInput> | CompetitionPostCommentCreateWithoutAuthorInput[] | CompetitionPostCommentUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutAuthorInput | CompetitionPostCommentCreateOrConnectWithoutAuthorInput[]
+    createMany?: CompetitionPostCommentCreateManyAuthorInputEnvelope
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutUserInput, CompetitionPostReactionUncheckedCreateWithoutUserInput> | CompetitionPostReactionCreateWithoutUserInput[] | CompetitionPostReactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutUserInput | CompetitionPostReactionCreateOrConnectWithoutUserInput[]
+    createMany?: CompetitionPostReactionCreateManyUserInputEnvelope
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
   }
 
   export type LeagueUncheckedCreateNestedManyWithoutCreatorInput = {
@@ -156620,6 +161714,48 @@ export namespace Prisma {
     update?: CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput | CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput[]
     updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput | CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput[]
     deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+  }
+
+  export type CompetitionPostUpdateManyWithoutAuthorNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutAuthorInput, CompetitionPostUncheckedCreateWithoutAuthorInput> | CompetitionPostCreateWithoutAuthorInput[] | CompetitionPostUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutAuthorInput | CompetitionPostCreateOrConnectWithoutAuthorInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutAuthorInput | CompetitionPostUpsertWithWhereUniqueWithoutAuthorInput[]
+    createMany?: CompetitionPostCreateManyAuthorInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutAuthorInput | CompetitionPostUpdateWithWhereUniqueWithoutAuthorInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutAuthorInput | CompetitionPostUpdateManyWithWhereWithoutAuthorInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+  }
+
+  export type CompetitionPostCommentUpdateManyWithoutAuthorNestedInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutAuthorInput, CompetitionPostCommentUncheckedCreateWithoutAuthorInput> | CompetitionPostCommentCreateWithoutAuthorInput[] | CompetitionPostCommentUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutAuthorInput | CompetitionPostCommentCreateOrConnectWithoutAuthorInput[]
+    upsert?: CompetitionPostCommentUpsertWithWhereUniqueWithoutAuthorInput | CompetitionPostCommentUpsertWithWhereUniqueWithoutAuthorInput[]
+    createMany?: CompetitionPostCommentCreateManyAuthorInputEnvelope
+    set?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    disconnect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    delete?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    update?: CompetitionPostCommentUpdateWithWhereUniqueWithoutAuthorInput | CompetitionPostCommentUpdateWithWhereUniqueWithoutAuthorInput[]
+    updateMany?: CompetitionPostCommentUpdateManyWithWhereWithoutAuthorInput | CompetitionPostCommentUpdateManyWithWhereWithoutAuthorInput[]
+    deleteMany?: CompetitionPostCommentScalarWhereInput | CompetitionPostCommentScalarWhereInput[]
+  }
+
+  export type CompetitionPostReactionUpdateManyWithoutUserNestedInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutUserInput, CompetitionPostReactionUncheckedCreateWithoutUserInput> | CompetitionPostReactionCreateWithoutUserInput[] | CompetitionPostReactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutUserInput | CompetitionPostReactionCreateOrConnectWithoutUserInput[]
+    upsert?: CompetitionPostReactionUpsertWithWhereUniqueWithoutUserInput | CompetitionPostReactionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: CompetitionPostReactionCreateManyUserInputEnvelope
+    set?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    disconnect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    delete?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    update?: CompetitionPostReactionUpdateWithWhereUniqueWithoutUserInput | CompetitionPostReactionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: CompetitionPostReactionUpdateManyWithWhereWithoutUserInput | CompetitionPostReactionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: CompetitionPostReactionScalarWhereInput | CompetitionPostReactionScalarWhereInput[]
   }
 
   export type LeagueUpdateManyWithoutCreatorNestedInput = {
@@ -157157,6 +162293,48 @@ export namespace Prisma {
     update?: CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput | CompetitionDocumentUpdateWithWhereUniqueWithoutUploaderInput[]
     updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput | CompetitionDocumentUpdateManyWithWhereWithoutUploaderInput[]
     deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutAuthorInput, CompetitionPostUncheckedCreateWithoutAuthorInput> | CompetitionPostCreateWithoutAuthorInput[] | CompetitionPostUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutAuthorInput | CompetitionPostCreateOrConnectWithoutAuthorInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutAuthorInput | CompetitionPostUpsertWithWhereUniqueWithoutAuthorInput[]
+    createMany?: CompetitionPostCreateManyAuthorInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutAuthorInput | CompetitionPostUpdateWithWhereUniqueWithoutAuthorInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutAuthorInput | CompetitionPostUpdateManyWithWhereWithoutAuthorInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutAuthorInput, CompetitionPostCommentUncheckedCreateWithoutAuthorInput> | CompetitionPostCommentCreateWithoutAuthorInput[] | CompetitionPostCommentUncheckedCreateWithoutAuthorInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutAuthorInput | CompetitionPostCommentCreateOrConnectWithoutAuthorInput[]
+    upsert?: CompetitionPostCommentUpsertWithWhereUniqueWithoutAuthorInput | CompetitionPostCommentUpsertWithWhereUniqueWithoutAuthorInput[]
+    createMany?: CompetitionPostCommentCreateManyAuthorInputEnvelope
+    set?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    disconnect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    delete?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    update?: CompetitionPostCommentUpdateWithWhereUniqueWithoutAuthorInput | CompetitionPostCommentUpdateWithWhereUniqueWithoutAuthorInput[]
+    updateMany?: CompetitionPostCommentUpdateManyWithWhereWithoutAuthorInput | CompetitionPostCommentUpdateManyWithWhereWithoutAuthorInput[]
+    deleteMany?: CompetitionPostCommentScalarWhereInput | CompetitionPostCommentScalarWhereInput[]
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutUserInput, CompetitionPostReactionUncheckedCreateWithoutUserInput> | CompetitionPostReactionCreateWithoutUserInput[] | CompetitionPostReactionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutUserInput | CompetitionPostReactionCreateOrConnectWithoutUserInput[]
+    upsert?: CompetitionPostReactionUpsertWithWhereUniqueWithoutUserInput | CompetitionPostReactionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: CompetitionPostReactionCreateManyUserInputEnvelope
+    set?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    disconnect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    delete?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    update?: CompetitionPostReactionUpdateWithWhereUniqueWithoutUserInput | CompetitionPostReactionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: CompetitionPostReactionUpdateManyWithWhereWithoutUserInput | CompetitionPostReactionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: CompetitionPostReactionScalarWhereInput | CompetitionPostReactionScalarWhereInput[]
   }
 
   export type LeagueUncheckedUpdateManyWithoutCreatorNestedInput = {
@@ -159259,6 +164437,13 @@ export namespace Prisma {
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
+  export type CompetitionPostCreateNestedManyWithoutCupInput = {
+    create?: XOR<CompetitionPostCreateWithoutCupInput, CompetitionPostUncheckedCreateWithoutCupInput> | CompetitionPostCreateWithoutCupInput[] | CompetitionPostUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutCupInput | CompetitionPostCreateOrConnectWithoutCupInput[]
+    createMany?: CompetitionPostCreateManyCupInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+  }
+
   export type CupParticipantUncheckedCreateNestedManyWithoutCupInput = {
     create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
@@ -159299,6 +164484,13 @@ export namespace Prisma {
     connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutCupInput | CompetitionDocumentCreateOrConnectWithoutCupInput[]
     createMany?: CompetitionDocumentCreateManyCupInputEnvelope
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostUncheckedCreateNestedManyWithoutCupInput = {
+    create?: XOR<CompetitionPostCreateWithoutCupInput, CompetitionPostUncheckedCreateWithoutCupInput> | CompetitionPostCreateWithoutCupInput[] | CompetitionPostUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutCupInput | CompetitionPostCreateOrConnectWithoutCupInput[]
+    createMany?: CompetitionPostCreateManyCupInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
   }
 
   export type UserUpdateOneRequiredWithoutCreatedCupsNestedInput = {
@@ -159393,6 +164585,20 @@ export namespace Prisma {
     deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
   }
 
+  export type CompetitionPostUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutCupInput, CompetitionPostUncheckedCreateWithoutCupInput> | CompetitionPostCreateWithoutCupInput[] | CompetitionPostUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutCupInput | CompetitionPostCreateOrConnectWithoutCupInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutCupInput | CompetitionPostUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CompetitionPostCreateManyCupInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutCupInput | CompetitionPostUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutCupInput | CompetitionPostUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+  }
+
   export type CupParticipantUncheckedUpdateManyWithoutCupNestedInput = {
     create?: XOR<CupParticipantCreateWithoutCupInput, CupParticipantUncheckedCreateWithoutCupInput> | CupParticipantCreateWithoutCupInput[] | CupParticipantUncheckedCreateWithoutCupInput[]
     connectOrCreate?: CupParticipantCreateOrConnectWithoutCupInput | CupParticipantCreateOrConnectWithoutCupInput[]
@@ -159475,6 +164681,20 @@ export namespace Prisma {
     update?: CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput | CompetitionDocumentUpdateWithWhereUniqueWithoutCupInput[]
     updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutCupInput | CompetitionDocumentUpdateManyWithWhereWithoutCupInput[]
     deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutCupNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutCupInput, CompetitionPostUncheckedCreateWithoutCupInput> | CompetitionPostCreateWithoutCupInput[] | CompetitionPostUncheckedCreateWithoutCupInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutCupInput | CompetitionPostCreateOrConnectWithoutCupInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutCupInput | CompetitionPostUpsertWithWhereUniqueWithoutCupInput[]
+    createMany?: CompetitionPostCreateManyCupInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutCupInput | CompetitionPostUpdateWithWhereUniqueWithoutCupInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutCupInput | CompetitionPostUpdateManyWithWhereWithoutCupInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
   }
 
   export type CupCreateNestedOneWithoutParticipantsInput = {
@@ -159970,6 +165190,13 @@ export namespace Prisma {
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
   }
 
+  export type CompetitionPostCreateNestedManyWithoutLeagueInput = {
+    create?: XOR<CompetitionPostCreateWithoutLeagueInput, CompetitionPostUncheckedCreateWithoutLeagueInput> | CompetitionPostCreateWithoutLeagueInput[] | CompetitionPostUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutLeagueInput | CompetitionPostCreateOrConnectWithoutLeagueInput[]
+    createMany?: CompetitionPostCreateManyLeagueInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+  }
+
   export type LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput = {
     create?: XOR<LeagueSeasonCreateWithoutLeagueInput, LeagueSeasonUncheckedCreateWithoutLeagueInput> | LeagueSeasonCreateWithoutLeagueInput[] | LeagueSeasonUncheckedCreateWithoutLeagueInput[]
     connectOrCreate?: LeagueSeasonCreateOrConnectWithoutLeagueInput | LeagueSeasonCreateOrConnectWithoutLeagueInput[]
@@ -159989,6 +165216,13 @@ export namespace Prisma {
     connectOrCreate?: CompetitionDocumentCreateOrConnectWithoutLeagueInput | CompetitionDocumentCreateOrConnectWithoutLeagueInput[]
     createMany?: CompetitionDocumentCreateManyLeagueInputEnvelope
     connect?: CompetitionDocumentWhereUniqueInput | CompetitionDocumentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostUncheckedCreateNestedManyWithoutLeagueInput = {
+    create?: XOR<CompetitionPostCreateWithoutLeagueInput, CompetitionPostUncheckedCreateWithoutLeagueInput> | CompetitionPostCreateWithoutLeagueInput[] | CompetitionPostUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutLeagueInput | CompetitionPostCreateOrConnectWithoutLeagueInput[]
+    createMany?: CompetitionPostCreateManyLeagueInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
   }
 
   export type UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput = {
@@ -160041,6 +165275,20 @@ export namespace Prisma {
     deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
   }
 
+  export type CompetitionPostUpdateManyWithoutLeagueNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutLeagueInput, CompetitionPostUncheckedCreateWithoutLeagueInput> | CompetitionPostCreateWithoutLeagueInput[] | CompetitionPostUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutLeagueInput | CompetitionPostCreateOrConnectWithoutLeagueInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutLeagueInput | CompetitionPostUpsertWithWhereUniqueWithoutLeagueInput[]
+    createMany?: CompetitionPostCreateManyLeagueInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutLeagueInput | CompetitionPostUpdateWithWhereUniqueWithoutLeagueInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutLeagueInput | CompetitionPostUpdateManyWithWhereWithoutLeagueInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+  }
+
   export type LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput = {
     create?: XOR<LeagueSeasonCreateWithoutLeagueInput, LeagueSeasonUncheckedCreateWithoutLeagueInput> | LeagueSeasonCreateWithoutLeagueInput[] | LeagueSeasonUncheckedCreateWithoutLeagueInput[]
     connectOrCreate?: LeagueSeasonCreateOrConnectWithoutLeagueInput | LeagueSeasonCreateOrConnectWithoutLeagueInput[]
@@ -160081,6 +165329,20 @@ export namespace Prisma {
     update?: CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput | CompetitionDocumentUpdateWithWhereUniqueWithoutLeagueInput[]
     updateMany?: CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput | CompetitionDocumentUpdateManyWithWhereWithoutLeagueInput[]
     deleteMany?: CompetitionDocumentScalarWhereInput | CompetitionDocumentScalarWhereInput[]
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutLeagueNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutLeagueInput, CompetitionPostUncheckedCreateWithoutLeagueInput> | CompetitionPostCreateWithoutLeagueInput[] | CompetitionPostUncheckedCreateWithoutLeagueInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutLeagueInput | CompetitionPostCreateOrConnectWithoutLeagueInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutLeagueInput | CompetitionPostUpsertWithWhereUniqueWithoutLeagueInput[]
+    createMany?: CompetitionPostCreateManyLeagueInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutLeagueInput | CompetitionPostUpdateWithWhereUniqueWithoutLeagueInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutLeagueInput | CompetitionPostUpdateManyWithWhereWithoutLeagueInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
   }
 
   export type LeagueCreateNestedOneWithoutSeasonsInput = {
@@ -160130,6 +165392,13 @@ export namespace Prisma {
     connect?: LeagueInvitationWhereUniqueInput | LeagueInvitationWhereUniqueInput[]
   }
 
+  export type CompetitionPostCreateNestedManyWithoutSeasonInput = {
+    create?: XOR<CompetitionPostCreateWithoutSeasonInput, CompetitionPostUncheckedCreateWithoutSeasonInput> | CompetitionPostCreateWithoutSeasonInput[] | CompetitionPostUncheckedCreateWithoutSeasonInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutSeasonInput | CompetitionPostCreateOrConnectWithoutSeasonInput[]
+    createMany?: CompetitionPostCreateManySeasonInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+  }
+
   export type LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput = {
     create?: XOR<LeagueParticipantCreateWithoutSeasonInput, LeagueParticipantUncheckedCreateWithoutSeasonInput> | LeagueParticipantCreateWithoutSeasonInput[] | LeagueParticipantUncheckedCreateWithoutSeasonInput[]
     connectOrCreate?: LeagueParticipantCreateOrConnectWithoutSeasonInput | LeagueParticipantCreateOrConnectWithoutSeasonInput[]
@@ -160169,6 +165438,13 @@ export namespace Prisma {
     connectOrCreate?: LeagueInvitationCreateOrConnectWithoutSeasonInput | LeagueInvitationCreateOrConnectWithoutSeasonInput[]
     createMany?: LeagueInvitationCreateManySeasonInputEnvelope
     connect?: LeagueInvitationWhereUniqueInput | LeagueInvitationWhereUniqueInput[]
+  }
+
+  export type CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput = {
+    create?: XOR<CompetitionPostCreateWithoutSeasonInput, CompetitionPostUncheckedCreateWithoutSeasonInput> | CompetitionPostCreateWithoutSeasonInput[] | CompetitionPostUncheckedCreateWithoutSeasonInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutSeasonInput | CompetitionPostCreateOrConnectWithoutSeasonInput[]
+    createMany?: CompetitionPostCreateManySeasonInputEnvelope
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
   }
 
   export type LeagueUpdateOneRequiredWithoutSeasonsNestedInput = {
@@ -160259,6 +165535,20 @@ export namespace Prisma {
     deleteMany?: LeagueInvitationScalarWhereInput | LeagueInvitationScalarWhereInput[]
   }
 
+  export type CompetitionPostUpdateManyWithoutSeasonNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutSeasonInput, CompetitionPostUncheckedCreateWithoutSeasonInput> | CompetitionPostCreateWithoutSeasonInput[] | CompetitionPostUncheckedCreateWithoutSeasonInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutSeasonInput | CompetitionPostCreateOrConnectWithoutSeasonInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutSeasonInput | CompetitionPostUpsertWithWhereUniqueWithoutSeasonInput[]
+    createMany?: CompetitionPostCreateManySeasonInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutSeasonInput | CompetitionPostUpdateWithWhereUniqueWithoutSeasonInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutSeasonInput | CompetitionPostUpdateManyWithWhereWithoutSeasonInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+  }
+
   export type LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput = {
     create?: XOR<LeagueParticipantCreateWithoutSeasonInput, LeagueParticipantUncheckedCreateWithoutSeasonInput> | LeagueParticipantCreateWithoutSeasonInput[] | LeagueParticipantUncheckedCreateWithoutSeasonInput[]
     connectOrCreate?: LeagueParticipantCreateOrConnectWithoutSeasonInput | LeagueParticipantCreateOrConnectWithoutSeasonInput[]
@@ -160337,6 +165627,20 @@ export namespace Prisma {
     update?: LeagueInvitationUpdateWithWhereUniqueWithoutSeasonInput | LeagueInvitationUpdateWithWhereUniqueWithoutSeasonInput[]
     updateMany?: LeagueInvitationUpdateManyWithWhereWithoutSeasonInput | LeagueInvitationUpdateManyWithWhereWithoutSeasonInput[]
     deleteMany?: LeagueInvitationScalarWhereInput | LeagueInvitationScalarWhereInput[]
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutSeasonInput, CompetitionPostUncheckedCreateWithoutSeasonInput> | CompetitionPostCreateWithoutSeasonInput[] | CompetitionPostUncheckedCreateWithoutSeasonInput[]
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutSeasonInput | CompetitionPostCreateOrConnectWithoutSeasonInput[]
+    upsert?: CompetitionPostUpsertWithWhereUniqueWithoutSeasonInput | CompetitionPostUpsertWithWhereUniqueWithoutSeasonInput[]
+    createMany?: CompetitionPostCreateManySeasonInputEnvelope
+    set?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    disconnect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    delete?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    connect?: CompetitionPostWhereUniqueInput | CompetitionPostWhereUniqueInput[]
+    update?: CompetitionPostUpdateWithWhereUniqueWithoutSeasonInput | CompetitionPostUpdateWithWhereUniqueWithoutSeasonInput[]
+    updateMany?: CompetitionPostUpdateManyWithWhereWithoutSeasonInput | CompetitionPostUpdateManyWithWhereWithoutSeasonInput[]
+    deleteMany?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
   }
 
   export type LeagueSeasonCreateNestedOneWithoutPoolsInput = {
@@ -160619,6 +165923,212 @@ export namespace Prisma {
     delete?: UserWhereInput | boolean
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCompetitionDocumentsInput, UserUpdateWithoutCompetitionDocumentsInput>, UserUncheckedUpdateWithoutCompetitionDocumentsInput>
+  }
+
+  export type LeagueCreateNestedOneWithoutBlogPostsInput = {
+    create?: XOR<LeagueCreateWithoutBlogPostsInput, LeagueUncheckedCreateWithoutBlogPostsInput>
+    connectOrCreate?: LeagueCreateOrConnectWithoutBlogPostsInput
+    connect?: LeagueWhereUniqueInput
+  }
+
+  export type CupCreateNestedOneWithoutBlogPostsInput = {
+    create?: XOR<CupCreateWithoutBlogPostsInput, CupUncheckedCreateWithoutBlogPostsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutBlogPostsInput
+    connect?: CupWhereUniqueInput
+  }
+
+  export type LeagueSeasonCreateNestedOneWithoutBlogPostsInput = {
+    create?: XOR<LeagueSeasonCreateWithoutBlogPostsInput, LeagueSeasonUncheckedCreateWithoutBlogPostsInput>
+    connectOrCreate?: LeagueSeasonCreateOrConnectWithoutBlogPostsInput
+    connect?: LeagueSeasonWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutCompetitionPostsInput = {
+    create?: XOR<UserCreateWithoutCompetitionPostsInput, UserUncheckedCreateWithoutCompetitionPostsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionPostsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type CompetitionPostCommentCreateNestedManyWithoutPostInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutPostInput, CompetitionPostCommentUncheckedCreateWithoutPostInput> | CompetitionPostCommentCreateWithoutPostInput[] | CompetitionPostCommentUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutPostInput | CompetitionPostCommentCreateOrConnectWithoutPostInput[]
+    createMany?: CompetitionPostCommentCreateManyPostInputEnvelope
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostReactionCreateNestedManyWithoutPostInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutPostInput, CompetitionPostReactionUncheckedCreateWithoutPostInput> | CompetitionPostReactionCreateWithoutPostInput[] | CompetitionPostReactionUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutPostInput | CompetitionPostReactionCreateOrConnectWithoutPostInput[]
+    createMany?: CompetitionPostReactionCreateManyPostInputEnvelope
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+  }
+
+  export type CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutPostInput, CompetitionPostCommentUncheckedCreateWithoutPostInput> | CompetitionPostCommentCreateWithoutPostInput[] | CompetitionPostCommentUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutPostInput | CompetitionPostCommentCreateOrConnectWithoutPostInput[]
+    createMany?: CompetitionPostCommentCreateManyPostInputEnvelope
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+  }
+
+  export type CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutPostInput, CompetitionPostReactionUncheckedCreateWithoutPostInput> | CompetitionPostReactionCreateWithoutPostInput[] | CompetitionPostReactionUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutPostInput | CompetitionPostReactionCreateOrConnectWithoutPostInput[]
+    createMany?: CompetitionPostReactionCreateManyPostInputEnvelope
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+  }
+
+  export type LeagueUpdateOneWithoutBlogPostsNestedInput = {
+    create?: XOR<LeagueCreateWithoutBlogPostsInput, LeagueUncheckedCreateWithoutBlogPostsInput>
+    connectOrCreate?: LeagueCreateOrConnectWithoutBlogPostsInput
+    upsert?: LeagueUpsertWithoutBlogPostsInput
+    disconnect?: LeagueWhereInput | boolean
+    delete?: LeagueWhereInput | boolean
+    connect?: LeagueWhereUniqueInput
+    update?: XOR<XOR<LeagueUpdateToOneWithWhereWithoutBlogPostsInput, LeagueUpdateWithoutBlogPostsInput>, LeagueUncheckedUpdateWithoutBlogPostsInput>
+  }
+
+  export type CupUpdateOneWithoutBlogPostsNestedInput = {
+    create?: XOR<CupCreateWithoutBlogPostsInput, CupUncheckedCreateWithoutBlogPostsInput>
+    connectOrCreate?: CupCreateOrConnectWithoutBlogPostsInput
+    upsert?: CupUpsertWithoutBlogPostsInput
+    disconnect?: CupWhereInput | boolean
+    delete?: CupWhereInput | boolean
+    connect?: CupWhereUniqueInput
+    update?: XOR<XOR<CupUpdateToOneWithWhereWithoutBlogPostsInput, CupUpdateWithoutBlogPostsInput>, CupUncheckedUpdateWithoutBlogPostsInput>
+  }
+
+  export type LeagueSeasonUpdateOneWithoutBlogPostsNestedInput = {
+    create?: XOR<LeagueSeasonCreateWithoutBlogPostsInput, LeagueSeasonUncheckedCreateWithoutBlogPostsInput>
+    connectOrCreate?: LeagueSeasonCreateOrConnectWithoutBlogPostsInput
+    upsert?: LeagueSeasonUpsertWithoutBlogPostsInput
+    disconnect?: LeagueSeasonWhereInput | boolean
+    delete?: LeagueSeasonWhereInput | boolean
+    connect?: LeagueSeasonWhereUniqueInput
+    update?: XOR<XOR<LeagueSeasonUpdateToOneWithWhereWithoutBlogPostsInput, LeagueSeasonUpdateWithoutBlogPostsInput>, LeagueSeasonUncheckedUpdateWithoutBlogPostsInput>
+  }
+
+  export type UserUpdateOneWithoutCompetitionPostsNestedInput = {
+    create?: XOR<UserCreateWithoutCompetitionPostsInput, UserUncheckedCreateWithoutCompetitionPostsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionPostsInput
+    upsert?: UserUpsertWithoutCompetitionPostsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCompetitionPostsInput, UserUpdateWithoutCompetitionPostsInput>, UserUncheckedUpdateWithoutCompetitionPostsInput>
+  }
+
+  export type CompetitionPostCommentUpdateManyWithoutPostNestedInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutPostInput, CompetitionPostCommentUncheckedCreateWithoutPostInput> | CompetitionPostCommentCreateWithoutPostInput[] | CompetitionPostCommentUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutPostInput | CompetitionPostCommentCreateOrConnectWithoutPostInput[]
+    upsert?: CompetitionPostCommentUpsertWithWhereUniqueWithoutPostInput | CompetitionPostCommentUpsertWithWhereUniqueWithoutPostInput[]
+    createMany?: CompetitionPostCommentCreateManyPostInputEnvelope
+    set?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    disconnect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    delete?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    update?: CompetitionPostCommentUpdateWithWhereUniqueWithoutPostInput | CompetitionPostCommentUpdateWithWhereUniqueWithoutPostInput[]
+    updateMany?: CompetitionPostCommentUpdateManyWithWhereWithoutPostInput | CompetitionPostCommentUpdateManyWithWhereWithoutPostInput[]
+    deleteMany?: CompetitionPostCommentScalarWhereInput | CompetitionPostCommentScalarWhereInput[]
+  }
+
+  export type CompetitionPostReactionUpdateManyWithoutPostNestedInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutPostInput, CompetitionPostReactionUncheckedCreateWithoutPostInput> | CompetitionPostReactionCreateWithoutPostInput[] | CompetitionPostReactionUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutPostInput | CompetitionPostReactionCreateOrConnectWithoutPostInput[]
+    upsert?: CompetitionPostReactionUpsertWithWhereUniqueWithoutPostInput | CompetitionPostReactionUpsertWithWhereUniqueWithoutPostInput[]
+    createMany?: CompetitionPostReactionCreateManyPostInputEnvelope
+    set?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    disconnect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    delete?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    update?: CompetitionPostReactionUpdateWithWhereUniqueWithoutPostInput | CompetitionPostReactionUpdateWithWhereUniqueWithoutPostInput[]
+    updateMany?: CompetitionPostReactionUpdateManyWithWhereWithoutPostInput | CompetitionPostReactionUpdateManyWithWhereWithoutPostInput[]
+    deleteMany?: CompetitionPostReactionScalarWhereInput | CompetitionPostReactionScalarWhereInput[]
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput = {
+    create?: XOR<CompetitionPostCommentCreateWithoutPostInput, CompetitionPostCommentUncheckedCreateWithoutPostInput> | CompetitionPostCommentCreateWithoutPostInput[] | CompetitionPostCommentUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostCommentCreateOrConnectWithoutPostInput | CompetitionPostCommentCreateOrConnectWithoutPostInput[]
+    upsert?: CompetitionPostCommentUpsertWithWhereUniqueWithoutPostInput | CompetitionPostCommentUpsertWithWhereUniqueWithoutPostInput[]
+    createMany?: CompetitionPostCommentCreateManyPostInputEnvelope
+    set?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    disconnect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    delete?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    connect?: CompetitionPostCommentWhereUniqueInput | CompetitionPostCommentWhereUniqueInput[]
+    update?: CompetitionPostCommentUpdateWithWhereUniqueWithoutPostInput | CompetitionPostCommentUpdateWithWhereUniqueWithoutPostInput[]
+    updateMany?: CompetitionPostCommentUpdateManyWithWhereWithoutPostInput | CompetitionPostCommentUpdateManyWithWhereWithoutPostInput[]
+    deleteMany?: CompetitionPostCommentScalarWhereInput | CompetitionPostCommentScalarWhereInput[]
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput = {
+    create?: XOR<CompetitionPostReactionCreateWithoutPostInput, CompetitionPostReactionUncheckedCreateWithoutPostInput> | CompetitionPostReactionCreateWithoutPostInput[] | CompetitionPostReactionUncheckedCreateWithoutPostInput[]
+    connectOrCreate?: CompetitionPostReactionCreateOrConnectWithoutPostInput | CompetitionPostReactionCreateOrConnectWithoutPostInput[]
+    upsert?: CompetitionPostReactionUpsertWithWhereUniqueWithoutPostInput | CompetitionPostReactionUpsertWithWhereUniqueWithoutPostInput[]
+    createMany?: CompetitionPostReactionCreateManyPostInputEnvelope
+    set?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    disconnect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    delete?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    connect?: CompetitionPostReactionWhereUniqueInput | CompetitionPostReactionWhereUniqueInput[]
+    update?: CompetitionPostReactionUpdateWithWhereUniqueWithoutPostInput | CompetitionPostReactionUpdateWithWhereUniqueWithoutPostInput[]
+    updateMany?: CompetitionPostReactionUpdateManyWithWhereWithoutPostInput | CompetitionPostReactionUpdateManyWithWhereWithoutPostInput[]
+    deleteMany?: CompetitionPostReactionScalarWhereInput | CompetitionPostReactionScalarWhereInput[]
+  }
+
+  export type CompetitionPostCreateNestedOneWithoutCommentsInput = {
+    create?: XOR<CompetitionPostCreateWithoutCommentsInput, CompetitionPostUncheckedCreateWithoutCommentsInput>
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutCommentsInput
+    connect?: CompetitionPostWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutCompetitionPostCommentsInput = {
+    create?: XOR<UserCreateWithoutCompetitionPostCommentsInput, UserUncheckedCreateWithoutCompetitionPostCommentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionPostCommentsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type CompetitionPostUpdateOneRequiredWithoutCommentsNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutCommentsInput, CompetitionPostUncheckedCreateWithoutCommentsInput>
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutCommentsInput
+    upsert?: CompetitionPostUpsertWithoutCommentsInput
+    connect?: CompetitionPostWhereUniqueInput
+    update?: XOR<XOR<CompetitionPostUpdateToOneWithWhereWithoutCommentsInput, CompetitionPostUpdateWithoutCommentsInput>, CompetitionPostUncheckedUpdateWithoutCommentsInput>
+  }
+
+  export type UserUpdateOneWithoutCompetitionPostCommentsNestedInput = {
+    create?: XOR<UserCreateWithoutCompetitionPostCommentsInput, UserUncheckedCreateWithoutCompetitionPostCommentsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionPostCommentsInput
+    upsert?: UserUpsertWithoutCompetitionPostCommentsInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCompetitionPostCommentsInput, UserUpdateWithoutCompetitionPostCommentsInput>, UserUncheckedUpdateWithoutCompetitionPostCommentsInput>
+  }
+
+  export type CompetitionPostCreateNestedOneWithoutReactionsInput = {
+    create?: XOR<CompetitionPostCreateWithoutReactionsInput, CompetitionPostUncheckedCreateWithoutReactionsInput>
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutReactionsInput
+    connect?: CompetitionPostWhereUniqueInput
+  }
+
+  export type UserCreateNestedOneWithoutCompetitionPostReactionsInput = {
+    create?: XOR<UserCreateWithoutCompetitionPostReactionsInput, UserUncheckedCreateWithoutCompetitionPostReactionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionPostReactionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type CompetitionPostUpdateOneRequiredWithoutReactionsNestedInput = {
+    create?: XOR<CompetitionPostCreateWithoutReactionsInput, CompetitionPostUncheckedCreateWithoutReactionsInput>
+    connectOrCreate?: CompetitionPostCreateOrConnectWithoutReactionsInput
+    upsert?: CompetitionPostUpsertWithoutReactionsInput
+    connect?: CompetitionPostWhereUniqueInput
+    update?: XOR<XOR<CompetitionPostUpdateToOneWithWhereWithoutReactionsInput, CompetitionPostUpdateWithoutReactionsInput>, CompetitionPostUncheckedUpdateWithoutReactionsInput>
+  }
+
+  export type UserUpdateOneRequiredWithoutCompetitionPostReactionsNestedInput = {
+    create?: XOR<UserCreateWithoutCompetitionPostReactionsInput, UserUncheckedCreateWithoutCompetitionPostReactionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutCompetitionPostReactionsInput
+    upsert?: UserUpsertWithoutCompetitionPostReactionsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutCompetitionPostReactionsInput, UserUpdateWithoutCompetitionPostReactionsInput>, UserUncheckedUpdateWithoutCompetitionPostReactionsInput>
   }
 
   export type LeagueSeasonCreateNestedOneWithoutParticipantsInput = {
@@ -163701,6 +169211,7 @@ export namespace Prisma {
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutCreatorInput = {
@@ -163742,6 +169253,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutCreatorInput = {
@@ -163792,6 +169304,119 @@ export namespace Prisma {
     data: CompetitionDocumentCreateManyUploaderInput | CompetitionDocumentCreateManyUploaderInput[]
   }
 
+  export type CompetitionPostCreateWithoutAuthorInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutBlogPostsInput
+    cup?: CupCreateNestedOneWithoutBlogPostsInput
+    season?: LeagueSeasonCreateNestedOneWithoutBlogPostsInput
+    comments?: CompetitionPostCommentCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateWithoutAuthorInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    seasonId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    comments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostCreateOrConnectWithoutAuthorInput = {
+    where: CompetitionPostWhereUniqueInput
+    create: XOR<CompetitionPostCreateWithoutAuthorInput, CompetitionPostUncheckedCreateWithoutAuthorInput>
+  }
+
+  export type CompetitionPostCreateManyAuthorInputEnvelope = {
+    data: CompetitionPostCreateManyAuthorInput | CompetitionPostCreateManyAuthorInput[]
+  }
+
+  export type CompetitionPostCommentCreateWithoutAuthorInput = {
+    id?: string
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    post: CompetitionPostCreateNestedOneWithoutCommentsInput
+  }
+
+  export type CompetitionPostCommentUncheckedCreateWithoutAuthorInput = {
+    id?: string
+    postId: string
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostCommentCreateOrConnectWithoutAuthorInput = {
+    where: CompetitionPostCommentWhereUniqueInput
+    create: XOR<CompetitionPostCommentCreateWithoutAuthorInput, CompetitionPostCommentUncheckedCreateWithoutAuthorInput>
+  }
+
+  export type CompetitionPostCommentCreateManyAuthorInputEnvelope = {
+    data: CompetitionPostCommentCreateManyAuthorInput | CompetitionPostCommentCreateManyAuthorInput[]
+  }
+
+  export type CompetitionPostReactionCreateWithoutUserInput = {
+    id?: string
+    kind: string
+    createdAt?: Date | string
+    post: CompetitionPostCreateNestedOneWithoutReactionsInput
+  }
+
+  export type CompetitionPostReactionUncheckedCreateWithoutUserInput = {
+    id?: string
+    postId: string
+    kind: string
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostReactionCreateOrConnectWithoutUserInput = {
+    where: CompetitionPostReactionWhereUniqueInput
+    create: XOR<CompetitionPostReactionCreateWithoutUserInput, CompetitionPostReactionUncheckedCreateWithoutUserInput>
+  }
+
+  export type CompetitionPostReactionCreateManyUserInputEnvelope = {
+    data: CompetitionPostReactionCreateManyUserInput | CompetitionPostReactionCreateManyUserInput[]
+  }
+
   export type LeagueCreateWithoutCreatorInput = {
     id?: string
     name: string
@@ -163815,6 +169440,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutCreatorInput = {
@@ -163840,6 +169466,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutCreatorInput = {
@@ -165066,6 +170693,107 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"CompetitionDocument"> | Date | string
   }
 
+  export type CompetitionPostUpsertWithWhereUniqueWithoutAuthorInput = {
+    where: CompetitionPostWhereUniqueInput
+    update: XOR<CompetitionPostUpdateWithoutAuthorInput, CompetitionPostUncheckedUpdateWithoutAuthorInput>
+    create: XOR<CompetitionPostCreateWithoutAuthorInput, CompetitionPostUncheckedCreateWithoutAuthorInput>
+  }
+
+  export type CompetitionPostUpdateWithWhereUniqueWithoutAuthorInput = {
+    where: CompetitionPostWhereUniqueInput
+    data: XOR<CompetitionPostUpdateWithoutAuthorInput, CompetitionPostUncheckedUpdateWithoutAuthorInput>
+  }
+
+  export type CompetitionPostUpdateManyWithWhereWithoutAuthorInput = {
+    where: CompetitionPostScalarWhereInput
+    data: XOR<CompetitionPostUpdateManyMutationInput, CompetitionPostUncheckedUpdateManyWithoutAuthorInput>
+  }
+
+  export type CompetitionPostScalarWhereInput = {
+    AND?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+    OR?: CompetitionPostScalarWhereInput[]
+    NOT?: CompetitionPostScalarWhereInput | CompetitionPostScalarWhereInput[]
+    id?: StringFilter<"CompetitionPost"> | string
+    leagueId?: StringNullableFilter<"CompetitionPost"> | string | null
+    cupId?: StringNullableFilter<"CompetitionPost"> | string | null
+    seasonId?: StringNullableFilter<"CompetitionPost"> | string | null
+    authorId?: StringNullableFilter<"CompetitionPost"> | string | null
+    title?: StringFilter<"CompetitionPost"> | string
+    contentHtml?: StringFilter<"CompetitionPost"> | string
+    excerpt?: StringNullableFilter<"CompetitionPost"> | string | null
+    coverImageUrl?: StringNullableFilter<"CompetitionPost"> | string | null
+    status?: StringFilter<"CompetitionPost"> | string
+    publishedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    notifiedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    editedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    pinnedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    hiddenAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    hiddenById?: StringNullableFilter<"CompetitionPost"> | string | null
+    hiddenReason?: StringNullableFilter<"CompetitionPost"> | string | null
+    deletedAt?: DateTimeNullableFilter<"CompetitionPost"> | Date | string | null
+    createdAt?: DateTimeFilter<"CompetitionPost"> | Date | string
+    updatedAt?: DateTimeFilter<"CompetitionPost"> | Date | string
+  }
+
+  export type CompetitionPostCommentUpsertWithWhereUniqueWithoutAuthorInput = {
+    where: CompetitionPostCommentWhereUniqueInput
+    update: XOR<CompetitionPostCommentUpdateWithoutAuthorInput, CompetitionPostCommentUncheckedUpdateWithoutAuthorInput>
+    create: XOR<CompetitionPostCommentCreateWithoutAuthorInput, CompetitionPostCommentUncheckedCreateWithoutAuthorInput>
+  }
+
+  export type CompetitionPostCommentUpdateWithWhereUniqueWithoutAuthorInput = {
+    where: CompetitionPostCommentWhereUniqueInput
+    data: XOR<CompetitionPostCommentUpdateWithoutAuthorInput, CompetitionPostCommentUncheckedUpdateWithoutAuthorInput>
+  }
+
+  export type CompetitionPostCommentUpdateManyWithWhereWithoutAuthorInput = {
+    where: CompetitionPostCommentScalarWhereInput
+    data: XOR<CompetitionPostCommentUpdateManyMutationInput, CompetitionPostCommentUncheckedUpdateManyWithoutAuthorInput>
+  }
+
+  export type CompetitionPostCommentScalarWhereInput = {
+    AND?: CompetitionPostCommentScalarWhereInput | CompetitionPostCommentScalarWhereInput[]
+    OR?: CompetitionPostCommentScalarWhereInput[]
+    NOT?: CompetitionPostCommentScalarWhereInput | CompetitionPostCommentScalarWhereInput[]
+    id?: StringFilter<"CompetitionPostComment"> | string
+    postId?: StringFilter<"CompetitionPostComment"> | string
+    authorId?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    body?: StringFilter<"CompetitionPostComment"> | string
+    editedAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    hiddenById?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    hiddenReason?: StringNullableFilter<"CompetitionPostComment"> | string | null
+    deletedAt?: DateTimeNullableFilter<"CompetitionPostComment"> | Date | string | null
+    createdAt?: DateTimeFilter<"CompetitionPostComment"> | Date | string
+  }
+
+  export type CompetitionPostReactionUpsertWithWhereUniqueWithoutUserInput = {
+    where: CompetitionPostReactionWhereUniqueInput
+    update: XOR<CompetitionPostReactionUpdateWithoutUserInput, CompetitionPostReactionUncheckedUpdateWithoutUserInput>
+    create: XOR<CompetitionPostReactionCreateWithoutUserInput, CompetitionPostReactionUncheckedCreateWithoutUserInput>
+  }
+
+  export type CompetitionPostReactionUpdateWithWhereUniqueWithoutUserInput = {
+    where: CompetitionPostReactionWhereUniqueInput
+    data: XOR<CompetitionPostReactionUpdateWithoutUserInput, CompetitionPostReactionUncheckedUpdateWithoutUserInput>
+  }
+
+  export type CompetitionPostReactionUpdateManyWithWhereWithoutUserInput = {
+    where: CompetitionPostReactionScalarWhereInput
+    data: XOR<CompetitionPostReactionUpdateManyMutationInput, CompetitionPostReactionUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type CompetitionPostReactionScalarWhereInput = {
+    AND?: CompetitionPostReactionScalarWhereInput | CompetitionPostReactionScalarWhereInput[]
+    OR?: CompetitionPostReactionScalarWhereInput[]
+    NOT?: CompetitionPostReactionScalarWhereInput | CompetitionPostReactionScalarWhereInput[]
+    id?: StringFilter<"CompetitionPostReaction"> | string
+    postId?: StringFilter<"CompetitionPostReaction"> | string
+    userId?: StringFilter<"CompetitionPostReaction"> | string
+    kind?: StringFilter<"CompetitionPostReaction"> | string
+    createdAt?: DateTimeFilter<"CompetitionPostReaction"> | Date | string
+  }
+
   export type LeagueUpsertWithWhereUniqueWithoutCreatorInput = {
     where: LeagueWhereUniqueInput
     update: XOR<LeagueUpdateWithoutCreatorInput, LeagueUncheckedUpdateWithoutCreatorInput>
@@ -166083,6 +171811,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -166160,6 +171891,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -166253,6 +171987,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -166330,6 +172067,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -166407,6 +172147,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -166484,6 +172227,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -166577,6 +172323,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -166654,6 +172403,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -166731,6 +172483,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -166808,6 +172563,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -166901,6 +172659,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -166978,6 +172739,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -167055,6 +172819,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -167132,6 +172899,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -167225,6 +172995,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -167302,6 +173075,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -167379,6 +173155,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -167456,6 +173235,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -167549,6 +173331,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -167626,6 +173411,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -167703,6 +173491,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -167780,6 +173571,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -167873,6 +173667,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -167950,6 +173747,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -168027,6 +173827,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -168104,6 +173907,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -168197,6 +174003,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -168274,6 +174083,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -168351,6 +174163,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -168428,6 +174243,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -168510,6 +174328,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -168587,6 +174408,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -168680,6 +174504,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -168757,6 +174584,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -168845,6 +174675,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -168922,6 +174755,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -169059,6 +174895,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -169136,6 +174975,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -169258,6 +175100,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -169335,6 +175180,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -169411,6 +175259,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -169488,6 +175339,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -169570,6 +175424,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -169647,6 +175504,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -169755,6 +175615,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutMatchesInput = {
@@ -169777,6 +175638,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutMatchesInput = {
@@ -169954,6 +175816,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -170031,6 +175896,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -170198,6 +176066,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutMatchesInput = {
@@ -170220,6 +176089,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueRoundUpsertWithoutMatchesInput = {
@@ -170600,6 +176470,9 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -170677,6 +176550,9 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -170926,6 +176802,9 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -171003,6 +176882,9 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -171171,6 +177053,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -171248,6 +177133,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -171896,6 +177784,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -171973,6 +177864,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -174373,6 +180267,9 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -174450,6 +180347,9 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -174730,6 +180630,63 @@ export namespace Prisma {
     data: CompetitionDocumentCreateManyCupInput | CompetitionDocumentCreateManyCupInput[]
   }
 
+  export type CompetitionPostCreateWithoutCupInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutBlogPostsInput
+    season?: LeagueSeasonCreateNestedOneWithoutBlogPostsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostsInput
+    comments?: CompetitionPostCommentCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateWithoutCupInput = {
+    id?: string
+    leagueId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    comments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostCreateOrConnectWithoutCupInput = {
+    where: CompetitionPostWhereUniqueInput
+    create: XOR<CompetitionPostCreateWithoutCupInput, CompetitionPostUncheckedCreateWithoutCupInput>
+  }
+
+  export type CompetitionPostCreateManyCupInputEnvelope = {
+    data: CompetitionPostCreateManyCupInput | CompetitionPostCreateManyCupInput[]
+  }
+
   export type UserUpsertWithoutCreatedCupsInput = {
     update: XOR<UserUpdateWithoutCreatedCupsInput, UserUncheckedUpdateWithoutCreatedCupsInput>
     create: XOR<UserCreateWithoutCreatedCupsInput, UserUncheckedCreateWithoutCreatedCupsInput>
@@ -174783,6 +180740,9 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -174860,6 +180820,9 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -175023,6 +180986,22 @@ export namespace Prisma {
     data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyWithoutCupInput>
   }
 
+  export type CompetitionPostUpsertWithWhereUniqueWithoutCupInput = {
+    where: CompetitionPostWhereUniqueInput
+    update: XOR<CompetitionPostUpdateWithoutCupInput, CompetitionPostUncheckedUpdateWithoutCupInput>
+    create: XOR<CompetitionPostCreateWithoutCupInput, CompetitionPostUncheckedCreateWithoutCupInput>
+  }
+
+  export type CompetitionPostUpdateWithWhereUniqueWithoutCupInput = {
+    where: CompetitionPostWhereUniqueInput
+    data: XOR<CompetitionPostUpdateWithoutCupInput, CompetitionPostUncheckedUpdateWithoutCupInput>
+  }
+
+  export type CompetitionPostUpdateManyWithWhereWithoutCupInput = {
+    where: CompetitionPostScalarWhereInput
+    data: XOR<CompetitionPostUpdateManyMutationInput, CompetitionPostUncheckedUpdateManyWithoutCupInput>
+  }
+
   export type CupCreateWithoutParticipantsInput = {
     id?: string
     name: string
@@ -175062,6 +181041,7 @@ export namespace Prisma {
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutParticipantsInput = {
@@ -175103,6 +181083,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutParticipantsInput = {
@@ -175272,6 +181253,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutParticipantsInput = {
@@ -175313,6 +181295,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type TeamUpsertWithoutCupParticipantsInput = {
@@ -175478,6 +181461,7 @@ export namespace Prisma {
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutPoolsInput = {
@@ -175519,6 +181503,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutPoolsInput = {
@@ -175603,6 +181588,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutPoolsInput = {
@@ -175644,6 +181630,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupParticipantUpsertWithWhereUniqueWithoutPoolInput = {
@@ -175701,6 +181688,7 @@ export namespace Prisma {
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutRoundsInput = {
@@ -175742,6 +181730,7 @@ export namespace Prisma {
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutRoundsInput = {
@@ -175838,6 +181827,7 @@ export namespace Prisma {
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutRoundsInput = {
@@ -175879,6 +181869,7 @@ export namespace Prisma {
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupPairingUpsertWithWhereUniqueWithoutRoundInput = {
@@ -176775,6 +182766,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
@@ -176852,6 +182846,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
@@ -177030,6 +183027,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
@@ -177107,6 +183107,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
@@ -177275,6 +183278,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
@@ -177352,6 +183358,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
@@ -177600,6 +183609,7 @@ export namespace Prisma {
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutLocalMatchesInput = {
@@ -177641,6 +183651,7 @@ export namespace Prisma {
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutLocalMatchesInput = {
@@ -177786,6 +183797,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
@@ -177863,6 +183877,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
@@ -178129,6 +184146,7 @@ export namespace Prisma {
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutLocalMatchesInput = {
@@ -178170,6 +184188,7 @@ export namespace Prisma {
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupPairingUpsertWithoutLocalMatchInput = {
@@ -178412,6 +184431,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
@@ -178489,6 +184511,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
     featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
@@ -178548,6 +184573,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutLeagueInput = {
@@ -178570,6 +184596,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutLeagueInput = {
@@ -178667,6 +184694,63 @@ export namespace Prisma {
     data: CompetitionDocumentCreateManyLeagueInput | CompetitionDocumentCreateManyLeagueInput[]
   }
 
+  export type CompetitionPostCreateWithoutLeagueInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    cup?: CupCreateNestedOneWithoutBlogPostsInput
+    season?: LeagueSeasonCreateNestedOneWithoutBlogPostsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostsInput
+    comments?: CompetitionPostCommentCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateWithoutLeagueInput = {
+    id?: string
+    cupId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    comments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostCreateOrConnectWithoutLeagueInput = {
+    where: CompetitionPostWhereUniqueInput
+    create: XOR<CompetitionPostCreateWithoutLeagueInput, CompetitionPostUncheckedCreateWithoutLeagueInput>
+  }
+
+  export type CompetitionPostCreateManyLeagueInputEnvelope = {
+    data: CompetitionPostCreateManyLeagueInput | CompetitionPostCreateManyLeagueInput[]
+  }
+
   export type UserUpsertWithoutCreatedLeaguesInput = {
     update: XOR<UserUpdateWithoutCreatedLeaguesInput, UserUncheckedUpdateWithoutCreatedLeaguesInput>
     create: XOR<UserCreateWithoutCreatedLeaguesInput, UserUncheckedCreateWithoutCreatedLeaguesInput>
@@ -178721,6 +184805,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
@@ -178798,6 +184885,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
     featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
@@ -178900,6 +184990,22 @@ export namespace Prisma {
     data: XOR<CompetitionDocumentUpdateManyMutationInput, CompetitionDocumentUncheckedUpdateManyWithoutLeagueInput>
   }
 
+  export type CompetitionPostUpsertWithWhereUniqueWithoutLeagueInput = {
+    where: CompetitionPostWhereUniqueInput
+    update: XOR<CompetitionPostUpdateWithoutLeagueInput, CompetitionPostUncheckedUpdateWithoutLeagueInput>
+    create: XOR<CompetitionPostCreateWithoutLeagueInput, CompetitionPostUncheckedCreateWithoutLeagueInput>
+  }
+
+  export type CompetitionPostUpdateWithWhereUniqueWithoutLeagueInput = {
+    where: CompetitionPostWhereUniqueInput
+    data: XOR<CompetitionPostUpdateWithoutLeagueInput, CompetitionPostUncheckedUpdateWithoutLeagueInput>
+  }
+
+  export type CompetitionPostUpdateManyWithWhereWithoutLeagueInput = {
+    where: CompetitionPostScalarWhereInput
+    data: XOR<CompetitionPostUpdateManyMutationInput, CompetitionPostUncheckedUpdateManyWithoutLeagueInput>
+  }
+
   export type LeagueCreateWithoutSeasonsInput = {
     id?: string
     name: string
@@ -178923,6 +185029,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutSeasonsInput = {
@@ -178948,6 +185055,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutSeasonsInput = {
@@ -179223,6 +185331,63 @@ export namespace Prisma {
     data: LeagueInvitationCreateManySeasonInput | LeagueInvitationCreateManySeasonInput[]
   }
 
+  export type CompetitionPostCreateWithoutSeasonInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutBlogPostsInput
+    cup?: CupCreateNestedOneWithoutBlogPostsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostsInput
+    comments?: CompetitionPostCommentCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateWithoutSeasonInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    comments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput
+    reactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostCreateOrConnectWithoutSeasonInput = {
+    where: CompetitionPostWhereUniqueInput
+    create: XOR<CompetitionPostCreateWithoutSeasonInput, CompetitionPostUncheckedCreateWithoutSeasonInput>
+  }
+
+  export type CompetitionPostCreateManySeasonInputEnvelope = {
+    data: CompetitionPostCreateManySeasonInput | CompetitionPostCreateManySeasonInput[]
+  }
+
   export type LeagueUpsertWithoutSeasonsInput = {
     update: XOR<LeagueUpdateWithoutSeasonsInput, LeagueUncheckedUpdateWithoutSeasonsInput>
     create: XOR<LeagueCreateWithoutSeasonsInput, LeagueUncheckedCreateWithoutSeasonsInput>
@@ -179257,6 +185422,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutSeasonsInput = {
@@ -179282,6 +185448,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueParticipantUpsertWithWhereUniqueWithoutSeasonInput = {
@@ -179424,6 +185591,22 @@ export namespace Prisma {
     data: XOR<LeagueInvitationUpdateManyMutationInput, LeagueInvitationUncheckedUpdateManyWithoutSeasonInput>
   }
 
+  export type CompetitionPostUpsertWithWhereUniqueWithoutSeasonInput = {
+    where: CompetitionPostWhereUniqueInput
+    update: XOR<CompetitionPostUpdateWithoutSeasonInput, CompetitionPostUncheckedUpdateWithoutSeasonInput>
+    create: XOR<CompetitionPostCreateWithoutSeasonInput, CompetitionPostUncheckedCreateWithoutSeasonInput>
+  }
+
+  export type CompetitionPostUpdateWithWhereUniqueWithoutSeasonInput = {
+    where: CompetitionPostWhereUniqueInput
+    data: XOR<CompetitionPostUpdateWithoutSeasonInput, CompetitionPostUncheckedUpdateWithoutSeasonInput>
+  }
+
+  export type CompetitionPostUpdateManyWithWhereWithoutSeasonInput = {
+    where: CompetitionPostScalarWhereInput
+    data: XOR<CompetitionPostUpdateManyMutationInput, CompetitionPostUncheckedUpdateManyWithoutSeasonInput>
+  }
+
   export type LeagueSeasonCreateWithoutPoolsInput = {
     id?: string
     seasonNumber: number
@@ -179444,6 +185627,7 @@ export namespace Prisma {
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutPoolsInput = {
@@ -179466,6 +185650,7 @@ export namespace Prisma {
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutPoolsInput = {
@@ -179602,6 +185787,7 @@ export namespace Prisma {
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutPoolsInput = {
@@ -179624,6 +185810,7 @@ export namespace Prisma {
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueParticipantUpsertWithWhereUniqueWithoutPoolInput = {
@@ -179681,6 +185868,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutInvitationsInput = {
@@ -179706,6 +185894,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutInvitationsInput = {
@@ -179733,6 +185922,7 @@ export namespace Prisma {
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutInvitationsInput = {
@@ -179755,6 +185945,7 @@ export namespace Prisma {
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutInvitationsInput = {
@@ -179805,6 +185996,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -179882,6 +186076,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -179964,6 +186161,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -180041,6 +186241,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -180199,6 +186402,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutInvitationsInput = {
@@ -180224,6 +186428,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueSeasonUpsertWithoutInvitationsInput = {
@@ -180257,6 +186462,7 @@ export namespace Prisma {
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutInvitationsInput = {
@@ -180279,6 +186485,7 @@ export namespace Prisma {
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type UserUpsertWithoutLeagueInvitationsSentInput = {
@@ -180335,6 +186542,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -180412,6 +186622,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -180500,6 +186713,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -180577,6 +186793,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -180741,6 +186960,7 @@ export namespace Prisma {
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutInvitationsInput = {
@@ -180782,6 +187002,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
     documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutInvitationsInput = {
@@ -180832,6 +187053,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -180909,6 +187133,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -180991,6 +187218,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -181068,6 +187298,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -181242,6 +187475,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutInvitationsInput = {
@@ -181283,6 +187517,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type UserUpsertWithoutCupInvitationsSentInput = {
@@ -181339,6 +187574,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -181416,6 +187654,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -181504,6 +187745,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -181581,6 +187825,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -181729,6 +187976,7 @@ export namespace Prisma {
     creator: UserCreateNestedOneWithoutCreatedLeaguesInput
     seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueUncheckedCreateWithoutDocumentsInput = {
@@ -181754,6 +188002,7 @@ export namespace Prisma {
     updatedAt?: Date | string
     seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutLeagueInput
   }
 
   export type LeagueCreateOrConnectWithoutDocumentsInput = {
@@ -181800,6 +188049,7 @@ export namespace Prisma {
     invitations?: CupInvitationCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchCreateNestedManyWithoutCupInput
     rounds?: CupRoundCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutCupInput
   }
 
   export type CupUncheckedCreateWithoutDocumentsInput = {
@@ -181841,6 +188091,7 @@ export namespace Prisma {
     invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
     localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
     rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutCupInput
   }
 
   export type CupCreateOrConnectWithoutDocumentsInput = {
@@ -181890,6 +188141,9 @@ export namespace Prisma {
     teams?: TeamCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -181967,6 +188221,9 @@ export namespace Prisma {
     teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -182041,6 +188298,7 @@ export namespace Prisma {
     creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutDocumentsInput = {
@@ -182066,6 +188324,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type CupUpsertWithoutDocumentsInput = {
@@ -182118,6 +188377,7 @@ export namespace Prisma {
     invitations?: CupInvitationUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutDocumentsInput = {
@@ -182159,6 +188419,7 @@ export namespace Prisma {
     invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type UserUpsertWithoutCompetitionDocumentsInput = {
@@ -182214,6 +188475,9 @@ export namespace Prisma {
     teams?: TeamUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -182291,6 +188555,1741 @@ export namespace Prisma {
     teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type LeagueCreateWithoutBlogPostsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
+    status?: string
+    isPublic?: boolean
+    maxParticipants?: number
+    allowedRosters?: string | null
+    allowedInducements?: string | null
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    tieBreakRules?: string | null
+    bonusPointsConfig?: string | null
+    predictionsScope?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    creator: UserCreateNestedOneWithoutCreatedLeaguesInput
+    seasons?: LeagueSeasonCreateNestedManyWithoutLeagueInput
+    invitations?: LeagueInvitationCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutLeagueInput
+  }
+
+  export type LeagueUncheckedCreateWithoutBlogPostsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    creatorId: string
+    ruleset?: $Enums.Ruleset
+    tournamentRuleset?: string | null
+    status?: string
+    isPublic?: boolean
+    maxParticipants?: number
+    allowedRosters?: string | null
+    allowedInducements?: string | null
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    tieBreakRules?: string | null
+    bonusPointsConfig?: string | null
+    predictionsScope?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    seasons?: LeagueSeasonUncheckedCreateNestedManyWithoutLeagueInput
+    invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutLeagueInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutLeagueInput
+  }
+
+  export type LeagueCreateOrConnectWithoutBlogPostsInput = {
+    where: LeagueWhereUniqueInput
+    create: XOR<LeagueCreateWithoutBlogPostsInput, LeagueUncheckedCreateWithoutBlogPostsInput>
+  }
+
+  export type CupCreateWithoutBlogPostsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
+    tieBreakRules?: string | null
+    sheetEntryMode?: string | null
+    predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
+    playoffSize?: number
+    playoffsPublished?: boolean | null
+    resurrectionMode?: boolean
+    tierBudgets?: string | null
+    rosterBudgetOverrides?: string | null
+    tierStartingPsp?: string | null
+    rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
+    creator: UserCreateNestedOneWithoutCreatedCupsInput
+    participants?: CupParticipantCreateNestedManyWithoutCupInput
+    pools?: CupPoolCreateNestedManyWithoutCupInput
+    invitations?: CupInvitationCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchCreateNestedManyWithoutCupInput
+    rounds?: CupRoundCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentCreateNestedManyWithoutCupInput
+  }
+
+  export type CupUncheckedCreateWithoutBlogPostsInput = {
+    id?: string
+    name: string
+    description?: string | null
+    creatorId: string
+    ruleset?: $Enums.Ruleset
+    format?: $Enums.Format
+    tournamentRuleset?: string | null
+    validated?: boolean
+    isPublic?: boolean
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    winPoints?: number
+    drawPoints?: number
+    lossPoints?: number
+    forfeitPoints?: number
+    touchdownPoints?: number
+    blockCasualtyPoints?: number
+    foulCasualtyPoints?: number
+    passPoints?: number
+    tieBreakRules?: string | null
+    sheetEntryMode?: string | null
+    predictionsScope?: string | null
+    sheetDoubleValidation?: boolean
+    playoffSize?: number
+    playoffsPublished?: boolean | null
+    resurrectionMode?: boolean
+    tierBudgets?: string | null
+    rosterBudgetOverrides?: string | null
+    tierStartingPsp?: string | null
+    rosterStartingPspOverrides?: string | null
+    inducementMode?: string | null
+    allowedInducements?: string | null
+    participants?: CupParticipantUncheckedCreateNestedManyWithoutCupInput
+    pools?: CupPoolUncheckedCreateNestedManyWithoutCupInput
+    invitations?: CupInvitationUncheckedCreateNestedManyWithoutCupInput
+    localMatches?: LocalMatchUncheckedCreateNestedManyWithoutCupInput
+    rounds?: CupRoundUncheckedCreateNestedManyWithoutCupInput
+    documents?: CompetitionDocumentUncheckedCreateNestedManyWithoutCupInput
+  }
+
+  export type CupCreateOrConnectWithoutBlogPostsInput = {
+    where: CupWhereUniqueInput
+    create: XOR<CupCreateWithoutBlogPostsInput, CupUncheckedCreateWithoutBlogPostsInput>
+  }
+
+  export type LeagueSeasonCreateWithoutBlogPostsInput = {
+    id?: string
+    seasonNumber: number
+    name: string
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
+    meceneEnabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league: LeagueCreateNestedOneWithoutSeasonsInput
+    participants?: LeagueParticipantCreateNestedManyWithoutSeasonInput
+    rounds?: LeagueRoundCreateNestedManyWithoutSeasonInput
+    matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
+    pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
+    invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+  }
+
+  export type LeagueSeasonUncheckedCreateWithoutBlogPostsInput = {
+    id?: string
+    leagueId: string
+    seasonNumber: number
+    name: string
+    status?: string
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+    theme?: string | null
+    themeYear?: number | null
+    playoffSize?: number
+    playoffsPublished?: boolean | null
+    meceneEnabled?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    participants?: LeagueParticipantUncheckedCreateNestedManyWithoutSeasonInput
+    rounds?: LeagueRoundUncheckedCreateNestedManyWithoutSeasonInput
+    matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
+    award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
+    pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
+    invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+  }
+
+  export type LeagueSeasonCreateOrConnectWithoutBlogPostsInput = {
+    where: LeagueSeasonWhereUniqueInput
+    create: XOR<LeagueSeasonCreateWithoutBlogPostsInput, LeagueSeasonUncheckedCreateWithoutBlogPostsInput>
+  }
+
+  export type UserCreateWithoutCompetitionPostsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutCompetitionPostsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutCompetitionPostsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCompetitionPostsInput, UserUncheckedCreateWithoutCompetitionPostsInput>
+  }
+
+  export type CompetitionPostCommentCreateWithoutPostInput = {
+    id?: string
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    author?: UserCreateNestedOneWithoutCompetitionPostCommentsInput
+  }
+
+  export type CompetitionPostCommentUncheckedCreateWithoutPostInput = {
+    id?: string
+    authorId?: string | null
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostCommentCreateOrConnectWithoutPostInput = {
+    where: CompetitionPostCommentWhereUniqueInput
+    create: XOR<CompetitionPostCommentCreateWithoutPostInput, CompetitionPostCommentUncheckedCreateWithoutPostInput>
+  }
+
+  export type CompetitionPostCommentCreateManyPostInputEnvelope = {
+    data: CompetitionPostCommentCreateManyPostInput | CompetitionPostCommentCreateManyPostInput[]
+  }
+
+  export type CompetitionPostReactionCreateWithoutPostInput = {
+    id?: string
+    kind: string
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutCompetitionPostReactionsInput
+  }
+
+  export type CompetitionPostReactionUncheckedCreateWithoutPostInput = {
+    id?: string
+    userId: string
+    kind: string
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostReactionCreateOrConnectWithoutPostInput = {
+    where: CompetitionPostReactionWhereUniqueInput
+    create: XOR<CompetitionPostReactionCreateWithoutPostInput, CompetitionPostReactionUncheckedCreateWithoutPostInput>
+  }
+
+  export type CompetitionPostReactionCreateManyPostInputEnvelope = {
+    data: CompetitionPostReactionCreateManyPostInput | CompetitionPostReactionCreateManyPostInput[]
+  }
+
+  export type LeagueUpsertWithoutBlogPostsInput = {
+    update: XOR<LeagueUpdateWithoutBlogPostsInput, LeagueUncheckedUpdateWithoutBlogPostsInput>
+    create: XOR<LeagueCreateWithoutBlogPostsInput, LeagueUncheckedCreateWithoutBlogPostsInput>
+    where?: LeagueWhereInput
+  }
+
+  export type LeagueUpdateToOneWithWhereWithoutBlogPostsInput = {
+    where?: LeagueWhereInput
+    data: XOR<LeagueUpdateWithoutBlogPostsInput, LeagueUncheckedUpdateWithoutBlogPostsInput>
+  }
+
+  export type LeagueUpdateWithoutBlogPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: IntFieldUpdateOperationsInput | number
+    allowedRosters?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    bonusPointsConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneRequiredWithoutCreatedLeaguesNestedInput
+    seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
+    invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
+  }
+
+  export type LeagueUncheckedUpdateWithoutBlogPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    maxParticipants?: IntFieldUpdateOperationsInput | number
+    allowedRosters?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    bonusPointsConfig?: NullableStringFieldUpdateOperationsInput | string | null
+    predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
+    invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
+  }
+
+  export type CupUpsertWithoutBlogPostsInput = {
+    update: XOR<CupUpdateWithoutBlogPostsInput, CupUncheckedUpdateWithoutBlogPostsInput>
+    create: XOR<CupCreateWithoutBlogPostsInput, CupUncheckedCreateWithoutBlogPostsInput>
+    where?: CupWhereInput
+  }
+
+  export type CupUpdateToOneWithWhereWithoutBlogPostsInput = {
+    where?: CupWhereInput
+    data: XOR<CupUpdateWithoutBlogPostsInput, CupUncheckedUpdateWithoutBlogPostsInput>
+  }
+
+  export type CupUpdateWithoutBlogPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
+    predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
+    tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
+    creator?: UserUpdateOneRequiredWithoutCreatedCupsNestedInput
+    participants?: CupParticipantUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUpdateManyWithoutCupNestedInput
+    invitations?: CupInvitationUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
+    rounds?: CupRoundUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+  }
+
+  export type CupUncheckedUpdateWithoutBlogPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    creatorId?: StringFieldUpdateOperationsInput | string
+    ruleset?: EnumRulesetFieldUpdateOperationsInput | $Enums.Ruleset
+    format?: EnumFormatFieldUpdateOperationsInput | $Enums.Format
+    tournamentRuleset?: NullableStringFieldUpdateOperationsInput | string | null
+    validated?: BoolFieldUpdateOperationsInput | boolean
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    winPoints?: IntFieldUpdateOperationsInput | number
+    drawPoints?: IntFieldUpdateOperationsInput | number
+    lossPoints?: IntFieldUpdateOperationsInput | number
+    forfeitPoints?: IntFieldUpdateOperationsInput | number
+    touchdownPoints?: IntFieldUpdateOperationsInput | number
+    blockCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    foulCasualtyPoints?: IntFieldUpdateOperationsInput | number
+    passPoints?: IntFieldUpdateOperationsInput | number
+    tieBreakRules?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetEntryMode?: NullableStringFieldUpdateOperationsInput | string | null
+    predictionsScope?: NullableStringFieldUpdateOperationsInput | string | null
+    sheetDoubleValidation?: BoolFieldUpdateOperationsInput | boolean
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    resurrectionMode?: BoolFieldUpdateOperationsInput | boolean
+    tierBudgets?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterBudgetOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    tierStartingPsp?: NullableStringFieldUpdateOperationsInput | string | null
+    rosterStartingPspOverrides?: NullableStringFieldUpdateOperationsInput | string | null
+    inducementMode?: NullableStringFieldUpdateOperationsInput | string | null
+    allowedInducements?: NullableStringFieldUpdateOperationsInput | string | null
+    participants?: CupParticipantUncheckedUpdateManyWithoutCupNestedInput
+    pools?: CupPoolUncheckedUpdateManyWithoutCupNestedInput
+    invitations?: CupInvitationUncheckedUpdateManyWithoutCupNestedInput
+    localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
+    rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
+    documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+  }
+
+  export type LeagueSeasonUpsertWithoutBlogPostsInput = {
+    update: XOR<LeagueSeasonUpdateWithoutBlogPostsInput, LeagueSeasonUncheckedUpdateWithoutBlogPostsInput>
+    create: XOR<LeagueSeasonCreateWithoutBlogPostsInput, LeagueSeasonUncheckedCreateWithoutBlogPostsInput>
+    where?: LeagueSeasonWhereInput
+  }
+
+  export type LeagueSeasonUpdateToOneWithWhereWithoutBlogPostsInput = {
+    where?: LeagueSeasonWhereInput
+    data: XOR<LeagueSeasonUpdateWithoutBlogPostsInput, LeagueSeasonUncheckedUpdateWithoutBlogPostsInput>
+  }
+
+  export type LeagueSeasonUpdateWithoutBlogPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    seasonNumber?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneRequiredWithoutSeasonsNestedInput
+    participants?: LeagueParticipantUpdateManyWithoutSeasonNestedInput
+    rounds?: LeagueRoundUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
+    pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
+    invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+  }
+
+  export type LeagueSeasonUncheckedUpdateWithoutBlogPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: StringFieldUpdateOperationsInput | string
+    seasonNumber?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    theme?: NullableStringFieldUpdateOperationsInput | string | null
+    themeYear?: NullableIntFieldUpdateOperationsInput | number | null
+    playoffSize?: IntFieldUpdateOperationsInput | number
+    playoffsPublished?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    meceneEnabled?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    participants?: LeagueParticipantUncheckedUpdateManyWithoutSeasonNestedInput
+    rounds?: LeagueRoundUncheckedUpdateManyWithoutSeasonNestedInput
+    matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
+    award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
+    pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
+    invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+  }
+
+  export type UserUpsertWithoutCompetitionPostsInput = {
+    update: XOR<UserUpdateWithoutCompetitionPostsInput, UserUncheckedUpdateWithoutCompetitionPostsInput>
+    create: XOR<UserCreateWithoutCompetitionPostsInput, UserUncheckedCreateWithoutCompetitionPostsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCompetitionPostsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCompetitionPostsInput, UserUncheckedUpdateWithoutCompetitionPostsInput>
+  }
+
+  export type UserUpdateWithoutCompetitionPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCompetitionPostsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type CompetitionPostCommentUpsertWithWhereUniqueWithoutPostInput = {
+    where: CompetitionPostCommentWhereUniqueInput
+    update: XOR<CompetitionPostCommentUpdateWithoutPostInput, CompetitionPostCommentUncheckedUpdateWithoutPostInput>
+    create: XOR<CompetitionPostCommentCreateWithoutPostInput, CompetitionPostCommentUncheckedCreateWithoutPostInput>
+  }
+
+  export type CompetitionPostCommentUpdateWithWhereUniqueWithoutPostInput = {
+    where: CompetitionPostCommentWhereUniqueInput
+    data: XOR<CompetitionPostCommentUpdateWithoutPostInput, CompetitionPostCommentUncheckedUpdateWithoutPostInput>
+  }
+
+  export type CompetitionPostCommentUpdateManyWithWhereWithoutPostInput = {
+    where: CompetitionPostCommentScalarWhereInput
+    data: XOR<CompetitionPostCommentUpdateManyMutationInput, CompetitionPostCommentUncheckedUpdateManyWithoutPostInput>
+  }
+
+  export type CompetitionPostReactionUpsertWithWhereUniqueWithoutPostInput = {
+    where: CompetitionPostReactionWhereUniqueInput
+    update: XOR<CompetitionPostReactionUpdateWithoutPostInput, CompetitionPostReactionUncheckedUpdateWithoutPostInput>
+    create: XOR<CompetitionPostReactionCreateWithoutPostInput, CompetitionPostReactionUncheckedCreateWithoutPostInput>
+  }
+
+  export type CompetitionPostReactionUpdateWithWhereUniqueWithoutPostInput = {
+    where: CompetitionPostReactionWhereUniqueInput
+    data: XOR<CompetitionPostReactionUpdateWithoutPostInput, CompetitionPostReactionUncheckedUpdateWithoutPostInput>
+  }
+
+  export type CompetitionPostReactionUpdateManyWithWhereWithoutPostInput = {
+    where: CompetitionPostReactionScalarWhereInput
+    data: XOR<CompetitionPostReactionUpdateManyMutationInput, CompetitionPostReactionUncheckedUpdateManyWithoutPostInput>
+  }
+
+  export type CompetitionPostCreateWithoutCommentsInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutBlogPostsInput
+    cup?: CupCreateNestedOneWithoutBlogPostsInput
+    season?: LeagueSeasonCreateNestedOneWithoutBlogPostsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostsInput
+    reactions?: CompetitionPostReactionCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateWithoutCommentsInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    reactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostCreateOrConnectWithoutCommentsInput = {
+    where: CompetitionPostWhereUniqueInput
+    create: XOR<CompetitionPostCreateWithoutCommentsInput, CompetitionPostUncheckedCreateWithoutCommentsInput>
+  }
+
+  export type UserCreateWithoutCompetitionPostCommentsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutCompetitionPostCommentsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutCompetitionPostCommentsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCompetitionPostCommentsInput, UserUncheckedCreateWithoutCompetitionPostCommentsInput>
+  }
+
+  export type CompetitionPostUpsertWithoutCommentsInput = {
+    update: XOR<CompetitionPostUpdateWithoutCommentsInput, CompetitionPostUncheckedUpdateWithoutCommentsInput>
+    create: XOR<CompetitionPostCreateWithoutCommentsInput, CompetitionPostUncheckedCreateWithoutCommentsInput>
+    where?: CompetitionPostWhereInput
+  }
+
+  export type CompetitionPostUpdateToOneWithWhereWithoutCommentsInput = {
+    where?: CompetitionPostWhereInput
+    data: XOR<CompetitionPostUpdateWithoutCommentsInput, CompetitionPostUncheckedUpdateWithoutCommentsInput>
+  }
+
+  export type CompetitionPostUpdateWithoutCommentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutBlogPostsNestedInput
+    cup?: CupUpdateOneWithoutBlogPostsNestedInput
+    season?: LeagueSeasonUpdateOneWithoutBlogPostsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostsNestedInput
+    reactions?: CompetitionPostReactionUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateWithoutCommentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    reactions?: CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type UserUpsertWithoutCompetitionPostCommentsInput = {
+    update: XOR<UserUpdateWithoutCompetitionPostCommentsInput, UserUncheckedUpdateWithoutCompetitionPostCommentsInput>
+    create: XOR<UserCreateWithoutCompetitionPostCommentsInput, UserUncheckedCreateWithoutCompetitionPostCommentsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCompetitionPostCommentsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCompetitionPostCommentsInput, UserUncheckedUpdateWithoutCompetitionPostCommentsInput>
+  }
+
+  export type UserUpdateWithoutCompetitionPostCommentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCompetitionPostCommentsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
+    createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUncheckedUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUncheckedUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUncheckedUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUncheckedUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUncheckedUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUncheckedUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUncheckedUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUncheckedUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUncheckedUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUncheckedUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUncheckedUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUncheckedUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUncheckedUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUncheckedUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUncheckedUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUncheckedUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type CompetitionPostCreateWithoutReactionsInput = {
+    id?: string
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    league?: LeagueCreateNestedOneWithoutBlogPostsInput
+    cup?: CupCreateNestedOneWithoutBlogPostsInput
+    season?: LeagueSeasonCreateNestedOneWithoutBlogPostsInput
+    author?: UserCreateNestedOneWithoutCompetitionPostsInput
+    comments?: CompetitionPostCommentCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostUncheckedCreateWithoutReactionsInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    comments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutPostInput
+  }
+
+  export type CompetitionPostCreateOrConnectWithoutReactionsInput = {
+    where: CompetitionPostWhereUniqueInput
+    create: XOR<CompetitionPostCreateWithoutReactionsInput, CompetitionPostUncheckedCreateWithoutReactionsInput>
+  }
+
+  export type UserCreateWithoutCompetitionPostReactionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchCreateNestedManyWithoutCreatorInput
+    teams?: TeamCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
+    createdCups?: CupCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardCreateNestedManyWithoutUserInput
+    proBets?: ProBetCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserUncheckedCreateWithoutCompetitionPostReactionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    name?: string | null
+    coachName: string
+    firstName?: string | null
+    lastName?: string | null
+    dateOfBirth?: Date | string | null
+    role?: string
+    roles?: string
+    patreon?: boolean
+    kofiLinkCode?: string | null
+    discordUserId?: string | null
+    supporterTier?: string | null
+    supporterActiveUntil?: Date | string | null
+    totalDonatedCentsByCurrency?: string
+    privateProfile?: boolean
+    nafName?: string | null
+    nafNumber?: number | null
+    nafVerifiedAt?: Date | string | null
+    diceTheme?: string | null
+    valid?: boolean
+    bannedAt?: Date | string | null
+    bannedUntil?: Date | string | null
+    banReason?: string | null
+    mustChangePassword?: boolean
+    deletedAt?: Date | string | null
+    deletionReason?: string | null
+    lastLoginAt?: Date | string | null
+    leaderboardStatus?: string
+    leaderboardStatusReason?: string | null
+    leaderboardStatusUpdatedAt?: Date | string | null
+    leaderboardStatusUpdatedBy?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    eloRating?: number
+    matches?: MatchUncheckedCreateNestedManyWithoutPlayersInput
+    createdMatches?: MatchUncheckedCreateNestedManyWithoutCreatorInput
+    teams?: TeamUncheckedCreateNestedManyWithoutOwnerInput
+    teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
+    createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
+    competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
+    createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
+    matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
+    featureFlagOverrides?: FeatureFlagUserUncheckedCreateNestedManyWithoutUserInput
+    friendshipsSent?: FriendshipUncheckedCreateNestedManyWithoutRequesterInput
+    friendshipsReceived?: FriendshipUncheckedCreateNestedManyWithoutReceiverInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    kofiTransactions?: KofiTransactionUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    passwordResetTokens?: PasswordResetTokenUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
+    eloSnapshots?: EloSnapshotUncheckedCreateNestedManyWithoutUserInput
+    tutorialCompletions?: TutorialCompletionUncheckedCreateNestedManyWithoutUserInput
+    proSpectatorFollows?: ProSpectatorFollowUncheckedCreateNestedManyWithoutUserInput
+    proWallet?: ProWalletUncheckedCreateNestedOneWithoutUserInput
+    diceThemes?: UserDiceThemeUncheckedCreateNestedManyWithoutUserInput
+    crownsRewards?: CrownsRewardUncheckedCreateNestedManyWithoutUserInput
+    proBets?: ProBetUncheckedCreateNestedManyWithoutUserInput
+    proUserBadges?: ProUserBadgeUncheckedCreateNestedManyWithoutUserInput
+    proHofDedications?: ProHallOfFameDedicationUncheckedCreateNestedManyWithoutUserInput
+    proPredictionLeagues?: ProPredictionLeagueUncheckedCreateNestedManyWithoutOwnerInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUncheckedCreateNestedManyWithoutUserInput
+    proPredictionPicks?: ProPredictionPickUncheckedCreateNestedManyWithoutUserInput
+    proSurvivorEntries?: ProSurvivorEntryUncheckedCreateNestedManyWithoutUserInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUncheckedCreateNestedManyWithoutUserInput
+    proGazetteComments?: ProGazetteCommentUncheckedCreateNestedManyWithoutUserInput
+    proMatchPredictions?: ProMatchPredictionUncheckedCreateNestedManyWithoutUserInput
+    proTournamentEntries?: ProTournamentEntryUncheckedCreateNestedManyWithoutUserInput
+    competitionPredictions?: CompetitionPredictionUncheckedCreateNestedManyWithoutUserInput
+    leagueInvitationsSent?: LeagueInvitationUncheckedCreateNestedManyWithoutInviterInput
+    leagueInvitationsReceived?: LeagueInvitationUncheckedCreateNestedManyWithoutInviteeInput
+    cupInvitationsSent?: CupInvitationUncheckedCreateNestedManyWithoutInviterInput
+    cupInvitationsReceived?: CupInvitationUncheckedCreateNestedManyWithoutInviteeInput
+  }
+
+  export type UserCreateOrConnectWithoutCompetitionPostReactionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutCompetitionPostReactionsInput, UserUncheckedCreateWithoutCompetitionPostReactionsInput>
+  }
+
+  export type CompetitionPostUpsertWithoutReactionsInput = {
+    update: XOR<CompetitionPostUpdateWithoutReactionsInput, CompetitionPostUncheckedUpdateWithoutReactionsInput>
+    create: XOR<CompetitionPostCreateWithoutReactionsInput, CompetitionPostUncheckedCreateWithoutReactionsInput>
+    where?: CompetitionPostWhereInput
+  }
+
+  export type CompetitionPostUpdateToOneWithWhereWithoutReactionsInput = {
+    where?: CompetitionPostWhereInput
+    data: XOR<CompetitionPostUpdateWithoutReactionsInput, CompetitionPostUncheckedUpdateWithoutReactionsInput>
+  }
+
+  export type CompetitionPostUpdateWithoutReactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutBlogPostsNestedInput
+    cup?: CupUpdateOneWithoutBlogPostsNestedInput
+    season?: LeagueSeasonUpdateOneWithoutBlogPostsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostsNestedInput
+    comments?: CompetitionPostCommentUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateWithoutReactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    comments?: CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type UserUpsertWithoutCompetitionPostReactionsInput = {
+    update: XOR<UserUpdateWithoutCompetitionPostReactionsInput, UserUncheckedUpdateWithoutCompetitionPostReactionsInput>
+    create: XOR<UserCreateWithoutCompetitionPostReactionsInput, UserUncheckedCreateWithoutCompetitionPostReactionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutCompetitionPostReactionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutCompetitionPostReactionsInput, UserUncheckedUpdateWithoutCompetitionPostReactionsInput>
+  }
+
+  export type UserUpdateWithoutCompetitionPostReactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
+    createdCups?: CupUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
+    createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
+    matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
+    featureFlagOverrides?: FeatureFlagUserUpdateManyWithoutUserNestedInput
+    friendshipsSent?: FriendshipUpdateManyWithoutRequesterNestedInput
+    friendshipsReceived?: FriendshipUpdateManyWithoutReceiverNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    kofiTransactions?: KofiTransactionUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    passwordResetTokens?: PasswordResetTokenUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
+    eloSnapshots?: EloSnapshotUpdateManyWithoutUserNestedInput
+    tutorialCompletions?: TutorialCompletionUpdateManyWithoutUserNestedInput
+    proSpectatorFollows?: ProSpectatorFollowUpdateManyWithoutUserNestedInput
+    proWallet?: ProWalletUpdateOneWithoutUserNestedInput
+    diceThemes?: UserDiceThemeUpdateManyWithoutUserNestedInput
+    crownsRewards?: CrownsRewardUpdateManyWithoutUserNestedInput
+    proBets?: ProBetUpdateManyWithoutUserNestedInput
+    proUserBadges?: ProUserBadgeUpdateManyWithoutUserNestedInput
+    proHofDedications?: ProHallOfFameDedicationUpdateManyWithoutUserNestedInput
+    proPredictionLeagues?: ProPredictionLeagueUpdateManyWithoutOwnerNestedInput
+    proPredictionLeagueMembers?: ProPredictionLeagueMemberUpdateManyWithoutUserNestedInput
+    proPredictionPicks?: ProPredictionPickUpdateManyWithoutUserNestedInput
+    proSurvivorEntries?: ProSurvivorEntryUpdateManyWithoutUserNestedInput
+    proPlayerOfMatchVotes?: ProPlayerOfMatchVoteUpdateManyWithoutUserNestedInput
+    proGazetteComments?: ProGazetteCommentUpdateManyWithoutUserNestedInput
+    proMatchPredictions?: ProMatchPredictionUpdateManyWithoutUserNestedInput
+    proTournamentEntries?: ProTournamentEntryUpdateManyWithoutUserNestedInput
+    competitionPredictions?: CompetitionPredictionUpdateManyWithoutUserNestedInput
+    leagueInvitationsSent?: LeagueInvitationUpdateManyWithoutInviterNestedInput
+    leagueInvitationsReceived?: LeagueInvitationUpdateManyWithoutInviteeNestedInput
+    cupInvitationsSent?: CupInvitationUpdateManyWithoutInviterNestedInput
+    cupInvitationsReceived?: CupInvitationUpdateManyWithoutInviteeNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutCompetitionPostReactionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    coachName?: StringFieldUpdateOperationsInput | string
+    firstName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: NullableStringFieldUpdateOperationsInput | string | null
+    dateOfBirth?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    role?: StringFieldUpdateOperationsInput | string
+    roles?: StringFieldUpdateOperationsInput | string
+    patreon?: BoolFieldUpdateOperationsInput | boolean
+    kofiLinkCode?: NullableStringFieldUpdateOperationsInput | string | null
+    discordUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterTier?: NullableStringFieldUpdateOperationsInput | string | null
+    supporterActiveUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    totalDonatedCentsByCurrency?: StringFieldUpdateOperationsInput | string
+    privateProfile?: BoolFieldUpdateOperationsInput | boolean
+    nafName?: NullableStringFieldUpdateOperationsInput | string | null
+    nafNumber?: NullableIntFieldUpdateOperationsInput | number | null
+    nafVerifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    diceTheme?: NullableStringFieldUpdateOperationsInput | string | null
+    valid?: BoolFieldUpdateOperationsInput | boolean
+    bannedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    bannedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    banReason?: NullableStringFieldUpdateOperationsInput | string | null
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletionReason?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLoginAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatus?: StringFieldUpdateOperationsInput | string
+    leaderboardStatusReason?: NullableStringFieldUpdateOperationsInput | string | null
+    leaderboardStatusUpdatedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    leaderboardStatusUpdatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    eloRating?: IntFieldUpdateOperationsInput | number
+    matches?: MatchUncheckedUpdateManyWithoutPlayersNestedInput
+    createdMatches?: MatchUncheckedUpdateManyWithoutCreatorNestedInput
+    teams?: TeamUncheckedUpdateManyWithoutOwnerNestedInput
+    teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
+    createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
+    competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -182346,6 +190345,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutParticipantsInput = {
@@ -182368,6 +190368,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutParticipantsInput = {
@@ -182610,6 +190611,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutParticipantsInput = {
@@ -182632,6 +190634,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type TeamUpsertWithoutLeagueParticipationsInput = {
@@ -182831,6 +190834,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutRoundsInput = {
@@ -182853,6 +190857,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedCreateNestedOneWithoutSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutRoundsInput = {
@@ -183034,6 +191039,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutRoundsInput = {
@@ -183056,6 +191062,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type MatchUpsertWithWhereUniqueWithoutLeagueRoundInput = {
@@ -183971,6 +191978,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -184048,6 +192058,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -184229,6 +192242,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -184306,6 +192322,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -184961,6 +192980,7 @@ export namespace Prisma {
     matches?: MatchCreateNestedManyWithoutLeagueSeasonInput
     pools?: LeaguePoolCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonUncheckedCreateWithoutAwardInput = {
@@ -184983,6 +193003,7 @@ export namespace Prisma {
     matches?: MatchUncheckedCreateNestedManyWithoutLeagueSeasonInput
     pools?: LeaguePoolUncheckedCreateNestedManyWithoutSeasonInput
     invitations?: LeagueInvitationUncheckedCreateNestedManyWithoutSeasonInput
+    blogPosts?: CompetitionPostUncheckedCreateNestedManyWithoutSeasonInput
   }
 
   export type LeagueSeasonCreateOrConnectWithoutAwardInput = {
@@ -185021,6 +193042,7 @@ export namespace Prisma {
     matches?: MatchUpdateManyWithoutLeagueSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutAwardInput = {
@@ -185043,6 +193065,7 @@ export namespace Prisma {
     matches?: MatchUncheckedUpdateManyWithoutLeagueSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type ProTeamCreateWithoutLeagueInput = {
@@ -187684,6 +195707,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -187761,6 +195787,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -187903,6 +195932,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -187980,6 +196012,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -188112,6 +196147,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -188189,6 +196227,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -188307,6 +196348,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -188384,6 +196428,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -188776,6 +196823,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -188853,6 +196903,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -188975,6 +197028,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -189052,6 +197108,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -189228,6 +197287,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -189305,6 +197367,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -189398,6 +197463,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -189475,6 +197543,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -189685,6 +197756,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -189762,6 +197836,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -189906,6 +197983,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -189983,6 +198063,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -190132,6 +198215,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -190209,6 +198295,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -190341,6 +198430,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -190418,6 +198510,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -190495,6 +198590,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -190572,6 +198670,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -190717,6 +198818,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -190794,6 +198898,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -190930,6 +199037,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -191007,6 +199117,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -191133,6 +199246,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -191210,6 +199326,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -191314,6 +199433,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -191391,6 +199513,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -191584,6 +199709,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -191661,6 +199789,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -191852,6 +199983,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -191929,6 +200063,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -192149,6 +200286,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -192226,6 +200366,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -192555,6 +200698,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -192632,6 +200778,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -192869,6 +201018,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -192946,6 +201098,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -193208,6 +201363,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -193285,6 +201443,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -193413,6 +201574,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -193490,6 +201654,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -193634,6 +201801,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -193711,6 +201881,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -193877,6 +202050,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -193954,6 +202130,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -194031,6 +202210,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -194108,6 +202290,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -194201,6 +202386,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -194278,6 +202466,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -194355,6 +202546,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionCreateNestedManyWithoutUserInput
     createdCups?: CupCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueCreateNestedOneWithoutUserInput
@@ -194432,6 +202626,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedCreateNestedManyWithoutUserInput
     createdCups?: CupUncheckedCreateNestedManyWithoutCreatorInput
     competitionDocuments?: CompetitionDocumentUncheckedCreateNestedManyWithoutUploaderInput
+    competitionPosts?: CompetitionPostUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostComments?: CompetitionPostCommentUncheckedCreateNestedManyWithoutAuthorInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedCreateNestedManyWithoutUserInput
     createdLeagues?: LeagueUncheckedCreateNestedManyWithoutCreatorInput
     createdLocalMatches?: LocalMatchUncheckedCreateNestedManyWithoutCreatorInput
     matchQueue?: MatchQueueUncheckedCreateNestedOneWithoutUserInput
@@ -194525,6 +202722,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -194602,6 +202802,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -194745,6 +202948,47 @@ export namespace Prisma {
     sortOrder?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type CompetitionPostCreateManyAuthorInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    seasonId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionPostCommentCreateManyAuthorInput = {
+    id?: string
+    postId: string
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostReactionCreateManyUserInput = {
+    id?: string
+    postId: string
+    kind: string
+    createdAt?: Date | string
   }
 
   export type LeagueCreateManyCreatorInput = {
@@ -195447,6 +203691,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateWithoutCreatorInput = {
@@ -195488,6 +203733,7 @@ export namespace Prisma {
     localMatches?: LocalMatchUncheckedUpdateManyWithoutCupNestedInput
     rounds?: CupRoundUncheckedUpdateManyWithoutCupNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutCupNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutCupNestedInput
   }
 
   export type CupUncheckedUpdateManyWithoutCreatorInput = {
@@ -195570,6 +203816,133 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CompetitionPostUpdateWithoutAuthorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutBlogPostsNestedInput
+    cup?: CupUpdateOneWithoutBlogPostsNestedInput
+    season?: LeagueSeasonUpdateOneWithoutBlogPostsNestedInput
+    comments?: CompetitionPostCommentUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateWithoutAuthorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    comments?: CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutAuthorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentUpdateWithoutAuthorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    post?: CompetitionPostUpdateOneRequiredWithoutCommentsNestedInput
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateWithoutAuthorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateManyWithoutAuthorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    post?: CompetitionPostUpdateOneRequiredWithoutReactionsNestedInput
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    postId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LeagueUpdateWithoutCreatorInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
@@ -195593,6 +203966,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateWithoutCreatorInput = {
@@ -195618,6 +203992,7 @@ export namespace Prisma {
     seasons?: LeagueSeasonUncheckedUpdateManyWithoutLeagueNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutLeagueNestedInput
     documents?: CompetitionDocumentUncheckedUpdateManyWithoutLeagueNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutLeagueNestedInput
   }
 
   export type LeagueUncheckedUpdateManyWithoutCreatorInput = {
@@ -196734,6 +205109,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUpdateManyWithoutUserNestedInput
     createdCups?: CupUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUpdateOneWithoutUserNestedInput
@@ -196811,6 +205189,9 @@ export namespace Prisma {
     teamSelections?: TeamSelectionUncheckedUpdateManyWithoutUserNestedInput
     createdCups?: CupUncheckedUpdateManyWithoutCreatorNestedInput
     competitionDocuments?: CompetitionDocumentUncheckedUpdateManyWithoutUploaderNestedInput
+    competitionPosts?: CompetitionPostUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostComments?: CompetitionPostCommentUncheckedUpdateManyWithoutAuthorNestedInput
+    competitionPostReactions?: CompetitionPostReactionUncheckedUpdateManyWithoutUserNestedInput
     createdLeagues?: LeagueUncheckedUpdateManyWithoutCreatorNestedInput
     createdLocalMatches?: LocalMatchUncheckedUpdateManyWithoutCreatorNestedInput
     matchQueue?: MatchQueueUncheckedUpdateOneWithoutUserNestedInput
@@ -198224,6 +206605,28 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type CompetitionPostCreateManyCupInput = {
+    id?: string
+    leagueId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type CupParticipantUpdateWithoutCupInput = {
     id?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -198496,6 +206899,76 @@ export namespace Prisma {
     bytes?: IntFieldUpdateOperationsInput | number
     uploadedById?: NullableStringFieldUpdateOperationsInput | string | null
     sortOrder?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutBlogPostsNestedInput
+    season?: LeagueSeasonUpdateOneWithoutBlogPostsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostsNestedInput
+    comments?: CompetitionPostCommentUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    comments?: CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutCupInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -198780,6 +207253,28 @@ export namespace Prisma {
     updatedAt?: Date | string
   }
 
+  export type CompetitionPostCreateManyLeagueInput = {
+    id?: string
+    cupId?: string | null
+    seasonId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type LeagueSeasonUpdateWithoutLeagueInput = {
     id?: StringFieldUpdateOperationsInput | string
     seasonNumber?: IntFieldUpdateOperationsInput | number
@@ -198800,6 +207295,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateWithoutLeagueInput = {
@@ -198822,6 +207318,7 @@ export namespace Prisma {
     award?: LeagueSeasonAwardUncheckedUpdateOneWithoutSeasonNestedInput
     pools?: LeaguePoolUncheckedUpdateManyWithoutSeasonNestedInput
     invitations?: LeagueInvitationUncheckedUpdateManyWithoutSeasonNestedInput
+    blogPosts?: CompetitionPostUncheckedUpdateManyWithoutSeasonNestedInput
   }
 
   export type LeagueSeasonUncheckedUpdateManyWithoutLeagueInput = {
@@ -198942,6 +207439,76 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CompetitionPostUpdateWithoutLeagueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    cup?: CupUpdateOneWithoutBlogPostsNestedInput
+    season?: LeagueSeasonUpdateOneWithoutBlogPostsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostsNestedInput
+    comments?: CompetitionPostCommentUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateWithoutLeagueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    comments?: CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutLeagueInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LeagueParticipantCreateManySeasonInput = {
     id?: string
     teamId: string
@@ -199029,6 +207596,28 @@ export namespace Prisma {
     declinedAt?: Date | string | null
     cancelledAt?: Date | string | null
     acceptedParticipantId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type CompetitionPostCreateManySeasonInput = {
+    id?: string
+    leagueId?: string | null
+    cupId?: string | null
+    authorId?: string | null
+    title: string
+    contentHtml: string
+    excerpt?: string | null
+    coverImageUrl?: string | null
+    status?: string
+    publishedAt?: Date | string | null
+    notifiedAt?: Date | string | null
+    editedAt?: Date | string | null
+    pinnedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -199326,6 +207915,76 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type CompetitionPostUpdateWithoutSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    league?: LeagueUpdateOneWithoutBlogPostsNestedInput
+    cup?: CupUpdateOneWithoutBlogPostsNestedInput
+    author?: UserUpdateOneWithoutCompetitionPostsNestedInput
+    comments?: CompetitionPostCommentUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateWithoutSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    comments?: CompetitionPostCommentUncheckedUpdateManyWithoutPostNestedInput
+    reactions?: CompetitionPostReactionUncheckedUpdateManyWithoutPostNestedInput
+  }
+
+  export type CompetitionPostUncheckedUpdateManyWithoutSeasonInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    leagueId?: NullableStringFieldUpdateOperationsInput | string | null
+    cupId?: NullableStringFieldUpdateOperationsInput | string | null
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    title?: StringFieldUpdateOperationsInput | string
+    contentHtml?: StringFieldUpdateOperationsInput | string
+    excerpt?: NullableStringFieldUpdateOperationsInput | string | null
+    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    publishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    notifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pinnedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type LeagueParticipantCreateManyPoolInput = {
     id?: string
     seasonId: string
@@ -199476,6 +208135,82 @@ export namespace Prisma {
     predictionsNotifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentCreateManyPostInput = {
+    id?: string
+    authorId?: string | null
+    body: string
+    editedAt?: Date | string | null
+    hiddenAt?: Date | string | null
+    hiddenById?: string | null
+    hiddenReason?: string | null
+    deletedAt?: Date | string | null
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostReactionCreateManyPostInput = {
+    id?: string
+    userId: string
+    kind: string
+    createdAt?: Date | string
+  }
+
+  export type CompetitionPostCommentUpdateWithoutPostInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    author?: UserUpdateOneWithoutCompetitionPostCommentsNestedInput
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateWithoutPostInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostCommentUncheckedUpdateManyWithoutPostInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    authorId?: NullableStringFieldUpdateOperationsInput | string | null
+    body?: StringFieldUpdateOperationsInput | string
+    editedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    hiddenById?: NullableStringFieldUpdateOperationsInput | string | null
+    hiddenReason?: NullableStringFieldUpdateOperationsInput | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionUpdateWithoutPostInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutCompetitionPostReactionsNestedInput
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateWithoutPostInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type CompetitionPostReactionUncheckedUpdateManyWithoutPostInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    kind?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type LeaguePairingCreateManyHomeParticipantInput = {
