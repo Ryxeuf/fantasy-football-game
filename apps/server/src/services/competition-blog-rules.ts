@@ -215,7 +215,10 @@ export function comparePosts(a: PostOrderRow, b: PostOrderRow): number {
 }
 
 /** Texte brut d'un extrait de HTML assaini (listings, aperçus). */
-export function excerptFromHtml(html: string, max = BLOG_LIMITS.excerptMax): string {
+export function excerptFromHtml(
+  html: string,
+  max: number = BLOG_LIMITS.excerptMax,
+): string {
   const text = html
     .replace(/<\/(p|h[1-6]|li|blockquote|pre)>/gi, " ")
     .replace(/<br\s*\/?>/gi, " ")

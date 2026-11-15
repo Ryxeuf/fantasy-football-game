@@ -45,7 +45,9 @@ export type NotificationKind =
   | "league.deleted"
   | "league.season.deleted"
   | "cup.archived"
-  | "cup.deleted";
+  | "cup.deleted"
+  | "competition.blog.post_published"
+  | "competition.blog.comment";
 
 export interface InAppNotificationPayload {
   readonly kind: NotificationKind;
