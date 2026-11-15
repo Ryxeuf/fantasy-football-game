@@ -2566,7 +2566,8 @@ edition du `.json`, `pnpm --filter web typecheck` +
   séquelle ») ; le Lancer Sécurisé rapporte 1 PSP au lanceur ; rattrapage
   du passé par `CASUALTY_RULE_VERSION = 2`.
 - **2026-11-15** : **Blog des compétitions et coupes privées alignées**
-  (change OpenSpec `competition-blog`) — un blog par ligue et par coupe
+  (change OpenSpec `competition-blog`, #1087, archivé le 2026-11-15 ; specs
+  vivantes `competition-blog` et `cup-visibility`) — un blog par ligue et par coupe
   (`CompetitionPost` ligue XOR coupe, commentaires, réactions), écrit par les
   membres actuels, lu comme la compétition, modéré par le commissaire, derrière
   le flag `competition_blog` ; au passage, `services/competition-access` rend
