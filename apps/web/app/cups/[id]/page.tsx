@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetDefinition } from "../../lib/tournament-rulesets";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
+import CompetitionBlogPanel from "../../components/competition-blog/CompetitionBlogPanel";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { buildForCupHref } from "../build-for-cup-href";
 import CupBracketView from "./CupBracketView";
@@ -264,6 +265,10 @@ export default function CupDetailPage() {
   const router = useRouter();
   const params = useParams();
   const cupId = params.id as string;
+  const blogCompetition = useMemo(
+    () => ({ kind: "cup" as const, id: cupId }),
+    [cupId],
+  );
   const [cup, setCup] = useState<Cup | null>(null);
   // Une seule lecture du règlement : son libellé ET sa liste de coups de
   // pouce (le résumé annonce ce que la coupe y ajoute ou en retire).
@@ -576,6 +581,9 @@ export default function CupDetailPage() {
         competitionId={cupId}
         canManage={cup.isCreator === true || currentUserIsAdmin}
       />
+
+      {/* Blog de la coupe : articles des coachs (flag `competition_blog`). */}
+      <CompetitionBlogPanel competition={blogCompetition} />
 
       {/* Cup Details */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
