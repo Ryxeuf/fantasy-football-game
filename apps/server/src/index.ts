@@ -35,6 +35,11 @@ import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminCupsRoutes from "./routes/admin-cups";
 import adminMatchSheetsRoutes from "./routes/admin-match-sheets";
 import competitionDocumentRoutes from "./routes/competition-documents";
+import competitionBlogRoutes from "./routes/competition-blog";
+import {
+  COMPETITION_BLOG_PUBLIC_PATH,
+  getCompetitionBlogUploadDir,
+} from "./utils/competition-blog-upload";
 import adminCompetitionDocumentRoutes from "./routes/admin-competition-documents";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
@@ -249,6 +254,19 @@ app.use(
 app.use(
   PLAYER_IMAGE_PUBLIC_PATH,
   express.static(getPlayerImageUploadDir(), {
+    maxAge: "365d",
+    immutable: true,
+    fallthrough: true,
+    index: false,
+    dotfiles: "ignore",
+  }),
+);
+
+// Images des blogs de competition (cf. routes/competition-blog.ts) : un
+// sous-dossier par competition, noms generes => cache long immutable.
+app.use(
+  COMPETITION_BLOG_PUBLIC_PATH,
+  express.static(getCompetitionBlogUploadDir(), {
     maxAge: "365d",
     immutable: true,
     fallthrough: true,
@@ -486,6 +504,14 @@ app.use("/admin/match-sheets", adminMatchSheetsRoutes);
 // Documents officiels des competitions (ligues et coupes) : un seul jeu de
 // handlers pour les deux familles (`/api/competitions/:kind/...`).
 app.use("/api/competitions", competitionDocumentRoutes);
+// Blog d'une competition (ligue | coupe), derriere le flag `competition_blog`.
+// Monte sur le chemin COMPLET pour que le gate ne couvre que le blog (et pas
+// les documents officiels, servis sous le meme prefixe).
+app.use(
+  "/api/competitions/:kind/:competitionId/blog",
+  requireFeatureFlag(COMPETITION_BLOG_FLAG),
+  competitionBlogRoutes,
+);
 app.use("/admin/competition-documents", adminCompetitionDocumentRoutes);
 app.use("/admin", adminAnalyticsRoutes);
 app.use("/admin/sim", adminSimRoutes);
