@@ -18,6 +18,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import { validate } from "../middleware/validate";
 import { hasRole } from "../utils/roles";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -195,7 +196,7 @@ export async function handleRemindCupRound(
 
 const router = Router();
 router.post("/rounds/:roundId/remind", authUser, handleRemindCupRound);
-router.get("/:id/rounds", authUser, handleListCupRounds);
+router.get("/:id/rounds", authUser, requireVisibleCup(), handleListCupRounds);
 router.post(
   "/:id/rounds",
   authUser,

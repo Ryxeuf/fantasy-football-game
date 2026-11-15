@@ -13,6 +13,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
 import {
@@ -46,6 +47,11 @@ export async function handleGetCupTeamRoster(
 
 const router = Router();
 
-router.get("/:id/teams/:teamId/roster-view", authUser, handleGetCupTeamRoster);
+router.get(
+  "/:id/teams/:teamId/roster-view",
+  authUser,
+  requireVisibleCup(),
+  handleGetCupTeamRoster,
+);
 
 export default router;

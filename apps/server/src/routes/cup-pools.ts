@@ -16,6 +16,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import { validate } from "../middleware/validate";
 import { hasRole } from "../utils/roles";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -175,7 +176,7 @@ export async function handleAutoAssignCupPools(
 }
 
 const router = Router();
-router.get("/:id/pools", authUser, handleListCupPools);
+router.get("/:id/pools", authUser, requireVisibleCup(), handleListCupPools);
 router.post(
   "/:id/pools",
   authUser,

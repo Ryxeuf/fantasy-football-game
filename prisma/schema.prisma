@@ -162,6 +162,9 @@ model User {
   // par un admin. `onDelete: SetNull` cote document : la suppression d'un
   // compte ne fait pas disparaitre le reglement de la ligue.
   competitionDocuments        CompetitionDocument[]       @relation("CompetitionDocumentUploader")
+  competitionPosts            CompetitionPost[]           @relation("CompetitionPostAuthor")
+  competitionPostComments     CompetitionPostComment[]    @relation("CompetitionPostCommentAuthor")
+  competitionPostReactions    CompetitionPostReaction[]   @relation("CompetitionPostReactionUser")
   /// Notifications internes (in-app), cf. `services/in-app-notifications.ts`.
   notifications               Notification[]
   /// Thèmes de dés acquis (achat en Crowns ou cadeau admin).
@@ -1174,6 +1177,7 @@ model Cup {
   pools        CupPool[]
   /// Documents officiels (reglement, feuille de route, affiche...).
   documents    CompetitionDocument[]
+  blogPosts    CompetitionPost[]
 
   @@index([creatorId])
   @@index([validated])
@@ -1394,6 +1398,89 @@ model CompetitionDocument {
   @@index([cupId, sortOrder])
   @@index([uploadedById])
   @@index([createdAt])
+}
+
+/// Blog d'une COMPÉTITION (change OpenSpec `competition-blog`) : article
+/// rattaché à une ligue OU à une coupe (`leagueId` XOR `cupId`, invariant tenu
+/// par `services/competition-blog`, seul chemin d'écriture — patron de
+/// `CompetitionDocument`). La famille se déduit de la FK présente.
+/// Masquage (modération) et suppression sont des colonnes, jamais un DELETE :
+/// une décision du commissaire doit rester explicable.
+model CompetitionPost {
+  id            String        @id @default(cuid())
+  league        League?       @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  leagueId      String?
+  cup           Cup?          @relation(fields: [cupId], references: [id], onDelete: Cascade)
+  cupId         String?
+  /// Repère d'affichage d'un article de ligue : saison la plus récente à la
+  /// première publication.
+  season        LeagueSeason? @relation(fields: [seasonId], references: [id], onDelete: SetNull)
+  seasonId      String?
+  /// SetNull : l'article survit à la suppression du compte (« coach supprimé »).
+  author        User?         @relation("CompetitionPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  authorId      String?
+  title         String
+  /// HTML assaini côté serveur (`utils/sanitize-competition-post-html`).
+  contentHtml   String        @db.Text
+  /// Texte brut dérivé du corps à l'écriture (listings).
+  excerpt       String?
+  coverImageUrl String?
+  /// "draft" | "published"
+  status        String        @default("draft")
+  /// Première publication (write-once).
+  publishedAt   DateTime?
+  /// Notification de publication envoyée (write-once).
+  notifiedAt    DateTime?
+  /// Dernière modification APRÈS publication.
+  editedAt      DateTime?
+  pinnedAt      DateTime?
+  hiddenAt      DateTime?
+  hiddenById    String?
+  hiddenReason  String?
+  deletedAt     DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  comments  CompetitionPostComment[]
+  reactions CompetitionPostReaction[]
+
+  @@index([leagueId, status, publishedAt])
+  @@index([cupId, status, publishedAt])
+  @@index([authorId, createdAt])
+}
+
+/// Commentaire d'un article de blog de compétition : texte brut, à plat.
+model CompetitionPostComment {
+  id           String          @id @default(cuid())
+  post         CompetitionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId       String
+  author       User?           @relation("CompetitionPostCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  authorId     String?
+  body         String          @db.Text
+  editedAt     DateTime?
+  hiddenAt     DateTime?
+  hiddenById   String?
+  /// "blocklist:<motif>" (auto) ou raison saisie par le modérateur.
+  hiddenReason String?
+  deletedAt    DateTime?
+  createdAt    DateTime        @default(now())
+
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
+}
+
+/// Réaction d'un membre à un article (catalogue fixe `REACTION_KINDS`).
+model CompetitionPostReaction {
+  id        String          @id @default(cuid())
+  post      CompetitionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  user      User            @relation("CompetitionPostReactionUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  kind      String
+  createdAt DateTime        @default(now())
+
+  @@unique([postId, userId, kind])
+  @@index([postId, kind])
 }
 
 // Modèle pour la file d'attente de matchmaking
@@ -1779,6 +1866,7 @@ model League {
   invitations LeagueInvitation[]
   /// Documents officiels (reglement, calendrier PDF, affiche...).
   documents   CompetitionDocument[]
+  blogPosts   CompetitionPost[]
 
   @@index([creatorId])
   @@index([status])
@@ -1838,6 +1926,7 @@ model LeagueSeason {
   // Lot C — multi-poules optionnelles. Vide = saison single-pool
   // (comportement legacy preserve : tout le monde dans la meme poule).
   pools        LeaguePool[]
+  blogPosts CompetitionPost[]
 
   @@unique([leagueId, seasonNumber])
   @@index([leagueId])

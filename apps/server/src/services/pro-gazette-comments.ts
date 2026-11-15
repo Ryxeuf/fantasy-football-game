@@ -18,6 +18,7 @@
  */
 
 import { prisma } from "../prisma";
+import { detectBlocklist } from "./text-blocklist";
 
 export const MAX_BODY_LENGTH = 500;
 export const MIN_BODY_LENGTH = 1;
@@ -40,34 +41,9 @@ export class CommentsError extends Error {
   }
 }
 
-/**
- * Blocklist conservatrice : termes les plus offensants connus, anglais
- * et francais. La detection est case-insensitive et tolere variations
- * de spacing simples. Volontairement courte — le but est un filet de
- * securite, pas un filtre complet.
- *
- * Si un commentaire match, il est `flagged` automatiquement (donc
- * masque pour les autres users).
- */
-const BLOCKLIST_PATTERNS: ReadonlyArray<{ name: string; regex: RegExp }> = [
-  { name: "slur-1", regex: /\bn[\W_]*i[\W_]*g[\W_]*g[\W_]*(?:e[\W_]*r|a)\b/i },
-  { name: "slur-2", regex: /\bf[\W_]*a[\W_]*g[\W_]*g[\W_]*o[\W_]*t\b/i },
-  { name: "slur-3", regex: /\br[\W_]*e[\W_]*t[\W_]*a[\W_]*r[\W_]*d\b/i },
-  { name: "slur-4", regex: /\bk[\W_]*i[\W_]*k[\W_]*e\b/i },
-  // Variantes phonetiques francaises courantes
-  { name: "slur-fr-1", regex: /\bsa[\W_]*l[\W_]*o[\W_]*p[\W_]*e\b/i },
-];
-
-/**
- * Verifie le body contre la blocklist. Renvoie le pattern matche ou
- * null si OK.
- */
-export function detectBlocklist(body: string): string | null {
-  for (const { name, regex } of BLOCKLIST_PATTERNS) {
-    if (regex.test(body)) return name;
-  }
-  return null;
-}
+// Blocklist partagée avec le blog des compétitions (`services/text-blocklist`),
+// ré-exportée pour ne rien changer aux appelants historiques.
+export { detectBlocklist };
 
 function validateBody(body: string): string {
   const trimmed = body.trim();

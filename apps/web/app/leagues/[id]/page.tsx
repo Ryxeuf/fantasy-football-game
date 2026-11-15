@@ -27,6 +27,7 @@ import { MeceneButton } from "./MeceneButton";
 import { putPoolFirst } from "./pool-order";
 import { isPoolQuotaEditable, poolQuotaSignature } from "./pool-quota-window";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
+import CompetitionBlogPanel from "../../components/competition-blog/CompetitionBlogPanel";
 import { CollapsibleSection } from "../../components/CollapsibleSection";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { getRosterName } from "@bb/game-engine";
@@ -62,6 +63,10 @@ export default function LeagueDetailPage() {
   const params = useParams();
   const router = useRouter();
   const leagueId = typeof params.id === "string" ? params.id : "";
+  const blogCompetition = useMemo(
+    () => ({ kind: "league" as const, id: leagueId }),
+    [leagueId],
+  );
 
   const [league, setLeague] = useState<LeagueDetail | null>(null);
   // Libellé du règlement servi par l'API (les règlements sont éditables).
@@ -460,6 +465,9 @@ export default function LeagueDetailPage() {
         competitionId={leagueId}
         canManage={isCreator || currentUserIsAdmin}
       />
+
+      {/* Blog de la ligue : articles des coachs (flag `competition_blog`). */}
+      <CompetitionBlogPanel competition={blogCompetition} />
 
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">

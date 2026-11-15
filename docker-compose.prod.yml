@@ -108,6 +108,10 @@ services:
       # persistant + URLs absolues sur l'hote API.
       - COMPETITION_DOCUMENT_UPLOAD_DIR=/data/competition-documents
       - COMPETITION_DOCUMENT_ASSET_PUBLIC_BASE=https://api.nufflearena.fr
+      # Images des blogs de competition (articles des coachs). Meme
+      # fonctionnement : volume persistant + URLs absolues sur l'hote API.
+      - COMPETITION_BLOG_UPLOAD_DIR=/data/competition-blog
+      - COMPETITION_BLOG_ASSET_PUBLIC_BASE=https://api.nufflearena.fr
       # Log every HTTP request to stdout so Loki can index them. Slow calls
       # still emit at warn level; without this flag Loki has no stream to
       # surface because the server is otherwise silent in steady state.
@@ -163,6 +167,8 @@ services:
       - player_images:/data/player-images
       # Persiste les documents officiels des competitions entre les redeploys.
       - competition_documents:/data/competition-documents
+      # Persiste les images des blogs de competition entre les redeploys.
+      - competition_blog_images:/data/competition-blog
     depends_on:
       db:
         condition: service_healthy
@@ -184,6 +190,7 @@ volumes:
   team_logos:
   player_images:
   competition_documents:
+  competition_blog_images:
 
 networks:
   traefik-network:

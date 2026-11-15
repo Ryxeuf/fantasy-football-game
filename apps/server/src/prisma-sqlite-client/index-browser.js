@@ -850,6 +850,50 @@ exports.Prisma.CompetitionDocumentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CompetitionPostScalarFieldEnum = {
+  id: 'id',
+  leagueId: 'leagueId',
+  cupId: 'cupId',
+  seasonId: 'seasonId',
+  authorId: 'authorId',
+  title: 'title',
+  contentHtml: 'contentHtml',
+  excerpt: 'excerpt',
+  coverImageUrl: 'coverImageUrl',
+  status: 'status',
+  publishedAt: 'publishedAt',
+  notifiedAt: 'notifiedAt',
+  editedAt: 'editedAt',
+  pinnedAt: 'pinnedAt',
+  hiddenAt: 'hiddenAt',
+  hiddenById: 'hiddenById',
+  hiddenReason: 'hiddenReason',
+  deletedAt: 'deletedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CompetitionPostCommentScalarFieldEnum = {
+  id: 'id',
+  postId: 'postId',
+  authorId: 'authorId',
+  body: 'body',
+  editedAt: 'editedAt',
+  hiddenAt: 'hiddenAt',
+  hiddenById: 'hiddenById',
+  hiddenReason: 'hiddenReason',
+  deletedAt: 'deletedAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.CompetitionPostReactionScalarFieldEnum = {
+  id: 'id',
+  postId: 'postId',
+  userId: 'userId',
+  kind: 'kind',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.LeagueParticipantScalarFieldEnum = {
   id: 'id',
   seasonId: 'seasonId',
@@ -1655,6 +1699,9 @@ exports.Prisma.ModelName = {
   LeagueInvitation: 'LeagueInvitation',
   CupInvitation: 'CupInvitation',
   CompetitionDocument: 'CompetitionDocument',
+  CompetitionPost: 'CompetitionPost',
+  CompetitionPostComment: 'CompetitionPostComment',
+  CompetitionPostReaction: 'CompetitionPostReaction',
   LeagueParticipant: 'LeagueParticipant',
   LeagueRound: 'LeagueRound',
   LeaguePairing: 'LeaguePairing',
