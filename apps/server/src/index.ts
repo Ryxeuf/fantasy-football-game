@@ -617,6 +617,19 @@ if (process.env.TEST_SQLITE === "1") {
         (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'),
       );
       await safe("match", () => prisma.match.deleteMany({}));
+      // Blog des competitions : cascade depuis League/Cup, retire d'abord
+      // (reactions et commentaires, puis articles) pour la meme raison que les
+      // documents officiels ci-dessous.
+      for (const model of [
+        "competitionPostReaction",
+        "competitionPostComment",
+        "competitionPost",
+      ]) {
+        await safe(
+          model,
+          () => (prisma as any)[model]?.deleteMany?.({}) ?? Promise.resolve(),
+        );
+      }
       // Documents officiels : cascade depuis League/Cup, mais on les retire
       // explicitement pour que le reset reste deterministe quel que soit le
       // mode referentiel du connecteur.
