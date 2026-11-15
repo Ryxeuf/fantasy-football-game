@@ -8,7 +8,8 @@
 ## 2. Visibilité commune ligue | coupe
 
 - [ ] 2.1 Créer `services/competition-access.ts` : `isCupVisibleTo` (pur, calque de `isLeagueVisibleTo` : publique, admin, commissaire, inscrit, invité `pending`), `findVisibleCompetition(kind, id, viewer)` (ligue ⇒ `canViewLeagueRow`, coupe ⇒ règle ci-dessus, requêtes d'appartenance seulement si nécessaires) ; vérifier par `competition-access.test.ts` en table (publique / privée × anonyme / étranger / commissaire / admin / inscrit / invité / inscription retirée ou supprimée)
-- [ ] 2.2 Ajouter la garde de route `ensureVisibleCompetition` (404, même message qu'un id inconnu, pour les deux familles) ; vérifier par un test unitaire de middleware
+- [ ] 2.2 Ajouter les gardes de route `ensureVisibleCup` / `ensureVisibleCompetition` (404, même message qu'un id inconnu) ; vérifier par des tests unitaires
+- [ ] 2.3 Aligner les lectures de coupe par id sur `ensureVisibleCup` : `GET /cup/:id`, rondes, poules, play-offs, fiche de roster, classements individuels, pronostics (+ classement), feuille de match (garde polymorphe ligue | coupe) et documents officiels (403 → 404) ; vérifier par un test de chaîne Express réelle en table (coupe publique / privée × étranger / inscrit / invité / commissaire / admin) et les tests existants des routes de coupe
 
 ## 3. Règles pures du blog
 
@@ -47,4 +48,4 @@
 
 - [ ] 9.1 Écrire `tests/e2e-api/specs/competition-blog.spec.ts` sur une vraie base : ligue privée avec deux coachs + un étranger, publication, notification, réaction, commentaire, masquage par le commissaire, 404 de l'étranger, archivage ⇒ 409 ; même parcours abrégé sur une coupe privée ; vérifier que la spec passe localement
 - [ ] 9.2 Ajouter une entrée d'aide « Le blog de la compétition » et documenter `docs/competition-blog.md` (modèle, droits, visibilité, modération) ; consigner dans `CLAUDE.md` le patron « une résolution de visibilité par compétition (`competition-access`) » ; vérifier que la doc cite les routes et les deux kinds de notification
-- [ ] 9.3 Reporter les suites (alignement `GET /cup/:id` et documents officiels sur `competition-access`, article rattaché à une rencontre, réactions sur commentaires, signalement, file de modération admin, nettoyage des images orphelines, option `blogParticipation`) dans `docs/roadmap/backlog/openspec-suites.md` ; vérifier que chaque élément « hors périmètre » du proposal y figure
+- [ ] 9.3 Reporter les suites (article rattaché à une rencontre, réactions sur commentaires, signalement, file de modération admin, nettoyage des images orphelines, option `blogParticipation`) dans `docs/roadmap/backlog/openspec-suites.md` ; vérifier que chaque élément « hors périmètre » du proposal y figure

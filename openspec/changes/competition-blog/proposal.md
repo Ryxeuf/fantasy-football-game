@@ -47,6 +47,14 @@ lire la compétition.
   lectures du blog, avec le même message qu'un id inexistant. Lectures
   ouvertes via `optionalAuthUser` : le blog d'une compétition publique se lit
   sans compte.
+- **Coupes privées alignées sur la même règle** : la visibilité d'une coupe
+  privée n'avait jamais été tranchée — `GET /cup/:id` et toutes ses lectures
+  (rondes, poules, play-offs, classements, pronostics, rosters, feuille de
+  match) la servaient à tout compte connecté, et les documents officiels
+  répondaient 403. Toutes ces lectures passent désormais par
+  `competition-access` : une coupe privée n'existe que pour son commissaire,
+  les admins, les propriétaires d'une équipe inscrite et les coachs invités ;
+  les autres reçoivent un 404, comme pour une ligue privée.
 - **Modération** : le commissaire modère le blog de SA compétition (masquer /
   rétablir un article ou un commentaire avec une raison, épingler,
   supprimer), l'admin partout. Un contenu masqué reste visible de son auteur
@@ -79,13 +87,13 @@ lire la compétition.
   réactions, commentaires, droits d'écriture des membres, visibilité héritée de
   la compétition, modération du commissaire, notifications et cycle de vie.
 
+- `cup-visibility` : une coupe privée est INVISIBLE (404) hors de ses membres,
+  sur toutes ses lectures par id — calque de `league-visibility`.
+
 ### Modified Capabilities
 
-<!-- Aucune exigence existante ne change. La visibilité des ligues
-(`league-visibility`) est RÉUTILISÉE telle quelle ; celle des coupes privées,
-jamais tranchée (`GET /cup/:id` les sert à tout compte connecté), est fixée
-pour le seul blog — l'alignement de la fiche coupe est une suite (cf.
-design.md, Open Questions). -->
+<!-- `league-visibility` est RÉUTILISÉE telle quelle. `competition-documents`
+voit sa branche coupe passer de 403 à 404, ce que couvre `cup-visibility`. -->
 
 ## Impact
 
@@ -108,8 +116,10 @@ design.md, Open Questions). -->
   `competition.blog.comment`).
 - **Tests** : règles pures en table, assainissement, chaîne Express réelle sur
   la visibilité (ligue privée, coupe privée, anonyme), spec e2e-api.
-- **Hors périmètre (suites)** : alignement de `GET /cup/:id` sur la visibilité
-  des coupes privées, article rattaché à une rencontre (compte rendu depuis la
+- **Coupes** : `routes/cup.ts` (`GET /:id`), `cup-rounds`, `cup-pools`,
+  `cup-playoffs`, `cup-team-roster`, `cup-leaderboards`, `cup-predictions`,
+  feuille de match (garde polymorphe ligue | coupe), documents officiels.
+- **Hors périmètre (suites)** : article rattaché à une rencontre (compte rendu depuis la
   feuille), réactions sur les commentaires, fils imbriqués, mentions
   `@coach`, file de modération admin globale, signalement par les lecteurs,
   ouverture des commentaires aux non-membres, nettoyage des images orphelines,

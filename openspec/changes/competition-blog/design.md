@@ -49,6 +49,8 @@ code qui façonne l'approche :
   composants) pour les deux.
 - Lecture = visibilité de la compétition, résolue en un seul endroit pour les
   deux familles, 404 pour qui ne la voit pas.
+- Aligner TOUTES les lectures d'une coupe par id sur cette résolution (la
+  coupe privée cesse d'être lisible de tout compte connecté).
 - Écriture, réactions, commentaires réservés aux membres ACTUELS ; droits
   effectifs servis par le serveur.
 - Contenu riche sûr (assainissement serveur strict, images confinées à la
@@ -56,8 +58,6 @@ code qui façonne l'approche :
 
 **Non-Goals:**
 
-- Changer la fiche coupe (`GET /cup/:id`) ou les documents officiels pour les
-  aligner sur la nouvelle résolution des coupes privées (suite dédiée).
 - Rattacher un article à une rencontre / générer un compte rendu depuis la
   feuille de match.
 - Réactions sur les commentaires, fils imbriqués, mentions, signalement par
@@ -184,8 +184,26 @@ Alternatives écartées :
   lecture littérale de « même visibilité que la compétition », mais elle
   ferait d'un blog de coupe privée un contenu lisible de n'importe qui — la
   règle « gater un contenu, c'est gater toutes ses lectures » dit l'inverse.
-  Le désalignement restant est porté par la fiche coupe, pas par le blog
-  (Open Questions).
+
+### D2bis — Les lectures de coupe s'alignent (décision du 2026-11-15)
+
+Plutôt que de laisser le blog plus fermé que la coupe, TOUTES les lectures
+d'une coupe par id passent par `findVisibleCup` (garde de route
+`ensureVisibleCup`, 404 « Coupe introuvable ») : fiche (`GET /cup/:id`),
+rondes, poules, play-offs, classements individuels, pronostics et leur
+classement, fiche de roster d'un inscrit, feuille de match (la garde
+polymorphe `ensureVisiblePairingLeague` devient
+`ensureVisibleCompetitionPairing` : ligue OU coupe) et documents officiels
+(403 → 404). Les mutations gardent leurs contrôles de rôle existants ; les
+listings appliquent déjà la même règle (`cupVisibleClauses`).
+
+Conséquences acceptées :
+- une équipe RETIRÉE d'une coupe privée (ligne `CupParticipant` supprimée)
+  perd l'accès à la coupe — comme un coach qui n'y est pas ; ses résultats
+  restent au classement ;
+- la page publique d'invitation par code (`/cup/invitations/:code`) reste
+  ouverte : elle ne sert que le nom et l'état de l'invitation, et c'est elle
+  qui permet d'entrer.
 
 ### D3 — Membres et droits : module PUR `competition-blog-rules`
 
@@ -333,9 +351,9 @@ automatiquement, publiable une fois rétabli par un modérateur).
   d'un échange par quelqu'un qui n'est plus dans la compétition.
 - **[Coût des lectures]** → liste d'articles = 1 requête paginée + 2 `groupBy`
   (réactions, commentaires) + droits (au plus 2 requêtes) ; pas de N+1.
-- **[Désalignement coupe privée]** → le blog d'une coupe privée sera PLUS
-  fermé que sa fiche tant que `GET /cup/:id` n'est pas aligné ; affiché comme
-  suite explicite plutôt que reproduit.
+- **[Coupe privée qui se ferme]** → des coachs qui lisaient une coupe privée
+  sans en être (lien partagé) ne la voient plus. C'est le sens même de
+  « privée » ; le commissaire peut la repasser publique ou inviter.
 
 ## Migration Plan
 
@@ -348,12 +366,8 @@ automatiquement, publiable une fois rétabli par un modérateur).
 
 ## Open Questions
 
-- **Visibilité des coupes privées** : faut-il aligner `GET /cup/:id` (et les
-  documents officiels, 403 aujourd'hui) sur `competition-access` ? Proposé en
-  suite `private-cup-visibility`, hors de ce change.
-- **Membres** : les anciens participants d'une ligue doivent-ils pouvoir
-  commenter (pas publier) ? Défaut retenu : non ; option de compétition
-  envisageable.
-- **Réactions des lecteurs** : ouvrir les réactions (pas les commentaires) aux
-  lecteurs connectés d'une compétition publique ? Défaut retenu : membres
-  seulement, comme demandé.
+Tranchées le 2026-11-15 :
+
+- **Visibilité des coupes privées** : alignée dans ce change (D2bis).
+- **Anciens participants** : lecture seule, ni article ni commentaire.
+- **Réactions des lecteurs** : réservées aux membres.
