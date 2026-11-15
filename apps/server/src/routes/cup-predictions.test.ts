@@ -19,6 +19,8 @@ vi.mock("../prisma", () => ({
     cup: { findUnique: vi.fn(), update: vi.fn() },
     cupRound: { findMany: vi.fn(), findUnique: vi.fn() },
     cupPairing: { findUnique: vi.fn(), updateMany: vi.fn() },
+    cupParticipant: { count: vi.fn(async () => 0) },
+    cupInvitation: { count: vi.fn(async () => 0) },
     competitionPrediction: {
       upsert: vi.fn(),
       deleteMany: vi.fn(),
@@ -58,6 +60,7 @@ function cupRow(predictionsScope: string | null, overrides: Record<string, unkno
     id: "cup-1",
     name: "Coupe du Chaos",
     creatorId: COMMISH,
+    isPublic: true,
     status: "en_cours",
     predictionsScope,
     playoffsPublished: null,

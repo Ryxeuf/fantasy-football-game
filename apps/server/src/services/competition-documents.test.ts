@@ -19,6 +19,7 @@ vi.mock("../prisma", () => ({
     leagueParticipant: { count: vi.fn() },
     leagueInvitation: { count: vi.fn() },
     cupParticipant: { count: vi.fn() },
+    cupInvitation: { count: vi.fn() },
     competitionDocument: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -49,6 +50,7 @@ const db = prisma as unknown as {
   leagueParticipant: { count: ReturnType<typeof vi.fn> };
   leagueInvitation: { count: ReturnType<typeof vi.fn> };
   cupParticipant: { count: ReturnType<typeof vi.fn> };
+  cupInvitation: { count: ReturnType<typeof vi.fn> };
   competitionDocument: {
     findMany: ReturnType<typeof vi.fn>;
     findUnique: ReturnType<typeof vi.fn>;
@@ -416,13 +418,14 @@ describe("listCompetitionDocuments", () => {
       isPublic: false,
     });
     db.cupParticipant.count.mockResolvedValue(0);
+    db.cupInvitation.count.mockResolvedValue(0);
     await expect(
       listCompetitionDocuments({
         kind: "cup",
         competitionId: "cup-1",
         actor: OTHER_COACH,
       }),
-    ).rejects.toMatchObject({ code: "forbidden" });
+    ).rejects.toMatchObject({ code: "competition-not-found" });
   });
 
   it("404 quand la competition n'existe pas", async () => {

@@ -10,6 +10,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import { sendError, sendSuccess } from "../utils/api-response";
 import { serverLog } from "../utils/server-log";
 import {
@@ -43,6 +44,11 @@ export async function handleGetCupLeaderboards(
 }
 
 const router = Router();
-router.get("/:id/leaderboards", authUser, handleGetCupLeaderboards);
+router.get(
+  "/:id/leaderboards",
+  authUser,
+  requireVisibleCup(),
+  handleGetCupLeaderboards,
+);
 
 export default router;

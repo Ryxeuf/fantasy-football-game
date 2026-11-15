@@ -26,6 +26,7 @@ import path from "node:path";
 
 import { prisma } from "../prisma";
 import { canViewLeagueRow } from "./league-access";
+import { canViewCupRow } from "./competition-access";
 import { serverLog } from "../utils/server-log";
 import {
   buildCompetitionDocumentUrl,
@@ -234,11 +235,10 @@ async function requireManageableCompetition(
 }
 
 /**
- * Droit de LECTURE : une competition publique est lisible par tous (les
- * documents officiels ont vocation a etre diffuses). Une ligue privee suit la
- * regle de TOUTE lecture d'une ligue (`services/league-access`) : commissaire,
- * admin, coach inscrit ou coach invite en attente. Une coupe privee n'est
- * lisible que par son commissaire, un admin ou un coach inscrit.
+ * Droit de LECTURE : celui de la competition elle-meme
+ * (`services/competition-access`). Une competition publique est lisible par
+ * tous ; une ligue ou une coupe privee seulement par son commissaire, un
+ * admin, un coach inscrit ou un coach invite en attente.
  */
 export async function canViewCompetitionDocuments(
   competition: CompetitionSummary,
@@ -246,38 +246,24 @@ export async function canViewCompetitionDocuments(
 ): Promise<boolean> {
   if (competition.isPublic) return true;
   if (canManageCompetition(competition, actor)) return true;
-  if (competition.kind === "league") {
-    return canViewLeagueRow(competition, {
-      userId: actor.userId,
-      isAdmin: actor.isAdmin,
-    });
-  }
-  if (!actor.userId) return false;
-  const count = await prisma.cupParticipant.count({
-    where: { cupId: competition.id, team: { ownerId: actor.userId } },
-  });
-  return count > 0;
+  const viewer = { userId: actor.userId, isAdmin: actor.isAdmin };
+  return competition.kind === "league"
+    ? canViewLeagueRow(competition, viewer)
+    : canViewCupRow(competition, viewer);
 }
 
 /**
- * Refus de LECTURE. Une ligue privee est INVISIBLE pour qui n'en fait pas
- * partie : « introuvable » (404), jamais « interdit » (403) qui en confirmerait
- * l'existence — meme 404 que toute lecture d'une ligue par id
- * (`services/league-access`). Une coupe privee garde son 403 : la visibilite
- * des coupes n'a pas ete tranchee, et `GET /cup/:id` les sert.
+ * Refus de LECTURE. Une competition privee est INVISIBLE pour qui n'en fait
+ * pas partie : « introuvable » (404), jamais « interdit » (403) qui en
+ * confirmerait l'existence — meme 404 que toute lecture d'une ligue ou d'une
+ * coupe par id.
  */
 function hiddenCompetitionError(
   competition: CompetitionSummary,
 ): CompetitionDocumentError {
-  if (competition.kind === "league") {
-    return new CompetitionDocumentError(
-      "competition-not-found",
-      "Ligue introuvable",
-    );
-  }
   return new CompetitionDocumentError(
-    "forbidden",
-    "Competition privee : documents reserves aux participants",
+    "competition-not-found",
+    competition.kind === "league" ? "Ligue introuvable" : "Coupe introuvable",
   );
 }
 

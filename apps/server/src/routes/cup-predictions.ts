@@ -16,6 +16,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import { validate } from "../middleware/validate";
 import { hasRole } from "../utils/roles";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -184,8 +185,13 @@ export async function handleSetCupPredictionsScope(
 }
 
 const router = Router();
-router.get("/:id/predictions", authUser, handleGetCupPredictions);
-router.get("/:id/predictions/leaderboard", authUser, handleGetCupPredictionLeaderboard);
+router.get("/:id/predictions", authUser, requireVisibleCup(), handleGetCupPredictions);
+router.get(
+  "/:id/predictions/leaderboard",
+  authUser,
+  requireVisibleCup(),
+  handleGetCupPredictionLeaderboard,
+);
 router.put(
   "/pairings/:pairingId/prediction",
   authUser,

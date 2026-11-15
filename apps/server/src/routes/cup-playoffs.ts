@@ -15,6 +15,7 @@
 import { Router } from "express";
 import type { Response } from "express";
 import { authUser, type AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import { validate } from "../middleware/validate";
 import { hasRole } from "../utils/roles";
 import { sendError, sendSuccess } from "../utils/api-response";
@@ -152,7 +153,7 @@ export async function handleOverrideCupPlayoffSeeds(
 }
 
 const router = Router();
-router.get("/:id/playoffs", authUser, handleGetCupBracket);
+router.get("/:id/playoffs", authUser, requireVisibleCup(), handleGetCupBracket);
 router.post(
   "/:id/playoffs/start",
   authUser,
