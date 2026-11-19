@@ -27,6 +27,7 @@ export const ROSTER_NAMES: Record<string, string> = {
   khorne: "Khorne",
   lizardmen: "Hommes Lézard",
   necromantic_horror: "Horreurs nécromantiques",
+  night_goblin: "Gobelins de la Nuit",
   norse: "Nordiques",
   nurgle: "Nurgle",
   ogre: "Ogres",

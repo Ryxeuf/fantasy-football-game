@@ -272,6 +272,8 @@ async function main() {
     gnome: "Gnome",
     norse: "Norse",
     snotling: "Snotling",
+    bretonnian: "Bretonnian",
+    night_goblin: "Night Goblin",
   };
   
   for (const ruleset of RULESETS) {

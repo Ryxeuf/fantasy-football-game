@@ -33,6 +33,7 @@ export const REROLL_COSTS: Record<string, number> = {
   khorne: 60_000,
   lizardmen: 70_000,
   necromantic_horror: 70_000,
+  night_goblin: 70_000,
   norse: 60_000,
   nurgle: 60_000,
   ogre: 70_000,

@@ -424,6 +424,7 @@ const ROSTER_FAMILY_MAP: Record<string, string> = {
   black_orc: "orc",
   goblin: "goblin",
   snotling: "goblin",
+  night_goblin: "goblin",
   halfling: "halfling",
   ogre: "ogre",
   chaos_chosen: "chaos",

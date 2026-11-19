@@ -67,6 +67,7 @@ export const ROSTER_LOGOS: Record<string, TeamLogo> = {
   black_orc: { shape: 'circle', glyph: 'BO' },
   goblin: { shape: 'circle', glyph: 'GO' },
   snotling: { shape: 'circle', glyph: 'SN' },
+  night_goblin: { shape: 'circle', glyph: 'NG' },
   underworld: { shape: 'circle', glyph: 'UW' },
 
   // Skaven

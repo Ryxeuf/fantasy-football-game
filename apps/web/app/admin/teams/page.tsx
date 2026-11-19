@@ -280,6 +280,8 @@ export default function AdminTeamsPage() {
             <option value="gnome">Gnomes</option>
             <option value="norse">Nordiques</option>
             <option value="snotling">Snotlings</option>
+            <option value="bretonnian">Bretonniens</option>
+            <option value="night_goblin">Gobelins de la Nuit</option>
           </select>
           <select
             value={rulesetFilter}
