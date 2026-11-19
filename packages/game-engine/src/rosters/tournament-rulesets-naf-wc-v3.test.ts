@@ -49,9 +49,17 @@ describe("NAF World Cup 2027 V3.0 — registre", () => {
 });
 
 describe("NAF World Cup 2027 V3.0 — tableau des tiers", () => {
-  it("couvre exactement les rosters de l'édition season_3", () => {
+  it("couvre exactement les rosters de l'édition season_3 parus avant le pack", () => {
+    // Les Gobelins de la Nuit sont parus APRÈS le Rules Pack V3.0 : le pack
+    // ne leur attribue aucun tier, on n'en invente pas (roster absent =
+    // `getTournamentRosterRules` rend null, équipe non constructible sous
+    // ce règlement tant que la NAF ne l'a pas classée).
+    const publishedAfterPack = new Set(["night_goblin"]);
+    expect(def.rosterRules.night_goblin).toBeUndefined();
     expect(Object.keys(def.rosterRules).sort()).toEqual(
-      Object.keys(TEAM_ROSTERS_BY_RULESET[def.edition]).sort(),
+      Object.keys(TEAM_ROSTERS_BY_RULESET[def.edition])
+        .filter((slug) => !publishedAfterPack.has(slug))
+        .sort(),
     );
   });
 
