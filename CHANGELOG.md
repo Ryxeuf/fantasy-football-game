@@ -1,3 +1,10 @@
+## [1.266.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.265.0...v1.266.0) (2026-11-19)
+
+
+### ✨ Features
+
+* **tournament-ruleset:** règlement NAF World Cup 2027 V3.0 ([#1084](https://github.com/Ryxeuf/fantasy-football-game/issues/1084)) ([d861ad5](https://github.com/Ryxeuf/fantasy-football-game/commit/d861ad53f9313f6ffb9a906f826362e5d5487f73))
+
 ## [1.265.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.264.0...v1.265.0) (2026-11-19)
 
 
