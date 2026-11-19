@@ -1,6 +1,7 @@
 "use client";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useState, useRef, useEffect } from "react";
+import FlagIcon from "./FlagIcon";
 
 export default function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
@@ -8,8 +9,8 @@ export default function LanguageSwitcher() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   const languages = [
-    { code: "fr" as const, name: "Français", flag: "🇫🇷" },
-    { code: "en" as const, name: "English", flag: "🇬🇧" },
+    { code: "fr" as const, name: "Français" },
+    { code: "en" as const, name: "English" },
   ];
 
   const currentLanguage = languages.find((lang) => lang.code === language) || languages[0];
@@ -38,7 +39,7 @@ export default function LanguageSwitcher() {
         className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm"
         aria-label="Sélecteur de langue"
       >
-        <span className="text-xl">{currentLanguage.flag}</span>
+        <FlagIcon code={currentLanguage.code} />
         <span className="hidden md:block">{currentLanguage.code.toUpperCase()}</span>
         <svg
           className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
@@ -64,7 +65,7 @@ export default function LanguageSwitcher() {
                   language === lang.code ? "bg-gray-50 font-semibold" : ""
                 }`}
               >
-                <span className="text-xl">{lang.flag}</span>
+                <FlagIcon code={lang.code} />
                 <span>{lang.name}</span>
                 {language === lang.code && (
                   <span className="ml-auto text-green-600">✓</span>
