@@ -1,3 +1,15 @@
+## [1.265.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.264.0...v1.265.0) (2026-11-19)
+
+
+### ✨ Features
+
+* **rosters:** ajoute les Gobelins de la Nuit (Saison 3) et leurs deux Traits ([#1089](https://github.com/Ryxeuf/fantasy-football-game/issues/1089)) ([f1e39f2](https://github.com/Ryxeuf/fantasy-football-game/commit/f1e39f2d4cb8fb0b297b4f265818c25aa9f57560))
+
+
+### 📝 Documentation
+
+* **openspec:** synchroniser et archiver le change competition-blog ([#1088](https://github.com/Ryxeuf/fantasy-football-game/issues/1088)) ([5eab533](https://github.com/Ryxeuf/fantasy-football-game/commit/5eab533fb1e3522273debdfcf6ee9ba04b8db1a6))
+
 ## [1.264.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.263.0...v1.264.0) (2026-11-15)
 
 
