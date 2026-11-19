@@ -39,8 +39,11 @@ describe("syncTournamentRulesets", () => {
   it("crée les règlements absents", async () => {
     findUnique.mockResolvedValue(null);
     const res = await syncTournamentRulesets({ write: true });
-    expect(res.created).toContain("naf_world_cup_2027");
-    expect(create).toHaveBeenCalledTimes(1);
+    expect(res.created).toEqual([
+      "naf_world_cup_2027",
+      "naf_world_cup_2027_v3",
+    ]);
+    expect(create).toHaveBeenCalledTimes(2);
     const data = create.mock.calls[0][0].data;
     expect(data.slug).toBe("naf_world_cup_2027");
     expect(data.enabled).toBe(true);
@@ -61,9 +64,28 @@ describe("syncTournamentRulesets", () => {
     findUnique.mockResolvedValue({ id: "r1" });
     const res = await syncTournamentRulesets({ write: true, force: true });
     expect(res.updated).toContain("naf_world_cup_2027");
-    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledTimes(2);
     expect(update.mock.calls[0][0].where).toEqual({
       slug: "naf_world_cup_2027",
+    });
+  });
+
+  it("ajoute le pack V3.0 à une base qui porte déjà le V2.1, sans toucher celui-ci", async () => {
+    findUnique.mockImplementation(
+      async (args: { where: { slug: string } }) =>
+        args.where.slug === "naf_world_cup_2027" ? { id: "r1" } : null,
+    );
+    const res = await syncTournamentRulesets({ write: true });
+    expect(res.skipped).toEqual(["naf_world_cup_2027"]);
+    expect(res.created).toEqual(["naf_world_cup_2027_v3"]);
+    expect(update).not.toHaveBeenCalled();
+    const data = create.mock.calls[0][0].data;
+    expect(data.slug).toBe("naf_world_cup_2027_v3");
+    expect(data.definition.version).toBe("V3.0");
+    expect(data.definition.stackReductionPerStarPlayer).toBe(1);
+    expect(data.definition.rosterRules.ogre).toMatchObject({
+      goldBudget: 1200,
+      sppBudget: 72,
     });
   });
 

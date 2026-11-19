@@ -6,7 +6,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { NAF_WORLD_CUP_2027, getTournamentRosterRules } from "@bb/game-engine";
+import {
+  NAF_WORLD_CUP_2027,
+  NAF_WORLD_CUP_2027_V3,
+  getTournamentRosterRules,
+} from "@bb/game-engine";
 import {
   eliteSkillsForPack,
   hasPackEliteSurcharge,
@@ -19,6 +23,7 @@ import {
 
 const PACK = {
   ...NAF_WORLD_CUP_2027,
+  NAF_WORLD_CUP_2027_V3,
   eliteSkills: ["block"],
   skillCosts: { ...NAF_WORLD_CUP_2027.skillCosts, eliteSurcharge: 2 },
 };
@@ -128,5 +133,27 @@ describe("quota de cumul du règlement", () => {
         packRules: getTournamentRosterRules(NAF_WORLD_CUP_2027, "undead"),
       }).max,
     ).toBe(1);
+  });
+
+  it("NAF WC 2027 V3.0 : chaque Star Player recruté retire un cumul", () => {
+    const ctx = {
+      pack: NAF_WORLD_CUP_2027_V3,
+      packRules: getTournamentRosterRules(NAF_WORLD_CUP_2027_V3, "ogre"),
+    };
+    expect(stackingUsage(plan, ctx).max).toBe(2);
+    expect(stackingUsage(plan, { ...ctx, starPlayerCount: 1 }).max).toBe(1);
+    expect(stackingUsage(plan, { ...ctx, starPlayerCount: 2 }).max).toBe(0);
+    // Jamais négatif, même au-delà du quota.
+    expect(stackingUsage(plan, { ...ctx, starPlayerCount: 5 }).max).toBe(0);
+  });
+
+  it("V2.1 : les Star Players ne touchent pas au cumul", () => {
+    expect(
+      stackingUsage(plan, {
+        pack: NAF_WORLD_CUP_2027,
+        packRules: getTournamentRosterRules(NAF_WORLD_CUP_2027, "norse"),
+        starPlayerCount: 2,
+      }).max,
+    ).toBe(2);
   });
 });

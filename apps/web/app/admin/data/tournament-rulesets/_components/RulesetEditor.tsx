@@ -68,7 +68,11 @@ const TAB_PREFIXES: Record<TabId, readonly string[]> = {
   ],
   rosters: ["rosterRules"],
   skills: ["skillCosts", "eliteSkills"],
-  stars: ["starPlayerSppTax", "bannedStarPlayers"],
+  stars: [
+    "starPlayerSppTax",
+    "bannedStarPlayers",
+    "stackReductionPerStarPlayer",
+  ],
   inducements: ["allowedInducements"],
   scoring: ["scoring"],
   json: [],

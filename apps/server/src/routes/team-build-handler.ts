@@ -616,6 +616,45 @@ export async function handleBuildTeam(
       }),
     );
 
+    const advancements = bodyAdvancements ?? [];
+
+    // Plan de compétences vs règlement de tournoi : types autorisés
+    // (choix primaire/secondaire uniquement), 2 compétences max par joueur
+    // et quota de joueurs à 2 compétences selon le cumul du roster. Validé
+    // AVANT la création pour refuser sans build à annuler. Le budget SPP
+    // (pool − taxe Star Players) est ensuite décompté à l'application via
+    // le barème du pack.
+    // Compétences Elite retenues par le règlement : sa propre liste s'il en
+    // publie une, sinon celles de l'édition (`Skill.isElite`). Un règlement
+    // qui facture un surcoût Elite sans republier la liste — le pack NAF WC
+    // 2027 — ne le facturait jamais avant cette résolution.
+    const packEliteSkills = pack
+      ? resolveTournamentEliteSkills(pack, [
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(await getEliteSkillSlugs(prisma as any, ruleset)),
+        ])
+      : undefined;
+
+    if (pack && packRosterRules && advancements.length > 0) {
+      const picks: TournamentSkillPick[] = advancements.map((adv) => ({
+        playerKey: `${adv.positionSlug}#${adv.ordinal}`,
+        type: adv.type,
+        skillSlug: adv.skillSlug,
+      }));
+      const plan = validateTournamentSkillPlan(
+        pack,
+        packRosterRules,
+        picks,
+        packEliteSkills,
+        // Chaque Star Player recruté peut retirer un cumul (pack V3.0).
+        starPlayersData.length,
+      );
+      if (!plan.valid) {
+        sendError(res, plan.error ?? 'Plan de compétences invalide', 400);
+        return;
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const team = await (prisma as any).$transaction(async (tx: any) => {
       const newTeam = await tx.team.create({
@@ -669,43 +708,6 @@ export async function handleBuildTeam(
     // avancée » ou coupe). On mappe (positionSlug, ordinal) → joueur créé, puis
     // on dépense le pool. En cas d'échec, on annule le build (suppression de
     // l'équipe) pour rester « tout ou rien ».
-    const advancements = bodyAdvancements ?? [];
-
-    // Plan de compétences vs règlement de tournoi : types autorisés
-    // (choix primaire/secondaire uniquement), 2 compétences max par joueur
-    // et quota de joueurs à 2 compétences selon le cumul du roster. Validé
-    // AVANT la création pour refuser sans build à annuler. Le budget SPP
-    // (pool − taxe Star Players) est ensuite décompté à l'application via
-    // le barème du pack.
-    // Compétences Elite retenues par le règlement : sa propre liste s'il en
-    // publie une, sinon celles de l'édition (`Skill.isElite`). Un règlement
-    // qui facture un surcoût Elite sans republier la liste — le pack NAF WC
-    // 2027 — ne le facturait jamais avant cette résolution.
-    const packEliteSkills = pack
-      ? resolveTournamentEliteSkills(pack, [
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ...(await getEliteSkillSlugs(prisma as any, ruleset)),
-        ])
-      : undefined;
-
-    if (pack && packRosterRules && advancements.length > 0) {
-      const picks: TournamentSkillPick[] = advancements.map((adv) => ({
-        playerKey: `${adv.positionSlug}#${adv.ordinal}`,
-        type: adv.type,
-        skillSlug: adv.skillSlug,
-      }));
-      const plan = validateTournamentSkillPlan(
-        pack,
-        packRosterRules,
-        picks,
-        packEliteSkills,
-      );
-      if (!plan.valid) {
-        sendError(res, plan.error ?? 'Plan de compétences invalide', 400);
-        return;
-      }
-    }
-
     if (advancements.length > 0) {
       const createdPlayers = await prisma.teamPlayer.findMany({
         where: { teamId: team.id },

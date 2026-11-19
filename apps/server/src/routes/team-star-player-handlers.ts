@@ -50,6 +50,11 @@ import {
 } from '../utils/star-player-validation';
 import { serverLog } from '../utils/server-log';
 import { teamAccessWhere } from '../services/team-edit-access';
+import {
+  decidePackStarChangeForTeam,
+  packStarBlockReason,
+} from '../services/tournament-star-player-rules';
+import { getTournamentRulesetDefinition } from '../services/tournament-ruleset-repository';
 
 /**
  * S25.5q / S27.8.23 — `GET /team/:id/star-players`
@@ -180,6 +185,12 @@ export async function handleListAvailableStarPlayers(
       isGameFormat(rawFormat) ? rawFormat : 'bb11',
     ).maxPlayers;
 
+    // Règlement de tournoi : un Star Player banni, ou tout Star Player sur
+    // un roster qui n'y a pas droit, n'est pas recrutable.
+    const pack = await getTournamentRulesetDefinition(
+      (team as { tournamentRuleset?: string | null }).tournamentRuleset ?? null,
+    );
+
     const enrichedStarPlayers = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       availableStarPlayers.map(async (sp: any) => {
@@ -211,11 +222,19 @@ export async function handleListAvailableStarPlayers(
             !isHired && hasRoomForPair && totalPairCost <= availableBudget;
         }
 
+        const rulesetBlockReason = packStarBlockReason(
+          pack,
+          team.roster,
+          sp.slug,
+        );
+        if (rulesetBlockReason) canHire = false;
+
         return {
           ...sp,
           keywordsEn: translateKeywordsCsv(sp.keywords ?? null, 'en'),
           isHired,
           canHire,
+          rulesetBlockReason,
           needsPair,
           pairStatus,
         };
@@ -315,9 +334,35 @@ export async function handleDeleteTeamStarPlayer(
     const auditDb = prisma as unknown as TeamAuditPrismaLike;
     const auditBefore = await captureTeamState(auditDb, teamId);
 
-    await prisma.teamStarPlayer.deleteMany({
+    // Règlement de tournoi : renvoyer un Star Player rend la taxe de PSP
+    // prélevée sur le pool (jamais refusé, cf. `decidePackStarChange`).
+    const packDecision = await decidePackStarChangeForTeam(
+      team,
+      team.starPlayers
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((sp: any) => !starPlayersToRemove.includes(sp.id))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((sp: any) => ({ slug: sp.starPlayerSlug, cost: sp.cost })),
+    );
+    const nextPool =
+      packDecision?.ok && packDecision.nextPool !== team.startingPspPool
+        ? packDecision.nextPool
+        : null;
+
+    const removeStars = prisma.teamStarPlayer.deleteMany({
       where: { id: { in: starPlayersToRemove } },
     });
+    if (nextPool === null) {
+      await removeStars;
+    } else {
+      await prisma.$transaction([
+        removeStars,
+        prisma.team.update({
+          where: { id: teamId },
+          data: { startingPspPool: nextPool },
+        }),
+      ]);
+    }
 
     await safeRecordTeamAudit(auditDb, {
       teamId,
@@ -329,6 +374,7 @@ export async function handleDeleteTeamStarPlayer(
         slug: starPlayer.starPlayerSlug,
         pairSlug: pairSlug ?? null,
         removedIds: starPlayersToRemove,
+        ...(nextPool === null ? {} : { startingPspPool: nextPool }),
       },
     });
 

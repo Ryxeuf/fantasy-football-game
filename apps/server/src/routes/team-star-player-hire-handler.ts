@@ -38,6 +38,7 @@ import {
   requiresPair,
 } from '../utils/star-player-validation';
 import { serverLog } from '../utils/server-log';
+import { decidePackStarChangeForTeam } from '../services/tournament-star-player-rules';
 import { teamAccessWhere } from '../services/team-edit-access';
 
 /**
@@ -164,6 +165,27 @@ export async function handleHireStarPlayer(
       }
     }
 
+    // Règlement de tournoi : il ne s'appliquait qu'à la création. Roster
+    // autorisé, bannis, effectif minimum, taxe de PSP, cumuls retirés et
+    // plafond « Arme Secrète » sont vérifiés ici aussi, et le pool suit la
+    // taxe dans la même transaction que le recrutement.
+    const packDecision = await decidePackStarChangeForTeam(team, [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...team.starPlayers.map((sp: any) => ({
+        slug: sp.starPlayerSlug as string,
+        cost: sp.cost as number,
+      })),
+      ...starPlayersToHire,
+    ]);
+    if (packDecision && !packDecision.ok) {
+      sendError(res, packDecision.error, 400);
+      return;
+    }
+    const nextPool =
+      packDecision && packDecision.nextPool !== team.startingPspPool
+        ? packDecision.nextPool
+        : null;
+
     // BUG fix audit round 6 (HIGH) : avant, `Promise.all(creates)` lancait
     // chaque create dans une transaction Prisma independante. Pour un
     // pairing (e.g. Morg + partner), si le 2e create echoue (unique
@@ -173,8 +195,8 @@ export async function handleHireStarPlayer(
     const auditDb = prisma as unknown as TeamAuditPrismaLike;
     const auditBefore = await captureTeamState(auditDb, teamId);
 
-    const createdStarPlayers = await prisma.$transaction(
-      starPlayersToHire.map((sp) =>
+    const transactionResults = await prisma.$transaction([
+      ...starPlayersToHire.map((sp) =>
         prisma.teamStarPlayer.create({
           data: {
             teamId: teamId,
@@ -183,6 +205,18 @@ export async function handleHireStarPlayer(
           },
         }),
       ),
+      ...(nextPool === null
+        ? []
+        : [
+            prisma.team.update({
+              where: { id: teamId },
+              data: { startingPspPool: nextPool },
+            }),
+          ]),
+    ]);
+    const createdStarPlayers = transactionResults.slice(
+      0,
+      starPlayersToHire.length,
     );
 
     await safeRecordTeamAudit(auditDb, {
@@ -195,6 +229,7 @@ export async function handleHireStarPlayer(
           slug: sp.slug,
           cost: sp.cost,
         })),
+        ...(nextPool === null ? {} : { startingPspPool: nextPool }),
       },
     });
 

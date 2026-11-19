@@ -8,7 +8,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useState } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { NAF_WORLD_CUP_2027, getTournamentRosterRules } from "@bb/game-engine";
+import {
+  NAF_WORLD_CUP_2027,
+  NAF_WORLD_CUP_2027_V3,
+  getTournamentRosterRules,
+} from "@bb/game-engine";
 import BuildAdvancementAllocator from "./BuildAdvancementAllocator";
 import type {
   BuildAdvancement,
@@ -43,6 +47,7 @@ function Harness(props: {
   pool?: number;
   pack: typeof NAF_WORLD_CUP_2027;
   packRules: ReturnType<typeof getTournamentRosterRules>;
+  starPlayerCount?: number;
 }) {
   const [value, setValue] = useState<BuildAdvancement[]>([]);
   return (
@@ -55,6 +60,7 @@ function Harness(props: {
       onChange={setValue}
       pack={props.pack}
       packRules={props.packRules}
+      starPlayerCount={props.starPlayerCount}
     />
   );
 }
@@ -142,5 +148,30 @@ describe("BuildAdvancementAllocator — règlement de tournoi", () => {
     expect(
       screen.getByTestId("allocator-add-custom_lineman-0").textContent,
     ).toContain("Cumul interdit par le règlement");
+  });
+
+  it("NAF WC 2027 V3.0 : un Star Player recruté retire un cumul du quota affiché", async () => {
+    const pack = NAF_WORLD_CUP_2027_V3;
+    const packRules = getTournamentRosterRules(pack, "ogre");
+    const { rerender } = render(<Harness pack={pack} packRules={packRules} pool={72} />);
+    const banner = await screen.findByTestId("allocator-pack-rules");
+    expect(banner.textContent).toContain("0/2 joueurs à 2 compétences");
+    expect(banner.textContent).toContain(
+      "chaque Star Player recruté retire un cumul",
+    );
+
+    rerender(
+      <Harness pack={pack} packRules={packRules} pool={72} starPlayerCount={1} />,
+    );
+    expect(screen.getByTestId("allocator-pack-rules").textContent).toContain(
+      "0/1 joueur à 2 compétences",
+    );
+
+    rerender(
+      <Harness pack={pack} packRules={packRules} pool={72} starPlayerCount={2} />,
+    );
+    expect(screen.getByTestId("allocator-pack-rules").textContent).toContain(
+      "aucun joueur ne peut cumuler 2 compétences",
+    );
   });
 });

@@ -128,6 +128,8 @@ export const tournamentRulesetDefinitionSchema = z
     allowedInducements: z.array(tournamentInducementRuleSchema).max(60),
     scoring: tournamentScoringSchema,
     regionalLeagueChoice: z.boolean().optional(),
+    /** Cumuls retirés par Star Player recruté (absent = aucun). */
+    stackReductionPerStarPlayer: z.number().int().min(0).max(2).optional(),
   })
   .superRefine((def, ctx) => {
     // Une seule tranche sans borne, et elle doit fermer le barème.

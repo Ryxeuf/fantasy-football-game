@@ -30,7 +30,8 @@ import {
   getNextAdvancementPspCost,
   type AdvancementSchedule,
   getTournamentRosterRules,
-  maxTwoSkillPlayers,
+  maxTwoSkillPlayersWithStars,
+  tournamentStackingError,
   parseAdvancements,
   poolSpentForTeam,
   resolveTournamentEliteSkills,
@@ -555,13 +556,17 @@ export async function assertTournamentAllowsAdvancement(params: {
     if (taken >= 2) doubled += 1;
   }
 
-  const maxDoubled = maxTwoSkillPlayers(rules.skillStacking);
+  // Le compte des Star Players n'est lu que si le règlement leur fait
+  // retirer des cumuls (pack V3.0) : aucune requête de plus pour les autres.
+  const starPlayerCount =
+    (pack.stackReductionPerStarPlayer ?? 0) > 0
+      ? await prisma.teamStarPlayer.count({ where: { teamId } })
+      : 0;
+  const maxDoubled = maxTwoSkillPlayersWithStars(pack, rules, starPlayerCount);
   if (doubled > maxDoubled) {
     throw new TeamAdvancementError(
       'tournament-rules',
-      maxDoubled === 0
-        ? 'Ce roster ne peut pas cumuler 2 compétences sur un même joueur'
-        : `Ce roster ne peut cumuler 2 compétences que sur ${maxDoubled} joueur${maxDoubled > 1 ? 's' : ''} maximum`,
+      tournamentStackingError(pack, rules, starPlayerCount),
     );
   }
 }
