@@ -1,3 +1,10 @@
+## [1.266.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.266.0...v1.266.1) (2026-11-19)
+
+
+### 🐛 Bug Fixes
+
+* **web:** drapeaux de langue en images SVG au lieu d'emoji ([#1090](https://github.com/Ryxeuf/fantasy-football-game/issues/1090)) ([97554b6](https://github.com/Ryxeuf/fantasy-football-game/commit/97554b68177a507275b291de2e7257be2c2ca515))
+
 ## [1.266.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.265.0...v1.266.0) (2026-11-19)
 
 
