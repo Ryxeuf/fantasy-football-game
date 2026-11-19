@@ -72,6 +72,7 @@ export const ROSTER_DIFFICULTY: Readonly<Record<string, RosterDifficulty>> = {
   halfling: "hard",
   ogre: "hard",
   snotling: "hard",
+  night_goblin: "hard",
   gnome: "hard",
 };
 

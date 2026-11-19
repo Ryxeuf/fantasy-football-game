@@ -31,6 +31,17 @@ describe("resolveEditAccess", () => {
     ).toEqual({ redirect: true, rosterLocked: false });
   });
 
+  it("redirige une équipe supprimée, même sans aucun gel", () => {
+    expect(
+      resolveEditAccess({
+        canEdit: true,
+        frozen: false,
+        buildLocked: false,
+        deleted: true,
+      }).redirect,
+    ).toBe(true);
+  });
+
   it("se ferme par défaut avant le premier chargement", () => {
     expect(resolveEditAccess({ canEdit: true })).toEqual({
       redirect: true,

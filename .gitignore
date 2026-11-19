@@ -136,6 +136,8 @@ backups/
 # (COMPETITION_DOCUMENT_UPLOAD_DIR).
 /apps/web/public/documents/competitions/*
 !/apps/web/public/documents/competitions/.gitkeep
+# Images des blogs de competition (cf. utils/competition-blog-upload.ts).
+/apps/web/public/images/competition-blog/*
 
 # Transcription verbatim du livre de regles BB (reproduction litterale, PI
 # Games Workshop). Reference LOCALE uniquement : ne JAMAIS versionner sur ce

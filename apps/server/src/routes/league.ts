@@ -14,6 +14,7 @@ import {
   optionalAuthUser,
   type AuthenticatedRequest,
 } from "../middleware/authUser";
+import { rejectDeletedTeamWrite } from "../middleware/rejectDeletedTeamWrite";
 import { validate, validateQuery } from "../middleware/validate";
 import { prisma } from "../prisma";
 import {
@@ -263,6 +264,7 @@ import {
   type LeagueViewer,
   type LeagueVisibilityRow,
 } from "../services/league-access";
+import { isCupPairingHiddenFrom } from "../services/competition-access";
 
 function requireUserId(
   req: AuthenticatedRequest,
@@ -323,16 +325,21 @@ async function ensureVisibleSeason(
 }
 
 /**
- * Feuille de match : 404 quand la rencontre appartient à une ligue cachée au
- * lecteur. Une rencontre de coupe ou un id inconnu passent (le service
- * tranche avec ses propres erreurs typées).
+ * Feuille de match : 404 quand la rencontre appartient à une ligue OU à une
+ * coupe cachée au lecteur (la feuille est polymorphe, et ces handlers sont
+ * montés des deux côtés). Un id inconnu passe (le service tranche avec ses
+ * propres erreurs typées).
  */
 async function ensureVisiblePairingLeague(
   req: AuthenticatedRequest,
   res: Response,
   pairingId: string,
 ): Promise<boolean> {
-  if (await isLeaguePairingHiddenFrom(pairingId, leagueViewerOf(req))) {
+  const viewer = leagueViewerOf(req);
+  if (
+    (await isLeaguePairingHiddenFrom(pairingId, viewer)) ||
+    (await isCupPairingHiddenFrom(pairingId, viewer))
+  ) {
     sendError(res, PAIRING_NOT_FOUND, 404);
     return false;
   }
@@ -3497,6 +3504,10 @@ router.get(
   optionalAuthUser,
   handleGetTeamLeaderboards,
 );
+
+// Outils du commissaire : une équipe supprimée n'est plus modifiable. Le
+// retrait d'une inscription (`/seasons/:seasonId/teams/:teamId`) reste permis.
+router.use("/:leagueId/teams/:teamId", rejectDeletedTeamWrite("teamId"));
 
 // Roster en lecture seule, visible par tout coach inscrit a la ligue.
 router.get(

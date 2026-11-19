@@ -35,6 +35,11 @@ import adminLeaguesRoutes from "./routes/admin-leagues";
 import adminCupsRoutes from "./routes/admin-cups";
 import adminMatchSheetsRoutes from "./routes/admin-match-sheets";
 import competitionDocumentRoutes from "./routes/competition-documents";
+import competitionBlogRoutes from "./routes/competition-blog";
+import {
+  COMPETITION_BLOG_PUBLIC_PATH,
+  getCompetitionBlogUploadDir,
+} from "./utils/competition-blog-upload";
 import adminCompetitionDocumentRoutes from "./routes/admin-competition-documents";
 import adminAnalyticsRoutes from "./routes/admin-analytics";
 import adminSimRoutes from "./routes/admin-sim";
@@ -129,6 +134,7 @@ import {
   HOME_NEWS_TICKER_FLAG,
   DICE_THEMES_FLAG,
   CROWNS_FLAG,
+  COMPETITION_BLOG_FLAG,
   invalidateFeatureFlagsCache,
 } from "./services/featureFlags";
 import dotenv from "dotenv";
@@ -248,6 +254,19 @@ app.use(
 app.use(
   PLAYER_IMAGE_PUBLIC_PATH,
   express.static(getPlayerImageUploadDir(), {
+    maxAge: "365d",
+    immutable: true,
+    fallthrough: true,
+    index: false,
+    dotfiles: "ignore",
+  }),
+);
+
+// Images des blogs de competition (cf. routes/competition-blog.ts) : un
+// sous-dossier par competition, noms generes => cache long immutable.
+app.use(
+  COMPETITION_BLOG_PUBLIC_PATH,
+  express.static(getCompetitionBlogUploadDir(), {
     maxAge: "365d",
     immutable: true,
     fallthrough: true,
@@ -485,6 +504,14 @@ app.use("/admin/match-sheets", adminMatchSheetsRoutes);
 // Documents officiels des competitions (ligues et coupes) : un seul jeu de
 // handlers pour les deux familles (`/api/competitions/:kind/...`).
 app.use("/api/competitions", competitionDocumentRoutes);
+// Blog d'une competition (ligue | coupe), derriere le flag `competition_blog`.
+// Monte sur le chemin COMPLET pour que le gate ne couvre que le blog (et pas
+// les documents officiels, servis sous le meme prefixe).
+app.use(
+  "/api/competitions/:kind/:competitionId/blog",
+  requireFeatureFlag(COMPETITION_BLOG_FLAG),
+  competitionBlogRoutes,
+);
 app.use("/admin/competition-documents", adminCompetitionDocumentRoutes);
 app.use("/admin", adminAnalyticsRoutes);
 app.use("/admin/sim", adminSimRoutes);
@@ -590,6 +617,19 @@ if (process.env.TEST_SQLITE === "1") {
         (prisma as any).$executeRawUnsafe('DELETE FROM "_MatchToUser"'),
       );
       await safe("match", () => prisma.match.deleteMany({}));
+      // Blog des competitions : cascade depuis League/Cup, retire d'abord
+      // (reactions et commentaires, puis articles) pour la meme raison que les
+      // documents officiels ci-dessous.
+      for (const model of [
+        "competitionPostReaction",
+        "competitionPostComment",
+        "competitionPost",
+      ]) {
+        await safe(
+          model,
+          () => (prisma as any)[model]?.deleteMany?.({}) ?? Promise.resolve(),
+        );
+      }
       // Documents officiels : cascade depuis League/Cup, mais on les retire
       // explicitement pour que le reset reste deterministe quel que soit le
       // mode referentiel du connecteur.
@@ -1536,6 +1576,12 @@ if (process.env.TEST_SQLITE === "1") {
           // OFF en prod (recette), ON pour les suites.
           key: CROWNS_FLAG,
           description: "Couronnes (Crowns) — solde coach, achat de thèmes de dés.",
+        },
+        {
+          // OFF en prod (recette), ON pour les suites.
+          key: COMPETITION_BLOG_FLAG,
+          description:
+            "Blog des compétitions — articles, réactions et commentaires.",
         },
       ];
       for (const flag of flagSeeds) {

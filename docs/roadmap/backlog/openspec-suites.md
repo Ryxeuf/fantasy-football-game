@@ -418,6 +418,24 @@ une équipe Saison 2 garde le texte 2020. Restent :
   déplacements ; une poussée subie rompt le Marquage, donc l'effet. À revoir si
   une erreur de lecture du livre remonte.
 
+## `competition-blog` (2026-11-15)
+
+Suites laissées hors périmètre du blog des compétitions :
+
+- article rattaché à une rencontre (compte rendu lancé depuis la feuille de
+  match, lien dans le calendrier) ;
+- réactions sur les commentaires, fils de réponses imbriqués, mentions `@coach` ;
+- signalement d'un contenu par un lecteur et file de modération globale en
+  admin (aujourd'hui : commissaire en première ligne, admin par les mêmes
+  routes) ;
+- option de compétition `blogParticipation` (ouvrir les commentaires ou les
+  réactions aux anciens participants ou aux lecteurs d'une compétition
+  publique — décision du 2026-11-15 : membres actuels seulement) ;
+- nettoyage des images orphelines (uploadées puis jamais publiées) ;
+- succès / Couronnes liés au blog ;
+- images d'un blog privé servies par une route gardée plutôt qu'en statique
+  (noms non devinables aujourd'hui).
+
 ## Opérations à faire au déploiement
 
 Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
@@ -440,3 +458,4 @@ Ces tâches ne sont pas du code : elles restent dues sur staging/prod et
 | `cup-league-parity` | `prisma db push` (`CompetitionPrediction.pairingId` devient nullable, colonne `cupPairingId` + unicité `[cupPairingId, userId]` ; colonnes `Cup.predictionsScope`, `CupPairing.predictionsClosedAt`, `CupRound.predictionsNotifiedAt`, nullables sans `@default`, aucun backfill) — joué par `scripts/deploy.sh`. Les coupes existantes démarrent SANS pronostics (`null` ⇒ `off`) ; leur commissaire est invité à les activer depuis la page de la coupe. |
 | `pro-league-coach-evolution` | `prisma db push` (tables `ProCoach`, `ProCoachMemory`), joué par `scripts/deploy.sh`. Aucun backfill : le coach d'une équipe se crée à son premier match. Variables optionnelles du lot 5 : `PRO_LEAGUE_SIM_WORKERS`, `PRO_LEAGUE_COMPLETION_TICK_MS`, `PRO_LEAGUE_REPLAY_RETENTION_DAYS`. |
 | ~~Audit des compétences S3 (2026-11-09)~~ | **Fait le 2026-11-09** pour les 7 descriptions corrigées, écrites une à une. Ne pas relancer `update-skills-and-rules-from-ocr.ts` sans relire `take-root` : le script remplacerait le texte posé en admin le 2026-07-22 par une version plus ancienne, et créerait 17 lignes `TeamSpecialRule` / `RegionalLeague` (tables vides en prod). |
+| `competition-blog` | `prisma db push` (tables `CompetitionPost`, `CompetitionPostComment`, `CompetitionPostReaction`, aucune colonne ajoutée à l'existant), joué par `scripts/deploy.sh`. Volume `competition_blog_images` (compose prod). Créer la ligne du flag `competition_blog` (seed ou « Synchroniser depuis le code » dans `/admin/feature-flags`) pour pouvoir l'allumer. À noter : les coupes PRIVÉES deviennent introuvables (404) pour les coachs qui n'en sont ni commissaire, ni inscrits, ni invités — dès le déploiement, sans flag. |

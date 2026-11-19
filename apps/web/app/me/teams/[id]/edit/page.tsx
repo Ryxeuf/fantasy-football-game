@@ -392,6 +392,7 @@ export default function TeamEditPage() {
   const { redirect, rosterLocked } = resolveEditAccess({
     canEdit,
     ...(locks ?? {}),
+    deleted: Boolean(data?.team?.deletedAt),
   });
   useEffect(() => {
     if (!loading && redirect) {

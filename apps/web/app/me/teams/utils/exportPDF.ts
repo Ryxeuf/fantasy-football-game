@@ -58,6 +58,7 @@ const ROSTER_DISPLAY_NAMES: Record<string, string> = {
   halfling: "Halfling",
   ogre: "Ogre",
   snotling: "Snotling",
+  night_goblin: "Night Goblin",
   blackorc: "Black Orc",
   black_orc: "Black Orc",
   chaosrenegades: "Chaos Renegades",

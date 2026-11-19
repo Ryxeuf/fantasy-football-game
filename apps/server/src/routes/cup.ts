@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../prisma";
 import { authUser, AuthenticatedRequest } from "../middleware/authUser";
+import { requireVisibleCup } from "../middleware/competitionVisibility";
 import {
   computeCupStandings,
   type CupWithParticipantsAndScoring,
@@ -481,7 +482,7 @@ router.get("/match-of-the-week", async (_req, res) => {
 });
 
 // GET /cup/:id - Détails d'une coupe
-router.get("/:id", authUser, async (req: AuthenticatedRequest, res) => {
+router.get("/:id", authUser, requireVisibleCup(), async (req: AuthenticatedRequest, res) => {
   try {
     let cup = await prisma.cup.findUnique({
       where: { id: req.params.id },

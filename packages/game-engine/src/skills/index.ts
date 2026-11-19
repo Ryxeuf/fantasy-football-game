@@ -1144,6 +1144,28 @@ export const SKILLS_DEFINITIONS: SkillDefinition[] = [
     description: "Un Lancer de Coéquipier raté ne cause pas de turnover.",
     category: "StarPlayerRule"
   },
+  {
+    slug: "squig-rage",
+    isPassive: true,
+    isModified: true,
+    nameFr: "Rage de Squig",
+    nameEn: "Squig Rage",
+    description: "Chaque fois que ce joueur est activé, avant d'annoncer son action, il doit jeter un D6. Sur 3+, il peut s'activer normalement. Sur 1-2, il doit annoncer une Action de Blocage ciblant un joueur adverse qu'il Marque s'il le peut (en utilisant la Compétence Rétablissement le cas échéant) ; il peut le faire même s'il a le Trait Chaîne et Boulet et ne pourrait normalement pas le faire. S'il ne peut pas annoncer d'Action de Blocage contre un joueur adverse mais qu'il est adjacent à au moins un coéquipier, il peut choisir un coéquipier adjacent, qui est immédiatement Plaqué (cela ne provoque pas de Turnover, sauf si ce coéquipier tenait le ballon) ; ce joueur peut ensuite poursuivre son activation normalement. S'il ne peut pas annoncer d'Action de Blocage contre un joueur adverse et qu'il n'est adjacent à aucun coéquipier, ou s'il choisit de ne Plaquer aucun coéquipier, il devient Déconcentré.",
+    descriptionEn: "Each time this player is activated, before declaring their action, they must roll a D6. On a 3+, they may activate as normal. On a 1-2, they must declare a Block action against an opposing player they are Marking if they can (using Jump Up if applicable), even if they have the Ball & Chain Trait and could not normally do so. If they cannot declare a Block action against an opposing player but are adjacent to at least one team-mate, they may choose an adjacent team-mate, who is immediately Knocked Down (this does not cause a Turnover unless that team-mate was holding the ball); this player may then carry on with their activation as normal. If they cannot Block an opposing player and are not adjacent to a team-mate, or choose not to Knock Down a team-mate, this player becomes Distracted.",
+    category: "Trait",
+    season3Only: true
+  },
+  {
+    slug: "squig-restraint",
+    isPassive: true,
+    isModified: true,
+    nameFr: "Maîtrise de Squig",
+    nameEn: "Squig Restraint",
+    description: "Les coéquipiers situés à 3 cases ou moins d'un joueur Debout ayant ce Trait ne jettent pas le dé pour leur Trait Rage de Squig au début de leur activation et peuvent s'activer normalement.",
+    descriptionEn: "Team-mates within 3 squares of a Standing player with this Trait do not roll for their Squig Rage Trait at the start of their activation and may activate as normal.",
+    category: "Trait",
+    season3Only: true
+  },
 ];
 
 // Index par slug pour accès rapide

@@ -48,6 +48,7 @@ const EN_BY_NORM: Record<string, string> = {
   snotling: "Snotling",
   spectre: "Wraith",
   squelette: "Skeleton",
+  squig: "Squig",
   troll: "Troll",
   vampire: "Vampire",
   yeti: "Yeti",

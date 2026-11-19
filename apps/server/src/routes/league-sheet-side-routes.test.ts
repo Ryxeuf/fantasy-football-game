@@ -21,6 +21,11 @@ vi.mock("../services/league-access", async (importOriginal) => {
     await importOriginal<typeof import("../services/league-access")>();
   return { ...actual, isLeaguePairingHiddenFrom: vi.fn(async () => false) };
 });
+vi.mock("../services/competition-access", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../services/competition-access")>();
+  return { ...actual, isCupPairingHiddenFrom: vi.fn(async () => false) };
+});
 
 vi.mock("../services/league-match-sheet", async (importOriginal) => {
   const actual =

@@ -11,14 +11,23 @@ interface Props {
   teamId: string;
   player: { id: string; name: string; number: number };
   onSaved: (playerId: string, name: string, number: number) => void;
+  /** Affiche le nom sans bouton d'édition (équipe supprimée). */
+  readOnly?: boolean;
 }
 
-export function PlayerIdentityInlineEdit({ teamId, player, onSaved }: Props) {
+export function PlayerIdentityInlineEdit({
+  teamId,
+  player,
+  onSaved,
+  readOnly = false,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(player.name);
   const [number, setNumber] = useState<string>(String(player.number));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (readOnly) return <span>{player.name}</span>;
 
   if (!editing) {
     return (

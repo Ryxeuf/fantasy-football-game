@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { LanguageProvider } from "../../../../contexts/LanguageContext";
 import LeagueTeamRosterPage from "./page";
 
@@ -105,11 +105,15 @@ describe("LeagueTeamRosterPage", () => {
     expect(
       screen.getByRole("heading", { name: "Reikland Reavers" }),
     ).toBeTruthy();
-    expect(screen.getByText("Blitzer")).toBeTruthy();
+    // Le tableau (écran large) et les cartes (mobile) portent le même contenu.
+    for (const scope of ["roster-table", "roster-cards"]) {
+      const view = within(screen.getByTestId(scope));
+      expect(view.getByText("Blitzer")).toBeTruthy();
+      // Compétences affichées par leur nom lisible (pas le slug).
+      expect(view.getByText("Blocage")).toBeTruthy();
+      expect(view.getByText("Esquive")).toBeTruthy();
+    }
     expect(screen.queryByText("human_blitzer")).toBeNull();
-    // Compétences affichées par leur nom lisible (pas le slug).
-    expect(screen.getByText("Blocage")).toBeTruthy();
-    expect(screen.getByText("Esquive")).toBeTruthy();
     expect(screen.queryByText("block")).toBeNull();
   });
 
@@ -126,7 +130,7 @@ describe("LeagueTeamRosterPage", () => {
 
     // En-têtes des colonnes stats.
     for (const header of ["MJ", "TD", "Élim.", "Pas.", "Int.", "Agr.", "PSP", "Valeur", "Blessures", "Dispo"]) {
-      expect(screen.getByText(header)).toBeTruthy();
+      expect(within(screen.getByTestId("roster-table")).getByText(header)).toBeTruthy();
     }
     // Matchs joués (toutes compétitions), servis mais jamais affichés avant.
     expect(screen.getByTestId("player-matches-pl1").textContent).toBe("6");

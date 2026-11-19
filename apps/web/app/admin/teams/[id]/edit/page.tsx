@@ -125,6 +125,12 @@ export default function AdminTeamEditPage() {
     return players.reduce((sum, p) => sum + (costByKey.get(p.position) ?? 0), 0);
   }, [players, positions]);
 
+  // Une équipe supprimée n'est plus modifiable : retour à sa fiche.
+  const isDeleted = Boolean(team?.deletedAt);
+  useEffect(() => {
+    if (isDeleted) router.replace(`/admin/teams/${teamId}`);
+  }, [isDeleted, router, teamId]);
+
   const handleSaveRoster = useCallback(async () => {
     if (!team) return;
     setSaving(true);
@@ -226,11 +232,6 @@ export default function AdminTeamEditPage() {
         verrouillages « équipe engagée » ne s&apos;appliquent pas à un
         administrateur — une équipe déjà engagée en ligue ou en coupe sera
         modifiée telle quelle.
-        {team.deletedAt && (
-          <div className="mt-2 font-medium">
-            Cette équipe est actuellement supprimée.
-          </div>
-        )}
       </div>
 
       {error && (

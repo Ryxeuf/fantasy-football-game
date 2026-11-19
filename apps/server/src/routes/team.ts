@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authUser } from "../middleware/authUser";
+import { rejectDeletedTeamWrite } from "../middleware/rejectDeletedTeamWrite";
 import { validate, validateQuery } from "../middleware/validate";
 import {
   createFromRosterSchema,
@@ -104,6 +105,11 @@ export { handleBuildTeam } from './team-build-handler';
 import { handleBuildTeam as handleBuildTeamImpl } from './team-build-handler';
 
 router.post("/build", authUser, validate(buildTeamSchema), handleBuildTeamImpl);
+
+// Une équipe supprimée est en lecture seule. Monté APRÈS les POST statiques
+// (`/choose`, `/build`…) et AVANT toute écriture `/:id…` ; ce routeur étant
+// monté le premier sur `/team`, le garde couvre aussi `routes/team-advancement`.
+router.use("/:id", rejectDeletedTeamWrite("id"));
 
 // Endpoint pour mettre a jour les informations d'equipe (S25.5u — ApiResponse<T>)
 // S27.8.25 — Handlers de mutation team (info / recalculate / update)

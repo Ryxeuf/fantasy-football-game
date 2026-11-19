@@ -9,9 +9,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
+const routerReplace = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "team-1" }),
-  useRouter: () => ({ back: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: routerReplace }),
 }));
 
 // Les deux blocs réutilisés du coach sont testés chez eux ; ici on vérifie
@@ -260,11 +262,12 @@ describe("AdminTeamEditPage — liste des positions", () => {
     ).toContain("Equipe engagee");
   });
 
-  it("signale une équipe supprimée dans l'encart d'avertissement", async () => {
+  it("renvoie une équipe supprimée vers sa fiche", async () => {
     mockApi({ team: { ...TEAM, deletedAt: "2026-08-27T10:00:00.000Z" } });
     render(<AdminTeamEditPage />);
 
-    const warning = await screen.findByTestId("admin-team-edit-warning");
-    expect(warning.textContent).toContain("actuellement supprimée");
+    await waitFor(() =>
+      expect(routerReplace).toHaveBeenCalledWith(`/admin/teams/${TEAM.id}`),
+    );
   });
 });

@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { API_BASE } from "../../auth-client";
 import { apiRequest } from "../../lib/api-client";
 import { useTournamentRulesetDefinition } from "../../lib/tournament-rulesets";
 import CompetitionDocuments from "../../components/CompetitionDocuments";
+import CompetitionBlogPanel from "../../components/competition-blog/CompetitionBlogPanel";
 import CompetitionLifecyclePanel from "../../components/CompetitionLifecyclePanel";
 import { buildForCupHref } from "../build-for-cup-href";
 import CupBracketView from "./CupBracketView";
@@ -264,6 +265,10 @@ export default function CupDetailPage() {
   const router = useRouter();
   const params = useParams();
   const cupId = params.id as string;
+  const blogCompetition = useMemo(
+    () => ({ kind: "cup" as const, id: cupId }),
+    [cupId],
+  );
   const [cup, setCup] = useState<Cup | null>(null);
   // Une seule lecture du règlement : son libellé ET sa liste de coups de
   // pouce (le résumé annonce ce que la coupe y ajoute ou en retire).
@@ -438,64 +443,69 @@ export default function CupDetailPage() {
   );
 
   return (
-    <div className="w-full p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="w-full p-4 sm:p-6 space-y-6">
+      {/* Header — titre sur sa propre ligne, badges en dessous qui passent
+          à la ligne : sur mobile, titre + badges dans une seule rangée
+          écrasaient le titre mot par mot et poussaient les badges hors
+          de l'écran. */}
+      <div>
+        <div className="min-w-0">
           <button
             onClick={() => router.push("/cups")}
             className="text-sm text-gray-600 hover:text-gray-800 mb-2 inline-flex items-center gap-1"
           >
             ← Retour aux coupes
           </button>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-heading font-bold text-nuffle-anthracite">
-              {cup.name}
-            </h1>
+          <h1 className="text-2xl sm:text-3xl font-heading font-bold text-nuffle-anthracite break-words">
+            {cup.name}
+          </h1>
+          <div
+            data-testid="cup-header-badges"
+            className="mt-2 flex flex-wrap items-center gap-2"
+          >
             {cup.status === "ouverte" && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Ouverte
               </span>
             )}
             {cup.status === "en_cours" && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 En cours
               </span>
             )}
             {cup.status === "terminee" && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                 Terminée
               </span>
             )}
             {cup.status === "archivee" && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                 Archivée
               </span>
             )}
             {cup.isCreator && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-nuffle-gold/20 text-nuffle-bronze">
+              <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-nuffle-gold/20 text-nuffle-bronze">
                 Créateur
               </span>
             )}
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+            <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
               {rulesetLabels[cup.ruleset] || cup.ruleset}
             </span>
             {cup.tournamentRuleset && (
               <span
                 data-testid="cup-tournament-ruleset-badge"
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
+                className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
               >
-                🏆{" "}
-                {tournamentRulesetLabel ?? cup.tournamentRuleset}
+                🏆 {tournamentRulesetLabel ?? cup.tournamentRuleset}
               </span>
             )}
             {!cup.isPublic && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                 🔒 Privée
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-600 mt-2 break-words">
             Créée par{" "}
             <span className="font-medium">{cup.creator.coachName}</span>
             {" • "}
@@ -529,7 +539,7 @@ export default function CupDetailPage() {
                   type="text"
                   readOnly
                   value={`${typeof window !== "undefined" ? window.location.origin : ""}/cups/${cup.id}`}
-                  className="flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-sm font-mono"
+                  className="min-w-0 flex-1 px-3 py-2 bg-white border border-blue-300 rounded text-sm font-mono"
                   onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
                 <button
@@ -538,7 +548,7 @@ export default function CupDetailPage() {
                     navigator.clipboard.writeText(url);
                     alert("Lien copié dans le presse-papiers !");
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+                  className="shrink-0 px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
                   Copier
                 </button>
@@ -572,17 +582,20 @@ export default function CupDetailPage() {
         canManage={cup.isCreator === true || currentUserIsAdmin}
       />
 
+      {/* Blog de la coupe : articles des coachs (flag `competition_blog`). */}
+      <CompetitionBlogPanel competition={blogCompetition} />
+
       {/* Cup Details */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
         <div className="space-y-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
               Informations
             </h2>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
+              <div className="flex flex-wrap justify-between gap-x-3">
                 <span className="text-gray-600">Créée le :</span>
-                <span className="font-medium">
+                <span className="font-medium text-right">
                   {new Date(cup.createdAt).toLocaleDateString("fr-FR", {
                     day: "numeric",
                     month: "long",
@@ -1095,55 +1108,61 @@ export default function CupDetailPage() {
                   <div
                     key={match.id}
                     data-testid={`cup-match-row-${match.id}`}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-left"
+                    className="w-full flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-3 sm:px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-left"
                   >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <TeamLogo
-                          slug={match.teamA.roster}
-                          logoUrl={match.teamA.logoUrl ?? null}
-                          size={24}
-                          className="shrink-0"
-                        />
-                        <span className="font-medium text-gray-900">
-                          <TeamRosterLink
-                            competition="cup"
-                            leagueId={cup.id}
-                            teamId={match.teamA.id}
-                            canViewRoster
-                            testIdSuffix={`match-${match.id}-a`}
-                          >
-                            {match.teamA.name}
-                          </TeamRosterLink>
-                        </span>
-                        <span className="text-xs text-gray-500">vs</span>
-                        {match.teamB ? (
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        {/* Logo + nom groupés : au retour à la ligne, un
+                            logo ne se sépare plus de son équipe. */}
+                        <span className="inline-flex min-w-0 items-center gap-2">
                           <TeamLogo
-                            slug={match.teamB.roster}
-                            logoUrl={match.teamB.logoUrl ?? null}
+                            slug={match.teamA.roster}
+                            logoUrl={match.teamA.logoUrl ?? null}
                             size={24}
                             className="shrink-0"
                           />
-                        ) : null}
-                        <span className="font-medium text-gray-900">
-                          {match.teamB ? (
+                          <span className="min-w-0 break-words font-medium text-gray-900">
                             <TeamRosterLink
                               competition="cup"
                               leagueId={cup.id}
-                              teamId={match.teamB.id}
+                              teamId={match.teamA.id}
                               canViewRoster
-                              testIdSuffix={`match-${match.id}-b`}
+                              testIdSuffix={`match-${match.id}-a`}
                             >
-                              {match.teamB.name}
+                              {match.teamA.name}
                             </TeamRosterLink>
-                          ) : (
-                            "??"
-                          )}
+                          </span>
+                        </span>
+                        <span className="text-xs text-gray-500">vs</span>
+                        <span className="inline-flex min-w-0 items-center gap-2">
+                          {match.teamB ? (
+                            <TeamLogo
+                              slug={match.teamB.roster}
+                              logoUrl={match.teamB.logoUrl ?? null}
+                              size={24}
+                              className="shrink-0"
+                            />
+                          ) : null}
+                          <span className="min-w-0 break-words font-medium text-gray-900">
+                            {match.teamB ? (
+                              <TeamRosterLink
+                                competition="cup"
+                                leagueId={cup.id}
+                                teamId={match.teamB.id}
+                                canViewRoster
+                                testIdSuffix={`match-${match.id}-b`}
+                              >
+                                {match.teamB.name}
+                              </TeamRosterLink>
+                            ) : (
+                              "??"
+                            )}
+                          </span>
                         </span>
                         {match.status === "completed" &&
                           match.scoreTeamA !== null &&
                           match.scoreTeamB !== null && (
-                            <span className="ml-2 text-sm font-semibold text-gray-800">
+                            <span className="whitespace-nowrap text-sm font-semibold text-gray-800 sm:ml-2">
                               {match.scoreTeamA} - {match.scoreTeamB}
                             </span>
                           )}
@@ -1158,15 +1177,15 @@ export default function CupDetailPage() {
                         })}
                       </div>
                     </div>
-                    <div className="text-xs text-gray-600 text-right">
-                      <div>
+                    <div className="flex shrink-0 flex-wrap gap-x-3 text-xs text-gray-600 sm:block sm:text-right">
+                      <div className="whitespace-nowrap">
                         {match.status === "completed"
                           ? "Terminée"
                           : match.status === "in_progress"
                             ? "En cours"
                             : "En préparation"}
                       </div>
-                      <div className="mt-1">
+                      <div className="whitespace-nowrap sm:mt-1">
                         {match.isPublic ? "🌍 Public" : "🔒 Privé"}
                       </div>
                     </div>
@@ -1200,9 +1219,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.topScorers.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1219,7 +1238,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} TD
                           </span>
                         </div>
@@ -1237,9 +1256,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.bestDefense.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1256,7 +1275,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} TD encaissé
                             {entry.value > 1 ? "s" : ""}
                           </span>
@@ -1275,9 +1294,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.bashers.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1294,7 +1313,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} élimination
                             {entry.value > 1 ? "s" : ""}
                           </span>
@@ -1313,9 +1332,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.shamePassers.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1332,7 +1351,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} passe{entry.value > 1 ? "s" : ""}
                           </span>
                         </div>
@@ -1350,9 +1369,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.foulExperts.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1369,7 +1388,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} agression{entry.value > 1 ? "s" : ""}
                           </span>
                         </div>
@@ -1387,9 +1406,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.indestructible.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1406,7 +1425,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} sortie{entry.value > 1 ? "s" : ""}{" "}
                             subie{entry.value > 1 ? "s" : ""}
                           </span>
@@ -1425,9 +1444,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.martyrs.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1444,7 +1463,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} victime{entry.value > 1 ? "s" : ""}
                           </span>
                         </div>
@@ -1462,9 +1481,9 @@ export default function CupDetailPage() {
                       {cup.actionAwards.permeable.map((entry) => (
                         <div
                           key={entry.teamId}
-                          className="flex justify-between text-sm"
+                          className="flex items-start justify-between gap-3 text-sm"
                         >
-                          <span className="inline-flex items-center gap-2 font-medium text-gray-900">
+                          <span className="inline-flex min-w-0 items-center gap-2 font-medium text-gray-900 break-words">
                             <TeamLogo
                               slug={entry.roster}
                               logoUrl={entry.logoUrl ?? null}
@@ -1481,7 +1500,7 @@ export default function CupDetailPage() {
                               {entry.teamName}
                             </TeamRosterLink>
                           </span>
-                          <span className="font-semibold text-gray-800">
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-gray-800">
                             {entry.value} TD encaissé
                             {entry.value > 1 ? "s" : ""}
                           </span>
@@ -1501,7 +1520,7 @@ export default function CupDetailPage() {
         cup.playerLeaderboardCategories.some(
           (c) => (cup.playerLeaderboards?.[c.key]?.length ?? 0) > 0,
         ) && (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-4 sm:p-6">
             <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-gray-900">
                 Classements individuels
@@ -1540,7 +1559,7 @@ export default function CupDetailPage() {
                           key={row.playerId}
                           className="flex items-center justify-between text-sm"
                         >
-                          <span className="truncate">
+                          <span className="min-w-0 truncate">
                             <span className="text-gray-400 mr-1">
                               {row.rank}.
                             </span>
@@ -1561,7 +1580,7 @@ export default function CupDetailPage() {
                               </TeamRosterLink>
                             </span>
                           </span>
-                          <span className="font-semibold text-gray-800 ml-2">
+                          <span className="shrink-0 font-semibold text-gray-800 ml-2">
                             {row.value}
                           </span>
                         </li>

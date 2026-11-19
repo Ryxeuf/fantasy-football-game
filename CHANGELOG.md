@@ -1,3 +1,55 @@
+## [1.265.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.264.0...v1.265.0) (2026-11-19)
+
+
+### ✨ Features
+
+* **rosters:** ajoute les Gobelins de la Nuit (Saison 3) et leurs deux Traits ([#1089](https://github.com/Ryxeuf/fantasy-football-game/issues/1089)) ([f1e39f2](https://github.com/Ryxeuf/fantasy-football-game/commit/f1e39f2d4cb8fb0b297b4f265818c25aa9f57560))
+
+
+### 📝 Documentation
+
+* **openspec:** synchroniser et archiver le change competition-blog ([#1088](https://github.com/Ryxeuf/fantasy-football-game/issues/1088)) ([5eab533](https://github.com/Ryxeuf/fantasy-football-game/commit/5eab533fb1e3522273debdfcf6ee9ba04b8db1a6))
+
+## [1.264.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.263.0...v1.264.0) (2026-11-15)
+
+
+### ✨ Features
+
+* **competition-blog:** un blog par ligue et par coupe + coupes privées réellement privées ([#1087](https://github.com/Ryxeuf/fantasy-football-game/issues/1087)) ([8732d2c](https://github.com/Ryxeuf/fantasy-football-game/commit/8732d2c88c873cc3c081d2897d82707378bd85de))
+
+## [1.263.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.2...v1.263.0) (2026-11-14)
+
+
+### ✨ Features
+
+* **web:** fiche de roster de ligue/coupe en cartes sur mobile ([3298d71](https://github.com/Ryxeuf/fantasy-football-game/commit/3298d71ec04dd2d8447dde4e3dd74ec1d6a8cf4a))
+
+## [1.262.2](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.1...v1.262.2) (2026-11-14)
+
+
+### 🐛 Bug Fixes
+
+* **cups:** affichage mobile de la page d'une coupe ([#1085](https://github.com/Ryxeuf/fantasy-football-game/issues/1085)) ([39d127d](https://github.com/Ryxeuf/fantasy-football-game/commit/39d127df3b8b2a340be4ad0fc1845eca6aa1650a))
+
+## [1.262.1](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.262.0...v1.262.1) (2026-11-11)
+
+
+### 🐛 Bug Fixes
+
+* **leagues:** créditer au joueur recruté les gestes d'un journalier ([#1083](https://github.com/Ryxeuf/fantasy-football-game/issues/1083)) ([cfc19de](https://github.com/Ryxeuf/fantasy-football-game/commit/cfc19deb3c9d7fa7d3e36c1f88c810933ebfc532))
+
+## [1.262.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.261.0...v1.262.0) (2026-11-10)
+
+
+### ✨ Features
+
+* **web:** afficher une équipe supprimée en lecture seule ([2b64f4d](https://github.com/Ryxeuf/fantasy-football-game/commit/2b64f4da04c76d2a02176669a5bd9af4acee4d74))
+
+
+### 🐛 Bug Fixes
+
+* **team:** refuser toute écriture sur une équipe supprimée ([54403f2](https://github.com/Ryxeuf/fantasy-football-game/commit/54403f23e85548440ca6d2e97d255b7eeccc2136))
+
 ## [1.261.0](https://github.com/Ryxeuf/fantasy-football-game/compare/v1.260.0...v1.261.0) (2026-11-10)
 
 

@@ -1718,6 +1718,7 @@ const SEASON_THREE_TEAM_REGIONAL_RULES_OVERRIDES: Record<string, string[]> = {
   chaos_renegade: ["chaos_clash"],
   norse: ["old_world_classic", "favoured_of_khorne"],
   bretonnian: ["old_world_classic"],
+  night_goblin: ["underworld_challenge"],
 };
 
 function buildSeasonThreeTeamRegionalRules(): Record<string, string[]> {

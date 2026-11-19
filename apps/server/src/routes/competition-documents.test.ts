@@ -28,6 +28,7 @@ vi.mock("../prisma", () => ({
     leagueParticipant: { count: vi.fn() },
     leagueInvitation: { count: vi.fn() },
     cupParticipant: { count: vi.fn() },
+    cupInvitation: { count: vi.fn() },
     competitionDocument: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -230,7 +231,7 @@ describe("GET /:kind/:competitionId/documents", () => {
     expect(res.body.data.documents).toHaveLength(1);
   });
 
-  it("coupe privee : 403 pour un coach non inscrit (regle propre aux coupes)", async () => {
+  it("coupe privee : 404 (pas 403) pour un coach non inscrit ni invite", async () => {
     currentUser = { id: "coach-2", roles: ["user"] };
     db.cup.findUnique.mockResolvedValue({
       id: "cup-1",
@@ -239,8 +240,25 @@ describe("GET /:kind/:competitionId/documents", () => {
       isPublic: false,
     });
     db.cupParticipant.count.mockResolvedValue(0);
+    db.cupInvitation.count.mockResolvedValue(0);
     const res = await request("GET", "/cups/cup-1/documents");
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBe("Coupe introuvable");
+  });
+
+  it("coupe privee : un coach invite (invitation en attente) lit les documents", async () => {
+    currentUser = { id: "coach-2", roles: ["user"] };
+    db.cup.findUnique.mockResolvedValue({
+      id: "cup-1",
+      name: "Coupe",
+      creatorId: "coach-1",
+      isPublic: false,
+    });
+    db.cupParticipant.count.mockResolvedValue(0);
+    db.cupInvitation.count.mockResolvedValue(1);
+    db.competitionDocument.findMany.mockResolvedValue([]);
+    const res = await request("GET", "/cups/cup-1/documents");
+    expect(res.status).toBe(200);
   });
 
   it("400 sur une famille de competition inconnue", async () => {

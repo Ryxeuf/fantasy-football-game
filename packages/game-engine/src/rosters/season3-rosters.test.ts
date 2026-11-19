@@ -6,7 +6,7 @@ describe('Season 3 Rosters', () => {
   describe('Roster descriptions (I.2)', () => {
     const rosterKeys = Object.keys(SEASON_THREE_ROSTERS);
 
-    it('should have descriptionFr for all 31 rosters', () => {
+    it('should have descriptionFr for all 32 rosters', () => {
       for (const key of rosterKeys) {
         const roster = SEASON_THREE_ROSTERS[key];
         expect(roster.descriptionFr, `${key} missing descriptionFr`).toBeDefined();
@@ -14,7 +14,7 @@ describe('Season 3 Rosters', () => {
       }
     });
 
-    it('should have descriptionEn for all 31 rosters', () => {
+    it('should have descriptionEn for all 32 rosters', () => {
       for (const key of rosterKeys) {
         const roster = SEASON_THREE_ROSTERS[key];
         expect(roster.descriptionEn, `${key} missing descriptionEn`).toBeDefined();
@@ -40,9 +40,9 @@ describe('Season 3 Rosters', () => {
   });
 
   describe('Roster completeness', () => {
-    it('should contain 31 rosters (30 historiques + Bretonniens)', () => {
+    it('should contain 32 rosters (30 historiques + Bretonniens + Gobelins de la Nuit)', () => {
       const rosterCount = Object.keys(SEASON_THREE_ROSTERS).length;
-      expect(rosterCount).toBe(31);
+      expect(rosterCount).toBe(32);
     });
 
     it('should include Slann roster', () => {

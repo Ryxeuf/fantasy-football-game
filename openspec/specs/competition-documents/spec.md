@@ -91,11 +91,13 @@ d'upload.
 `GET /api/competitions/:kind/:competitionId/documents` DOIT lister les
 documents triés par ordre d'affichage puis par date de création. Une
 compétition **publique** DOIT être lisible par tous, y compris sans
-authentification. Une coupe **privée** NE DOIT être lisible que par son
-commissaire, un administrateur ou un coach inscrit. Une ligue **privée** suit
-la règle de visibilité des ligues (capability `league-visibility`) : lisible
-par son commissaire, un administrateur, un coach inscrit ou un coach invité en
-attente, et **introuvable** (`404`) pour tout autre lecteur.
+authentification. Une compétition **privée** suit la règle de visibilité de sa
+famille (capabilities `league-visibility` et `cup-visibility`, résolution
+commune `services/competition-access`) : lisible par son commissaire, un
+administrateur, un coach inscrit ou un coach invité en attente, et
+**introuvable** (`404`) pour tout autre lecteur — y compris une coupe privée
+depuis le change `competition-blog` (2026-11-15), qui répondait `403`
+auparavant.
 
 #### Scenario: Visiteur anonyme sur une ligue publique
 
@@ -105,7 +107,8 @@ attente, et **introuvable** (`404`) pour tout autre lecteur.
 #### Scenario: Visiteur anonyme sur une coupe privée
 
 - WHEN un visiteur non connecté demande les documents d'une coupe privée
-- THEN le serveur DOIT répondre `403`
+- THEN le serveur DOIT répondre `404` avec le même message qu'une coupe
+  inexistante
 
 #### Scenario: Coach tiers sur une ligue privée
 

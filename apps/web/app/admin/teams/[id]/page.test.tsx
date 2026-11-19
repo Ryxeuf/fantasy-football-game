@@ -380,6 +380,7 @@ describe("AdminTeamDetailPage — restauration", () => {
 
     await screen.findByTestId("admin-team-deleted-badge");
     expect(screen.getByTestId("admin-team-restore")).toBeTruthy();
+    expect(screen.queryByTestId("admin-team-edit-link")).toBeNull();
   });
 
   it("POSTe /restore puis recharge la fiche", async () => {

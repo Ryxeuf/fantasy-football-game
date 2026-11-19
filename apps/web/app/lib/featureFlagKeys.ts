@@ -82,3 +82,10 @@ export const DICE_THEMES_FLAG = "dice_themes" as const;
  * `apps/server/src/services/featureFlags.ts.CROWNS_FLAG`.
  */
 export const CROWNS_FLAG = "crowns" as const;
+
+/**
+ * Blog d'une compétition (ligue ou coupe) : articles, réactions, commentaires
+ * des coachs. OFF par défaut (2026-11-15) : en recette. Miroir de
+ * `apps/server/src/services/featureFlags.ts.COMPETITION_BLOG_FLAG`.
+ */
+export const COMPETITION_BLOG_FLAG = "competition_blog" as const;
