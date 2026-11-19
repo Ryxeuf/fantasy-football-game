@@ -215,6 +215,14 @@ export const POSITION_NAMES_EN: Readonly<Record<string, string>> = {
   vampire_blitzer_vampire: 'Vampire Blitzer',
   vampire_lanceur_vampire: 'Vampire Thrower',
   vampire_vargheist: 'Vargheist',
+
+  // Night Goblin
+  night_goblin_trois_quart_gobelin_de_la_nuit: 'Night Goblin Lineman',
+  night_goblin_gardien_de_squigs: 'Squig Herder',
+  night_goblin_chevaucheur_de_squig: 'Squig Hopper',
+  night_goblin_dompteur_de_squig: 'Squig Wrangler',
+  night_goblin_squig_des_cavernes: 'Cave Squig',
+  night_goblin_troll_entraine: 'Trained Troll',
 };
 
 /**

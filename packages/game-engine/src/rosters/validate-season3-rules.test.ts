@@ -301,6 +301,7 @@ describe('S3 Rules Validation: Coherence des skills', () => {
     'take-root', 'throw-team-mate', 'timmm-ber', 'titchy',
     'trickster', 'wild-animal', 'drunkard', 'hate', 'hate-troll',
     'kick-team-mate', 'clearance', 'fumblerooskie',
+    'monstrous-mouth', 'squig-rage', 'squig-restraint',
   ];
 
   const knownSkillSet = new Set(KNOWN_SKILL_PATTERNS);

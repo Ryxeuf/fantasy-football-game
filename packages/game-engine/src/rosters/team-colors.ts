@@ -61,6 +61,7 @@ export const ROSTER_COLORS: Record<string, TeamColors> = {
   black_orc: { primary: 0x052e16, secondary: 0xfacc15 },
   goblin: { primary: 0x4d7c0f, secondary: 0xfbbf24 },
   snotling: { primary: 0x84cc16, secondary: 0x1c1917 },
+  night_goblin: { primary: 0x111827, secondary: 0xdc2626 }, // robes noires & squigs rouges
   underworld: { primary: 0x1f2937, secondary: 0x22c55e },
 
   // --- Skaven / Rats ---

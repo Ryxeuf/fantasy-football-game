@@ -1847,3 +1847,27 @@ registerSkill({
     hasSkill(ctx.player, 'running-pass-2025') ||
     hasSkill(ctx.player, 'running_pass_2025'),
 });
+
+// ─── SQUIG RAGE / SQUIG RESTRAINT (Gobelins de la Nuit, Saison 3) ───────────
+// Traits de la fiche « Gobelins de la Nuit ». Rage de Squig : a chaque
+// activation, AVANT d'annoncer l'action, D6 — 3+ activation normale ; 1-2 le
+// joueur doit Bloquer un adversaire qu'il Marque (meme avec Chaine et Boulet),
+// sinon Plaquer un coequipier adjacent (sans Turnover sauf porteur du ballon)
+// ou devenir Deconcentre. Maitrise de Squig : les coequipiers a 3 cases ou
+// moins d'un porteur Debout ne font pas ce jet.
+// NON CABLE dans le match en ligne a ce jour : aucun jet n'est declenche par
+// le moteur. Les entrees servent a la decouverte UI et a la documentation
+// (fiches d'equipe, feuilles de match saisies apres un match sur table).
+registerSkill({
+  slug: 'squig-rage',
+  triggers: ['passive'],
+  description: "A chaque activation, avant d'annoncer son action, D6 : 3+ activation normale ; 1-2 le joueur doit Bloquer un adversaire qu'il Marque, sinon Plaquer un coequipier adjacent ou devenir Deconcentre.",
+  canApply: (ctx) => hasSkill(ctx.player, 'squig-rage') || hasSkill(ctx.player, 'squig_rage'),
+});
+
+registerSkill({
+  slug: 'squig-restraint',
+  triggers: ['passive'],
+  description: "Les coequipiers a 3 cases ou moins d'un joueur Debout ayant ce Trait ne jettent pas le de de Rage de Squig au debut de leur activation.",
+  canApply: (ctx) => hasSkill(ctx.player, 'squig-restraint') || hasSkill(ctx.player, 'squig_restraint'),
+});

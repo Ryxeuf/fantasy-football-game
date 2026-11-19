@@ -339,6 +339,15 @@ export const ROSTER_META: Record<string, RosterMeta> = {
     shortEn:
       "Very Agile Leapers capable of spectacular jumps: a unique aerial movement game, but tricky to master.",
   },
+  night_goblin: {
+    difficulty: "advanced",
+    playStyle: "stunty",
+    starPlayers: ["Ripper Bolgrot", "Fungus the Loon"],
+    shortFr:
+      "Une nuée de Minus sournois autour de Squigs enragés : Grande Gueule, bonds à ressort et Rage de Squig à canaliser avec les Gardiens. Imprévisible et réjouissant (Défi des Bas-fonds).",
+    shortEn:
+      "A swarm of sneaky Stunties around raging Squigs: Monstrous Mouth, pogo leaps and Squig Rage to be kept in check by the Herders. Unpredictable and great fun (Underworld Challenge).",
+  },
   snotling: {
     difficulty: "advanced",
     playStyle: "stunty",

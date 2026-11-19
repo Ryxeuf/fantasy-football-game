@@ -8,7 +8,7 @@ import {
   PLAYSTYLE_LABELS,
 } from "./roster-meta";
 
-// Les 31 rosters Saison 3 (30 historiques + Bretonniens, clés de SEASON_THREE_ROSTERS).
+// Les 32 rosters Saison 3 (30 historiques + Bretonniens + Gobelins de la Nuit, clés de SEASON_THREE_ROSTERS).
 const EXPECTED_SLUGS = [
   "old_world_alliance",
   "bretonnian",
@@ -39,12 +39,13 @@ const EXPECTED_SLUGS = [
   "skaven",
   "slann",
   "snotling",
+  "night_goblin",
   "elven_union",
   "vampire",
 ];
 
 describe("ROSTER_META", () => {
-  it("couvre les 31 rosters officiels", () => {
+  it("couvre les 32 rosters officiels", () => {
     expect(Object.keys(ROSTER_META).sort()).toEqual([...EXPECTED_SLUGS].sort());
   });
 

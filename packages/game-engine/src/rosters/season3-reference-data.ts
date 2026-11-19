@@ -453,6 +453,19 @@ export const SEASON_3_REFERENCE: Record<string, ReferenceRoster> = {
       { nameEn: 'Trained Troll', cost: 115, max: 2, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
     ],
   },
+
+  night_goblin: {
+    nameEn: 'Night Goblin',
+    tier: 'IV',
+    positionCount: 6,
+    budget: 1000,
+    keyPositions: [
+      { nameEn: 'Night Goblin Lineman', cost: 45, max: 16, ma: 6, st: 2, ag: 3, pa: 4, av: 8, skills: ['dodge', 'provocation', 'right-stuff', 'shadowing', 'stunty'] },
+      { nameEn: 'Squig Hopper', cost: 80, max: 2, ma: 7, st: 3, ag: 3, pa: 4, av: 8, skills: ['dodge', 'jump-up', 'monstrous-mouth', 'pogo-stick', 'squig-rage'] },
+      { nameEn: 'Cave Squig', cost: 85, max: 2, ma: 6, st: 4, ag: 3, pa: 0, av: 9, skills: ['frenzy', 'jump-up', 'monstrous-mouth', 'no-hands', 'pogo-stick', 'squig-rage'] },
+      { nameEn: 'Trained Troll', cost: 115, max: 1, ma: 4, st: 5, ag: 5, pa: 5, av: 10, skills: ['always-hungry', 'mighty-blow-1', 'projectile-vomit', 'really-stupid', 'regeneration', 'throw-team-mate'] },
+    ],
+  },
 };
 
 // ─── Regles structurelles de reference ───────────────────────────────────
@@ -480,5 +493,5 @@ export const STRUCTURAL_RULES = {
   /** Chaque equipe doit avoir au moins un type de position avec max >= 11 (lineman) */
   mustHaveLinemanType: true,
   /** Nombre total d'equipes attendu en S3 (30 historiques + Bretonniens) */
-  expectedTeamCount: 31,
+  expectedTeamCount: 32,
 };
